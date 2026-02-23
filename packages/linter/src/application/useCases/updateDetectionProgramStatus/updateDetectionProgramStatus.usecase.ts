@@ -1,12 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IStandardsPort } from '@packmind/types';
-import { DetectionStatus, RuleId } from '@packmind/types';
+import { DetectionSeverity, DetectionStatus, RuleId } from '@packmind/types';
 import {
   IExecuteLinterProgramsUseCase,
   ExecuteLinterProgramsCommand,
   ExecuteLinterProgramsResult,
   LinterExecutionProgram,
-  DetectionSeverity,
 } from '@packmind/types';
 import { ProgrammingLanguage } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';

@@ -180,8 +180,11 @@ describe('buildDiffHtml', () => {
         expect(result).toContain('<code');
       });
 
-      it('does not contain diff markers', () => {
+      it('does not contain diff-del markers', () => {
         expect(result).not.toContain('diff-del');
+      });
+
+      it('does not contain diff-ins markers', () => {
         expect(result).not.toContain('diff-ins');
       });
     });

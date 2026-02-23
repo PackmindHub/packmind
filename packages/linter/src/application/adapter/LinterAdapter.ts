@@ -270,6 +270,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     this._updateActiveDetectionProgramSeverityUseCase =
       new UpdateActiveDetectionProgramSeverityUseCase(
         this.repositories.getActiveDetectionProgramRepository(),
+        ports.eventEmitterService,
       );
 
     this._startGenerationProgramUseCase = new StartGenerationProgramUseCase(

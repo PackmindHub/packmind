@@ -6,7 +6,11 @@ import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
-import { logInfoConsole, logWarningConsole } from '../utils/consoleLogger';
+import {
+  logErrorConsole,
+  logInfoConsole,
+  logWarningConsole,
+} from '../utils/consoleLogger';
 
 const SEVERITY_LEVELS: Record<DetectionSeverity, number> = {
   [DetectionSeverity.WARNING]: 0,
@@ -134,12 +138,17 @@ export async function lintHandler(
     throw error;
   }
 
+  const effectiveSeverity = (s: DetectionSeverity | undefined) =>
+    s ?? DetectionSeverity.ERROR;
+
   const filteredViolations = level
     ? violations
         .map((v) => ({
           ...v,
           violations: v.violations.filter(
-            (d) => SEVERITY_LEVELS[d.severity] >= SEVERITY_LEVELS[level],
+            (d) =>
+              SEVERITY_LEVELS[effectiveSeverity(d.severity)] >=
+              SEVERITY_LEVELS[level],
           ),
         }))
         .filter((v) => v.violations.length > 0)
@@ -149,16 +158,19 @@ export async function lintHandler(
     filteredViolations,
   );
 
-  const durationSeconds = (Date.now() - startedAt) / 1000;
-  logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
-
   const hasErrors = filteredViolations.some((v) =>
-    v.violations.some((d) => d.severity === DetectionSeverity.ERROR),
+    v.violations.some(
+      (d) => effectiveSeverity(d.severity) === DetectionSeverity.ERROR,
+    ),
   );
 
+  const durationSeconds = (Date.now() - startedAt) / 1000;
+
   if (hasErrors && !continueOnError) {
+    logErrorConsole(`Lint failed in ${durationSeconds.toFixed(2)}s`);
     exit(1);
   } else {
+    logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
     exit(0);
   }
 }

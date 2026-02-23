@@ -6,8 +6,10 @@ import {
   createRuleId,
   createUserId,
   DetectionSeverity,
+  LinterRuleSeverityUpdatedEvent,
   UpdateActiveDetectionProgramSeverityCommand,
 } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { IActiveDetectionProgramRepository } from '../../../domain/repositories/IActiveDetectionProgramRepository';
@@ -17,6 +19,7 @@ import { ActiveDetectionProgramNotFoundError } from '../../../domain/errors';
 describe('UpdateActiveDetectionProgramSeverityUseCase', () => {
   let useCase: UpdateActiveDetectionProgramSeverityUseCase;
   let activeDetectionProgramRepository: jest.Mocked<IActiveDetectionProgramRepository>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -33,10 +36,15 @@ describe('UpdateActiveDetectionProgramSeverityUseCase', () => {
       deleteByRuleId: jest.fn(),
     } as unknown as jest.Mocked<IActiveDetectionProgramRepository>;
 
+    mockEventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     stubbedLogger = stubLogger();
 
     useCase = new UpdateActiveDetectionProgramSeverityUseCase(
       activeDetectionProgramRepository,
+      mockEventEmitterService,
       stubbedLogger,
     );
   });
@@ -100,6 +108,35 @@ describe('UpdateActiveDetectionProgramSeverityUseCase', () => {
             DetectionSeverity.WARNING,
           );
         });
+
+        it('emits exactly one event', async () => {
+          await useCase.execute(command);
+
+          expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+        });
+
+        it('emits a LinterRuleSeverityUpdatedEvent instance', async () => {
+          await useCase.execute(command);
+
+          const emittedEvent = mockEventEmitterService.emit.mock.calls[0][0];
+          expect(emittedEvent).toBeInstanceOf(LinterRuleSeverityUpdatedEvent);
+        });
+
+        it('includes ruleId in the event payload', async () => {
+          await useCase.execute(command);
+
+          const emittedEvent = mockEventEmitterService.emit.mock.calls[0][0];
+          expect(emittedEvent.payload.ruleId).toEqual(ruleId);
+        });
+
+        it('includes the new severity in the event payload', async () => {
+          await useCase.execute(command);
+
+          const emittedEvent = mockEventEmitterService.emit.mock.calls[0][0];
+          expect(emittedEvent.payload.severity).toEqual(
+            DetectionSeverity.WARNING,
+          );
+        });
       });
 
       describe('when updating severity to ERROR', () => {
@@ -138,6 +175,35 @@ describe('UpdateActiveDetectionProgramSeverityUseCase', () => {
           const result = await useCase.execute(command);
 
           expect(result.severity).toEqual(DetectionSeverity.ERROR);
+        });
+
+        it('emits exactly one event', async () => {
+          await useCase.execute(command);
+
+          expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+        });
+
+        it('emits a LinterRuleSeverityUpdatedEvent instance', async () => {
+          await useCase.execute(command);
+
+          const emittedEvent = mockEventEmitterService.emit.mock.calls[0][0];
+          expect(emittedEvent).toBeInstanceOf(LinterRuleSeverityUpdatedEvent);
+        });
+
+        it('includes ruleId in the event payload', async () => {
+          await useCase.execute(command);
+
+          const emittedEvent = mockEventEmitterService.emit.mock.calls[0][0];
+          expect(emittedEvent.payload.ruleId).toEqual(ruleId);
+        });
+
+        it('includes the new severity in the event payload', async () => {
+          await useCase.execute(command);
+
+          const emittedEvent = mockEventEmitterService.emit.mock.calls[0][0];
+          expect(emittedEvent.payload.severity).toEqual(
+            DetectionSeverity.ERROR,
+          );
         });
       });
 
@@ -180,6 +246,16 @@ describe('UpdateActiveDetectionProgramSeverityUseCase', () => {
             activeDetectionProgramRepository.updateSeverity,
           ).not.toHaveBeenCalled();
         });
+
+        it('does not emit any event', async () => {
+          try {
+            await useCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -214,6 +290,16 @@ describe('UpdateActiveDetectionProgramSeverityUseCase', () => {
         expect(
           activeDetectionProgramRepository.updateSeverity,
         ).not.toHaveBeenCalled();
+      });
+
+      it('does not emit any event', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
   });
