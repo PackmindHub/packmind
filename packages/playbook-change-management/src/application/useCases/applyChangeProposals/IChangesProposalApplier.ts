@@ -16,9 +16,9 @@ export type ObjectVersions = RecipeVersion | StandardVersion | SkillVersion;
 export type ObjectByVersion<T extends ObjectVersions> = T extends RecipeVersion
   ? Recipe
   : T extends SkillVersion
-    ? Standard
+    ? Skill
     : T extends StandardVersion
-      ? Skill
+      ? Standard
       : never;
 
 export interface IChangesProposalApplier<Version extends ObjectVersions> {

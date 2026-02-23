@@ -3,8 +3,8 @@ import {
   ChangeProposal,
   ChangeProposalType,
   ISkillsPort,
+  SkillId,
   SkillVersion,
-  StandardId,
 } from '@packmind/types';
 import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 import { DiffService } from '../../services/DiffService';
@@ -35,8 +35,14 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
     return this.checkChangesApplicable(changeProposals, SKILL_CHANGE_TYPES);
   }
 
-  getVersion(artefactId: StandardId): Promise<SkillVersion> {
-    throw new Error(`Unable to find skillVersion with id ${artefactId}.`);
+  async getVersion(artefactId: SkillId): Promise<SkillVersion> {
+    const skillVersion = await this.skillPort.getLatestSkillVersion(artefactId);
+
+    if (!skillVersion) {
+      throw new Error(`Unable to find skillVersion with id ${artefactId}.`);
+    }
+
+    return skillVersion;
   }
 
   protected applyChangeProposal(
