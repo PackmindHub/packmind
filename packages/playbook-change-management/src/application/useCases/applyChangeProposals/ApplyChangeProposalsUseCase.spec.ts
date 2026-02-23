@@ -339,9 +339,7 @@ describe('ApplyChangeProposalsUseCase', () => {
           accepted: [changeProposal.id],
           rejected: [],
         }),
-      ).rejects.toThrow(
-        'Change proposal type addRule is not supported yet. Only recipe change proposals are supported.',
-      );
+      ).rejects.toThrow('Unable to find a valid applier for changes: addRule');
     });
 
     it('does not call updateRecipeFromUI', async () => {
@@ -392,7 +390,7 @@ describe('ApplyChangeProposalsUseCase', () => {
           rejected: [],
         }),
       ).rejects.toThrow(
-        'Change proposal type updateSkillName is not supported yet. Only recipe change proposals are supported.',
+        'Unable to find a valid applier for changes: updateSkillName',
       );
     });
 
