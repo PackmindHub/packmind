@@ -40,8 +40,6 @@ describe('detectUpdateSubItemConflict', () => {
   });
 
   it('returns false if both proposals have the same id', () => {
-    console.log({ changeProposal, diffService });
-
     expect(
       detectAddSubItemConflict(
         changeProposal,
@@ -364,7 +362,7 @@ describe('detectUpdateSkillFilePermissionsConflict', () => {
           }),
           diffService,
         ),
-      );
+      ).toBe(false);
     });
 
     it('return true if the new value is different', () => {
@@ -381,7 +379,7 @@ describe('detectUpdateSkillFilePermissionsConflict', () => {
           }),
           diffService,
         ),
-      );
+      ).toBe(true);
     });
   });
 

@@ -71,7 +71,7 @@ describe('detectAddRuleConflict', () => {
     diffService = {} as jest.Mocked<DiffService>;
   });
 
-  it('returns false if the two proposals have the same content', () => {
+  it('returns false if the two proposals have different content', () => {
     expect(
       detectAddRuleConflict(
         {
