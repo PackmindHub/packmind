@@ -207,6 +207,87 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
       });
     });
 
+    describe('when detectionProgram language is missing', () => {
+      let ruleId: ReturnType<typeof createRuleId>;
+      let command: GetActiveDetectionProgramForRuleCommand;
+
+      beforeEach(() => {
+        const organizationId = createOrganizationId(uuidv4());
+        ruleId = createRuleId(uuidv4());
+        const standardSlug = 'my-standard';
+
+        command = {
+          standardSlug,
+          ruleId,
+          organizationId,
+          userId: createUserId(uuidv4()),
+        };
+
+        const existingStandard = standardFactory({ slug: standardSlug });
+        const existingRule = ruleFactory({ id: ruleId });
+
+        standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
+        standardsAdapter.getRule.mockResolvedValue(existingRule);
+        standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
+          existingRule,
+        ]);
+      });
+
+      it('falls back to activeDetectionProgram language', async () => {
+        const detectionProgram = detectionProgramFactory({
+          ruleId,
+          language: null as unknown as ProgrammingLanguage,
+        });
+
+        detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
+          [
+            {
+              ...activeDetectionProgramFactory({
+                ruleId,
+                language: ProgrammingLanguage.TYPESCRIPT,
+              }),
+              detectionProgram,
+              draftDetectionProgram: null,
+            },
+          ],
+        );
+
+        const result = await useCase.execute(command);
+
+        expect(result.programs[0].program.language).toBe(
+          ProgrammingLanguage.TYPESCRIPT,
+        );
+      });
+
+      describe('when detectionProgram language is defined', () => {
+        it('uses detectionProgram language over activeDetectionProgram language', async () => {
+          const detectionProgram = detectionProgramFactory({
+            ruleId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+          });
+
+          detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeDetectionProgramFactory({
+                  ruleId,
+                  language: ProgrammingLanguage.JAVASCRIPT,
+                }),
+                detectionProgram,
+                draftDetectionProgram: null,
+              },
+            ],
+          );
+
+          const result = await useCase.execute(command);
+
+          expect(result.programs[0].program.language).toBe(
+            ProgrammingLanguage.TYPESCRIPT,
+          );
+        });
+      });
+    });
+
     describe('when multiple active programs exist for different languages', () => {
       let ruleId: ReturnType<typeof createRuleId>;
       let command: GetActiveDetectionProgramForRuleCommand;

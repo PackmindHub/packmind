@@ -284,7 +284,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                       (item) => {
                         const program = item.program ?? item;
                         return {
-                          language: program.language,
+                          language: program.language ?? language,
                           severity: item.severity,
                           detectionProgram: {
                             mode: program.mode,
@@ -335,7 +335,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                       (item) => {
                         const program = item.program ?? item;
                         return {
-                          language: program.language,
+                          language: program.language ?? language,
                           severity: item.severity,
                           detectionProgram: {
                             mode: program.mode,

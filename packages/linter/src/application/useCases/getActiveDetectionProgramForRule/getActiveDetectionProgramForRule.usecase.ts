@@ -83,7 +83,10 @@ export class GetActiveDetectionProgramForRuleUseCase implements IGetActiveDetect
         activeProgramsWithPrograms
           .filter((p) => p.detectionProgram !== null)
           .map((p) => ({
-            program: p.detectionProgram!,
+            program: {
+              ...p.detectionProgram!,
+              language: p.detectionProgram!.language ?? p.language,
+            },
             severity: p.severity,
           }));
 

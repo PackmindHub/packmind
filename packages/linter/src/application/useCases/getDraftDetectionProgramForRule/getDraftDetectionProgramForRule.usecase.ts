@@ -87,7 +87,10 @@ export class GetDraftDetectionProgramForRuleUseCase implements IGetDraftDetectio
         activeProgramsWithPrograms
           .filter((p) => p.draftDetectionProgram !== null)
           .map((p) => ({
-            program: p.draftDetectionProgram!,
+            program: {
+              ...p.draftDetectionProgram!,
+              language: p.draftDetectionProgram!.language ?? p.language,
+            },
             severity: p.severity ?? DetectionSeverity.ERROR,
           }));
 

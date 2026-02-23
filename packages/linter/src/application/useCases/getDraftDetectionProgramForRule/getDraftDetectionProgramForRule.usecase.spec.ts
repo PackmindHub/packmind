@@ -283,6 +283,84 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
       });
     });
 
+    describe('when draftDetectionProgram language is missing', () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardSlug = 'my-standard';
+
+      const command: GetDraftDetectionProgramForRuleCommand = {
+        standardSlug,
+        ruleId,
+        userId: createUserId(uuidv4()),
+        organizationId,
+      };
+
+      const existingStandard = standardFactory({ slug: standardSlug });
+      const existingRule = ruleFactory({ id: ruleId });
+
+      beforeEach(() => {
+        standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
+        standardsAdapter.getRule.mockResolvedValue(existingRule);
+        standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
+          existingRule,
+        ]);
+      });
+
+      it('falls back to activeDetectionProgram language', async () => {
+        const draftProgram = detectionProgramFactory({
+          ruleId,
+          language: null as unknown as ProgrammingLanguage,
+        });
+
+        detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
+          [
+            {
+              ...activeDetectionProgramFactory({
+                ruleId,
+                language: ProgrammingLanguage.TYPESCRIPT,
+              }),
+              detectionProgram: null,
+              draftDetectionProgram: draftProgram,
+            },
+          ],
+        );
+
+        const result = await useCase.execute(command);
+
+        expect(result.programs[0].program.language).toBe(
+          ProgrammingLanguage.TYPESCRIPT,
+        );
+      });
+
+      describe('when draftDetectionProgram language is defined', () => {
+        it('uses draftDetectionProgram language over activeDetectionProgram language', async () => {
+          const draftProgram = detectionProgramFactory({
+            ruleId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+          });
+
+          detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeDetectionProgramFactory({
+                  ruleId,
+                  language: ProgrammingLanguage.JAVASCRIPT,
+                }),
+                detectionProgram: null,
+                draftDetectionProgram: draftProgram,
+              },
+            ],
+          );
+
+          const result = await useCase.execute(command);
+
+          expect(result.programs[0].program.language).toBe(
+            ProgrammingLanguage.TYPESCRIPT,
+          );
+        });
+      });
+    });
+
     describe('when no draft programs exist', () => {
       it('returns empty array', async () => {
         const organizationId = createOrganizationId(uuidv4());
