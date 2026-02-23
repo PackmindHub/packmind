@@ -75,7 +75,6 @@ export abstract class AbstractChangeProposalsApplier<
       throw new ChangeProposalConflictError(changeProposalId);
     }
 
-    console.log({ payload, diffResult });
     return diffResult.value;
   }
 }

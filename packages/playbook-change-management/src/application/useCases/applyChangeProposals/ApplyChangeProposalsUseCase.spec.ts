@@ -27,6 +27,7 @@ import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactor
 import { changeProposalFactory } from '@packmind/playbook-change-management/test/changeProposalFactory';
 import { ApplyChangeProposalsUseCase } from './ApplyChangeProposalsUseCase';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { skillVersionFactory } from '@packmind/skills/test';
 
 describe('ApplyChangeProposalsUseCase', () => {
   const organizationId = createOrganizationId('organization-id');
@@ -72,6 +73,8 @@ describe('ApplyChangeProposalsUseCase', () => {
 
     skillsPort = {
       getSkill: jest.fn(),
+      getLatestSkillVersion: jest.fn(),
+      saveSkillVersion: jest.fn(),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     changeProposalService = {
@@ -366,8 +369,17 @@ describe('ApplyChangeProposalsUseCase', () => {
       id: createChangeProposalId('cp-1'),
       type: ChangeProposalType.updateSkillName,
       artefactId: skillId,
+      payload: {
+        oldValue: 'the old value',
+        newValue: 'the new value',
+      },
       spaceId,
       status: ChangeProposalStatus.pending,
+    });
+
+    const skillVersion = skillVersionFactory({
+      skillId,
+      version: 1,
     });
 
     beforeEach(() => {
@@ -376,39 +388,28 @@ describe('ApplyChangeProposalsUseCase', () => {
         id: skillId,
         spaceId,
       } as never);
-      recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+      skillsPort.saveSkillVersion.mockResolvedValue(skillVersion);
     });
 
-    it('throws error for skill change proposals', async () => {
-      await expect(
-        useCase.execute({
-          userId,
-          organizationId,
-          spaceId,
-          artefactId: skillId,
-          accepted: [changeProposal.id],
-          rejected: [],
-        }),
-      ).rejects.toThrow(
-        'Unable to find a valid applier for changes: updateSkillName',
-      );
-    });
-
-    it('does not call updateRecipeFromUI', async () => {
-      await useCase
-        .execute({
-          userId,
-          organizationId,
-          spaceId,
-          artefactId: skillId,
-          accepted: [changeProposal.id],
-          rejected: [],
-        })
-        .catch(() => {
-          /* expected error */
-        });
-
-      expect(recipesPort.updateRecipeFromUI).not.toHaveBeenCalled();
+    it('calls skillsPort.save skill with the updated version', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: skillId,
+        accepted: [changeProposal.id],
+        rejected: [],
+      });
+      expect(skillsPort.saveSkillVersion).toHaveBeenCalledWith({
+        userId,
+        spaceId,
+        organizationId,
+        skillVersion: {
+          ...skillVersion,
+          name: 'the new value',
+        },
+      });
     });
   });
 

@@ -286,7 +286,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   ): Promise<SkillVersion> {
     this.logger.info('saveSkillVersion called via port', {
       skillId: command.skillVersion.skillId,
-      version: command.skillVersion.version,
       userId: command.userId.substring(0, 6) + '*',
       organizationId: command.organizationId,
     });
@@ -428,18 +427,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       organizationId: command.organizationId,
     });
     return this._listSkillVersions.execute(command);
-  }
-
-  async saveSkillVersionUseCase(
-    command: SaveSkillVersionCommand,
-  ): Promise<SkillVersion> {
-    this.logger.info('saveSkillVersion use case invoked', {
-      skillId: command.skillVersion.skillId,
-      version: command.skillVersion.version,
-      userId: command.userId.substring(0, 6) + '*',
-      organizationId: command.organizationId,
-    });
-    return this._saveSkillVersion.execute(command);
   }
 
   /**

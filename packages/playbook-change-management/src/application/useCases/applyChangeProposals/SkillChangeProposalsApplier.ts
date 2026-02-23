@@ -3,8 +3,11 @@ import {
   ChangeProposal,
   ChangeProposalType,
   ISkillsPort,
+  OrganizationId,
   SkillId,
   SkillVersion,
+  SpaceId,
+  UserId,
 } from '@packmind/types';
 import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 import { DiffService } from '../../services/DiffService';
@@ -26,7 +29,7 @@ const SKILL_CHANGE_TYPES = [
 export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<SkillVersion> {
   constructor(
     diffService: DiffService,
-    private readonly skillPort: ISkillsPort,
+    private readonly skillsPort: ISkillsPort,
   ) {
     super(diffService);
   }
@@ -36,7 +39,8 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
   }
 
   async getVersion(artefactId: SkillId): Promise<SkillVersion> {
-    const skillVersion = await this.skillPort.getLatestSkillVersion(artefactId);
+    const skillVersion =
+      await this.skillsPort.getLatestSkillVersion(artefactId);
 
     if (!skillVersion) {
       throw new Error(`Unable to find skillVersion with id ${artefactId}.`);
@@ -80,7 +84,17 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
     throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
   }
 
-  async saveNewVersion(): Promise<SkillVersion> {
-    throw new Error('...');
+  async saveNewVersion(
+    skillVersion: SkillVersion,
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<SkillVersion> {
+    return this.skillsPort.saveSkillVersion({
+      skillVersion,
+      userId,
+      spaceId,
+      organizationId,
+    });
   }
 }
