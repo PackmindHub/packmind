@@ -46,7 +46,7 @@ export default function SocialLoginButtons() {
           return (
             <PMButton
               key={provider}
-              variant="outline"
+              variant="tertiary"
               flex="1"
               onClick={() => {
                 window.location.href = `/api/v0/auth/social/authorize/${provider}`;
