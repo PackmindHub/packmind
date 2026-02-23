@@ -57,7 +57,7 @@ export function ReviewDetailLayout({
           disabled={isSaving || !hasPooledDecisions}
           onClick={onSave}
         >
-          {isSaving ? 'Saving...' : 'Save'}
+          {isSaving ? 'Applying...' : 'Apply changes'}
         </PMButton>
       </PMBox>
       <PMBox minW={0} overflowY="auto" p={4}>
