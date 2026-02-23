@@ -10,6 +10,7 @@ import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
 import {
   ConfigWithTarget,
+  DetectionSeverity,
   ExecuteLinterProgramsCommand,
   GetDetectionProgramsForPackagesResponse,
   LinterExecutionProgram,
@@ -300,7 +301,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
                     sourceCodeState:
                       activeProgram.detectionProgram.sourceCodeState,
                     language: fileLanguage,
-                    severity: activeProgram.severity,
+                    severity: activeProgram.severity ?? DetectionSeverity.ERROR,
                   });
 
                   programsByLanguage.set(programLanguage, programsForLanguage);

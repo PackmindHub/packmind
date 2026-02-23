@@ -9,6 +9,8 @@ import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
 import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DetectionProgramWithSeverity,
+  DetectionSeverity,
   ExecuteLinterProgramsCommand,
   LinterExecutionProgram,
   LinterExecutionViolation,
@@ -281,15 +283,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: draftProgramsResult.ruleContent || 'Draft Rule',
                     activeDetectionPrograms: draftProgramsResult.programs.map(
-                      (item) => ({
-                        language: item.program.language,
-                        severity: item.severity,
-                        detectionProgram: {
-                          mode: item.program.mode,
-                          code: item.program.code,
-                          sourceCodeState: item.program.sourceCodeState,
-                        },
-                      }),
+                      this.mapToActiveDetectionProgram,
                     ),
                   },
                 ],
@@ -329,15 +323,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: activeProgramsResult.ruleContent || 'Active Rule',
                     activeDetectionPrograms: activeProgramsResult.programs.map(
-                      (item) => ({
-                        language: item.program.language,
-                        severity: item.severity,
-                        detectionProgram: {
-                          mode: item.program.mode,
-                          code: item.program.code,
-                          sourceCodeState: item.program.sourceCodeState,
-                        },
-                      }),
+                      this.mapToActiveDetectionProgram,
                     ),
                   },
                 ],
@@ -456,7 +442,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   sourceCodeState:
                     activeProgram.detectionProgram.sourceCodeState,
                   language: fileLanguage,
-                  severity: activeProgram.severity,
+                  severity: activeProgram.severity ?? DetectionSeverity.ERROR,
                 });
 
                 programsByLanguage.set(programLanguage, programsForLanguage);
@@ -546,6 +532,20 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
       },
     };
   }
+
+  private mapToActiveDetectionProgram = (
+    item: DetectionProgramWithSeverity,
+  ) => {
+    return {
+      language: item.program.language,
+      severity: item.severity,
+      detectionProgram: {
+        mode: item.program.mode,
+        code: item.program.code,
+        sourceCodeState: item.program.sourceCodeState,
+      },
+    };
+  };
 
   private resolveProgrammingLanguage(
     language: string,
