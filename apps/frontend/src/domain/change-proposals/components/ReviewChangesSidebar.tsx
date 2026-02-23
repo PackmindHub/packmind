@@ -1,6 +1,8 @@
 import { NavLink, useParams } from 'react-router';
 import {
+  PMAlert,
   PMBadge,
+  PMBox,
   PMHStack,
   PMLink,
   PMText,
@@ -115,6 +117,16 @@ export function ReviewChangesSidebar({
   return (
     <PMVerticalNav logo={false} showLogoContainer={false} width="270px">
       {sections}
+      <PMBox p={4} mt="auto">
+        <PMAlert.Root status="info">
+          <PMAlert.Indicator />
+          <PMAlert.Content>
+            <PMAlert.Description>
+              Playbook updates will soon require an Enterprise plan.
+            </PMAlert.Description>
+          </PMAlert.Content>
+        </PMAlert.Root>
+      </PMBox>
     </PMVerticalNav>
   );
 }
