@@ -8,7 +8,7 @@ import {
   PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import { UserId } from '@packmind/types';
+import { ChangeProposalId, UserId } from '@packmind/types';
 import { LuCircleAlert } from 'react-icons/lu';
 import { ChangeProposalWithConflicts } from '../../types';
 import { getChangeProposalFieldLabel } from '../../utils/changeProposalHelpers';
@@ -21,7 +21,7 @@ interface ProposalCardBaseProps {
   borderColor?: string;
   proposalNumber?: number;
   userLookup: Map<UserId, string>;
-  currentArtefactVersion?: number;
+  outdatedProposalIds: Set<ChangeProposalId>;
   onSelect: () => void;
   actions: ReactNode;
 }
@@ -32,15 +32,13 @@ export function ProposalCardBase({
   borderColor = 'border.tertiary',
   proposalNumber,
   userLookup,
-  currentArtefactVersion,
+  outdatedProposalIds,
   onSelect,
   actions,
 }: ProposalCardBaseProps) {
   const authorDisplayName =
     userLookup.get(proposal.createdBy) ?? 'Unknown user';
-  const isOutdated =
-    currentArtefactVersion !== undefined &&
-    proposal.artefactVersion !== currentArtefactVersion;
+  const isOutdated = outdatedProposalIds.has(proposal.id);
 
   return (
     <PMBox

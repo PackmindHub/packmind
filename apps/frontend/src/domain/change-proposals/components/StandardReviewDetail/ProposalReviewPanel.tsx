@@ -48,6 +48,7 @@ interface ProposalReviewPanelProps {
   selectedStandardProposals: ChangeProposalWithConflicts[];
   rules: Rule[];
   reviewingProposalId: ChangeProposalId | null;
+  outdatedProposalIds: Set<ChangeProposalId>;
   acceptedProposalIds: Set<ChangeProposalId>;
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
@@ -63,6 +64,7 @@ export function ProposalReviewPanel({
   selectedStandardProposals,
   rules,
   reviewingProposalId,
+  outdatedProposalIds,
   acceptedProposalIds,
   rejectedProposalIds,
   blockedByConflictIds,
@@ -197,9 +199,7 @@ export function ProposalReviewPanel({
 
   if (reviewingProposal) {
     const payload = reviewingProposal.payload as ScalarUpdatePayload;
-    const isOutdated =
-      selectedStandard !== undefined &&
-      reviewingProposal.artefactVersion !== selectedStandard.version;
+    const isOutdated = outdatedProposalIds.has(reviewingProposal.id);
 
     const isNameDiff =
       reviewingProposal.type === ChangeProposalType.updateStandardName;

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMSpinner } from '@packmind/ui';
 import { OrganizationId, StandardId, SpaceId } from '@packmind/types';
@@ -19,6 +19,7 @@ import {
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
 import { getStandardByIdKey } from '../../../standards/api/queryKeys';
+import { computeStandardOutdatedIds } from '../../utils/computeOutdatedProposalIds';
 import { ReviewDetailLayout } from '../ReviewDetailLayout';
 import { ProposalReviewPanel } from './ProposalReviewPanel';
 import { useBlocker, useBeforeUnload } from 'react-router';
@@ -58,6 +59,16 @@ export function StandardReviewDetail({
   const rules = rulesData ?? [];
 
   const pool = useChangeProposalPool(selectedStandardProposals);
+
+  const outdatedProposalIds = useMemo(
+    () =>
+      computeStandardOutdatedIds(
+        selectedStandardProposals,
+        selectedStandard,
+        rules,
+      ),
+    [selectedStandardProposals, selectedStandard, rules],
+  );
 
   useBeforeUnload(
     useCallback(
@@ -119,7 +130,7 @@ export function StandardReviewDetail({
         rejectedProposalIds={pool.rejectedProposalIds}
         blockedByConflictIds={pool.blockedByConflictIds}
         hasPooledDecisions={pool.hasPooledDecisions}
-        currentArtefactVersion={selectedStandard?.version}
+        outdatedProposalIds={outdatedProposalIds}
         userLookup={userLookup}
         onSelectProposal={pool.handleSelectProposal}
         onPoolAccept={pool.handlePoolAccept}
@@ -136,6 +147,7 @@ export function StandardReviewDetail({
             selectedStandardProposals={selectedStandardProposals}
             rules={rules}
             reviewingProposalId={pool.reviewingProposalId}
+            outdatedProposalIds={outdatedProposalIds}
             acceptedProposalIds={pool.acceptedProposalIds}
             rejectedProposalIds={pool.rejectedProposalIds}
             blockedByConflictIds={pool.blockedByConflictIds}

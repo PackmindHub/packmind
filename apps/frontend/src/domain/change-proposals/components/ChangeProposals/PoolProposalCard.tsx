@@ -1,5 +1,5 @@
 import { PMIconButton } from '@packmind/ui';
-import { UserId } from '@packmind/types';
+import { ChangeProposalId, UserId } from '@packmind/types';
 import { LuUndo2 } from 'react-icons/lu';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ProposalCardBase } from './ProposalCardBase';
@@ -9,7 +9,7 @@ interface PoolProposalCardProps {
   isSelected: boolean;
   proposalNumber?: number;
   userLookup: Map<UserId, string>;
-  currentArtefactVersion?: number;
+  outdatedProposalIds: Set<ChangeProposalId>;
   onSelect: () => void;
   onUndo: () => void;
 }
@@ -19,7 +19,7 @@ export function PoolProposalCard({
   isSelected,
   proposalNumber,
   userLookup,
-  currentArtefactVersion,
+  outdatedProposalIds,
   onSelect,
   onUndo,
 }: PoolProposalCardProps) {
@@ -29,7 +29,7 @@ export function PoolProposalCard({
       isSelected={isSelected}
       proposalNumber={proposalNumber}
       userLookup={userLookup}
-      currentArtefactVersion={currentArtefactVersion}
+      outdatedProposalIds={outdatedProposalIds}
       onSelect={onSelect}
       actions={
         <PMIconButton

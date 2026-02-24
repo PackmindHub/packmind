@@ -11,7 +11,7 @@ interface ReviewDetailLayoutProps {
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
   hasPooledDecisions: boolean;
-  currentArtefactVersion?: number;
+  outdatedProposalIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
@@ -29,7 +29,7 @@ export function ReviewDetailLayout({
   rejectedProposalIds,
   blockedByConflictIds,
   hasPooledDecisions,
-  currentArtefactVersion,
+  outdatedProposalIds,
   userLookup,
   onSelectProposal,
   onPoolAccept,
@@ -70,7 +70,7 @@ export function ReviewDetailLayout({
           acceptedProposalIds={acceptedProposalIds}
           rejectedProposalIds={rejectedProposalIds}
           blockedByConflictIds={blockedByConflictIds}
-          currentArtefactVersion={currentArtefactVersion}
+          outdatedProposalIds={outdatedProposalIds}
           userLookup={userLookup}
           onSelectProposal={onSelectProposal}
           onPoolAccept={onPoolAccept}

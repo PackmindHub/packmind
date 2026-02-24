@@ -1,5 +1,5 @@
 import { PMHStack, PMIconButton } from '@packmind/ui';
-import { UserId } from '@packmind/types';
+import { ChangeProposalId, UserId } from '@packmind/types';
 import { LuCheck, LuX } from 'react-icons/lu';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ProposalCardBase } from './ProposalCardBase';
@@ -10,7 +10,7 @@ interface PendingProposalCardProps {
   isBlockedByConflict: boolean;
   proposalNumber?: number;
   userLookup: Map<UserId, string>;
-  currentArtefactVersion?: number;
+  outdatedProposalIds: Set<ChangeProposalId>;
   onSelect: () => void;
   onAccept: () => void;
   onReject: () => void;
@@ -22,14 +22,12 @@ export function PendingProposalCard({
   isBlockedByConflict,
   proposalNumber,
   userLookup,
-  currentArtefactVersion,
+  outdatedProposalIds,
   onSelect,
   onAccept,
   onReject,
 }: PendingProposalCardProps) {
-  const isOutdated =
-    currentArtefactVersion !== undefined &&
-    proposal.artefactVersion !== currentArtefactVersion;
+  const isOutdated = outdatedProposalIds.has(proposal.id);
 
   return (
     <ProposalCardBase
@@ -38,7 +36,7 @@ export function PendingProposalCard({
       borderColor={isBlockedByConflict ? 'border.error' : 'border.tertiary'}
       proposalNumber={proposalNumber}
       userLookup={userLookup}
-      currentArtefactVersion={currentArtefactVersion}
+      outdatedProposalIds={outdatedProposalIds}
       onSelect={onSelect}
       actions={
         <PMHStack gap={1}>
