@@ -3,12 +3,17 @@
 ## Added
 
 - Support social login thanks to WorkOS
+- Creators or standards, commands and skills are now displayed
 
 ## Changed
+
+- Added blank-states for standards, commands and skills
 
 ## Fixed
 
 - Fix organization name field auto-refilling instead of showing validation error during sign-up
+- Several security issues following a pentest report led by external auditor
+- Several improvements to the default skills `packmind-create-standard` and `packmind-create-skills`
 
 ## Removed
 
