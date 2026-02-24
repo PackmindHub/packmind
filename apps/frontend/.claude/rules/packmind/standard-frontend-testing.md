@@ -1,8 +1,8 @@
 ---
-name: Frontend testing
-globs: '**/*.test.tsx'
+name: 'Frontend testing'
+paths: '**/*.test.tsx'
 alwaysApply: false
-description: Enforce behavioral tests for components in files matching **/*.test.tsx using Jest and React Testing Library to assert functionality (e.g., that a button triggers the expected action) rather than mere presence, improving test reliability and preventing regressions.
+description: 'Enforce behavioral tests for components in files matching **/*.test.tsx using Jest and React Testing Library to assert functionality (e.g., that a button triggers the expected action) rather than mere presence, improving test reliability and preventing regressions.'
 ---
 
 ## Standard: Frontend testing

@@ -1,5 +1,5 @@
 ---
-description: Implement a new Packmind AI agent rendering system with deployer, type/registry/frontend/docs updates, and full unit/integration tests to enable consistent single- or multi-file standards/recipes distribution when adding or extending AI coding assistant integrations and rendering formats.
+description: 'Implement a new Packmind AI agent rendering system with deployer, type/registry/frontend/docs updates, and full unit/integration tests to enable consistent single- or multi-file standards/recipes distribution when adding or extending AI coding assistant integrations and rendering formats.'
 ---
 
 Add a new AI agent rendering system to Packmind, supporting both single-file (like AGENTS.md) and multi-file (like Cursor/Continue) patterns, including type definitions, deployer implementation, registry registration, frontend UI integration, documentation updates, and comprehensive tests following Packmind test standards.

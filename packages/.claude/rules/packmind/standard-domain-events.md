@@ -1,7 +1,7 @@
 ---
-name: Domain Events
+name: 'Domain Events'
 alwaysApply: true
-description: Use when creating domain events, emitting events from use cases, or implementing listeners.
+description: 'Use when creating domain events, emitting events from use cases, or implementing listeners.'
 ---
 
 ## Standard: Domain Events

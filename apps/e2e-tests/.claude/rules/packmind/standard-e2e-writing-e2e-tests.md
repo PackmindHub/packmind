@@ -1,7 +1,7 @@
 ---
-name: [E2E] Writing E2E tests
+name: '[E2E] Writing E2E tests'
 alwaysApply: true
-description: Define modular Playwright E2E test specs using shared fixtures (testWithApi, testWithUser) and API-based data factories to isolate feature behavior, reduce duplication, and improve test reliability.
+description: 'Define modular Playwright E2E test specs using shared fixtures (testWithApi, testWithUser) and API-based data factories to isolate feature behavior, reduce duplication, and improve test reliability.'
 ---
 
 ## Standard: [E2E] Writing E2E tests

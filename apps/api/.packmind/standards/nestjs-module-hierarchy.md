@@ -11,3 +11,4 @@ Establish a consistent NestJS module structure in the API application where each
 * Import child modules in parent module's imports array and register them as children in AppModule's RouterModule configuration to establish proper module dependencies
 * Include all parent resource IDs in URL paths to make hierarchical relationships explicit and enable proper resource scoping and validation
 * Place module files in directories that mirror the URL path hierarchy to make the codebase structure immediately understandable
+* Accept a single typed Command object as the input parameter in service methods instead of multiple individual parameters to enforce explicit intent and maintain consistency with the hexagonal architecture

@@ -1,5 +1,5 @@
 ---
-description: Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
+description: 'Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.'
 ---
 
 Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.

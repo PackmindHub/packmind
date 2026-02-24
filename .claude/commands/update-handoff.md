@@ -1,5 +1,5 @@
 ---
-description: Update an existing handoff document with the current session's progress, preserving prior work history while refreshing status and next steps. Falls back to creating a new handoff if no source file is found.
+description: "Update an existing handoff document with the current session's progress, preserving prior work history while refreshing status and next steps. Falls back to creating a new handoff if no source file is found."
 ---
 
 Update an existing handoff document with the current session's progress, preserving prior work history while refreshing status and next steps. Falls back to creating a new handoff if no source file is found.

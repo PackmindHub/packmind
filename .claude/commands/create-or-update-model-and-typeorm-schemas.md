@@ -1,5 +1,5 @@
 ---
-description: Create and evolve TypeORM-backed domain models, schemas, repositories, and migrations to keep your database structure consistent, maintainable, and backward compatible when business requirements or existing entities change.
+description: 'Create and evolve TypeORM-backed domain models, schemas, repositories, and migrations to keep your database structure consistent, maintainable, and backward compatible when business requirements or existing entities change.'
 ---
 
 Create new models and update existing ones with TypeORM to ensure proper database structure and maintainability when adapting to evolving business requirements.

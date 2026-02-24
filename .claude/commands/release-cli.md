@@ -1,5 +1,5 @@
 ---
-description: Automate a clean, versioned CLI release by validating git status, promoting any unreleased default skills, updating package.json and CHANGELOG, tagging and pushing the release, and preparing the next Unreleased section to ensure consistent, traceable releases when publishing version {{version}}.
+description: 'Automate a clean, versioned CLI release by validating git status, promoting any unreleased default skills, updating package.json and CHANGELOG, tagging and pushing the release, and preparing the next Unreleased section to ensure consistent, traceable releases when publishing version {{version}}.'
 ---
 
 Create a CLI release with version {{version}}. Follow these steps:

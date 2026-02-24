@@ -1,8 +1,8 @@
 ---
-name: TanStack Query Key Management
-globs: apps/frontend/**/*.tsx
+name: 'TanStack Query Key Management'
+paths: apps/frontend/**/*.tsx
 alwaysApply: false
-description: Manage TanStack Query key structures using hierarchical prefix matching and dedicated queryKeys.ts files in React applications to ensure efficient cache invalidation and type-safe query management when handling cross-domain data operations.
+description: 'Manage TanStack Query key structures using hierarchical prefix matching and dedicated queryKeys.ts files in React applications to ensure efficient cache invalidation and type-safe query management when handling cross-domain data operations.'
 ---
 
 ## Standard: TanStack Query Key Management

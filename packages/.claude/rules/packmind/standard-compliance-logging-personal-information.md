@@ -1,8 +1,8 @@
 ---
-name: Compliance - Logging Personal Information
-globs: '**/*.ts'
+name: 'Compliance - Logging Personal Information'
+paths: '**/*.ts'
 alwaysApply: false
-description: Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries.
+description: 'Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries.'
 ---
 
 ## Standard: Compliance - Logging Personal Information

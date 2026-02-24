@@ -1,5 +1,5 @@
 ---
-description: Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.
+description: 'Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.'
 ---
 
 Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.

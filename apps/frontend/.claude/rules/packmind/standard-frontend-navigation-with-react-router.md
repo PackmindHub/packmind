@@ -1,8 +1,8 @@
 ---
-name: Frontend Navigation with React Router
-globs: apps/frontend/**/*.tsx
+name: 'Frontend Navigation with React Router'
+paths: apps/frontend/**/*.tsx
 alwaysApply: false
-description: Standardize frontend navigation using React Router v7 with centralized utilities in React applications to ensure consistent URL parameter handling and simplify navigation management, particularly when organizing and scoping URLs, across apps/frontend/**/*.tsx.
+description: 'Standardize frontend navigation using React Router v7 with centralized utilities in React applications to ensure consistent URL parameter handling and simplify navigation management, particularly when organizing and scoping URLs, across apps/frontend/**/*.tsx.'
 ---
 
 ## Standard: Frontend Navigation with React Router

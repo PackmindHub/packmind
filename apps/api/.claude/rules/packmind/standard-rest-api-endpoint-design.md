@@ -1,8 +1,8 @@
 ---
-name: REST API Endpoint Design
-globs: REST API route definitions and controller endpoints
+name: 'REST API Endpoint Design'
+paths: REST API route definitions and controller endpoints
 alwaysApply: false
-description: Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent.
+description: 'Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent.'
 ---
 
 ## Standard: REST API Endpoint Design
