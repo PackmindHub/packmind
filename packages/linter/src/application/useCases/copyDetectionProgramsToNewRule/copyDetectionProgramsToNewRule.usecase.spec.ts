@@ -6,7 +6,9 @@ import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import {
+  ActiveDetectionProgram,
   createRuleId,
+  DetectionSeverity,
   ProgrammingLanguage,
   DetectionProgram,
   LanguageDetectionPrograms,
@@ -238,10 +240,16 @@ describe('CopyDetectionProgramsToNewRuleUseCase', () => {
           activeDetectionProgramRepository.add.mock.calls[0][0];
         expect(activeCall.detectionProgramVersion).toBeTruthy();
       });
+
+      it('preserves severity of copied active program', () => {
+        const activeCall =
+          activeDetectionProgramRepository.add.mock.calls[0][0];
+        expect(activeCall.severity).toBe(DetectionSeverity.ERROR);
+      });
     });
 
     describe('when active programs have both active and draft versions', () => {
-      let activeCall: LanguageDetectionPrograms;
+      let activeCall: ActiveDetectionProgram;
 
       beforeEach(async () => {
         const detectionProgram1 = detectionProgramFactory({
