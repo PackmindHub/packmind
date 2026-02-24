@@ -94,6 +94,39 @@ If your infrastructure uses self-signed certificates or custom Certificate Autho
    docker compose up -d
    ```
 
+## Enable social login with WorkOS (Optional)
+
+Packmind supports social login via [WorkOS AuthKit](https://workos.com/), allowing users to sign in with Google, Microsoft, or GitHub. To enable it, you need a WorkOS account and the following three environment variables:
+
+- `WORKOS_API_KEY` - Your WorkOS API key
+- `WORKOS_CLIENT_ID` - Your WorkOS application Client ID
+- `WORKOS_REDIRECT_URI` - The callback URL for OAuth redirects (e.g., `https://your-packmind-instance.com/api/v0/auth/social/callback`)
+
+If you use Docker Compose, add these variables to the `api` section of your `docker-compose.yml`:
+
+```yaml
+api:
+  environment:
+    WORKOS_API_KEY: <YOUR_WORKOS_API_KEY>
+    WORKOS_CLIENT_ID: <YOUR_WORKOS_CLIENT_ID>
+    WORKOS_REDIRECT_URI: https://your-packmind-instance.com/api/v0/auth/social/callback
+```
+
+Then restart with:
+
+```bash
+docker compose up -d
+```
+
+Once configured, social login buttons (Google, Microsoft, GitHub) will appear on the sign-in page.
+
+<Warning>
+  Social login is a convenience feature that provides additional sign-in methods
+  alongside email/password. It is not a full SSO solution: you cannot restrict
+  users to a specific social login provider or disable email/password
+  authentication in favor of social login only.
+</Warning>
+
 ## Configure deployment and environment variables
 
 ### Override environment variables
@@ -150,6 +183,12 @@ Authentication & Security:
 - `ENCRYPTION_KEY` - Key used for encrypting sensitive data like password reset tokens, invitations, and git provider credentials
 - `MAX_LOGIN_ATTEMPTS` - Maximum number of failed login attempts before rate limiting is triggered (defaults to a configured value if not set)
 - `LOGIN_BAN_TIME_SECONDS` - Duration (in seconds) for which user will not be allow to try to login again.
+
+Social Login (WorkOS):
+
+- `WORKOS_API_KEY` - API key from your WorkOS dashboard for social login authentication
+- `WORKOS_CLIENT_ID` - Client ID of your WorkOS application
+- `WORKOS_REDIRECT_URI` - OAuth callback URL, must point to your Packmind instance (e.g., `https://your-packmind-instance.com/api/v0/auth/social/callback`)
 
 API Integration:
 
