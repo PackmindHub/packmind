@@ -16,8 +16,6 @@ import { SkillOptionalField } from './SkillOptionalField';
 import { FileAccordionItem } from '../FileItems/FileAccordionItem';
 import { UpdatedFileContentItem } from '../FileItems/UpdatedFileContentItem';
 import { UpdatedFilePermissionsItem } from '../FileItems/UpdatedFilePermissionsItem';
-import { DeletedFileItem } from '../FileItems/DeletedFileItem';
-import { AddedFileItem } from '../FileItems/AddedFileItem';
 
 const defaultProposalTypeFlags = {
   isNameDiff: false,
@@ -384,19 +382,39 @@ export function SkillContentView({
                     Omit<SkillFile, 'skillVersionId'>
                   >;
                 if (file.id === deletePayload.targetId)
-                  return <DeletedFileItem key={file.id} file={file} />;
+                  return (
+                    <FileAccordionItem
+                      key={file.id}
+                      file={file}
+                      variant="deleted"
+                      accordionValue={file.id}
+                    />
+                  );
               }
-              return <FileAccordionItem key={file.id} file={file} />;
+              return (
+                <FileAccordionItem
+                  key={file.id}
+                  file={file}
+                  accordionValue={file.id}
+                />
+              );
             })}
-            {isAddFile && reviewingProposal && (
-              <AddedFileItem
-                payload={
+            {isAddFile &&
+              reviewingProposal &&
+              (() => {
+                const addedFile = (
                   reviewingProposal.payload as CollectionItemAddPayload<
-                    Omit<SkillFile, 'skillVersionId'>
+                    Omit<SkillFile, 'id' | 'skillVersionId'>
                   >
-                }
-              />
-            )}
+                ).item;
+                return (
+                  <FileAccordionItem
+                    file={addedFile}
+                    variant="added"
+                    accordionValue={addedFile.path}
+                  />
+                );
+              })()}
           </PMAccordion.Root>
         </PMVStack>
       )}

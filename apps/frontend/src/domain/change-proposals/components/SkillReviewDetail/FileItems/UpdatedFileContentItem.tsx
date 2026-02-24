@@ -1,4 +1,10 @@
-import { PMAccordion, PMBox, PMMarkdownViewer, PMText } from '@packmind/ui';
+import {
+  PMAccordion,
+  PMBox,
+  PMMarkdownViewer,
+  PMText,
+  PMTooltip,
+} from '@packmind/ui';
 import {
   CollectionItemUpdatePayload,
   SkillFile,
@@ -23,9 +29,13 @@ export function UpdatedFileContentItem({
     >
       <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
         <PMAccordion.ItemIndicator />
-        <PMText fontSize="sm" fontWeight="semibold">
-          {file.path}
-        </PMText>
+        <PMBox flex={1} minWidth={0} truncate>
+          <PMTooltip label={file.path}>
+            <PMText fontSize="sm" fontWeight="semibold">
+              {file.path}
+            </PMText>
+          </PMTooltip>
+        </PMBox>
       </PMAccordion.ItemTrigger>
       <PMAccordion.ItemContent>
         {file.isBase64 ? (

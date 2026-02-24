@@ -84,13 +84,22 @@ export function useDiffNavigation(
         .flat()
         .forEach((el) => el.removeAttribute('data-diff-active'));
       groupsRef.current = [];
-      setCurrentIndex(0);
       setTotalChanges(0);
+      setCurrentIndex(0);
       setHasScroll(false);
       return;
     }
 
     let cancelled = false;
+
+    // Reset immediately — prevent stale data from previous proposal
+    groupsRef.current
+      .flat()
+      .forEach((el) => el.removeAttribute('data-diff-active'));
+    groupsRef.current = [];
+    setTotalChanges(0);
+    setCurrentIndex(0);
+    setHasScroll(false);
 
     function applyGroups(groups: HTMLElement[][]) {
       if (cancelled) return;
@@ -103,38 +112,26 @@ export function useDiffNavigation(
     let observer: MutationObserver | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    const frameId = requestAnimationFrame(() => {
-      const elements = Array.from(
+    const scanForChanges = () => {
+      const els = Array.from(
         document.querySelectorAll<HTMLElement>(CHANGE_SELECTOR),
       );
-
-      if (elements.length > 0) {
-        applyGroups(groupByProximity(elements));
-        return;
+      if (els.length > 0) {
+        observer?.disconnect();
+        if (timeoutId) clearTimeout(timeoutId);
+        applyGroups(groupByProximity(els));
       }
+    };
 
-      // No elements yet — watch for them to appear (accordion hydration)
-      const sections = document.querySelectorAll('[data-diff-section]');
-      if (sections.length === 0) return;
+    // Watch body for DOM mutations immediately (before rAF)
+    observer = new MutationObserver(scanForChanges);
+    observer.observe(document.body, { childList: true, subtree: true });
 
-      observer = new MutationObserver(() => {
-        const els = Array.from(
-          document.querySelectorAll<HTMLElement>(CHANGE_SELECTOR),
-        );
-        if (els.length > 0) {
-          observer?.disconnect();
-          if (timeoutId) clearTimeout(timeoutId);
-          applyGroups(groupByProximity(els));
-        }
-      });
+    // Explicit scan on next frame for elements already in DOM
+    const frameId = requestAnimationFrame(() => scanForChanges());
 
-      sections.forEach((section) =>
-        observer!.observe(section, { childList: true, subtree: true }),
-      );
-
-      // Stop observing after 2s to avoid leaks
-      timeoutId = setTimeout(() => observer?.disconnect(), 2000);
-    });
+    // Safety timeout
+    timeoutId = setTimeout(() => observer?.disconnect(), 2000);
 
     return () => {
       cancelled = true;
@@ -164,7 +161,7 @@ export function useDiffNavigation(
 
     current.forEach((el) => el.setAttribute('data-diff-active', ''));
     scrollToElement(current[0]);
-  }, [currentIndex, totalChanges]);
+  }, [currentIndex, totalChanges, reviewingProposalId]);
 
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => {

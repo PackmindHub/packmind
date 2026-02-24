@@ -1,4 +1,6 @@
-import { groupByProximity } from './useDiffNavigation';
+import { renderHook, act } from '@testing-library/react';
+import { createChangeProposalId } from '@packmind/types';
+import { groupByProximity, useDiffNavigation } from './useDiffNavigation';
 
 describe('groupByProximity', () => {
   describe('with an empty list', () => {
@@ -97,6 +99,168 @@ describe('groupByProximity', () => {
       const result = groupByProximity([del, ins]);
 
       expect(result).toEqual([[del], [ins]]);
+    });
+  });
+});
+
+describe('useDiffNavigation', () => {
+  let mutationCallbacks: MutationCallback[];
+  let observeTargets: Node[];
+  const OriginalMutationObserver = window.MutationObserver;
+
+  beforeEach(() => {
+    mutationCallbacks = [];
+    observeTargets = [];
+    window.MutationObserver = class MockMutationObserver {
+      private callback: MutationCallback;
+      constructor(callback: MutationCallback) {
+        this.callback = callback;
+        mutationCallbacks.push(callback);
+      }
+      observe(target: Node) {
+        observeTargets.push(target);
+      }
+      disconnect() {
+        // no-op mock
+      }
+      takeRecords() {
+        return [];
+      }
+    } as unknown as typeof MutationObserver;
+    jest.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+  });
+
+  afterEach(() => {
+    (window.requestAnimationFrame as jest.Mock).mockRestore();
+    window.MutationObserver = OriginalMutationObserver;
+    document.body.innerHTML = '';
+  });
+
+  describe('when no diff sections exist initially', () => {
+    it('observes document.body for mutations', () => {
+      const proposalId = createChangeProposalId('proposal-1');
+
+      renderHook(() => useDiffNavigation(proposalId));
+
+      expect(observeTargets).toContain(document.body);
+    });
+
+    it('detects changes once sections appear in the DOM', () => {
+      const proposalId = createChangeProposalId('proposal-1');
+
+      const { result } = renderHook(() => useDiffNavigation(proposalId));
+
+      const section = document.createElement('div');
+      section.setAttribute('data-diff-section', '');
+      const change = document.createElement('div');
+      change.setAttribute('data-diff-change', '');
+      section.appendChild(change);
+      document.body.appendChild(section);
+
+      act(() => {
+        mutationCallbacks[0]([], {} as MutationObserver);
+      });
+
+      expect(result.current.totalChanges).toBe(1);
+    });
+  });
+
+  describe('when diff sections already exist in DOM', () => {
+    it('detects changes on the first frame scan', () => {
+      const section = document.createElement('div');
+      section.setAttribute('data-diff-section', '');
+      const change = document.createElement('ins');
+      section.appendChild(change);
+      document.body.appendChild(section);
+
+      const proposalId = createChangeProposalId('proposal-1');
+
+      const { result } = renderHook(() => useDiffNavigation(proposalId));
+
+      expect(result.current.totalChanges).toBe(1);
+    });
+  });
+
+  describe('when switching from one proposal to another', () => {
+    it('re-detects changes for the new proposal', () => {
+      const section = document.createElement('div');
+      section.setAttribute('data-diff-section', '');
+      const change1 = document.createElement('ins');
+      const change2 = document.createElement('del');
+      section.appendChild(change1);
+      section.appendChild(change2);
+      document.body.appendChild(section);
+
+      const proposalId1 = createChangeProposalId('proposal-1');
+      const proposalId2 = createChangeProposalId('proposal-2');
+
+      const { result, rerender } = renderHook(
+        ({ id }) => useDiffNavigation(id),
+        { initialProps: { id: proposalId1 } },
+      );
+
+      // Replace DOM content for the new proposal
+      section.innerHTML = '';
+      const newChange = document.createElement('div');
+      newChange.setAttribute('data-diff-change', '');
+      section.appendChild(newChange);
+
+      rerender({ id: proposalId2 });
+
+      expect(result.current.totalChanges).toBe(1);
+    });
+  });
+
+  describe('when switching proposals with same change count', () => {
+    it('removes data-diff-active from old element', () => {
+      const section = document.createElement('div');
+      section.setAttribute('data-diff-section', '');
+      const change1 = document.createElement('ins');
+      section.appendChild(change1);
+      document.body.appendChild(section);
+
+      const proposalId1 = createChangeProposalId('proposal-1');
+      const proposalId2 = createChangeProposalId('proposal-2');
+
+      const { rerender } = renderHook(({ id }) => useDiffNavigation(id), {
+        initialProps: { id: proposalId1 },
+      });
+
+      // Replace with a different element for the second proposal
+      section.innerHTML = '';
+      const change2 = document.createElement('del');
+      section.appendChild(change2);
+
+      rerender({ id: proposalId2 });
+
+      expect(change1.hasAttribute('data-diff-active')).toBe(false);
+    });
+
+    it('applies data-diff-active on the new element', () => {
+      const section = document.createElement('div');
+      section.setAttribute('data-diff-section', '');
+      const change1 = document.createElement('ins');
+      section.appendChild(change1);
+      document.body.appendChild(section);
+
+      const proposalId1 = createChangeProposalId('proposal-1');
+      const proposalId2 = createChangeProposalId('proposal-2');
+
+      const { rerender } = renderHook(({ id }) => useDiffNavigation(id), {
+        initialProps: { id: proposalId1 },
+      });
+
+      // Replace with a different element for the second proposal
+      section.innerHTML = '';
+      const change2 = document.createElement('del');
+      section.appendChild(change2);
+
+      rerender({ id: proposalId2 });
+
+      expect(change2.hasAttribute('data-diff-active')).toBe(true);
     });
   });
 });

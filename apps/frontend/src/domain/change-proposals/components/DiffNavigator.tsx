@@ -1,5 +1,5 @@
 import { PMHStack, PMIconButton, PMText, PMTooltip } from '@packmind/ui';
-import { LuChevronUp, LuChevronDown, LuLocate } from 'react-icons/lu';
+import { LuChevronUp, LuChevronDown, LuScanSearch } from 'react-icons/lu';
 
 interface DiffNavigatorProps {
   currentIndex: number;
@@ -58,7 +58,7 @@ export function DiffNavigator({
           size="xs"
           onClick={onScrollToCurrent}
         >
-          <LuLocate />
+          <LuScanSearch />
         </PMIconButton>
       </PMTooltip>
     </PMHStack>
