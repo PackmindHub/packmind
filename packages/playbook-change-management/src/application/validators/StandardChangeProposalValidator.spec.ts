@@ -259,12 +259,13 @@ describe('StandardChangeProposalValidator', () => {
 
   describe('when validating deleteRule', () => {
     const ruleId = createRuleId();
+    const realRuleId = createRuleId('real-rule-id');
 
     describe('when rule content exists in standard', () => {
       beforeEach(() => {
         standardsPort.getRulesByStandardId.mockResolvedValue([
           {
-            id: createRuleId(),
+            id: realRuleId,
             content: 'Existing rule',
             standardVersionId: 'sv-1' as never,
           },
@@ -282,7 +283,24 @@ describe('StandardChangeProposalValidator', () => {
 
         const result = await validator.validate(command);
 
-        expect(result).toEqual({ artefactVersion: 3 });
+        expect(result.artefactVersion).toEqual(3);
+      });
+
+      it('returns resolvedPayload with real rule ID', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.deleteRule,
+          payload: {
+            targetId: ruleId,
+            item: { id: ruleId, content: 'Existing rule' },
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result.resolvedPayload).toEqual({
+          targetId: realRuleId,
+          item: { id: realRuleId, content: 'Existing rule' },
+        });
       });
     });
 

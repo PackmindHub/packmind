@@ -1,5 +1,4 @@
 import { ChangeProposalType, createRuleId } from '@packmind/types';
-import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
@@ -108,7 +107,7 @@ export class StandardDiffStrategy implements IDiffStrategy {
 
     for (const rule of serverRules) {
       if (!localRules.has(rule)) {
-        const ruleId = createRuleId(crypto.randomUUID());
+        const ruleId = createRuleId('unresolved');
         diffs.push({
           ...diffBase,
           type: ChangeProposalType.deleteRule,

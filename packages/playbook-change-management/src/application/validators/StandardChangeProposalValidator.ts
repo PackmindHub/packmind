@@ -9,7 +9,10 @@ import {
   StandardId,
 } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
-import { IChangeProposalValidator } from './IChangeProposalValidator';
+import {
+  ChangeProposalValidationResult,
+  IChangeProposalValidator,
+} from './IChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 
 type ScalarStandardType =
@@ -78,16 +81,16 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
   private async validateDeleteRule(
     standard: Standard,
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
-  ): Promise<{ artefactVersion: number }> {
+  ): Promise<ChangeProposalValidationResult> {
     const payload = command.payload as CollectionItemDeletePayload<
       Omit<Rule, 'standardVersionId'>
     >;
     const rules = await this.standardsPort.getRulesByStandardId(standard.id);
-    const ruleExists = rules.some(
+    const matchingRule = rules.find(
       (rule) => rule.content === payload.item.content,
     );
 
-    if (!ruleExists) {
+    if (!matchingRule) {
       throw new ChangeProposalPayloadMismatchError(
         command.type,
         payload.item.content,
@@ -95,6 +98,12 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
       );
     }
 
-    return { artefactVersion: standard.version };
+    return {
+      artefactVersion: standard.version,
+      resolvedPayload: {
+        targetId: matchingRule.id,
+        item: { id: matchingRule.id, content: matchingRule.content },
+      },
+    };
   }
 }
