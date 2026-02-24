@@ -49,6 +49,7 @@ interface SkillProposalReviewPanelProps {
   selectedSkill: SkillWithFiles | undefined;
   selectedSkillProposals: ChangeProposalWithConflicts[];
   reviewingProposalId: ChangeProposalId | null;
+  outdatedProposalIds: Set<ChangeProposalId>;
   acceptedProposalIds: Set<ChangeProposalId>;
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
@@ -63,6 +64,7 @@ export function SkillProposalReviewPanel({
   selectedSkill,
   selectedSkillProposals,
   reviewingProposalId,
+  outdatedProposalIds,
   acceptedProposalIds,
   rejectedProposalIds,
   blockedByConflictIds,
@@ -127,9 +129,7 @@ export function SkillProposalReviewPanel({
   ]);
 
   if (reviewingProposal) {
-    const isOutdated =
-      skill !== undefined &&
-      reviewingProposal.artefactVersion !== skill.version;
+    const isOutdated = outdatedProposalIds.has(reviewingProposal.id);
 
     const proposalTypeFlags: ProposalTypeFlags = {
       isNameDiff: reviewingProposal.type === ChangeProposalType.updateSkillName,

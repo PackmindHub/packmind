@@ -17,7 +17,7 @@ interface ChangeProposalsChangesListProps {
   acceptedProposalIds: Set<ChangeProposalId>;
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
-  currentArtefactVersion?: number;
+  outdatedProposalIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
@@ -31,7 +31,7 @@ export function ChangeProposalsChangesList({
   acceptedProposalIds,
   rejectedProposalIds,
   blockedByConflictIds,
-  currentArtefactVersion,
+  outdatedProposalIds,
   userLookup,
   onSelectProposal,
   onPoolAccept,
@@ -107,7 +107,7 @@ export function ChangeProposalsChangesList({
                   isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
                   proposalNumber={proposalNumberMap.get(proposal.id)}
                   userLookup={userLookup}
-                  currentArtefactVersion={currentArtefactVersion}
+                  outdatedProposalIds={outdatedProposalIds}
                   onSelect={() => onSelectProposal(proposal.id)}
                   onAccept={() => onPoolAccept(proposal.id)}
                   onReject={() => onPoolReject(proposal.id)}
@@ -131,7 +131,7 @@ export function ChangeProposalsChangesList({
                   isSelected={proposal.id === reviewingProposalId}
                   proposalNumber={proposalNumberMap.get(proposal.id)}
                   userLookup={userLookup}
-                  currentArtefactVersion={currentArtefactVersion}
+                  outdatedProposalIds={outdatedProposalIds}
                   onSelect={() => onSelectProposal(proposal.id)}
                   onUndo={() => onUndoPool(proposal.id)}
                 />
@@ -154,7 +154,7 @@ export function ChangeProposalsChangesList({
                   isSelected={proposal.id === reviewingProposalId}
                   proposalNumber={proposalNumberMap.get(proposal.id)}
                   userLookup={userLookup}
-                  currentArtefactVersion={currentArtefactVersion}
+                  outdatedProposalIds={outdatedProposalIds}
                   onSelect={() => onSelectProposal(proposal.id)}
                   onUndo={() => onUndoPool(proposal.id)}
                 />

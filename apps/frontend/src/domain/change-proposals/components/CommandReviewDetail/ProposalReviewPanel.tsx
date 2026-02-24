@@ -25,6 +25,7 @@ interface ProposalReviewPanelProps {
   selectedRecipe: Recipe | undefined;
   selectedRecipeProposals: ChangeProposalWithConflicts[];
   reviewingProposalId: ChangeProposalId | null;
+  outdatedProposalIds: Set<ChangeProposalId>;
   acceptedProposalIds: Set<ChangeProposalId>;
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
@@ -39,6 +40,7 @@ export function ProposalReviewPanel({
   selectedRecipe,
   selectedRecipeProposals,
   reviewingProposalId,
+  outdatedProposalIds,
   acceptedProposalIds,
   rejectedProposalIds,
   blockedByConflictIds,
@@ -76,9 +78,7 @@ export function ProposalReviewPanel({
 
   if (reviewingProposal) {
     const payload = reviewingProposal.payload as ScalarUpdatePayload;
-    const isOutdated =
-      selectedRecipe !== undefined &&
-      reviewingProposal.artefactVersion !== selectedRecipe.version;
+    const isOutdated = outdatedProposalIds.has(reviewingProposal.id);
 
     const isNameDiff =
       reviewingProposal.type === ChangeProposalType.updateCommandName;
