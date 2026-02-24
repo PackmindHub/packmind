@@ -113,11 +113,8 @@ export function useDiffNavigation(
         return;
       }
 
-      // No elements yet — watch for them to appear (accordion hydration)
-      const sections = document.querySelectorAll('[data-diff-section]');
-      if (sections.length === 0) return;
-
-      observer = new MutationObserver(() => {
+      // No elements yet — watch for them to appear
+      const scanForChanges = () => {
         const els = Array.from(
           document.querySelectorAll<HTMLElement>(CHANGE_SELECTOR),
         );
@@ -126,11 +123,20 @@ export function useDiffNavigation(
           if (timeoutId) clearTimeout(timeoutId);
           applyGroups(groupByProximity(els));
         }
-      });
+      };
 
-      sections.forEach((section) =>
-        observer!.observe(section, { childList: true, subtree: true }),
-      );
+      observer = new MutationObserver(scanForChanges);
+
+      const sections = document.querySelectorAll('[data-diff-section]');
+      if (sections.length === 0) {
+        // Sections not yet in DOM (e.g. added file not rendered yet)
+        observer.observe(document.body, { childList: true, subtree: true });
+      } else {
+        // Sections exist but children not yet rendered (accordion hydration)
+        sections.forEach((section) =>
+          observer!.observe(section, { childList: true, subtree: true }),
+        );
+      }
 
       // Stop observing after 2s to avoid leaks
       timeoutId = setTimeout(() => observer?.disconnect(), 2000);
