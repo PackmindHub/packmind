@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react';
-import { PMBox, PMMarkdownViewer, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMBox,
+  PMHStack,
+  PMIcon,
+  PMMarkdownViewer,
+  PMSwitch,
+  PMText,
+  PMTooltip,
+  PMVStack,
+} from '@packmind/ui';
 import {
   ChangeProposalId,
   ChangeProposalType,
@@ -13,6 +22,7 @@ import {
   RuleId,
   StandardVersionId,
 } from '@packmind/types';
+import { LuInfo } from 'react-icons/lu';
 import {
   buildBlockedByAcceptedMap,
   buildProposalNumberMap,
@@ -25,6 +35,12 @@ import {
 } from '../../../../shared/components/editor/MarkdownEditor';
 import { renderDiffText } from '../../utils/renderDiffText';
 import { ProposalReviewHeader } from '../ProposalReviewHeader';
+import {
+  applyStandardProposals,
+  getProposalNumbers,
+} from '../../utils/applyStandardProposals';
+import { HighlightedText, HighlightedRuleBox } from '../HighlightedContent';
+import { UnifiedMarkdownViewer } from '../UnifiedMarkdownViewer';
 
 interface ProposalReviewPanelProps {
   selectedStandard: Standard | undefined;
@@ -56,6 +72,7 @@ export function ProposalReviewPanel({
   onUndoPool,
 }: Readonly<ProposalReviewPanelProps>) {
   const [showPreview, setShowPreview] = useState(false);
+  const [showUnifiedView, setShowUnifiedView] = useState(false);
 
   const proposalNumberMap = useMemo(
     () => buildProposalNumberMap(selectedStandardProposals),
@@ -72,6 +89,31 @@ export function ProposalReviewPanel({
     ? (selectedStandardProposals.find((p) => p.id === reviewingProposalId) ??
       null)
     : null;
+
+  // Compute unified preview when enabled
+  const unifiedResult = useMemo(() => {
+    if (
+      !showUnifiedView ||
+      !selectedStandard ||
+      acceptedProposalIds.size === 0 ||
+      reviewingProposal
+    ) {
+      return null;
+    }
+    return applyStandardProposals(
+      selectedStandard,
+      rules,
+      selectedStandardProposals,
+      acceptedProposalIds,
+    );
+  }, [
+    showUnifiedView,
+    selectedStandard,
+    rules,
+    selectedStandardProposals,
+    acceptedProposalIds,
+    reviewingProposal,
+  ]);
 
   // Compute preview rules when a rule change proposal is selected
   const previewRules = useMemo(() => {
@@ -284,27 +326,179 @@ export function ProposalReviewPanel({
 
   return (
     <PMVStack gap={2} align="stretch">
-      <PMText fontSize="lg" fontWeight="semibold">
-        {selectedStandard.name}
-      </PMText>
-      <MarkdownEditorProvider>
-        <MarkdownEditor defaultValue={selectedStandard.description} readOnly />
-      </MarkdownEditorProvider>
-
-      {/* Rules Section */}
-      {rules.length > 0 && (
-        <PMVStack gap={2} align="stretch" marginTop={4}>
-          <PMText fontSize="md" fontWeight="semibold">
-            Rules
+      {/* Unified View Toggle - only show when there are accepted proposals */}
+      {acceptedProposalIds.size > 0 && !reviewingProposal && (
+        <PMHStack
+          gap={2}
+          alignItems="center"
+          p={3}
+          bg="background.secondary"
+          borderRadius="md"
+        >
+          <PMSwitch
+            size="sm"
+            checked={showUnifiedView}
+            onCheckedChange={(e) => setShowUnifiedView(e.checked)}
+          />
+          <PMText fontSize="sm">
+            Unified View ({acceptedProposalIds.size} accepted change
+            {acceptedProposalIds.size > 1 ? 's' : ''})
           </PMText>
-          {rules.map((rule) => (
-            <PMBox key={rule.id} p={3} bg="background.tertiary">
-              <PMText fontSize="sm" color="primary">
-                {rule.content}
+          <PMTooltip
+            label="Preview how the standard will look after applying all accepted proposals"
+            placement="top"
+          >
+            <PMIcon color="text.tertiary">
+              <LuInfo />
+            </PMIcon>
+          </PMTooltip>
+        </PMHStack>
+      )}
+
+      {/* Render unified view when enabled */}
+      {unifiedResult ? (
+        <>
+          {/* Standard Name */}
+          {unifiedResult.changes.name ? (
+            <HighlightedText
+              oldValue={unifiedResult.changes.name.originalValue}
+              newValue={unifiedResult.changes.name.finalValue}
+              proposalNumbers={getProposalNumbers(
+                unifiedResult.changes.name.proposalIds,
+                selectedStandardProposals,
+              )}
+            >
+              <PMText fontSize="lg" fontWeight="semibold">
+                {unifiedResult.name}
               </PMText>
-            </PMBox>
-          ))}
-        </PMVStack>
+            </HighlightedText>
+          ) : (
+            <PMText fontSize="lg" fontWeight="semibold">
+              {unifiedResult.name}
+            </PMText>
+          )}
+
+          {/* Description */}
+          {unifiedResult.changes.description ? (
+            <UnifiedMarkdownViewer
+              oldValue={unifiedResult.changes.description.originalValue}
+              newValue={unifiedResult.changes.description.finalValue}
+              proposalNumbers={getProposalNumbers(
+                unifiedResult.changes.description.proposalIds,
+                selectedStandardProposals,
+              )}
+            />
+          ) : (
+            <MarkdownEditorProvider>
+              <MarkdownEditor
+                defaultValue={unifiedResult.description}
+                readOnly
+              />
+            </MarkdownEditorProvider>
+          )}
+
+          {/* Rules Section */}
+          {unifiedResult.rules.length > 0 && (
+            <PMVStack gap={2} align="stretch" marginTop={4}>
+              <PMText fontSize="md" fontWeight="semibold">
+                Rules
+              </PMText>
+              {unifiedResult.rules.map((rule) => {
+                const isAdded = unifiedResult.changes.rules.added.has(rule.id);
+                const updateInfo = unifiedResult.changes.rules.updated.get(
+                  rule.id,
+                );
+                const isDeleted = unifiedResult.changes.rules.deleted.has(
+                  rule.id,
+                );
+
+                if (isAdded) {
+                  const proposalId = unifiedResult.changes.rules.added.get(
+                    rule.id,
+                  );
+                  const proposalNumbers = proposalId
+                    ? getProposalNumbers(
+                        [proposalId],
+                        selectedStandardProposals,
+                      )
+                    : [];
+                  return (
+                    <HighlightedRuleBox
+                      key={rule.id}
+                      rule={rule}
+                      changeType="added"
+                      proposalNumbers={proposalNumbers}
+                    />
+                  );
+                }
+
+                if (updateInfo) {
+                  return (
+                    <HighlightedRuleBox
+                      key={rule.id}
+                      rule={rule}
+                      changeType="updated"
+                      oldContent={updateInfo.originalValue}
+                      proposalNumbers={getProposalNumbers(
+                        updateInfo.proposalIds,
+                        selectedStandardProposals,
+                      )}
+                    />
+                  );
+                }
+
+                if (isDeleted) {
+                  // Note: Deleted rules are not in the final rules array
+                  // This code path won't be hit, but kept for completeness
+                  return (
+                    <HighlightedRuleBox
+                      key={rule.id}
+                      rule={rule}
+                      changeType="deleted"
+                      proposalNumbers={[]}
+                    />
+                  );
+                }
+
+                // Unchanged rule
+                return (
+                  <PMBox key={rule.id} p={3} bg="background.tertiary">
+                    <PMText fontSize="sm">{rule.content}</PMText>
+                  </PMBox>
+                );
+              })}
+            </PMVStack>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Standard view (no unified view) */}
+          <PMText fontSize="lg" fontWeight="semibold">
+            {selectedStandard.name}
+          </PMText>
+          <MarkdownEditorProvider>
+            <MarkdownEditor
+              defaultValue={selectedStandard.description}
+              readOnly
+            />
+          </MarkdownEditorProvider>
+
+          {/* Rules Section */}
+          {rules.length > 0 && (
+            <PMVStack gap={2} align="stretch" marginTop={4}>
+              <PMText fontSize="md" fontWeight="semibold">
+                Rules
+              </PMText>
+              {rules.map((rule) => (
+                <PMBox key={rule.id} p={3} bg="background.tertiary">
+                  <PMText fontSize="sm" color="primary">
+                    {rule.content}
+                  </PMText>
+                </PMBox>
+              ))}
+            </PMVStack>
+          )}
+        </>
       )}
     </PMVStack>
   );
