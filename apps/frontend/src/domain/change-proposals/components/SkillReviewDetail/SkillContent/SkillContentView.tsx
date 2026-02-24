@@ -13,6 +13,7 @@ import { ChangeProposalWithConflicts } from '../../../types';
 import { renderDiffText } from '../../../utils/renderDiffText';
 import { renderMarkdownDiffOrPreview } from './renderMarkdownDiffOrPreview';
 import { SkillOptionalField } from './SkillOptionalField';
+import { MetadataKeyValueDisplay } from './MetadataKeyValueDisplay';
 import { FileAccordionItem } from '../FileItems/FileAccordionItem';
 import { UpdatedFileContentItem } from '../FileItems/UpdatedFileContentItem';
 import { UpdatedFilePermissionsItem } from '../FileItems/UpdatedFilePermissionsItem';
@@ -36,25 +37,6 @@ export type ProposalTypeFlags = {
 };
 
 const emptyPayload = { oldValue: '', newValue: '' } as ScalarUpdatePayload;
-
-function MetadataKeyValueDisplay({
-  metadata,
-}: {
-  metadata: Record<string, string>;
-}) {
-  return (
-    <PMVStack gap={1} align="flex-start">
-      {Object.entries(metadata).map(([key, value]) => (
-        <PMHStack key={key} gap={2}>
-          <PMText fontSize="sm" fontWeight="bold">
-            {key}:
-          </PMText>
-          <PMText fontSize="sm">{value}</PMText>
-        </PMHStack>
-      ))}
-    </PMVStack>
-  );
-}
 
 function parseMetadataJson(value: string): Record<string, string> {
   try {
