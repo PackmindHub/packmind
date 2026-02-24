@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { PMBox, PMMarkdownViewer, PMText, PMVStack } from '@packmind/ui';
+import { PMBox, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   ChangeProposalType,
@@ -12,7 +12,6 @@ import {
   buildProposalNumberMap,
 } from '../../utils/changeProposalHelpers';
 import { ChangeProposalWithConflicts } from '../../types';
-import { buildDiffHtml, markdownDiffCss } from '../../utils/markdownDiff';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -20,6 +19,7 @@ import {
 import { renderDiffText } from '../../utils/renderDiffText';
 import { ProposalReviewHeader } from '../ProposalReviewHeader';
 import { useDiffNavigation } from '../../hooks/useDiffNavigation';
+import { renderMarkdownDiffOrPreview } from '../SkillReviewDetail/SkillContent/renderMarkdownDiffOrPreview';
 
 interface ProposalReviewPanelProps {
   selectedRecipe: Recipe | undefined;
@@ -123,31 +123,22 @@ export function ProposalReviewPanel({
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedRecipe.name}
             </PMText>
-            {isDescriptionDiff && !showPreview ? (
-              <PMBox
-                padding="60px 68px"
-                css={markdownDiffCss}
-                {...(isDescriptionDiff && { 'data-diff-section': true })}
-              >
-                <PMMarkdownViewer
-                  htmlContent={buildDiffHtml(
-                    payload.oldValue,
-                    payload.newValue,
-                  )}
-                />
-              </PMBox>
-            ) : isDescriptionDiff && showPreview ? (
-              <MarkdownEditorProvider>
-                <MarkdownEditor defaultValue={payload.newValue} readOnly />
-              </MarkdownEditorProvider>
-            ) : (
-              <MarkdownEditorProvider>
-                <MarkdownEditor
-                  defaultValue={selectedRecipe.content}
-                  readOnly
-                />
-              </MarkdownEditorProvider>
-            )}
+            <PMVStack
+              gap={1}
+              align="stretch"
+              {...(isDescriptionDiff && { 'data-diff-section': true })}
+            >
+              {renderMarkdownDiffOrPreview(
+                isDescriptionDiff,
+                showPreview,
+                payload,
+                selectedRecipe.content,
+                {
+                  previewPaddingVariant: 'none',
+                  defaultPaddingVariant: 'none',
+                },
+              )}
+            </PMVStack>
           </PMVStack>
         )}
       </PMVStack>
@@ -176,7 +167,11 @@ export function ProposalReviewPanel({
         {selectedRecipe.name}
       </PMText>
       <MarkdownEditorProvider>
-        <MarkdownEditor defaultValue={selectedRecipe.content} readOnly />
+        <MarkdownEditor
+          defaultValue={selectedRecipe.content}
+          readOnly
+          paddingVariant="none"
+        />
       </MarkdownEditorProvider>
     </PMVStack>
   );
