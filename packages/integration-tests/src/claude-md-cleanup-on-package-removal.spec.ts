@@ -19,9 +19,9 @@ import { TestApp } from './helpers/TestApp';
  * These tests verify the behavior when removing packages that deployed content
  * to Claude Code. The expected behavior is:
  *
- * 1. Individual recipe command files at .claude/commands/packmind/{slug}.md are deleted.
+ * 1. Individual recipe command files at .claude/commands/{slug}.md are deleted.
  *
- * 2. The .claude/commands/packmind/ folder is deleted when all recipes are removed.
+ * 2. The legacy .claude/commands/packmind/ folder is always deleted when recipes are removed.
  *
  * 3. Individual standard rule files at .claude/rules/packmind/standard-{slug}.md are deleted.
  *
@@ -130,7 +130,7 @@ describe('CLAUDE.md cleanup on package removal', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            path: '.claude/commands/packmind/test-recipe.md',
+            path: '.claude/commands/test-recipe.md',
           }),
         ]),
       );
@@ -223,7 +223,7 @@ describe('CLAUDE.md cleanup on package removal', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            path: '.claude/commands/packmind/test-recipe.md',
+            path: '.claude/commands/test-recipe.md',
           }),
         ]),
       );

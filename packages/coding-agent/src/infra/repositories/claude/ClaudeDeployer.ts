@@ -21,7 +21,10 @@ const origin = 'ClaudeDeployer';
 
 export class ClaudeDeployer implements ICodingAgentDeployer {
   private static readonly STANDARDS_FOLDER_PATH = '.claude/rules/packmind/';
-  private static readonly COMMANDS_FOLDER_PATH = '.claude/commands/packmind/';
+  private static readonly COMMANDS_FOLDER_PATH = '.claude/commands/';
+  /** @deprecated Legacy path to clean up during migration */
+  private static readonly LEGACY_COMMANDS_FOLDER_PATH =
+    '.claude/commands/packmind/';
   private static readonly SKILLS_FOLDER_PATH = '.claude/skills/';
   private static readonly CLAUDE_MD_PATH = 'CLAUDE.md';
 
@@ -70,6 +73,15 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
         artifactName: recipeVersion.name,
       });
     }
+
+    // Clean up legacy packmind commands subdirectory
+    fileUpdates.delete.push({
+      path: getTargetPrefixedPath(
+        ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
+        target,
+      ),
+      type: DeleteItemType.Directory,
+    });
 
     // Clear legacy Packmind recipes section from CLAUDE.md
     const claudeMdPath = getTargetPrefixedPath(
@@ -174,6 +186,12 @@ ${recipeVersion.content}`;
         artifactName: recipeVersion.name,
       });
     }
+
+    // Clean up legacy packmind commands subdirectory
+    fileUpdates.delete.push({
+      path: ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
+      type: DeleteItemType.Directory,
+    });
 
     // Clear legacy Packmind recipes section from CLAUDE.md
     fileUpdates.createOrUpdate.push({
@@ -343,6 +361,12 @@ ${recipeVersion.content}`;
       }
     }
 
+    // Clean up legacy packmind commands subdirectory
+    fileUpdates.delete.push({
+      path: ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
+      type: DeleteItemType.Directory,
+    });
+
     // Clear legacy Packmind sections from CLAUDE.md
     fileUpdates.createOrUpdate.push({
       path: ClaudeDeployer.CLAUDE_MD_PATH,
@@ -389,11 +413,11 @@ ${recipeVersion.content}`;
       });
     }
 
-    // Delete commands folder if all recipes are removed and something was actually removed
+    // Clean up legacy packmind commands subdirectory when recipes are removed
     const hasRemovedRecipes = removed.recipeVersions.length > 0;
-    if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
+    if (hasRemovedRecipes) {
       fileUpdates.delete.push({
-        path: ClaudeDeployer.COMMANDS_FOLDER_PATH,
+        path: ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
         type: DeleteItemType.Directory,
       });
     }
@@ -445,7 +469,7 @@ ${recipeVersion.content}`;
 
     const deleteItems: DeleteItem[] = [
       {
-        path: ClaudeDeployer.COMMANDS_FOLDER_PATH,
+        path: ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
         type: DeleteItemType.Directory,
       },
       {
@@ -453,6 +477,14 @@ ${recipeVersion.content}`;
         type: DeleteItemType.Directory,
       },
     ];
+
+    // Delete individual command files for recipes
+    for (const recipeVersion of artifacts.recipeVersions) {
+      deleteItems.push({
+        path: `${ClaudeDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        type: DeleteItemType.File,
+      });
+    }
 
     // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
