@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { ChangeProposalId } from '@packmind/types';
 
 const CHANGE_SELECTOR =
-  '[data-diff-section] ins, [data-diff-section] del, [data-diff-section] [data-diff-change], [data-diff-section] .diff-ins, [data-diff-section] .diff-del';
+  '[data-diff-section] ins, [data-diff-section] del, [data-diff-section] [data-diff-change], [data-diff-section] .diff-ins, [data-diff-section] .diff-del, [data-diff-section] .milkdown-diff-highlight';
 
 function findScrollableAncestor(element: HTMLElement): HTMLElement | null {
   let parent = element.parentElement;

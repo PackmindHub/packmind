@@ -101,3 +101,20 @@
   line-height: var(--pm-line-heights-shorter);
   letter-spacing: var(--pm-letter-spacings-wide);
 }
+
+/* Diff highlighting styles */
+.milkdown .ProseMirror .milkdown-diff-highlight {
+  border-bottom: 2px dotted #fbbf24;
+  cursor: help;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.milkdown .ProseMirror .milkdown-diff-highlight:hover {
+  background-color: rgba(251, 191, 36, 0.15);
+}
+
+.milkdown .ProseMirror .milkdown-diff-highlight[data-diff-active] {
+  background-color: rgba(251, 191, 36, 0.3);
+  border-bottom-style: solid;
+}
