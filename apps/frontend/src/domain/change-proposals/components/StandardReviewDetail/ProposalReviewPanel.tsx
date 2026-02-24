@@ -41,6 +41,7 @@ import {
 } from '../../utils/applyStandardProposals';
 import { HighlightedText, HighlightedRuleBox } from '../HighlightedContent';
 import { UnifiedMarkdownViewer } from '../UnifiedMarkdownViewer';
+import { useDiffNavigation } from '../../hooks/useDiffNavigation';
 
 interface ProposalReviewPanelProps {
   selectedStandard: Standard | undefined;
@@ -71,6 +72,14 @@ export function ProposalReviewPanel({
   onPoolReject,
   onUndoPool,
 }: Readonly<ProposalReviewPanelProps>) {
+  const {
+    currentIndex,
+    totalChanges,
+    hasScroll,
+    goToNext,
+    goToPrevious,
+    scrollToCurrent,
+  } = useDiffNavigation(reviewingProposalId);
   const [showPreview, setShowPreview] = useState(false);
   const [showUnifiedView, setShowUnifiedView] = useState(false);
 
@@ -215,18 +224,34 @@ export function ProposalReviewPanel({
           onPoolAccept={onPoolAccept}
           onPoolReject={onPoolReject}
           onUndoPool={onUndoPool}
+          diffNavigation={{
+            currentIndex,
+            totalChanges,
+            hasScroll,
+            onNext: goToNext,
+            onPrevious: goToPrevious,
+            onScrollToCurrent: scrollToCurrent,
+          }}
         />
 
         {/* Full artefact content with inline diff */}
         {selectedStandard && (
           <PMVStack gap={2} align="stretch">
-            <PMText fontSize="lg" fontWeight="semibold">
+            <PMText
+              fontSize="lg"
+              fontWeight="semibold"
+              {...(isNameDiff && { 'data-diff-section': true })}
+            >
               {isNameDiff
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedStandard.name}
             </PMText>
             {isDescriptionDiff && !showPreview ? (
-              <PMBox padding="60px 68px" css={markdownDiffCss}>
+              <PMBox
+                padding="60px 68px"
+                css={markdownDiffCss}
+                {...(isDescriptionDiff && { 'data-diff-section': true })}
+              >
                 <PMMarkdownViewer
                   htmlContent={buildDiffHtml(
                     payload.oldValue,
