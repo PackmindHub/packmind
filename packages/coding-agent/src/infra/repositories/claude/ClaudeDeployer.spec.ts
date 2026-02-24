@@ -89,8 +89,9 @@ describe('ClaudeDeployer', () => {
 
       it('creates one recipe file in commands directory', () => {
         expect(
-          result.createOrUpdate.filter((f) =>
-            f.path.startsWith('.claude/commands/packmind/'),
+          result.createOrUpdate.filter(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           ),
         ).toHaveLength(1);
       });
@@ -148,7 +149,7 @@ describe('ClaudeDeployer', () => {
         });
       });
 
-      it('does not delete any files', async () => {
+      it('deletes legacy commands directory', async () => {
         const recipe = recipeFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
@@ -171,7 +172,12 @@ describe('ClaudeDeployer', () => {
           mockTarget,
         );
 
-        expect(result.delete).toHaveLength(0);
+        expect(result.delete).toEqual([
+          {
+            path: '.claude/commands/packmind/',
+            type: DeleteItemType.Directory,
+          },
+        ]);
       });
 
       it('creates file at correct path', async () => {
@@ -198,9 +204,7 @@ describe('ClaudeDeployer', () => {
         );
 
         const recipeFile = result.createOrUpdate[0];
-        expect(recipeFile.path).toBe(
-          '.claude/commands/packmind/test-recipe.md',
-        );
+        expect(recipeFile.path).toBe('.claude/commands/test-recipe.md');
       });
 
       it('includes frontmatter with description from summary', async () => {
@@ -336,8 +340,13 @@ describe('ClaudeDeployer', () => {
         expect(result.createOrUpdate[0].sections).toHaveLength(1);
       });
 
-      it('returns no file deletions', () => {
-        expect(result.delete).toHaveLength(0);
+      it('deletes legacy commands directory', () => {
+        expect(result.delete).toEqual([
+          {
+            path: '.claude/commands/packmind/',
+            type: DeleteItemType.Directory,
+          },
+        ]);
       });
     });
 
@@ -390,8 +399,9 @@ describe('ClaudeDeployer', () => {
 
       it('creates two recipe files in commands directory', () => {
         expect(
-          result.createOrUpdate.filter((f) =>
-            f.path.startsWith('.claude/commands/packmind/'),
+          result.createOrUpdate.filter(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           ),
         ).toHaveLength(2);
       });
@@ -400,9 +410,7 @@ describe('ClaudeDeployer', () => {
         const firstRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
-        expect(firstRecipeFile?.path).toBe(
-          '.claude/commands/packmind/test-recipe-1.md',
-        );
+        expect(firstRecipeFile?.path).toBe('.claude/commands/test-recipe-1.md');
       });
 
       it('creates second recipe file at correct path', () => {
@@ -410,7 +418,7 @@ describe('ClaudeDeployer', () => {
           f.path.includes('test-recipe-2'),
         );
         expect(secondRecipeFile?.path).toBe(
-          '.claude/commands/packmind/test-recipe-2.md',
+          '.claude/commands/test-recipe-2.md',
         );
       });
 
@@ -1545,19 +1553,19 @@ describe('ClaudeDeployer', () => {
 
       it('creates one recipe file in commands directory', () => {
         expect(
-          result.createOrUpdate.filter((f) =>
-            f.path.startsWith('.claude/commands/packmind/'),
+          result.createOrUpdate.filter(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           ),
         ).toHaveLength(1);
       });
 
       it('creates file at correct path without target prefix', () => {
-        const recipeFile = result.createOrUpdate.find((f) =>
-          f.path.startsWith('.claude/commands/packmind/'),
+        const recipeFile = result.createOrUpdate.find(
+          (f) =>
+            f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
         );
-        expect(recipeFile?.path).toBe(
-          '.claude/commands/packmind/test-recipe.md',
-        );
+        expect(recipeFile?.path).toBe('.claude/commands/test-recipe.md');
       });
 
       it('includes frontmatter with description from summary', () => {
@@ -1623,8 +1631,13 @@ describe('ClaudeDeployer', () => {
         expect(result.createOrUpdate[0].sections).toHaveLength(1);
       });
 
-      it('returns no file deletions', () => {
-        expect(result.delete).toHaveLength(0);
+      it('deletes legacy commands directory', () => {
+        expect(result.delete).toEqual([
+          {
+            path: '.claude/commands/packmind/',
+            type: DeleteItemType.Directory,
+          },
+        ]);
       });
     });
 
@@ -1678,8 +1691,9 @@ describe('ClaudeDeployer', () => {
 
       it('creates two recipe files in commands directory', () => {
         expect(
-          result.createOrUpdate.filter((f) =>
-            f.path.startsWith('.claude/commands/packmind/'),
+          result.createOrUpdate.filter(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           ),
         ).toHaveLength(2);
       });
@@ -1688,9 +1702,7 @@ describe('ClaudeDeployer', () => {
         const firstRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
-        expect(firstRecipeFile?.path).toBe(
-          '.claude/commands/packmind/test-recipe-1.md',
-        );
+        expect(firstRecipeFile?.path).toBe('.claude/commands/test-recipe-1.md');
       });
 
       it('creates second recipe file at correct path', () => {
@@ -1698,7 +1710,7 @@ describe('ClaudeDeployer', () => {
           f.path.includes('test-recipe-2'),
         );
         expect(secondRecipeFile?.path).toBe(
-          '.claude/commands/packmind/test-recipe-2.md',
+          '.claude/commands/test-recipe-2.md',
         );
       });
 
@@ -1830,7 +1842,8 @@ describe('ClaudeDeployer', () => {
           expect(
             result.createOrUpdate.filter(
               (f) =>
-                f.path.startsWith('.claude/commands/packmind/') ||
+                (f.path.startsWith('.claude/commands/') &&
+                  f.path.endsWith('.md')) ||
                 f.path.startsWith('.claude/rules/packmind/'),
             ),
           ).toHaveLength(2);
@@ -1880,7 +1893,7 @@ describe('ClaudeDeployer', () => {
 
         expect(
           result.createOrUpdate.some(
-            (f) => f.path === '.claude/commands/packmind/test-recipe.md',
+            (f) => f.path === '.claude/commands/test-recipe.md',
           ),
         ).toBe(true);
       });
@@ -2041,8 +2054,10 @@ describe('ClaudeDeployer', () => {
 
         it('creates one command file', () => {
           expect(
-            result.createOrUpdate.filter((f) =>
-              f.path.startsWith('.claude/commands/packmind/'),
+            result.createOrUpdate.filter(
+              (f) =>
+                f.path.startsWith('.claude/commands/') &&
+                f.path.endsWith('.md'),
             ),
           ).toHaveLength(1);
         });
@@ -2067,12 +2082,11 @@ describe('ClaudeDeployer', () => {
 
         const result = await deployer.deployArtifacts([recipeVersion], []);
 
-        const recipeFile = result.createOrUpdate.find((f) =>
-          f.path.startsWith('.claude/commands/packmind/'),
+        const recipeFile = result.createOrUpdate.find(
+          (f) =>
+            f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
         );
-        expect(recipeFile?.path).toBe(
-          '.claude/commands/packmind/test-recipe.md',
-        );
+        expect(recipeFile?.path).toBe('.claude/commands/test-recipe.md');
       });
 
       it('includes frontmatter with description', async () => {
@@ -2170,8 +2184,9 @@ describe('ClaudeDeployer', () => {
 
       it('creates two recipe files in commands directory', () => {
         expect(
-          result.createOrUpdate.filter((f) =>
-            f.path.startsWith('.claude/commands/packmind/'),
+          result.createOrUpdate.filter(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           ),
         ).toHaveLength(2);
       });
@@ -2180,18 +2195,14 @@ describe('ClaudeDeployer', () => {
         const firstRecipe = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
-        expect(firstRecipe?.path).toBe(
-          '.claude/commands/packmind/test-recipe-1.md',
-        );
+        expect(firstRecipe?.path).toBe('.claude/commands/test-recipe-1.md');
       });
 
       it('creates second recipe at correct path', () => {
         const secondRecipe = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-2'),
         );
-        expect(secondRecipe?.path).toBe(
-          '.claude/commands/packmind/test-recipe-2.md',
-        );
+        expect(secondRecipe?.path).toBe('.claude/commands/test-recipe-2.md');
       });
     });
 
@@ -2283,8 +2294,13 @@ describe('ClaudeDeployer', () => {
         expect(result.createOrUpdate[0].sections).toHaveLength(2);
       });
 
-      it('returns no file deletions', () => {
-        expect(result.delete).toHaveLength(0);
+      it('deletes legacy commands directory', () => {
+        expect(result.delete).toEqual([
+          {
+            path: '.claude/commands/packmind/',
+            type: DeleteItemType.Directory,
+          },
+        ]);
       });
     });
   });
@@ -2339,12 +2355,12 @@ describe('ClaudeDeployer', () => {
 
         expect(
           result.delete.some(
-            (f) => f.path === '.claude/commands/packmind/removed-recipe.md',
+            (f) => f.path === '.claude/commands/removed-recipe.md',
           ),
         ).toBe(true);
       });
 
-      it('does not delete commands folder', async () => {
+      it('deletes legacy commands directory', async () => {
         const removedRecipe = recipeFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
@@ -2392,7 +2408,7 @@ describe('ClaudeDeployer', () => {
 
         expect(
           result.delete.some((f) => f.path === '.claude/commands/packmind/'),
-        ).toBe(false);
+        ).toBe(true);
       });
 
       it('does not update CLAUDE.md', async () => {
@@ -2474,12 +2490,12 @@ describe('ClaudeDeployer', () => {
 
         expect(
           result.delete.some(
-            (f) => f.path === '.claude/commands/packmind/removed-recipe.md',
+            (f) => f.path === '.claude/commands/removed-recipe.md',
           ),
         ).toBe(true);
       });
 
-      it('deletes commands folder', async () => {
+      it('deletes legacy commands directory', async () => {
         const removedRecipe = recipeFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
@@ -2756,12 +2772,12 @@ describe('ClaudeDeployer', () => {
 
         expect(
           result.delete.some(
-            (f) => f.path === '.claude/commands/packmind/removed-recipe.md',
+            (f) => f.path === '.claude/commands/removed-recipe.md',
           ),
         ).toBe(true);
       });
 
-      it('deletes commands folder', async () => {
+      it('deletes legacy commands directory', async () => {
         const removedRecipe = recipeFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
@@ -4029,7 +4045,7 @@ describe('ClaudeDeployer', () => {
         });
       });
 
-      it('deletes the commands folder', () => {
+      it('deletes the legacy commands directory', () => {
         expect(
           result.delete.some(
             (item) =>
@@ -4073,6 +4089,82 @@ describe('ClaudeDeployer', () => {
           key: 'Packmind recipes',
           content: '',
         });
+      });
+    });
+
+    describe('when recipes exist', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        const recipe1 = recipeFactory({
+          name: 'Recipe One',
+          slug: 'recipe-one',
+        });
+
+        const recipe2 = recipeFactory({
+          name: 'Recipe Two',
+          slug: 'recipe-two',
+        });
+
+        const recipeVersion1: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe1.id,
+          name: recipe1.name,
+          slug: recipe1.slug,
+          content: 'Recipe 1 content',
+          version: 1,
+          summary: 'Recipe 1 summary',
+          userId: createUserId('user-1'),
+        };
+
+        const recipeVersion2: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-2'),
+          recipeId: recipe2.id,
+          name: recipe2.name,
+          slug: recipe2.slug,
+          content: 'Recipe 2 content',
+          version: 1,
+          summary: 'Recipe 2 summary',
+          userId: createUserId('user-1'),
+        };
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [recipeVersion1, recipeVersion2],
+          standardVersions: [],
+          skillVersions: [],
+        });
+      });
+
+      it('deletes individual command files for each recipe', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/commands/recipe-one.md' &&
+              item.type === DeleteItemType.File,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes second recipe command file', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/commands/recipe-two.md' &&
+              item.type === DeleteItemType.File,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes legacy commands directory', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/commands/packmind/' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
       });
     });
 

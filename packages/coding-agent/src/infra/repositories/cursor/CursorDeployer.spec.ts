@@ -7,12 +7,14 @@ import {
   createTargetId,
   IStandardsPort,
   SkillVersion,
+  RecipeVersion,
   createSkillVersionId,
   createSkillFileId,
   DeleteItemType,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { recipeVersionFactory } from '@packmind/recipes/test';
 
 describe('CursorDeployer', () => {
   let deployer: CursorDeployer;
@@ -597,6 +599,53 @@ describe('CursorDeployer', () => {
       });
     });
 
+    describe('when removing recipes', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateRemovalFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        const removedRecipes = [
+          recipeVersionFactory({ slug: 'removed-recipe-1' }),
+          recipeVersionFactory({ slug: 'removed-recipe-2' }),
+        ];
+
+        fileUpdates = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: removedRecipes,
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+        );
+      });
+
+      it('deletes individual command file for removed-recipe-1', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.cursor/commands/removed-recipe-1.md',
+          type: DeleteItemType.File,
+        });
+      });
+
+      it('deletes individual command file for removed-recipe-2', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.cursor/commands/removed-recipe-2.md',
+          type: DeleteItemType.File,
+        });
+      });
+
+      it('deletes the legacy commands directory', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.cursor/commands/packmind/',
+          type: DeleteItemType.Directory,
+        });
+      });
+    });
+
     describe('when removing multiple skills', () => {
       let fileUpdates: Awaited<
         ReturnType<typeof deployer.generateRemovalFileUpdates>
@@ -658,11 +707,11 @@ describe('CursorDeployer', () => {
         });
       });
 
-      it('deletes the commands folder', () => {
+      it('deletes the legacy commands folder', () => {
         expect(
           result.delete.some(
             (item) =>
-              item.path === '.cursor/commands/packmind' &&
+              item.path === '.cursor/commands/packmind/' &&
               item.type === DeleteItemType.Directory,
           ),
         ).toBe(true);
@@ -809,6 +858,56 @@ describe('CursorDeployer', () => {
       });
     });
 
+    describe('when deleting recipes', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+      let recipeVersions: RecipeVersion[];
+
+      beforeEach(async () => {
+        recipeVersions = [
+          recipeVersionFactory({ slug: 'recipe-one' }),
+          recipeVersionFactory({ slug: 'recipe-two' }),
+        ];
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions,
+          standardVersions: [],
+          skillVersions: [],
+        });
+      });
+
+      it('deletes individual command file for recipe-one', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/commands/recipe-one.md' &&
+              item.type === DeleteItemType.File,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes individual command file for recipe-two', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/commands/recipe-two.md' &&
+              item.type === DeleteItemType.File,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes the legacy commands folder', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/commands/packmind/' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+    });
+
     describe('when user has skills not managed by Packmind', () => {
       let result: Awaited<
         ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
@@ -883,6 +982,30 @@ describe('CursorDeployer', () => {
           file.path.includes('.cursor/skills/'),
         );
         expect(skillFile?.content).toContain('Test skill prompt');
+      });
+
+      it('includes legacy cleanup delete entries', () => {
+        expect(fileUpdates.delete).toHaveLength(2);
+      });
+
+      it('deletes legacy recipes-index.mdc file', () => {
+        expect(
+          fileUpdates.delete.some(
+            (item) =>
+              item.path === '.cursor/rules/packmind/recipes-index.mdc' &&
+              item.type === DeleteItemType.File,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes legacy commands directory', () => {
+        expect(
+          fileUpdates.delete.some(
+            (item) =>
+              item.path === '.cursor/commands/packmind/' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
       });
     });
 

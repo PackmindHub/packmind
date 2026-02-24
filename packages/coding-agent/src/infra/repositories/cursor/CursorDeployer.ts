@@ -20,7 +20,9 @@ import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDep
 const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
-  private static readonly COMMANDS_PATH = '.cursor/commands/packmind';
+  private static readonly COMMANDS_PATH = '.cursor/commands';
+  /** @deprecated Legacy path to clean up during migration */
+  private static readonly LEGACY_COMMANDS_PATH = '.cursor/commands/packmind';
   private static readonly SKILLS_FOLDER_PATH = '.cursor/skills/';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_RECIPES_INDEX_PATH =
@@ -82,6 +84,15 @@ export class CursorDeployer implements ICodingAgentDeployer {
         target,
       ),
       type: DeleteItemType.File,
+    });
+
+    // Clean up legacy packmind commands subdirectory
+    fileUpdates.delete.push({
+      path: getTargetPrefixedPath(
+        `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
+        target,
+      ),
+      type: DeleteItemType.Directory,
     });
 
     return fileUpdates;
@@ -147,6 +158,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
     fileUpdates.delete.push({
       path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
+    });
+
+    // Clean up legacy packmind commands subdirectory
+    fileUpdates.delete.push({
+      path: `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
+      type: DeleteItemType.Directory,
     });
 
     return fileUpdates;
@@ -311,6 +328,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
       type: DeleteItemType.File,
     });
 
+    // Clean up legacy packmind commands subdirectory
+    fileUpdates.delete.push({
+      path: `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
+      type: DeleteItemType.Directory,
+    });
+
     return fileUpdates;
   }
 
@@ -356,11 +379,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete commands folder if no recipes remain installed
+    // Clean up legacy packmind commands subdirectory when recipes are removed
     const hasRemovedRecipes = removed.recipeVersions.length > 0;
-    if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
+    if (hasRemovedRecipes) {
       fileUpdates.delete.push({
-        path: `${CursorDeployer.COMMANDS_PATH}/`,
+        path: `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
         type: DeleteItemType.Directory,
       });
     }
@@ -399,7 +422,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
 
     const deleteItems: DeleteItem[] = [
       {
-        path: CursorDeployer.COMMANDS_PATH,
+        path: `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
         type: DeleteItemType.Directory,
       },
       {
@@ -411,6 +434,14 @@ export class CursorDeployer implements ICodingAgentDeployer {
         type: DeleteItemType.File,
       },
     ];
+
+    // Delete individual command files for recipes
+    for (const recipeVersion of artifacts.recipeVersions) {
+      deleteItems.push({
+        path: `${CursorDeployer.COMMANDS_PATH}/${recipeVersion.slug}.md`,
+        type: DeleteItemType.File,
+      });
+    }
 
     // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {

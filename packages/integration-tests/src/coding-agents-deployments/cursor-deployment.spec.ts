@@ -40,7 +40,7 @@ describe('Cursor Deployment Integration', () => {
     ...skillsSchemas,
   ]);
 
-  const CURSOR_COMMANDS_PATH = '.cursor/commands/packmind';
+  const CURSOR_COMMANDS_PATH = '.cursor/commands';
   let testApp: TestApp;
   let standardsPort: IStandardsPort;
   let gitPort: IGitPort;
@@ -198,6 +198,13 @@ describe('Cursor Deployment Integration', () => {
         expect(fileUpdates.delete).toContainEqual({
           path: '.cursor/rules/packmind/recipes-index.mdc',
           type: DeleteItemType.File,
+        });
+      });
+
+      it('deletes legacy commands subdirectory', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.cursor/commands/packmind/',
+          type: DeleteItemType.Directory,
         });
       });
     });
@@ -475,6 +482,13 @@ describe('Cursor Deployment Integration', () => {
         expect(fileUpdates.delete).toContainEqual({
           path: '.cursor/rules/packmind/recipes-index.mdc',
           type: DeleteItemType.File,
+        });
+      });
+
+      it('still deletes legacy commands subdirectory', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.cursor/commands/packmind/',
+          type: DeleteItemType.Directory,
         });
       });
     });

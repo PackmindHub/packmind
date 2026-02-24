@@ -112,7 +112,7 @@ describe('Package removal from target integration', () => {
           },
           { path: '.packmind/standards-index.md', type: DeleteItemType.File },
           {
-            path: '.cursor/commands/packmind/recipe-1.md',
+            path: '.cursor/commands/recipe-1.md',
             type: DeleteItemType.File,
           },
           {
@@ -125,7 +125,7 @@ describe('Package removal from target integration', () => {
           },
           { path: '.cursor/rules/packmind/', type: DeleteItemType.Directory },
           {
-            path: '.claude/commands/packmind/recipe-1.md',
+            path: '.claude/commands/recipe-1.md',
             type: DeleteItemType.File,
           },
           {
@@ -252,7 +252,7 @@ describe('Package removal from target integration', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
           {
-            path: '.claude/commands/packmind/recipe-1.md',
+            path: '.claude/commands/recipe-1.md',
             type: DeleteItemType.File,
           },
         ]),
@@ -263,7 +263,7 @@ describe('Package removal from target integration', () => {
       expect(deleteFiles).not.toEqual(
         expect.arrayContaining([
           {
-            path: '.claude/commands/packmind/shared-recipe.md',
+            path: '.claude/commands/shared-recipe.md',
             type: DeleteItemType.File,
           },
         ]),
@@ -271,8 +271,8 @@ describe('Package removal from target integration', () => {
     });
 
     describe('when recipes remain', () => {
-      it('does not delete commands folder', () => {
-        expect(deleteFiles).not.toEqual(
+      it('deletes legacy commands directory', () => {
+        expect(deleteFiles).toEqual(
           expect.arrayContaining([
             {
               path: '.claude/commands/packmind/',

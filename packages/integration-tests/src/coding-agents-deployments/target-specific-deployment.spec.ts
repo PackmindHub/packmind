@@ -785,8 +785,7 @@ class MyService {
         );
 
         deployedFile = recipeUpdates.createOrUpdate.find(
-          (f) =>
-            f.path === `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
+          (f) => f.path === `jetbrains/.claude/commands/${recipe.slug}.md`,
         );
       });
 
@@ -800,7 +799,7 @@ class MyService {
 
       it('deploys to correct path', () => {
         expect(deployedFile?.path).toBe(
-          `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
+          `jetbrains/.claude/commands/${recipe.slug}.md`,
         );
       });
 
@@ -853,7 +852,7 @@ class MyService {
 
       it('deploys to correct Cursor path', () => {
         expect(deployedFile.path).toBe(
-          `jetbrains/.cursor/commands/packmind/${recipe.slug}.md`,
+          `jetbrains/.cursor/commands/${recipe.slug}.md`,
         );
       });
 

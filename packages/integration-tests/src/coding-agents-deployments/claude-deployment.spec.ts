@@ -131,8 +131,10 @@ describe(
             ['claude'],
           );
 
-          recipeFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.startsWith('.claude/commands/packmind/'),
+          recipeFile = fileUpdates.createOrUpdate.find(
+            (file) =>
+              file.path.startsWith('.claude/commands/') &&
+              file.path.endsWith('.md'),
           );
         });
 
@@ -142,24 +144,35 @@ describe(
 
         it('includes one recipe command file', () => {
           expect(
-            fileUpdates.createOrUpdate.filter((f) =>
-              f.path.startsWith('.claude/commands/packmind/'),
+            fileUpdates.createOrUpdate.filter(
+              (f) =>
+                f.path.startsWith('.claude/commands/') &&
+                f.path.endsWith('.md'),
             ),
           ).toHaveLength(1);
         });
 
-        it('has no files to delete', () => {
-          expect(fileUpdates.delete).toHaveLength(0);
+        it('has one file to delete for legacy cleanup', () => {
+          expect(fileUpdates.delete).toHaveLength(1);
         });
 
-        it('creates recipe file in .claude/commands/packmind/', () => {
+        it('deletes legacy .claude/commands/packmind/ directory', () => {
+          expect(fileUpdates.delete).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                path: '.claude/commands/packmind/',
+                type: 'directory',
+              }),
+            ]),
+          );
+        });
+
+        it('creates recipe file in .claude/commands/', () => {
           expect(recipeFile).toBeDefined();
         });
 
         it('uses correct path for recipe file', () => {
-          expect(recipeFile?.path).toBe(
-            `.claude/commands/packmind/${recipe.slug}.md`,
-          );
+          expect(recipeFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
         });
 
         it('includes frontmatter delimiter', () => {
@@ -350,10 +363,8 @@ describe(
           expect(pathMap.size).toBe(3);
         });
 
-        it('creates recipe command file in .claude/commands/packmind/', () => {
-          expect(
-            pathMap.has(`.claude/commands/packmind/${recipe.slug}.md`),
-          ).toBe(true);
+        it('creates recipe command file in .claude/commands/', () => {
+          expect(pathMap.has(`.claude/commands/${recipe.slug}.md`)).toBe(true);
         });
 
         it('creates standard file in .claude/rules/packmind/', () => {
@@ -370,9 +381,7 @@ describe(
           let recipeFile: FileModification | undefined;
 
           beforeEach(() => {
-            recipeFile = pathMap.get(
-              `.claude/commands/packmind/${recipe.slug}.md`,
-            );
+            recipeFile = pathMap.get(`.claude/commands/${recipe.slug}.md`);
           });
 
           it('includes frontmatter delimiter', () => {
@@ -446,8 +455,9 @@ describe(
             ['claude'],
           );
 
-          const foundRecipeFile = fileUpdates.createOrUpdate.find((f) =>
-            f.path.startsWith('.claude/commands/packmind/'),
+          const foundRecipeFile = fileUpdates.createOrUpdate.find(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           );
           assert(foundRecipeFile, 'Recipe file should exist');
           recipeFile = foundRecipeFile;
@@ -459,20 +469,31 @@ describe(
 
         it('includes one recipe command file', () => {
           expect(
-            fileUpdates.createOrUpdate.filter((f) =>
-              f.path.startsWith('.claude/commands/packmind/'),
+            fileUpdates.createOrUpdate.filter(
+              (f) =>
+                f.path.startsWith('.claude/commands/') &&
+                f.path.endsWith('.md'),
             ),
           ).toHaveLength(1);
         });
 
-        it('has no files to delete', () => {
-          expect(fileUpdates.delete).toHaveLength(0);
+        it('has one file to delete for legacy cleanup', () => {
+          expect(fileUpdates.delete).toHaveLength(1);
+        });
+
+        it('deletes legacy .claude/commands/packmind/ directory', () => {
+          expect(fileUpdates.delete).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                path: '.claude/commands/packmind/',
+                type: 'directory',
+              }),
+            ]),
+          );
         });
 
         it('uses correct path for recipe file', () => {
-          expect(recipeFile?.path).toBe(
-            `.claude/commands/packmind/${recipe.slug}.md`,
-          );
+          expect(recipeFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
         });
 
         it('includes frontmatter delimiter', () => {
@@ -629,8 +650,19 @@ describe(
           expect(fileUpdates.createOrUpdate[0].path).toBe('CLAUDE.md');
         });
 
-        it('has no files to delete', () => {
-          expect(fileUpdates.delete).toHaveLength(0);
+        it('has one file to delete for legacy cleanup', () => {
+          expect(fileUpdates.delete).toHaveLength(1);
+        });
+
+        it('deletes legacy .claude/commands/packmind/ directory', () => {
+          expect(fileUpdates.delete).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                path: '.claude/commands/packmind/',
+                type: 'directory',
+              }),
+            ]),
+          );
         });
       });
 
@@ -694,8 +726,9 @@ describe(
             defaultTarget,
           );
 
-          recipeFile = fileUpdates.createOrUpdate.find((f) =>
-            f.path.startsWith('.claude/commands/packmind/'),
+          recipeFile = fileUpdates.createOrUpdate.find(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           );
         });
 
@@ -703,14 +736,23 @@ describe(
           expect(fileUpdates.createOrUpdate).toHaveLength(2);
         });
 
-        it('has no files to delete', () => {
-          expect(fileUpdates.delete).toHaveLength(0);
+        it('has one file to delete for legacy cleanup', () => {
+          expect(fileUpdates.delete).toHaveLength(1);
+        });
+
+        it('deletes legacy .claude/commands/packmind/ directory', () => {
+          expect(fileUpdates.delete).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                path: '.claude/commands/packmind/',
+                type: 'directory',
+              }),
+            ]),
+          );
         });
 
         it('sets correct recipe file path', () => {
-          expect(recipeFile?.path).toBe(
-            `.claude/commands/packmind/${recipe.slug}.md`,
-          );
+          expect(recipeFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
         });
 
         it('includes frontmatter delimiter', () => {
