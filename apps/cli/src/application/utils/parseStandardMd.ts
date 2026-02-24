@@ -54,18 +54,29 @@ function parsePackmindStandard(content: string): ParsedStandardMd | null {
     return null;
   }
 
+  let rulesLineIndex = -1;
+  for (let i = nameLineIndex + 1; i < lines.length; i++) {
+    if (lines[i].trim() === '## Rules') {
+      rulesLineIndex = i;
+      break;
+    }
+  }
+
   const descriptionLines: string[] = [];
   let rulesStartIndex = -1;
-  for (let i = nameLineIndex + 1; i < lines.length; i++) {
-    if (lines[i].startsWith('## ')) {
-      rulesStartIndex = i + 1;
-      break;
+  if (rulesLineIndex >= 0) {
+    for (let i = nameLineIndex + 1; i < rulesLineIndex; i++) {
+      descriptionLines.push(lines[i]);
     }
-    if (lines[i].startsWith('* ') || lines[i].startsWith('- ')) {
-      rulesStartIndex = i;
-      break;
+    rulesStartIndex = rulesLineIndex + 1;
+  } else {
+    for (let i = nameLineIndex + 1; i < lines.length; i++) {
+      if (lines[i].startsWith('* ') || lines[i].startsWith('- ')) {
+        rulesStartIndex = i;
+        break;
+      }
+      descriptionLines.push(lines[i]);
     }
-    descriptionLines.push(lines[i]);
   }
 
   const rules = extractRulesList(lines, rulesStartIndex);
