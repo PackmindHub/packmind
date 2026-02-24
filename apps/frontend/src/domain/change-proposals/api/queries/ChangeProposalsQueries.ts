@@ -225,10 +225,10 @@ export const useApplyRecipeChangeProposalsMutation = (params?: {
         );
         pmToaster.create({
           title: 'Changes applied successfully',
-          description: `View the updated recipe`,
+          description: `View the updated command`,
           type: 'success',
           action: {
-            label: 'View recipe',
+            label: 'View command',
             onClick: () => {
               window.location.href = recipeUrl;
             },
