@@ -1,5 +1,5 @@
 ---
-description: Create user-focused Packmind documentation within `apps/doc/` that explains features in clear task-oriented language without technical implementation details to help end users accomplish specific goals effectively when adding or updating guides for new or existing functionality.
+description: 'Create user-focused Packmind documentation within `apps/doc/` that explains features in clear task-oriented language without technical implementation details to help end users accomplish specific goals effectively when adding or updating guides for new or existing functionality.'
 ---
 
 Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.

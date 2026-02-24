@@ -1,7 +1,7 @@
 ---
-name: UseCase Test Structure and Validation
+name: 'UseCase Test Structure and Validation'
 alwaysApply: true
-description: Define testing patterns for use case unit tests to ensure consistent organization and comprehensive validation coverage in the Packmind hexagonal architecture.
+description: 'Define testing patterns for use case unit tests to ensure consistent organization and comprehensive validation coverage in the Packmind hexagonal architecture.'
 ---
 
 ## Standard: UseCase Test Structure and Validation

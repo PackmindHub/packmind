@@ -1,5 +1,5 @@
 ---
-description: Automate creating a Packmind release by enforcing a clean git state, updating versions and changelog, tagging and pushing the release, and preparing the next development cycle to ensure consistent, verifiable release workflows whenever you cut a new version.
+description: 'Automate creating a Packmind release by enforcing a clean git state, updating versions and changelog, tagging and pushing the release, and preparing the next development cycle to ensure consistent, verifiable release workflows whenever you cut a new version.'
 ---
 
 Create a Packmind release with version {{version}}. Follow these steps:

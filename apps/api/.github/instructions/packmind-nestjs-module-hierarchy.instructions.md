@@ -3,7 +3,8 @@ applyTo: '**/*.controller.ts,**/*.module.ts,**/*.service.ts'
 ---
 ## Standard: NestJS Module Hierarchy
 
-Establish a consistent NestJS module hierarchy using RouterModule.register() for routing and dedicated modules for each resource in the apps/api/src/app/ directory to enhance maintainability and scalability by mirroring the URL hierarchy and ensuring clear separation of concerns across the codebase, applicable to all modules including controllers, services, and modules. :
+Enforce a NestJS module structure where AppModule configures all hierarchical routes via RouterModule.register() and each resource lives in its own module with empty @Controller() paths, URL-mirroring directories, explicit parent IDs (using @Param('orgId')), and command-object service inputs to improve maintainability, scalability, and separation of concerns. :
+* Accept a single typed Command object as the input parameter in service methods instead of multiple individual parameters to enforce explicit intent and maintain consistency with the hexagonal architecture
 * Configure all hierarchical routing exclusively in AppModule using RouterModule.register() with nested children arrays to ensure a single source of truth for the entire API route structure
 * Create a dedicated NestJS module for each resource type, preventing controllers from handling sub-resource routes to maintain clear separation of concerns
 * Define controller routes using empty @Controller() decorators to inherit path segments from RouterModule configuration and avoid path duplication

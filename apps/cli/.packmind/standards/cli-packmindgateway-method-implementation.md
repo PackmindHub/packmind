@@ -10,3 +10,6 @@ When adding new methods to the PackmindGateway class in the CLI application, use
 * Pass HTTP method and body via options object to `httpClient.request()` for non-GET requests (e.g., `{ method: 'POST', body: data }`)
 * Keep gateway methods concise by delegating authentication and error handling to `PackmindHttpClient`
 * PackmindGateway must delegate to sub-gateways for each hexa
+* Gateway interfaces should only expose `Gateway<UseCase>`
+* Gateway implementations methods should always be typed using `Gateway<UseCase>`
+* Gateway should never expose custom command or response types

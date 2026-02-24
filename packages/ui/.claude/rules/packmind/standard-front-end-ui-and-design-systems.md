@@ -1,8 +1,8 @@
 ---
-name: Front-end UI and Design Systems
-globs: apps/frontend/**/*.tsx
+name: 'Front-end UI and Design Systems'
+paths: apps/frontend/**/*.tsx
 alwaysApply: false
-description: Adopt guidelines for using Chakra UI v3 through the @packmind/ui design system in React applications to ensure consistent UI implementation and visual consistency, applying this standard when building or modifying any frontend components.
+description: 'Adopt guidelines for using Chakra UI v3 through the @packmind/ui design system in React applications to ensure consistent UI implementation and visual consistency, applying this standard when building or modifying any frontend components.'
 ---
 
 ## Standard: Front-end UI and Design Systems

@@ -1,8 +1,8 @@
 ---
-name: Back-end TypeScript Clean Code Practices
-globs: '**/packages/**/*.ts'
+name: 'Back-end TypeScript Clean Code Practices'
+paths: '**/packages/**/*.ts'
 alwaysApply: false
-description: Establish back-end TypeScript clean code rules in the Packmind monorepo (/packages/**/*.ts)—including PackmindLogger constructor injection, disciplined logger.info/error usage, top-of-file static imports, custom Error subclasses, and adapter-created use cases with their own loggers—to improve maintainability, debuggability, and consistent architecture across services.
+description: 'Establish back-end TypeScript clean code rules in the Packmind monorepo (/packages/**/*.ts)—including PackmindLogger constructor injection, disciplined logger.info/error usage, top-of-file static imports, custom Error subclasses, and adapter-created use cases with their own loggers—to improve maintainability, debuggability, and consistent architecture across services.'
 ---
 
 ## Standard: Back-end TypeScript Clean Code Practices

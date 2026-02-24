@@ -1,5 +1,5 @@
 ---
-description: Create typed slot components that wrap Chakra UI primitives to centralize custom behavior, styling, and context, improving API consistency and composability across your design system when building complex components like tabs, accordions, or modals.
+description: 'Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.'
 ---
 
 Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.
@@ -33,6 +33,7 @@ import { Tabs } from '@chakra-ui/react';
 import { ReactNode, createElement } from 'react';
 import { SlotComponent } from '../../../types/slot';
 
+// Props are constrained here, depending on the requirements of the component
 type PMTabsTriggerProps = {
   value: string;
   children: ReactNode;

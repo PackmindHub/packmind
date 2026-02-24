@@ -4,8 +4,11 @@ alwaysApply: false
 ---
 ## Standard: CLI Gateway Implementation
 
-Standardize PackmindGateway methods in apps/cli/src/infra/repositories/*Gateway.ts to use PackmindHttpClient (getAuthContext for organizationId and request<ResponseType>() with Promise<ResponseType> return types and options-based non-GET bodies) to eliminate duplicated API key/JWT parsing and error-handling boilerplate and keep gateway logic consistent and concise. :
+Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods to use PackmindHttpClient (getAuthContext and typed request<T> with options for non-GET), delegate to sub-gateways, and expose only Gateway<UseCase> interfaces to reduce boilerplate, enforce type safety, and keep authentication and error handling consistent. :
 * Define the method return type using `Promise<ResponseType>` for type safety
+* Gateway implementations methods should always be typed using `Gateway<UseCase>`
+* Gateway interfaces should only expose `Gateway<UseCase>`
+* Gateway should never expose custom command or response types
 * Keep gateway methods concise by delegating authentication and error handling to `PackmindHttpClient`
 * PackmindGateway must delegate to sub-gateways for each hexa
 * Pass HTTP method and body via options object to `httpClient.request()` for non-GET requests (e.g., `{ method: 'POST', body: data }`)

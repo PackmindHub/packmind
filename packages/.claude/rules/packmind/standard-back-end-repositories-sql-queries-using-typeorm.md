@@ -1,8 +1,8 @@
 ---
-name: Back-end repositories SQL queries using TypeORM
-globs: '**/infra/repositories/*.ts'
+name: 'Back-end repositories SQL queries using TypeORM'
+paths: '**/infra/repositories/*.ts'
 alwaysApply: false
-description: Standardize use of TypeORM QueryBuilder with parameterized WHERE/AND WHERE and IN (:...param) clauses in /infra/repositories/*.ts, including correct handling of soft-deleted entities via withDeleted() or includeDeleted options, to ensure type safety, prevent SQL injection, and improve maintainability and testability of all repository queries.
+description: 'Standardize use of TypeORM QueryBuilder with parameterized WHERE/AND WHERE and IN (:...param) clauses in /infra/repositories/*.ts, including correct handling of soft-deleted entities via withDeleted() or includeDeleted options, to ensure type safety, prevent SQL injection, and improve maintainability and testability of all repository queries.'
 ---
 
 ## Standard: Back-end repositories SQL queries using TypeORM

@@ -1,5 +1,5 @@
 ---
-description: Enable parallel development on multiple branches simultaneously without switching contexts, with automatic setup and clean commit integration.
+description: 'Enable parallel development on multiple branches simultaneously without switching contexts, with automatic setup and clean commit integration.'
 ---
 
 Enable parallel development on multiple branches simultaneously without switching contexts, with automatic setup and clean commit integration.
