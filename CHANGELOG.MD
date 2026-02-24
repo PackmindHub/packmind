@@ -2,15 +2,28 @@
 
 ## Added
 
-- Support social login thanks to WorkOS
-
 ## Changed
 
 ## Fixed
 
-- Fix organization name field auto-refilling instead of showing validation error during sign-up
-
 ## Removed
+
+# [1.10.0] - 2026-02-24
+
+## Added
+
+- Support social login thanks to WorkOS
+- Creators or standards, commands and skills are now displayed
+
+## Changed
+
+- Added blank-states for standards, commands and skills
+
+## Fixed
+
+- Fix organization name field auto-refilling instead of showing validation error during sign-up
+- Several security issues following a pentest report led by external auditor
+- Several improvements to the default skills `packmind-create-standard` and `packmind-create-skills`
 
 # [1.9.0] - 2026-02-06
 
@@ -207,7 +220,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.9.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.10.0...HEAD
+[1.10.0]: https://github.com/PackmindHub/packmind/compare/release/1.9.0...release/1.10.0
 [1.9.0]: https://github.com/PackmindHub/packmind/compare/release/1.8.0...release/1.9.0
 [1.8.0]: https://github.com/PackmindHub/packmind/compare/release/1.7.0...release/1.8.0
 [1.7.0]: https://github.com/PackmindHub/packmind/compare/release/1.6.0...release/1.7.0
