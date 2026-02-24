@@ -1,4 +1,4 @@
-import { PMAccordion, PMHStack, PMText } from '@packmind/ui';
+import { PMAccordion, PMBox, PMHStack, PMText, PMTooltip } from '@packmind/ui';
 import {
   CollectionItemUpdatePayload,
   SkillFile,
@@ -28,11 +28,15 @@ export function UpdatedFilePermissionsItem({
         data-diff-change
       >
         <PMAccordion.ItemIndicator />
-        <PMHStack justify="space-between" width="full">
-          <PMText fontSize="sm" fontWeight="semibold">
-            {file.path}
-          </PMText>
-          <PMHStack gap={2} align="center">
+        <PMHStack flex={1} minWidth={0}>
+          <PMBox minWidth={0} truncate>
+            <PMTooltip label={file.path}>
+              <PMText fontSize="sm" fontWeight="semibold">
+                {file.path}
+              </PMText>
+            </PMTooltip>
+          </PMBox>
+          <PMHStack gap={2} align="center" flexShrink={0} marginLeft="auto">
             <PMText
               fontSize="xs"
               fontFamily="mono"

@@ -136,9 +136,9 @@ export function SkillProposalReviewPanel({
       if (isAddFile) {
         return (
           reviewingProposal.payload as CollectionItemAddPayload<
-            Omit<SkillFile, 'skillVersionId'>
+            Omit<SkillFile, 'id' | 'skillVersionId'>
           >
-        ).item.id;
+        ).item.path;
       }
       return undefined;
     })();
