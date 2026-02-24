@@ -13,6 +13,7 @@ import {
   StandardDeletedEvent,
   CommandDeletedEvent,
   LinterCalledEvent,
+  LinterRuleSeverityUpdatedEvent,
   SkillCreatedEvent,
   SkillUpdatedEvent,
   RuleUpdatedEvent,
@@ -51,6 +52,10 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       this.handleTrialAccountActivated,
     );
     this.subscribe(LinterCalledEvent, this.onLinterCalled);
+    this.subscribe(
+      LinterRuleSeverityUpdatedEvent,
+      this.onLinterRuleSeverityUpdated,
+    );
     this.subscribe(SkillCreatedEvent, this.onSkillCreated);
     this.subscribe(SkillUpdatedEvent, this.onSkillUpdated);
     this.subscribe(UserSignedUpEvent, this.onUserSignedUpEvent);
@@ -237,6 +242,19 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       targetCount: payload.targetCount,
       standardCount: payload.standardCount,
     }));
+  };
+
+  private onLinterRuleSeverityUpdated = async (
+    event: LinterRuleSeverityUpdatedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'linter_rule_severity_updated',
+      (payload) => ({
+        ruleId: payload.ruleId,
+        severity: payload.severity,
+      }),
+    );
   };
 
   private onSkillCreated = async (event: SkillCreatedEvent): Promise<void> => {

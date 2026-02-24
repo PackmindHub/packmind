@@ -10,6 +10,7 @@ import {
   StandardUpdatedEvent,
   StandardSampleSelectedEvent,
   LinterCalledEvent,
+  LinterRuleSeverityUpdatedEvent,
   SkillCreatedEvent,
   OrganizationCreatedEvent,
   UserSignedInEvent,
@@ -18,6 +19,7 @@ import {
   createRecipeId,
   createSpaceId,
   createSkillId,
+  createRuleId,
   createStandardId,
   createStandardVersionId,
   createTargetId,
@@ -303,6 +305,33 @@ describe('AmplitudeEventListener', () => {
           targetCount: 3,
           standardCount: 5,
           source: 'cli',
+        },
+      );
+    });
+  });
+
+  describe('LinterRuleSeverityUpdatedEvent', () => {
+    it('tracks linter_rule_severity_updated event with correct payload', async () => {
+      const event = new LinterRuleSeverityUpdatedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        ruleId: createRuleId('rule-789'),
+        severity: 'warning',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'linter_rule_severity_updated',
+        {
+          ruleId: 'rule-789',
+          severity: 'warning',
+          source: 'ui',
         },
       );
     });
