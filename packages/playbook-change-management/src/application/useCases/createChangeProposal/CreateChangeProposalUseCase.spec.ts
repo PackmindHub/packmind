@@ -33,6 +33,7 @@ import { SkillVersionNotFoundError } from '../../errors/SkillVersionNotFoundErro
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { CreateChangeProposalUseCase } from './CreateChangeProposalUseCase';
 import { CommandChangeProposalValidator } from '../../validators/CommandChangeProposalValidator';
+import { IChangeProposalValidator } from '../../validators/IChangeProposalValidator';
 import { SkillChangeProposalValidator } from '../../validators/SkillChangeProposalValidator';
 
 describe('CreateChangeProposalUseCase', () => {
@@ -715,6 +716,64 @@ describe('CreateChangeProposalUseCase', () => {
       await useCase.execute(command);
 
       expect(service.createChangeProposal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when validator returns resolvedPayload', () => {
+    const resolvedPayload = {
+      oldValue: 'resolved-old',
+      newValue: 'resolved-new',
+    };
+
+    let mockValidator: jest.Mocked<IChangeProposalValidator>;
+
+    beforeEach(() => {
+      mockValidator = {
+        supports: jest.fn().mockReturnValue(true),
+        validate: jest.fn().mockResolvedValue({
+          artefactVersion: 5,
+          resolvedPayload,
+        }),
+      };
+
+      useCase = new CreateChangeProposalUseCase(
+        accountsPort,
+        spacesPort,
+        service,
+        [mockValidator],
+        stubLogger(),
+      );
+
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      service.createChangeProposal.mockResolvedValue({
+        changeProposal:
+          {} as CreateChangeProposalResponse<ChangeProposalType.updateCommandName>['changeProposal'],
+      });
+    });
+
+    it('uses resolvedPayload for dedup check', async () => {
+      const command = buildCommand();
+
+      await useCase.execute(command);
+
+      expect(service.findExistingPending).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        resolvedPayload,
+      );
+    });
+
+    it('uses resolvedPayload for change proposal creation', async () => {
+      const command = buildCommand();
+
+      await useCase.execute(command);
+
+      expect(service.createChangeProposal).toHaveBeenCalledWith(
+        expect.objectContaining({ payload: resolvedPayload }),
+        5,
+      );
     });
   });
 

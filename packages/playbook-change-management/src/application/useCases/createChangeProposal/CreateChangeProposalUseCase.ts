@@ -51,14 +51,19 @@ export class CreateChangeProposalUseCase
       command.organization.id,
     );
 
-    const { artefactVersion } = await validator.validate(command);
+    const { artefactVersion, resolvedPayload } =
+      await validator.validate(command);
+
+    const resolvedCommand = resolvedPayload
+      ? { ...command, payload: resolvedPayload }
+      : command;
 
     const existing = await this.service.findExistingPending(
-      command.spaceId,
-      createUserId(command.userId),
-      command.artefactId,
-      command.type,
-      command.payload,
+      resolvedCommand.spaceId,
+      createUserId(resolvedCommand.userId),
+      resolvedCommand.artefactId,
+      resolvedCommand.type,
+      resolvedCommand.payload,
     );
 
     if (existing) {
@@ -66,7 +71,7 @@ export class CreateChangeProposalUseCase
     }
 
     const { changeProposal } = await this.service.createChangeProposal(
-      command,
+      resolvedCommand,
       artefactVersion,
     );
 
