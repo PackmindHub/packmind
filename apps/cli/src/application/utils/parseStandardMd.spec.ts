@@ -64,6 +64,38 @@ describe('parseStandardMd', () => {
       });
     });
 
+    describe('when description contains ## sub-headings before ## Rules', () => {
+      it('preserves sub-headings in description and extracts rules', () => {
+        const content =
+          '# My Standard\n\nSome description\n\n## Evidence\n\n- file1.ts\n- file2.ts\n\n## Rules\n\n* Rule 1\n* Rule 2';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result).toEqual({
+          name: 'My Standard',
+          description:
+            'Some description\n\n## Evidence\n\n- file1.ts\n- file2.ts',
+          scope: '',
+          rules: ['Rule 1', 'Rule 2'],
+        });
+      });
+
+      it('preserves multiple sub-headings in description', () => {
+        const content =
+          '# My Standard\n\nIntro\n\n## Context\n\nSome context\n\n## A sub-title\n\nMore text\n\n## Rules\n\n* Rule 1';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result).toEqual({
+          name: 'My Standard',
+          description:
+            'Intro\n\n## Context\n\nSome context\n\n## A sub-title\n\nMore text',
+          scope: '',
+          rules: ['Rule 1'],
+        });
+      });
+    });
+
     describe('when no ## heading exists', () => {
       it('returns all remaining content as description', () => {
         const content = '# My Standard\n\nJust a description with no rules';
