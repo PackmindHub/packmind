@@ -109,10 +109,8 @@ export function ProposalReviewPanel({
     }
 
     if (proposalType === ChangeProposalType.deleteRule) {
-      const payload = reviewingProposal.payload as CollectionItemDeletePayload<
-        Omit<Rule, 'standardVersionId'>
-      >;
-      return rules.filter((rule) => rule.id !== payload.targetId);
+      // Keep the deleted rule in the list so it can be shown with strikethrough styling
+      return rules;
     }
 
     return rules;
