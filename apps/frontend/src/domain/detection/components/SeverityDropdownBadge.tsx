@@ -19,13 +19,13 @@ interface SeverityOptionConfig {
 
 const SEVERITY_CONFIG: Record<DetectionSeverity, SeverityOptionConfig> = {
   [DetectionSeverity.ERROR]: {
-    text: 'Severity: Error',
+    text: 'Error',
     variant: 'danger',
     Icon: LuOctagonAlert,
-    iconColor: 'red.500',
+    iconColor: 'red.300',
   },
   [DetectionSeverity.WARNING]: {
-    text: 'Severity: Warning',
+    text: 'Warning',
     variant: 'warning',
     Icon: LuTriangleAlert,
     iconColor: 'yellow.500',
@@ -46,7 +46,13 @@ export const SeverityDropdownBadge: FC<SeverityDropdownBadgeProps> = ({
 
   if (isDisabled) {
     return (
-      <PMButton variant={config.variant} size="2xs" disabled>
+      <PMButton
+        variant={config.variant}
+        size="2xs"
+        disabled
+        minWidth="100px"
+        justifyContent="flex-start"
+      >
         {config.text}
       </PMButton>
     );
@@ -58,6 +64,8 @@ export const SeverityDropdownBadge: FC<SeverityDropdownBadgeProps> = ({
         <PMButton
           variant={config.variant}
           size="2xs"
+          minWidth="100px"
+          justifyContent="flex-start"
           onClick={(e: MouseEvent) => {
             e.stopPropagation();
           }}
