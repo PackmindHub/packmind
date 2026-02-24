@@ -48,15 +48,15 @@ For other AI assistants (GitLab Duo, Junie, AGENTS.md), standards are included i
 
 Commands are placed in specific locations, but unlike standards, you need to invoke them manually when you want to use them.
 
-| AI Assistant   | Where Commands Are Rendered         | How to Use                                  |
-| -------------- | ----------------------------------- | ------------------------------------------- |
-| Claude Code    | `.claude/commands/packmind/` folder | Type `/command-name` in chat                |
-| Cursor         | `.cursor/commands/packmind/` folder | Type `/command-name` in chat                |
-| GitHub Copilot | `.github/prompts/`                  | Type `/command-name` in chat                |
-| Continue       | `.continue/prompts/`                | Type `/command-name` in chat                |
-| GitLab Duo     | Not rendered (use source)           | Execute @.packmind/commands/command-name.md |
-| Junie          | Not rendered (use source)           | Execute @.packmind/commands/command-name.md |
-| AGENTS.md      | Not rendered (use source)           | Execute @.packmind/commands/command-name.md |
+| AI Assistant   | Where Commands Are Rendered | How to Use                                  |
+| -------------- | --------------------------- | ------------------------------------------- |
+| Claude Code    | `.claude/commands/` folder  | Type `/command-name` in chat                |
+| Cursor         | `.cursor/commands/` folder  | Type `/command-name` in chat                |
+| GitHub Copilot | `.github/prompts/`          | Type `/command-name` in chat                |
+| Continue       | `.continue/prompts/`        | Type `/command-name` in chat                |
+| GitLab Duo     | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
+| Junie          | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
+| AGENTS.md      | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
 
 ### Using Slash Commands (Claude Code, Cursor, GitHub Copilot)
 
@@ -130,7 +130,7 @@ These source files are the single source of truth. The files in AI assistant-spe
 
 1. Ensure you've distributed the package containing the commands
 2. Check the `.packmind/commands/` folder for the source files
-3. For Claude Code, Cursor, or GitHub Copilot: Verify the AI assistant-specific folder exists (e.g., `.cursor/commands/packmind/`)
+3. For Claude Code, Cursor, or GitHub Copilot: Verify the AI assistant-specific folder exists (e.g., `.cursor/commands/`)
 4. For Continue, GitLab Duo, Junie, or AGENTS.md: Commands are not rendered separately—use the files directly from `.packmind/commands/`
 
 ### The AI assistant isn't following my standards
