@@ -1,14 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  PMAccordion,
-  PMBox,
-  PMHStack,
-  PMIcon,
-  PMSwitch,
-  PMText,
-  PMTooltip,
-  PMVStack,
-} from '@packmind/ui';
+import { PMAccordion, PMBox, PMText, PMTooltip, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   ChangeProposalType,
@@ -21,7 +12,6 @@ import {
   SkillWithFiles,
   UserId,
 } from '@packmind/types';
-import { LuInfo } from 'react-icons/lu';
 import {
   buildBlockedByAcceptedMap,
   buildProposalNumberMap,
@@ -54,6 +44,7 @@ interface SkillProposalReviewPanelProps {
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
+  showUnifiedView: boolean;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
   onPoolReject: (proposalId: ChangeProposalId) => void;
@@ -69,6 +60,7 @@ export function SkillProposalReviewPanel({
   rejectedProposalIds,
   blockedByConflictIds,
   userLookup,
+  showUnifiedView,
   onSelectProposal,
   onPoolAccept,
   onPoolReject,
@@ -83,7 +75,6 @@ export function SkillProposalReviewPanel({
     scrollToCurrent,
   } = useDiffNavigation(reviewingProposalId);
   const [showPreview, setShowPreview] = useState(false);
-  const [showUnifiedView, setShowUnifiedView] = useState(false);
 
   const proposalNumberMap = useMemo(
     () => buildProposalNumberMap(selectedSkillProposals),
@@ -253,35 +244,6 @@ export function SkillProposalReviewPanel({
   // Read-only full skill view (no proposal selected)
   return (
     <PMVStack gap={2} align="stretch" p={4}>
-      {/* Unified View Toggle - only show when there are accepted proposals */}
-      {acceptedProposalIds.size > 0 && !reviewingProposal && (
-        <PMHStack
-          gap={2}
-          alignItems="center"
-          p={3}
-          bg="background.secondary"
-          borderRadius="md"
-        >
-          <PMSwitch
-            size="sm"
-            checked={showUnifiedView}
-            onCheckedChange={(e) => setShowUnifiedView(e.checked)}
-          />
-          <PMText fontSize="sm">
-            Unified View ({acceptedProposalIds.size} accepted change
-            {acceptedProposalIds.size > 1 ? 's' : ''})
-          </PMText>
-          <PMTooltip
-            label="Preview how the skill will look after applying all accepted proposals"
-            placement="top"
-          >
-            <PMIcon color="text.tertiary">
-              <LuInfo />
-            </PMIcon>
-          </PMTooltip>
-        </PMHStack>
-      )}
-
       {/* Render unified view when enabled */}
       {unifiedResult ? (
         <UnifiedSkillView

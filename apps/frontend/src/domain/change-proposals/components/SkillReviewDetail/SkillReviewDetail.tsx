@@ -1,6 +1,11 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { PMAlertDialog, PMSpinner } from '@packmind/ui';
-import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
+import {
+  ChangeProposalId,
+  OrganizationId,
+  SkillId,
+  SpaceId,
+} from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetSkillWithFilesByIdQuery } from '../../../skills/api/queries/SkillsQueries';
@@ -41,6 +46,30 @@ export function SkillReviewDetail({
   const selectedSkill = selectedSkillData ?? undefined;
 
   const pool = useChangeProposalPool(selectedSkillProposals);
+
+  const [showUnifiedView, setShowUnifiedView] = useState(false);
+
+  const handleUnifiedViewChange = useCallback(
+    (checked: boolean) => {
+      setShowUnifiedView(checked);
+      if (checked && pool.reviewingProposalId) {
+        // When toggling unified view ON, clear the selected proposal
+        pool.handleSelectProposal(pool.reviewingProposalId);
+      }
+    },
+    [pool],
+  );
+
+  const handleSelectProposal = useCallback(
+    (proposalId: ChangeProposalId) => {
+      // When selecting a proposal, turn off unified view
+      if (showUnifiedView) {
+        setShowUnifiedView(false);
+      }
+      pool.handleSelectProposal(proposalId);
+    },
+    [pool, showUnifiedView],
+  );
 
   const outdatedProposalIds = useMemo(
     () =>
@@ -103,10 +132,12 @@ export function SkillReviewDetail({
         hasPooledDecisions={pool.hasPooledDecisions}
         outdatedProposalIds={outdatedProposalIds}
         userLookup={userLookup}
-        onSelectProposal={pool.handleSelectProposal}
+        showUnifiedView={showUnifiedView}
+        onSelectProposal={handleSelectProposal}
         onPoolAccept={pool.handlePoolAccept}
         onPoolReject={pool.handlePoolReject}
         onUndoPool={pool.handleUndoPool}
+        onUnifiedViewChange={handleUnifiedViewChange}
         onSave={handleSave}
         isSaving={applySkillChangeProposalsMutation.isPending}
       >
@@ -122,7 +153,8 @@ export function SkillReviewDetail({
             rejectedProposalIds={pool.rejectedProposalIds}
             blockedByConflictIds={pool.blockedByConflictIds}
             userLookup={userLookup}
-            onSelectProposal={pool.handleSelectProposal}
+            showUnifiedView={showUnifiedView}
+            onSelectProposal={handleSelectProposal}
             onPoolAccept={pool.handlePoolAccept}
             onPoolReject={pool.handlePoolReject}
             onUndoPool={pool.handleUndoPool}
