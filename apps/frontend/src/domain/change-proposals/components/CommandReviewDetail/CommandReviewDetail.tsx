@@ -91,7 +91,7 @@ export function CommandReviewDetail({
           queryKey: [...GET_CHANGE_PROPOSALS_BY_RECIPE_KEY, recipeId],
         }),
         queryClient.invalidateQueries({
-          queryKey: [GET_RECIPE_BY_ID_KEY, recipeId],
+          queryKey: [...GET_RECIPE_BY_ID_KEY, recipeId],
         }),
       ]);
 
