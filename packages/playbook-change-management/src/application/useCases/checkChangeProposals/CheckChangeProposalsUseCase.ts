@@ -32,25 +32,23 @@ export class CheckChangeProposalsUseCase extends AbstractMemberUseCase<
       count: command.proposals.length,
     });
 
-    const results: CheckChangeProposalItemResult[] = [];
+    const results = await Promise.all(
+      command.proposals.map(async (proposal, index) => {
+        const existing = await this.changeProposalService.findExistingPending(
+          command.spaceId,
+          createUserId(command.userId),
+          proposal.artefactId,
+          proposal.type as ChangeProposalType,
+          proposal.payload,
+        );
 
-    for (let i = 0; i < command.proposals.length; i++) {
-      const proposal = command.proposals[i];
-
-      const existing = await this.changeProposalService.findExistingPending(
-        command.spaceId,
-        createUserId(command.userId),
-        proposal.artefactId,
-        proposal.type as ChangeProposalType,
-        proposal.payload,
-      );
-
-      results.push({
-        index: i,
-        exists: existing !== null,
-        createdAt: existing?.createdAt.toISOString() ?? null,
-      });
-    }
+        return {
+          index,
+          exists: existing !== null,
+          createdAt: existing?.createdAt.toISOString() ?? null,
+        };
+      }),
+    );
 
     this.logger.info('Change proposals check completed', {
       spaceId: command.spaceId,
