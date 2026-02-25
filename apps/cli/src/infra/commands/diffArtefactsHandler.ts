@@ -138,54 +138,12 @@ function formatSubmittedDate(isoDate: string): string {
   });
 }
 
-function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string[] {
-  const lines: string[] = [];
-
-  // Group submitted diffs by artifact
-  const byArtefact = new Map<
-    string,
-    { type: ArtifactType; name: string; changeTypes: ChangeProposalType[] }
-  >();
-  for (const item of submittedDiffs) {
-    const key = `${item.diff.artifactType}:${item.diff.artifactName}`;
-    const existing = byArtefact.get(key);
-    if (existing) {
-      existing.changeTypes.push(item.diff.type);
-    } else {
-      byArtefact.set(key, {
-        type: item.diff.artifactType,
-        name: item.diff.artifactName,
-        changeTypes: [item.diff.type],
-      });
-    }
-  }
-
-  const artefactCount = byArtefact.size;
+function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
   const proposalCount = submittedDiffs.length;
   const proposalWord =
     proposalCount === 1 ? 'change proposal' : 'change proposals';
-  const artefactWord = artefactCount === 1 ? 'artifact' : 'artifacts';
 
-  lines.push(
-    `${proposalCount} ${proposalWord} already submitted for ${artefactCount} ${artefactWord}, run "packmind-cli diff --include-submitted" to see details`,
-  );
-
-  for (const [, artefact] of byArtefact) {
-    const typeLabel = ARTIFACT_TYPE_LABELS[artefact.type];
-    // Count occurrences of each change type
-    const typeCounts = new Map<ChangeProposalType, number>();
-    for (const ct of artefact.changeTypes) {
-      typeCounts.set(ct, (typeCounts.get(ct) ?? 0) + 1);
-    }
-    const parts: string[] = [];
-    for (const [ct, count] of typeCounts) {
-      const label = CHANGE_PROPOSAL_TYPE_LABELS[ct] ?? 'content changed';
-      parts.push(count > 1 ? `${label} (${count})` : label);
-    }
-    lines.push(`  ${typeLabel} "${artefact.name}": ${parts.join(', ')}`);
-  }
-
-  return lines;
+  return `${proposalCount} ${proposalWord} ignored, run "packmind-cli diff --include-submitted" to see what's pending`;
 }
 
 export async function diffArtefactsHandler(
@@ -315,10 +273,7 @@ export async function diffArtefactsHandler(
     if (diffsToDisplay.length === 0) {
       log('No new changes found.');
       if (submittedItems.length > 0) {
-        const footerLines = buildSubmittedFooter(submittedItems);
-        for (const line of footerLines) {
-          logInfoConsole(line);
-        }
+        logInfoConsole(buildSubmittedFooter(submittedItems));
       }
       if (submit) {
         logInfoConsole('All changes already submitted.');
@@ -397,10 +352,7 @@ export async function diffArtefactsHandler(
 
     // Show footer about submitted diffs (when not --include-submitted)
     if (!includeSubmitted && submittedItems.length > 0) {
-      const footerLines = buildSubmittedFooter(submittedItems);
-      for (const line of footerLines) {
-        logInfoConsole(line);
-      }
+      logInfoConsole(buildSubmittedFooter(submittedItems));
     }
 
     if (submit) {

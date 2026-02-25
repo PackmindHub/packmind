@@ -1402,16 +1402,16 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('1 change proposal already submitted'),
+        expect.stringContaining('1 change proposal ignored'),
       );
     });
 
-    it('displays footer with artifact detail', async () => {
+    it('displays footer with hint to use --include-submitted', async () => {
       const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Standard "My Standard"'),
+        expect.stringContaining('run "packmind-cli diff --include-submitted"'),
       );
     });
 
@@ -1460,7 +1460,7 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('1 change proposal already submitted'),
+        expect.stringContaining('1 change proposal ignored'),
       );
     });
 
