@@ -370,6 +370,7 @@ export function ProposalReviewPanel({
               <MarkdownEditor
                 defaultValue={unifiedResult.description}
                 readOnly
+                paddingVariant="none"
               />
             </MarkdownEditorProvider>
           )}
