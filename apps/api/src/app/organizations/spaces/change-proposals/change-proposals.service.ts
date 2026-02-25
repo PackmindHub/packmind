@@ -4,6 +4,8 @@ import {
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
   ChangeProposalType,
+  CheckChangeProposalsCommand,
+  CheckChangeProposalsResponse,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   IPlaybookChangeManagementPort,
@@ -26,6 +28,12 @@ export class ChangeProposalsService {
     return this.playbookChangeManagementAdapter.batchCreateChangeProposals(
       command,
     );
+  }
+
+  async checkChangeProposals(
+    command: CheckChangeProposalsCommand,
+  ): Promise<CheckChangeProposalsResponse> {
+    return this.playbookChangeManagementAdapter.checkChangeProposals(command);
   }
   async createChangeProposal(
     command: CreateChangeProposalCommand<ChangeProposalType>,

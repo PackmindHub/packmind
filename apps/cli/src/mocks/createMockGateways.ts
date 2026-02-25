@@ -43,6 +43,7 @@ export function createMockChangeProposalGateway(
 ): jest.Mocked<IChangeProposalGateway> {
   return {
     batchCreate: jest.fn(),
+    check: jest.fn(),
     ...overrides,
   };
 }

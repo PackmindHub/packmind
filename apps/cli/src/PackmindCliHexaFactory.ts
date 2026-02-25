@@ -46,6 +46,8 @@ import { IDiffArtefactsUseCase } from './domain/useCases/IDiffArtefactsUseCase';
 import { DiffArtefactsUseCase } from './application/useCases/DiffArtefactsUseCase';
 import { ISubmitDiffsUseCase } from './domain/useCases/ISubmitDiffsUseCase';
 import { SubmitDiffsUseCase } from './application/useCases/SubmitDiffsUseCase';
+import { ICheckDiffsUseCase } from './domain/useCases/ICheckDiffsUseCase';
+import { CheckDiffsUseCase } from './application/useCases/CheckDiffsUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -71,6 +73,7 @@ export class PackmindCliHexaFactory {
     uploadSkill: IUploadSkillUseCase;
     diffArtefacts: IDiffArtefactsUseCase;
     submitDiffs: ISubmitDiffsUseCase;
+    checkDiffs: ICheckDiffsUseCase;
   };
 
   constructor() {
@@ -127,6 +130,7 @@ export class PackmindCliHexaFactory {
         this.repositories.packmindGateway,
       ),
       submitDiffs: new SubmitDiffsUseCase(this.repositories.packmindGateway),
+      checkDiffs: new CheckDiffsUseCase(this.repositories.packmindGateway),
     };
   }
 }
