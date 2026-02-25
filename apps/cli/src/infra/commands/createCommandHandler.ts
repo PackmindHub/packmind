@@ -1,4 +1,9 @@
-import { readCommandPlaybookFile } from '../utils/readCommandPlaybookFile';
+import {
+  readCommandPlaybookFile,
+  parseAndValidateCommandPlaybook,
+  ReadCommandPlaybookResult,
+} from '../utils/readCommandPlaybookFile';
+import { readStdin } from '../utils/readStdin';
 import { ICreateCommandFromPlaybookUseCase } from '../../domain/useCases/ICreateCommandFromPlaybookUseCase';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
 
@@ -19,11 +24,25 @@ function buildWebappUrl(
 }
 
 export async function createCommandHandler(
-  filePath: string,
+  filePath: string | undefined,
   useCase: ICreateCommandFromPlaybookUseCase,
   originSkill?: string,
 ): Promise<ICreateCommandHandlerResult> {
-  const readResult = await readCommandPlaybookFile(filePath);
+  let readResult: ReadCommandPlaybookResult;
+
+  if (filePath) {
+    readResult = await readCommandPlaybookFile(filePath);
+  } else {
+    try {
+      const content = await readStdin();
+      readResult = parseAndValidateCommandPlaybook(content);
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : 'Failed to read from stdin',
+      };
+    }
+  }
 
   if (!readResult.isValid) {
     return {
