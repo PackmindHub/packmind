@@ -1,7 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  CheckChangeProposalItemResult,
   CheckChangeProposalsCommand,
   CheckChangeProposalsResponse,
   ChangeProposalType,
