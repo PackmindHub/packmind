@@ -1613,6 +1613,71 @@ describe('diffArtefactsHandler', () => {
 
       expect(result.diffsFound).toBe(2);
     });
+
+    describe('when some artefacts are fully submitted', () => {
+      it('annotates submitted artefact with "all already submitted"', async () => {
+        await diffArtefactsHandler({ ...deps, includeSubmitted: true });
+
+        const { logWarningConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          '* Standard "My Standard" (all already submitted)',
+        );
+      });
+
+      it('does not annotate unsubmitted artefact', async () => {
+        await diffArtefactsHandler({ ...deps, includeSubmitted: true });
+
+        const { logWarningConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          '* Command "My Command"',
+        );
+      });
+    });
+
+    describe('when all artefacts are fully submitted', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.checkDiffs.mockResolvedValue({
+          results: [
+            {
+              diff: commandDiff,
+              exists: true,
+              createdAt: '2025-06-15T10:30:00.000Z',
+            },
+            {
+              diff: standardDiff,
+              exists: true,
+              createdAt: '2025-06-15T10:30:00.000Z',
+            },
+          ],
+        });
+      });
+
+      it('appends "all already submitted" to the summary line', async () => {
+        await diffArtefactsHandler({ ...deps, includeSubmitted: true });
+
+        const { logWarningConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'Summary: 2 changes found on 2 artefacts (all already submitted):',
+        );
+      });
+
+      it('annotates each artefact with "all already submitted"', async () => {
+        await diffArtefactsHandler({ ...deps, includeSubmitted: true });
+
+        const { logWarningConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          '* Command "My Command" (all already submitted)',
+        );
+      });
+    });
   });
 
   describe('when --submit is used with mixed submitted and unsubmitted diffs', () => {

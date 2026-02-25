@@ -356,12 +356,23 @@ export async function diffArtefactsHandler(
 
     const artefactCount = sortedArtefacts.length;
     const artefactWord = artefactCount === 1 ? 'artefact' : 'artefacts';
+    const allSubmittedSuffix =
+      includeSubmitted && unsubmittedItems.length === 0
+        ? ' (all already submitted)'
+        : '';
     logWarningConsole(
-      `Summary: ${changeCount} ${changeWord} found on ${artefactCount} ${artefactWord}:`,
+      `Summary: ${changeCount} ${changeWord} found on ${artefactCount} ${artefactWord}${allSubmittedSuffix}:`,
     );
     for (const artefact of sortedArtefacts) {
       const typeLabel = ARTIFACT_TYPE_LABELS[artefact.type];
-      logWarningConsole(`* ${typeLabel} "${artefact.name}"`);
+      const key = `${artefact.type}:${artefact.name}`;
+      const artefactDiffs = groups.get(key) ?? [];
+      const allDiffsSubmitted =
+        includeSubmitted &&
+        artefactDiffs.length > 0 &&
+        artefactDiffs.every((d) => submittedLookup.get(d)?.exists);
+      const suffix = allDiffsSubmitted ? ' (all already submitted)' : '';
+      logWarningConsole(`* ${typeLabel} "${artefact.name}"${suffix}`);
     }
 
     // Show footer about submitted diffs (when not --include-submitted)
