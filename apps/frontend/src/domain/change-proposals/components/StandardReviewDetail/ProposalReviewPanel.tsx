@@ -234,7 +234,7 @@ export function ProposalReviewPanel({
 
         {/* Full artefact content with inline diff */}
         {selectedStandard && (
-          <PMVStack gap={2} align="stretch">
+          <PMVStack gap={2} align="stretch" p={4}>
             <PMText
               fontSize="lg"
               fontWeight="semibold"
@@ -333,7 +333,7 @@ export function ProposalReviewPanel({
   }
 
   return (
-    <PMVStack gap={2} align="stretch">
+    <PMVStack gap={2} align="stretch" p={4}>
       {/* Render unified view when enabled */}
       {unifiedResult ? (
         <PMVStack gap={2} align="stretch" p={4}>
