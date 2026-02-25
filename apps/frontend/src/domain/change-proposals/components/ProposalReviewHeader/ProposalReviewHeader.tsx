@@ -193,6 +193,14 @@ export function ProposalReviewHeader({
             </PMText>
             <PMText fontSize="sm">{proposal.artefactVersion}</PMText>
           </PMHStack>
+          {proposal.message ? (
+            <PMHStack gap={1}>
+              <PMText fontWeight="bold" fontSize="sm">
+                Message
+              </PMText>
+              <PMText fontSize="sm">{proposal.message}</PMText>
+            </PMHStack>
+          ) : null}
         </PMVStack>
       </PMVStack>
     </PMBox>

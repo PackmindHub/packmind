@@ -18,6 +18,7 @@ import {
   logSuccessConsole,
 } from '../utils/consoleLogger';
 import { formatContentDiff } from '../utils/diffFormatter';
+import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 import chalk from 'chalk';
 
 export type DiffHandlerDependencies = {
@@ -28,6 +29,7 @@ export type DiffHandlerDependencies = {
   error: typeof console.error;
   submit?: boolean;
   includeSubmitted?: boolean;
+  message?: string;
 };
 
 export type DiffHandlerResult = {
@@ -163,6 +165,7 @@ export async function diffArtefactsHandler(
     error,
     submit,
     includeSubmitted,
+    message: messageFlag,
   } = deps;
   const cwd = getCwd();
 
@@ -309,7 +312,12 @@ export async function diffArtefactsHandler(
         const checkItem = submittedLookup.get(subGroup[0]);
         if (includeSubmitted && checkItem?.exists && checkItem.createdAt) {
           const dateStr = formatSubmittedDate(checkItem.createdAt);
-          log(`  - ${label} ${chalk.dim(`[already submitted on ${dateStr}]`)}`);
+          const messageSuffix = checkItem.message
+            ? ` "${checkItem.message.length > 50 ? checkItem.message.slice(0, 50) + '...' : checkItem.message}"`
+            : '';
+          log(
+            `  - ${label} ${chalk.dim(`[already submitted on ${dateStr}${messageSuffix}]`)}`,
+          );
         } else {
           log(`  - ${label}`);
         }
@@ -368,10 +376,42 @@ export async function diffArtefactsHandler(
       if (unsubmittedDiffs.length === 0) {
         logInfoConsole('All changes already submitted.');
       } else {
+        // Resolve message: from -m flag, editor, or abort
+        let message: string;
+        if (messageFlag !== undefined) {
+          const validation = validateMessage(messageFlag);
+          if (!validation.valid) {
+            logErrorConsole(validation.error);
+            exit(1);
+            return { diffsFound: changeCount };
+          }
+          message = validation.message;
+        } else if (process.stdin.isTTY) {
+          const editorMessage = openEditorForMessage();
+          const validation = validateMessage(editorMessage);
+          if (!validation.valid) {
+            logErrorConsole(
+              'Aborting submission: empty message. Use -m to provide a message.',
+            );
+            exit(1);
+            return { diffsFound: changeCount };
+          }
+          message = validation.message;
+        } else {
+          logErrorConsole(
+            'Non-interactive mode requires -m flag. Use: packmind-cli diff --submit -m "your message"',
+          );
+          exit(1);
+          return { diffsFound: changeCount };
+        }
+
         const groupedUnsubmitted = Array.from(
           groupDiffsByArtefact(unsubmittedDiffs).values(),
         );
-        const result = await packmindCliHexa.submitDiffs(groupedUnsubmitted);
+        const result = await packmindCliHexa.submitDiffs(
+          groupedUnsubmitted,
+          message,
+        );
 
         for (const err of result.errors) {
           if (err.code === 'ChangeProposalPayloadMismatchError') {
@@ -381,6 +421,12 @@ export async function diffArtefactsHandler(
           } else {
             logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
           }
+        }
+
+        if (result.submitted > 0) {
+          const truncatedMessage =
+            message.length > 50 ? message.slice(0, 50) + '...' : message;
+          logInfoConsole(`Message: "${truncatedMessage}"`);
         }
 
         const summaryParts: string[] = [];

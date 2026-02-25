@@ -77,6 +77,7 @@ describe('CreateChangeProposalUseCase', () => {
       artefactId: recipeId,
       payload: { oldValue: recipe.name, newValue: 'New Recipe Name' },
       captureMode: ChangeProposalCaptureMode.commit,
+      message: 'test message',
       ...overrides,
     }) as CreateChangeProposalCommand<ChangeProposalType>;
 

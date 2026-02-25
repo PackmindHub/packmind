@@ -159,6 +159,7 @@ export class OrganizationsSpacesChangeProposalsController {
         artefactId: body.artefactId,
         payload: body.payload,
         captureMode: body.captureMode,
+        message: body.message,
       } as unknown as CreateChangeProposalCommand<ChangeProposalType>;
 
       const result =

@@ -22,6 +22,14 @@ jest.mock('../utils/diffFormatter', () => ({
   })),
 }));
 
+jest.mock('../utils/editorMessage', () => ({
+  openEditorForMessage: jest.fn(() => 'test message from editor'),
+  validateMessage: jest.fn((msg: string) => ({
+    valid: true,
+    message: msg.trim(),
+  })),
+}));
+
 describe('diffArtefactsHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
   let mockExit: jest.Mock;
@@ -1083,26 +1091,37 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('calls submitDiffs with grouped diffs', async () => {
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
-        expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith([
+        expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith(
           [
-            {
-              filePath: '.packmind/commands/my-command.md',
-              type: ChangeProposalType.updateCommandDescription,
-              payload: { oldValue: 'old', newValue: 'new' },
-              artifactName: 'My Command',
-              artifactType: 'command',
-            },
+            [
+              {
+                filePath: '.packmind/commands/my-command.md',
+                type: ChangeProposalType.updateCommandDescription,
+                payload: { oldValue: 'old', newValue: 'new' },
+                artifactName: 'My Command',
+                artifactType: 'command',
+              },
+            ],
           ],
-        ]);
+          'test message',
+        );
       });
 
       it('displays submission summary', async () => {
         const { logSuccessConsole } = jest.requireMock(
           '../utils/consoleLogger',
         );
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logSuccessConsole).toHaveBeenCalledWith('Summary: 1 submitted');
       });
@@ -1145,7 +1164,11 @@ describe('diffArtefactsHandler', () => {
         const { logWarningConsole } = jest.requireMock(
           '../utils/consoleLogger',
         );
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logWarningConsole).toHaveBeenCalledWith(
           'Summary: 1 submitted, 1 already submitted',
@@ -1179,7 +1202,11 @@ describe('diffArtefactsHandler', () => {
 
       it('displays error for each failed submission', async () => {
         const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logErrorConsole).toHaveBeenCalledWith(
           'Failed to submit "My Command": Server error',
@@ -1188,7 +1215,11 @@ describe('diffArtefactsHandler', () => {
 
       it('displays error summary', async () => {
         const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logErrorConsole).toHaveBeenCalledWith('Summary: 1 error');
       });
@@ -1227,7 +1258,11 @@ describe('diffArtefactsHandler', () => {
 
       it('displays user-friendly outdated message with artifact type', async () => {
         const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logErrorConsole).toHaveBeenCalledWith(
           'Failed to submit "My Command": command is outdated, please run `packmind-cli install` to update it',
@@ -1261,7 +1296,11 @@ describe('diffArtefactsHandler', () => {
 
       it('displays raw error message', async () => {
         const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logErrorConsole).toHaveBeenCalledWith(
           'Failed to submit "My Command": Server error',
@@ -1270,7 +1309,11 @@ describe('diffArtefactsHandler', () => {
 
       it('does not display outdated message', async () => {
         const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logErrorConsole).not.toHaveBeenCalledWith(
           expect.stringContaining('is outdated'),
@@ -1311,7 +1354,11 @@ describe('diffArtefactsHandler', () => {
         const { logWarningConsole } = jest.requireMock(
           '../utils/consoleLogger',
         );
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logWarningConsole).toHaveBeenCalledWith(
           'Summary: 2 submitted, 1 already submitted, 2 errors',
@@ -1329,14 +1376,22 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('does not call submitDiffs', async () => {
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
       });
 
       it('displays no changes to submit message', async () => {
         const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({ ...deps, submit: true });
+        await diffArtefactsHandler({
+          ...deps,
+          submit: true,
+          message: 'test message',
+        });
 
         expect(logInfoConsole).toHaveBeenCalledWith('No changes to submit.');
       });
@@ -1607,15 +1662,24 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('only submits unsubmitted diffs', async () => {
-      await diffArtefactsHandler({ ...deps, submit: true });
+      await diffArtefactsHandler({
+        ...deps,
+        submit: true,
+        message: 'test message',
+      });
 
-      expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith([
-        [commandDiff],
-      ]);
+      expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith(
+        [[commandDiff]],
+        'test message',
+      );
     });
 
     it('does not submit already submitted diffs', async () => {
-      await diffArtefactsHandler({ ...deps, submit: true });
+      await diffArtefactsHandler({
+        ...deps,
+        submit: true,
+        message: 'test message',
+      });
 
       const submitCalls = mockPackmindCliHexa.submitDiffs.mock.calls;
       const allSubmittedDiffs = submitCalls.flatMap((call) => call[0].flat());
@@ -1652,14 +1716,22 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('does not call submitDiffs', async () => {
-      await diffArtefactsHandler({ ...deps, submit: true });
+      await diffArtefactsHandler({
+        ...deps,
+        submit: true,
+        message: 'test message',
+      });
 
       expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
     });
 
     it('displays all changes already submitted message', async () => {
       const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
-      await diffArtefactsHandler({ ...deps, submit: true });
+      await diffArtefactsHandler({
+        ...deps,
+        submit: true,
+        message: 'test message',
+      });
 
       expect(logInfoConsole).toHaveBeenCalledWith(
         'All changes already submitted.',

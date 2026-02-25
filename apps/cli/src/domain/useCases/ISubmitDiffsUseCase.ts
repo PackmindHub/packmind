@@ -4,6 +4,7 @@ import { ArtefactDiff } from './IDiffArtefactsUseCase';
 
 export type SubmitDiffsCommand = {
   groupedDiffs: ArtefactDiff[][];
+  message: string;
 };
 
 export type SubmitDiffsResult = {

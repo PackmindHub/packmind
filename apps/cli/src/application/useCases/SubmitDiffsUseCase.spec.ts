@@ -37,31 +37,43 @@ describe('SubmitDiffsUseCase', () => {
 
   describe('when groupedDiffs is empty', () => {
     it('returns 0 submitted', async () => {
-      const result = await useCase.execute({ groupedDiffs: [] });
+      const result = await useCase.execute({
+        groupedDiffs: [],
+        message: 'test message',
+      });
 
       expect(result.submitted).toBe(0);
     });
 
     it('returns empty skipped array', async () => {
-      const result = await useCase.execute({ groupedDiffs: [] });
+      const result = await useCase.execute({
+        groupedDiffs: [],
+        message: 'test message',
+      });
 
       expect(result.skipped).toEqual([]);
     });
 
     it('returns empty errors array', async () => {
-      const result = await useCase.execute({ groupedDiffs: [] });
+      const result = await useCase.execute({
+        groupedDiffs: [],
+        message: 'test message',
+      });
 
       expect(result.errors).toEqual([]);
     });
 
     it('returns 0 alreadySubmitted', async () => {
-      const result = await useCase.execute({ groupedDiffs: [] });
+      const result = await useCase.execute({
+        groupedDiffs: [],
+        message: 'test message',
+      });
 
       expect(result.alreadySubmitted).toBe(0);
     });
 
     it('does not call batchCreate', async () => {
-      await useCase.execute({ groupedDiffs: [] });
+      await useCase.execute({ groupedDiffs: [], message: 'test message' });
 
       expect(mockChangeProposals.batchCreate).not.toHaveBeenCalled();
     });
@@ -96,6 +108,7 @@ describe('SubmitDiffsUseCase', () => {
     it('returns created count from batch response', async () => {
       const result = await useCase.execute({
         groupedDiffs: [sameSpaceGroup],
+        message: 'test message',
       });
 
       expect(result.submitted).toBe(2);
@@ -108,7 +121,10 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('sends all diffs in a single batch', async () => {
-      await useCase.execute({ groupedDiffs: [sameSpaceGroup] });
+      await useCase.execute({
+        groupedDiffs: [sameSpaceGroup],
+        message: 'test message',
+      });
 
       expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
         spaceId: 'spc-456',
@@ -118,12 +134,14 @@ describe('SubmitDiffsUseCase', () => {
             artefactId: 'art-123',
             payload: { oldValue: 'old content', newValue: 'new content' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: 'test message',
           },
           {
             type: ChangeProposalType.updateCommandDescription,
             artefactId: 'art-123',
             payload: { oldValue: 'old content', newValue: 'new content' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: 'test message',
           },
         ],
       });
@@ -132,6 +150,7 @@ describe('SubmitDiffsUseCase', () => {
     it('returns empty skipped array', async () => {
       const result = await useCase.execute({
         groupedDiffs: [sameSpaceGroup],
+        message: 'test message',
       });
 
       expect(result.skipped).toEqual([]);
@@ -170,6 +189,7 @@ describe('SubmitDiffsUseCase', () => {
     it('calls batchCreate once per spaceId', async () => {
       await useCase.execute({
         groupedDiffs: [spaceAGroup, spaceBGroup],
+        message: 'test message',
       });
 
       expect(mockChangeProposals.batchCreate).toHaveBeenCalledTimes(2);
@@ -178,6 +198,7 @@ describe('SubmitDiffsUseCase', () => {
     it('aggregates created counts from all batch responses', async () => {
       const result = await useCase.execute({
         groupedDiffs: [spaceAGroup, spaceBGroup],
+        message: 'test message',
       });
 
       expect(result.submitted).toBe(2);
@@ -202,13 +223,19 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('returns created count from batch response', async () => {
-      const result = await useCase.execute({ groupedDiffs: [standardGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [standardGroup],
+        message: 'test message',
+      });
 
       expect(result.submitted).toBe(1);
     });
 
     it('sends standard diff with correct type and payload', async () => {
-      await useCase.execute({ groupedDiffs: [standardGroup] });
+      await useCase.execute({
+        groupedDiffs: [standardGroup],
+        message: 'test message',
+      });
 
       expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
         spaceId: 'spc-std',
@@ -218,13 +245,17 @@ describe('SubmitDiffsUseCase', () => {
             artefactId: 'art-std',
             payload: { oldValue: 'old', newValue: 'new' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: 'test message',
           },
         ],
       });
     });
 
     it('returns empty skipped array', async () => {
-      const result = await useCase.execute({ groupedDiffs: [standardGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [standardGroup],
+        message: 'test message',
+      });
 
       expect(result.skipped).toEqual([]);
     });
@@ -248,13 +279,19 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('returns created count from batch response', async () => {
-      const result = await useCase.execute({ groupedDiffs: [skillGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [skillGroup],
+        message: 'test message',
+      });
 
       expect(result.submitted).toBe(1);
     });
 
     it('sends skill diff with correct type and payload', async () => {
-      await useCase.execute({ groupedDiffs: [skillGroup] });
+      await useCase.execute({
+        groupedDiffs: [skillGroup],
+        message: 'test message',
+      });
 
       expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
         spaceId: 'spc-skl',
@@ -264,13 +301,17 @@ describe('SubmitDiffsUseCase', () => {
             artefactId: 'art-skl',
             payload: { oldValue: 'old', newValue: 'new' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: 'test message',
           },
         ],
       });
     });
 
     it('returns empty skipped array', async () => {
-      const result = await useCase.execute({ groupedDiffs: [skillGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [skillGroup],
+        message: 'test message',
+      });
 
       expect(result.skipped).toEqual([]);
     });
@@ -314,6 +355,7 @@ describe('SubmitDiffsUseCase', () => {
     it('returns created count from batch response', async () => {
       const result = await useCase.execute({
         groupedDiffs: [mixedMetadataGroup],
+        message: 'test message',
       });
 
       expect(result.submitted).toBe(2);
@@ -322,6 +364,7 @@ describe('SubmitDiffsUseCase', () => {
     it('skips diffs missing metadata', async () => {
       const result = await useCase.execute({
         groupedDiffs: [mixedMetadataGroup],
+        message: 'test message',
       });
 
       expect(result.skipped).toEqual([
@@ -330,7 +373,10 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('sends only valid diffs in the batch', async () => {
-      await useCase.execute({ groupedDiffs: [mixedMetadataGroup] });
+      await useCase.execute({
+        groupedDiffs: [mixedMetadataGroup],
+        message: 'test message',
+      });
 
       expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
         spaceId: 'spc-456',
@@ -340,12 +386,14 @@ describe('SubmitDiffsUseCase', () => {
             artefactId: 'art-123',
             payload: { oldValue: 'old', newValue: 'new' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: 'test message',
           },
           {
             type: ChangeProposalType.updateCommandDescription,
             artefactId: 'art-123',
             payload: { oldValue: 'old claude', newValue: 'new claude' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: 'test message',
           },
         ],
       });
@@ -384,7 +432,10 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('does not call batchCreate', async () => {
-      await useCase.execute({ groupedDiffs: [missingArtifactIdGroup] });
+      await useCase.execute({
+        groupedDiffs: [missingArtifactIdGroup],
+        message: 'test message',
+      });
 
       expect(mockChangeProposals.batchCreate).not.toHaveBeenCalled();
     });
@@ -406,6 +457,7 @@ describe('SubmitDiffsUseCase', () => {
     it('returns 0 submitted', async () => {
       const result = await useCase.execute({
         groupedDiffs: [missingSpaceIdGroup],
+        message: 'test message',
       });
 
       expect(result.submitted).toBe(0);
@@ -414,6 +466,7 @@ describe('SubmitDiffsUseCase', () => {
     it('skips with reason "Missing artifact metadata"', async () => {
       const result = await useCase.execute({
         groupedDiffs: [missingSpaceIdGroup],
+        message: 'test message',
       });
 
       expect(result.skipped).toEqual([
@@ -466,6 +519,7 @@ describe('SubmitDiffsUseCase', () => {
     it('returns correct submitted count', async () => {
       const result = await useCase.execute({
         groupedDiffs: [validGroup, standardGroup, missingMetadataGroup],
+        message: 'test message',
       });
 
       expect(result.submitted).toBe(2);
@@ -474,6 +528,7 @@ describe('SubmitDiffsUseCase', () => {
     it('returns correct skipped entries', async () => {
       const result = await useCase.execute({
         groupedDiffs: [validGroup, standardGroup, missingMetadataGroup],
+        message: 'test message',
       });
 
       expect(result.skipped).toEqual([
@@ -484,13 +539,19 @@ describe('SubmitDiffsUseCase', () => {
 
   describe('when group is an empty array', () => {
     it('returns 0 submitted', async () => {
-      const result = await useCase.execute({ groupedDiffs: [[]] });
+      const result = await useCase.execute({
+        groupedDiffs: [[]],
+        message: 'test message',
+      });
 
       expect(result.submitted).toBe(0);
     });
 
     it('returns empty skipped array', async () => {
-      const result = await useCase.execute({ groupedDiffs: [[]] });
+      const result = await useCase.execute({
+        groupedDiffs: [[]],
+        message: 'test message',
+      });
 
       expect(result.skipped).toEqual([]);
     });
@@ -527,7 +588,10 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('maps errors to artifact names using the index', async () => {
-      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [commandGroup],
+        message: 'test message',
+      });
 
       expect(result.errors).toEqual([
         {
@@ -540,7 +604,10 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('returns correct submitted count', async () => {
-      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [commandGroup],
+        message: 'test message',
+      });
 
       expect(result.submitted).toBe(1);
     });
@@ -574,7 +641,10 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('propagates the error code from the gateway response', async () => {
-      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [commandGroup],
+        message: 'test message',
+      });
 
       expect(result.errors).toEqual([
         {
@@ -614,13 +684,19 @@ describe('SubmitDiffsUseCase', () => {
     });
 
     it('returns alreadySubmitted count from gateway', async () => {
-      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [commandGroup],
+        message: 'test message',
+      });
 
       expect(result.alreadySubmitted).toBe(1);
     });
 
     it('returns correct submitted count', async () => {
-      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+      const result = await useCase.execute({
+        groupedDiffs: [commandGroup],
+        message: 'test message',
+      });
 
       expect(result.submitted).toBe(1);
     });
