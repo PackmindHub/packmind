@@ -6,25 +6,29 @@ export interface ReadPlaybookResult extends ValidationResult {
   data?: PlaybookDTO;
 }
 
+export function parseAndValidatePlaybook(content: string): ReadPlaybookResult {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(content);
+  } catch (e) {
+    return {
+      isValid: false,
+      errors: [
+        `Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      ],
+    };
+  }
+
+  return validatePlaybook(parsed);
+}
+
 export async function readPlaybookFile(
   filePath: string,
 ): Promise<ReadPlaybookResult> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
-    let parsed: unknown;
-
-    try {
-      parsed = JSON.parse(content);
-    } catch (e) {
-      return {
-        isValid: false,
-        errors: [
-          `Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`,
-        ],
-      };
-    }
-
-    return validatePlaybook(parsed);
+    return parseAndValidatePlaybook(content);
   } catch (e) {
     return {
       isValid: false,

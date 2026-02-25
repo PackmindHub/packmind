@@ -1,6 +1,7 @@
 import {
   readCommandPlaybookFile,
   ReadCommandPlaybookResult,
+  parseAndValidateCommandPlaybook,
 } from './readCommandPlaybookFile';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -110,6 +111,73 @@ describe('readCommandPlaybookFile', () => {
 
     it('returns errors', () => {
       expect(result.errors).toBeDefined();
+    });
+  });
+});
+
+describe('parseAndValidateCommandPlaybook', () => {
+  describe('when given valid JSON with valid schema', () => {
+    let result: ReadCommandPlaybookResult;
+    const playbook = {
+      name: 'Setup React Component',
+      summary: 'Creates a new React component with tests',
+      whenToUse: ['When creating a new UI component'],
+      contextValidationCheckpoints: ['Is this a frontend project?'],
+      steps: [
+        {
+          name: 'Create component file',
+          description: 'Create the component TSX file',
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      result = parseAndValidateCommandPlaybook(JSON.stringify(playbook));
+    });
+
+    it('returns valid status', () => {
+      expect(result.isValid).toBe(true);
+    });
+
+    it('returns parsed playbook data', () => {
+      expect(result.data).toEqual(playbook);
+    });
+  });
+
+  describe('when given invalid JSON', () => {
+    let result: ReadCommandPlaybookResult;
+
+    beforeEach(() => {
+      result = parseAndValidateCommandPlaybook('{invalid json}');
+    });
+
+    it('returns invalid status', () => {
+      expect(result.isValid).toBe(false);
+    });
+
+    it('returns errors containing Invalid JSON', () => {
+      expect(result.errors?.[0]).toContain('Invalid JSON');
+    });
+  });
+
+  describe('when given valid JSON but invalid schema', () => {
+    let result: ReadCommandPlaybookResult;
+
+    beforeEach(() => {
+      result = parseAndValidateCommandPlaybook(
+        JSON.stringify({
+          name: 'Test',
+          // missing required fields: summary, whenToUse, contextValidationCheckpoints, steps
+        }),
+      );
+    });
+
+    it('returns invalid status', () => {
+      expect(result.isValid).toBe(false);
+    });
+
+    it('returns at least one error', () => {
+      expect(result.errors!.length).toBeGreaterThan(0);
     });
   });
 });

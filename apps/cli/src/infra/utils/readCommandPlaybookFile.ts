@@ -9,25 +9,31 @@ export interface ReadCommandPlaybookResult extends CommandValidationResult {
   data?: CommandPlaybookDTO;
 }
 
+export function parseAndValidateCommandPlaybook(
+  content: string,
+): ReadCommandPlaybookResult {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(content);
+  } catch (e) {
+    return {
+      isValid: false,
+      errors: [
+        `Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      ],
+    };
+  }
+
+  return validateCommandPlaybook(parsed);
+}
+
 export async function readCommandPlaybookFile(
   filePath: string,
 ): Promise<ReadCommandPlaybookResult> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
-    let parsed: unknown;
-
-    try {
-      parsed = JSON.parse(content);
-    } catch (e) {
-      return {
-        isValid: false,
-        errors: [
-          `Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`,
-        ],
-      };
-    }
-
-    return validateCommandPlaybook(parsed);
+    return parseAndValidateCommandPlaybook(content);
   } catch (e) {
     return {
       isValid: false,
