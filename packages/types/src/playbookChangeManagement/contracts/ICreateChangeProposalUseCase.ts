@@ -13,6 +13,7 @@ export type CreateChangeProposalCommand<T extends ChangeProposalType> =
     artefactId: ChangeProposalArtefactId<T>;
     payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
+    message?: string;
   };
 
 export type CreateChangeProposalResponse<T extends ChangeProposalType> = {

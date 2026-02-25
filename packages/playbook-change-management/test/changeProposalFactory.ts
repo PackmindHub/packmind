@@ -22,6 +22,7 @@ export const changeProposalFactory: Factory<
     spaceId: createSpaceId(uuidv4()),
     payload: { oldValue: 'Old Name', newValue: 'New Name' },
     captureMode: ChangeProposalCaptureMode.commit,
+    message: '',
     status: ChangeProposalStatus.pending,
     createdBy: createUserId(uuidv4()),
     resolvedBy: null,

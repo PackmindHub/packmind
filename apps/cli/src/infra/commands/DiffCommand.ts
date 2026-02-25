@@ -1,4 +1,4 @@
-import { command, flag } from 'cmd-ts';
+import { command, flag, option, optional, string } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { diffArtefactsHandler } from './diffArtefactsHandler';
@@ -16,8 +16,15 @@ export const diffCommand = command({
       long: 'include-submitted',
       description: 'Include already submitted changes in the output',
     }),
+    message: option({
+      long: 'message',
+      short: 'm',
+      description:
+        'Message describing the intent behind the changes (max 1024 chars)',
+      type: optional(string),
+    }),
   },
-  handler: async ({ submit, includeSubmitted }) => {
+  handler: async ({ submit, includeSubmitted, message }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -29,6 +36,7 @@ export const diffCommand = command({
       error: console.error,
       submit,
       includeSubmitted,
+      message,
     });
   },
 });

@@ -17,6 +17,7 @@ export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
     payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
     status: ChangeProposalStatus;
+    message: string;
     createdBy: UserId;
     resolvedBy: UserId | null;
     resolvedAt: Date | null;

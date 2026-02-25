@@ -72,6 +72,7 @@ export class ChangeProposalService {
       spaceId: command.spaceId,
       payload: command.payload,
       captureMode: command.captureMode,
+      message: command.message ?? '',
       status: ChangeProposalStatus.pending,
       createdBy,
       resolvedBy: null,

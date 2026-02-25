@@ -21,7 +21,7 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
 
   async execute(command: SubmitDiffsCommand): Promise<SubmitDiffsResult> {
-    const { groupedDiffs } = command;
+    const { groupedDiffs, message } = command;
     const skipped: { name: string; reason: string }[] = [];
     const validDiffs: ValidDiff[] = [];
 
@@ -76,6 +76,7 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
             diff.artifactId as ChangeProposalArtefactId<ChangeProposalType>,
           payload: diff.payload,
           captureMode: ChangeProposalCaptureMode.commit,
+          message,
         })),
       });
       submitted += response.created;

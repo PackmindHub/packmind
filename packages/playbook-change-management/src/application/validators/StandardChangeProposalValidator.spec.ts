@@ -44,6 +44,7 @@ describe('StandardChangeProposalValidator', () => {
       type: ChangeProposalType.updateStandardName,
       artefactId: standardId,
       captureMode: ChangeProposalCaptureMode.commit,
+      message: 'test message',
       payload: {
         oldValue: 'My Standard',
         newValue: 'Renamed Standard',

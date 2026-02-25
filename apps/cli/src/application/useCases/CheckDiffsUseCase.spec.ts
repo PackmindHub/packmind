@@ -196,12 +196,14 @@ describe('CheckDiffsUseCase', () => {
             artefactId: 'art-a',
             payload: { oldValue: 'old a', newValue: 'new a' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
           },
           {
             type: ChangeProposalType.updateCommandDescription,
             artefactId: 'art-b',
             payload: { oldValue: 'old b', newValue: 'new b' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
           },
         ],
       });
@@ -364,6 +366,7 @@ describe('CheckDiffsUseCase', () => {
             artefactId: 'art-valid',
             payload: { oldValue: 'old', newValue: 'new' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
           },
         ],
       });
@@ -453,12 +456,14 @@ describe('CheckDiffsUseCase', () => {
             artefactId: 'art-1',
             payload: { oldValue: 'old 1', newValue: 'new 1' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
           },
           {
             type: ChangeProposalType.updateStandardName,
             artefactId: 'art-2',
             payload: { oldValue: 'old 2', newValue: 'new 2' },
             captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
           },
         ],
       });

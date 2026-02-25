@@ -60,6 +60,7 @@ describe('ChangeProposalService', () => {
         artefactId: recipeId,
         payload: { oldValue: 'old name', newValue: 'new name' },
         captureMode: ChangeProposalCaptureMode.commit,
+        message: '',
       };
 
     it('creates a proposal with pending status', async () => {
@@ -112,6 +113,30 @@ describe('ChangeProposalService', () => {
       );
     });
 
+    it('sets message from command', async () => {
+      const commandWithMessage = {
+        ...command,
+        message: 'Refactored command names',
+      };
+      const { changeProposal } = await service.createChangeProposal(
+        commandWithMessage,
+        artefactVersion,
+      );
+
+      expect(changeProposal.message).toBe('Refactored command names');
+    });
+
+    describe('when message is not provided', () => {
+      it('defaults message to empty string', async () => {
+        const { changeProposal } = await service.createChangeProposal(
+          command,
+          artefactVersion,
+        );
+
+        expect(changeProposal.message).toBe('');
+      });
+    });
+
     it('sets resolvedBy to null', async () => {
       const { changeProposal } = await service.createChangeProposal(
         command,
@@ -144,6 +169,7 @@ describe('ChangeProposalService', () => {
         spaceId,
         payload: { oldValue: 'old name', newValue: 'new name' },
         captureMode: ChangeProposalCaptureMode.commit,
+        message: '',
         status: ChangeProposalStatus.pending,
         createdBy: userId,
         resolvedBy: null,
@@ -210,6 +236,7 @@ describe('ChangeProposalService', () => {
         newValue: 'new',
       } as ChangeProposal<T>['payload'],
       captureMode: ChangeProposalCaptureMode.commit,
+      message: '',
       status: ChangeProposalStatus.pending,
       createdBy: createUserId('user-id'),
       resolvedBy: null,
@@ -472,6 +499,7 @@ describe('ChangeProposalService', () => {
         newValue: 'new',
       } as ChangeProposal<T>['payload'],
       captureMode: ChangeProposalCaptureMode.commit,
+      message: '',
       status: ChangeProposalStatus.pending,
       createdBy: createUserId('user-id'),
       resolvedBy: null,

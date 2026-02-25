@@ -45,6 +45,7 @@ export class CheckChangeProposalsUseCase extends AbstractMemberUseCase<
           index,
           exists: existing !== null,
           createdAt: existing?.createdAt.toISOString() ?? null,
+          message: existing?.message ?? null,
         };
       }),
     );

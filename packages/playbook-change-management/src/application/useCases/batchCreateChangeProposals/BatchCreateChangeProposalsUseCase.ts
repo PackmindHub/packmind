@@ -46,6 +46,7 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
         artefactId: proposal.artefactId,
         payload: proposal.payload,
         captureMode: proposal.captureMode,
+        message: proposal.message,
       } as CreateChangeProposalCommand<ChangeProposalType>;
 
       try {

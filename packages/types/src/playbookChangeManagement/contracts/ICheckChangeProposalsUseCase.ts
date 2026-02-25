@@ -11,6 +11,7 @@ export type CheckChangeProposalItemResult = {
   index: number;
   exists: boolean;
   createdAt: string | null;
+  message: string | null;
 };
 
 export type CheckChangeProposalsResponse = {
