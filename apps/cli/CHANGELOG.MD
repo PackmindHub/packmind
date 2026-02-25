@@ -2,6 +2,8 @@
 
 ## Added
 
+- Rules can now be linted with severity error (default) or warning - Enterprise version only
+
 ## Changed
 
 ## Fixed
