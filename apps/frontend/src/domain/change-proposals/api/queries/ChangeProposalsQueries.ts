@@ -23,13 +23,15 @@ import {
 } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
-import { GET_RECIPES_KEY } from '../../../recipes/api/queryKeys';
+import {
+  GET_RECIPES_KEY,
+  GET_RECIPE_BY_ID_KEY,
+} from '../../../recipes/api/queryKeys';
 import {
   GET_SKILLS_KEY,
   SKILLS_QUERY_SCOPE,
 } from '../../../skills/api/queryKeys';
 import { SPACES_SCOPE } from '../../../spaces/api/queryKeys';
-import { STANDARDS_QUERY_SCOPE } from '../../../standards/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -214,6 +216,9 @@ export const useApplyRecipeChangeProposalsMutation = (params?: {
         queryClient.invalidateQueries({
           queryKey: GET_RECIPES_KEY,
         }),
+        queryClient.invalidateQueries({
+          queryKey: GET_RECIPE_BY_ID_KEY,
+        }),
       ]);
 
       // Show success toast with link to the new recipe version
@@ -267,13 +272,13 @@ export const useApplyStandardChangeProposalsMutation = () => {
     ) => {
       return changeProposalsGateway.applyStandardChangeProposals(command);
     },
-    onSuccess: async () => {
+    onSuccess: async (_response, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
         }),
         queryClient.invalidateQueries({
-          queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
+          queryKey: [ORGANIZATION_QUERY_SCOPE, SPACES_SCOPE, variables.spaceId],
         }),
       ]);
 
