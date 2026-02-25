@@ -224,17 +224,12 @@ Define specific, actionable scenarios:
    - \`## Context Validation Checkpoints\` bullet items → \`contextValidationCheckpoints[]\`
    - Each \`### ...\` under \`## Steps\` → step \`name\`, paragraph text → \`description\`, code block → \`codeSnippet\` (wrapped in markdown code fences with language identifier)
 
-6. Write the resulting JSON to a temporary \`.playbook.json\` file next to the markdown file (e.g., \`.packmind/commands/_drafts/<slug>.playbook.json\`).
-
-7. Run the packmind-cli command:
+6. Pipe the JSON directly to the CLI via stdin using a heredoc (no intermediate file needed):
 
 \`\`\`bash
-packmind-cli commands create <path-to-playbook.json>
-\`\`\`
-
-Example:
-\`\`\`bash
-packmind-cli commands create .packmind/commands/_drafts/create-api-endpoint.playbook.json
+packmind-cli commands create --origin-skill packmind-create-command <<'EOF'
+{"name":"...","summary":"...","whenToUse":[...],"contextValidationCheckpoints":[...],"steps":[...]}
+EOF
 \`\`\`
 
 Expected output on success:
@@ -261,10 +256,7 @@ packmind-cli login
 
 ### Step 5: Cleanup
 
-After the command is **successfully created**, delete the temporary files:
-
-1. Delete the temporary \`.playbook.json\` file
-2. Delete the draft markdown file in \`.packmind/commands/_drafts/\`
+After the command is **successfully created**, delete the draft markdown file in \`.packmind/commands/_drafts/\`.
 
 **Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
 
@@ -339,9 +331,11 @@ Create unit tests for the controller and use case in their respective \\\`.spec.
 Add the controller and use case to the appropriate NestJS module's \\\`controllers\\\` and \\\`providers\\\` arrays.
 \`\`\`
 
-**Creating the command:**
+**Creating the command (piped via stdin):**
 \`\`\`bash
-packmind-cli commands create .packmind/commands/_drafts/create-api-endpoint.playbook.json
+packmind-cli commands create --origin-skill packmind-create-command <<'EOF'
+{"name":"Create API Endpoint","summary":"Set up a new REST API endpoint...","whenToUse":[...],"contextValidationCheckpoints":[...],"steps":[...]}
+EOF
 \`\`\`
 
 ## Quick Reference
