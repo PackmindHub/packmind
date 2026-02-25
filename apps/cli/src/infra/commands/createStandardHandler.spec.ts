@@ -4,6 +4,10 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 
+jest.mock('../utils/readStdin');
+import { readStdin } from '../utils/readStdin';
+const mockReadStdin = readStdin as jest.MockedFunction<typeof readStdin>;
+
 describe('createStandardHandler', () => {
   let mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase>;
   let tempDir: string;
@@ -130,6 +134,75 @@ describe('createStandardHandler', () => {
 
     it('returns the error message', () => {
       expect(result.error).toContain('API failed');
+    });
+  });
+
+  describe('when reading from stdin (no file path)', () => {
+    describe('with valid JSON from stdin', () => {
+      let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+      beforeEach(async () => {
+        const playbook = {
+          name: 'Stdin Standard',
+          description: 'Created from stdin',
+          scope: 'Test scope',
+          rules: [{ content: 'Use something' }],
+        };
+        mockReadStdin.mockResolvedValue(JSON.stringify(playbook));
+
+        result = await createStandardHandler(undefined, mockUseCase);
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('calls use case with parsed data', () => {
+        expect(mockUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Stdin Standard',
+            description: 'Created from stdin',
+            scope: 'Test scope',
+            rules: [{ content: 'Use something' }],
+          }),
+        );
+      });
+    });
+
+    describe('when stdin contains invalid JSON', () => {
+      let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+      beforeEach(async () => {
+        mockReadStdin.mockResolvedValue('{invalid json}');
+        result = await createStandardHandler(undefined, mockUseCase);
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns validation error', () => {
+        expect(result.error).toBeDefined();
+      });
+    });
+
+    describe('when stdin read fails', () => {
+      let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+      beforeEach(async () => {
+        mockReadStdin.mockRejectedValue(
+          new Error('No file argument provided and no piped input detected'),
+        );
+        result = await createStandardHandler(undefined, mockUseCase);
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns the stdin error message', () => {
+        expect(result.error).toContain('No file argument provided');
+      });
     });
   });
 });
