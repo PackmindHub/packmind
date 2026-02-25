@@ -1,4 +1,4 @@
-import { PMHStack, PMIconButton } from '@packmind/ui';
+import { PMHStack, PMIconButton, PMTooltip } from '@packmind/ui';
 import { ChangeProposalId, UserId } from '@packmind/types';
 import { LuCheck, LuX } from 'react-icons/lu';
 import { ChangeProposalWithConflicts } from '../../types';
@@ -14,6 +14,48 @@ interface PendingProposalCardProps {
   onSelect: () => void;
   onAccept: () => void;
   onReject: () => void;
+}
+
+function AcceptIconButton({
+  isOutdated,
+  isBlocked,
+  onAccept,
+}: {
+  isOutdated: boolean;
+  isBlocked: boolean;
+  onAccept: () => void;
+}) {
+  const isDisabled = isOutdated || isBlocked;
+
+  const button = (
+    <PMIconButton
+      aria-label="Accept proposal"
+      size="xs"
+      variant="solid"
+      disabled={isDisabled}
+      onClick={onAccept}
+    >
+      <LuCheck size={14} />
+    </PMIconButton>
+  );
+
+  if (isOutdated) {
+    return (
+      <PMTooltip label="This proposal is based on an outdated version">
+        {button}
+      </PMTooltip>
+    );
+  }
+
+  if (isBlocked) {
+    return (
+      <PMTooltip label="Conflicts with an accepted proposal">
+        {button}
+      </PMTooltip>
+    );
+  }
+
+  return button;
 }
 
 export function PendingProposalCard({
@@ -40,15 +82,11 @@ export function PendingProposalCard({
       onSelect={onSelect}
       actions={
         <PMHStack gap={1}>
-          <PMIconButton
-            aria-label="Accept proposal"
-            size="xs"
-            variant="solid"
-            disabled={isOutdated || isBlockedByConflict}
-            onClick={onAccept}
-          >
-            <LuCheck size={14} />
-          </PMIconButton>
+          <AcceptIconButton
+            isOutdated={isOutdated}
+            isBlocked={isBlockedByConflict}
+            onAccept={onAccept}
+          />
           <PMIconButton
             aria-label="Reject proposal"
             size="xs"

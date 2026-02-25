@@ -109,6 +109,9 @@ describe('useDiffNavigation', () => {
   const OriginalMutationObserver = window.MutationObserver;
 
   beforeEach(() => {
+    jest.useFakeTimers({
+      doNotFake: ['requestAnimationFrame', 'cancelAnimationFrame'],
+    });
     mutationCallbacks = [];
     observeTargets = [];
     window.MutationObserver = class MockMutationObserver {
@@ -137,6 +140,7 @@ describe('useDiffNavigation', () => {
     (window.requestAnimationFrame as jest.Mock).mockRestore();
     window.MutationObserver = OriginalMutationObserver;
     document.body.innerHTML = '';
+    jest.useRealTimers();
   });
 
   describe('when no diff sections exist initially', () => {
@@ -162,6 +166,7 @@ describe('useDiffNavigation', () => {
 
       act(() => {
         mutationCallbacks[0]([], {} as MutationObserver);
+        jest.runAllTimers();
       });
 
       expect(result.current.totalChanges).toBe(1);
@@ -179,6 +184,10 @@ describe('useDiffNavigation', () => {
       const proposalId = createChangeProposalId('proposal-1');
 
       const { result } = renderHook(() => useDiffNavigation(proposalId));
+
+      act(() => {
+        jest.runAllTimers();
+      });
 
       expect(result.current.totalChanges).toBe(1);
     });
@@ -210,6 +219,10 @@ describe('useDiffNavigation', () => {
 
       rerender({ id: proposalId2 });
 
+      act(() => {
+        jest.runAllTimers();
+      });
+
       expect(result.current.totalChanges).toBe(1);
     });
   });
@@ -229,12 +242,20 @@ describe('useDiffNavigation', () => {
         initialProps: { id: proposalId1 },
       });
 
+      act(() => {
+        jest.runAllTimers();
+      });
+
       // Replace with a different element for the second proposal
       section.innerHTML = '';
       const change2 = document.createElement('del');
       section.appendChild(change2);
 
       rerender({ id: proposalId2 });
+
+      act(() => {
+        jest.runAllTimers();
+      });
 
       expect(change1.hasAttribute('data-diff-active')).toBe(false);
     });
@@ -259,6 +280,10 @@ describe('useDiffNavigation', () => {
       section.appendChild(change2);
 
       rerender({ id: proposalId2 });
+
+      act(() => {
+        jest.runAllTimers();
+      });
 
       expect(change2.hasAttribute('data-diff-active')).toBe(true);
     });

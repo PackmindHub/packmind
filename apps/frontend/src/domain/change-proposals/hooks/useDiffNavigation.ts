@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ChangeProposalId } from '@packmind/types';
 
+const ACCORDION_ANIMATION_DELAY_MS = 250;
+
 const CHANGE_SELECTOR =
   '[data-diff-section] ins, [data-diff-section] del, [data-diff-section] [data-diff-change], [data-diff-section] .diff-ins, [data-diff-section] .diff-del, [data-diff-section] .milkdown-diff-highlight';
 
@@ -111,6 +113,7 @@ export function useDiffNavigation(
 
     let observer: MutationObserver | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let animDelayId: ReturnType<typeof setTimeout> | null = null;
 
     const scanForChanges = () => {
       const els = Array.from(
@@ -119,7 +122,11 @@ export function useDiffNavigation(
       if (els.length > 0) {
         observer?.disconnect();
         if (timeoutId) clearTimeout(timeoutId);
-        applyGroups(groupByProximity(els));
+        // Delay applying groups to let accordion animations complete
+        // before getBoundingClientRect() is called for scrolling
+        animDelayId = setTimeout(() => {
+          applyGroups(groupByProximity(els));
+        }, ACCORDION_ANIMATION_DELAY_MS);
       }
     };
 
@@ -138,6 +145,7 @@ export function useDiffNavigation(
       cancelAnimationFrame(frameId);
       observer?.disconnect();
       if (timeoutId) clearTimeout(timeoutId);
+      if (animDelayId) clearTimeout(animDelayId);
       groupsRef.current
         .flat()
         .forEach((el) => el.removeAttribute('data-diff-active'));

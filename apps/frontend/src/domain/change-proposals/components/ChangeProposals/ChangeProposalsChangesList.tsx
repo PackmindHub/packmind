@@ -165,7 +165,7 @@ export function ChangeProposalsChangesList({
           {proposals.length === 0 && (
             <PMBox py={4} textAlign="center">
               <PMText fontSize="sm" color="secondary">
-                No pending proposals for this command
+                No pending proposals
               </PMText>
             </PMBox>
           )}
