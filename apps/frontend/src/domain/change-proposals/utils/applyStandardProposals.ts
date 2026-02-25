@@ -130,8 +130,8 @@ export function applyStandardProposals(
         if (
           isExpectedChangeProposalType(proposal, ChangeProposalType.addRule)
         ) {
-          // Create a temporary rule ID for frontend display
-          const newRuleId = createRuleId('');
+          // Create a unique temporary rule ID based on the proposal ID for frontend display
+          const newRuleId = createRuleId(`temp-rule-${proposal.id}`);
           const newRule: Rule = {
             id: newRuleId,
             content: proposal.payload.item.content,
