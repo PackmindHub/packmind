@@ -74,10 +74,14 @@ The agent will guide you through:
 
 ## Create a standard from the CLI
 
-You can also create standards directly using the Packmind CLI with a JSON playbook file.
+You can also create standards directly using the Packmind CLI with a JSON playbook file or by piping JSON via stdin.
 
 ```bash
+# From a file
 packmind-cli standards create ./my-standard.json
+
+# From stdin
+echo '{"name":"Error Handling","description":"...","scope":"All services","rules":[{"content":"Validate inputs"}]}' | packmind-cli standards create
 ```
 
 ### Playbook format
@@ -129,8 +133,9 @@ Each rule requires a `content` field that starts with an action verb. Examples a
 
 <Tip>
   Use the CLI directly when you have standards defined as files in your
-  repository or want to automate standard creation. See [CLI: Standard
-  Command](/tools/cli#standard-command) for more details.
+  repository or want to automate standard creation. Stdin support makes it easy
+  to pipe JSON from scripts or AI agents. See [CLI: Standards
+  Command](/tools/cli#standards-command) for more details.
 </Tip>
 
 ## Create a standard from the web app

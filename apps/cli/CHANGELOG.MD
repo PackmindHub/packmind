@@ -2,6 +2,8 @@
 
 ## Added
 
+- `standards create` and `commands create` now accept JSON via stdin (e.g., `echo '{"name":"..."}' | packmind-cli standards create`), in addition to the existing file path argument
+
 ## Changed
 
 ## Fixed
