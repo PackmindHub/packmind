@@ -130,6 +130,29 @@ To make a draft program active:
 
 Only programs with a "READY" status can be promoted to active.
 
+## Rule Severity
+
+Each active detection program has a **severity** level that determines how violations are treated:
+
+### Error (default)
+
+Rules with `error` severity are **blocking**. When the linter detects a violation from an error-level rule, it exits with a non-zero exit code. This makes errors ideal for **CI/CD gates** — your pipeline will fail if any error-level violations are found.
+
+### Warning
+
+Rules with `warning` severity are **informational**. Violations are reported in the output, but they do **not** cause a non-zero exit code. Warnings won't block your pipeline — they serve as guidance for developers without enforcing a hard stop.
+
+### Configuring Severity
+
+Severity can be configured per rule and per language from the rule's detection settings in the Packmind web interface. By default, all rules are set to `error` severity.
+
+<Tip>
+  **When to use warnings** — Warnings are useful for rules you want to gradually
+  roll out, stylistic preferences, or best practices that shouldn't block
+  deployments. Start with `warning` severity and promote to `error` once the
+  team is aligned.
+</Tip>
+
 ## Testing Draft Programs
 
 Before promoting a draft program to active, you should test it to ensure it correctly detects violations.

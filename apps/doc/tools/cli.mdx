@@ -597,6 +597,33 @@ packmind-cli lint . --logger=ide
 
 **IDE format** provides structured output that can be parsed by editors and CI/CD tools.
 
+### Filtering by Severity
+
+Use the `--level` flag to filter which violations are displayed based on their severity:
+
+```bash
+# Show only errors (suppress warnings)
+packmind-cli lint . --level error
+
+# Show warnings and errors (everything)
+packmind-cli lint . --level warning
+```
+
+| Value     | What is displayed                    |
+| --------- | ------------------------------------ |
+| `error`   | Only error-level violations          |
+| `warning` | All violations (warnings and errors) |
+
+Without the `--level` flag, all violations are displayed regardless of severity.
+
+<Tip>
+  **CI/CD usage** — Use `--level error` in your CI pipeline to focus on blocking
+  violations only, while still running `--level warning` (or no flag) during
+  local development to see all feedback. See [Rule
+  Severity](/linter/linter#rule-severity) for details on how severity affects
+  exit codes.
+</Tip>
+
 ## Skills Command
 
 Manage skills in your Packmind organization. Skills are reusable knowledge packages that AI coding assistants can discover and use.
