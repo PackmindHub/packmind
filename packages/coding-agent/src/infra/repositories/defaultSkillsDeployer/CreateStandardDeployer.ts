@@ -322,17 +322,12 @@ Rules:
    }
    \`\`\`
 
-6. Write the resulting JSON to a temporary \`.playbook.json\` file next to the markdown file (e.g., \`.packmind/standards/_drafts/<slug>.playbook.json\`).
-
-7. Run the packmind-cli command:
+6. Pipe the JSON directly to the CLI via stdin using a heredoc (no intermediate file needed):
 
 \`\`\`bash
-packmind-cli standards create <path-to-playbook.json>
-\`\`\`
-
-Example:
-\`\`\`bash
-packmind-cli standards create .packmind/standards/_drafts/testing-conventions.playbook.json
+packmind-cli standards create --origin-skill packmind-create-standard <<'EOF'
+{"name":"...","description":"...","scope":"...","rules":[...]}
+EOF
 \`\`\`
 
 Expected output on success:
@@ -362,10 +357,7 @@ packmind-cli login
 
 ### Step 5: Cleanup
 
-After the standard is **successfully created**, delete the temporary files:
-
-1. Delete the temporary \`.playbook.json\` file
-2. Delete the draft markdown file in \`.packmind/standards/_drafts/\`
+After the standard is **successfully created**, delete the draft markdown file in \`.packmind/standards/_drafts/\`.
 
 **Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
 
@@ -454,9 +446,11 @@ it('validates user', () => { expect(result.name).toBe('test'); expect(result.age
 ### Avoid using 'should' at the start of test names - use assertive verb-first naming
 \`\`\`
 
-**Creating the standard:**
+**Creating the standard (piped via stdin):**
 \`\`\`bash
-packmind-cli standards create .packmind/standards/_drafts/testing-conventions.playbook.json
+packmind-cli standards create --origin-skill packmind-create-standard <<'EOF'
+{"name":"TypeScript Testing Conventions","description":"Enforce consistent testing patterns...","scope":"TypeScript test files (*.spec.ts, *.test.ts)","rules":[...]}
+EOF
 \`\`\`
 
 ## Quick Reference

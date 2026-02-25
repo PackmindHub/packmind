@@ -1,4 +1,9 @@
-import { readPlaybookFile } from '../utils/readPlaybookFile';
+import {
+  readPlaybookFile,
+  parseAndValidatePlaybook,
+  ReadPlaybookResult,
+} from '../utils/readPlaybookFile';
+import { readStdin } from '../utils/readStdin';
 import { ICreateStandardFromPlaybookUseCase } from '../../domain/useCases/ICreateStandardFromPlaybookUseCase';
 
 export interface ICreateStandardHandlerResult {
@@ -9,11 +14,25 @@ export interface ICreateStandardHandlerResult {
 }
 
 export async function createStandardHandler(
-  filePath: string,
+  filePath: string | undefined,
   useCase: ICreateStandardFromPlaybookUseCase,
   originSkill?: string,
 ): Promise<ICreateStandardHandlerResult> {
-  const readResult = await readPlaybookFile(filePath);
+  let readResult: ReadPlaybookResult;
+
+  if (filePath) {
+    readResult = await readPlaybookFile(filePath);
+  } else {
+    try {
+      const content = await readStdin();
+      readResult = parseAndValidatePlaybook(content);
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : 'Failed to read from stdin',
+      };
+    }
+  }
 
   if (!readResult.isValid) {
     return {

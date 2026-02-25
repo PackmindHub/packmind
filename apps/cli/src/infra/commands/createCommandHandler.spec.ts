@@ -10,6 +10,10 @@ jest.mock('../utils/credentials', () => ({
   decodeApiKey: jest.fn(),
 }));
 
+jest.mock('../utils/readStdin');
+import { readStdin } from '../utils/readStdin';
+const mockReadStdin = readStdin as jest.MockedFunction<typeof readStdin>;
+
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
 
 const mockLoadApiKey = loadApiKey as jest.MockedFunction<typeof loadApiKey>;
@@ -191,6 +195,77 @@ describe('createCommandHandler', () => {
 
     it('returns the error message', () => {
       expect(result.error).toContain('API failed');
+    });
+  });
+
+  describe('when reading from stdin (no file path)', () => {
+    describe('with valid JSON from stdin', () => {
+      let result: Awaited<ReturnType<typeof createCommandHandler>>;
+
+      beforeEach(async () => {
+        const playbook = {
+          name: 'Stdin Command',
+          summary: 'Created from stdin',
+          whenToUse: ['When testing stdin'],
+          contextValidationCheckpoints: ['Is stdin available?'],
+          steps: [{ name: 'Step 1', description: 'Do something' }],
+        };
+        mockReadStdin.mockResolvedValue(JSON.stringify(playbook));
+
+        result = await createCommandHandler(undefined, mockUseCase);
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('calls use case with parsed data', () => {
+        expect(mockUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Stdin Command',
+            summary: 'Created from stdin',
+            whenToUse: ['When testing stdin'],
+            contextValidationCheckpoints: ['Is stdin available?'],
+            steps: [{ name: 'Step 1', description: 'Do something' }],
+          }),
+        );
+      });
+    });
+
+    describe('when stdin contains invalid JSON', () => {
+      let result: Awaited<ReturnType<typeof createCommandHandler>>;
+
+      beforeEach(async () => {
+        mockReadStdin.mockResolvedValue('{invalid json}');
+        result = await createCommandHandler(undefined, mockUseCase);
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns validation error', () => {
+        expect(result.error).toBeDefined();
+      });
+    });
+
+    describe('when stdin read fails', () => {
+      let result: Awaited<ReturnType<typeof createCommandHandler>>;
+
+      beforeEach(async () => {
+        mockReadStdin.mockRejectedValue(
+          new Error('No file argument provided and no piped input detected'),
+        );
+        result = await createCommandHandler(undefined, mockUseCase);
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns the stdin error message', () => {
+        expect(result.error).toContain('No file argument provided');
+      });
     });
   });
 });

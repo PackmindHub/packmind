@@ -1,4 +1,4 @@
-import { command, positional, string } from 'cmd-ts';
+import { command, positional, string, optional } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { createStandardHandler } from './createStandardHandler';
 import { logSuccessConsole, logErrorConsole } from '../utils/consoleLogger';
@@ -8,12 +8,13 @@ import { originSkillOption } from './sharedOptions';
 
 export const createStandardCommand = command({
   name: 'create',
-  description: 'Create a coding standard from a playbook JSON file',
+  description: 'Create a coding standard from a playbook JSON file or stdin',
   args: {
     file: positional({
       displayName: 'file',
-      description: 'Path to the playbook JSON file',
-      type: string,
+      description:
+        'Path to the playbook JSON file (reads from stdin if omitted)',
+      type: optional(string),
     }),
     originSkill: originSkillOption,
   },

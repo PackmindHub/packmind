@@ -1,4 +1,8 @@
-import { readPlaybookFile, ReadPlaybookResult } from './readPlaybookFile';
+import {
+  readPlaybookFile,
+  ReadPlaybookResult,
+  parseAndValidatePlaybook,
+} from './readPlaybookFile';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -91,6 +95,67 @@ describe('readPlaybookFile', () => {
 
     it('returns errors', () => {
       expect(result.errors).toBeDefined();
+    });
+  });
+});
+
+describe('parseAndValidatePlaybook', () => {
+  describe('when given valid JSON with valid schema', () => {
+    let result: ReadPlaybookResult;
+    const playbook = {
+      name: 'Test',
+      description: 'Test description',
+      scope: 'Test scope',
+      rules: [{ content: 'Use something' }],
+    };
+
+    beforeEach(() => {
+      result = parseAndValidatePlaybook(JSON.stringify(playbook));
+    });
+
+    it('returns valid status', () => {
+      expect(result.isValid).toBe(true);
+    });
+
+    it('returns parsed playbook data', () => {
+      expect(result.data).toEqual(playbook);
+    });
+  });
+
+  describe('when given invalid JSON', () => {
+    let result: ReadPlaybookResult;
+
+    beforeEach(() => {
+      result = parseAndValidatePlaybook('{invalid json}');
+    });
+
+    it('returns invalid status', () => {
+      expect(result.isValid).toBe(false);
+    });
+
+    it('returns errors containing Invalid JSON', () => {
+      expect(result.errors?.[0]).toContain('Invalid JSON');
+    });
+  });
+
+  describe('when given valid JSON but invalid schema', () => {
+    let result: ReadPlaybookResult;
+
+    beforeEach(() => {
+      result = parseAndValidatePlaybook(
+        JSON.stringify({
+          name: 'Test',
+          // missing required fields: description, scope, rules
+        }),
+      );
+    });
+
+    it('returns invalid status', () => {
+      expect(result.isValid).toBe(false);
+    });
+
+    it('returns at least one error', () => {
+      expect(result.errors!.length).toBeGreaterThan(0);
     });
   });
 });
