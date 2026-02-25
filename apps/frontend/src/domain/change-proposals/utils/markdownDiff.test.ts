@@ -279,6 +279,42 @@ describe('buildDiffHtml', () => {
     });
   });
 
+  describe('with tight-to-loose list transition', () => {
+    const oldValue =
+      '* [ ] Use `PackmindErrorHandler.throwError`\n* Follow logging guidelines';
+    const newValue =
+      '* [ ] Use `PackmindErrorHandler.throwError`\n\n* Follow logging guidelines\n\n* New item added';
+    let result: string;
+
+    beforeEach(() => {
+      result = buildDiffHtml(oldValue, newValue);
+    });
+
+    it('does not mark unchanged checkbox item as deleted', () => {
+      expect(result).not.toContain(
+        '<del><input type="checkbox" disabled > Use <code>PackmindErrorHandler.throwError</code></del>',
+      );
+    });
+
+    it('does not mark unchanged checkbox item as added', () => {
+      expect(result).not.toContain(
+        '<ins><input type="checkbox" disabled > Use <code>PackmindErrorHandler.throwError</code></ins>',
+      );
+    });
+
+    it('does not mark unchanged plain item as deleted', () => {
+      expect(result).not.toContain('<del>Follow logging guidelines</del>');
+    });
+
+    it('does not mark unchanged plain item as added', () => {
+      expect(result).not.toContain('<ins>Follow logging guidelines</ins>');
+    });
+
+    it('marks the truly new item as added', () => {
+      expect(result).toContain('<ins>New item added</ins>');
+    });
+  });
+
   describe('with complex mixed content', () => {
     const oldValue = [
       '## When to Use',

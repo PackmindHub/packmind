@@ -34,8 +34,8 @@ function renderListWithItemDiff(
   newList: Tokens.List,
 ): string {
   const listTag = newList.ordered ? 'ol' : 'ul';
-  const oldTexts = oldList.items.map((item) => item.text);
-  const newTexts = newList.items.map((item) => item.text);
+  const oldTexts = oldList.items.map((item) => item.text.trim());
+  const newTexts = newList.items.map((item) => item.text.trim());
   const changes = diffArrays(oldTexts, newTexts);
 
   let oldIdx = 0;
