@@ -1,7 +1,9 @@
 import {
   BatchCreateChangeProposalsResponse,
+  CheckChangeProposalsResponse,
   Gateway,
   IBatchCreateChangeProposalsUseCase,
+  ICheckChangeProposalsUseCase,
 } from '@packmind/types';
 
 import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
@@ -16,6 +18,17 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
     const { organizationId } = this.httpClient.getAuthContext();
     return this.httpClient.request<BatchCreateChangeProposalsResponse>(
       `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/change-proposals/batch`,
+      {
+        method: 'POST',
+        body: { proposals: command.proposals },
+      },
+    );
+  };
+
+  check: Gateway<ICheckChangeProposalsUseCase> = async (command) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<CheckChangeProposalsResponse>(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/change-proposals/check`,
       {
         method: 'POST',
         body: { proposals: command.proposals },

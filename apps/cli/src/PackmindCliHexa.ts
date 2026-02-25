@@ -80,6 +80,7 @@ import {
   IDiffArtefactsResult,
 } from './domain/useCases/IDiffArtefactsUseCase';
 import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
+import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { loadCredentials } from './infra/utils/credentials';
 
 const origin = 'PackmindCliHexa';
@@ -157,6 +158,12 @@ export class PackmindCliHexa {
     groupedDiffs: ArtefactDiff[][],
   ): Promise<SubmitDiffsResult> {
     return this.hexa.useCases.submitDiffs.execute({ groupedDiffs });
+  }
+
+  public async checkDiffs(
+    groupedDiffs: ArtefactDiff[][],
+  ): Promise<CheckDiffsResult> {
+    return this.hexa.useCases.checkDiffs.execute({ groupedDiffs });
   }
 
   public async listPackages(
