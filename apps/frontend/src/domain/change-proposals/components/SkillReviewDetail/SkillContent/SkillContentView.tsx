@@ -170,13 +170,21 @@ export function SkillContentView({
     targetFileId ? [targetFileId] : [],
   );
 
+  const [skillMdOpen, setSkillMdOpen] = useState<string[]>(['SKILL.md']);
+
   useEffect(() => {
     if (targetFileId) {
-      setOpenFileIds((prev) =>
-        prev.includes(targetFileId) ? prev : [...prev, targetFileId],
-      );
+      setOpenFileIds([targetFileId]);
     }
   }, [targetFileId]);
+
+  useEffect(() => {
+    if (isPromptDiff) {
+      setSkillMdOpen((prev) =>
+        prev.includes('SKILL.md') ? prev : [...prev, 'SKILL.md'],
+      );
+    }
+  }, [isPromptDiff]);
 
   return (
     <PMVStack gap={4} align="stretch">
@@ -272,7 +280,12 @@ export function SkillContentView({
 
       {/* SKILL.md section */}
       <PMVStack gap={2} {...(isPromptDiff && { 'data-diff-section': true })}>
-        <PMAccordion.Root collapsible multiple defaultValue={['SKILL.md']}>
+        <PMAccordion.Root
+          collapsible
+          multiple
+          value={skillMdOpen}
+          onValueChange={(details) => setSkillMdOpen(details.value)}
+        >
           <PMAccordion.Item
             value="SKILL.md"
             borderRadius="md"
