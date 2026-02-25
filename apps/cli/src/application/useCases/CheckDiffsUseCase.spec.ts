@@ -436,10 +436,15 @@ describe('CheckDiffsUseCase', () => {
       );
     });
 
-    it('flattens and processes diffs from all groups', async () => {
+    it('calls check once for shared spaceId across groups', async () => {
       await useCase.execute({ groupedDiffs: [group1, group2] });
 
       expect(mockChangeProposals.check).toHaveBeenCalledTimes(1);
+    });
+
+    it('sends flattened proposals from all groups', async () => {
+      await useCase.execute({ groupedDiffs: [group1, group2] });
+
       expect(mockChangeProposals.check).toHaveBeenCalledWith({
         spaceId: 'spc-shared',
         proposals: [
