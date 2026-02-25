@@ -2,6 +2,8 @@
 
 ## Added
 
+- Rules can now be linted with severity error (default) or warning - Enterprise version only
+
 ## Changed
 
 - Commands are now rendered directly in `.claude/commands/` and `.cursor/commands/` instead of the `packmind` subdirectory, with automatic cleanup of the legacy path on next deploy
