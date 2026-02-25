@@ -123,6 +123,8 @@ export function ProposalReviewPanel({
 
     const proposalType = reviewingProposal.type;
 
+    let resultRules = rules;
+
     if (proposalType === ChangeProposalType.addRule) {
       const payload = reviewingProposal.payload as CollectionItemAddPayload<
         Omit<Rule, 'id' | 'standardVersionId'>
@@ -132,7 +134,7 @@ export function ProposalReviewPanel({
         rules.length > 0
           ? rules[0].standardVersionId
           : ('' as StandardVersionId);
-      return [
+      resultRules = [
         ...rules,
         {
           ...payload.item,
@@ -145,7 +147,7 @@ export function ProposalReviewPanel({
     if (proposalType === ChangeProposalType.updateRule) {
       const payload =
         reviewingProposal.payload as CollectionItemUpdatePayload<RuleId>;
-      return rules.map((rule) =>
+      resultRules = rules.map((rule) =>
         rule.id === payload.targetId
           ? { ...rule, content: payload.newValue }
           : rule,
@@ -154,10 +156,13 @@ export function ProposalReviewPanel({
 
     if (proposalType === ChangeProposalType.deleteRule) {
       // Keep the deleted rule in the list so it can be shown with strikethrough styling
-      return rules;
+      resultRules = rules;
     }
 
-    return rules;
+    // Sort rules alphabetically by content (case-insensitive)
+    return [...resultRules].sort((a, b) =>
+      a.content.toLowerCase().localeCompare(b.content.toLowerCase()),
+    );
   }, [reviewingProposal, rules]);
 
   // Helper function to determine rule change status
@@ -375,70 +380,78 @@ export function ProposalReviewPanel({
               <PMText fontSize="md" fontWeight="semibold">
                 Rules
               </PMText>
-              {unifiedResult.rules.map((rule) => {
-                const isAdded = unifiedResult.changes.rules.added.has(rule.id);
-                const updateInfo = unifiedResult.changes.rules.updated.get(
-                  rule.id,
-                );
-                const isDeleted = unifiedResult.changes.rules.deleted.has(
-                  rule.id,
-                );
-
-                if (isAdded) {
-                  const proposalId = unifiedResult.changes.rules.added.get(
+              {[...unifiedResult.rules]
+                .sort((a, b) =>
+                  a.content
+                    .toLowerCase()
+                    .localeCompare(b.content.toLowerCase()),
+                )
+                .map((rule) => {
+                  const isAdded = unifiedResult.changes.rules.added.has(
                     rule.id,
                   );
-                  const proposalNumbers = proposalId
-                    ? getProposalNumbers(
-                        [proposalId],
-                        selectedStandardProposals,
-                      )
-                    : [];
-                  return (
-                    <HighlightedRuleBox
-                      key={rule.id}
-                      rule={rule}
-                      changeType="added"
-                      proposalNumbers={proposalNumbers}
-                    />
+                  const updateInfo = unifiedResult.changes.rules.updated.get(
+                    rule.id,
                   );
-                }
-
-                if (updateInfo) {
-                  return (
-                    <HighlightedRuleBox
-                      key={rule.id}
-                      rule={rule}
-                      changeType="updated"
-                      oldContent={updateInfo.originalValue}
-                      proposalNumbers={getProposalNumbers(
-                        updateInfo.proposalIds,
-                        selectedStandardProposals,
-                      )}
-                    />
+                  const isDeleted = unifiedResult.changes.rules.deleted.has(
+                    rule.id,
                   );
-                }
 
-                if (isDeleted) {
-                  // Note: Deleted rules are not in the final rules array
-                  // This code path won't be hit, but kept for completeness
+                  if (isAdded) {
+                    const proposalId = unifiedResult.changes.rules.added.get(
+                      rule.id,
+                    );
+                    const proposalNumbers = proposalId
+                      ? getProposalNumbers(
+                          [proposalId],
+                          selectedStandardProposals,
+                        )
+                      : [];
+                    return (
+                      <HighlightedRuleBox
+                        key={rule.id}
+                        rule={rule}
+                        changeType="added"
+                        proposalNumbers={proposalNumbers}
+                      />
+                    );
+                  }
+
+                  if (updateInfo) {
+                    return (
+                      <HighlightedRuleBox
+                        key={rule.id}
+                        rule={rule}
+                        changeType="updated"
+                        oldContent={updateInfo.originalValue}
+                        proposalNumbers={getProposalNumbers(
+                          updateInfo.proposalIds,
+                          selectedStandardProposals,
+                        )}
+                      />
+                    );
+                  }
+
+                  if (isDeleted) {
+                    // Note: Deleted rules are not in the final rules array
+                    // This code path won't be hit, but kept for completeness
+                    return (
+                      <HighlightedRuleBox
+                        key={rule.id}
+                        rule={rule}
+                        changeType="deleted"
+                        proposalNumbers={[]}
+                      />
+                    );
+                  }
+
+                  // Unchanged rule
                   return (
-                    <HighlightedRuleBox
-                      key={rule.id}
-                      rule={rule}
-                      changeType="deleted"
-                      proposalNumbers={[]}
-                    />
+                    <PMBox key={rule.id} p={3} bg="background.tertiary">
+                      <PMText fontSize="sm">{rule.content}</PMText>
+                    </PMBox>
                   );
-                }
-
-                // Unchanged rule
-                return (
-                  <PMBox key={rule.id} p={3} bg="background.tertiary">
-                    <PMText fontSize="sm">{rule.content}</PMText>
-                  </PMBox>
-                );
-              })}
+                })}
             </PMVStack>
           )}
         </PMVStack>
@@ -462,13 +475,19 @@ export function ProposalReviewPanel({
               <PMText fontSize="md" fontWeight="semibold">
                 Rules
               </PMText>
-              {rules.map((rule) => (
-                <PMBox key={rule.id} p={3} bg="background.tertiary">
-                  <PMText fontSize="sm" color="primary">
-                    {rule.content}
-                  </PMText>
-                </PMBox>
-              ))}
+              {[...rules]
+                .sort((a, b) =>
+                  a.content
+                    .toLowerCase()
+                    .localeCompare(b.content.toLowerCase()),
+                )
+                .map((rule) => (
+                  <PMBox key={rule.id} p={3} bg="background.tertiary">
+                    <PMText fontSize="sm" color="primary">
+                      {rule.content}
+                    </PMText>
+                  </PMBox>
+                ))}
             </PMVStack>
           )}
         </PMVStack>
