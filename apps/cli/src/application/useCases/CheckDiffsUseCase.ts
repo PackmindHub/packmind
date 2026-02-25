@@ -70,6 +70,7 @@ export class CheckDiffsUseCase implements ICheckDiffsUseCase {
           diff,
           exists: result.exists,
           createdAt: result.createdAt,
+          message: result.message,
         });
       }
     }
@@ -82,7 +83,7 @@ export class CheckDiffsUseCase implements ICheckDiffsUseCase {
           results.push(checked);
         } else {
           // Invalid diffs are treated as not existing
-          results.push({ diff, exists: false, createdAt: null });
+          results.push({ diff, exists: false, createdAt: null, message: null });
         }
       }
     }

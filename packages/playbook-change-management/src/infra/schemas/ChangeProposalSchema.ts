@@ -20,6 +20,7 @@ export const ChangeProposalSchema = new EntitySchema<
     spaceId: { name: 'space_id', type: 'uuid' },
     payload: { type: 'jsonb' },
     captureMode: { name: 'capture_mode', type: 'varchar' },
+    message: { type: 'varchar', length: 1024, default: "''" },
     status: { type: 'varchar' },
     createdBy: { name: 'created_by', type: 'uuid' },
     resolvedBy: { name: 'resolved_by', type: 'uuid', nullable: true },

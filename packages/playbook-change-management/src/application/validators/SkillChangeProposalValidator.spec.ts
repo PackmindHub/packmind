@@ -72,6 +72,7 @@ describe('SkillChangeProposalValidator', () => {
       type: ChangeProposalType.updateSkillFilePermissions,
       artefactId: skillId,
       captureMode: ChangeProposalCaptureMode.commit,
+      message: 'test message',
       payload: {
         targetId: oldFileId,
         oldValue: 'rw-r--r--',

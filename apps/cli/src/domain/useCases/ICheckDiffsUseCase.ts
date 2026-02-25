@@ -10,6 +10,7 @@ export type CheckDiffItemResult = {
   diff: ArtefactDiff;
   exists: boolean;
   createdAt: string | null;
+  message: string | null;
 };
 
 export type CheckDiffsResult = {

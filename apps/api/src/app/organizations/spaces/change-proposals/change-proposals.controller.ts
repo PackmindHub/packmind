@@ -98,6 +98,22 @@ export class OrganizationsSpacesChangeProposalsController {
       throw new BadRequestException('Proposals array must not be empty');
     }
 
+    for (const proposal of body.proposals) {
+      if (
+        typeof proposal.message !== 'string' ||
+        proposal.message.trim().length === 0
+      ) {
+        throw new BadRequestException(
+          'Each proposal must include a non-empty message',
+        );
+      }
+      if (proposal.message.length > 1024) {
+        throw new BadRequestException(
+          'Proposal message must not exceed 1024 characters',
+        );
+      }
+    }
+
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch - Batch creating change proposals',
       {
@@ -141,6 +157,17 @@ export class OrganizationsSpacesChangeProposalsController {
     @Body() body: BatchCreateChangeProposalItem,
     @Req() request: AuthenticatedRequest,
   ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
+    if (typeof body.message !== 'string' || body.message.trim().length === 0) {
+      throw new BadRequestException(
+        'Proposal must include a non-empty message',
+      );
+    }
+    if (body.message.length > 1024) {
+      throw new BadRequestException(
+        'Proposal message must not exceed 1024 characters',
+      );
+    }
+
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/change-proposals - Creating change proposal',
       {
@@ -159,6 +186,7 @@ export class OrganizationsSpacesChangeProposalsController {
         artefactId: body.artefactId,
         payload: body.payload,
         captureMode: body.captureMode,
+        message: body.message,
       } as unknown as CreateChangeProposalCommand<ChangeProposalType>;
 
       const result =

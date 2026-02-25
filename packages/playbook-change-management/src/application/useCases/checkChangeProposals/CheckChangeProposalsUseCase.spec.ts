@@ -39,6 +39,7 @@ describe('CheckChangeProposalsUseCase', () => {
     artefactId: 'artefact-1',
     payload: { oldValue: 'Old Name', newValue: 'New Name' },
     captureMode: ChangeProposalCaptureMode.commit,
+    message: 'test message',
     ...overrides,
   });
 
@@ -53,9 +54,11 @@ describe('CheckChangeProposalsUseCase', () => {
 
   const buildExistingProposal = (
     createdAt: Date,
+    message = 'test message',
   ): ChangeProposal<ChangeProposalType> =>
     ({
       createdAt,
+      message,
     }) as ChangeProposal<ChangeProposalType>;
 
   beforeEach(() => {
@@ -114,8 +117,8 @@ describe('CheckChangeProposalsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.results).toEqual([
-        { index: 0, exists: false, createdAt: null },
-        { index: 1, exists: false, createdAt: null },
+        { index: 0, exists: false, createdAt: null, message: null },
+        { index: 1, exists: false, createdAt: null, message: null },
       ]);
     });
 
@@ -146,8 +149,18 @@ describe('CheckChangeProposalsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.results).toEqual([
-        { index: 0, exists: true, createdAt: '2025-06-15T10:30:00.000Z' },
-        { index: 1, exists: true, createdAt: '2025-06-15T10:30:00.000Z' },
+        {
+          index: 0,
+          exists: true,
+          createdAt: '2025-06-15T10:30:00.000Z',
+          message: 'test message',
+        },
+        {
+          index: 1,
+          exists: true,
+          createdAt: '2025-06-15T10:30:00.000Z',
+          message: 'test message',
+        },
       ]);
     });
   });
@@ -172,9 +185,14 @@ describe('CheckChangeProposalsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.results).toEqual([
-        { index: 0, exists: false, createdAt: null },
-        { index: 1, exists: true, createdAt: '2025-06-15T10:30:00.000Z' },
-        { index: 2, exists: false, createdAt: null },
+        { index: 0, exists: false, createdAt: null, message: null },
+        {
+          index: 1,
+          exists: true,
+          createdAt: '2025-06-15T10:30:00.000Z',
+          message: 'test message',
+        },
+        { index: 2, exists: false, createdAt: null, message: null },
       ]);
     });
 

@@ -156,8 +156,9 @@ export class PackmindCliHexa {
 
   public async submitDiffs(
     groupedDiffs: ArtefactDiff[][],
+    message: string,
   ): Promise<SubmitDiffsResult> {
-    return this.hexa.useCases.submitDiffs.execute({ groupedDiffs });
+    return this.hexa.useCases.submitDiffs.execute({ groupedDiffs, message });
   }
 
   public async checkDiffs(

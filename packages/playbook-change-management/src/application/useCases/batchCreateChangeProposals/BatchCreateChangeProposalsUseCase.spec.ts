@@ -40,6 +40,7 @@ describe('BatchCreateChangeProposalsUseCase', () => {
     artefactId: 'artefact-1',
     payload: { oldValue: 'Old Name', newValue: 'New Name' },
     captureMode: ChangeProposalCaptureMode.commit,
+    message: 'test message',
     ...overrides,
   });
 
