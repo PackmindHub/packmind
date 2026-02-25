@@ -11,6 +11,10 @@ import {
   BatchCreateChangeProposalsResponse,
 } from '../contracts/IBatchCreateChangeProposalsUseCase';
 import {
+  CheckChangeProposalsCommand,
+  CheckChangeProposalsResponse,
+} from '../contracts/ICheckChangeProposalsUseCase';
+import {
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
 } from '../contracts/IListChangeProposalsBySpace';
@@ -46,4 +50,8 @@ export interface IPlaybookChangeManagementPort {
   listChangeProposalsByArtefact<T extends StandardId | RecipeId | SkillId>(
     command: ListChangeProposalsByArtefactCommand<T>,
   ): Promise<ListChangeProposalsByArtefactResponse>;
+
+  checkChangeProposals(
+    command: CheckChangeProposalsCommand,
+  ): Promise<CheckChangeProposalsResponse>;
 }

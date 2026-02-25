@@ -12,8 +12,12 @@ export const diffCommand = command({
       long: 'submit',
       description: 'Submit detected changes as change proposals',
     }),
+    includeSubmitted: flag({
+      long: 'include-submitted',
+      description: 'Include already submitted changes in the output',
+    }),
   },
-  handler: async ({ submit }) => {
+  handler: async ({ submit, includeSubmitted }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -24,6 +28,7 @@ export const diffCommand = command({
       log: console.log,
       error: console.error,
       submit,
+      includeSubmitted,
     });
   },
 });

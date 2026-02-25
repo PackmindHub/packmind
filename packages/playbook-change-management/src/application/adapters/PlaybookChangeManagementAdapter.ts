@@ -6,6 +6,8 @@ import {
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
   ChangeProposalType,
+  CheckChangeProposalsCommand,
+  CheckChangeProposalsResponse,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   IAccountsPort,
@@ -33,6 +35,7 @@ import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/Cr
 import { ListChangeProposalsByArtefactUseCase } from '../useCases/listChangeProposalsByArtefact/ListChangeProposalsByArtefactUseCase';
 import { ListChangeProposalsBySpaceUseCase } from '../useCases/listChangeProposalsBySpace/ListChangeProposalsBySpaceUseCase';
 import { BatchCreateChangeProposalsUseCase } from '../useCases/batchCreateChangeProposals/BatchCreateChangeProposalsUseCase';
+import { CheckChangeProposalsUseCase } from '../useCases/checkChangeProposals/CheckChangeProposalsUseCase';
 import { IChangeProposalValidator } from '../validators/IChangeProposalValidator';
 import { CommandChangeProposalValidator } from '../validators/CommandChangeProposalValidator';
 import { SkillChangeProposalValidator } from '../validators/SkillChangeProposalValidator';
@@ -49,6 +52,7 @@ export class PlaybookChangeManagementAdapter
     StandardId | RecipeId | SkillId
   >;
   private _batchCreateChangeProposals!: BatchCreateChangeProposalsUseCase;
+  private _checkChangeProposals!: CheckChangeProposalsUseCase;
   private _createChangeProposal!: CreateChangeProposalUseCase;
   private _listChangeProposalsByArtefact!: ListChangeProposalsByArtefactUseCase<
     StandardId | RecipeId | SkillId
@@ -70,6 +74,12 @@ export class PlaybookChangeManagementAdapter
     command: BatchCreateChangeProposalsCommand,
   ): Promise<BatchCreateChangeProposalsResponse> {
     return this._batchCreateChangeProposals.execute(command);
+  }
+
+  async checkChangeProposals(
+    command: CheckChangeProposalsCommand,
+  ): Promise<CheckChangeProposalsResponse> {
+    return this._checkChangeProposals.execute(command);
   }
 
   async createChangeProposal<T extends ChangeProposalType>(
@@ -167,6 +177,11 @@ export class PlaybookChangeManagementAdapter
       this,
     );
 
+    this._checkChangeProposals = new CheckChangeProposalsUseCase(
+      accountsPort,
+      changeProposalService,
+    );
+
     this._createChangeProposal = new CreateChangeProposalUseCase(
       accountsPort,
       spacesPort,
@@ -203,6 +218,7 @@ export class PlaybookChangeManagementAdapter
     return (
       this._applyChangeProposals !== undefined &&
       this._batchCreateChangeProposals !== undefined &&
+      this._checkChangeProposals !== undefined &&
       this._createChangeProposal !== undefined &&
       this._listChangeProposalsByArtefact !== undefined &&
       this._listChangeProposalsBySpace !== undefined

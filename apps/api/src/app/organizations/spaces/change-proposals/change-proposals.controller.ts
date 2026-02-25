@@ -16,6 +16,8 @@ import {
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
   ChangeProposalType,
+  CheckChangeProposalsCommand,
+  CheckChangeProposalsResponse,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   ListChangeProposalsBySpaceResponse,
@@ -46,6 +48,40 @@ export class OrganizationsSpacesChangeProposalsController {
       LogLevel.INFO,
     ),
   ) {}
+
+  /**
+   * Check if change proposals already exist
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/check
+   */
+  @Post('check')
+  async checkChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { proposals: BatchCreateChangeProposalItem[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CheckChangeProposalsResponse> {
+    if (!body.proposals || body.proposals.length === 0) {
+      throw new BadRequestException('Proposals array must not be empty');
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/check - Checking change proposals',
+      {
+        organizationId,
+        spaceId,
+        count: body.proposals.length,
+      },
+    );
+
+    const command: CheckChangeProposalsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+      proposals: body.proposals,
+    };
+
+    return this.changeProposalsService.checkChangeProposals(command);
+  }
 
   /**
    * Batch create change proposals
