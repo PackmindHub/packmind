@@ -46,6 +46,48 @@ interface ProposalReviewHeaderProps {
   };
 }
 
+function AcceptButton({
+  isOutdated,
+  isBlocked,
+  onAccept,
+}: {
+  isOutdated: boolean;
+  isBlocked: boolean;
+  onAccept: () => void;
+}) {
+  const isDisabled = isOutdated || isBlocked;
+
+  const button = (
+    <PMButton
+      size="xs"
+      variant="secondary"
+      disabled={isDisabled}
+      onClick={onAccept}
+    >
+      <LuCheck />
+      Accept
+    </PMButton>
+  );
+
+  if (isOutdated) {
+    return (
+      <PMTooltip label="This proposal is based on an outdated version and cannot be accepted">
+        {button}
+      </PMTooltip>
+    );
+  }
+
+  if (isBlocked) {
+    return (
+      <PMTooltip label="This proposal conflicts with an already accepted proposal">
+        {button}
+      </PMTooltip>
+    );
+  }
+
+  return button;
+}
+
 export function ProposalReviewHeader({
   proposal,
   isOutdated,
@@ -148,15 +190,11 @@ export function ProposalReviewHeader({
               </PMButton>
             ) : (
               <PMHStack gap={2}>
-                <PMButton
-                  size="xs"
-                  variant="secondary"
-                  disabled={isOutdated || blockedByConflictIds.has(proposal.id)}
-                  onClick={() => onPoolAccept(proposal.id)}
-                >
-                  <LuCheck />
-                  Accept
-                </PMButton>
+                <AcceptButton
+                  isOutdated={isOutdated}
+                  isBlocked={blockedByConflictIds.has(proposal.id)}
+                  onAccept={() => onPoolAccept(proposal.id)}
+                />
                 <PMButton
                   size="xs"
                   variant="secondary"

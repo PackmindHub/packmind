@@ -33,6 +33,10 @@ import {
 } from '../../../skills/api/queryKeys';
 import { SPACES_SCOPE } from '../../../spaces/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import {
+  GET_RULES_BY_STANDARD_ID_KEY,
+  getStandardByIdKey,
+} from '../../../standards/api/queryKeys';
 import { routes } from '../../../../shared/utils/routes';
 
 export const getGroupedChangeProposalsOptions = (
@@ -276,6 +280,18 @@ export const useApplyStandardChangeProposalsMutation = () => {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_CHANGE_PROPOSALS_BY_STANDARD_KEY,
+            variables.artefactId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getStandardByIdKey(variables.spaceId, variables.artefactId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: GET_RULES_BY_STANDARD_ID_KEY,
         }),
         queryClient.invalidateQueries({
           queryKey: [ORGANIZATION_QUERY_SCOPE, SPACES_SCOPE, variables.spaceId],
