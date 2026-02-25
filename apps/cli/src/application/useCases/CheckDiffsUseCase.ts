@@ -61,6 +61,7 @@ export class CheckDiffsUseCase implements ICheckDiffsUseCase {
             diff.artifactId as ChangeProposalArtefactId<ChangeProposalType>,
           payload: diff.payload,
           captureMode: ChangeProposalCaptureMode.commit,
+          message: '',
         })),
       });
 
