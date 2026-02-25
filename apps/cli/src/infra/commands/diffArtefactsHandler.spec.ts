@@ -1382,18 +1382,25 @@ describe('diffArtefactsHandler', () => {
       });
     });
 
-    it('only displays unsubmitted diffs by default', async () => {
+    it('displays unsubmitted diffs', async () => {
       await diffArtefactsHandler(deps);
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const commandHeader = logCalls.find((c: string) =>
         c.includes('Command "My Command"'),
       );
+
+      expect(commandHeader).toBeDefined();
+    });
+
+    it('hides submitted diffs by default', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const standardHeader = logCalls.find((c: string) =>
         c.includes('Standard "My Standard"'),
       );
 
-      expect(commandHeader).toBeDefined();
       expect(standardHeader).toBeUndefined();
     });
 
@@ -1510,18 +1517,25 @@ describe('diffArtefactsHandler', () => {
       });
     });
 
-    it('displays all diffs including submitted ones', async () => {
+    it('displays unsubmitted diffs with --include-submitted', async () => {
       await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const commandHeader = logCalls.find((c: string) =>
         c.includes('Command "My Command"'),
       );
+
+      expect(commandHeader).toBeDefined();
+    });
+
+    it('displays submitted diffs with --include-submitted', async () => {
+      await diffArtefactsHandler({ ...deps, includeSubmitted: true });
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const standardHeader = logCalls.find((c: string) =>
         c.includes('Standard "My Standard"'),
       );
 
-      expect(commandHeader).toBeDefined();
       expect(standardHeader).toBeDefined();
     });
 
