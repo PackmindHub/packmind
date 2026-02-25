@@ -19,9 +19,9 @@ The Packmind CLI provides the following commands:
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
 - **`skills list`** - List all skills in your organization
-- **`standards create`** - Create a coding standard from a playbook file
+- **`standards create`** - Create a coding standard from a playbook file or stdin
 - **`standards list`** - List all standards in your organization
-- **`commands create`** - Create a reusable command from a playbook file
+- **`commands create`** - Create a reusable command from a playbook file or stdin
 - **`commands list`** - List all commands in your organization
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
@@ -747,23 +747,44 @@ Available standards:
   MCP server. CLI support for updating standards is coming in Q1 2026.
 </Info>
 
-### Create a Standard from a Playbook File
+### Create a Standard from a Playbook
 
 ```bash
-packmind-cli standards create <file>
+packmind-cli standards create [file]
 ```
 
 **Arguments:**
 
-- `<file>` - Path to a JSON playbook file containing the standard definition
+- `[file]` - Path to a JSON playbook file containing the standard definition (optional — reads from stdin if omitted)
 
-**Example:**
+**Examples:**
+
+From a file:
 
 ```bash
 packmind-cli standards create ./my-standard.json
 ```
 
-This creates a new coding standard in your Packmind organization based on the playbook file.
+From stdin:
+
+```bash
+echo '{"name":"Error Handling","description":"...","scope":"All services","rules":[{"content":"Validate inputs at boundaries"}]}' | packmind-cli standards create
+```
+
+Using a heredoc:
+
+```bash
+packmind-cli standards create <<'EOF'
+{
+  "name": "Error Handling",
+  "description": "Ensure errors are handled predictably.",
+  "scope": "All services",
+  "rules": [{ "content": "Validate inputs at boundaries and fail fast" }]
+}
+EOF
+```
+
+This creates a new coding standard in your Packmind organization based on the playbook.
 
 ### Playbook File Format
 
@@ -816,7 +837,8 @@ The standard-playbook file is a JSON file with the following structure:
 
 <Tip>
   **Workflow tip** — Use this command when you have standards defined as files
-  in your repository or want to create standards without the MCP server.
+  in your repository or want to create standards without the MCP server. Stdin
+  support makes it easy to pipe JSON from scripts or AI agents.
 </Tip>
 
 ## Commands Command
@@ -855,23 +877,45 @@ Available commands:
   support for updating commands is coming in Q1 2026.
 </Info>
 
-### Create a Command from a Playbook File
+### Create a Command from a Playbook
 
 ```bash
-packmind-cli commands create <file>
+packmind-cli commands create [file]
 ```
 
 **Arguments:**
 
-- `<file>` - Path to a JSON playbook file containing the command definition
+- `[file]` - Path to a JSON playbook file containing the command definition (optional — reads from stdin if omitted)
 
-**Example:**
+**Examples:**
+
+From a file:
 
 ```bash
 packmind-cli commands create ./setup-api-endpoint.json
 ```
 
-This creates a new command in your Packmind organization based on the playbook file.
+From stdin:
+
+```bash
+cat my-command.json | packmind-cli commands create
+```
+
+Using a heredoc:
+
+```bash
+packmind-cli commands create <<'EOF'
+{
+  "name": "Add a New REST Endpoint",
+  "summary": "Step-by-step guide for adding a new REST endpoint",
+  "whenToUse": ["When adding a new API endpoint"],
+  "contextValidationCheckpoints": ["Do you understand the business requirement?"],
+  "steps": [{ "name": "Define the Route", "description": "Create the HTTP route" }]
+}
+EOF
+```
+
+This creates a new command in your Packmind organization based on the playbook.
 
 ### Playbook File Format
 
@@ -952,9 +996,10 @@ If a command with the same slug already exists in your space, Packmind appends a
 
 <Tip>
   **Workflow tip** — Use this command when you have commands defined as files in
-  your repository or want to create commands without the MCP server. Commands
-  are particularly useful for capturing multi-step development workflows that
-  your team performs regularly.
+  your repository or want to create commands without the MCP server. Stdin
+  support makes it easy to pipe JSON from scripts or AI agents. Commands are
+  particularly useful for capturing multi-step development workflows that your
+  team performs regularly.
 </Tip>
 
 ## Packages Command
