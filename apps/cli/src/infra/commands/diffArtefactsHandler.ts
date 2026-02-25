@@ -7,6 +7,7 @@ import {
   CodingAgent,
 } from '@packmind/types';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
+import { CheckDiffItemResult } from '../../domain/useCases/ICheckDiffsUseCase';
 import {
   logWarningConsole,
   logInfoConsole,
@@ -26,6 +27,7 @@ export type DiffHandlerDependencies = {
   log: typeof console.log;
   error: typeof console.error;
   submit?: boolean;
+  includeSubmitted?: boolean;
 };
 
 export type DiffHandlerResult = {
@@ -127,10 +129,77 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
   }
 }
 
+function formatSubmittedDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string[] {
+  const lines: string[] = [];
+
+  // Group submitted diffs by artifact
+  const byArtefact = new Map<
+    string,
+    { type: ArtifactType; name: string; changeTypes: ChangeProposalType[] }
+  >();
+  for (const item of submittedDiffs) {
+    const key = `${item.diff.artifactType}:${item.diff.artifactName}`;
+    const existing = byArtefact.get(key);
+    if (existing) {
+      existing.changeTypes.push(item.diff.type);
+    } else {
+      byArtefact.set(key, {
+        type: item.diff.artifactType,
+        name: item.diff.artifactName,
+        changeTypes: [item.diff.type],
+      });
+    }
+  }
+
+  const artefactCount = byArtefact.size;
+  const proposalCount = submittedDiffs.length;
+  const proposalWord =
+    proposalCount === 1 ? 'change proposal' : 'change proposals';
+  const artefactWord = artefactCount === 1 ? 'artifact' : 'artifacts';
+
+  lines.push(
+    `${proposalCount} ${proposalWord} already submitted for ${artefactCount} ${artefactWord}, run "packmind-cli diff --include-submitted" to see details`,
+  );
+
+  for (const [, artefact] of byArtefact) {
+    const typeLabel = ARTIFACT_TYPE_LABELS[artefact.type];
+    // Count occurrences of each change type
+    const typeCounts = new Map<ChangeProposalType, number>();
+    for (const ct of artefact.changeTypes) {
+      typeCounts.set(ct, (typeCounts.get(ct) ?? 0) + 1);
+    }
+    const parts: string[] = [];
+    for (const [ct, count] of typeCounts) {
+      const label = CHANGE_PROPOSAL_TYPE_LABELS[ct] ?? 'content changed';
+      parts.push(count > 1 ? `${label} (${count})` : label);
+    }
+    lines.push(`  ${typeLabel} "${artefact.name}": ${parts.join(', ')}`);
+  }
+
+  return lines;
+}
+
 export async function diffArtefactsHandler(
   deps: DiffHandlerDependencies,
 ): Promise<DiffHandlerResult> {
-  const { packmindCliHexa, exit, getCwd, log, error, submit } = deps;
+  const {
+    packmindCliHexa,
+    exit,
+    getCwd,
+    log,
+    error,
+    submit,
+    includeSubmitted,
+  } = deps;
   const cwd = getCwd();
 
   // Read existing config (including agents if present)
@@ -225,9 +294,42 @@ export async function diffArtefactsHandler(
       return { diffsFound: 0 };
     }
 
+    // Check which diffs have already been submitted
+    const allGroupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
+    const checkResult = await packmindCliHexa.checkDiffs(allGroupedDiffs);
+
+    const submittedItems = checkResult.results.filter((r) => r.exists);
+    const unsubmittedItems = checkResult.results.filter((r) => !r.exists);
+
+    // Determine which diffs to display
+    const diffsToDisplay = includeSubmitted
+      ? diffs
+      : unsubmittedItems.map((r) => r.diff);
+
+    // Build a lookup for submitted status (used with --include-submitted)
+    const submittedLookup = new Map<ArtefactDiff, CheckDiffItemResult>();
+    for (const item of checkResult.results) {
+      submittedLookup.set(item.diff, item);
+    }
+
+    if (diffsToDisplay.length === 0) {
+      log('No new changes found.');
+      if (submittedItems.length > 0) {
+        const footerLines = buildSubmittedFooter(submittedItems);
+        for (const line of footerLines) {
+          logInfoConsole(line);
+        }
+      }
+      if (submit) {
+        logInfoConsole('All changes already submitted.');
+      }
+      exit(0);
+      return { diffsFound: 0 };
+    }
+
     log(formatHeader(`\nChanges found:\n`));
 
-    const groups = groupDiffsByArtefact(diffs);
+    const groups = groupDiffsByArtefact(diffsToDisplay);
     for (const [, groupDiffs] of groups) {
       const { artifactType, artifactName } = groupDiffs[0];
       const typeLabel = ARTIFACT_TYPE_LABELS[artifactType];
@@ -241,13 +343,21 @@ export async function diffArtefactsHandler(
         }
         const label =
           CHANGE_PROPOSAL_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
-        log(`  - ${label}`);
+
+        // Add submitted tag if --include-submitted and the diff was already submitted
+        const checkItem = submittedLookup.get(subGroup[0]);
+        if (includeSubmitted && checkItem?.exists && checkItem.createdAt) {
+          const dateStr = formatSubmittedDate(checkItem.createdAt);
+          log(`  - ${label} ${chalk.dim(`[already submitted on ${dateStr}]`)}`);
+        } else {
+          log(`  - ${label}`);
+        }
         formatDiffPayload(subGroup[0], log);
       }
       log('');
     }
 
-    const changeCount = diffs.length;
+    const changeCount = diffsToDisplay.length;
     const changeWord = changeCount === 1 ? 'change' : 'changes';
 
     const typeSortOrder: Record<ArtifactType, number> = {
@@ -285,43 +395,60 @@ export async function diffArtefactsHandler(
       logWarningConsole(`* ${typeLabel} "${artefact.name}"`);
     }
 
+    // Show footer about submitted diffs (when not --include-submitted)
+    if (!includeSubmitted && submittedItems.length > 0) {
+      const footerLines = buildSubmittedFooter(submittedItems);
+      for (const line of footerLines) {
+        logInfoConsole(line);
+      }
+    }
+
     if (submit) {
-      const groupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
-      const result = await packmindCliHexa.submitDiffs(groupedDiffs);
+      // Only submit unsubmitted diffs
+      const unsubmittedDiffs = unsubmittedItems.map((r) => r.diff);
 
-      for (const err of result.errors) {
-        if (err.code === 'ChangeProposalPayloadMismatchError') {
-          logErrorConsole(
-            `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
-          );
-        } else {
-          logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+      if (unsubmittedDiffs.length === 0) {
+        logInfoConsole('All changes already submitted.');
+      } else {
+        const groupedUnsubmitted = Array.from(
+          groupDiffsByArtefact(unsubmittedDiffs).values(),
+        );
+        const result = await packmindCliHexa.submitDiffs(groupedUnsubmitted);
+
+        for (const err of result.errors) {
+          if (err.code === 'ChangeProposalPayloadMismatchError') {
+            logErrorConsole(
+              `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
+            );
+          } else {
+            logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+          }
         }
-      }
 
-      const summaryParts: string[] = [];
-      if (result.submitted > 0) {
-        summaryParts.push(`${result.submitted} submitted`);
-      }
-      if (result.alreadySubmitted > 0) {
-        summaryParts.push(`${result.alreadySubmitted} already submitted`);
-      }
-      if (result.errors.length > 0) {
-        const errorWord = result.errors.length === 1 ? 'error' : 'errors';
-        summaryParts.push(`${result.errors.length} ${errorWord}`);
-      }
+        const summaryParts: string[] = [];
+        if (result.submitted > 0) {
+          summaryParts.push(`${result.submitted} submitted`);
+        }
+        if (result.alreadySubmitted > 0) {
+          summaryParts.push(`${result.alreadySubmitted} already submitted`);
+        }
+        if (result.errors.length > 0) {
+          const errorWord = result.errors.length === 1 ? 'error' : 'errors';
+          summaryParts.push(`${result.errors.length} ${errorWord}`);
+        }
 
-      if (summaryParts.length > 0) {
-        const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
-        if (result.errors.length === 0 && result.alreadySubmitted === 0) {
-          logSuccessConsole(summaryMessage);
-        } else if (
-          (result.errors.length > 0 && result.submitted > 0) ||
-          result.alreadySubmitted > 0
-        ) {
-          logWarningConsole(summaryMessage);
-        } else {
-          logErrorConsole(summaryMessage);
+        if (summaryParts.length > 0) {
+          const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
+          if (result.errors.length === 0 && result.alreadySubmitted === 0) {
+            logSuccessConsole(summaryMessage);
+          } else if (
+            (result.errors.length > 0 && result.submitted > 0) ||
+            result.alreadySubmitted > 0
+          ) {
+            logWarningConsole(summaryMessage);
+          } else {
+            logErrorConsole(summaryMessage);
+          }
         }
       }
     }

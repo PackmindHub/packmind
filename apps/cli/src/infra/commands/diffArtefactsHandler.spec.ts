@@ -39,6 +39,7 @@ describe('diffArtefactsHandler', () => {
       getCurrentBranch: jest.fn(),
       diffArtefacts: jest.fn(),
       submitDiffs: jest.fn(),
+      checkDiffs: jest.fn(),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -59,6 +60,15 @@ describe('diffArtefactsHandler', () => {
       'git@github.com:org/repo.git',
     );
     mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+
+    // Default: all diffs are unsubmitted
+    mockPackmindCliHexa.checkDiffs.mockImplementation(async (groupedDiffs) => ({
+      results: groupedDiffs.flat().map((diff) => ({
+        diff,
+        exists: false,
+        createdAt: null,
+      })),
+    }));
   });
 
   afterEach(() => {
@@ -1330,6 +1340,316 @@ describe('diffArtefactsHandler', () => {
 
         expect(logInfoConsole).toHaveBeenCalledWith('No changes to submit.');
       });
+    });
+  });
+
+  describe('when some diffs are already submitted', () => {
+    const commandDiff = {
+      filePath: '.packmind/commands/my-command.md',
+      type: ChangeProposalType.updateCommandDescription,
+      payload: { oldValue: 'old', newValue: 'new' },
+      artifactName: 'My Command',
+      artifactType: 'command' as const,
+    };
+
+    const standardDiff = {
+      filePath: '.packmind/standards/my-standard.md',
+      type: ChangeProposalType.updateStandardDescription,
+      payload: { oldValue: 'old std', newValue: 'new std' },
+      artifactName: 'My Standard',
+      artifactType: 'standard' as const,
+    };
+
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        commandDiff,
+        standardDiff,
+      ]);
+
+      mockPackmindCliHexa.checkDiffs.mockResolvedValue({
+        results: [
+          { diff: commandDiff, exists: false, createdAt: null },
+          {
+            diff: standardDiff,
+            exists: true,
+            createdAt: '2025-06-15T10:30:00.000Z',
+          },
+        ],
+      });
+    });
+
+    it('only displays unsubmitted diffs by default', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const commandHeader = logCalls.find((c: string) =>
+        c.includes('Command "My Command"'),
+      );
+      const standardHeader = logCalls.find((c: string) =>
+        c.includes('Standard "My Standard"'),
+      );
+
+      expect(commandHeader).toBeDefined();
+      expect(standardHeader).toBeUndefined();
+    });
+
+    it('displays footer about submitted changes', async () => {
+      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('1 change proposal already submitted'),
+      );
+    });
+
+    it('displays footer with artifact detail', async () => {
+      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Standard "My Standard"'),
+      );
+    });
+
+    it('returns diffsFound count of unsubmitted only', async () => {
+      const result = await diffArtefactsHandler(deps);
+
+      expect(result.diffsFound).toBe(1);
+    });
+  });
+
+  describe('when all diffs are already submitted', () => {
+    const commandDiff = {
+      filePath: '.packmind/commands/my-command.md',
+      type: ChangeProposalType.updateCommandDescription,
+      payload: { oldValue: 'old', newValue: 'new' },
+      artifactName: 'My Command',
+      artifactType: 'command' as const,
+    };
+
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([commandDiff]);
+
+      mockPackmindCliHexa.checkDiffs.mockResolvedValue({
+        results: [
+          {
+            diff: commandDiff,
+            exists: true,
+            createdAt: '2025-06-15T10:30:00.000Z',
+          },
+        ],
+      });
+    });
+
+    it('displays no new changes message', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockLog).toHaveBeenCalledWith('No new changes found.');
+    });
+
+    it('displays footer about submitted changes', async () => {
+      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('1 change proposal already submitted'),
+      );
+    });
+
+    it('returns zero diffsFound', async () => {
+      const result = await diffArtefactsHandler(deps);
+
+      expect(result.diffsFound).toBe(0);
+    });
+  });
+
+  describe('when --include-submitted is used', () => {
+    const commandDiff = {
+      filePath: '.packmind/commands/my-command.md',
+      type: ChangeProposalType.updateCommandDescription,
+      payload: { oldValue: 'old', newValue: 'new' },
+      artifactName: 'My Command',
+      artifactType: 'command' as const,
+    };
+
+    const standardDiff = {
+      filePath: '.packmind/standards/my-standard.md',
+      type: ChangeProposalType.updateStandardDescription,
+      payload: { oldValue: 'old std', newValue: 'new std' },
+      artifactName: 'My Standard',
+      artifactType: 'standard' as const,
+    };
+
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        commandDiff,
+        standardDiff,
+      ]);
+
+      mockPackmindCliHexa.checkDiffs.mockResolvedValue({
+        results: [
+          { diff: commandDiff, exists: false, createdAt: null },
+          {
+            diff: standardDiff,
+            exists: true,
+            createdAt: '2025-06-15T10:30:00.000Z',
+          },
+        ],
+      });
+    });
+
+    it('displays all diffs including submitted ones', async () => {
+      await diffArtefactsHandler({ ...deps, includeSubmitted: true });
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const commandHeader = logCalls.find((c: string) =>
+        c.includes('Command "My Command"'),
+      );
+      const standardHeader = logCalls.find((c: string) =>
+        c.includes('Standard "My Standard"'),
+      );
+
+      expect(commandHeader).toBeDefined();
+      expect(standardHeader).toBeDefined();
+    });
+
+    it('shows submitted tag with date for submitted diffs', async () => {
+      await diffArtefactsHandler({ ...deps, includeSubmitted: true });
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const submittedTag = logCalls.find((c: string) =>
+        c.includes('already submitted on'),
+      );
+
+      expect(submittedTag).toBeDefined();
+    });
+
+    it('returns total diffsFound including submitted', async () => {
+      const result = await diffArtefactsHandler({
+        ...deps,
+        includeSubmitted: true,
+      });
+
+      expect(result.diffsFound).toBe(2);
+    });
+  });
+
+  describe('when --submit is used with mixed submitted and unsubmitted diffs', () => {
+    const commandDiff = {
+      filePath: '.packmind/commands/my-command.md',
+      type: ChangeProposalType.updateCommandDescription,
+      payload: { oldValue: 'old', newValue: 'new' },
+      artifactName: 'My Command',
+      artifactType: 'command' as const,
+    };
+
+    const standardDiff = {
+      filePath: '.packmind/standards/my-standard.md',
+      type: ChangeProposalType.updateStandardDescription,
+      payload: { oldValue: 'old std', newValue: 'new std' },
+      artifactName: 'My Standard',
+      artifactType: 'standard' as const,
+    };
+
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        commandDiff,
+        standardDiff,
+      ]);
+
+      mockPackmindCliHexa.checkDiffs.mockResolvedValue({
+        results: [
+          { diff: commandDiff, exists: false, createdAt: null },
+          {
+            diff: standardDiff,
+            exists: true,
+            createdAt: '2025-06-15T10:30:00.000Z',
+          },
+        ],
+      });
+
+      mockPackmindCliHexa.submitDiffs.mockResolvedValue({
+        submitted: 1,
+        alreadySubmitted: 0,
+        skipped: [],
+        errors: [],
+      });
+    });
+
+    it('only submits unsubmitted diffs', async () => {
+      await diffArtefactsHandler({ ...deps, submit: true });
+
+      expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith([
+        [commandDiff],
+      ]);
+    });
+
+    it('does not submit already submitted diffs', async () => {
+      await diffArtefactsHandler({ ...deps, submit: true });
+
+      const submitCalls = mockPackmindCliHexa.submitDiffs.mock.calls;
+      const allSubmittedDiffs = submitCalls.flatMap((call) => call[0].flat());
+
+      expect(allSubmittedDiffs).not.toContain(standardDiff);
+    });
+  });
+
+  describe('when --submit is used and all diffs are already submitted', () => {
+    const commandDiff = {
+      filePath: '.packmind/commands/my-command.md',
+      type: ChangeProposalType.updateCommandDescription,
+      payload: { oldValue: 'old', newValue: 'new' },
+      artifactName: 'My Command',
+      artifactType: 'command' as const,
+    };
+
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([commandDiff]);
+
+      mockPackmindCliHexa.checkDiffs.mockResolvedValue({
+        results: [
+          {
+            diff: commandDiff,
+            exists: true,
+            createdAt: '2025-06-15T10:30:00.000Z',
+          },
+        ],
+      });
+    });
+
+    it('does not call submitDiffs', async () => {
+      await diffArtefactsHandler({ ...deps, submit: true });
+
+      expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
+    });
+
+    it('displays all changes already submitted message', async () => {
+      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler({ ...deps, submit: true });
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        'All changes already submitted.',
+      );
     });
   });
 });
