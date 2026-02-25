@@ -1,14 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  PMBox,
-  PMHStack,
-  PMIcon,
-  PMMarkdownViewer,
-  PMSwitch,
-  PMText,
-  PMTooltip,
-  PMVStack,
-} from '@packmind/ui';
+import { PMBox, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   ChangeProposalType,
@@ -22,13 +13,11 @@ import {
   RuleId,
   StandardVersionId,
 } from '@packmind/types';
-import { LuInfo } from 'react-icons/lu';
 import {
   buildBlockedByAcceptedMap,
   buildProposalNumberMap,
 } from '../../utils/changeProposalHelpers';
 import { ChangeProposalWithConflicts } from '../../types';
-import { buildDiffHtml, markdownDiffCss } from '../../utils/markdownDiff';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -54,6 +43,7 @@ interface ProposalReviewPanelProps {
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
+  showUnifiedView: boolean;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
   onPoolReject: (proposalId: ChangeProposalId) => void;
@@ -70,6 +60,7 @@ export function ProposalReviewPanel({
   rejectedProposalIds,
   blockedByConflictIds,
   userLookup,
+  showUnifiedView,
   onSelectProposal,
   onPoolAccept,
   onPoolReject,
@@ -84,7 +75,6 @@ export function ProposalReviewPanel({
     scrollToCurrent,
   } = useDiffNavigation(reviewingProposalId);
   const [showPreview, setShowPreview] = useState(false);
-  const [showUnifiedView, setShowUnifiedView] = useState(false);
 
   const proposalNumberMap = useMemo(
     () => buildProposalNumberMap(selectedStandardProposals),
@@ -337,35 +327,6 @@ export function ProposalReviewPanel({
 
   return (
     <PMVStack gap={2} align="stretch">
-      {/* Unified View Toggle - only show when there are accepted proposals */}
-      {acceptedProposalIds.size > 0 && !reviewingProposal && (
-        <PMHStack
-          gap={2}
-          alignItems="center"
-          p={3}
-          bg="background.secondary"
-          borderRadius="md"
-        >
-          <PMSwitch
-            size="sm"
-            checked={showUnifiedView}
-            onCheckedChange={(e) => setShowUnifiedView(e.checked)}
-          />
-          <PMText fontSize="sm">
-            Unified View ({acceptedProposalIds.size} accepted change
-            {acceptedProposalIds.size > 1 ? 's' : ''})
-          </PMText>
-          <PMTooltip
-            label="Preview how the standard will look after applying all accepted proposals"
-            placement="top"
-          >
-            <PMIcon color="text.tertiary">
-              <LuInfo />
-            </PMIcon>
-          </PMTooltip>
-        </PMHStack>
-      )}
-
       {/* Render unified view when enabled */}
       {unifiedResult ? (
         <PMVStack gap={2} align="stretch" p={4}>

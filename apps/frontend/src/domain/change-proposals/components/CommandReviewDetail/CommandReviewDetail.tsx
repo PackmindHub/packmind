@@ -127,6 +127,10 @@ export function CommandReviewDetail({
         onUndoPool={pool.handleUndoPool}
         onSave={handleSave}
         isSaving={applyRecipeChangeProposalsMutation.isPending}
+        showUnifiedView={false}
+        onUnifiedViewChange={() => {
+          // no-op
+        }}
       >
         {isLoadingProposals ? (
           <PMSpinner />

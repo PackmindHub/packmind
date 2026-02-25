@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { PMBox, PMButton } from '@packmind/ui';
+import { PMBox, PMButton, PMHStack, PMSwitch, PMText } from '@packmind/ui';
 import { ChangeProposalId, UserId } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ChangeProposalsChangesList } from '../ChangeProposals/ChangeProposalsChangesList';
@@ -13,10 +13,12 @@ interface ReviewDetailLayoutProps {
   hasPooledDecisions: boolean;
   outdatedProposalIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
+  showUnifiedView: boolean;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
   onPoolReject: (proposalId: ChangeProposalId) => void;
   onUndoPool: (proposalId: ChangeProposalId) => void;
+  onUnifiedViewChange: (checked: boolean) => void;
   onSave: () => void;
   isSaving: boolean;
   children: ReactNode;
@@ -31,10 +33,12 @@ export function ReviewDetailLayout({
   hasPooledDecisions,
   outdatedProposalIds,
   userLookup,
+  showUnifiedView,
   onSelectProposal,
   onPoolAccept,
   onPoolReject,
   onUndoPool,
+  onUnifiedViewChange,
   onSave,
   isSaving,
   children,
@@ -49,8 +53,19 @@ export function ReviewDetailLayout({
         display="flex"
         justifyContent="flex-end"
         alignItems="center"
+        gap={4}
         minH="44px"
       >
+        {acceptedProposalIds.size > 0 && (
+          <PMHStack gap={2} alignItems="center">
+            <PMSwitch
+              size="sm"
+              checked={showUnifiedView}
+              onCheckedChange={(e) => onUnifiedViewChange(e.checked)}
+            />
+            <PMText fontSize="sm">Preview changes</PMText>
+          </PMHStack>
+        )}
         <PMButton
           size="sm"
           colorPalette="blue"
