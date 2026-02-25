@@ -6,6 +6,7 @@ import {
   CheckChangeProposalsResponse,
   ChangeProposalType,
   IAccountsPort,
+  UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 
@@ -38,7 +39,7 @@ export class CheckChangeProposalsUseCase extends AbstractMemberUseCase<
 
       const existing = await this.changeProposalService.findExistingPending(
         command.spaceId,
-        command.userId,
+        command.userId as UserId,
         proposal.artefactId,
         proposal.type as ChangeProposalType,
         proposal.payload,
