@@ -3,6 +3,7 @@
 ## Added
 
 - Rules can now be linted with severity error (default) or warning - Enterprise version only
+- `diff` command to submit changes to artefacts (in beta)
 
 ## Changed
 
