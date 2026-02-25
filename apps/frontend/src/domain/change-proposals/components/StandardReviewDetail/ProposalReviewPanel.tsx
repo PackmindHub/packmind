@@ -42,6 +42,7 @@ import {
 import { HighlightedText, HighlightedRuleBox } from '../HighlightedContent';
 import { UnifiedMarkdownViewer } from '../UnifiedMarkdownViewer';
 import { useDiffNavigation } from '../../hooks/useDiffNavigation';
+import { renderMarkdownDiffOrPreview } from '../SkillReviewDetail/SkillContent/renderMarkdownDiffOrPreview';
 
 interface ProposalReviewPanelProps {
   selectedStandard: Standard | undefined;
@@ -246,30 +247,15 @@ export function ProposalReviewPanel({
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedStandard.name}
             </PMText>
-            {isDescriptionDiff && !showPreview ? (
-              <PMBox
-                padding="60px 68px"
-                css={markdownDiffCss}
-                {...(isDescriptionDiff && { 'data-diff-section': true })}
-              >
-                <PMMarkdownViewer
-                  htmlContent={buildDiffHtml(
-                    payload.oldValue,
-                    payload.newValue,
-                  )}
-                />
-              </PMBox>
-            ) : isDescriptionDiff && showPreview ? (
-              <MarkdownEditorProvider>
-                <MarkdownEditor defaultValue={payload.newValue} readOnly />
-              </MarkdownEditorProvider>
-            ) : (
-              <MarkdownEditorProvider>
-                <MarkdownEditor
-                  defaultValue={selectedStandard.description}
-                  readOnly
-                />
-              </MarkdownEditorProvider>
+            {renderMarkdownDiffOrPreview(
+              isDescriptionDiff,
+              showPreview,
+              payload,
+              selectedStandard.description,
+              {
+                previewPaddingVariant: 'none',
+                defaultPaddingVariant: 'none',
+              },
             )}
 
             {/* Rules Section */}
@@ -382,7 +368,7 @@ export function ProposalReviewPanel({
 
       {/* Render unified view when enabled */}
       {unifiedResult ? (
-        <>
+        <PMVStack gap={2} align="stretch" p={4}>
           {/* Standard Name */}
           {unifiedResult.changes.name ? (
             <HighlightedText
@@ -494,9 +480,9 @@ export function ProposalReviewPanel({
               })}
             </PMVStack>
           )}
-        </>
+        </PMVStack>
       ) : (
-        <>
+        <PMVStack gap={2} align="stretch" p={4}>
           {/* Standard view (no unified view) */}
           <PMText fontSize="lg" fontWeight="semibold">
             {selectedStandard.name}
@@ -505,6 +491,7 @@ export function ProposalReviewPanel({
             <MarkdownEditor
               defaultValue={selectedStandard.description}
               readOnly
+              paddingVariant="none"
             />
           </MarkdownEditorProvider>
 
@@ -523,7 +510,7 @@ export function ProposalReviewPanel({
               ))}
             </PMVStack>
           )}
-        </>
+        </PMVStack>
       )}
     </PMVStack>
   );
