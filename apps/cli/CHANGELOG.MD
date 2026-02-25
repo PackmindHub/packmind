@@ -2,14 +2,18 @@
 
 ## Added
 
-- Rules can now be linted with severity error (default) or warning - Enterprise version only
-- `diff` command to submit changes to artefacts (in beta)
-
 ## Changed
 
 ## Fixed
 
 ## Removed
+
+# [0.17.0] - 2026-02-25
+
+## Added
+
+- Rules can now be linted with severity error (default) or warning - Enterprise version only
+- `diff` command to submit changes to artefacts (in beta)
 
 # [0.16.1] - 2026-02-11
 
@@ -205,7 +209,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.17.0...HEAD
+[0.17.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.1...release-cli/0.17.0
 [0.16.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.0...release-cli/0.16.1
 [0.16.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.15.0...release-cli/0.16.0
 [0.15.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.1...release-cli/0.15.0
