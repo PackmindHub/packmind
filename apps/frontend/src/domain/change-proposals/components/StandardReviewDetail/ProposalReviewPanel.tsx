@@ -138,7 +138,7 @@ export function ProposalReviewPanel({
         ...rules,
         {
           ...payload.item,
-          id: 'temp-new-rule' as RuleId,
+          id: `temp-new-rule-${reviewingProposal.id}` as RuleId,
           standardVersionId,
         },
       ];
@@ -174,7 +174,9 @@ export function ProposalReviewPanel({
     const proposalType = reviewingProposal.type;
 
     if (proposalType === ChangeProposalType.addRule) {
-      return rule.id === ('temp-new-rule' as RuleId) ? 'added' : null;
+      return rule.id === (`temp-new-rule-${reviewingProposal.id}` as RuleId)
+        ? 'added'
+        : null;
     }
 
     if (proposalType === ChangeProposalType.updateRule) {
