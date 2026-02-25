@@ -131,11 +131,17 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
 
 function formatSubmittedDate(isoDate: string): string {
   const date = new Date(isoDate);
-  return date.toLocaleDateString('en-US', {
+  const datePart = date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  return `${datePart} ${timePart}`;
 }
 
 function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
