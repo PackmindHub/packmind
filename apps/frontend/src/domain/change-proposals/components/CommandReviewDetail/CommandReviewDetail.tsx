@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMSpinner } from '@packmind/ui';
+import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
   ChangeProposalId,
   OrganizationId,
@@ -20,10 +20,13 @@ import {
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
+import { useCommandReviewState } from '../../hooks/useCommandReviewState';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
 import { computeCommandOutdatedIds } from '../../utils/computeOutdatedProposalIds';
-import { ReviewDetailLayout } from '../ReviewDetailLayout';
-import { ProposalReviewPanel } from './ProposalReviewPanel';
+import { CommandReviewHeader } from './CommandReviewHeader';
+import { ChangeProposalAccordion } from './ChangeProposalAccordion';
+import { OriginalTabContent } from './OriginalTabContent';
+import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
 
 interface CommandReviewDetailProps {
@@ -46,7 +49,6 @@ export function CommandReviewDetail({
 
   const organizationId = organization?.id;
 
-  // Use props if provided, otherwise fall back to params/context
   const orgSlug = orgSlugProp ?? orgSlugParam;
   const spaceSlug = spaceSlugProp ?? space?.slug;
 
@@ -65,27 +67,7 @@ export function CommandReviewDetail({
 
   const pool = useChangeProposalPool(selectedRecipeProposals);
 
-  const [showUnifiedView, setShowUnifiedView] = useState(false);
-
-  const handleUnifiedViewChange = useCallback(
-    (checked: boolean) => {
-      setShowUnifiedView(checked);
-      if (checked && pool.reviewingProposalId) {
-        pool.handleSelectProposal(pool.reviewingProposalId);
-      }
-    },
-    [pool],
-  );
-
-  const handleSelectProposal = useCallback(
-    (proposalId: ChangeProposalId) => {
-      if (showUnifiedView) {
-        setShowUnifiedView(false);
-      }
-      pool.handleSelectProposal(proposalId);
-    },
-    [pool, showUnifiedView],
-  );
+  const reviewState = useCommandReviewState();
 
   const outdatedProposalIds = useMemo(
     () => computeCommandOutdatedIds(selectedRecipeProposals, selectedRecipe),
@@ -145,46 +127,110 @@ export function CommandReviewDetail({
     pool.resetPool,
   ]);
 
+  const handleEdit = useCallback(
+    (proposalId: ChangeProposalId) => {
+      const proposal = selectedRecipeProposals.find((p) => p.id === proposalId);
+      if (!proposal) return;
+      const payload = proposal.payload as { newValue: string };
+      reviewState.startEditing(proposalId, payload.newValue);
+    },
+    [selectedRecipeProposals, reviewState],
+  );
+
+  const handleSaveAndAccept = useCallback(
+    (proposalId: ChangeProposalId) => {
+      pool.handlePoolAccept(proposalId);
+      reviewState.cancelEditing();
+    },
+    [pool, reviewState],
+  );
+
+  const latestProposal = useMemo(() => {
+    if (selectedRecipeProposals.length === 0) return null;
+    return [...selectedRecipeProposals].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+  }, [selectedRecipeProposals]);
+
+  const latestAuthor = latestProposal
+    ? (userLookup.get(latestProposal.createdBy) ?? 'Unknown')
+    : '';
+  const latestTime = latestProposal?.createdAt ?? new Date();
+
+  if (isLoadingProposals) {
+    return (
+      <PMBox gridColumn="span 2" display="flex" justifyContent="center" p={8}>
+        <PMSpinner />
+      </PMBox>
+    );
+  }
+
+  if (!selectedRecipe) {
+    return null;
+  }
+
   return (
     <>
-      <ReviewDetailLayout
-        proposals={selectedRecipeProposals}
-        reviewingProposalId={pool.reviewingProposalId}
-        acceptedProposalIds={pool.acceptedProposalIds}
-        rejectedProposalIds={pool.rejectedProposalIds}
-        blockedByConflictIds={pool.blockedByConflictIds}
-        hasPooledDecisions={pool.hasPooledDecisions}
-        outdatedProposalIds={outdatedProposalIds}
-        userLookup={userLookup}
-        showUnifiedView={showUnifiedView}
-        onSelectProposal={handleSelectProposal}
-        onPoolAccept={pool.handlePoolAccept}
-        onPoolReject={pool.handlePoolReject}
-        onUndoPool={pool.handleUndoPool}
-        onUnifiedViewChange={handleUnifiedViewChange}
-        onSave={handleSave}
-        isSaving={applyRecipeChangeProposalsMutation.isPending}
+      <PMBox
+        gridColumn="span 2"
+        display="flex"
+        flexDirection="column"
+        height="full"
+        overflowY="auto"
       >
-        {isLoadingProposals ? (
-          <PMSpinner />
-        ) : (
-          <ProposalReviewPanel
-            selectedRecipe={selectedRecipe}
-            selectedRecipeProposals={selectedRecipeProposals}
-            reviewingProposalId={pool.reviewingProposalId}
-            outdatedProposalIds={outdatedProposalIds}
+        <CommandReviewHeader
+          recipeName={selectedRecipe.name}
+          recipeVersion={selectedRecipe.version}
+          latestAuthor={latestAuthor}
+          latestTime={latestTime}
+          activeTab={reviewState.activeTab}
+          onTabChange={reviewState.setActiveTab}
+          acceptedCount={pool.acceptedProposalIds.size}
+          hasPooledDecisions={pool.hasPooledDecisions}
+          isSaving={applyRecipeChangeProposalsMutation.isPending}
+          onSave={handleSave}
+        />
+
+        {reviewState.activeTab === 'changes' && (
+          <ChangeProposalAccordion
+            proposals={selectedRecipeProposals}
+            recipe={selectedRecipe}
             acceptedProposalIds={pool.acceptedProposalIds}
             rejectedProposalIds={pool.rejectedProposalIds}
             blockedByConflictIds={pool.blockedByConflictIds}
+            outdatedProposalIds={outdatedProposalIds}
+            expandedCardIds={reviewState.expandedCardIds}
+            editingProposalId={reviewState.editingProposalId}
+            editedValues={reviewState.editedValues}
             userLookup={userLookup}
-            showUnifiedView={showUnifiedView}
-            onSelectProposal={handleSelectProposal}
-            onPoolAccept={pool.handlePoolAccept}
-            onPoolReject={pool.handlePoolReject}
-            onUndoPool={pool.handleUndoPool}
+            onToggleCard={reviewState.toggleCard}
+            getViewMode={reviewState.getViewMode}
+            onViewModeChange={reviewState.setViewMode}
+            onEdit={handleEdit}
+            onAccept={pool.handlePoolAccept}
+            onDismiss={pool.handlePoolReject}
+            onUndo={pool.handleUndoPool}
+            onEditedValueChange={reviewState.setEditedValue}
+            onResetToOriginal={reviewState.resetEditedValue}
+            onCancelEdit={reviewState.cancelEditing}
+            onSaveAndAccept={handleSaveAndAccept}
           />
         )}
-      </ReviewDetailLayout>
+
+        {reviewState.activeTab === 'original' && (
+          <OriginalTabContent recipe={selectedRecipe} />
+        )}
+
+        {reviewState.activeTab === 'result' && (
+          <ResultTabContent
+            recipe={selectedRecipe}
+            proposals={selectedRecipeProposals}
+            acceptedProposalIds={pool.acceptedProposalIds}
+          />
+        )}
+      </PMBox>
+
       <PMAlertDialog
         open={blocker.state === 'blocked'}
         onOpenChange={(details) => {
