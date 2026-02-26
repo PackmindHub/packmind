@@ -20,6 +20,10 @@ import { renderDiffText } from '../../utils/renderDiffText';
 import { ProposalReviewHeader } from '../ProposalReviewHeader';
 import { useDiffNavigation } from '../../hooks/useDiffNavigation';
 import { renderMarkdownDiffOrPreview } from '../SkillReviewDetail/SkillContent/renderMarkdownDiffOrPreview';
+import { applyRecipeProposals } from '../../utils/applyRecipeProposals';
+import { getProposalNumbers } from '../../utils/applyStandardProposals';
+import { HighlightedText } from '../HighlightedContent';
+import { UnifiedMarkdownViewer } from '../UnifiedMarkdownViewer';
 
 interface ProposalReviewPanelProps {
   selectedRecipe: Recipe | undefined;
@@ -30,6 +34,7 @@ interface ProposalReviewPanelProps {
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
+  showUnifiedView: boolean;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
   onPoolReject: (proposalId: ChangeProposalId) => void;
@@ -45,6 +50,7 @@ export function ProposalReviewPanel({
   rejectedProposalIds,
   blockedByConflictIds,
   userLookup,
+  showUnifiedView,
   onSelectProposal,
   onPoolAccept,
   onPoolReject,
@@ -75,6 +81,28 @@ export function ProposalReviewPanel({
     ? (selectedRecipeProposals.find((p) => p.id === reviewingProposalId) ??
       null)
     : null;
+
+  const unifiedResult = useMemo(() => {
+    if (
+      !showUnifiedView ||
+      !selectedRecipe ||
+      acceptedProposalIds.size === 0 ||
+      reviewingProposal
+    ) {
+      return null;
+    }
+    return applyRecipeProposals(
+      selectedRecipe,
+      selectedRecipeProposals,
+      acceptedProposalIds,
+    );
+  }, [
+    showUnifiedView,
+    selectedRecipe,
+    selectedRecipeProposals,
+    acceptedProposalIds,
+    reviewingProposal,
+  ]);
 
   if (reviewingProposal) {
     const payload = reviewingProposal.payload as ScalarUpdatePayload;
@@ -163,16 +191,60 @@ export function ProposalReviewPanel({
 
   return (
     <PMVStack gap={2} align="stretch" p={4}>
-      <PMText fontSize="lg" fontWeight="semibold">
-        {selectedRecipe.name}
-      </PMText>
-      <MarkdownEditorProvider>
-        <MarkdownEditor
-          defaultValue={selectedRecipe.content}
-          readOnly
-          paddingVariant="none"
-        />
-      </MarkdownEditorProvider>
+      {unifiedResult ? (
+        <>
+          {unifiedResult.changes.name ? (
+            <HighlightedText
+              oldValue={unifiedResult.changes.name.originalValue}
+              newValue={unifiedResult.changes.name.finalValue}
+              proposalNumbers={getProposalNumbers(
+                unifiedResult.changes.name.proposalIds,
+                selectedRecipeProposals,
+              )}
+            >
+              <PMText fontSize="lg" fontWeight="semibold">
+                {unifiedResult.name}
+              </PMText>
+            </HighlightedText>
+          ) : (
+            <PMText fontSize="lg" fontWeight="semibold">
+              {unifiedResult.name}
+            </PMText>
+          )}
+
+          {unifiedResult.changes.content ? (
+            <UnifiedMarkdownViewer
+              oldValue={unifiedResult.changes.content.originalValue}
+              newValue={unifiedResult.changes.content.finalValue}
+              proposalNumbers={getProposalNumbers(
+                unifiedResult.changes.content.proposalIds,
+                selectedRecipeProposals,
+              )}
+            />
+          ) : (
+            <MarkdownEditorProvider>
+              <MarkdownEditor
+                defaultValue={unifiedResult.content}
+                readOnly
+                paddingVariant="none"
+              />
+            </MarkdownEditorProvider>
+          )}
+        </>
+      ) : (
+        <>
+          <PMText fontSize="lg" fontWeight="semibold">
+            {selectedRecipe.name}
+          </PMText>
+          <MarkdownEditorProvider>
+            <MarkdownEditor
+              defaultValue={selectedRecipe.content}
+              readOnly
+              paddingVariant="none"
+            />
+          </MarkdownEditorProvider>
+        </>
+      )}
     </PMVStack>
   );
 }
