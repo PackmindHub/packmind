@@ -238,6 +238,98 @@ async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
   return { gitRemoteUrl, gitBranch, relativePath };
 }
 
+async function handleSubmission(params: {
+  packmindCliHexa: PackmindCliHexa;
+  unsubmittedItems: CheckDiffItemResult[];
+  messageFlag: string | undefined;
+  exit: (code: number) => void;
+}): Promise<boolean> {
+  const { packmindCliHexa, unsubmittedItems, messageFlag, exit } = params;
+  const unsubmittedDiffs = unsubmittedItems.map((r) => r.diff);
+
+  if (unsubmittedDiffs.length === 0) {
+    logInfoConsole('All changes already submitted.');
+    return false;
+  }
+
+  let message: string;
+  if (messageFlag !== undefined) {
+    const validation = validateMessage(messageFlag);
+    if (!validation.valid) {
+      logErrorConsole(validation.error);
+      exit(1);
+      return true;
+    }
+    message = validation.message;
+  } else if (process.stdin.isTTY) {
+    const editorMessage = openEditorForMessage();
+    const validation = validateMessage(editorMessage);
+    if (!validation.valid) {
+      logErrorConsole(
+        'Aborting submission: empty message. Use -m to provide a message.',
+      );
+      exit(1);
+      return true;
+    }
+    message = validation.message;
+  } else {
+    logErrorConsole(
+      'Non-interactive mode requires -m flag. Use: packmind-cli diff --submit -m "your message"',
+    );
+    exit(1);
+    return true;
+  }
+
+  const groupedUnsubmitted = Array.from(
+    groupDiffsByArtefact(unsubmittedDiffs).values(),
+  );
+  const result = await packmindCliHexa.submitDiffs(groupedUnsubmitted, message);
+
+  for (const err of result.errors) {
+    if (err.code === 'ChangeProposalPayloadMismatchError') {
+      logErrorConsole(
+        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
+      );
+    } else {
+      logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+    }
+  }
+
+  if (result.submitted > 0) {
+    const truncatedMessage =
+      message.length > 50 ? message.slice(0, 50) + '...' : message;
+    logInfoConsole(`Message: "${truncatedMessage}"`);
+  }
+
+  const summaryParts: string[] = [];
+  if (result.submitted > 0) {
+    summaryParts.push(`${result.submitted} submitted`);
+  }
+  if (result.alreadySubmitted > 0) {
+    summaryParts.push(`${result.alreadySubmitted} already submitted`);
+  }
+  if (result.errors.length > 0) {
+    const errorWord = result.errors.length === 1 ? 'error' : 'errors';
+    summaryParts.push(`${result.errors.length} ${errorWord}`);
+  }
+
+  if (summaryParts.length > 0) {
+    const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
+    if (result.errors.length === 0 && result.alreadySubmitted === 0) {
+      logSuccessConsole(summaryMessage);
+    } else if (
+      (result.errors.length > 0 && result.submitted > 0) ||
+      result.alreadySubmitted > 0
+    ) {
+      logWarningConsole(summaryMessage);
+    } else {
+      logErrorConsole(summaryMessage);
+    }
+  }
+
+  return false;
+}
+
 function displayDiffs(params: {
   diffsToDisplay: ArtefactDiff[];
   submittedLookup: Map<ArtefactDiff, CheckDiffItemResult>;
@@ -436,90 +528,14 @@ export async function diffArtefactsHandler(
     });
 
     if (submit) {
-      // Only submit unsubmitted diffs
-      const unsubmittedDiffs = unsubmittedItems.map((r) => r.diff);
-
-      if (unsubmittedDiffs.length === 0) {
-        logInfoConsole('All changes already submitted.');
-      } else {
-        // Resolve message: from -m flag, editor, or abort
-        let message: string;
-        if (messageFlag !== undefined) {
-          const validation = validateMessage(messageFlag);
-          if (!validation.valid) {
-            logErrorConsole(validation.error);
-            exit(1);
-            return { diffsFound: changeCount };
-          }
-          message = validation.message;
-        } else if (process.stdin.isTTY) {
-          const editorMessage = openEditorForMessage();
-          const validation = validateMessage(editorMessage);
-          if (!validation.valid) {
-            logErrorConsole(
-              'Aborting submission: empty message. Use -m to provide a message.',
-            );
-            exit(1);
-            return { diffsFound: changeCount };
-          }
-          message = validation.message;
-        } else {
-          logErrorConsole(
-            'Non-interactive mode requires -m flag. Use: packmind-cli diff --submit -m "your message"',
-          );
-          exit(1);
-          return { diffsFound: changeCount };
-        }
-
-        const groupedUnsubmitted = Array.from(
-          groupDiffsByArtefact(unsubmittedDiffs).values(),
-        );
-        const result = await packmindCliHexa.submitDiffs(
-          groupedUnsubmitted,
-          message,
-        );
-
-        for (const err of result.errors) {
-          if (err.code === 'ChangeProposalPayloadMismatchError') {
-            logErrorConsole(
-              `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
-            );
-          } else {
-            logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
-          }
-        }
-
-        if (result.submitted > 0) {
-          const truncatedMessage =
-            message.length > 50 ? message.slice(0, 50) + '...' : message;
-          logInfoConsole(`Message: "${truncatedMessage}"`);
-        }
-
-        const summaryParts: string[] = [];
-        if (result.submitted > 0) {
-          summaryParts.push(`${result.submitted} submitted`);
-        }
-        if (result.alreadySubmitted > 0) {
-          summaryParts.push(`${result.alreadySubmitted} already submitted`);
-        }
-        if (result.errors.length > 0) {
-          const errorWord = result.errors.length === 1 ? 'error' : 'errors';
-          summaryParts.push(`${result.errors.length} ${errorWord}`);
-        }
-
-        if (summaryParts.length > 0) {
-          const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
-          if (result.errors.length === 0 && result.alreadySubmitted === 0) {
-            logSuccessConsole(summaryMessage);
-          } else if (
-            (result.errors.length > 0 && result.submitted > 0) ||
-            result.alreadySubmitted > 0
-          ) {
-            logWarningConsole(summaryMessage);
-          } else {
-            logErrorConsole(summaryMessage);
-          }
-        }
+      const aborted = await handleSubmission({
+        packmindCliHexa,
+        unsubmittedItems,
+        messageFlag,
+        exit,
+      });
+      if (aborted) {
+        return { diffsFound: changeCount };
       }
     }
 
