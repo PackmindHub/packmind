@@ -69,7 +69,8 @@
         "pages": [
           "governance/distribution",
           "governance/git-repository-connection",
-          "governance/overview"
+          "governance/overview",
+          "governance/change-proposals"
         ]
       },
       {
