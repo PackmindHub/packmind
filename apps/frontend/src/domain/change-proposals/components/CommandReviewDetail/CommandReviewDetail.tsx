@@ -1,7 +1,12 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMSpinner } from '@packmind/ui';
-import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
+import {
+  ChangeProposalId,
+  OrganizationId,
+  RecipeId,
+  SpaceId,
+} from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetRecipeByIdQuery } from '../../../recipes/api/queries/RecipesQueries';
@@ -59,6 +64,28 @@ export function CommandReviewDetail({
   const { data: selectedRecipe } = useGetRecipeByIdQuery(recipeId);
 
   const pool = useChangeProposalPool(selectedRecipeProposals);
+
+  const [showUnifiedView, setShowUnifiedView] = useState(false);
+
+  const handleUnifiedViewChange = useCallback(
+    (checked: boolean) => {
+      setShowUnifiedView(checked);
+      if (checked && pool.reviewingProposalId) {
+        pool.handleSelectProposal(pool.reviewingProposalId);
+      }
+    },
+    [pool],
+  );
+
+  const handleSelectProposal = useCallback(
+    (proposalId: ChangeProposalId) => {
+      if (showUnifiedView) {
+        setShowUnifiedView(false);
+      }
+      pool.handleSelectProposal(proposalId);
+    },
+    [pool, showUnifiedView],
+  );
 
   const outdatedProposalIds = useMemo(
     () => computeCommandOutdatedIds(selectedRecipeProposals, selectedRecipe),
@@ -129,16 +156,14 @@ export function CommandReviewDetail({
         hasPooledDecisions={pool.hasPooledDecisions}
         outdatedProposalIds={outdatedProposalIds}
         userLookup={userLookup}
-        onSelectProposal={pool.handleSelectProposal}
+        showUnifiedView={showUnifiedView}
+        onSelectProposal={handleSelectProposal}
         onPoolAccept={pool.handlePoolAccept}
         onPoolReject={pool.handlePoolReject}
         onUndoPool={pool.handleUndoPool}
+        onUnifiedViewChange={handleUnifiedViewChange}
         onSave={handleSave}
         isSaving={applyRecipeChangeProposalsMutation.isPending}
-        showUnifiedView={false}
-        onUnifiedViewChange={() => {
-          // no-op
-        }}
       >
         {isLoadingProposals ? (
           <PMSpinner />
@@ -152,7 +177,8 @@ export function CommandReviewDetail({
             rejectedProposalIds={pool.rejectedProposalIds}
             blockedByConflictIds={pool.blockedByConflictIds}
             userLookup={userLookup}
-            onSelectProposal={pool.handleSelectProposal}
+            showUnifiedView={showUnifiedView}
+            onSelectProposal={handleSelectProposal}
             onPoolAccept={pool.handlePoolAccept}
             onPoolReject={pool.handlePoolReject}
             onUndoPool={pool.handleUndoPool}
