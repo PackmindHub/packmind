@@ -266,7 +266,10 @@ export const useApplyRecipeChangeProposalsMutation = (params?: {
   });
 };
 
-export const useApplyStandardChangeProposalsMutation = () => {
+export const useApplyStandardChangeProposalsMutation = (params?: {
+  orgSlug?: string;
+  spaceSlug?: string;
+}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -298,10 +301,30 @@ export const useApplyStandardChangeProposalsMutation = () => {
         }),
       ]);
 
-      pmToaster.create({
-        title: 'Changes applied successfully',
-        type: 'success',
-      });
+      // Show success toast with link to the standard
+      if (params?.orgSlug && params?.spaceSlug) {
+        const standardUrl = routes.space.toStandard(
+          params.orgSlug,
+          params.spaceSlug,
+          variables.artefactId,
+        );
+        pmToaster.create({
+          title: 'Changes applied successfully',
+          description: `View the updated standard`,
+          type: 'success',
+          action: {
+            label: 'View standard',
+            onClick: () => {
+              window.location.href = standardUrl;
+            },
+          },
+        });
+      } else {
+        pmToaster.create({
+          title: 'Changes applied successfully',
+          type: 'success',
+        });
+      }
     },
     onError: (error, variables, context) => {
       console.error('Error applying standard change proposals');
@@ -319,7 +342,11 @@ export const useApplyStandardChangeProposalsMutation = () => {
   });
 };
 
-export const useApplySkillChangeProposalsMutation = () => {
+export const useApplySkillChangeProposalsMutation = (params?: {
+  orgSlug?: string;
+  spaceSlug?: string;
+  skillSlug?: string;
+}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -350,10 +377,30 @@ export const useApplySkillChangeProposalsMutation = () => {
         }),
       ]);
 
-      pmToaster.create({
-        title: 'Changes applied successfully',
-        type: 'success',
-      });
+      // Show success toast with link to the skill
+      if (params?.orgSlug && params?.spaceSlug && params?.skillSlug) {
+        const skillUrl = routes.space.toSkill(
+          params.orgSlug,
+          params.spaceSlug,
+          params.skillSlug,
+        );
+        pmToaster.create({
+          title: 'Changes applied successfully',
+          description: `View the updated skill`,
+          type: 'success',
+          action: {
+            label: 'View skill',
+            onClick: () => {
+              window.location.href = skillUrl;
+            },
+          },
+        });
+      } else {
+        pmToaster.create({
+          title: 'Changes applied successfully',
+          type: 'success',
+        });
+      }
     },
     onError: (error, variables, context) => {
       console.error('Error applying skill change proposals');

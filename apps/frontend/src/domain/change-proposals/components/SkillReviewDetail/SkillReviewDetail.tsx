@@ -22,10 +22,14 @@ import { useBlocker, useBeforeUnload } from 'react-router';
 
 interface SkillReviewDetailProps {
   artefactId: string;
+  orgSlug?: string;
+  spaceSlug?: string;
 }
 
 export function SkillReviewDetail({
   artefactId,
+  orgSlug,
+  spaceSlug,
 }: Readonly<SkillReviewDetailProps>) {
   const skillId = artefactId as SkillId;
   const { organization } = useAuthContext();
@@ -34,8 +38,6 @@ export function SkillReviewDetail({
 
   const organizationId = organization?.id;
 
-  const applySkillChangeProposalsMutation =
-    useApplySkillChangeProposalsMutation();
   const { data: selectedSkillProposalsData, isLoading: isLoadingProposals } =
     useListChangeProposalsBySkillQuery(skillId);
 
@@ -44,6 +46,10 @@ export function SkillReviewDetail({
 
   const { data: selectedSkillData } = useGetSkillWithFilesByIdQuery(skillId);
   const selectedSkill = selectedSkillData ?? undefined;
+  const skillSlug = selectedSkill?.skill?.slug;
+
+  const applySkillChangeProposalsMutation =
+    useApplySkillChangeProposalsMutation({ orgSlug, spaceSlug, skillSlug });
 
   const pool = useChangeProposalPool(selectedSkillProposals);
 
