@@ -330,6 +330,34 @@ async function handleSubmission(params: {
   return false;
 }
 
+function extractUniqueAndSortedArtefacts(groups: Map<string, ArtefactDiff[]>) {
+  const typeSortOrder: Record<ArtifactType, number> = {
+    command: 0,
+    skill: 1,
+    standard: 2,
+  };
+
+  const uniqueArtefacts = new Map<
+    string,
+    { type: ArtifactType; name: string }
+  >();
+  for (const [key, groupDiffs] of groups) {
+    if (!uniqueArtefacts.has(key)) {
+      uniqueArtefacts.set(key, {
+        type: groupDiffs[0].artifactType,
+        name: groupDiffs[0].artifactName,
+      });
+    }
+  }
+
+  const sortedArtefacts = Array.from(uniqueArtefacts.values()).sort(
+    (a, b) =>
+      typeSortOrder[a.type] - typeSortOrder[b.type] ||
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+  );
+  return sortedArtefacts;
+}
+
 function displayDiffs(params: {
   diffsToDisplay: ArtefactDiff[];
   submittedLookup: Map<ArtefactDiff, CheckDiffItemResult>;
@@ -383,30 +411,7 @@ function displayDiffs(params: {
   const changeCount = diffsToDisplay.length;
   const changeWord = changeCount === 1 ? 'change' : 'changes';
 
-  const typeSortOrder: Record<ArtifactType, number> = {
-    command: 0,
-    skill: 1,
-    standard: 2,
-  };
-
-  const uniqueArtefacts = new Map<
-    string,
-    { type: ArtifactType; name: string }
-  >();
-  for (const [key, groupDiffs] of groups) {
-    if (!uniqueArtefacts.has(key)) {
-      uniqueArtefacts.set(key, {
-        type: groupDiffs[0].artifactType,
-        name: groupDiffs[0].artifactName,
-      });
-    }
-  }
-
-  const sortedArtefacts = Array.from(uniqueArtefacts.values()).sort(
-    (a, b) =>
-      typeSortOrder[a.type] - typeSortOrder[b.type] ||
-      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
-  );
+  const sortedArtefacts = extractUniqueAndSortedArtefacts(groups);
 
   const artefactCount = sortedArtefacts.length;
   const artefactWord = artefactCount === 1 ? 'artefact' : 'artefacts';
