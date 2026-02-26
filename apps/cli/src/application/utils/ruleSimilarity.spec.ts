@@ -1,4 +1,8 @@
-import { levenshteinSimilarity } from './ruleSimilarity';
+import {
+  levenshteinSimilarity,
+  jaccardSimilarity,
+  combinedSimilarity,
+} from './ruleSimilarity';
 
 describe('levenshteinSimilarity', () => {
   it('returns 1 for identical strings', () => {
@@ -48,6 +52,71 @@ describe('levenshteinSimilarity', () => {
 
     it('returns low similarity', () => {
       expect(levenshteinSimilarity(a, b)).toBeCloseTo(0.2593, 4);
+    });
+  });
+});
+
+describe('jaccardSimilarity', () => {
+  it('returns 1 for identical strings', () => {
+    expect(jaccardSimilarity('hello world', 'hello world')).toBe(1);
+  });
+
+  it('returns 0 for completely different words', () => {
+    expect(jaccardSimilarity('hello world', 'foo bar')).toBe(0);
+  });
+
+  describe('when both strings are empty', () => {
+    it('returns 0', () => {
+      expect(jaccardSimilarity('', '')).toBe(0);
+    });
+  });
+
+  it('returns 1 for reordered identical words', () => {
+    expect(jaccardSimilarity('hello world foo', 'foo hello world')).toBe(1);
+  });
+
+  describe('when sentences are restructured', () => {
+    const a =
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient';
+    const b =
+      'Delegate authentication and error handling to PackmindHttpClient to keep gateway methods focused and concise';
+
+    it('rescues restructured sentences that Levenshtein misses', () => {
+      expect(jaccardSimilarity(a, b)).toBeGreaterThanOrEqual(0.5);
+    });
+  });
+});
+
+describe('combinedSimilarity', () => {
+  describe('when sentences are restructured', () => {
+    const a =
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient';
+    const b =
+      'Delegate authentication and error handling to PackmindHttpClient to keep gateway methods focused and concise';
+
+    it('takes the max of levenshtein and jaccard', () => {
+      expect(combinedSimilarity(a, b)).toBeGreaterThanOrEqual(0.5);
+    });
+  });
+
+  describe('when levenshtein scores higher', () => {
+    const a =
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient';
+    const b =
+      'Keep gateway methods simple by delegating auth and error handling to PackmindHttpClient';
+
+    it('returns levenshtein score', () => {
+      expect(combinedSimilarity(a, b)).toBeGreaterThan(0.8);
+    });
+  });
+
+  describe('when rules are genuinely different', () => {
+    const a = 'Always use snake_case for variable names in Python code';
+    const b =
+      'Deploy microservices independently using separate CI/CD pipelines';
+
+    it('returns low score', () => {
+      expect(combinedSimilarity(a, b)).toBeLessThan(0.3);
     });
   });
 });

@@ -1,3 +1,17 @@
+export function jaccardSimilarity(a: string, b: string): number {
+  const setA = new Set(a.toLowerCase().split(/\s+/).filter(Boolean));
+  const setB = new Set(b.toLowerCase().split(/\s+/).filter(Boolean));
+  if (setA.size === 0 && setB.size === 0) return 0;
+
+  const intersection = new Set([...setA].filter((word) => setB.has(word)));
+  const union = new Set([...setA, ...setB]);
+  return intersection.size / union.size;
+}
+
+export function combinedSimilarity(a: string, b: string): number {
+  return Math.max(levenshteinSimilarity(a, b), jaccardSimilarity(a, b));
+}
+
 export function levenshteinSimilarity(a: string, b: string): number {
   const maxLen = Math.max(a.length, b.length);
   if (maxLen === 0) return 0;
