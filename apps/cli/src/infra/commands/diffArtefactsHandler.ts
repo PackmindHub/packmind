@@ -238,6 +238,112 @@ async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
   return { gitRemoteUrl, gitBranch, relativePath };
 }
 
+function displayDiffs(params: {
+  diffsToDisplay: ArtefactDiff[];
+  submittedLookup: Map<ArtefactDiff, CheckDiffItemResult>;
+  includeSubmitted: boolean | undefined;
+  unsubmittedItems: CheckDiffItemResult[];
+  submittedItems: CheckDiffItemResult[];
+  log: typeof console.log;
+}): number {
+  const {
+    diffsToDisplay,
+    submittedLookup,
+    includeSubmitted,
+    unsubmittedItems,
+    submittedItems,
+    log,
+  } = params;
+
+  log(formatHeader(`\nChanges found:\n`));
+
+  const groups = groupDiffsByArtefact(diffsToDisplay);
+  for (const [, groupDiffs] of groups) {
+    const { artifactType, artifactName } = groupDiffs[0];
+    const typeLabel = ARTIFACT_TYPE_LABELS[artifactType];
+    log(formatBold(`${typeLabel} "${artifactName}"`));
+
+    const subGroups = subGroupByChangeContent(groupDiffs);
+    for (const subGroup of subGroups) {
+      for (const diff of subGroup) {
+        log(`  ${formatFilePath(diff.filePath)}`);
+      }
+      const label =
+        CHANGE_PROPOSAL_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
+
+      const checkItem = submittedLookup.get(subGroup[0]);
+      if (includeSubmitted && checkItem?.exists && checkItem.createdAt) {
+        const dateStr = formatSubmittedDate(checkItem.createdAt);
+        const messageSuffix = checkItem.message
+          ? ` "${checkItem.message.length > 50 ? checkItem.message.slice(0, 50) + '...' : checkItem.message}"`
+          : '';
+        log(
+          `  - ${label} ${chalk.dim(`[already submitted on ${dateStr}${messageSuffix}]`)}`,
+        );
+      } else {
+        log(`  - ${label}`);
+      }
+      formatDiffPayload(subGroup[0], log);
+    }
+    log('');
+  }
+
+  const changeCount = diffsToDisplay.length;
+  const changeWord = changeCount === 1 ? 'change' : 'changes';
+
+  const typeSortOrder: Record<ArtifactType, number> = {
+    command: 0,
+    skill: 1,
+    standard: 2,
+  };
+
+  const uniqueArtefacts = new Map<
+    string,
+    { type: ArtifactType; name: string }
+  >();
+  for (const [key, groupDiffs] of groups) {
+    if (!uniqueArtefacts.has(key)) {
+      uniqueArtefacts.set(key, {
+        type: groupDiffs[0].artifactType,
+        name: groupDiffs[0].artifactName,
+      });
+    }
+  }
+
+  const sortedArtefacts = Array.from(uniqueArtefacts.values()).sort(
+    (a, b) =>
+      typeSortOrder[a.type] - typeSortOrder[b.type] ||
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+  );
+
+  const artefactCount = sortedArtefacts.length;
+  const artefactWord = artefactCount === 1 ? 'artefact' : 'artefacts';
+  const allSubmittedSuffix =
+    includeSubmitted && unsubmittedItems.length === 0
+      ? ' (all already submitted)'
+      : '';
+  logWarningConsole(
+    `Summary: ${changeCount} ${changeWord} found on ${artefactCount} ${artefactWord}${allSubmittedSuffix}:`,
+  );
+  for (const artefact of sortedArtefacts) {
+    const typeLabel = ARTIFACT_TYPE_LABELS[artefact.type];
+    const key = `${artefact.type}:${artefact.name}`;
+    const artefactDiffs = groups.get(key) ?? [];
+    const allDiffsSubmitted =
+      includeSubmitted &&
+      artefactDiffs.length > 0 &&
+      artefactDiffs.every((d) => submittedLookup.get(d)?.exists);
+    const suffix = allDiffsSubmitted ? ' (all already submitted)' : '';
+    logWarningConsole(`* ${typeLabel} "${artefact.name}"${suffix}`);
+  }
+
+  if (!includeSubmitted && submittedItems.length > 0) {
+    logInfoConsole(buildSubmittedFooter(submittedItems));
+  }
+
+  return changeCount;
+}
+
 export async function diffArtefactsHandler(
   deps: DiffHandlerDependencies,
 ): Promise<DiffHandlerResult> {
@@ -320,94 +426,14 @@ export async function diffArtefactsHandler(
       return { diffsFound: 0 };
     }
 
-    log(formatHeader(`\nChanges found:\n`));
-
-    const groups = groupDiffsByArtefact(diffsToDisplay);
-    for (const [, groupDiffs] of groups) {
-      const { artifactType, artifactName } = groupDiffs[0];
-      const typeLabel = ARTIFACT_TYPE_LABELS[artifactType];
-      log(formatBold(`${typeLabel} "${artifactName}"`));
-
-      // Sub-group by change type + payload to deduplicate identical changes across agent folders
-      const subGroups = subGroupByChangeContent(groupDiffs);
-      for (const subGroup of subGroups) {
-        for (const diff of subGroup) {
-          log(`  ${formatFilePath(diff.filePath)}`);
-        }
-        const label =
-          CHANGE_PROPOSAL_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
-
-        // Add submitted tag if --include-submitted and the diff was already submitted
-        const checkItem = submittedLookup.get(subGroup[0]);
-        if (includeSubmitted && checkItem?.exists && checkItem.createdAt) {
-          const dateStr = formatSubmittedDate(checkItem.createdAt);
-          const messageSuffix = checkItem.message
-            ? ` "${checkItem.message.length > 50 ? checkItem.message.slice(0, 50) + '...' : checkItem.message}"`
-            : '';
-          log(
-            `  - ${label} ${chalk.dim(`[already submitted on ${dateStr}${messageSuffix}]`)}`,
-          );
-        } else {
-          log(`  - ${label}`);
-        }
-        formatDiffPayload(subGroup[0], log);
-      }
-      log('');
-    }
-
-    const changeCount = diffsToDisplay.length;
-    const changeWord = changeCount === 1 ? 'change' : 'changes';
-
-    const typeSortOrder: Record<ArtifactType, number> = {
-      command: 0,
-      skill: 1,
-      standard: 2,
-    };
-
-    const uniqueArtefacts = new Map<
-      string,
-      { type: ArtifactType; name: string }
-    >();
-    for (const [key, groupDiffs] of groups) {
-      if (!uniqueArtefacts.has(key)) {
-        uniqueArtefacts.set(key, {
-          type: groupDiffs[0].artifactType,
-          name: groupDiffs[0].artifactName,
-        });
-      }
-    }
-
-    const sortedArtefacts = Array.from(uniqueArtefacts.values()).sort(
-      (a, b) =>
-        typeSortOrder[a.type] - typeSortOrder[b.type] ||
-        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
-    );
-
-    const artefactCount = sortedArtefacts.length;
-    const artefactWord = artefactCount === 1 ? 'artefact' : 'artefacts';
-    const allSubmittedSuffix =
-      includeSubmitted && unsubmittedItems.length === 0
-        ? ' (all already submitted)'
-        : '';
-    logWarningConsole(
-      `Summary: ${changeCount} ${changeWord} found on ${artefactCount} ${artefactWord}${allSubmittedSuffix}:`,
-    );
-    for (const artefact of sortedArtefacts) {
-      const typeLabel = ARTIFACT_TYPE_LABELS[artefact.type];
-      const key = `${artefact.type}:${artefact.name}`;
-      const artefactDiffs = groups.get(key) ?? [];
-      const allDiffsSubmitted =
-        includeSubmitted &&
-        artefactDiffs.length > 0 &&
-        artefactDiffs.every((d) => submittedLookup.get(d)?.exists);
-      const suffix = allDiffsSubmitted ? ' (all already submitted)' : '';
-      logWarningConsole(`* ${typeLabel} "${artefact.name}"${suffix}`);
-    }
-
-    // Show footer about submitted diffs (when not --include-submitted)
-    if (!includeSubmitted && submittedItems.length > 0) {
-      logInfoConsole(buildSubmittedFooter(submittedItems));
-    }
+    const changeCount = displayDiffs({
+      diffsToDisplay,
+      submittedLookup,
+      includeSubmitted,
+      unsubmittedItems,
+      submittedItems,
+      log,
+    });
 
     if (submit) {
       // Only submit unsubmitted diffs
