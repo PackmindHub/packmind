@@ -8,7 +8,14 @@ import {
   useDeleteStandardMutation,
 } from '../api/queries/StandardsQueries';
 
-import { Rule, Standard, OrganizationId, SpaceId } from '@packmind/types';
+import {
+  Rule,
+  Standard,
+  OrganizationId,
+  SpaceId,
+  ChangeProposalStatus,
+} from '@packmind/types';
+import { useListChangeProposalsByStandardQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { routes } from '../../../shared/utils/routes';
 import { StandardVersionHistoryHeader } from './StandardVersionHistoryHeader';
@@ -69,6 +76,14 @@ export const StandardDetails = ({
     spaceId as SpaceId,
     standard.id,
   );
+
+  const { data: changeProposals } = useListChangeProposalsByStandardQuery(
+    standard.id,
+  );
+  const pendingCount =
+    changeProposals?.changeProposals?.filter(
+      (p) => p.status === ChangeProposalStatus.pending,
+    ).length ?? 0;
 
   const { ruleLanguages } = useStandardEditionFeatures(standard.id);
 
@@ -257,6 +272,10 @@ export const StandardDetails = ({
                   ? STANDARD_MESSAGES.confirmation.deleteStandard(standard.name)
                   : 'Are you sure you want to delete this standard?'
               }
+              pendingCount={pendingCount}
+              standardId={standard.id}
+              orgSlug={orgSlug}
+              spaceSlug={spaceSlug}
             />
           ) : showRuleActions ? (
             <RuleActions onBackToSummary={handleBackToSummary} />
