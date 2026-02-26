@@ -361,7 +361,9 @@ describe('StandardChangeProposalValidator', () => {
     const realRuleId = createRuleId('real-rule-id');
 
     describe('when rule content matches oldValue', () => {
-      beforeEach(() => {
+      let result: Awaited<ReturnType<typeof validator.validate>>;
+
+      beforeEach(async () => {
         standardsPort.getRulesByStandardId.mockResolvedValue([
           {
             id: realRuleId,
@@ -369,9 +371,7 @@ describe('StandardChangeProposalValidator', () => {
             standardVersionId: 'sv-1' as never,
           },
         ]);
-      });
 
-      it('validates successfully and returns artefactVersion', async () => {
         const command = buildCommand({
           type: ChangeProposalType.updateRule,
           payload: {
@@ -381,23 +381,14 @@ describe('StandardChangeProposalValidator', () => {
           },
         });
 
-        const result = await validator.validate(command);
+        result = await validator.validate(command);
+      });
 
+      it('validates successfully and returns artefactVersion', () => {
         expect(result.artefactVersion).toEqual(3);
       });
 
-      it('returns resolvedPayload with real rule ID', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.updateRule,
-          payload: {
-            targetId: ruleId,
-            oldValue: 'Existing rule',
-            newValue: 'Updated rule',
-          },
-        });
-
-        const result = await validator.validate(command);
-
+      it('returns resolvedPayload with real rule ID', () => {
         expect(result.resolvedPayload).toEqual({
           targetId: realRuleId,
           oldValue: 'Existing rule',

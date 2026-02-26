@@ -349,8 +349,9 @@ describe('StandardDiffStrategy', () => {
       'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient';
     const localRule =
       'Keep gateway methods simple by delegating auth and error handling to PackmindHttpClient';
+    let result: ArtefactDiff[];
 
-    it('returns a single updateRule diff', async () => {
+    beforeEach(async () => {
       const file: DiffableFile = {
         path: '.packmind/standards/my-standard.md',
         content: `# Same Name\n\nSame desc\n\n## Rules\n* ${serverRule}`,
@@ -364,27 +365,14 @@ describe('StandardDiffStrategy', () => {
         `# Same Name\n\nSame desc\n\n## Rules\n* ${localRule}`,
       );
 
-      const result = await strategy.diff(file, '/test');
+      result = await strategy.diff(file, '/test');
+    });
 
+    it('returns a single updateRule diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('includes updateRule with oldValue and newValue', async () => {
-      const file: DiffableFile = {
-        path: '.packmind/standards/my-standard.md',
-        content: `# Same Name\n\nSame desc\n\n## Rules\n* ${serverRule}`,
-        artifactType: 'standard',
-        artifactName: 'My Standard',
-        artifactId: 'art-1',
-        spaceId: 'spc-1',
-      } as DiffableFile;
-
-      (fs.readFile as jest.Mock).mockResolvedValue(
-        `# Same Name\n\nSame desc\n\n## Rules\n* ${localRule}`,
-      );
-
-      const result = await strategy.diff(file, '/test');
-
+    it('includes updateRule with oldValue and newValue', () => {
       expect(result[0]).toEqual(
         expect.objectContaining({
           type: ChangeProposalType.updateRule,
@@ -398,7 +386,9 @@ describe('StandardDiffStrategy', () => {
   });
 
   describe('when a rule is replaced by a completely different rule', () => {
-    it('returns deleteRule and addRule diffs', async () => {
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
       const file: DiffableFile = {
         path: '.packmind/standards/my-standard.md',
         content:
@@ -413,28 +403,14 @@ describe('StandardDiffStrategy', () => {
         '# Same Name\n\nSame desc\n\n## Rules\n* Deploy microservices independently using separate CI/CD pipelines',
       );
 
-      const result = await strategy.diff(file, '/test');
+      result = await strategy.diff(file, '/test');
+    });
 
+    it('returns deleteRule and addRule diffs', () => {
       expect(result).toHaveLength(2);
     });
 
-    it('includes deleteRule for original content', async () => {
-      const file: DiffableFile = {
-        path: '.packmind/standards/my-standard.md',
-        content:
-          '# Same Name\n\nSame desc\n\n## Rules\n* Always use snake_case for variable names in Python code',
-        artifactType: 'standard',
-        artifactName: 'My Standard',
-        artifactId: 'art-1',
-        spaceId: 'spc-1',
-      } as DiffableFile;
-
-      (fs.readFile as jest.Mock).mockResolvedValue(
-        '# Same Name\n\nSame desc\n\n## Rules\n* Deploy microservices independently using separate CI/CD pipelines',
-      );
-
-      const result = await strategy.diff(file, '/test');
-
+    it('includes deleteRule for original content', () => {
       expect(result[0]).toEqual(
         expect.objectContaining({
           type: ChangeProposalType.deleteRule,
@@ -448,23 +424,7 @@ describe('StandardDiffStrategy', () => {
       );
     });
 
-    it('includes addRule for new content', async () => {
-      const file: DiffableFile = {
-        path: '.packmind/standards/my-standard.md',
-        content:
-          '# Same Name\n\nSame desc\n\n## Rules\n* Always use snake_case for variable names in Python code',
-        artifactType: 'standard',
-        artifactName: 'My Standard',
-        artifactId: 'art-1',
-        spaceId: 'spc-1',
-      } as DiffableFile;
-
-      (fs.readFile as jest.Mock).mockResolvedValue(
-        '# Same Name\n\nSame desc\n\n## Rules\n* Deploy microservices independently using separate CI/CD pipelines',
-      );
-
-      const result = await strategy.diff(file, '/test');
-
+    it('includes addRule for new content', () => {
       expect(result[1]).toEqual(
         expect.objectContaining({
           type: ChangeProposalType.addRule,
