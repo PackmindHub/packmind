@@ -151,7 +151,7 @@ function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
   const proposalWord =
     proposalCount === 1 ? 'change proposal' : 'change proposals';
 
-  return `${proposalCount} ${proposalWord} ignored, run "packmind-cli diff --include-submitted" to see what's pending`;
+  return `${proposalCount} ${proposalWord} ignored, run \`packmind-cli diff --include-submitted\` to see what's waiting for validation`;
 }
 
 export async function diffArtefactsHandler(
