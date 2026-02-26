@@ -105,6 +105,10 @@ describe('StandardChangeProposalValidator', () => {
       expect(validator.supports(ChangeProposalType.deleteRule)).toBe(true);
     });
 
+    it('returns true for updateRule', () => {
+      expect(validator.supports(ChangeProposalType.updateRule)).toBe(true);
+    });
+
     it('returns false for updateCommandDescription', () => {
       expect(
         validator.supports(ChangeProposalType.updateCommandDescription),
@@ -342,6 +346,84 @@ describe('StandardChangeProposalValidator', () => {
           payload: {
             targetId: ruleId,
             item: { id: ruleId, content: 'Some rule' },
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
+    });
+  });
+
+  describe('when validating updateRule', () => {
+    const ruleId = createRuleId();
+    const realRuleId = createRuleId('real-rule-id');
+
+    describe('when rule content matches oldValue', () => {
+      beforeEach(() => {
+        standardsPort.getRulesByStandardId.mockResolvedValue([
+          {
+            id: realRuleId,
+            content: 'Existing rule',
+            standardVersionId: 'sv-1' as never,
+          },
+        ]);
+      });
+
+      it('validates successfully and returns artefactVersion', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateRule,
+          payload: {
+            targetId: ruleId,
+            oldValue: 'Existing rule',
+            newValue: 'Updated rule',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result.artefactVersion).toEqual(3);
+      });
+
+      it('returns resolvedPayload with real rule ID', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateRule,
+          payload: {
+            targetId: ruleId,
+            oldValue: 'Existing rule',
+            newValue: 'Updated rule',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result.resolvedPayload).toEqual({
+          targetId: realRuleId,
+          oldValue: 'Existing rule',
+          newValue: 'Updated rule',
+        });
+      });
+    });
+
+    describe('when rule content does not match oldValue', () => {
+      beforeEach(() => {
+        standardsPort.getRulesByStandardId.mockResolvedValue([
+          {
+            id: createRuleId(),
+            content: 'Different rule',
+            standardVersionId: 'sv-1' as never,
+          },
+        ]);
+      });
+
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateRule,
+          payload: {
+            targetId: ruleId,
+            oldValue: 'Non-existent rule',
+            newValue: 'Updated rule',
           },
         });
 
