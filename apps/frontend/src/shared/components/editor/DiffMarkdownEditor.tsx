@@ -16,16 +16,17 @@ export interface IDiffMarkdownEditorProps {
   proposalNumbers: number[];
   /** Padding variant for the editor */
   paddingVariant?: 'default' | 'none';
-  displayMode: 'unified' | 'diff';
+  /** Display mode: 'unified' (highlights with tooltips), 'diff' (inline +/-), 'plain' (clean view) */
+  displayMode: 'unified' | 'diff' | 'plain';
 }
 
 /**
- * A specialized MarkdownEditor that displays diff highlighting and tooltips
- * for changed content. Uses a single Milkdown editor with highlights applied
- * via DOM manipulation after render.
+ * A specialized MarkdownEditor that supports three display modes:
+ * - 'unified': Displays the new content with highlights and tooltips showing what changed
+ * - 'diff': Displays inline diff with additions and deletions using HTML rendering
+ * - 'plain': Displays the new content without any diff highlighting (clean view)
  *
- * This component is read-only and designed for viewing unified diff views
- * of change proposals.
+ * This component is read-only and designed for viewing change proposals.
  */
 export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
   oldValue,
@@ -48,6 +49,7 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
     if (displayMode === 'diff') {
       return buildInlineDiffMarkdown(oldValue, newValue);
     }
+    // For 'unified' and 'plain' modes, use newValue
     return newValue;
   }, [displayMode, oldValue, newValue]);
 
@@ -75,7 +77,28 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
 
   // Apply highlights to changed content after editor renders (unified mode only)
   useEffect(() => {
-    if (displayMode !== 'unified') return; // Skip for diff mode
+    // Helper function to remove all highlights
+    const removeHighlights = () => {
+      if (!editorRef.current) return;
+      const proseMirrorEditor = editorRef.current.querySelector('.ProseMirror');
+      if (!proseMirrorEditor) return;
+
+      const highlightedElements = proseMirrorEditor.querySelectorAll(
+        '.milkdown-diff-highlight',
+      );
+      highlightedElements.forEach((element) => {
+        (element as HTMLElement).classList.remove('milkdown-diff-highlight');
+        (element as HTMLElement).removeAttribute('data-diff-html');
+        (element as HTMLElement).removeAttribute('data-proposal-numbers');
+      });
+    };
+
+    // If not in unified mode, remove any existing highlights and return
+    if (displayMode !== 'unified') {
+      removeHighlights();
+      return;
+    }
+
     if (!isEditorReady || !editorRef.current || blocks.length === 0) return;
 
     const changedBlocks = blocks.filter((b) => b.isChanged);
@@ -166,6 +189,7 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
       return () => {
         clearTimeout(initialCheck);
         observer.disconnect();
+        removeHighlights();
       };
     } else {
       // ProseMirror element not found yet - wait for it to be added
@@ -188,13 +212,14 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
 
       return () => {
         waitForProseMirror.disconnect();
+        removeHighlights();
       };
     }
   }, [blocks, proposalNumbers, isEditorReady, displayMode]);
 
   // Add hover handlers for tooltips (unified mode only)
   useEffect(() => {
-    if (displayMode !== 'unified') return; // Skip for diff mode
+    if (displayMode !== 'unified') return; // Skip for diff and plain modes
     if (!isEditorReady || !editorRef.current) return;
 
     const handleMouseEnter = (e: MouseEvent) => {
@@ -308,7 +333,7 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
     );
   }
 
-  // For unified mode, use Milkdown with highlights
+  // For unified and plain modes, use Milkdown with highlights (unified) or without (plain)
   return (
     <PMBox data-milkdown-padding-variant={paddingVariant}>
       <Milkdown />

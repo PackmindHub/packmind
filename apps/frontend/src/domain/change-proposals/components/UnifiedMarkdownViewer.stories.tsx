@@ -11,7 +11,7 @@ const meta: Meta<typeof UnifiedMarkdownViewer> = {
   argTypes: {
     displayMode: {
       control: 'radio',
-      options: ['unified', 'diff'],
+      options: ['unified', 'diff', 'plain'],
       description: 'Display mode for the markdown viewer',
       value: 'unified',
     },
@@ -41,7 +41,9 @@ export const MarkdownFormatting: Story = {
   args: {
     oldValue: `# Heading
 
-This is a paragraph with plain text.`,
+This is a paragraph with plain text.
+
+This used to be a line.`,
     newValue: `# Updated Heading
 
 This is a paragraph with **bold** text.`,
