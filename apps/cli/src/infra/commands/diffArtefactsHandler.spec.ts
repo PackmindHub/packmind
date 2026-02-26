@@ -1473,7 +1473,7 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('run "packmind-cli diff --include-submitted"'),
+        expect.stringContaining('run `packmind-cli diff --include-submitted`'),
       );
     });
 
