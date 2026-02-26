@@ -23,24 +23,32 @@ import { useParams, useBlocker, useBeforeUnload } from 'react-router';
 
 interface CommandReviewDetailProps {
   artefactId: string;
+  orgSlug?: string;
+  spaceSlug?: string;
 }
 
 export function CommandReviewDetail({
   artefactId,
+  orgSlug: orgSlugProp,
+  spaceSlug: spaceSlugProp,
 }: Readonly<CommandReviewDetailProps>) {
   const recipeId = artefactId as RecipeId;
   const { organization } = useAuthContext();
   const { spaceId, space } = useCurrentSpace();
-  const { orgSlug } = useParams<{ orgSlug: string }>();
+  const { orgSlug: orgSlugParam } = useParams<{ orgSlug: string }>();
   const queryClient = useQueryClient();
   const userLookup = useUserLookup();
 
   const organizationId = organization?.id;
 
+  // Use props if provided, otherwise fall back to params/context
+  const orgSlug = orgSlugProp ?? orgSlugParam;
+  const spaceSlug = spaceSlugProp ?? space?.slug;
+
   const applyRecipeChangeProposalsMutation =
     useApplyRecipeChangeProposalsMutation({
       orgSlug,
-      spaceSlug: space?.slug,
+      spaceSlug,
     });
   const { data: selectedRecipeProposalsData, isLoading: isLoadingProposals } =
     useListChangeProposalsByRecipeQuery(recipeId);

@@ -5,23 +5,46 @@ import { SkillReviewDetail } from '../../src/domain/change-proposals/components/
 import { StandardReviewDetail } from '../../src/domain/change-proposals/components/StandardReviewDetail';
 
 export default function ReviewChangesDetailRouteModule() {
-  const { artefactType, artefactId } = useParams<{
+  const { artefactType, artefactId, orgSlug, spaceSlug } = useParams<{
     artefactType: string;
     artefactId: string;
+    orgSlug: string;
+    spaceSlug: string;
   }>();
 
   if (!artefactType || !artefactId) return null;
 
   if (artefactType === 'commands') {
-    return <CommandReviewDetail key={artefactId} artefactId={artefactId} />;
+    return (
+      <CommandReviewDetail
+        key={artefactId}
+        artefactId={artefactId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    );
   }
 
   if (artefactType === 'skills') {
-    return <SkillReviewDetail key={artefactId} artefactId={artefactId} />;
+    return (
+      <SkillReviewDetail
+        key={artefactId}
+        artefactId={artefactId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    );
   }
 
   if (artefactType === 'standards') {
-    return <StandardReviewDetail key={artefactId} artefactId={artefactId} />;
+    return (
+      <StandardReviewDetail
+        key={artefactId}
+        artefactId={artefactId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    );
   }
 
   return (

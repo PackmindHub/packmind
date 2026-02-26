@@ -31,10 +31,14 @@ import { useBlocker, useBeforeUnload } from 'react-router';
 
 interface StandardReviewDetailProps {
   artefactId: string;
+  orgSlug?: string;
+  spaceSlug?: string;
 }
 
 export function StandardReviewDetail({
   artefactId,
+  orgSlug,
+  spaceSlug,
 }: Readonly<StandardReviewDetailProps>) {
   const standardId = artefactId as StandardId;
   const { organization } = useAuthContext();
@@ -45,7 +49,7 @@ export function StandardReviewDetail({
   const organizationId = organization?.id;
 
   const applyStandardChangeProposalsMutation =
-    useApplyStandardChangeProposalsMutation();
+    useApplyStandardChangeProposalsMutation({ orgSlug, spaceSlug });
   const { data: selectedStandardProposalsData, isLoading: isLoadingProposals } =
     useListChangeProposalsByStandardQuery(standardId);
 
