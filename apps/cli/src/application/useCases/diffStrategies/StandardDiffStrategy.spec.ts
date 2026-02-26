@@ -345,10 +345,15 @@ describe('StandardDiffStrategy', () => {
   });
 
   describe('when a rule is modified locally', () => {
-    it('returns deleteRule and addRule diffs', async () => {
+    const serverRule =
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient';
+    const localRule =
+      'Keep gateway methods simple by delegating auth and error handling to PackmindHttpClient';
+
+    it('returns a single updateRule diff', async () => {
       const file: DiffableFile = {
         path: '.packmind/standards/my-standard.md',
-        content: '# Same Name\n\nSame desc\n\n## Rules\n* Original rule',
+        content: `# Same Name\n\nSame desc\n\n## Rules\n* ${serverRule}`,
         artifactType: 'standard',
         artifactName: 'My Standard',
         artifactId: 'art-1',
@@ -356,7 +361,56 @@ describe('StandardDiffStrategy', () => {
       } as DiffableFile;
 
       (fs.readFile as jest.Mock).mockResolvedValue(
-        '# Same Name\n\nSame desc\n\n## Rules\n* Modified rule',
+        `# Same Name\n\nSame desc\n\n## Rules\n* ${localRule}`,
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('includes updateRule with oldValue and newValue', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: `# Same Name\n\nSame desc\n\n## Rules\n* ${serverRule}`,
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        `# Same Name\n\nSame desc\n\n## Rules\n* ${localRule}`,
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.updateRule,
+          payload: expect.objectContaining({
+            oldValue: serverRule,
+            newValue: localRule,
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('when a rule is replaced by a completely different rule', () => {
+    it('returns deleteRule and addRule diffs', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content:
+          '# Same Name\n\nSame desc\n\n## Rules\n* Always use snake_case for variable names in Python code',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Deploy microservices independently using separate CI/CD pipelines',
       );
 
       const result = await strategy.diff(file, '/test');
@@ -367,7 +421,8 @@ describe('StandardDiffStrategy', () => {
     it('includes deleteRule for original content', async () => {
       const file: DiffableFile = {
         path: '.packmind/standards/my-standard.md',
-        content: '# Same Name\n\nSame desc\n\n## Rules\n* Original rule',
+        content:
+          '# Same Name\n\nSame desc\n\n## Rules\n* Always use snake_case for variable names in Python code',
         artifactType: 'standard',
         artifactName: 'My Standard',
         artifactId: 'art-1',
@@ -375,7 +430,7 @@ describe('StandardDiffStrategy', () => {
       } as DiffableFile;
 
       (fs.readFile as jest.Mock).mockResolvedValue(
-        '# Same Name\n\nSame desc\n\n## Rules\n* Modified rule',
+        '# Same Name\n\nSame desc\n\n## Rules\n* Deploy microservices independently using separate CI/CD pipelines',
       );
 
       const result = await strategy.diff(file, '/test');
@@ -384,7 +439,10 @@ describe('StandardDiffStrategy', () => {
         expect.objectContaining({
           type: ChangeProposalType.deleteRule,
           payload: expect.objectContaining({
-            item: expect.objectContaining({ content: 'Original rule' }),
+            item: expect.objectContaining({
+              content:
+                'Always use snake_case for variable names in Python code',
+            }),
           }),
         }),
       );
@@ -393,7 +451,8 @@ describe('StandardDiffStrategy', () => {
     it('includes addRule for new content', async () => {
       const file: DiffableFile = {
         path: '.packmind/standards/my-standard.md',
-        content: '# Same Name\n\nSame desc\n\n## Rules\n* Original rule',
+        content:
+          '# Same Name\n\nSame desc\n\n## Rules\n* Always use snake_case for variable names in Python code',
         artifactType: 'standard',
         artifactName: 'My Standard',
         artifactId: 'art-1',
@@ -401,7 +460,7 @@ describe('StandardDiffStrategy', () => {
       } as DiffableFile;
 
       (fs.readFile as jest.Mock).mockResolvedValue(
-        '# Same Name\n\nSame desc\n\n## Rules\n* Modified rule',
+        '# Same Name\n\nSame desc\n\n## Rules\n* Deploy microservices independently using separate CI/CD pipelines',
       );
 
       const result = await strategy.diff(file, '/test');
@@ -410,7 +469,10 @@ describe('StandardDiffStrategy', () => {
         expect.objectContaining({
           type: ChangeProposalType.addRule,
           payload: expect.objectContaining({
-            item: expect.objectContaining({ content: 'Modified rule' }),
+            item: expect.objectContaining({
+              content:
+                'Deploy microservices independently using separate CI/CD pipelines',
+            }),
           }),
         }),
       );
