@@ -3,6 +3,7 @@
 ## Added
 
 - Rules can now be linted with severity error (default) or warning - Enterprise version only
+- A user can provide a message when submitting change proposals (#142)
 
 ## Changed
 
