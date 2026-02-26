@@ -154,22 +154,13 @@ function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
   return `${proposalCount} ${proposalWord} ignored, run \`packmind-cli diff --include-submitted\` to see what's waiting for validation`;
 }
 
-export async function diffArtefactsHandler(
-  deps: DiffHandlerDependencies,
-): Promise<DiffHandlerResult> {
-  const {
-    packmindCliHexa,
-    exit,
-    getCwd,
-    log,
-    error,
-    submit,
-    includeSubmitted,
-    message: messageFlag,
-  } = deps;
+async function readConfigAndPackages(deps: DiffHandlerDependencies): Promise<{
+  configPackages: string[];
+  configAgents: CodingAgent[] | undefined;
+} | null> {
+  const { packmindCliHexa, exit, getCwd, log, error } = deps;
   const cwd = getCwd();
 
-  // Read existing config (including agents if present)
   let configPackages: string[];
   let configAgents: CodingAgent[] | undefined;
   try {
@@ -189,7 +180,7 @@ export async function diffArtefactsHandler(
     }
     error('\n💡 Please fix the packmind.json file or delete it to continue.');
     exit(1);
-    return { diffsFound: 0 };
+    return null;
   }
 
   if (configPackages.length === 0) {
@@ -198,44 +189,82 @@ export async function diffArtefactsHandler(
     log('Compare local command files against the server.');
     log('Configure packages in packmind.json first.');
     exit(0);
-    return { diffsFound: 0 };
+    return null;
   }
 
-  try {
-    // Collect git info (required for deployed content lookup)
-    let gitRemoteUrl: string | undefined;
-    let gitBranch: string | undefined;
-    let relativePath: string | undefined;
+  return { configPackages, configAgents };
+}
 
-    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-    if (gitRoot) {
-      try {
-        gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
-        gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
+  gitRemoteUrl: string;
+  gitBranch: string;
+  relativePath: string;
+} | null> {
+  const { packmindCliHexa, exit, getCwd, error } = deps;
+  const cwd = getCwd();
 
-        relativePath = cwd.startsWith(gitRoot)
-          ? cwd.slice(gitRoot.length)
-          : '/';
-        if (!relativePath.startsWith('/')) {
-          relativePath = '/' + relativePath;
-        }
-        if (!relativePath.endsWith('/')) {
-          relativePath = relativePath + '/';
-        }
-      } catch (err) {
-        logWarningConsole(
-          `Failed to collect git info: ${err instanceof Error ? err.message : String(err)}`,
-        );
+  let gitRemoteUrl: string | undefined;
+  let gitBranch: string | undefined;
+  let relativePath: string | undefined;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+  if (gitRoot) {
+    try {
+      gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+      gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+
+      relativePath = cwd.startsWith(gitRoot) ? cwd.slice(gitRoot.length) : '/';
+      if (!relativePath.startsWith('/')) {
+        relativePath = '/' + relativePath;
       }
-    }
-
-    if (!gitRemoteUrl || !gitBranch || !relativePath) {
-      error(
-        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      if (!relativePath.endsWith('/')) {
+        relativePath = relativePath + '/';
+      }
+    } catch (err) {
+      logWarningConsole(
+        `Failed to collect git info: ${err instanceof Error ? err.message : String(err)}`,
       );
-      exit(1);
+    }
+  }
+
+  if (!gitRemoteUrl || !gitBranch || !relativePath) {
+    error(
+      '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+    );
+    exit(1);
+    return null;
+  }
+
+  return { gitRemoteUrl, gitBranch, relativePath };
+}
+
+export async function diffArtefactsHandler(
+  deps: DiffHandlerDependencies,
+): Promise<DiffHandlerResult> {
+  const {
+    packmindCliHexa,
+    exit,
+    getCwd,
+    log,
+    error,
+    submit,
+    includeSubmitted,
+    message: messageFlag,
+  } = deps;
+  const cwd = getCwd();
+
+  const config = await readConfigAndPackages(deps);
+  if (!config) {
+    return { diffsFound: 0 };
+  }
+  const { configPackages, configAgents } = config;
+
+  try {
+    const gitInfo = await collectGitInfo(deps);
+    if (!gitInfo) {
       return { diffsFound: 0 };
     }
+    const { gitRemoteUrl, gitBranch, relativePath } = gitInfo;
 
     const packageCount = configPackages.length;
     const packageWord = packageCount === 1 ? 'package' : 'packages';
