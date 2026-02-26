@@ -180,6 +180,7 @@ export class PlaybookChangeManagementAdapter
     this._checkChangeProposals = new CheckChangeProposalsUseCase(
       accountsPort,
       changeProposalService,
+      validators,
     );
 
     this._createChangeProposal = new CreateChangeProposalUseCase(

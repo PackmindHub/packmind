@@ -6,8 +6,10 @@ import {
   ChangeProposalType,
   IAccountsPort,
   createUserId,
+  CreateChangeProposalCommand,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { IChangeProposalValidator } from '../../validators/IChangeProposalValidator';
 
 const origin = 'CheckChangeProposalsUseCase';
 
@@ -18,6 +20,7 @@ export class CheckChangeProposalsUseCase extends AbstractMemberUseCase<
   constructor(
     accountsPort: IAccountsPort,
     private readonly changeProposalService: ChangeProposalService,
+    private readonly validators: IChangeProposalValidator[],
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -33,12 +36,48 @@ export class CheckChangeProposalsUseCase extends AbstractMemberUseCase<
 
     const results = await Promise.all(
       command.proposals.map(async (proposal, index) => {
+        let payload = proposal.payload;
+
+        const validator = this.validators.find((v) =>
+          v.supports(proposal.type as ChangeProposalType),
+        );
+
+        if (validator) {
+          try {
+            const validationCommand = {
+              userId: command.userId,
+              organizationId: command.organizationId,
+              spaceId: command.spaceId,
+              type: proposal.type as ChangeProposalType,
+              artefactId: proposal.artefactId,
+              payload: proposal.payload,
+              captureMode: proposal.captureMode,
+              message: proposal.message,
+              user: command.user,
+              organization: command.organization,
+              membership: command.membership,
+            } as CreateChangeProposalCommand<ChangeProposalType> &
+              MemberContext;
+
+            const { resolvedPayload } =
+              await validator.validate(validationCommand);
+            payload = resolvedPayload ?? payload;
+          } catch {
+            return {
+              index,
+              exists: false,
+              createdAt: null,
+              message: null,
+            };
+          }
+        }
+
         const existing = await this.changeProposalService.findExistingPending(
           command.spaceId,
           createUserId(command.userId),
           proposal.artefactId,
           proposal.type as ChangeProposalType,
-          proposal.payload,
+          payload,
         );
 
         return {
