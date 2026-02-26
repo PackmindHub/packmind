@@ -3,8 +3,8 @@ import { Milkdown, useEditor } from '@milkdown/react';
 import '@packmind/assets/milkdown.theme';
 import { PMBox } from '@packmind/ui';
 import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { buildUnifiedMarkdownDiff } from '../../../domain/change-proposals/utils/buildUnifiedMarkdownDiff';
-import { buildInlineDiffMarkdown } from '../../../domain/change-proposals/utils/buildInlineDiffMarkdown';
+import { parseAndDiffMarkdown } from '../../../domain/change-proposals/utils/markdownBlockDiff';
+import { rebuildMarkdownFromBlocks } from '../../../domain/change-proposals/utils/rebuildMarkdownFromBlocks';
 import { markdownDiffCss } from '../../../domain/change-proposals/utils/markdownDiff';
 
 export interface IDiffMarkdownEditorProps {
@@ -38,20 +38,24 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
 
-  // Build blocks for unified mode (for highlighting)
+  // Parse and diff markdown blocks
   const blocks = useMemo(
-    () => buildUnifiedMarkdownDiff(oldValue, newValue),
+    () => parseAndDiffMarkdown(oldValue, newValue),
     [oldValue, newValue],
   );
 
   // Compute editor content based on display mode
   const editorContent = useMemo(() => {
     if (displayMode === 'diff') {
-      return buildInlineDiffMarkdown(oldValue, newValue);
+      // For diff mode, rebuild with HTML and include deleted blocks
+      return rebuildMarkdownFromBlocks(blocks, {
+        includeDeleted: true,
+        useDiffContent: true,
+      });
     }
-    // For 'unified' and 'plain' modes, use newValue
+    // For 'unified' and 'plain' modes, use clean newValue
     return newValue;
-  }, [displayMode, oldValue, newValue]);
+  }, [displayMode, blocks, newValue]);
 
   useEditor((root) => {
     editorRef.current = root as HTMLDivElement;
@@ -101,8 +105,41 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
 
     if (!isEditorReady || !editorRef.current || blocks.length === 0) return;
 
-    const changedBlocks = blocks.filter((b) => b.isChanged);
-    if (changedBlocks.length === 0) return;
+    // Collect all changed blocks and list items for highlighting
+    interface HighlightTarget {
+      content: string;
+      diffContent: string;
+    }
+
+    const highlightTargets: HighlightTarget[] = [];
+
+    for (const block of blocks) {
+      // Add changed blocks (non-list blocks)
+      if (
+        block.status !== 'unchanged' &&
+        block.diffContent &&
+        block.type !== 'list'
+      ) {
+        highlightTargets.push({
+          content: block.content,
+          diffContent: block.diffContent,
+        });
+      }
+
+      // Add changed list items
+      if (block.type === 'list' && block.items) {
+        for (const item of block.items) {
+          if (item.status !== 'unchanged' && item.diffContent) {
+            highlightTargets.push({
+              content: item.content,
+              diffContent: item.diffContent,
+            });
+          }
+        }
+      }
+    }
+
+    if (highlightTargets.length === 0) return;
 
     const applyHighlights = () => {
       const proseMirrorEditor =
@@ -127,26 +164,23 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
         const elementText = element.textContent?.trim() || '';
         if (!elementText) return;
 
-        // Check if this element's text matches any changed block
-        for (const block of changedBlocks) {
-          const blockText = block.html
-            .replace(/<[^>]+>/g, ' ')
+        // Check if this element's text matches any changed block or list item
+        for (const target of highlightTargets) {
+          const normalizedElementText = elementText.replace(/\s+/g, ' ').trim();
+          const normalizedTargetText = target.content
             .replace(/\s+/g, ' ')
             .trim();
 
-          const normalizedElementText = elementText.replace(/\s+/g, ' ').trim();
-          const normalizedBlockText = blockText.replace(/\s+/g, ' ').trim();
-
           // Match if texts are similar (handle minor whitespace differences)
           if (
-            normalizedElementText === normalizedBlockText ||
-            normalizedElementText.includes(normalizedBlockText) ||
-            normalizedBlockText.includes(normalizedElementText)
+            normalizedElementText === normalizedTargetText ||
+            normalizedElementText.includes(normalizedTargetText) ||
+            normalizedTargetText.includes(normalizedElementText)
           ) {
             (element as HTMLElement).classList.add('milkdown-diff-highlight');
             (element as HTMLElement).setAttribute(
               'data-diff-html',
-              block.diffHtml || '',
+              target.diffContent || '',
             );
             (element as HTMLElement).setAttribute(
               'data-proposal-numbers',

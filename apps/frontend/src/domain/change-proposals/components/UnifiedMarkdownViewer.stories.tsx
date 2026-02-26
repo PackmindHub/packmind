@@ -39,14 +39,27 @@ export const MultipleProposals: Story = {
 
 export const MarkdownFormatting: Story = {
   args: {
-    oldValue: `# Heading
+    oldValue: `# My title
 
-This is a paragraph with plain text.
+This was my content
 
-This used to be a line.`,
-    newValue: `# Updated Heading
+There was a line here.
 
-This is a paragraph with **bold** text.`,
+## My sub-heading
+
+My list:
+ - one item
+ - another item`,
+    newValue: `# My title
+
+This is my updated content
+
+## My sub-heading
+
+My list:
+ - first item
+ - a new item
+ - another item`,
     proposalNumbers: [1],
   },
 };
@@ -85,5 +98,32 @@ export const ListChanges: Story = {
 - Item 3
 - Item 4`,
     proposalNumbers: [1],
+  },
+};
+
+export const ComplexChanges: Story = {
+  args: {
+    oldValue: `# My title
+
+This was my content
+
+There was a line here.
+
+## My sub-heading
+
+My list:
+ - one item
+ - another item`,
+    newValue: `# My title
+
+This is my updated content
+
+## My sub-heading
+
+My list:
+ - first item
+ - a new item
+ - another item`,
+    proposalNumbers: [1, 2],
   },
 };
