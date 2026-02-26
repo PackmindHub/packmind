@@ -4,8 +4,10 @@ import '@packmind/assets/milkdown.theme';
 import { PMBox } from '@packmind/ui';
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { buildUnifiedMarkdownDiff } from '../../../domain/change-proposals/utils/buildUnifiedMarkdownDiff';
+import { buildInlineDiffMarkdown } from '../../../domain/change-proposals/utils/buildInlineDiffMarkdown';
+import { markdownDiffCss } from '../../../domain/change-proposals/utils/markdownDiff';
 
-interface IDiffMarkdownEditorProps {
+export interface IDiffMarkdownEditorProps {
   /** Original markdown content before changes */
   oldValue: string;
   /** New markdown content after changes */
@@ -14,6 +16,7 @@ interface IDiffMarkdownEditorProps {
   proposalNumbers: number[];
   /** Padding variant for the editor */
   paddingVariant?: 'default' | 'none';
+  displayMode: 'unified' | 'diff';
 }
 
 /**
@@ -28,22 +31,32 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
   oldValue,
   newValue,
   proposalNumbers,
+  displayMode,
   paddingVariant = 'default',
 }) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
 
+  // Build blocks for unified mode (for highlighting)
   const blocks = useMemo(
     () => buildUnifiedMarkdownDiff(oldValue, newValue),
     [oldValue, newValue],
   );
+
+  // Compute editor content based on display mode
+  const editorContent = useMemo(() => {
+    if (displayMode === 'diff') {
+      return buildInlineDiffMarkdown(oldValue, newValue);
+    }
+    return newValue;
+  }, [displayMode, oldValue, newValue]);
 
   useEditor((root) => {
     editorRef.current = root as HTMLDivElement;
 
     const crepe = new Crepe({
       root,
-      defaultValue: newValue,
+      defaultValue: editorContent,
       features: {
         [Crepe.Feature.ImageBlock]: false,
         [Crepe.Feature.Latex]: false,
@@ -60,8 +73,9 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
     return crepe;
   });
 
-  // Apply highlights to changed content after editor renders
+  // Apply highlights to changed content after editor renders (unified mode only)
   useEffect(() => {
+    if (displayMode !== 'unified') return; // Skip for diff mode
     if (!isEditorReady || !editorRef.current || blocks.length === 0) return;
 
     const changedBlocks = blocks.filter((b) => b.isChanged);
@@ -176,10 +190,11 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
         waitForProseMirror.disconnect();
       };
     }
-  }, [blocks, proposalNumbers, isEditorReady]);
+  }, [blocks, proposalNumbers, isEditorReady, displayMode]);
 
-  // Add hover handlers for tooltips
+  // Add hover handlers for tooltips (unified mode only)
   useEffect(() => {
+    if (displayMode !== 'unified') return; // Skip for diff mode
     if (!isEditorReady || !editorRef.current) return;
 
     const handleMouseEnter = (e: MouseEvent) => {
@@ -276,8 +291,24 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
       editor.removeEventListener('mouseout', handleMouseLeave);
       document.querySelectorAll('.diff-tooltip').forEach((el) => el.remove());
     };
-  }, [isEditorReady]);
+  }, [isEditorReady, displayMode, proposalNumbers]);
 
+  // For diff mode, render HTML directly without Milkdown
+  if (displayMode === 'diff') {
+    return (
+      <PMBox
+        data-milkdown-padding-variant={paddingVariant}
+        css={markdownDiffCss}
+        dangerouslySetInnerHTML={{ __html: editorContent }}
+        style={{
+          padding: paddingVariant === 'default' ? '16px' : '0',
+          minHeight: '100px',
+        }}
+      />
+    );
+  }
+
+  // For unified mode, use Milkdown with highlights
   return (
     <PMBox data-milkdown-padding-variant={paddingVariant}>
       <Milkdown />

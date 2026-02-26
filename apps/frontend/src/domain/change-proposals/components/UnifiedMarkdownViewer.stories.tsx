@@ -8,6 +8,14 @@ const meta: Meta<typeof UnifiedMarkdownViewer> = {
     layout: 'padded',
   },
   tags: ['autodocs'],
+  argTypes: {
+    displayMode: {
+      control: 'radio',
+      options: ['unified', 'diff'],
+      description: 'Display mode for the markdown viewer',
+      value: 'unified',
+    },
+  },
 };
 
 export default meta;
@@ -33,7 +41,7 @@ export const MarkdownFormatting: Story = {
   args: {
     oldValue: `# Heading
 
-This is a paragraph with bold text.`,
+This is a paragraph with plain text.`,
     newValue: `# Updated Heading
 
 This is a paragraph with **bold** text.`,
