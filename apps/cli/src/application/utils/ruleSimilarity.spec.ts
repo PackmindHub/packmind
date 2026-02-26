@@ -2,6 +2,7 @@ import {
   levenshteinSimilarity,
   jaccardSimilarity,
   combinedSimilarity,
+  matchUpdatedRules,
 } from './ruleSimilarity';
 
 describe('levenshteinSimilarity', () => {
@@ -117,6 +118,127 @@ describe('combinedSimilarity', () => {
 
     it('returns low score', () => {
       expect(combinedSimilarity(a, b)).toBeLessThan(0.3);
+    });
+  });
+});
+
+describe('matchUpdatedRules', () => {
+  it('returns empty results for empty inputs', () => {
+    expect(matchUpdatedRules([], [])).toEqual({
+      updates: [],
+      remainingDeleted: [],
+      remainingAdded: [],
+    });
+  });
+
+  describe('when a rule is slightly modified', () => {
+    const deleted = [
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient',
+    ];
+    const added = [
+      'Keep gateway methods simple by delegating auth and error handling to PackmindHttpClient',
+    ];
+
+    it('matches the modified rule as an update', () => {
+      expect(matchUpdatedRules(deleted, added).updates).toEqual([
+        { oldValue: deleted[0], newValue: added[0] },
+      ]);
+    });
+
+    it('leaves no remaining deleted rules', () => {
+      expect(matchUpdatedRules(deleted, added).remainingDeleted).toEqual([]);
+    });
+
+    it('leaves no remaining added rules', () => {
+      expect(matchUpdatedRules(deleted, added).remainingAdded).toEqual([]);
+    });
+  });
+
+  describe('when rules are genuinely different', () => {
+    const deleted = ['Always use snake_case for variable names in Python code'];
+    const added = [
+      'Deploy microservices independently using separate CI/CD pipelines',
+    ];
+
+    it('does not match them as an update', () => {
+      expect(matchUpdatedRules(deleted, added).updates).toEqual([]);
+    });
+
+    it('keeps the deleted rule as remaining', () => {
+      expect(matchUpdatedRules(deleted, added).remainingDeleted).toEqual(
+        deleted,
+      );
+    });
+
+    it('keeps the added rule as remaining', () => {
+      expect(matchUpdatedRules(deleted, added).remainingAdded).toEqual(added);
+    });
+  });
+
+  describe('when multiple candidates exist', () => {
+    const deleted = [
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient',
+    ];
+    const added = [
+      'Deploy microservices independently using separate CI/CD pipelines',
+      'Keep gateway methods simple by delegating auth and error handling to PackmindHttpClient',
+    ];
+
+    it('picks the best match', () => {
+      expect(matchUpdatedRules(deleted, added).updates).toEqual([
+        { oldValue: deleted[0], newValue: added[1] },
+      ]);
+    });
+
+    it('keeps unmatched added rules as remaining', () => {
+      expect(matchUpdatedRules(deleted, added).remainingAdded).toEqual([
+        added[0],
+      ]);
+    });
+  });
+
+  describe('when handling multiple updates with greedy pairing', () => {
+    const deleted = [
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient',
+      'Always use snake_case for variable names in Python code',
+    ];
+    const added = [
+      'Always prefer snake_case for variable naming in Python projects',
+      'Keep gateway methods simple by delegating auth and error handling to PackmindHttpClient',
+    ];
+
+    it('matches both pairs correctly', () => {
+      const result = matchUpdatedRules(deleted, added);
+      expect(result.updates).toHaveLength(2);
+    });
+
+    it('leaves no remaining deleted rules', () => {
+      expect(matchUpdatedRules(deleted, added).remainingDeleted).toEqual([]);
+    });
+
+    it('leaves no remaining added rules', () => {
+      expect(matchUpdatedRules(deleted, added).remainingAdded).toEqual([]);
+    });
+  });
+
+  describe('when using custom threshold', () => {
+    const deleted = [
+      'Keep gateway methods concise by delegating authentication and error handling to PackmindHttpClient',
+    ];
+    const added = [
+      'Keep gateway methods simple by delegating auth and error handling to PackmindHttpClient',
+    ];
+
+    describe('when threshold is at default 0.5', () => {
+      it('matches the pair', () => {
+        expect(matchUpdatedRules(deleted, added, 0.5).updates).toHaveLength(1);
+      });
+    });
+
+    describe('when threshold is very high at 0.9', () => {
+      it('does not match the pair', () => {
+        expect(matchUpdatedRules(deleted, added, 0.9).updates).toHaveLength(0);
+      });
     });
   });
 });
