@@ -11,6 +11,8 @@
 
 ## Fixed
 
+- Skill subfiles (references/, scripts/, assets/) were lost during push deployment for previously deployed skills (#125)
+
 ## Removed
 
 # [1.10.0] - 2026-02-24
