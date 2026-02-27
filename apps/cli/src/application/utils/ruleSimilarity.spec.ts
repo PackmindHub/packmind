@@ -15,8 +15,8 @@ describe('levenshteinSimilarity', () => {
   });
 
   describe('when both strings are empty', () => {
-    it('returns 0', () => {
-      expect(levenshteinSimilarity('', '')).toBe(0);
+    it('returns 1', () => {
+      expect(levenshteinSimilarity('', '')).toBe(1);
     });
   });
 
@@ -67,8 +67,8 @@ describe('jaccardSimilarity', () => {
   });
 
   describe('when both strings are empty', () => {
-    it('returns 0', () => {
-      expect(jaccardSimilarity('', '')).toBe(0);
+    it('returns 1', () => {
+      expect(jaccardSimilarity('', '')).toBe(1);
     });
   });
 
