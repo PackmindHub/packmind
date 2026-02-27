@@ -4,6 +4,7 @@
 
 - Rules can now be linted with severity error (default) or warning - Enterprise version only
 - A user can provide a message when submitting change proposals (#142)
+- The `diff` command now detects updated rules using similarity matching: when a rule is modified rather than deleted and re-added, it is submitted as an `updateRule` change proposal
 
 ## Changed
 

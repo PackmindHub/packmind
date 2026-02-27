@@ -4,6 +4,7 @@
 
 - `standards create` and `commands create` now accept JSON via stdin (e.g., `echo '{"name":"..."}' | packmind-cli standards create`), in addition to the existing file path argument
 - A user can provide a message when submitting change proposals (#142)
+- The `diff` command now detects updated rules using similarity matching: when a rule is modified rather than deleted and re-added, it is submitted as an `updateRule` change proposal
 
 ## Changed
 
