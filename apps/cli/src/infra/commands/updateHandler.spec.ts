@@ -166,6 +166,24 @@ describe('updateHandler', () => {
       });
     });
 
+    describe('when current version is newer than latest', () => {
+      beforeEach(async () => {
+        deps.currentVersion = '0.20.0';
+        mockFetch.mockResolvedValue({
+          ok: true,
+          json: async () => ({ version: '0.19.0' }),
+        } as Response);
+
+        await updateHandler(deps);
+      });
+
+      it('reports already up to date', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Already up to date (v0.20.0)',
+        );
+      });
+    });
+
     it('fetches from npm registry', async () => {
       deps.isExecutableMode = false;
       mockFetch.mockResolvedValue({

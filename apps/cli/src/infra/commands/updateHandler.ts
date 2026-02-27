@@ -8,6 +8,7 @@ import {
 } from 'fs';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
+import semver from 'semver';
 import {
   logConsole,
   logInfoConsole,
@@ -184,10 +185,11 @@ export async function updateHandler(
       `Failed to check for updates: ${error instanceof Error ? error.message : String(error)}`,
     );
     process.exit(1);
+    return;
   }
 
-  // Compare versions
-  if (deps.currentVersion === latestVersion) {
+  // Compare versions using semver
+  if (!semver.gt(latestVersion, deps.currentVersion)) {
     logSuccessConsole(`Already up to date (v${deps.currentVersion})`);
     return;
   }
