@@ -19,7 +19,7 @@ import {
 const GITHUB_REPO = 'PackmindHub/packmind';
 const NPM_PACKAGE = '@packmind/cli';
 
-export interface UpdateHandlerDependencies {
+export interface IUpdateHandlerDependencies {
   currentVersion: string;
   isExecutableMode: boolean;
   executablePath: string;
@@ -139,7 +139,7 @@ function updateViaNpm(version: string): void {
 }
 
 async function updateViaExecutableReplace(
-  deps: UpdateHandlerDependencies,
+  deps: IUpdateHandlerDependencies,
   version: string,
 ): Promise<void> {
   const platformSuffix = getPlatformAssetSuffix(deps.platform, deps.arch);
@@ -168,7 +168,7 @@ async function updateViaExecutableReplace(
 }
 
 export async function updateHandler(
-  deps: UpdateHandlerDependencies,
+  deps: IUpdateHandlerDependencies,
 ): Promise<void> {
   logInfoConsole(
     `Current version: ${deps.currentVersion} (${deps.isExecutableMode ? 'standalone executable' : 'npm package'})`,

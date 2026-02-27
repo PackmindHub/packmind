@@ -1,6 +1,6 @@
 import {
   updateHandler,
-  UpdateHandlerDependencies,
+  IUpdateHandlerDependencies,
   getPlatformAssetSuffix,
   fetchLatestVersionFromNpm,
   fetchLatestVersionFromGitHub,
@@ -17,7 +17,7 @@ jest.mock('../utils/consoleLogger', () => ({
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 
 describe('updateHandler', () => {
-  let deps: UpdateHandlerDependencies;
+  let deps: IUpdateHandlerDependencies;
   let mockFetch: jest.MockedFunction<typeof fetch>;
   const processExitSpy = jest
     .spyOn(process, 'exit')
