@@ -1,5 +1,5 @@
 import { marked, Token, Tokens, TokensList } from 'marked';
-import { diffArrays, diffWords } from 'diff';
+import { diffArrays, diffWords, Change } from 'diff';
 
 function toTokensList(tokens: Token[]): TokensList {
   const list = tokens as TokensList;
@@ -13,6 +13,67 @@ function renderToken(token: Token): string {
 
 function renderInlineContent(text: string): string {
   return marked.parseInline(text) as string;
+}
+
+/**
+ * Merge adjacent diff changes that are markdown syntax markers with their words.
+ * For example: [added: '**'], [unchanged: 'word'], [added: '**']
+ * becomes: [added: '**word**']
+ */
+function mergeMarkdownSyntax(changes: Change[]): Change[] {
+  const merged: Change[] = [];
+  let i = 0;
+
+  while (i < changes.length) {
+    const current = changes[i];
+
+    // Check if this looks like a markdown marker start
+    if (
+      (current.added || current.removed) &&
+      /^[*_`~]+$/.test(current.value.trim())
+    ) {
+      // Look ahead to find the matching closing marker
+      let j = i + 1;
+      let accumulatedValue = current.value;
+      let foundClosing = false;
+
+      while (j < changes.length) {
+        const next = changes[j];
+        accumulatedValue += next.value;
+
+        // Check if this is the closing marker
+        if (
+          (next.added || next.removed) &&
+          next.added === current.added &&
+          next.removed === current.removed &&
+          /^[*_`~]+$/.test(next.value.trim())
+        ) {
+          foundClosing = true;
+          // Merge all changes from i to j into one
+          merged.push({
+            added: current.added,
+            removed: current.removed,
+            value: accumulatedValue,
+            count: 1,
+          });
+          i = j + 1;
+          break;
+        }
+        j++;
+      }
+
+      if (!foundClosing) {
+        // No closing marker found, keep original
+        merged.push(current);
+        i++;
+      }
+    } else {
+      merged.push(current);
+      i++;
+    }
+  }
+
+  return merged;
 }
 
 function renderListAllMarked(list: Tokens.List, tag: 'del' | 'ins'): string {
@@ -108,7 +169,9 @@ function renderWordDiffInBlock(
   blockTag: string,
 ): string {
   const changes = diffWords(oldToken.text, newToken.text);
-  const inlineHtml = changes
+  // Merge markdown syntax markers with their words
+  const mergedChanges = mergeMarkdownSyntax(changes);
+  const inlineHtml = mergedChanges
     .map((change) => {
       if (change.added)
         return `<ins>${renderInlineContent(change.value)}</ins>`;
@@ -193,6 +256,7 @@ function renderModifiedPair(oldToken: Token, newToken: Token): string {
 }
 
 export const markdownDiffCss = {
+  // Diff highlighting
   '& ins, & .diff-ins': {
     backgroundColor: 'var(--Palette-Semantic-Green800)',
     padding: '0 2px',
@@ -203,6 +267,52 @@ export const markdownDiffCss = {
     backgroundColor: 'var(--Palette-Semantic-Red800)',
     padding: '0 2px',
     borderRadius: '2px',
+  },
+  // Markdown typography
+  '& h1': {
+    fontSize: '2em',
+    fontWeight: 'bold',
+    marginTop: '0.67em',
+    marginBottom: '0.67em',
+  },
+  '& h2': {
+    fontSize: '1.5em',
+    fontWeight: 'bold',
+    marginTop: '0.83em',
+    marginBottom: '0.83em',
+  },
+  '& h3': {
+    fontSize: '1.17em',
+    fontWeight: 'bold',
+    marginTop: '1em',
+    marginBottom: '1em',
+  },
+  '& strong': {
+    fontWeight: 'bold',
+  },
+  '& em': {
+    fontStyle: 'italic',
+  },
+  '& p': {
+    marginTop: '1em',
+    marginBottom: '1em',
+  },
+  '& code': {
+    fontFamily: 'monospace',
+    backgroundColor: 'var(--Palette-Neutral-300)',
+    padding: '2px 4px',
+    borderRadius: '3px',
+  },
+  '& pre': {
+    backgroundColor: 'var(--Palette-Neutral-200)',
+    padding: '1em',
+    borderRadius: '4px',
+    overflow: 'auto',
+  },
+  '& ul, & ol': {
+    marginTop: '1em',
+    marginBottom: '1em',
+    paddingLeft: '2em',
   },
 };
 
@@ -237,7 +347,22 @@ export function buildDiffHtml(oldValue: string, newValue: string): string {
           parts.push(
             renderModifiedPair(oldTokens[oldIdx++], newTokens[newIdx++]),
           );
+        } else if (count === nextCount) {
+          // Same number of tokens changed - try to pair them up for word-level diffs
+          for (let i = 0; i < count; i++) {
+            const oldToken = oldTokens[oldIdx++];
+            const newToken = newTokens[newIdx++];
+            // If both tokens are the same type, do word-level diff
+            if (oldToken.type === newToken.type) {
+              parts.push(renderModifiedPair(oldToken, newToken));
+            } else {
+              // Different types - render as complete replacement
+              parts.push(renderDeletedToken(oldToken));
+              parts.push(renderAddedToken(newToken));
+            }
+          }
         } else {
+          // Different number of tokens - render all deletions then all additions
           for (let i = 0; i < count; i++) {
             parts.push(renderDeletedToken(oldTokens[oldIdx++]));
           }
