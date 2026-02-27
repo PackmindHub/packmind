@@ -2,6 +2,8 @@
 
 ## Added
 
+- The `diff` command now detects updated rules using similarity matching: when a rule is modified rather than deleted and re-added, it is submitted as an `updateRule` change proposal
+
 ## Changed
 
 ## Fixed

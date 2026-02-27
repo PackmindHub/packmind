@@ -1,9 +1,11 @@
 import {
   ChangeProposalType,
   CollectionItemDeletePayload,
+  CollectionItemUpdatePayload,
   CreateChangeProposalCommand,
   IStandardsPort,
   Rule,
+  RuleId,
   ScalarUpdatePayload,
   Standard,
   StandardId,
@@ -25,6 +27,7 @@ const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
   ChangeProposalType.updateStandardDescription,
   ChangeProposalType.updateStandardScope,
   ChangeProposalType.addRule,
+  ChangeProposalType.updateRule,
   ChangeProposalType.deleteRule,
 ]);
 
@@ -59,6 +62,10 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
       return { artefactVersion: standard.version };
     }
 
+    if (command.type === ChangeProposalType.updateRule) {
+      return this.validateUpdateRule(standard, command);
+    }
+
     if (command.type === ChangeProposalType.deleteRule) {
       return this.validateDeleteRule(standard, command);
     }
@@ -76,6 +83,34 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
     }
 
     return { artefactVersion: standard.version };
+  }
+
+  private async validateUpdateRule(
+    standard: Standard,
+    command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
+  ): Promise<ChangeProposalValidationResult> {
+    const payload = command.payload as CollectionItemUpdatePayload<RuleId>;
+    const rules = await this.standardsPort.getRulesByStandardId(standard.id);
+    const matchingRule = rules.find(
+      (rule) => rule.content === payload.oldValue,
+    );
+
+    if (!matchingRule) {
+      throw new ChangeProposalPayloadMismatchError(
+        command.type,
+        payload.oldValue,
+        'rule not found',
+      );
+    }
+
+    return {
+      artefactVersion: standard.version,
+      resolvedPayload: {
+        targetId: matchingRule.id,
+        oldValue: payload.oldValue,
+        newValue: payload.newValue,
+      },
+    };
   }
 
   private async validateDeleteRule(

@@ -29,6 +29,13 @@ import { ApplyChangeProposalsUseCase } from './ApplyChangeProposalsUseCase';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { skillVersionFactory } from '@packmind/skills/test';
 
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
+  SSEEventPublisher: {
+    publishChangeProposalUpdateEvent: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('ApplyChangeProposalsUseCase', () => {
   const organizationId = createOrganizationId('organization-id');
   const userId = createUserId('user-id');

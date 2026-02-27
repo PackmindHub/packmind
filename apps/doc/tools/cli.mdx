@@ -1093,6 +1093,74 @@ packmind-cli packages add --to backend --skill debugging-workflow
   when automating package management in scripts or CI/CD pipelines.
 </Tip>
 
+## Diff Command
+
+Compare your local artifact files (standards, commands, skills) against the versions published in Packmind, and optionally propose your changes for team review.
+
+### Preview Changes
+
+```bash
+packmind-cli diff
+```
+
+This compares your local files against the published versions and displays what has changed. No changes are submitted.
+
+**Example output:**
+
+```
+Standard: Error Handling
+
+  Rule (update)
+  - Validate inputs at system boundaries and fail fast
+  + Validate inputs at system boundaries, fail fast, and log the context
+
+  Rule (add)
+  + Preserve context when rethrowing errors
+
+  Rule (delete)
+  - Avoid swallowing exceptions silently
+```
+
+For each standard, the diff shows:
+
+- **Rule (update)** — a rule that was modified (Packmind detects this automatically using similarity matching)
+- **Rule (add)** — a new rule added locally
+- **Rule (delete)** — a rule removed locally
+
+### Submit Changes as Proposals
+
+```bash
+packmind-cli diff --submit
+```
+
+Submits your local changes as change proposals, which can be reviewed and accepted by your team in the Packmind web app.
+
+Add an optional message to explain the intent behind your changes:
+
+```bash
+packmind-cli diff --submit -m "Improve error handling rules for better observability"
+```
+
+If you omit `-m`, Packmind opens your default editor so you can write the message interactively.
+
+**Options:**
+
+| Flag                  | Short | Description                                                       |
+| --------------------- | ----- | ----------------------------------------------------------------- |
+| `--submit`            |       | Submit detected changes as change proposals                       |
+| `--message <text>`    | `-m`  | Message describing the intent behind the changes (max 1024 chars) |
+| `--include-submitted` |       | Include already-submitted changes in the output                   |
+
+### How Rule Updates Are Detected
+
+When you modify a rule in a standard file, Packmind automatically determines whether the change is a rule update (the same rule was edited) or a separate deletion and addition (two unrelated rules). This keeps your change proposals clean and meaningful, showing reviewers exactly what was changed rather than an unrelated delete + add pair.
+
+<Tip>
+  **Requires a git repository** — The `diff` command requires your project to be
+  in a git repository with a configured remote. Make sure you have run
+  `packmind-cli install` to set up your `packmind.json` before using `diff`.
+</Tip>
+
 ## Related Documentation
 
 - [Create your first command](/getting-started/gs-create-command): Learn how to create commands with AI assistance
