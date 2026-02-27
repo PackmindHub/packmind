@@ -1,4 +1,4 @@
-import { PMVStack } from '@packmind/ui';
+import { PMSeparator, PMVStack } from '@packmind/ui';
 import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCommandReviewState';
@@ -57,47 +57,62 @@ export function ChangeProposalCardBody({
   const payload = proposal.payload as { oldValue: string; newValue: string };
 
   return (
-    <PMVStack gap={4} p={4} alignItems="stretch">
+    <PMVStack gap={0} alignItems="stretch">
       {!isEditing && (
-        <CardToolbar
-          poolStatus={poolStatus}
-          isOutdated={isOutdated}
-          isBlockedByConflict={isBlockedByConflict}
-          onEdit={onEdit}
-          onAccept={onAccept}
-          onDismiss={onDismiss}
-          onUndo={onUndo}
-          onShowInFile={() => onViewModeChange('focused')}
-        />
+        <>
+          <PMSeparator borderColor="border.tertiary" />
+          <PMVStack p={4}>
+            <CardToolbar
+              poolStatus={poolStatus}
+              isOutdated={isOutdated}
+              isBlockedByConflict={isBlockedByConflict}
+              onEdit={onEdit}
+              onAccept={onAccept}
+              onDismiss={onDismiss}
+              onUndo={onUndo}
+              onShowInFile={() => onViewModeChange('focused')}
+            />
+          </PMVStack>
+        </>
       )}
 
-      <ProposalMessage message={proposal.message} />
-
-      {isEditing ? (
-        <EditView
-          proposal={proposal}
-          editedValue={editedValue}
-          onEditedValueChange={(v) => onEditedValueChange(proposal.id, v)}
-          onResetToOriginal={() => onResetToOriginal(proposal.id)}
-          onCancel={onCancelEdit}
-          onSaveAndAccept={() => onSaveAndAccept(proposal.id)}
-          isModified={isEditModified}
-        />
-      ) : viewMode === 'diff' ? (
-        <DiffView
-          oldValue={payload.oldValue}
-          newValue={payload.newValue}
-          isDescriptionField={isDescriptionField}
-        />
-      ) : viewMode === 'focused' ? (
-        <FocusedView recipe={recipe} proposal={proposal} />
-      ) : (
-        <InlineView
-          oldValue={payload.oldValue}
-          newValue={payload.newValue}
-          isDescriptionField={isDescriptionField}
-        />
+      {proposal.message && (
+        <>
+          <PMSeparator borderColor="border.tertiary" />
+          <PMVStack p={4}>
+            <ProposalMessage message={proposal.message} />
+          </PMVStack>
+        </>
       )}
+
+      <PMSeparator borderColor="border.tertiary" />
+      <PMVStack p={4}>
+        {isEditing ? (
+          <EditView
+            proposal={proposal}
+            editedValue={editedValue}
+            onEditedValueChange={(v) => onEditedValueChange(proposal.id, v)}
+            onResetToOriginal={() => onResetToOriginal(proposal.id)}
+            onCancel={onCancelEdit}
+            onSaveAndAccept={() => onSaveAndAccept(proposal.id)}
+            isModified={isEditModified}
+          />
+        ) : viewMode === 'diff' ? (
+          <DiffView
+            oldValue={payload.oldValue}
+            newValue={payload.newValue}
+            isDescriptionField={isDescriptionField}
+          />
+        ) : viewMode === 'focused' ? (
+          <FocusedView recipe={recipe} proposal={proposal} />
+        ) : (
+          <InlineView
+            oldValue={payload.oldValue}
+            newValue={payload.newValue}
+            isDescriptionField={isDescriptionField}
+          />
+        )}
+      </PMVStack>
     </PMVStack>
   );
 }
