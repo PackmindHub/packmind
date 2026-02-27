@@ -11,6 +11,7 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: false,
         useDiffContent: false,
+        mode: 'unified',
       });
 
       expect(result).toEqual(
@@ -18,6 +19,29 @@ describe('rebuildMarkdownFromBlocks', () => {
           /# Title[\s\S]*New paragraph(?![\s\S]*Old paragraph)(?![\s\S]*Another paragraph)/,
         ),
       );
+    });
+
+    it('adds "Show code changes" trigger for updated code blocks', () => {
+      const oldValue = `\`\`\`javascript
+function hello() {
+  console.log('Hello');
+}
+\`\`\``;
+
+      const newValue = `\`\`\`javascript
+function hello(name) {
+  console.log('Hello, ' + name);
+}
+\`\`\``;
+
+      const blocks = parseAndDiffMarkdown(oldValue, newValue);
+      const result = rebuildMarkdownFromBlocks(blocks, {
+        includeDeleted: false,
+        useDiffContent: false,
+        mode: 'unified',
+      });
+
+      expect(result).toContain('Show code changes');
     });
 
     it('rebuilds list markdown preserving structure', () => {
@@ -28,6 +52,7 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: false,
         useDiffContent: false,
+        mode: 'unified',
       });
 
       expect(result).toMatch(/- item 1[\s\S]*- item 2[\s\S]*- item 3/);
@@ -41,6 +66,7 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: false,
         useDiffContent: false,
+        mode: 'unified',
       });
 
       expect(result).toEqual(
@@ -56,14 +82,15 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: false,
         useDiffContent: false,
+        mode: 'unified',
       });
 
-      expect(result).toMatch(/```[\s\S]*const x = 2;[\s\S]*```/);
+      expect(result).toMatch(/```js[\s\S]*const x = 2;[\s\S]*```/);
     });
   });
 
-  describe('diff mode (HTML output)', () => {
-    it('generates HTML with inline diff markers', () => {
+  describe('diff mode (markdown output with diff tags)', () => {
+    it('generates markdown with inline diff markers', () => {
       const oldValue = 'Old text';
       const newValue = 'New text';
 
@@ -71,14 +98,15 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: true,
         useDiffContent: true,
+        mode: 'diff',
       });
 
       expect(result).toMatch(
-        /<p>.*<del>Old<\/del>.*<ins>New<\/ins>.*text.*<\/p>/,
+        /<del>Old<\/del>[\s\S]*<ins>New<\/ins>[\s\S]*text(?![\s\S]*<p>)/,
       );
     });
 
-    it('renders list items with diff HTML markers', () => {
+    it('renders list items with diff markdown markers', () => {
       const oldValue = '- item 1\n- item 2';
       const newValue = '- item 1\n- item 2\n- item 3';
 
@@ -86,14 +114,15 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: true,
         useDiffContent: true,
+        mode: 'diff',
       });
 
       expect(result).toMatch(
-        /<ul>[\s\S]*<li>.*item 1.*<\/li>[\s\S]*<li>.*item 2.*<\/li>[\s\S]*<li>.*<ins>item 3<\/ins>.*<\/li>[\s\S]*<\/ul>/,
+        /- item 1[\s\S]*- item 2[\s\S]*- <ins>item 3<\/ins>(?![\s\S]*<ul>)(?![\s\S]*<li>)/,
       );
     });
 
-    it('renders headings with proper HTML structure', () => {
+    it('renders headings with markdown syntax', () => {
       const oldValue = '# Old Title';
       const newValue = '# New Title';
 
@@ -101,9 +130,12 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: true,
         useDiffContent: true,
+        mode: 'diff',
       });
 
-      expect(result).toMatch(/<h1>.*<del>Old<\/del>.*<ins>New<\/ins>.*<\/h1>/);
+      expect(result).toMatch(
+        /# .*<del>Old<\/del>.*<ins>New<\/ins>(?![\s\S]*<h1>)/,
+      );
     });
 
     it('includes deleted blocks in output', () => {
@@ -114,9 +146,33 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: true,
         useDiffContent: true,
+        mode: 'diff',
       });
 
-      expect(result).toMatch(/<del>Paragraph to delete<\/del>/);
+      expect(result).toMatch(/<del>Paragraph to delete<\/del>(?![\s\S]*<p>)/);
+    });
+
+    it('renders code blocks with line-level diff syntax', () => {
+      const oldValue = `\`\`\`javascript
+function hello() {
+  console.log('Hello');
+}
+\`\`\``;
+
+      const newValue = `\`\`\`javascript
+function hello(name) {
+  console.log('Hello, ' + name);
+}
+\`\`\``;
+
+      const blocks = parseAndDiffMarkdown(oldValue, newValue);
+      const result = rebuildMarkdownFromBlocks(blocks, {
+        includeDeleted: true,
+        useDiffContent: true,
+        mode: 'diff',
+      });
+
+      expect(result).toContain('```diff');
     });
   });
 
@@ -129,6 +185,7 @@ describe('rebuildMarkdownFromBlocks', () => {
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: false,
         useDiffContent: false,
+        mode: 'plain',
       });
 
       expect(result).toEqual(
@@ -168,6 +225,7 @@ My list:
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: false,
         useDiffContent: false,
+        mode: 'unified',
       });
 
       expect(result).toEqual(
@@ -205,12 +263,11 @@ My list:
       const result = rebuildMarkdownFromBlocks(blocks, {
         includeDeleted: true,
         useDiffContent: true,
+        mode: 'diff',
       });
 
-      expect(result).toEqual(
-        expect.stringMatching(
-          /<h1>My title<\/h1>[\s\S]*<del>There was a line here\.<\/del>[\s\S]*<ul>[\s\S]*<li>/,
-        ),
+      expect(result).toMatch(
+        /# My title[\s\S]*<del>There was a line here\.<\/del>[\s\S]*- (?![\s\S]*<h1>)(?![\s\S]*<ul>)(?![\s\S]*<li>)/,
       );
     });
   });

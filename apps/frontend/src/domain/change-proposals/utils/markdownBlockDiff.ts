@@ -1,5 +1,5 @@
 import { marked, Token, Tokens } from 'marked';
-import { diffArrays, diffWords } from 'diff';
+import { diffArrays, diffWords, diffLines } from 'diff';
 
 /**
  * Status of a markdown block after diff computation
@@ -27,10 +27,14 @@ export interface MarkdownBlock {
   content: string;
   /** Diff HTML content with <ins>/<del> tags (for tooltips and diff view) */
   diffContent: string;
+  /** Line-level diff with +/- prefixes for code blocks (for diff mode rendering) */
+  lineDiff?: string;
   /** Status after diff computation */
   status: BlockStatus;
   /** Heading level (e.g., '#', '##') - only for heading blocks */
   level?: string;
+  /** Code block language (e.g., 'js', 'typescript') - only for code blocks */
+  language?: string;
   /** List items - only for list blocks */
   items?: MarkdownBlock[];
   /** Original markdown raw text */
@@ -57,6 +61,12 @@ function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
     if (token.type === 'heading') {
       const heading = token as Tokens.Heading;
       block.level = '#'.repeat(heading.depth);
+    }
+
+    // Add language if it's a code block
+    if (token.type === 'code') {
+      const code = token as Tokens.Code;
+      block.language = code.lang || '';
     }
 
     // Parse list items if it's a list
@@ -122,6 +132,33 @@ function buildWordDiffHtml(oldText: string, newText: string): string {
       return escapeHtml(change.value);
     })
     .join('');
+}
+
+/**
+ * Build line-level diff string for code blocks with +/- prefixes
+ */
+function buildLineDiff(oldText: string, newText: string): string {
+  const changes = diffLines(oldText, newText);
+  const lines: string[] = [];
+
+  for (const change of changes) {
+    const value = change.value;
+    // Remove trailing newline to avoid empty lines
+    const text = value.endsWith('\n') ? value.slice(0, -1) : value;
+    const codeLines = text.split('\n');
+
+    for (const line of codeLines) {
+      if (change.added) {
+        lines.push(`+${line}`);
+      } else if (change.removed) {
+        lines.push(`-${line}`);
+      } else {
+        lines.push(` ${line}`);
+      }
+    }
+  }
+
+  return lines.join('\n');
 }
 
 /**
@@ -339,11 +376,22 @@ export function parseAndDiffMarkdown(
                 oldBlock.content,
                 newBlock.content,
               );
-              result.push({
+
+              // For code blocks, also compute line-level diff
+              const updatedBlock: MarkdownBlock = {
                 ...newBlock,
                 status: 'updated',
                 diffContent: diffHtml,
-              });
+              };
+
+              if (newBlock.type === 'code') {
+                updatedBlock.lineDiff = buildLineDiff(
+                  oldBlock.content,
+                  newBlock.content,
+                );
+              }
+
+              result.push(updatedBlock);
             }
           } else {
             // Different block types - mark as deleted and added
@@ -379,11 +427,22 @@ export function parseAndDiffMarkdown(
                 oldBlock.content,
                 newBlock.content,
               );
-              result.push({
+
+              // For code blocks, also compute line-level diff
+              const updatedBlock: MarkdownBlock = {
                 ...newBlock,
                 status: 'updated',
                 diffContent: diffHtml,
-              });
+              };
+
+              if (newBlock.type === 'code') {
+                updatedBlock.lineDiff = buildLineDiff(
+                  oldBlock.content,
+                  newBlock.content,
+                );
+              }
+
+              result.push(updatedBlock);
             }
           }
 

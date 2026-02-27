@@ -208,7 +208,43 @@ My list:
         expect.objectContaining({
           type: 'code',
           status: 'updated',
+          language: 'js',
           diffContent: expect.stringMatching(/<del>1<\/del>.*<ins>2<\/ins>/),
+          lineDiff: expect.stringContaining('-const x = 1;'),
+        }),
+      ]);
+    });
+
+    it('includes additions in line diff for code blocks', () => {
+      const oldValue = '```js\nconst x = 1;\n```';
+      const newValue = '```js\nconst x = 2;\n```';
+
+      const result = parseAndDiffMarkdown(oldValue, newValue);
+
+      expect(result[0].lineDiff).toContain('+const x = 2;');
+    });
+
+    it('computes line-level diffs for multi-line code blocks', () => {
+      const oldValue = `\`\`\`javascript
+function hello() {
+  console.log('Hello');
+}
+\`\`\``;
+
+      const newValue = `\`\`\`javascript
+function hello(name) {
+  console.log('Hello, ' + name);
+}
+\`\`\``;
+
+      const result = parseAndDiffMarkdown(oldValue, newValue);
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          type: 'code',
+          status: 'updated',
+          language: 'javascript',
+          lineDiff: expect.stringContaining('-function hello() {'),
         }),
       ]);
     });

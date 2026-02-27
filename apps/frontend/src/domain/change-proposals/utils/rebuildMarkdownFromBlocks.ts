@@ -9,6 +9,8 @@ export interface RebuildOptions {
   includeDeleted: boolean;
   /** Whether to use diffContent (with <ins>/<del> tags) or clean content */
   useDiffContent: boolean;
+  /** Display mode: 'unified', 'diff', or 'plain' */
+  mode?: 'unified' | 'diff' | 'plain';
 }
 
 /**
@@ -38,30 +40,19 @@ export function rebuildMarkdownFromBlocks(
 
     switch (block.type) {
       case 'heading':
-        if (options.useDiffContent) {
-          // For diff mode, render as HTML heading
-          const level = block.level?.length || 1;
-          parts.push(`<h${level}>${content}</h${level}>\n`);
-        } else {
-          // For unified/plain mode, use markdown syntax
-          parts.push(`${block.level || '#'} ${content}\n`);
-        }
+        // Always use markdown syntax for headings
+        parts.push(`${block.level || '#'} ${content}\n`);
         break;
 
       case 'paragraph':
-        if (options.useDiffContent) {
-          // For diff mode, render as HTML paragraph
-          parts.push(`<p>${content}</p>\n`);
-        } else {
-          // For unified/plain mode, use plain text with blank line separator
-          parts.push(`${content}\n`);
-        }
+        // Always use plain text for paragraphs
+        parts.push(`${content}\n`);
         break;
 
       case 'list':
         if (options.useDiffContent) {
-          // For diff mode, render as HTML list
-          parts.push(renderListAsDiffHtml(block));
+          // For diff mode, use markdown list with diff content
+          parts.push(renderListAsMarkdownWithDiff(block));
         } else {
           // For unified/plain mode, use markdown list syntax
           parts.push(renderListAsMarkdown(block, options.includeDeleted));
@@ -70,11 +61,30 @@ export function rebuildMarkdownFromBlocks(
 
       case 'code':
         if (options.useDiffContent) {
-          // For diff mode, render as HTML code block
-          parts.push(`<pre><code>${content}</code></pre>\n`);
+          // For diff mode, render as ```diff code block with line-level changes
+          const diffLines = block.lineDiff || content;
+          parts.push(`\`\`\`diff\n${diffLines}\n\`\`\`\n`);
         } else {
           // For unified/plain mode, use markdown code block
-          parts.push(`\`\`\`\n${content}\n\`\`\`\n`);
+          const lang = block.language || '';
+          parts.push(`\`\`\`${lang}\n${content}\n\`\`\`\n`);
+
+          // In unified mode, add a marker for changed code blocks
+          if (
+            options.mode === 'unified' &&
+            block.status === 'updated' &&
+            block.lineDiff
+          ) {
+            // Add a special HTML comment that will be detected by the editor
+            // The lineDiff is base64 encoded to avoid breaking the HTML
+            const encodedDiff =
+              typeof btoa !== 'undefined'
+                ? btoa(block.lineDiff)
+                : Buffer.from(block.lineDiff).toString('base64');
+            parts.push(
+              `<!-- CODE_DIFF:${encodedDiff} -->\n<span class="code-diff-trigger" data-line-diff="${encodedDiff}">Show code changes</span>\n`,
+            );
+          }
         }
         break;
 
@@ -83,8 +93,8 @@ export function rebuildMarkdownFromBlocks(
         parts.push(block.raw);
     }
 
-    // Add blank line between blocks for markdown mode
-    if (!options.useDiffContent && block.type !== 'heading') {
+    // Add blank line between blocks (except after headings)
+    if (block.type !== 'heading') {
       parts.push('\n');
     }
   }
@@ -112,9 +122,9 @@ function renderListAsMarkdown(
 }
 
 /**
- * Render a list block as HTML with diff tags
+ * Render a list block as markdown with diff tags
  */
-function renderListAsDiffHtml(block: MarkdownBlock): string {
+function renderListAsMarkdownWithDiff(block: MarkdownBlock): string {
   if (!block.items || block.items.length === 0) {
     return '';
   }
@@ -122,9 +132,9 @@ function renderListAsDiffHtml(block: MarkdownBlock): string {
   const items = block.items
     .map((item) => {
       const content = item.diffContent || item.content;
-      return `<li>${content}</li>`;
+      return `- ${content}`;
     })
     .join('\n');
 
-  return `<ul>\n${items}\n</ul>\n`;
+  return items + '\n';
 }

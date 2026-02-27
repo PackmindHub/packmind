@@ -49,7 +49,16 @@ There was a line here.
 
 My list:
  - one item
- - another item`,
+ - another item
+ 
+# Code example
+
+\`\`\`javascript
+function hello() {
+  console.log('Hello');
+}
+\`\`\` 
+`,
     newValue: `# My title
 
 This is my updated content
@@ -59,7 +68,15 @@ This is my updated content
 My list:
  - first item
  - a new item
- - another item`,
+ - another item
+ 
+ # Example
+
+\`\`\`javascript
+function hello() {
+  console.log('Hello, ' + name);
+}
+\`\`\``,
     proposalNumbers: [1],
   },
 };
