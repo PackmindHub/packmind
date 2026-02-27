@@ -281,7 +281,6 @@ jobs:
 
   cli-e2e-tests:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    needs: build-cli
     timeout-minutes: 15
     strategy:
       matrix:
@@ -303,11 +302,7 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
 
-      - name: Download CLI build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build-cli.outputs.artifact-name }}
-          path: dist/apps/cli/
+      - run: nx run packmind-cli:build
 
       - name: Fix CLI artifacts permissions
         run: |
