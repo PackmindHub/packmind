@@ -309,6 +309,12 @@ jobs:
           name: ${{ needs.build-cli.outputs.artifact-name }}
           path: dist/apps/cli/
 
+      - name: Fix CLI artifacts permissions
+        run: |
+          chmod +x dist/apps/cli/main.cjs || true
+          chmod -R +r dist/apps/cli/
+          ls -la dist/apps/cli/
+
       - name: Start docker compose for CLI E2E tests
         uses: nick-fields/retry@v3
         with:
