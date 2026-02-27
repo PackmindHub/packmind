@@ -36,6 +36,13 @@ import { CommandChangeProposalValidator } from '../../validators/CommandChangePr
 import { IChangeProposalValidator } from '../../validators/IChangeProposalValidator';
 import { SkillChangeProposalValidator } from '../../validators/SkillChangeProposalValidator';
 
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
+  SSEEventPublisher: {
+    publishChangeProposalUpdateEvent: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('CreateChangeProposalUseCase', () => {
   const organizationId = createOrganizationId('organization-id');
   const userId = createUserId('user-id');

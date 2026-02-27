@@ -3,6 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
 import { parseStandardMd } from '../../utils/parseStandardMd';
+import { matchUpdatedRules } from '../../utils/ruleSimilarity';
 import { IDiffStrategy } from './IDiffStrategy';
 import { DiffableFile } from './DiffableFile';
 
@@ -105,30 +106,49 @@ export class StandardDiffStrategy implements IDiffStrategy {
     const serverRules = new Set(serverParsed.rules);
     const localRules = new Set(localParsed.rules);
 
-    for (const rule of serverRules) {
-      if (!localRules.has(rule)) {
-        const ruleId = createRuleId('unresolved');
-        diffs.push({
-          ...diffBase,
-          type: ChangeProposalType.deleteRule,
-          payload: {
-            targetId: ruleId,
-            item: { id: ruleId, content: rule },
-          },
-        });
-      }
+    const deletedRules = [...serverRules].filter(
+      (rule) => !localRules.has(rule),
+    );
+    const addedRules = [...localRules].filter((rule) => !serverRules.has(rule));
+
+    const { updates, remainingDeleted, remainingAdded } = matchUpdatedRules(
+      deletedRules,
+      addedRules,
+    );
+
+    for (const update of updates) {
+      const ruleId = createRuleId('unresolved');
+      diffs.push({
+        ...diffBase,
+        type: ChangeProposalType.updateRule,
+        payload: {
+          targetId: ruleId,
+          oldValue: update.oldValue,
+          newValue: update.newValue,
+        },
+      });
     }
 
-    for (const rule of localRules) {
-      if (!serverRules.has(rule)) {
-        diffs.push({
-          ...diffBase,
-          type: ChangeProposalType.addRule,
-          payload: {
-            item: { content: rule },
-          },
-        });
-      }
+    for (const rule of remainingDeleted) {
+      const ruleId = createRuleId('unresolved');
+      diffs.push({
+        ...diffBase,
+        type: ChangeProposalType.deleteRule,
+        payload: {
+          targetId: ruleId,
+          item: { id: ruleId, content: rule },
+        },
+      });
+    }
+
+    for (const rule of remainingAdded) {
+      diffs.push({
+        ...diffBase,
+        type: ChangeProposalType.addRule,
+        payload: {
+          item: { content: rule },
+        },
+      });
     }
 
     return diffs;
