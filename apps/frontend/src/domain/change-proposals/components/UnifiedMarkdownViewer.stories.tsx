@@ -8,16 +8,17 @@ const MultiViewer: React.FunctionComponent<
   Omit<UnifiedMarkdownViewerProps, 'displayMode'>
 > = (props) => {
   return (
-    <>
-      <h1>Unified view</h1>
-      <UnifiedMarkdownViewer {...props} displayMode={'unified'} />
+    <div style={{ display: 'flex', flexDirection: 'row', gap: '2em' }}>
+      <div style={{ width: '50%' }}>
+        <h1>Unified view</h1>
+        <UnifiedMarkdownViewer {...props} displayMode={'unified'} />
+      </div>
 
-      <h1>Diff view</h1>
-      <UnifiedMarkdownViewer {...props} displayMode={'diff'} />
-
-      <h1>Plain view</h1>
-      <UnifiedMarkdownViewer {...props} displayMode={'plain'} />
-    </>
+      <div style={{ flex: '1 1 0px' }}>
+        <h1>Diff view</h1>
+        <UnifiedMarkdownViewer {...props} displayMode={'diff'} />
+      </div>
+    </div>
   );
 };
 

@@ -372,24 +372,27 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
 
     const handleCodeDiffMouseEnter = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains('code-diff-trigger')) {
-        const encodedDiff = target.getAttribute('data-line-diff') || '';
-        let lineDiff = '';
+      // Check if it's a link with #CODE_DIFF: href
+      if (target.tagName === 'A') {
+        const href = target.getAttribute('href') || '';
+        if (href.startsWith('#CODE_DIFF:')) {
+          const encodedDiff = href.substring('#CODE_DIFF:'.length);
+          let lineDiff = '';
 
-        try {
-          lineDiff =
-            typeof atob !== 'undefined'
-              ? atob(encodedDiff)
-              : Buffer.from(encodedDiff, 'base64').toString('utf-8');
-        } catch (error) {
-          console.error('Failed to decode line diff:', error);
-          return;
-        }
+          try {
+            lineDiff =
+              typeof atob !== 'undefined'
+                ? atob(encodedDiff)
+                : Buffer.from(encodedDiff, 'base64').toString('utf-8');
+          } catch (error) {
+            console.error('Failed to decode line diff:', error);
+            return;
+          }
 
-        // Create tooltip element
-        const tooltip = document.createElement('div');
-        tooltip.className = 'code-diff-tooltip';
-        tooltip.style.cssText = `
+          // Create tooltip element
+          const tooltip = document.createElement('div');
+          tooltip.className = 'code-diff-tooltip';
+          tooltip.style.cssText = `
           position: fixed;
           z-index: 10000;
           background: #1f2937;
@@ -405,59 +408,60 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
           overflow-x: auto;
         `;
 
-        const header = document.createElement('div');
-        header.style.cssText =
-          'font-weight: bold; margin-bottom: 8px; font-family: sans-serif;';
-        header.textContent = 'Code changes';
+          const header = document.createElement('div');
+          header.style.cssText =
+            'font-weight: bold; margin-bottom: 8px; font-family: sans-serif;';
+          header.textContent = 'Code changes';
 
-        const content = document.createElement('div');
-        content.style.cssText = 'font-size: 13px;';
+          const content = document.createElement('div');
+          content.style.cssText = 'font-size: 13px;';
 
-        // Format diff lines with colors
-        const lines = lineDiff.split('\n');
-        const formattedLines = lines
-          .map((line) => {
-            if (line.startsWith('+')) {
-              return `<span style="color: #86efac; background-color: rgba(34, 197, 94, 0.2);">${escapeHtmlInComponent(line)}</span>`;
-            } else if (line.startsWith('-')) {
-              return `<span style="color: #fca5a5; background-color: rgba(239, 68, 68, 0.2);">${escapeHtmlInComponent(line)}</span>`;
-            } else {
-              return `<span style="color: #d1d5db;">${escapeHtmlInComponent(line)}</span>`;
+          // Format diff lines with colors
+          const lines = lineDiff.split('\n');
+          const formattedLines = lines
+            .map((line) => {
+              if (line.startsWith('+')) {
+                return `<span style="color: #86efac; background-color: rgba(34, 197, 94, 0.2);">${escapeHtmlInComponent(line)}</span>`;
+              } else if (line.startsWith('-')) {
+                return `<span style="color: #fca5a5; background-color: rgba(239, 68, 68, 0.2);">${escapeHtmlInComponent(line)}</span>`;
+              } else {
+                return `<span style="color: #d1d5db;">${escapeHtmlInComponent(line)}</span>`;
+              }
+            })
+            .join('\n');
+
+          content.innerHTML = formattedLines;
+
+          tooltip.appendChild(header);
+          tooltip.appendChild(content);
+
+          document.body.appendChild(tooltip);
+          target.setAttribute('data-code-tooltip-id', 'active');
+
+          // Position tooltip after append
+          requestAnimationFrame(() => {
+            const rect = target.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+
+            // Position above the element
+            let top = rect.top - tooltipRect.height - 8;
+            let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+
+            // Keep tooltip within viewport
+            if (top < 0) {
+              top = rect.bottom + 8;
             }
-          })
-          .join('\n');
+            if (left < 8) {
+              left = 8;
+            }
+            if (left + tooltipRect.width > window.innerWidth - 8) {
+              left = window.innerWidth - tooltipRect.width - 8;
+            }
 
-        content.innerHTML = formattedLines;
-
-        tooltip.appendChild(header);
-        tooltip.appendChild(content);
-
-        document.body.appendChild(tooltip);
-        target.setAttribute('data-code-tooltip-id', 'active');
-
-        // Position tooltip after append
-        requestAnimationFrame(() => {
-          const rect = target.getBoundingClientRect();
-          const tooltipRect = tooltip.getBoundingClientRect();
-
-          // Position above the element
-          let top = rect.top - tooltipRect.height - 8;
-          let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-
-          // Keep tooltip within viewport
-          if (top < 0) {
-            top = rect.bottom + 8;
-          }
-          if (left < 8) {
-            left = 8;
-          }
-          if (left + tooltipRect.width > window.innerWidth - 8) {
-            left = window.innerWidth - tooltipRect.width - 8;
-          }
-
-          tooltip.style.top = `${top}px`;
-          tooltip.style.left = `${left}px`;
-        });
+            tooltip.style.top = `${top}px`;
+            tooltip.style.left = `${left}px`;
+          });
+        }
       }
     };
 
@@ -481,26 +485,25 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
         .replace(/'/g, '&#039;');
     };
 
-    // Apply styling to code-diff-trigger elements
+    // Apply styling to code diff links
     const applyCodeDiffStyling = () => {
       const proseMirrorEditor =
         editorRef.current?.querySelector('.ProseMirror');
       if (!proseMirrorEditor) return;
 
-      const triggers = proseMirrorEditor.querySelectorAll('.code-diff-trigger');
-      triggers.forEach((trigger) => {
-        const element = trigger as HTMLElement;
-        element.style.cssText = `
-          display: inline-block;
-          margin-top: 8px;
-          padding: 4px 8px;
-          background: rgba(251, 191, 36, 0.2);
-          color: #f59e0b;
-          border-radius: 4px;
-          font-size: 12px;
-          cursor: pointer;
-          border: 1px solid rgba(251, 191, 36, 0.4);
-        `;
+      const links = proseMirrorEditor.querySelectorAll(
+        'a[href^="#CODE_DIFF:"]',
+      );
+      links.forEach((link) => {
+        const element = link as HTMLElement;
+        // The link will already have styling from the <ins> wrapper
+        // Just ensure it's clickable and has cursor pointer
+        element.style.cursor = 'pointer';
+        element.style.textDecoration = 'none';
+        // Prevent default link behavior
+        element.addEventListener('click', (e) => {
+          e.preventDefault();
+        });
       });
     };
 
@@ -510,6 +513,12 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
     }, 500);
 
     const editor = editorRef.current;
+    if (!editor) {
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+
     editor.addEventListener('mouseover', handleCodeDiffMouseEnter);
     editor.addEventListener('mouseout', handleCodeDiffMouseLeave);
 

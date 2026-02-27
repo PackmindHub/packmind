@@ -21,7 +21,7 @@ describe('rebuildMarkdownFromBlocks', () => {
       );
     });
 
-    it('adds "Show code changes" trigger for updated code blocks', () => {
+    it('adds "[See code change]" marker for updated code blocks', () => {
       const oldValue = `\`\`\`javascript
 function hello() {
   console.log('Hello');
@@ -41,7 +41,7 @@ function hello(name) {
         mode: 'unified',
       });
 
-      expect(result).toContain('Show code changes');
+      expect(result).toMatch(/\[See code change\]\(#CODE_DIFF:.*\)/);
     });
 
     it('rebuilds list markdown preserving structure', () => {

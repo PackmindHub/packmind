@@ -82,15 +82,12 @@ export function rebuildMarkdownFromBlocks(
             block.status === 'updated' &&
             block.lineDiff
           ) {
-            // Add a special HTML comment that will be detected by the editor
-            // The lineDiff is base64 encoded to avoid breaking the HTML
+            // Add plain markdown with diff markers and encoded diff data in link
             const encodedDiff =
               typeof btoa !== 'undefined'
                 ? btoa(block.lineDiff)
                 : Buffer.from(block.lineDiff).toString('base64');
-            parts.push(
-              `<!-- CODE_DIFF:${encodedDiff} -->\n<span class="code-diff-trigger" data-line-diff="${encodedDiff}">Show code changes</span>\n`,
-            );
+            parts.push(`[See code change](#CODE_DIFF:${encodedDiff})\n`);
           }
         }
         break;
