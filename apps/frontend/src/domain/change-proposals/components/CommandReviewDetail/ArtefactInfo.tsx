@@ -1,4 +1,4 @@
-import { PMBadge, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import { PMBadge, PMHStack, PMText } from '@packmind/ui';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 
 interface ArtefactInfoProps {
@@ -15,18 +15,16 @@ export function ArtefactInfo({
   latestTime,
 }: Readonly<ArtefactInfoProps>) {
   return (
-    <PMVStack gap={1} alignItems="flex-start">
-      <PMHStack gap={2} alignItems="center">
-        <PMText fontWeight="bold" fontSize="lg">
-          {recipeName}
-        </PMText>
-        <PMBadge size="sm" colorPalette="gray">
-          Base v{recipeVersion}
-        </PMBadge>
-      </PMHStack>
+    <PMHStack gap={2} alignItems="center">
+      <PMText fontWeight="bold" fontSize="lg">
+        {recipeName}
+      </PMText>
+      <PMBadge size="sm" colorPalette="gray">
+        Base v{recipeVersion}
+      </PMBadge>
       <PMText fontSize="sm" color="secondary">
         {latestAuthor} &middot; {formatRelativeTime(latestTime)}
       </PMText>
-    </PMVStack>
+    </PMHStack>
   );
 }
