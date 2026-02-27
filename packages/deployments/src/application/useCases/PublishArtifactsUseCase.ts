@@ -281,6 +281,17 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           }),
         );
 
+        // Load files for all skill versions that don't have them populated
+        // This is critical for previously deployed skills which come from the database
+        // without their files relation loaded
+        const skillVersionsWithFiles = await Promise.all(
+          filteredSkillVersions.map(async (sv) => {
+            if (sv.files !== undefined) return sv;
+            const files = await this.skillsPort.getSkillFiles(sv.id);
+            return { ...sv, files };
+          }),
+        );
+
         // Prepare unified deployment using renderArtifacts for ALL targets
         const {
           fileUpdatesPerTarget,
@@ -291,7 +302,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           command.organizationId as OrganizationId,
           filteredRecipeVersions,
           standardVersionsWithRules,
-          filteredSkillVersions,
+          skillVersionsWithFiles,
           removedRecipeVersions,
           removedStandardVersions,
           skillVersionsToRemove,
@@ -308,7 +319,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           skillVersions,
           filteredRecipeVersions,
           standardVersionsWithRules,
-          filteredSkillVersions,
+          skillVersionsWithFiles,
           targets,
           addedPackmindSkills,
         );

@@ -2,14 +2,18 @@
 
 ## Added
 
-- `standards create` and `commands create` now accept JSON via stdin (e.g., `echo '{"name":"..."}' | packmind-cli standards create`), in addition to the existing file path argument
-- A user can provide a message when submitting change proposals (#142)
-
 ## Changed
 
 ## Fixed
 
 ## Removed
+
+# [0.18.0] - 2026-02-26
+
+## Added
+
+- `standards create` and `commands create` now accept JSON via stdin (e.g., `echo '{"name":"..."}' | packmind-cli standards create`), in addition to the existing file path argument
+- A user can provide a message when submitting change proposals (#142)
 
 # [0.17.0] - 2026-02-25
 
@@ -212,7 +216,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.17.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.18.0...HEAD
+[0.18.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.17.0...release-cli/0.18.0
 [0.17.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.1...release-cli/0.17.0
 [0.16.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.0...release-cli/0.16.1
 [0.16.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.15.0...release-cli/0.16.0

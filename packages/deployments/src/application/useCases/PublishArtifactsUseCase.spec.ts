@@ -1674,6 +1674,144 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
+  describe('when deploying with previously deployed skills that lack files', () => {
+    let command: PublishArtifactsCommand;
+    let newSkillVersion: ReturnType<typeof skillVersionFactory>;
+    let previousSkillVersion: ReturnType<typeof skillVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const newSkillVersionId = createSkillVersionId(uuidv4());
+    const previousSkillVersionId = createSkillVersionId(uuidv4());
+    const mockFiles: SkillFile[] = [
+      {
+        id: createSkillFileId(uuidv4()),
+        skillVersionId: previousSkillVersionId,
+        path: 'references/guide.md',
+        content: 'Reference guide content',
+      },
+    ];
+
+    beforeEach(() => {
+      newSkillVersion = skillVersionFactory({
+        id: newSkillVersionId,
+        skillId: createSkillId('skill-new'),
+        name: 'New Skill',
+        slug: 'new-skill',
+        version: 1,
+        files: [],
+      });
+
+      // Previously deployed skill WITHOUT files (simulating database fetch)
+      previousSkillVersion = skillVersionFactory({
+        id: previousSkillVersionId,
+        skillId: createSkillId('skill-old'),
+        name: 'Old Skill',
+        slug: 'old-skill',
+        version: 1,
+        files: undefined,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [],
+        skillVersionIds: [newSkillVersion.id],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockSkillsPort.getSkillVersion.mockResolvedValue(newSkillVersion);
+      mockSkillsPort.getSkillFiles.mockImplementation(async (id) => {
+        if (id === previousSkillVersionId) return mockFiles;
+        return [];
+      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // Return previously deployed skill WITHOUT files
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [previousSkillVersion],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.claude/skills/new-skill/SKILL.md',
+            content: 'skill content',
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    it('loads files for previously deployed skills', async () => {
+      await useCase.execute(command);
+
+      expect(mockSkillsPort.getSkillFiles).toHaveBeenCalledWith(
+        previousSkillVersion.id,
+      );
+    });
+
+    it('passes skills with loaded files to renderArtifacts', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            skillVersions: expect.arrayContaining([
+              expect.objectContaining({
+                id: newSkillVersion.id,
+                files: [],
+              }),
+              expect.objectContaining({
+                id: previousSkillVersion.id,
+                files: mockFiles,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('ensures no skill version has undefined files before rendering', async () => {
+      await useCase.execute(command);
+
+      const renderCall = mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
+      const skillsWithoutFiles = renderCall.installed.skillVersions.filter(
+        (sv: { files?: unknown }) => sv.files === undefined,
+      );
+
+      expect(skillsWithoutFiles).toHaveLength(0);
+    });
+  });
+
   describe('when deploying with packagesSlugs', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;

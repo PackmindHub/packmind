@@ -1,0 +1,66 @@
+---
+title: 'Change Proposals'
+---
+
+<Info>
+  **Private Beta** — Change Proposals is currently in private beta. Contact
+  Packmind to get access to this feature.
+</Info>
+
+## What are Change Proposals?
+
+Change Proposals enable users to propose modifications to distributed artifacts (standards, commands, skills) directly from their local environment. Once submitted, proposals are reviewed and approved through the Packmind UI, ensuring that changes go through a controlled review process before being applied.
+
+## Submitting Changes with the CLI
+
+Local changes must be made on files rendered by Packmind — these include files in the `.packmind/` directory as well as agent-specific directories such as `.claude/`, `.github/`, `.cursor/`, and others depending on your enabled AI agents (see [Distribute artifacts](/governance/distribution) for the full list).
+
+### View local changes
+
+To see what local changes haven't been submitted yet:
+
+```bash
+packmind-cli diff
+```
+
+### Submit changes
+
+To submit your local changes as a proposal with a justification message:
+
+```bash
+packmind-cli diff --submit -m "Clarify error handling rules for API endpoints"
+```
+
+The message is required when submitting and has a maximum length of 1024 characters. If you omit the `-m` flag in interactive mode, an editor will open for you to write the message.
+
+### Include already-submitted changes
+
+To view all local changes, including those that have already been submitted:
+
+```bash
+packmind-cli diff --include-submitted
+```
+
+## Important: Pending Changes and the Install Command
+
+<Warning>
+  While changes are pending (not yet accepted), running `packmind-cli install`
+  will overwrite your local modifications with the server version. This will
+  erase any unsubmitted changes.
+</Warning>
+
+Always submit your changes before running `packmind-cli install` to avoid losing your work.
+
+## Reviewing Change Proposals in the UI
+
+Once changes have been submitted, they can be reviewed in the Packmind web interface:
+
+1. Navigate to the **Review changes** module from the sidebar menu
+2. Proposals are grouped by artifact (standard, command, or skill)
+3. Each proposal shows the modification type and a diff view highlighting additions and removals
+4. Review each proposal and choose to **accept** or **dismiss** it
+5. Click **Apply changes** to create a new version of the artifact with the accepted changes
+
+## Conflict Management
+
+If a new version of an artifact is published while a change proposal is still pending, the proposal becomes outdated. Packmind detects this conflict automatically — the proposal will be marked as conflicting and cannot be applied as-is. The submitter needs to rebase their changes on the latest version and submit a new proposal.

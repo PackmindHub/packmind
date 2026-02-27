@@ -1,0 +1,51 @@
+---
+title: 'Import existing content from Confluence, Notion and more'
+---
+
+## Why import from your knowledge base?
+
+Teams often have coding guidelines, conventions, and processes documented in wikis and knowledge bases. With MCP, your AI coding assistant can read directly from these sources and create Packmind artifacts — Standards, Commands, and Skills — without copy-pasting or rewriting content manually.
+
+## What is MCP?
+
+MCP (Model Context Protocol) is an open protocol that lets AI agents connect to external data sources. Packmind leverages MCP to import content from any compatible knowledge base.
+
+## Supported knowledge bases
+
+Any tool that exposes an MCP server works with this workflow. Here are two popular options:
+
+- **Confluence** — Follow the [Atlassian MCP server setup guide](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/) to connect your Confluence workspace.
+- **Notion** — Follow the [Notion MCP setup guide](https://developers.notion.com/guides/mcp/get-started-with-mcp.md) to connect your Notion workspace.
+
+Once MCP is configured in your AI coding assistant, Packmind can access your knowledge base pages directly.
+
+## Demo
+
+Here is an example of importing coding guidelines from Confluence into Packmind:
+
+<iframe
+  src="https://demo.arcade.software/wvhmovpiagPhl7p7nwM6?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
+  className="w-full aspect-video rounded-xl"
+  style={{
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    colorScheme: 'light',
+  }}
+  allowFullScreen
+></iframe>
+
+## What you can import
+
+From your knowledge base pages, you can create three types of Packmind artifacts:
+
+- **Standards** — Convert coding guidelines and conventions pages into enforceable standards that AI agents follow when generating code. Use the `/packmind-create-standard` skill to create one.
+- **Commands** — Turn step-by-step process documentation into reusable commands that automate multi-step workflows. Use the `/packmind-create-command` skill to create one.
+- **Skills** — Create skills from pages containing relevant domain knowledge that enriches AI agent capabilities. Use the `/packmind-create-skill` skill to create one.
+
+## Learn more
+
+- [Standards management](/concepts/standards-management)
+- [Commands management](/concepts/commands-management)
+- [Skills management](/concepts/skills-management)
