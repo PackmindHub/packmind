@@ -296,7 +296,11 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
         header.textContent = proposalText;
 
         const content = document.createElement('div');
-        content.innerHTML = diffHtml;
+        // Convert ++ and -- markers to HTML tags
+        const convertedDiffHtml = diffHtml
+          .replace(/\+\+([^+]+)\+\+/g, '<ins>$1</ins>')
+          .replace(/--([^-]+)--/g, '<del>$1</del>');
+        content.innerHTML = convertedDiffHtml;
         content.style.cssText = 'font-size: 14px;';
 
         // Apply diff styling
@@ -516,6 +520,90 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
       document
         .querySelectorAll('.code-diff-tooltip')
         .forEach((el) => el.remove());
+    };
+  }, [isEditorReady, displayMode]);
+
+  // Convert ++ and -- markers to HTML tags in diff mode
+  useEffect(() => {
+    if (displayMode !== 'diff') return;
+    if (!isEditorReady || !editorRef.current) return;
+
+    const convertMarkersToHtml = () => {
+      const proseMirrorEditor =
+        editorRef.current?.querySelector('.ProseMirror');
+      if (!proseMirrorEditor) return;
+
+      // Get all text nodes
+      const walker = document.createTreeWalker(
+        proseMirrorEditor,
+        NodeFilter.SHOW_TEXT,
+        null,
+      );
+
+      const nodesToProcess: { node: Text; newContent: string }[] = [];
+
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const textNode = node as Text;
+        const text = textNode.textContent || '';
+
+        // Check if the text contains our markers
+        if (text.includes('++') || text.includes('--')) {
+          // Replace ++text++ with <ins>text</ins> and --text-- with <del>text</del>
+          const newContent = text
+            .replace(/\+\+([^+]+)\+\+/g, '<ins>$1</ins>')
+            .replace(/--([^-]+)--/g, '<del>$1</del>');
+
+          if (newContent !== text) {
+            nodesToProcess.push({ node: textNode, newContent });
+          }
+        }
+      }
+
+      // Process all nodes that need updating
+      nodesToProcess.forEach(({ node, newContent }) => {
+        const parent = node.parentElement;
+        if (parent) {
+          // Create a temporary container to parse the HTML
+          const temp = document.createElement('span');
+          temp.innerHTML = newContent;
+
+          // Replace the text node with the parsed HTML nodes
+          const fragment = document.createDocumentFragment();
+          while (temp.firstChild) {
+            fragment.appendChild(temp.firstChild);
+          }
+
+          parent.replaceChild(fragment, node);
+        }
+      });
+    };
+
+    // Wait for content to render, then convert markers
+    const timer = setTimeout(() => {
+      convertMarkersToHtml();
+    }, 600);
+
+    // Set up observer to handle dynamic content changes
+    const proseMirrorEditor = editorRef.current.querySelector('.ProseMirror');
+    if (proseMirrorEditor) {
+      const observer = new MutationObserver(() => {
+        convertMarkersToHtml();
+      });
+
+      observer.observe(proseMirrorEditor, {
+        childList: true,
+        subtree: true,
+      });
+
+      return () => {
+        clearTimeout(timer);
+        observer.disconnect();
+      };
+    }
+
+    return () => {
+      clearTimeout(timer);
     };
   }, [isEditorReady, displayMode]);
 

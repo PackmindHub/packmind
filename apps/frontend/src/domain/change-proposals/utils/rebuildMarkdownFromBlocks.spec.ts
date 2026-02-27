@@ -102,7 +102,7 @@ function hello(name) {
       });
 
       expect(result).toMatch(
-        /<del>Old<\/del>[\s\S]*<ins>New<\/ins>[\s\S]*text(?![\s\S]*<p>)/,
+        /--Old--[\s\S]*\+\+New\+\+[\s\S]*text(?![\s\S]*<p>)/,
       );
     });
 
@@ -118,7 +118,7 @@ function hello(name) {
       });
 
       expect(result).toMatch(
-        /- item 1[\s\S]*- item 2[\s\S]*- <ins>item 3<\/ins>(?![\s\S]*<ul>)(?![\s\S]*<li>)/,
+        /- item 1[\s\S]*- item 2[\s\S]*- \+\+item 3\+\+(?![\s\S]*<ul>)(?![\s\S]*<li>)/,
       );
     });
 
@@ -133,9 +133,7 @@ function hello(name) {
         mode: 'diff',
       });
 
-      expect(result).toMatch(
-        /# .*<del>Old<\/del>.*<ins>New<\/ins>(?![\s\S]*<h1>)/,
-      );
+      expect(result).toMatch(/# .*--Old--.*\+\+New\+\+(?![\s\S]*<h1>)/);
     });
 
     it('includes deleted blocks in output', () => {
@@ -149,7 +147,7 @@ function hello(name) {
         mode: 'diff',
       });
 
-      expect(result).toMatch(/<del>Paragraph to delete<\/del>(?![\s\S]*<p>)/);
+      expect(result).toMatch(/--Paragraph to delete--(?![\s\S]*<p>)/);
     });
 
     it('renders code blocks with line-level diff syntax', () => {
@@ -190,7 +188,7 @@ function hello(name) {
 
       expect(result).toEqual(
         expect.stringMatching(
-          /New content(?![\s\S]*Old content)(?![\s\S]*<ins>)(?![\s\S]*<del>)/,
+          /New content(?![\s\S]*Old content)(?![\s\S]*\+\+)(?![\s\S]*--)/,
         ),
       );
     });
@@ -267,7 +265,7 @@ My list:
       });
 
       expect(result).toMatch(
-        /# My title[\s\S]*<del>There was a line here\.<\/del>[\s\S]*- (?![\s\S]*<h1>)(?![\s\S]*<ul>)(?![\s\S]*<li>)/,
+        /# My title[\s\S]*--There was a line here\.--[\s\S]*- (?![\s\S]*<h1>)(?![\s\S]*<ul>)(?![\s\S]*<li>)/,
       );
     });
   });

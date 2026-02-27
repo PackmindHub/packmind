@@ -14,7 +14,7 @@ describe('markdownBlockDiff', () => {
           content: 'This is my updated content',
           status: 'updated',
           diffContent: expect.stringMatching(
-            /This <del>was<\/del><ins>is<\/ins> my <ins>updated <\/ins>content/,
+            /This --was--\+\+is\+\+ my \+\+updated \+\+content/,
           ),
         }),
       ]);
@@ -32,7 +32,7 @@ describe('markdownBlockDiff', () => {
           level: '#',
           content: 'My updated title',
           status: 'updated',
-          diffContent: expect.stringContaining('<ins>updated </ins>'),
+          diffContent: expect.stringContaining('++updated ++'),
         }),
       ]);
     });
@@ -64,7 +64,7 @@ describe('markdownBlockDiff', () => {
             type: 'paragraph',
             content: 'New paragraph',
             status: 'added',
-            diffContent: '<ins>New paragraph</ins>',
+            diffContent: '++New paragraph++',
           }),
         ]),
       );
@@ -86,7 +86,7 @@ describe('markdownBlockDiff', () => {
             type: 'paragraph',
             content: 'Paragraph to delete',
             status: 'deleted',
-            diffContent: '<del>Paragraph to delete</del>',
+            diffContent: '--Paragraph to delete--',
           }),
         ]),
       );
@@ -136,15 +136,13 @@ My list:
             type: 'paragraph',
             content: 'This is my updated content',
             status: 'updated',
-            diffContent: expect.stringMatching(
-              /<del>was<\/del>.*<ins>is<\/ins>/,
-            ),
+            diffContent: expect.stringMatching(/--was--.*\+\+is\+\+/),
           }),
           expect.objectContaining({
             type: 'paragraph',
             content: 'There was a line here.',
             status: 'deleted',
-            diffContent: '<del>There was a line here.</del>',
+            diffContent: '--There was a line here.--',
           }),
           expect.objectContaining({
             type: 'list',
@@ -209,7 +207,7 @@ My list:
           type: 'code',
           status: 'updated',
           language: 'js',
-          diffContent: expect.stringMatching(/<del>1<\/del>.*<ins>2<\/ins>/),
+          diffContent: expect.stringMatching(/--1--.*\+\+2\+\+/),
           lineDiff: expect.stringContaining('-const x = 1;'),
         }),
       ]);
@@ -264,7 +262,7 @@ function hello(name) {
             expect.objectContaining({ status: 'unchanged' }),
             expect.objectContaining({
               status: 'added',
-              diffContent: '<ins>item 3</ins>',
+              diffContent: '++item 3++',
             }),
           ],
         }),
@@ -285,7 +283,7 @@ function hello(name) {
             expect.objectContaining({ status: 'unchanged' }),
             expect.objectContaining({
               status: 'deleted',
-              diffContent: '<del>item 2</del>',
+              diffContent: '--item 2--',
             }),
             expect.objectContaining({ status: 'unchanged' }),
           ],
@@ -336,7 +334,7 @@ There was a line here.`;
             content: 'This is my updated content',
             status: 'updated',
             diffContent: expect.stringMatching(
-              /<del>was<\/del>.*<ins>is<\/ins>.*<ins>updated <\/ins>/,
+              /--was--.*\+\+is\+\+.*\+\+updated \+\+/,
             ),
           }),
           expect.objectContaining({

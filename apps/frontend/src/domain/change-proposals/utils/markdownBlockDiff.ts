@@ -25,7 +25,7 @@ export interface MarkdownBlock {
   type: BlockType;
   /** Clean content (for unified/plain views) */
   content: string;
-  /** Diff HTML content with <ins>/<del> tags (for tooltips and diff view) */
+  /** Diff content with ++/-- markers (for tooltips and diff view) */
   diffContent: string;
   /** Line-level diff with +/- prefixes for code blocks (for diff mode rendering) */
   lineDiff?: string;
@@ -121,15 +121,16 @@ function extractCleanContent(token: Token): string {
 }
 
 /**
- * Build diff HTML from two text strings using word-level diffing
+ * Build diff markup from two text strings using word-level diffing
+ * Uses custom markdown-style syntax: ++ for additions, -- for deletions
  */
 function buildWordDiffHtml(oldText: string, newText: string): string {
   const changes = diffWords(oldText, newText);
   return changes
     .map((change) => {
-      if (change.added) return `<ins>${escapeHtml(change.value)}</ins>`;
-      if (change.removed) return `<del>${escapeHtml(change.value)}</del>`;
-      return escapeHtml(change.value);
+      if (change.added) return `++${change.value}++`;
+      if (change.removed) return `--${change.value}--`;
+      return change.value;
     })
     .join('');
 }
@@ -279,7 +280,7 @@ function diffListItems(
         result.push({
           ...oldItem,
           status: 'deleted',
-          diffContent: `<del>${escapeHtml(oldItem.content)}</del>`,
+          diffContent: `--${oldItem.content}--`,
         });
       }
     } else {
@@ -289,7 +290,7 @@ function diffListItems(
         result.push({
           ...newItem,
           status: 'added',
-          diffContent: `<ins>${escapeHtml(newItem.content)}</ins>`,
+          diffContent: `++${newItem.content}++`,
         });
       }
     }
@@ -398,12 +399,12 @@ export function parseAndDiffMarkdown(
             result.push({
               ...oldBlock,
               status: 'deleted',
-              diffContent: `<del>${escapeHtml(oldBlock.content)}</del>`,
+              diffContent: `--${oldBlock.content}--`,
             });
             result.push({
               ...newBlock,
               status: 'added',
-              diffContent: `<ins>${escapeHtml(newBlock.content)}</ins>`,
+              diffContent: `++${newBlock.content}++`,
             });
           }
         } else {
@@ -451,7 +452,7 @@ export function parseAndDiffMarkdown(
             result.push({
               ...oldBlock,
               status: 'deleted',
-              diffContent: `<del>${escapeHtml(oldBlock.content)}</del>`,
+              diffContent: `--${oldBlock.content}--`,
             });
           }
 
@@ -460,7 +461,7 @@ export function parseAndDiffMarkdown(
             result.push({
               ...newBlock,
               status: 'added',
-              diffContent: `<ins>${escapeHtml(newBlock.content)}</ins>`,
+              diffContent: `++${newBlock.content}++`,
             });
           }
 
@@ -475,7 +476,7 @@ export function parseAndDiffMarkdown(
           result.push({
             ...oldBlock,
             status: 'deleted',
-            diffContent: `<del>${escapeHtml(oldBlock.content)}</del>`,
+            diffContent: `--${oldBlock.content}--`,
           });
         }
       }
@@ -486,7 +487,7 @@ export function parseAndDiffMarkdown(
         result.push({
           ...newBlock,
           status: 'added',
-          diffContent: `<ins>${escapeHtml(newBlock.content)}</ins>`,
+          diffContent: `++${newBlock.content}++`,
         });
       }
     }

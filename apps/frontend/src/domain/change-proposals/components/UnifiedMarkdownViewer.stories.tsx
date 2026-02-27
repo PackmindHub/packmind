@@ -33,22 +33,6 @@ const meta: Meta<typeof MultiViewer> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const SimpleTextChange: Story = {
-  args: {
-    oldValue: 'This was my content',
-    newValue: 'This is my updated content',
-    proposalNumbers: [1],
-  },
-};
-
-export const MultipleProposals: Story = {
-  args: {
-    oldValue: 'This is my content',
-    newValue: 'This is my updated content',
-    proposalNumbers: [1, 2, 3],
-  },
-};
-
 export const MarkdownFormatting: Story = {
   args: {
     oldValue: `# My title
@@ -90,6 +74,22 @@ function hello() {
 }
 \`\`\``,
     proposalNumbers: [1],
+  },
+};
+
+export const TagChanges: Story = {
+  args: {
+    oldValue: '# My title\n\nThis was my content',
+    newValue: '## My title\n\nThis is my **content**',
+    proposalNumbers: [1],
+  },
+};
+
+export const MultipleProposals: Story = {
+  args: {
+    oldValue: 'This is my content',
+    newValue: 'This is my updated content',
+    proposalNumbers: [1, 2, 3],
   },
 };
 
