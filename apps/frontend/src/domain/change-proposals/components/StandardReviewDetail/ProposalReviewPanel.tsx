@@ -31,7 +31,6 @@ import {
 import { HighlightedText, HighlightedRuleBox } from '../HighlightedContent';
 import { UnifiedMarkdownViewer } from '../UnifiedMarkdownViewer';
 import { useDiffNavigation } from '../../hooks/useDiffNavigation';
-import { renderMarkdownDiffOrPreview } from '../SkillReviewDetail/SkillContent/renderMarkdownDiffOrPreview';
 
 interface ProposalReviewPanelProps {
   selectedStandard: Standard | undefined;
@@ -244,15 +243,24 @@ export function ProposalReviewPanel({
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedStandard.name}
             </PMText>
-            {renderMarkdownDiffOrPreview(
-              isDescriptionDiff,
-              showPreview,
-              payload,
-              selectedStandard.description,
-              {
-                previewPaddingVariant: 'none',
-                defaultPaddingVariant: 'none',
-              },
+            {isDescriptionDiff ? (
+              <UnifiedMarkdownViewer
+                key={showPreview ? 'preview' : 'diff'}
+                oldValue={payload.oldValue}
+                newValue={payload.newValue}
+                proposalNumbers={[
+                  proposalNumberMap.get(reviewingProposal.id) ?? 0,
+                ]}
+                displayMode={showPreview ? 'unified' : 'diff'}
+              />
+            ) : (
+              <MarkdownEditorProvider>
+                <MarkdownEditor
+                  defaultValue={selectedStandard.description}
+                  readOnly
+                  paddingVariant="none"
+                />
+              </MarkdownEditorProvider>
             )}
 
             {/* Rules Section */}
