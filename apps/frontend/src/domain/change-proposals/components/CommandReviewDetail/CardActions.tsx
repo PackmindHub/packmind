@@ -42,9 +42,10 @@ export function CardActions({
     <PMButton
       size="sm"
       variant="outline"
-      colorPalette="green"
       disabled={acceptDisabled}
       onClick={onAccept}
+      color="green.300"
+      borderColor="green.300"
     >
       <LuCheck />
       Accept
@@ -65,8 +66,9 @@ export function CardActions({
       <PMButton
         size="sm"
         variant="outline"
-        colorPalette="red"
         onClick={onDismiss}
+        color="red.300"
+        borderColor="red.300"
       >
         <LuX />
         Dismiss

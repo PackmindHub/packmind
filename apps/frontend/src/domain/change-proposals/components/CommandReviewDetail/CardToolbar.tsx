@@ -27,7 +27,7 @@ export function CardToolbar({
 }: Readonly<CardToolbarProps>) {
   return (
     <PMHStack justifyContent="space-between" alignItems="center">
-      <PMButton size="sm" variant="outline" onClick={onShowInFile}>
+      <PMButton size="sm" variant="secondary" onClick={onShowInFile}>
         <LuArrowUpRight />
         Show in file
       </PMButton>

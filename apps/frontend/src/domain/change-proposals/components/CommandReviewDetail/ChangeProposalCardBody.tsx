@@ -61,7 +61,7 @@ export function ChangeProposalCardBody({
       {!isEditing && (
         <>
           <PMSeparator borderColor="border.tertiary" />
-          <PMVStack p={4}>
+          <PMVStack p={4} alignItems="stretch">
             <CardToolbar
               poolStatus={poolStatus}
               isOutdated={isOutdated}
