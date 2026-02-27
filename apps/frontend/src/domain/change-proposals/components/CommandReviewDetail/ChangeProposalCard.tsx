@@ -8,7 +8,7 @@ import { ChangeProposalCardBody } from './ChangeProposalCardBody';
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
 const borderColorByStatus: Record<PoolStatus, string> = {
-  pending: 'border.muted',
+  pending: 'border.tertiary',
   accepted: 'green.300',
   dismissed: 'red.300',
 };

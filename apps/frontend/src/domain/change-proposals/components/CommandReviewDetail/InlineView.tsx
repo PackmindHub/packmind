@@ -34,7 +34,7 @@ export function InlineView({
       p={3}
       borderRadius="md"
       border="1px solid"
-      borderColor="border.muted"
+      borderColor="border.tertiary"
     >
       {renderDiffText(oldValue, newValue)}
     </PMBox>

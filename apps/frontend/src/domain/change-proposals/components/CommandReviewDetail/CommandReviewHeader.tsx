@@ -36,7 +36,7 @@ export function CommandReviewHeader({
       zIndex={10}
       bg="bg.panel"
       borderBottom="1px solid"
-      borderColor="border.muted"
+      borderColor="border.tertiary"
       px={6}
       py={3}
     >

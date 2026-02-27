@@ -15,7 +15,7 @@ export function EditableProposalField({
 }: Readonly<EditableProposalFieldProps>) {
   if (isDescriptionField) {
     return (
-      <PMBox border="1px solid" borderColor="border.muted" borderRadius="md">
+      <PMBox border="1px solid" borderColor="border.tertiary" borderRadius="md">
         <MilkdownProvider>
           <MarkdownEditor
             defaultValue={value}

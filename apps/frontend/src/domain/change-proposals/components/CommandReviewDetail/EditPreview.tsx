@@ -18,7 +18,7 @@ export function EditPreview({ value }: Readonly<EditPreviewProps>) {
       </PMText>
       <PMBox
         border="1px solid"
-        borderColor="border.muted"
+        borderColor="border.tertiary"
         borderRadius="md"
         p={3}
       >
