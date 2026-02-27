@@ -1,21 +1,33 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { UnifiedMarkdownViewer } from './UnifiedMarkdownViewer';
+import {
+  UnifiedMarkdownViewer,
+  UnifiedMarkdownViewerProps,
+} from './UnifiedMarkdownViewer';
 
-const meta: Meta<typeof UnifiedMarkdownViewer> = {
+const MultiViewer: React.FunctionComponent<
+  Omit<UnifiedMarkdownViewerProps, 'displayMode'>
+> = (props) => {
+  return (
+    <>
+      <h1>Unified view</h1>
+      <UnifiedMarkdownViewer {...props} displayMode={'unified'} />
+
+      <h1>Diff view</h1>
+      <UnifiedMarkdownViewer {...props} displayMode={'diff'} />
+
+      <h1>Plain view</h1>
+      <UnifiedMarkdownViewer {...props} displayMode={'plain'} />
+    </>
+  );
+};
+
+const meta: Meta<typeof MultiViewer> = {
   title: 'ChangeProposals/UnifiedMarkdownViewer',
-  component: UnifiedMarkdownViewer,
+  component: MultiViewer,
   parameters: {
     layout: 'padded',
   },
   tags: ['autodocs'],
-  argTypes: {
-    displayMode: {
-      control: 'radio',
-      options: ['unified', 'diff', 'plain'],
-      description: 'Display mode for the markdown viewer',
-      value: 'unified',
-    },
-  },
 };
 
 export default meta;

@@ -6,7 +6,7 @@ import {
   IDiffMarkdownEditorProps,
 } from '../../../shared/components/editor/DiffMarkdownEditor';
 
-interface UnifiedMarkdownViewerProps {
+export interface UnifiedMarkdownViewerProps {
   oldValue: string;
   newValue: string;
   proposalNumbers: number[];
