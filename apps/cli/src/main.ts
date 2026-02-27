@@ -18,6 +18,7 @@ import { diffCommand } from './infra/commands/DiffCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
 import { initCommand } from './infra/commands/InitCommand';
+import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -106,6 +107,7 @@ const app = subcommands({
     skills: skillsCommand,
     standards: standardsCommand,
     uninstall: uninstallCommand,
+    update: updateCommand,
     whoami: whoamiCommand,
   },
 });
