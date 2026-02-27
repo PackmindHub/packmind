@@ -620,7 +620,6 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
   return (
     <PMBox data-milkdown-padding-variant={paddingVariant} css={markdownDiffCss}>
       <Milkdown />
-      <pre>{editorContent}</pre>
     </PMBox>
   );
 };
