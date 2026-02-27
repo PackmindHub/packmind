@@ -20,6 +20,7 @@ import {
   PMFeatureFlag,
   DEFAULT_FEATURE_DOMAIN_MAP,
   CHANGE_PROPOSALS_FEATURE_KEY,
+  ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
   PMLink,
   PMBadge,
 } from '@packmind/ui';
@@ -161,7 +162,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       breadcrumbComponent={<RecipeVersionHistoryHeader recipe={recipe} />}
       titleAction={
         <PMFeatureFlag
-          featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+          featureKeys={[ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY]}
           featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
           userEmail={user?.email}
         >
@@ -270,7 +271,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               content: (
                 <>
                   <PMFeatureFlag
-                    featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+                    featureKeys={[ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY]}
                     featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
                     userEmail={user?.email}
                   >
