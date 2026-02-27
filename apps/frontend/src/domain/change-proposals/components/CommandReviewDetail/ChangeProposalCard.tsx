@@ -7,12 +7,6 @@ import { ChangeProposalCardBody } from './ChangeProposalCardBody';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
-const borderColorByStatus: Record<PoolStatus, string> = {
-  pending: 'border.tertiary',
-  accepted: 'green.300',
-  dismissed: 'red.300',
-};
-
 interface ChangeProposalCardProps {
   proposal: ChangeProposalWithConflicts;
   proposalNumber: number;
@@ -62,7 +56,7 @@ export function ChangeProposalCard({
     <PMAccordion.Item
       value={proposal.id}
       border="1px solid"
-      borderColor={borderColorByStatus[poolStatus]}
+      borderColor="border.tertiary"
       borderRadius="md"
       width="full"
     >
