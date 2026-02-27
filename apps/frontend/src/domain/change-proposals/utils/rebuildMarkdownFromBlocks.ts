@@ -40,8 +40,15 @@ export function rebuildMarkdownFromBlocks(
 
     switch (block.type) {
       case 'heading':
-        // Always use markdown syntax for headings
-        parts.push(`${block.level || '#'} ${content}\n`);
+        // For headings, check if diffContent already includes level markers
+        // (happens when heading level changes, e.g., "#--text--\n##++text++")
+        if (options.useDiffContent && content.startsWith('#')) {
+          // diffContent already includes heading levels, use as-is
+          parts.push(`${content}\n`);
+        } else {
+          // Normal heading or unified mode, prepend level
+          parts.push(`${block.level || '#'} ${content}\n`);
+        }
         break;
 
       case 'paragraph':

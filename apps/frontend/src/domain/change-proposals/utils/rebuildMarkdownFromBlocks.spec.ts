@@ -136,6 +136,20 @@ function hello(name) {
       expect(result).toMatch(/# .*--Old--.*\+\+New\+\+(?![\s\S]*<h1>)/);
     });
 
+    it('renders heading level changes without duplicating level markers', () => {
+      const oldValue = '# My title';
+      const newValue = '## My title';
+
+      const blocks = parseAndDiffMarkdown(oldValue, newValue);
+      const result = rebuildMarkdownFromBlocks(blocks, {
+        includeDeleted: true,
+        useDiffContent: true,
+        mode: 'diff',
+      });
+
+      expect(result).toBe('# --My title--\n## ++My title++\n');
+    });
+
     it('includes deleted blocks in output', () => {
       const oldValue = '# Title\n\nParagraph to delete';
       const newValue = '# Title';

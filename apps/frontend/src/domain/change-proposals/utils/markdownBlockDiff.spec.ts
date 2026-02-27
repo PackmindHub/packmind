@@ -385,5 +385,39 @@ New paragraph
         ]),
       );
     });
+
+    it('detects heading level changes', () => {
+      const oldValue = '# My title';
+      const newValue = '## My title';
+
+      const result = parseAndDiffMarkdown(oldValue, newValue);
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          type: 'heading',
+          level: '##',
+          content: 'My title',
+          status: 'updated',
+          diffContent: '# --My title--\n## ++My title++',
+        }),
+      ]);
+    });
+
+    it('detects heading level and content changes', () => {
+      const oldValue = '# Old title';
+      const newValue = '## New title';
+
+      const result = parseAndDiffMarkdown(oldValue, newValue);
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          type: 'heading',
+          level: '##',
+          content: 'New title',
+          status: 'updated',
+          diffContent: '# --Old title--\n## ++New title++',
+        }),
+      ]);
+    });
   });
 });

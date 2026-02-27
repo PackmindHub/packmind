@@ -373,26 +373,47 @@ export function parseAndDiffMarkdown(
               });
             } else {
               // Text blocks (heading, paragraph, code)
-              const diffHtml = buildWordDiffHtml(
-                oldBlock.content,
-                newBlock.content,
-              );
+              // For headings with different levels, mark as complete replacement
+              if (
+                oldBlock.type === 'heading' &&
+                newBlock.type === 'heading' &&
+                oldBlock.level !== newBlock.level
+              ) {
+                result.push({
+                  ...newBlock,
+                  status: 'updated',
+                  diffContent: `${oldBlock.level || '#'} --${oldBlock.content}--\n${newBlock.level || '#'} ++${newBlock.content}++`,
+                });
+              } else {
+                // For headings with same level, include level markers in diff
+                // For other blocks, just use content
+                const oldText =
+                  oldBlock.type === 'heading'
+                    ? `${oldBlock.level || '#'} ${oldBlock.content}`
+                    : oldBlock.content;
+                const newText =
+                  newBlock.type === 'heading'
+                    ? `${newBlock.level || '#'} ${newBlock.content}`
+                    : newBlock.content;
 
-              // For code blocks, also compute line-level diff
-              const updatedBlock: MarkdownBlock = {
-                ...newBlock,
-                status: 'updated',
-                diffContent: diffHtml,
-              };
+                const diffHtml = buildWordDiffHtml(oldText, newText);
 
-              if (newBlock.type === 'code') {
-                updatedBlock.lineDiff = buildLineDiff(
-                  oldBlock.content,
-                  newBlock.content,
-                );
+                // For code blocks, also compute line-level diff
+                const updatedBlock: MarkdownBlock = {
+                  ...newBlock,
+                  status: 'updated',
+                  diffContent: diffHtml,
+                };
+
+                if (newBlock.type === 'code') {
+                  updatedBlock.lineDiff = buildLineDiff(
+                    oldBlock.content,
+                    newBlock.content,
+                  );
+                }
+
+                result.push(updatedBlock);
               }
-
-              result.push(updatedBlock);
             }
           } else {
             // Different block types - mark as deleted and added
@@ -424,26 +445,47 @@ export function parseAndDiffMarkdown(
                 items: diffListItems(oldBlock.items, newBlock.items),
               });
             } else {
-              const diffHtml = buildWordDiffHtml(
-                oldBlock.content,
-                newBlock.content,
-              );
+              // For headings with different levels, mark as complete replacement
+              if (
+                oldBlock.type === 'heading' &&
+                newBlock.type === 'heading' &&
+                oldBlock.level !== newBlock.level
+              ) {
+                result.push({
+                  ...newBlock,
+                  status: 'updated',
+                  diffContent: `${oldBlock.level || '#'} --${oldBlock.content}--\n${newBlock.level || '#'} ++${newBlock.content}++`,
+                });
+              } else {
+                // For headings with same level, include level markers in diff
+                // For other blocks, just use content
+                const oldText =
+                  oldBlock.type === 'heading'
+                    ? `${oldBlock.level || '#'} ${oldBlock.content}`
+                    : oldBlock.content;
+                const newText =
+                  newBlock.type === 'heading'
+                    ? `${newBlock.level || '#'} ${newBlock.content}`
+                    : newBlock.content;
 
-              // For code blocks, also compute line-level diff
-              const updatedBlock: MarkdownBlock = {
-                ...newBlock,
-                status: 'updated',
-                diffContent: diffHtml,
-              };
+                const diffHtml = buildWordDiffHtml(oldText, newText);
 
-              if (newBlock.type === 'code') {
-                updatedBlock.lineDiff = buildLineDiff(
-                  oldBlock.content,
-                  newBlock.content,
-                );
+                // For code blocks, also compute line-level diff
+                const updatedBlock: MarkdownBlock = {
+                  ...newBlock,
+                  status: 'updated',
+                  diffContent: diffHtml,
+                };
+
+                if (newBlock.type === 'code') {
+                  updatedBlock.lineDiff = buildLineDiff(
+                    oldBlock.content,
+                    newBlock.content,
+                  );
+                }
+
+                result.push(updatedBlock);
               }
-
-              result.push(updatedBlock);
             }
           }
 
