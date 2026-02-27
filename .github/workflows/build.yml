@@ -279,6 +279,101 @@ jobs:
             dist/apps/cli-executables/packmind-cli-windows-x64.exe
           retention-days: 30
 
+  cli-e2e-tests:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Generate tsconfig
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+
+      - run: ./node_modules/.bin/nx run packmind-cli:build
+
+      - name: Fix CLI artifacts permissions
+        run: |
+          chmod +x dist/apps/cli/main.cjs || true
+          chmod -R +r dist/apps/cli/
+          ls -la dist/apps/cli/
+
+      - name: Start docker compose for CLI E2E tests
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: |
+            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
+            echo "Docker version:"
+            docker --version
+            docker compose version
+            echo "Starting containers..."
+            docker compose up -d --wait-timeout 300
+            echo "Docker compose up completed. Container status:"
+            docker compose ps -a
+            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+          CI: 'true'
+          APP_WEB_URL: http://frontend:4200
+
+      - name: Wait for services to be ready
+        env:
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+        run: |
+          echo "Waiting for API to be ready..."
+          timeout 60 bash -c 'until curl -f http://localhost:4200/api/health > /dev/null 2>&1; do sleep 2; done' || true
+
+      - name: Run CLI E2E tests
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
+        run: ./node_modules/.bin/nx test cli-e2e-tests
+
+      - name: Collect Docker container logs
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+        run: |
+          mkdir -p docker-logs-cli-e2e
+          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
+          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
+          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
+            echo "Collecting logs for $container..."
+            docker logs "$container" > "docker-logs-cli-e2e/${container}.log" 2>&1 || true
+          done
+          echo "Collected logs:"
+          ls -la docker-logs-cli-e2e/ || echo "No logs collected"
+
+      - name: Upload Docker logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs-cli-e2e-${{ github.run_number }}-${{ github.sha }}
+          path: docker-logs-cli-e2e/
+          if-no-files-found: ignore
+
+      - name: Cleanup Docker containers
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+        run: docker compose down -v --remove-orphans
+
   e2e-tests:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: 15
