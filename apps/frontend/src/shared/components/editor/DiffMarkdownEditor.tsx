@@ -155,9 +155,9 @@ export const DiffMarkdownEditor: React.FC<IDiffMarkdownEditorProps> = ({
         editorRef.current?.querySelector('.ProseMirror');
       if (!proseMirrorEditor) return;
 
-      // Get all text-containing elements
+      // Get all text-containing elements (exclude li since content is in p inside)
       const contentElements = proseMirrorEditor.querySelectorAll(
-        'p, h1, h2, h3, h4, h5, h6, li, code',
+        'p, h1, h2, h3, h4, h5, h6, code',
       );
 
       if (contentElements.length === 0) return;
