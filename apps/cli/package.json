@@ -36,6 +36,7 @@
   "dependencies": {
     "@types/inquirer": "^9.0.9",
     "inquirer": "^13.0.2",
-    "zod": "^4.3.5"
+    "zod": "^4.3.5",
+    "semver": "^6.3.1"
   }
 }
