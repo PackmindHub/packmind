@@ -55,7 +55,8 @@
           "concepts/commands-management",
           "concepts/skills-management",
           "concepts/packages-management",
-          "concepts/artifact-rendering"
+          "concepts/artifact-rendering",
+          "tools/import-from-knowledge-base"
         ]
       },
       {
