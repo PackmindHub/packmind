@@ -18,13 +18,7 @@ export function FocusedView({ recipe, proposal }: Readonly<FocusedViewProps>) {
   if (isNameChange) {
     return (
       <PMBox>
-        <PMBox
-          border="2px dashed"
-          borderColor="orange.300"
-          borderRadius="md"
-          p={4}
-          mb={4}
-        >
+        <PMBox border="none" borderRadius="md" p={4} mb={4}>
           <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
             Name change
           </PMText>
@@ -52,12 +46,7 @@ export function FocusedView({ recipe, proposal }: Readonly<FocusedViewProps>) {
         <PMHeading size="md" mb={4}>
           {recipe.name}
         </PMHeading>
-        <PMBox
-          border="2px dashed"
-          borderColor="orange.300"
-          borderRadius="md"
-          p={4}
-        >
+        <PMBox border="none" borderRadius="md" p={4}>
           <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
             Instructions change
           </PMText>

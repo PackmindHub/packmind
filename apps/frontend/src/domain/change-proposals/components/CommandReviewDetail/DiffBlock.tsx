@@ -10,14 +10,14 @@ const variantConfig = {
   removed: {
     indicator: '\u2212',
     indicatorColor: 'error' as const,
-    bg: 'red.subtle',
-    borderColor: 'red.200',
+    bg: 'red.500/10',
+    borderColor: 'red.500/30',
   },
   added: {
     indicator: '+',
     indicatorColor: 'success' as const,
-    bg: 'green.subtle',
-    borderColor: 'green.200',
+    bg: 'green.500/10',
+    borderColor: 'green.500/30',
   },
 };
 
@@ -29,33 +29,25 @@ export function DiffBlock({
   const config = variantConfig[variant];
 
   return (
-    <PMHStack
-      gap={0}
-      alignItems="stretch"
-      borderRadius="md"
-      overflow="hidden"
-      border="1px solid"
-      borderColor={config.borderColor}
-    >
-      <PMBox
-        width="28px"
-        flexShrink={0}
-        bg={config.bg}
-        display="flex"
-        alignItems="flex-start"
-        justifyContent="center"
+    <PMHStack gap={2} alignItems="stretch">
+      <PMText
+        fontWeight="bold"
+        fontSize="sm"
+        color={config.indicatorColor}
+        fontFamily="mono"
         pt={2}
+        flexShrink={0}
       >
-        <PMText
-          fontWeight="bold"
-          fontSize="sm"
-          color={config.indicatorColor}
-          fontFamily="mono"
-        >
-          {config.indicator}
-        </PMText>
-      </PMBox>
-      <PMBox flex={1} bg={config.bg} p={3}>
+        {config.indicator}
+      </PMText>
+      <PMBox
+        flex={1}
+        bg={config.bg}
+        borderLeft="2px solid"
+        borderColor={config.borderColor}
+        borderRadius="md"
+        p={3}
+      >
         {isMarkdown ? (
           <PMMarkdownViewer content={value} />
         ) : (
