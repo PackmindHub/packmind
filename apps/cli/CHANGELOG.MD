@@ -1,14 +1,8 @@
-# [Unreleased]
+# [0.19.0] - 2026-02-27
 
 ## Added
 
 - The `diff` command now detects updated rules using similarity matching: when a rule is modified rather than deleted and re-added, it is submitted as an `updateRule` change proposal
-
-## Changed
-
-## Fixed
-
-## Removed
 
 # [0.18.0] - 2026-02-26
 
@@ -218,7 +212,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.18.0...HEAD
+[0.19.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.18.0...release-cli/0.19.0
 [0.18.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.17.0...release-cli/0.18.0
 [0.17.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.1...release-cli/0.17.0
 [0.16.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.0...release-cli/0.16.1
