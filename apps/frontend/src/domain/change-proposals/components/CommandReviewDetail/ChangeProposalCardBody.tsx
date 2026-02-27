@@ -79,14 +79,14 @@ export function ChangeProposalCardBody({
       {proposal.message && (
         <>
           <PMSeparator borderColor="border.tertiary" />
-          <PMVStack p={4}>
+          <PMVStack p={4} alignItems="stretch">
             <ProposalMessage message={proposal.message} />
           </PMVStack>
         </>
       )}
 
       <PMSeparator borderColor="border.tertiary" />
-      <PMVStack p={4}>
+      <PMVStack p={4} alignItems="stretch">
         {isEditing ? (
           <EditView
             proposal={proposal}
