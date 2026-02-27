@@ -12,7 +12,9 @@ export interface ApiContext {
   password: string;
   userId: string;
   organizationId: string;
+  spaceId: string;
   baseUrl: string;
+  authCookie: string; // Auth cookie for making authenticated API calls
 }
 
 /**
@@ -73,7 +75,30 @@ export async function createUserWithApiKey(
     throw new Error('No auth cookie received from signin');
   }
 
-  // Step 3: Generate API key using the auth cookie
+  // Step 3: Get the default space (global space)
+  const spacesResponse = await fetch(
+    `${baseUrl}/api/v0/organizations/${signupData.organization.id}/spaces`,
+    {
+      method: 'GET',
+      headers: {
+        Cookie: cookies,
+      },
+    },
+  );
+
+  if (!spacesResponse.ok) {
+    throw new Error(
+      `Failed to get spaces: ${spacesResponse.status} ${spacesResponse.statusText}`,
+    );
+  }
+
+  const spaces = await spacesResponse.json();
+  const globalSpace = spaces.find((s: { slug: string }) => s.slug === 'global');
+  if (!globalSpace) {
+    throw new Error('No global space found');
+  }
+
+  // Step 4: Generate API key using the auth cookie
   const apiKeyResponse = await fetch(
     `${baseUrl}/api/v0/auth/api-key/generate`,
     {
@@ -100,6 +125,8 @@ export async function createUserWithApiKey(
     password: opts.password,
     userId: signupData.user.id,
     organizationId: signupData.organization.id,
+    spaceId: globalSpace.id,
     baseUrl,
+    authCookie: cookies,
   };
 }

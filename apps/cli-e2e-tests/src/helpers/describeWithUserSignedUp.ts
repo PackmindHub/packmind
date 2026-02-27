@@ -2,6 +2,9 @@
 import stage from 'jest-stage';
 import { ApiContext, createUserWithApiKey } from './apiClient';
 import { createTestUser } from './userFactory';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 export interface UserSignedUpContext {
   apiKey: string;
@@ -9,7 +12,10 @@ export interface UserSignedUpContext {
   password: string;
   userId: string;
   organizationId: string;
+  spaceId: string;
   baseUrl: string;
+  authCookie: string;
+  testDir: string; // Temporary directory for test execution
 }
 
 export interface UserSignedUpOptions {
@@ -68,14 +74,28 @@ export function describeWithUserSignedUp(
         baseUrl: options.baseUrl,
       });
 
+      // Create a temporary directory for this test execution
+      const testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
+
       return {
         apiKey: apiContext.apiKey,
         email: apiContext.email,
         password: apiContext.password,
         userId: apiContext.userId,
         organizationId: apiContext.organizationId,
+        spaceId: apiContext.spaceId,
         baseUrl: apiContext.baseUrl,
+        authCookie: apiContext.authCookie,
+        testDir,
       };
+    });
+
+    // Clean up test directory after all tests
+    afterAll(async () => {
+      const context = await stage();
+      if (context.testDir && fs.existsSync(context.testDir)) {
+        fs.rmSync(context.testDir, { recursive: true, force: true });
+      }
     });
 
     // Pass the stage getter to tests
