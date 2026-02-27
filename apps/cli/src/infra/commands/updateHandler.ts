@@ -83,13 +83,19 @@ export async function fetchLatestVersionFromGitHub(
     );
   }
   const releases = (await res.json()) as GithubRelease[];
-  const cliRelease = releases.find((r) =>
-    r.tag_name?.startsWith('release-cli/'),
-  );
-  if (!cliRelease) {
+  const cliReleases = releases
+    .filter((r) => r.tag_name?.startsWith('release-cli/'))
+    .map((r) => ({
+      ...r,
+      version: r.tag_name.replace('release-cli/', ''),
+    }))
+    .filter((r) => semver.valid(r.version))
+    .sort((a, b) => semver.rcompare(a.version, b.version));
+
+  if (cliReleases.length === 0) {
     throw new Error('No CLI release found on GitHub');
   }
-  return cliRelease.tag_name.replace('release-cli/', '');
+  return cliReleases[0].version;
 }
 
 async function downloadExecutable(
