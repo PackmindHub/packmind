@@ -302,7 +302,7 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
 
-      - run: nx run packmind-cli:build
+      - run: ./node_modules/.bin/nx run packmind-cli:build
 
       - name: Fix CLI artifacts permissions
         run: |
