@@ -26,6 +26,7 @@ export interface IUpdateHandlerDependencies {
   platform: string;
   arch: string;
   fetchFn: typeof fetch;
+  checkOnly?: boolean;
 }
 
 interface GithubRelease {
@@ -204,6 +205,10 @@ export async function updateHandler(
   logInfoConsole(
     `New version available: ${deps.currentVersion} -> ${latestVersion}`,
   );
+
+  if (deps.checkOnly) {
+    return;
+  }
 
   try {
     if (deps.isExecutableMode) {

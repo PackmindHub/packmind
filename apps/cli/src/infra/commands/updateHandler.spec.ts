@@ -220,6 +220,50 @@ describe('updateHandler', () => {
     });
   });
 
+  describe('updateHandler - check-only mode', () => {
+    describe('when an update is available', () => {
+      beforeEach(async () => {
+        deps.checkOnly = true;
+        mockFetch.mockResolvedValue({
+          ok: true,
+          json: async () => ({ version: '0.19.0' }),
+        } as Response);
+
+        await updateHandler(deps);
+      });
+
+      it('logs the available version', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          'New version available: 0.18.0 -> 0.19.0',
+        );
+      });
+
+      it('does not attempt to update', () => {
+        // Only two fetch calls expected: none for download/npm install
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when already up to date', () => {
+      beforeEach(async () => {
+        deps.checkOnly = true;
+        deps.currentVersion = '0.19.0';
+        mockFetch.mockResolvedValue({
+          ok: true,
+          json: async () => ({ version: '0.19.0' }),
+        } as Response);
+
+        await updateHandler(deps);
+      });
+
+      it('reports already up to date', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Already up to date (v0.19.0)',
+        );
+      });
+    });
+  });
+
   describe('updateHandler - executable mode', () => {
     it('fetches from GitHub releases API', async () => {
       deps.isExecutableMode = true;
