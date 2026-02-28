@@ -65,9 +65,39 @@ type SkillChangeProposalPayloadMap = {
   >;
 };
 
+export type NewStandardPayload = {
+  name: string;
+  description: string;
+  scope: string | null;
+  rules: Array<{ content: string }>;
+};
+
+export type NewCommandPayload = {
+  name: string;
+  content: string;
+};
+
+export type NewSkillPayload = {
+  name: string;
+  description: string;
+  prompt: string;
+  license?: string;
+  compatibility?: string;
+  metadata?: Record<string, string>;
+  allowedTools?: string;
+  files?: Array<Omit<SkillFile, 'id' | 'skillVersionId'>>;
+};
+
+type CreationChangeProposalPayloadMap = {
+  [ChangeProposalType.newStandard]: NewStandardPayload;
+  [ChangeProposalType.newCommand]: NewCommandPayload;
+  [ChangeProposalType.newSkill]: NewSkillPayload;
+};
+
 type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
   StandardChangeProposalPayloadMap &
-  SkillChangeProposalPayloadMap;
+  SkillChangeProposalPayloadMap &
+  CreationChangeProposalPayloadMap;
 
 export type ChangeProposalPayload<
   T extends ChangeProposalType = ChangeProposalType,
