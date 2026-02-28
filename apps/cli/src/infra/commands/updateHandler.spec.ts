@@ -238,8 +238,11 @@ describe('updateHandler', () => {
         );
       });
 
+      it('exits with code 1', () => {
+        expect(processExitSpy).toHaveBeenCalledWith(1);
+      });
+
       it('does not attempt to update', () => {
-        // Only two fetch calls expected: none for download/npm install
         expect(mockFetch).toHaveBeenCalledTimes(1);
       });
     });

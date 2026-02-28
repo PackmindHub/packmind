@@ -207,6 +207,7 @@ export async function updateHandler(
   );
 
   if (deps.checkOnly) {
+    process.exit(1);
     return;
   }
 

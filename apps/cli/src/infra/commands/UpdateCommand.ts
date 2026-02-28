@@ -9,13 +9,13 @@ export const updateCommand = command({
   name: 'update',
   description: 'Update packmind-cli to the latest version',
   args: {
-    checkUpdate: flag({
-      long: 'check-update',
+    check: flag({
+      long: 'check',
       description:
         'Only check if a newer version is available without performing the update',
     }),
   },
-  handler: async ({ checkUpdate }) => {
+  handler: async ({ check }) => {
     await updateHandler({
       currentVersion: CLI_VERSION,
       isExecutableMode: hasEmbeddedWasmFiles(),
@@ -23,7 +23,7 @@ export const updateCommand = command({
       platform: process.platform,
       arch: process.arch,
       fetchFn: fetch,
-      checkOnly: checkUpdate,
+      checkOnly: check,
     });
   },
 });
