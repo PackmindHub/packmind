@@ -29,11 +29,11 @@ export interface IUpdateHandlerDependencies {
   checkOnly?: boolean;
 }
 
-interface GithubRelease {
+interface IGithubRelease {
   tag_name: string;
 }
 
-interface NpmPackageInfo {
+interface INpmPackageInfo {
   version: string;
 }
 
@@ -65,7 +65,7 @@ export async function fetchLatestVersionFromNpm(
       `Failed to fetch from npm registry: ${res.status} ${res.statusText}`,
     );
   }
-  const data = (await res.json()) as NpmPackageInfo;
+  const data = (await res.json()) as INpmPackageInfo;
   return data.version;
 }
 
@@ -83,7 +83,7 @@ export async function fetchLatestVersionFromGitHub(
       `Failed to fetch from GitHub API: ${res.status} ${res.statusText}`,
     );
   }
-  const releases = (await res.json()) as GithubRelease[];
+  const releases = (await res.json()) as IGithubRelease[];
   const cliReleases = releases
     .filter((r) => r.tag_name?.startsWith('release-cli/'))
     .map((r) => ({
