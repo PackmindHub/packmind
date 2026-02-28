@@ -31,9 +31,16 @@ type SkillChangeProposalArtefactIdMap = {
   [ChangeProposalType.deleteSkillFile]: SkillId;
 };
 
+type CreationChangeProposalArtefactIdMap = {
+  [ChangeProposalType.newStandard]: null;
+  [ChangeProposalType.newCommand]: null;
+  [ChangeProposalType.newSkill]: null;
+};
+
 type ChangeProposalArtefactIdMap = CommandChangeProposalArtefactIdMap &
   StandardChangeProposalArtefactIdMap &
-  SkillChangeProposalArtefactIdMap;
+  SkillChangeProposalArtefactIdMap &
+  CreationChangeProposalArtefactIdMap;
 
 export type ChangeProposalArtefactId<
   T extends ChangeProposalType = ChangeProposalType,
