@@ -156,7 +156,7 @@
     "@sentry/nestjs": "^9.40.0",
     "@sentry/node": "^9.40.0",
     "@sentry/react": "^9.40.0",
-    "@storybook/addon-themes": "^9.0.16",
+    "@storybook/addon-themes": "^10.2.13",
     "@tanstack/react-query": "^5.81.5",
     "@types/bcrypt": "^5.0.2",
     "@types/diff": "^7.0.2",
