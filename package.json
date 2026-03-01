@@ -38,7 +38,7 @@
     "@eslint/js": "^9.39.2",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
-    "@nx/devkit": "21.6.8",
+    "@nx/devkit": "22.5.3",
     "@nx/esbuild": "21.6.8",
     "@nx/eslint": "21.6.8",
     "@nx/eslint-plugin": "21.6.8",
