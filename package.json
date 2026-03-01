@@ -201,7 +201,7 @@
     "validator": "^13.15.15",
     "web-tree-sitter": "^0.25.0",
     "winston": "^3.17.0",
-    "yaml": "^2.8.0"
+    "yaml": "^2.8.2"
   },
   "overrides": {
     "fast-xml-parser": "5.3.6"
