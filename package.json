@@ -150,7 +150,7 @@
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/typeorm": "^11.0.0",
     "@react-router/fs-routes": "^7.12.0",
-    "@react-router/node": "^7.12.0",
+    "@react-router/node": "^7.13.1",
     "@react-router/serve": "^7.12.0",
     "@replit/codemirror-lang-csharp": "^6.2.0",
     "@sentry/nestjs": "^9.40.0",
