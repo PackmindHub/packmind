@@ -1,0 +1,4 @@
+packages:
+  - 'packages/*'
+  - 'packages/linter-ast/parsers/*'
+  - 'apps/*'

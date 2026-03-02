@@ -40,5 +40,8 @@ compose.env
 .mcp.json
 apps/mcp-server/key.pem
 
+# Lock files (using pnpm-lock.yaml instead)
+package-lock.json
+
 # Git worktrees
 .worktrees/

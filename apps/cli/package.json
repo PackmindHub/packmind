@@ -36,6 +36,7 @@
   "dependencies": {
     "@types/inquirer": "^9.0.9",
     "inquirer": "^13.0.2",
+    "minimatch": "^9.0.0",
     "zod": "^4.3.5"
   }
 }
