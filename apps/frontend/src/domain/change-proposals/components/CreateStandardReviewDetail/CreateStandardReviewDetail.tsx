@@ -1,13 +1,6 @@
 import { useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import {
-  PMBox,
-  PMButton,
-  PMHStack,
-  PMSpinner,
-  PMText,
-  PMVStack,
-} from '@packmind/ui';
+import { useParams } from 'react-router';
+import { PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   OrganizationId,
@@ -21,6 +14,13 @@ import {
   useApplyCreationChangeProposalsMutation,
 } from '../../api/queries/ChangeProposalsQueries';
 import { routes } from '../../../../shared/utils/routes';
+import { useCreationProposalCache } from '../../hooks/useCreationProposalCache';
+import { SubmissionBanner } from '../SubmissionBanner';
+import { ReviewActionButtons } from '../ReviewActionButtons';
+import {
+  ProposalDetailEmpty,
+  ProposalDetailLoading,
+} from '../ProposalDetailPlaceholder';
 
 interface CreateStandardReviewDetailProps {
   proposalId: string;
@@ -36,7 +36,6 @@ export function CreateStandardReviewDetail({
   const { organization } = useAuthContext();
   const { spaceId, space } = useCurrentSpace();
   const { orgSlug: orgSlugParam } = useParams<{ orgSlug: string }>();
-  const navigate = useNavigate();
 
   const orgSlug = orgSlugProp ?? orgSlugParam;
   const spaceSlug = spaceSlugProp ?? space?.slug;
@@ -54,25 +53,27 @@ export function CreateStandardReviewDetail({
       c.artefactType === 'standards' && c.proposalId === proposalId,
   );
 
+  const { displayedProposal, submittedState, setSubmittedState } =
+    useCreationProposalCache<StandardCreationProposalOverview>(proposal);
+
   const handleAccept = useCallback(async () => {
-    if (!organization?.id || !spaceId) return;
-
-    const response = await applyMutation.mutateAsync({
-      organizationId: organization.id as OrganizationId,
-      spaceId: spaceId as SpaceId,
-      accepted: [proposalId as ChangeProposalId],
-      rejected: [],
-    });
-
-    if (orgSlug && spaceSlug) {
+    if (!organization?.id || !spaceId || !orgSlug || !spaceSlug) return;
+    try {
+      const response = await applyMutation.mutateAsync({
+        organizationId: organization.id as OrganizationId,
+        spaceId: spaceId as SpaceId,
+        accepted: [proposalId as ChangeProposalId],
+        rejected: [],
+      });
       const createdStandardId = response.created.standards[0];
-      if (createdStandardId) {
-        navigate(
-          routes.space.toStandard(orgSlug, spaceSlug, createdStandardId),
-        );
-      } else {
-        navigate(routes.space.toReviewChanges(orgSlug, spaceSlug));
-      }
+      setSubmittedState({
+        type: 'accepted',
+        artefactUrl: createdStandardId
+          ? routes.space.toStandard(orgSlug, spaceSlug, createdStandardId)
+          : routes.space.toStandards(orgSlug, spaceSlug),
+      });
+    } catch {
+      // error handled by mutation onError callback
     }
   }, [
     organization?.id,
@@ -81,60 +82,30 @@ export function CreateStandardReviewDetail({
     orgSlug,
     spaceSlug,
     applyMutation,
-    navigate,
+    setSubmittedState,
   ]);
 
   const handleReject = useCallback(async () => {
     if (!organization?.id || !spaceId) return;
-
-    await applyMutation.mutateAsync({
-      organizationId: organization.id as OrganizationId,
-      spaceId: spaceId as SpaceId,
-      accepted: [],
-      rejected: [proposalId as ChangeProposalId],
-    });
-
-    if (orgSlug && spaceSlug) {
-      navigate(routes.space.toReviewChanges(orgSlug, spaceSlug));
+    try {
+      await applyMutation.mutateAsync({
+        organizationId: organization.id as OrganizationId,
+        spaceId: spaceId as SpaceId,
+        accepted: [],
+        rejected: [proposalId as ChangeProposalId],
+      });
+      setSubmittedState({ type: 'rejected' });
+    } catch {
+      // error handled by mutation onError callback
     }
-  }, [
-    organization?.id,
-    spaceId,
-    proposalId,
-    orgSlug,
-    spaceSlug,
-    applyMutation,
-    navigate,
-  ]);
+  }, [organization?.id, spaceId, proposalId, applyMutation, setSubmittedState]);
 
-  if (isLoading) {
-    return (
-      <PMBox
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        minH="300px"
-        gridColumn="span 2"
-      >
-        <PMSpinner />
-      </PMBox>
-    );
+  if (isLoading && !displayedProposal) {
+    return <ProposalDetailLoading />;
   }
 
-  if (!proposal) {
-    return (
-      <PMBox
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        minH="300px"
-        gridColumn="span 2"
-      >
-        <PMText color="secondary">
-          This proposal has already been processed or does not exist.
-        </PMText>
-      </PMBox>
-    );
+  if (!displayedProposal) {
+    return <ProposalDetailEmpty />;
   }
 
   return (
@@ -149,53 +120,47 @@ export function CreateStandardReviewDetail({
         gap={4}
         minH="44px"
       >
-        <PMHStack gap={2}>
-          <PMButton
-            size="sm"
-            colorPalette="red"
-            variant="outline"
-            disabled={applyMutation.isPending}
-            onClick={handleReject}
-          >
-            Reject
-          </PMButton>
-          <PMButton
-            size="sm"
-            colorPalette="green"
-            disabled={applyMutation.isPending}
-            onClick={handleAccept}
-          >
-            {applyMutation.isPending ? 'Applying...' : 'Accept'}
-          </PMButton>
-        </PMHStack>
+        {!submittedState && (
+          <ReviewActionButtons
+            onAccept={handleAccept}
+            onReject={handleReject}
+            isPending={applyMutation.isPending}
+          />
+        )}
       </PMBox>
       <PMVStack gap={6} align="stretch" p={6}>
+        {submittedState && (
+          <SubmissionBanner
+            submittedState={submittedState}
+            artefactLabel="standard"
+          />
+        )}
         <PMText fontSize="lg" fontWeight="semibold">
-          {proposal.name}
+          {displayedProposal.name}
         </PMText>
-        {proposal.scope && (
+        {displayedProposal.scope && (
           <PMVStack gap={1} align="stretch">
             <PMText fontSize="sm" fontWeight="semibold" color="secondary">
               Scope
             </PMText>
-            <PMText fontSize="sm">{proposal.scope}</PMText>
+            <PMText fontSize="sm">{displayedProposal.scope}</PMText>
           </PMVStack>
         )}
-        {proposal.description && (
+        {displayedProposal.description && (
           <PMVStack gap={1} align="stretch">
             <PMText fontSize="sm" fontWeight="semibold" color="secondary">
               Description
             </PMText>
-            <PMText fontSize="sm">{proposal.description}</PMText>
+            <PMText fontSize="sm">{displayedProposal.description}</PMText>
           </PMVStack>
         )}
-        {proposal.rules.length > 0 && (
+        {displayedProposal.rules.length > 0 && (
           <PMVStack gap={2} align="stretch">
             <PMText fontSize="sm" fontWeight="semibold" color="secondary">
               Rules
             </PMText>
             <PMVStack gap={2} align="stretch">
-              {proposal.rules.map((rule, index) => (
+              {displayedProposal.rules.map((rule, index) => (
                 <PMHStack key={index} gap={2} align="flex-start">
                   <PMText fontSize="sm" color="secondary" flexShrink={0}>
                     {index + 1}.

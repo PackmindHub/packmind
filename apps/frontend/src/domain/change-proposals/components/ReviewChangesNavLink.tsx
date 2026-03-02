@@ -21,7 +21,8 @@ export function ReviewChangesNavLink({
   const totalArtefacts = groupedProposals
     ? groupedProposals.standards.length +
       groupedProposals.commands.length +
-      groupedProposals.skills.length
+      groupedProposals.skills.length +
+      groupedProposals.creations.length
     : 0;
 
   return (
