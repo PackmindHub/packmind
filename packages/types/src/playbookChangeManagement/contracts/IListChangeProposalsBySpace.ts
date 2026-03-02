@@ -9,7 +9,7 @@ export type ListChangeProposalsBySpaceCommand = PackmindCommand & {
 };
 
 export type ListProposalsOverview<T extends StandardId | RecipeId | SkillId> = {
-  artefactId: T;
+  artefactId: T | null;
   name: string;
   changeProposalCount: number;
 };
