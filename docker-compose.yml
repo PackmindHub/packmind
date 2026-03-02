@@ -19,7 +19,7 @@ services:
         set -eu;
         node scripts/select-tsconfig.mjs;
         mkdir -p /nx-sock && chmod 777 /nx-sock;
-        npx nx daemon --start;
+        ./node_modules/.bin/nx daemon --start;
         for i in $$(seq 1 30); do
           [ -S /nx-sock/d.sock ] && break;
           [ $$i -eq 30 ] && exit 1;
@@ -98,8 +98,10 @@ services:
       - |
         apk add --no-cache python3 git make g++ py3-setuptools && \
         ln -sf /usr/bin/python3 /usr/bin/python && \
+        corepack enable && \
+        corepack prepare pnpm@10.11.0 --activate && \
         rm -rf node_modules/.cache && \
-        npm install --unsafe-perm && \
+        pnpm install --frozen-lockfile && \
         chmod -R +x node_modules/.bin 2>/dev/null || true
     volumes:
       - .:/packmind
@@ -119,18 +121,18 @@ services:
         if [ -n "${CI:-}" ]; then
           echo "[migrations] CI mode -> WITHOUT daemon (verbose, no cache)"
           export NX_DAEMON=false
-          exec npx nx run migrations:run --verbose --skip-nx-cache
+          exec ./node_modules/.bin/nx run migrations:run --verbose --skip-nx-cache
         fi
         echo "[migrations] /nx-sock:"; ls -l /nx-sock || true
         echo "[migrations] Checking daemon status..."
-        if npx nx daemon --status >/dev/null 2>&1; then
+        if ./node_modules/.bin/nx daemon --status >/dev/null 2>&1; then
           echo "[migrations] Daemon OK -> WITH daemon (verbose, no cache)"
           exec env DEBUG="nx:*" NX_PERF_LOGGING=true NODE_OPTIONS="--trace-uncaught" \
-            npx nx run migrations:run --verbose --skip-nx-cache
+            ./node_modules/.bin/nx run migrations:run --verbose --skip-nx-cache
         else
           echo "[migrations] Daemon NOT reachable -> WITHOUT daemon (verbose, no cache)"
           exec env DEBUG="nx:*" NX_PERF_LOGGING=true NODE_OPTIONS="--trace-uncaught" NX_DAEMON=false \
-            npx nx run migrations:run --no-daemon --verbose --skip-nx-cache
+            ./node_modules/.bin/nx run migrations:run --no-daemon --verbose --skip-nx-cache
         fi
       '
     environment:
@@ -167,15 +169,15 @@ services:
         if [ -n "${CI:-}" ]; then
           echo "[frontend] CI mode -> WITHOUT daemon"
           export NX_DAEMON=false
-          exec npx nx run frontend:dev --host=0.0.0.0
+          exec ./node_modules/.bin/nx run frontend:dev --host=0.0.0.0
         fi
         echo "[frontend] /nx-sock:"; ls -l /nx-sock || true
-        if npx nx daemon --status >/dev/null 2>&1; then
+        if ./node_modules/.bin/nx daemon --status >/dev/null 2>&1; then
           echo "[frontend] Daemon OK -> WITH daemon"
-          exec npx nx run frontend:dev --host=0.0.0.0
+          exec ./node_modules/.bin/nx run frontend:dev --host=0.0.0.0
         else
           echo "[frontend] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run frontend:dev --host=0.0.0.0 --no-daemon
+          exec NX_DAEMON=false ./node_modules/.bin/nx run frontend:dev --host=0.0.0.0 --no-daemon
         fi
       '
     environment:
@@ -221,15 +223,15 @@ services:
         if [ -n "${CI:-}" ]; then
           echo "[backend] CI mode -> WITHOUT daemon"
           export NX_DAEMON=false
-          exec npx nx run api:serve:development --skip-nx-cache
+          exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         fi
         echo "[backend] /nx-sock:"; ls -l /nx-sock || true
-        if npx nx daemon --status >/dev/null 2>&1; then
+        if ./node_modules/.bin/nx daemon --status >/dev/null 2>&1; then
           echo "[backend] Daemon OK -> WITH daemon"
-          exec npx nx run api:serve:development --skip-nx-cache
+          exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         else
           echo "[backend] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run api:serve:development --skip-nx-cache
+          exec NX_DAEMON=false ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         fi
       '
     environment:
@@ -278,15 +280,15 @@ services:
         if [ -n "${CI:-}" ]; then
           echo "[mcp] CI mode -> WITHOUT daemon"
           export NX_DAEMON=false
-          exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+          exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         fi
         echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
-        if npx nx daemon --status >/dev/null 2>&1; then
+        if ./node_modules/.bin/nx daemon --status >/dev/null 2>&1; then
           echo "[mcp] Daemon OK -> WITH daemon"
-          exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+          exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         else
           echo "[mcp] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose --no-daemon
+          exec NX_DAEMON=false ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose --no-daemon
         fi
       '
     environment:
@@ -324,7 +326,7 @@ services:
     ports:
       - '9323:9323'
     working_dir: /packmind/apps/e2e-tests
-    entrypoint: npm run e2e
+    entrypoint: ./node_modules/.bin/nx run e2e-tests:e2e
     environment:
       BASE_URL: http://frontend:4200
       CI: 'true'

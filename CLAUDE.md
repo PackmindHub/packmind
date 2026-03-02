@@ -28,8 +28,8 @@ The following commands apply for both NX apps and packages (use `nx show project
 - Test a project: `nx test <project-name>`
 - Lint a project: `nx lint <project-name>`
 - Build a project: `nx build <project-name>`
-- Test affected projects: `npm run test:staged`
-- Lint affected projects: `npm run lint:staged`
+- Test affected projects: `pnpm run test:staged`
+- Lint affected projects: `pnpm run lint:staged`
 
 ## Code Quality
 

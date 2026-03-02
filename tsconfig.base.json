@@ -19,6 +19,8 @@
     "baseUrl": ".",
     "paths": {
       "@packmind/accounts": ["packages/accounts/src/index.ts"],
+      "@packmind/accounts/test": ["packages/accounts/test/index.ts"],
+      "@packmind/accounts/test/*": ["packages/accounts/test/*"],
       "@packmind/amplitude": ["packages/amplitude/src/index.ts"],
       "@packmind/analytics/types": ["packages/analytics/src/types/index.ts"],
       "@packmind/assets": ["packages/assets/src/index.ts"],
@@ -33,6 +35,8 @@
       "@packmind/editions": ["packages/editions/src/index.ts"],
       "@packmind/frontend": ["packages/frontend/src/index.ts"],
       "@packmind/git": ["packages/git/src/index.ts"],
+      "@packmind/git/test": ["packages/git/test/index.ts"],
+      "@packmind/git/test/*": ["packages/git/test/*"],
       "@packmind/integration-tests": [
         "packages/integration-tests/src/index.ts"
       ],
@@ -48,12 +52,21 @@
       "@packmind/playbook-change-management/test": [
         "packages/playbook-change-management/test/index.ts"
       ],
+      "@packmind/playbook-change-management/test/*": [
+        "packages/playbook-change-management/test/*"
+      ],
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
+      "@packmind/recipes/test/*": ["packages/recipes/test/*"],
       "@packmind/skills": ["packages/skills/src/index.ts"],
+      "@packmind/skills/test": ["packages/skills/test/index.ts"],
+      "@packmind/skills/test/*": ["packages/skills/test/*"],
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
+      "@packmind/spaces/test/*": ["packages/spaces/test/*"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
+      "@packmind/standards/test": ["packages/standards/test/index.ts"],
+      "@packmind/standards/test/*": ["packages/standards/test/*"],
       "@packmind/test-utils": ["packages/test-utils/src/index.ts"],
       "@packmind/types": ["packages/types/src/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"],
