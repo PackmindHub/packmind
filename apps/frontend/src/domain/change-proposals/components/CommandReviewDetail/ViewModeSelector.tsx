@@ -6,8 +6,7 @@ interface ViewModeSelectorProps {
   onViewModeChange: (mode: ViewMode) => void;
 }
 
-const viewModeItems = [
-  { label: 'Focused', value: 'focused' },
+const viewModeItems: { label: string; value: ViewMode }[] = [
   { label: 'Diff', value: 'diff' },
   { label: 'Inline', value: 'inline' },
 ];
@@ -23,7 +22,12 @@ export function ViewModeSelector({
       onValueChange={(e) => onViewModeChange(e.value as ViewMode)}
     >
       <PMSegmentGroup.Indicator />
-      <PMSegmentGroup.Items items={viewModeItems} />
+      {viewModeItems.map((item) => (
+        <PMSegmentGroup.Item key={item.value} value={item.value}>
+          <PMSegmentGroup.ItemText>{item.label}</PMSegmentGroup.ItemText>
+          <PMSegmentGroup.ItemHiddenInput />
+        </PMSegmentGroup.Item>
+      ))}
     </PMSegmentGroup.Root>
   );
 }

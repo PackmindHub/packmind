@@ -1,42 +1,95 @@
-import { PMBox } from '@packmind/ui';
-import { MilkdownProvider } from '@milkdown/react';
-import { DiffMarkdownEditor } from '../../../../shared/components/editor/DiffMarkdownEditor';
-import { renderDiffText } from '../../utils/renderDiffText';
+import { useMemo } from 'react';
+import { PMBox, PMHeading, PMMarkdownViewer, PMText } from '@packmind/ui';
+import { ChangeProposalType, Recipe } from '@packmind/types';
+import { ChangeProposalWithConflicts } from '../../types';
+import { buildDiffSections } from '../../utils/buildDiffSections';
+import { DiffBlock } from './DiffBlock';
 
 interface InlineViewProps {
-  oldValue: string;
-  newValue: string;
-  isDescriptionField: boolean;
+  recipe: Recipe;
+  proposal: ChangeProposalWithConflicts;
 }
 
-export function InlineView({
-  oldValue,
-  newValue,
-  isDescriptionField,
-}: Readonly<InlineViewProps>) {
-  if (isDescriptionField) {
+export function InlineView({ recipe, proposal }: Readonly<InlineViewProps>) {
+  const isDescriptionChange =
+    proposal.type === ChangeProposalType.updateCommandDescription;
+  const isNameChange = proposal.type === ChangeProposalType.updateCommandName;
+
+  const payload = proposal.payload as { oldValue: string; newValue: string };
+
+  const sections = useMemo(
+    () =>
+      isDescriptionChange
+        ? buildDiffSections(payload.oldValue, payload.newValue)
+        : [],
+    [isDescriptionChange, payload.oldValue, payload.newValue],
+  );
+
+  if (isNameChange) {
     return (
       <PMBox>
-        <MilkdownProvider>
-          <DiffMarkdownEditor
-            oldValue={oldValue}
-            newValue={newValue}
-            proposalNumbers={[]}
-            paddingVariant="none"
-          />
-        </MilkdownProvider>
+        <PMBox borderRadius="md" p={4} mb={4}>
+          <PMBox mb={3}>
+            <PMText fontSize="xs" fontWeight="semibold" color="secondary">
+              Name change
+            </PMText>
+          </PMBox>
+          {payload.newValue ? (
+            <DiffBlock
+              value={payload.newValue}
+              variant="added"
+              isMarkdown={false}
+            />
+          ) : (
+            <DiffBlock
+              value={payload.oldValue}
+              variant="removed"
+              isMarkdown={false}
+            />
+          )}
+        </PMBox>
+        <PMMarkdownViewer content={recipe.content} />
       </PMBox>
     );
   }
 
-  return (
-    <PMBox
-      p={3}
-      borderRadius="md"
-      border="1px solid"
-      borderColor="border.tertiary"
-    >
-      {renderDiffText(oldValue, newValue)}
-    </PMBox>
-  );
+  if (isDescriptionChange) {
+    return (
+      <PMBox>
+        <PMBox mb={2}>
+          <PMHeading size="md">{recipe.name}</PMHeading>
+        </PMBox>
+        {sections.map((section, index) =>
+          section.type === 'unchanged' ? (
+            <PMMarkdownViewer key={index} content={section.value} />
+          ) : (
+            <PMBox
+              key={index}
+              borderRadius="md"
+              border="1px dashed"
+              borderColor="border.tertiary"
+              p={4}
+              my={2}
+            >
+              {section.newValue ? (
+                <DiffBlock
+                  value={section.newValue}
+                  variant="added"
+                  isMarkdown={true}
+                />
+              ) : (
+                <DiffBlock
+                  value={section.oldValue}
+                  variant="removed"
+                  isMarkdown={true}
+                />
+              )}
+            </PMBox>
+          ),
+        )}
+      </PMBox>
+    );
+  }
+
+  return null;
 }

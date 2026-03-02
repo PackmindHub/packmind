@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { PMBox, PMHeading, PMMarkdownViewer, PMText } from '@packmind/ui';
 import { ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
+import { buildDiffSections } from '../../utils/buildDiffSections';
 import { DiffBlock } from './DiffBlock';
 
 interface FocusedViewProps {
@@ -14,6 +16,14 @@ export function FocusedView({ recipe, proposal }: Readonly<FocusedViewProps>) {
   const isNameChange = proposal.type === ChangeProposalType.updateCommandName;
 
   const payload = proposal.payload as { oldValue: string; newValue: string };
+
+  const sections = useMemo(
+    () =>
+      isDescriptionChange
+        ? buildDiffSections(payload.oldValue, payload.newValue)
+        : [],
+    [isDescriptionChange, payload.oldValue, payload.newValue],
+  );
 
   if (isNameChange) {
     return (
@@ -48,25 +58,37 @@ export function FocusedView({ recipe, proposal }: Readonly<FocusedViewProps>) {
         <PMBox mb={2}>
           <PMHeading size="md">{recipe.name}</PMHeading>
         </PMBox>
-        <PMBox borderRadius="md" p={4}>
-          <PMBox mb={3}>
-            <PMText fontSize="xs" fontWeight="semibold" color="secondary">
-              Instructions change
-            </PMText>
-          </PMBox>
-          <DiffBlock
-            value={payload.oldValue}
-            variant="removed"
-            isMarkdown={true}
-          />
-          <PMBox mt={2}>
-            <DiffBlock
-              value={payload.newValue}
-              variant="added"
-              isMarkdown={true}
-            />
-          </PMBox>
-        </PMBox>
+        {sections.map((section, index) =>
+          section.type === 'unchanged' ? (
+            <PMMarkdownViewer key={index} content={section.value} />
+          ) : (
+            <PMBox
+              key={index}
+              borderRadius="md"
+              border="1px dashed"
+              borderColor="border.tertiary"
+              p={4}
+              my={2}
+            >
+              {section.oldValue && (
+                <DiffBlock
+                  value={section.oldValue}
+                  variant="removed"
+                  isMarkdown={true}
+                />
+              )}
+              {section.newValue && (
+                <PMBox mt={section.oldValue ? 2 : 0}>
+                  <DiffBlock
+                    value={section.newValue}
+                    variant="added"
+                    isMarkdown={true}
+                  />
+                </PMBox>
+              )}
+            </PMBox>
+          ),
+        )}
       </PMBox>
     );
   }

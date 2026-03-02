@@ -1,6 +1,8 @@
 import { PMButton, PMHStack } from '@packmind/ui';
 import { LuArrowUpRight } from 'react-icons/lu';
+import { ViewMode } from '../../hooks/useCommandReviewState';
 import { CardActions } from './CardActions';
+import { ViewModeSelector } from './ViewModeSelector';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -8,29 +10,46 @@ interface CardToolbarProps {
   poolStatus: PoolStatus;
   isOutdated: boolean;
   isBlockedByConflict: boolean;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
   onAccept: () => void;
   onDismiss: () => void;
   onUndo: () => void;
-  onShowInFile: () => void;
 }
 
 export function CardToolbar({
   poolStatus,
   isOutdated,
   isBlockedByConflict,
+  viewMode,
+  onViewModeChange,
   onEdit,
   onAccept,
   onDismiss,
   onUndo,
-  onShowInFile,
 }: Readonly<CardToolbarProps>) {
+  const isFocused = viewMode === 'focused';
+  const isExpanded = !isFocused;
+
   return (
     <PMHStack justifyContent="space-between" alignItems="center">
-      <PMButton size="sm" variant="secondary" onClick={onShowInFile}>
-        <LuArrowUpRight />
-        Show in file
-      </PMButton>
+      <PMHStack gap={2} alignItems="center">
+        <PMButton
+          size="sm"
+          variant={isFocused ? 'secondary' : 'solid'}
+          onClick={() => onViewModeChange(isFocused ? 'diff' : 'focused')}
+        >
+          <LuArrowUpRight />
+          {isFocused ? 'Show in file' : 'Focused'}
+        </PMButton>
+        {isExpanded && (
+          <ViewModeSelector
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+          />
+        )}
+      </PMHStack>
       <CardActions
         poolStatus={poolStatus}
         isOutdated={isOutdated}

@@ -66,11 +66,12 @@ export function ChangeProposalCardBody({
               poolStatus={poolStatus}
               isOutdated={isOutdated}
               isBlockedByConflict={isBlockedByConflict}
+              viewMode={viewMode}
+              onViewModeChange={onViewModeChange}
               onEdit={onEdit}
               onAccept={onAccept}
               onDismiss={onDismiss}
               onUndo={onUndo}
-              onShowInFile={() => onViewModeChange('focused')}
             />
           </PMVStack>
         </>
@@ -97,20 +98,16 @@ export function ChangeProposalCardBody({
             onSaveAndAccept={() => onSaveAndAccept(proposal.id)}
             isModified={isEditModified}
           />
-        ) : viewMode === 'diff' ? (
+        ) : viewMode === 'focused' ? (
           <DiffView
             oldValue={payload.oldValue}
             newValue={payload.newValue}
             isDescriptionField={isDescriptionField}
           />
-        ) : viewMode === 'focused' ? (
+        ) : viewMode === 'diff' ? (
           <FocusedView recipe={recipe} proposal={proposal} />
         ) : (
-          <InlineView
-            oldValue={payload.oldValue}
-            newValue={payload.newValue}
-            isDescriptionField={isDescriptionField}
-          />
+          <InlineView recipe={recipe} proposal={proposal} />
         )}
       </PMVStack>
     </PMVStack>
