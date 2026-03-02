@@ -7,7 +7,7 @@
  */
 
 // Helper to convert TypeScript paths to Jest moduleNameMapper format
-export function pathsToModuleNameMapper(
+function pathsToModuleNameMapper(
   paths: Record<string, string[]>,
   prefix: string,
 ) {
@@ -26,7 +26,7 @@ export function pathsToModuleNameMapper(
 /**
  * Standard SWC Jest transformer configuration for TypeScript projects
  */
-export const swcTransformConfig = {
+const swcTransformConfig = {
   jsc: {
     parser: { syntax: 'typescript' as const, tsx: false },
     target: 'es2022' as const,
@@ -36,7 +36,7 @@ export const swcTransformConfig = {
 /**
  * SWC Jest transformer configuration with additional options for better compatibility
  */
-export const swcTransformConfigWithDefineFields = {
+const swcTransformConfigWithDefineFields = {
   jsc: {
     parser: { syntax: 'typescript' as const, tsx: false },
     target: 'es2022' as const,
@@ -54,7 +54,7 @@ export const swcTransformConfigWithDefineFields = {
 /**
  * SWC Jest transformer configuration with decorator support (without extra transforms)
  */
-export const swcTransformConfigWithDecoratorsOnly = {
+const swcTransformConfigWithDecoratorsOnly = {
   jsc: {
     parser: {
       syntax: 'typescript' as const,
@@ -72,7 +72,7 @@ export const swcTransformConfigWithDecoratorsOnly = {
 /**
  * SWC Jest transformer configuration for NestJS projects with decorator support
  */
-export const swcTransformConfigWithDecorators = {
+const swcTransformConfigWithDecorators = {
   jsc: {
     parser: {
       syntax: 'typescript' as const,
@@ -94,47 +94,45 @@ export const swcTransformConfigWithDecorators = {
 /**
  * Standard transform configuration for @swc/jest
  */
-export const swcTransform = {
+const swcTransform = {
   '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfig],
 };
 
 /**
  * Transform configuration for @swc/jest with better compatibility
  */
-export const swcTransformWithDefineFields = {
+const swcTransformWithDefineFields = {
   '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDefineFields],
 };
 
 /**
  * Transform configuration for @swc/jest with decorators only
  */
-export const swcTransformWithDecoratorsOnly = {
+const swcTransformWithDecoratorsOnly = {
   '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDecoratorsOnly],
 };
 
 /**
  * Transform configuration for @swc/jest with NestJS decorator support
  */
-export const swcTransformWithDecorators = {
+const swcTransformWithDecorators = {
   '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDecorators],
 };
 
 /**
  * Standard transformIgnorePatterns for node packages
  */
-export const standardTransformIgnorePatterns = [
-  '/node_modules/(?!slug).+\\.js$',
-];
+const standardTransformIgnorePatterns = ['/node_modules/(?!slug).+\\.js$'];
 
 /**
  * Standard moduleFileExtensions for TypeScript projects
  */
-export const standardModuleFileExtensions = ['ts', 'js', 'html'];
+const standardModuleFileExtensions = ['ts', 'js', 'html'];
 
 /**
  * SWC Jest transformer configuration for React/TSX projects
  */
-export const swcTransformConfigTsx = {
+const swcTransformConfigTsx = {
   jsc: {
     parser: {
       syntax: 'typescript' as const,
@@ -156,13 +154,30 @@ export const swcTransformConfigTsx = {
 /**
  * Transform configuration for @swc/jest with TSX support (React components)
  */
-export const swcTransformTsx = {
+const swcTransformTsx = {
   '^.+\\.[tj]sx?$': ['@swc/jest', swcTransformConfigTsx],
 };
 
 /**
  * Transform ignore patterns for frontend with Chakra UI, framer-motion, etc.
  */
-export const frontendTransformIgnorePatterns = [
+const frontendTransformIgnorePatterns = [
   '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
 ];
+
+module.exports = {
+  pathsToModuleNameMapper,
+  swcTransformConfig,
+  swcTransformConfigWithDefineFields,
+  swcTransformConfigWithDecoratorsOnly,
+  swcTransformConfigWithDecorators,
+  swcTransform,
+  swcTransformWithDefineFields,
+  swcTransformWithDecoratorsOnly,
+  swcTransformWithDecorators,
+  standardTransformIgnorePatterns,
+  standardModuleFileExtensions,
+  swcTransformConfigTsx,
+  swcTransformTsx,
+  frontendTransformIgnorePatterns,
+};

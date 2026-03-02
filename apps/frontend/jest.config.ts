@@ -1,10 +1,8 @@
-import { pathsToModuleNameMapper } from 'ts-jest';
+const { pathsToModuleNameMapper } = require('ts-jest');
 
-// Use require instead of import to avoid TypeScript compilation issues
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { compilerOptions } = require('../../tsconfig.base.effective.json');
 
-export default {
+module.exports = {
   preset: '../../jest.preset.ts',
   displayName: 'frontend',
   rootDir: '.',

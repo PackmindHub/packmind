@@ -97,4 +97,10 @@ export default [
     // Override or add rules here
     rules: {},
   },
+  {
+    files: ['**/jest.config.ts'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 ];

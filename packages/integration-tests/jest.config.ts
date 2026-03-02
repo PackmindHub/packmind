@@ -1,13 +1,11 @@
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import { compilerOptions } from '../../tsconfig.base.effective.json';
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import {
+const { compilerOptions } = require('../../tsconfig.base.effective.json');
+const {
   pathsToModuleNameMapper,
   swcTransformWithDecorators,
   standardModuleFileExtensions,
-} from '../../jest-utils';
+} = require('../../jest-utils.ts');
 
-export default {
+module.exports = {
   displayName: '@packmind/integration-tests',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',

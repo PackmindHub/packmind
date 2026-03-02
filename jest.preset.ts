@@ -1,4 +1,4 @@
-export const nxPreset = {
+const nxPreset = {
   // This is one of the patterns that jest finds by default https://jestjs.io/docs/configuration#testmatch-arraystring
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   resolver: '@nx/jest/plugins/resolver',
@@ -58,3 +58,5 @@ export const nxPreset = {
   // Force garbage collection between test files (requires --expose-gc flag)
   // This is handled in the test script
 };
+
+module.exports = { nxPreset };
