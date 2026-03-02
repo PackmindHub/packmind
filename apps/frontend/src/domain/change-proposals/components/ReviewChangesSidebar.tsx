@@ -1,16 +1,23 @@
 import { NavLink, useParams } from 'react-router';
 import {
   PMAlert,
-  PMBadge,
   PMBox,
+  PMFlex,
   PMHStack,
   PMLink,
   PMText,
   PMVerticalNav,
   PMVerticalNavSection,
+  PMVStack,
 } from '@packmind/ui';
 import { ListChangeProposalsBySpaceResponse } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
+
+const artefactTypeLabels: Record<string, string> = {
+  commands: 'Command',
+  standards: 'Standard',
+  skills: 'Skill',
+};
 
 function ArtefactNavLink({
   artefactId,
@@ -27,6 +34,8 @@ function ArtefactNavLink({
   orgSlug: string;
   spaceSlug: string;
 }) {
+  const typeLabel = artefactTypeLabels[artefactType] ?? artefactType;
+
   return (
     <NavLink
       key={artefactId}
@@ -46,21 +55,42 @@ function ArtefactNavLink({
           display="flex"
           alignItems="center"
           width="full"
+          py={2}
         >
           <PMHStack width="full" justifyContent="space-between" gap={2}>
-            <PMText
-              fontSize="sm"
-              fontWeight={isActive ? 'bold' : 'medium'}
-              overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
+            <PMVStack
+              gap={0}
               flex={1}
+              overflow="hidden"
+              alignItems="flex-start"
             >
-              {name}
-            </PMText>
-            <PMBadge colorPalette="blue" size="sm">
+              <PMText
+                fontSize="sm"
+                fontWeight={isActive ? 'bold' : 'medium'}
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+              >
+                {name}
+              </PMText>
+              <PMText fontSize="xs" opacity={0.5} fontWeight="normal">
+                {typeLabel}
+              </PMText>
+            </PMVStack>
+            <PMFlex
+              alignItems="center"
+              justifyContent="center"
+              bg="yellow.800"
+              color="yellow.200"
+              borderRadius="full"
+              minWidth="24px"
+              height="24px"
+              fontSize="xs"
+              fontWeight="bold"
+              flexShrink={0}
+            >
               {changeProposalCount}
-            </PMBadge>
+            </PMFlex>
           </PMHStack>
         </PMLink>
       )}
@@ -84,39 +114,42 @@ export function ReviewChangesSidebar({
     return null;
   }
 
-  const sectionConfig = [
-    { key: 'commands', title: 'Commands', items: groupedProposals.commands },
-    {
-      key: 'standards',
-      title: 'Standards',
-      items: groupedProposals.standards,
-    },
-    { key: 'skills', title: 'Skills', items: groupedProposals.skills },
-  ] as const;
-
-  const sections = sectionConfig
-    .filter(({ items }) => items.length > 0)
-    .map(({ key, title, items }) => (
-      <PMVerticalNavSection
-        key={key}
-        title={title}
-        navEntries={items.map((item) => (
-          <ArtefactNavLink
-            key={item.artefactId}
-            artefactId={item.artefactId}
-            name={item.name}
-            changeProposalCount={item.changeProposalCount}
-            artefactType={key}
-            orgSlug={orgSlug}
-            spaceSlug={spaceSlug}
-          />
-        ))}
-      />
-    ));
+  const allItems = [
+    ...groupedProposals.commands.map((item) => ({
+      ...item,
+      artefactType: 'commands' as const,
+    })),
+    ...groupedProposals.standards.map((item) => ({
+      ...item,
+      artefactType: 'standards' as const,
+    })),
+    ...groupedProposals.skills.map((item) => ({
+      ...item,
+      artefactType: 'skills' as const,
+    })),
+  ];
 
   return (
     <PMVerticalNav logo={false} showLogoContainer={false} width="270px">
-      {sections}
+      <PMVerticalNavSection
+        title="CHANGES TO REVIEW"
+        navEntries={allItems.map((item) => (
+          <PMBox
+            key={item.artefactId}
+            borderBottom="1px solid"
+            borderColor="{colors.border.tertiary}"
+          >
+            <ArtefactNavLink
+              artefactId={item.artefactId}
+              name={item.name}
+              changeProposalCount={item.changeProposalCount}
+              artefactType={item.artefactType}
+              orgSlug={orgSlug}
+              spaceSlug={spaceSlug}
+            />
+          </PMBox>
+        ))}
+      />
       <PMBox p={4} mt="auto">
         <PMAlert.Root status="info">
           <PMAlert.Indicator />
