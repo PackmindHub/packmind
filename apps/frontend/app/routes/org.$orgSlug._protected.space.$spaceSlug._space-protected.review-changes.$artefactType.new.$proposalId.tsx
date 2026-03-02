@@ -1,5 +1,6 @@
 import { useParams } from 'react-router';
 import { CreateCommandReviewDetail } from '../../src/domain/change-proposals/components/CreateCommandReviewDetail';
+import { CreateStandardReviewDetail } from '../../src/domain/change-proposals/components/CreateStandardReviewDetail';
 
 export default function ReviewChangesCreationDetailRouteModule() {
   const { artefactType, proposalId, orgSlug, spaceSlug } = useParams<{
@@ -9,14 +10,29 @@ export default function ReviewChangesCreationDetailRouteModule() {
     spaceSlug: string;
   }>();
 
-  if (!proposalId || artefactType !== 'commands') return null;
+  if (!proposalId) return null;
 
-  return (
-    <CreateCommandReviewDetail
-      key={proposalId}
-      proposalId={proposalId}
-      orgSlug={orgSlug}
-      spaceSlug={spaceSlug}
-    />
-  );
+  if (artefactType === 'commands') {
+    return (
+      <CreateCommandReviewDetail
+        key={proposalId}
+        proposalId={proposalId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    );
+  }
+
+  if (artefactType === 'standards') {
+    return (
+      <CreateStandardReviewDetail
+        key={proposalId}
+        proposalId={proposalId}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    );
+  }
+
+  return null;
 }
