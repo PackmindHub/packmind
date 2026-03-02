@@ -445,14 +445,27 @@ describe('ChangeProposalService', () => {
         null as unknown as string,
       );
 
-      beforeEach(() => {
-        repository.findBySpaceId.mockResolvedValue([createCommandProposal]);
-      });
-
       it('groups createCommand proposals under null key in commands', async () => {
+        repository.findBySpaceId.mockResolvedValue([createCommandProposal]);
+
         const result = await service.groupProposalsByArtefact(spaceId);
 
         expect(result.commands.get(null)).toBe(1);
+      });
+
+      it('accumulates multiple createCommand proposals under the same null key', async () => {
+        const anotherCreateCommandProposal = createProposal(
+          ChangeProposalType.createCommand,
+          null as unknown as string,
+        );
+        repository.findBySpaceId.mockResolvedValue([
+          createCommandProposal,
+          anotherCreateCommandProposal,
+        ]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(null)).toBe(2);
       });
     });
 
