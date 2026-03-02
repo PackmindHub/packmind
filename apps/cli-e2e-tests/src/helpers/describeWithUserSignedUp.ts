@@ -6,7 +6,11 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-export interface UserSignedUpContext {
+export type WithTempSpaceContext = {
+  testDir: string; // Temporary directory for test execution
+};
+
+export type UserSignedUpContext = WithTempSpaceContext & {
   apiKey: string;
   email: string;
   password: string;
@@ -15,22 +19,47 @@ export interface UserSignedUpContext {
   spaceId: string;
   baseUrl: string;
   authCookie: string;
-  testDir: string; // Temporary directory for test execution
-}
+};
 
-export interface UserSignedUpOptions {
-  email?: string;
-  password?: string;
-  baseUrl?: string;
-}
+export type UserSignedUpOptions = {
+  email: string;
+  password: string;
+  baseUrl: string;
+};
 
-function getDefaultOptions(): Required<UserSignedUpOptions> {
+function getDefaultOptions(): UserSignedUpOptions {
   const testUser = createTestUser();
   return {
     email: testUser.email,
     password: testUser.password,
     baseUrl: 'http://localhost:4200',
   };
+}
+
+export function describeWithTempSpace(
+  description: string,
+  tests: (getContext: () => Promise<WithTempSpaceContext>) => void,
+): void {
+  describe(description, () => {
+    let testDir: string;
+
+    stage(async (): Promise<WithTempSpaceContext> => {
+      // Create a temporary directory for this test execution
+      testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
+
+      return { testDir };
+    });
+
+    // Clean up test directory after all tests
+    afterEach(async () => {
+      if (testDir && fs.existsSync(testDir)) {
+        fs.rmSync(testDir, { recursive: true, force: true });
+      }
+    });
+
+    // Pass the stage getter to tests
+    tests(async () => stage());
+  });
 }
 
 /**
@@ -61,42 +90,37 @@ function getDefaultOptions(): Required<UserSignedUpOptions> {
 export function describeWithUserSignedUp(
   description: string,
   tests: (getContext: () => Promise<UserSignedUpContext>) => void,
-  userOptions?: UserSignedUpOptions,
+  userOptions?: Partial<UserSignedUpOptions>,
 ): void {
-  describe(description, () => {
-    const options = { ...getDefaultOptions(), ...userOptions };
+  describeWithTempSpace(description, () => {
+    let options: UserSignedUpOptions;
 
     // Set up user context using jest-stage
-    stage(async (): Promise<UserSignedUpContext> => {
-      const apiContext: ApiContext = await createUserWithApiKey({
-        email: options.email,
-        password: options.password,
-        baseUrl: options.baseUrl,
-      });
-
-      // Create a temporary directory for this test execution
-      const testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
-
-      return {
-        apiKey: apiContext.apiKey,
-        email: apiContext.email,
-        password: apiContext.password,
-        userId: apiContext.userId,
-        organizationId: apiContext.organizationId,
-        spaceId: apiContext.spaceId,
-        baseUrl: apiContext.baseUrl,
-        authCookie: apiContext.authCookie,
+    stage(
+      async ({
         testDir,
-      };
-    });
+      }: WithTempSpaceContext): Promise<UserSignedUpContext> => {
+        options = { ...getDefaultOptions(), ...userOptions };
 
-    // Clean up test directory after all tests
-    afterAll(async () => {
-      const context = await stage();
-      if (context.testDir && fs.existsSync(context.testDir)) {
-        fs.rmSync(context.testDir, { recursive: true, force: true });
-      }
-    });
+        const apiContext: ApiContext = await createUserWithApiKey({
+          email: options.email,
+          password: options.password,
+          baseUrl: options.baseUrl,
+        });
+
+        return {
+          apiKey: apiContext.apiKey,
+          email: apiContext.email,
+          password: apiContext.password,
+          userId: apiContext.userId,
+          organizationId: apiContext.organizationId,
+          spaceId: apiContext.spaceId,
+          baseUrl: apiContext.baseUrl,
+          authCookie: apiContext.authCookie,
+          testDir,
+        };
+      },
+    );
 
     // Pass the stage getter to tests
     tests(async () => stage());

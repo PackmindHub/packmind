@@ -15,6 +15,35 @@ export interface RunCliResult {
 }
 
 /**
+ * Parse command string into arguments, respecting quoted strings.
+ * Example: 'diff --submit -m "My message"' -> ['diff', '--submit', '-m', 'My message']
+ */
+function parseCommandArgs(command: string): string[] {
+  const args: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (const char of command) {
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ' ' && !inQuotes) {
+      if (current) {
+        args.push(current);
+        current = '';
+      }
+    } else {
+      current += char;
+    }
+  }
+
+  if (current) {
+    args.push(current);
+  }
+
+  return args;
+}
+
+/**
  * Runs the Packmind CLI with the given command and options.
  *
  * @param command - The CLI command to run (e.g., 'whoami', 'standards list')
@@ -27,7 +56,7 @@ export async function runCli(
 ): Promise<RunCliResult> {
   const cliPath = path.resolve(__dirname, '../../../../dist/apps/cli/main.cjs');
 
-  const args = command.split(' ');
+  const args = parseCommandArgs(command);
 
   // Create a temporary HOME directory to avoid loading existing credentials
   const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));

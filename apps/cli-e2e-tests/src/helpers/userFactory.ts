@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface TestUserCredentials {
   email: string;
@@ -12,10 +12,8 @@ export interface TestUserCredentials {
  * @returns Test user credentials with random email and strong password
  */
 export function createTestUser(): TestUserCredentials {
-  const randomId = randomBytes(8).toString('hex');
-
   return {
-    email: `test-${randomId}@example.com`,
-    password: `Test-${randomId}-Password!123`,
+    email: `test-${uuidv4()}@example.com`,
+    password: `Test-${uuidv4()}-Password!123`,
   };
 }

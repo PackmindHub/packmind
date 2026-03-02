@@ -1,4 +1,5 @@
 import { describeWithUserSignedUp, runCli } from './helpers';
+import { describeWithTempSpace } from './helpers/describeWithUserSignedUp';
 
 describe('whoami command', () => {
   describeWithUserSignedUp('when user is signed in', (getContext) => {
@@ -7,13 +8,11 @@ describe('whoami command', () => {
     let returnCode: number;
     let stdout: string;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       const context = await getContext();
       apiKey = context.apiKey;
       testDir = context.testDir;
-    });
 
-    beforeEach(async () => {
       const result = await runCli('whoami', { apiKey, cwd: testDir });
 
       returnCode = result.returnCode;
@@ -33,17 +32,15 @@ describe('whoami command', () => {
     });
   });
 
-  describeWithUserSignedUp('when user is not signed in', (getContext) => {
+  describeWithTempSpace('when user is not signed in', (getContext) => {
     let testDir: string;
     let returnCode: number;
     let stdout: string;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       const context = await getContext();
       testDir = context.testDir;
-    });
 
-    beforeEach(async () => {
       const result = await runCli('whoami', { cwd: testDir }); // No API key
 
       returnCode = result.returnCode;
