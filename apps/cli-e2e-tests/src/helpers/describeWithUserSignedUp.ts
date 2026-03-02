@@ -7,6 +7,7 @@ import {
 } from './describeWithTempSpace';
 import { IPackmindGateway } from './IPackmindGateway';
 import { OrganizationId, SpaceId, UserId } from '@packmind/types';
+import { PackmindGateway } from './gateways/PackmindGateway';
 
 export type UserSignedUpContext = WithTempSpaceContext & {
   gateway: IPackmindGateway;
@@ -71,7 +72,6 @@ export function describeWithUserSignedUp(
         testDir,
       }: WithTempSpaceContext): Promise<UserSignedUpContext> => {
         options = { ...getDefaultOptions(), ...userOptions };
-        const { PackmindGateway } = await import('./gateways/PackmindGateway');
         const gateway = new PackmindGateway(options.baseUrl);
 
         const { user, organization } = await gateway.auth.signup({
