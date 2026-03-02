@@ -1,5 +1,5 @@
 import { PMButton, PMHStack } from '@packmind/ui';
-import { LuArrowUpRight } from 'react-icons/lu';
+import { LuArrowUpRight, LuMinimize2 } from 'react-icons/lu';
 import { ViewMode } from '../../hooks/useCommandReviewState';
 import { CardActions } from './CardActions';
 import { ViewModeSelector } from './ViewModeSelector';
@@ -37,10 +37,10 @@ export function CardToolbar({
       <PMHStack gap={2} alignItems="center">
         <PMButton
           size="sm"
-          variant={isFocused ? 'secondary' : 'solid'}
+          variant={isFocused ? 'secondary' : 'ghost'}
           onClick={() => onViewModeChange(isFocused ? 'diff' : 'focused')}
         >
-          <LuArrowUpRight />
+          {isFocused ? <LuArrowUpRight /> : <LuMinimize2 />}
           {isFocused ? 'Show in file' : 'Focused'}
         </PMButton>
         {isExpanded && (
