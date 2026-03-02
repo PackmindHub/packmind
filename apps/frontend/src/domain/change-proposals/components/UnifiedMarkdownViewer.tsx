@@ -1,12 +1,16 @@
 import React from 'react';
 import { PMBox } from '@packmind/ui';
 import { MilkdownProvider } from '@milkdown/react';
-import { DiffMarkdownEditor } from '../../../shared/components/editor/DiffMarkdownEditor';
+import {
+  DiffMarkdownEditor,
+  IDiffMarkdownEditorProps,
+} from '../../../shared/components/editor/DiffMarkdownEditor';
 
-interface UnifiedMarkdownViewerProps {
+export interface UnifiedMarkdownViewerProps {
   oldValue: string;
   newValue: string;
   proposalNumbers: number[];
+  displayMode?: IDiffMarkdownEditorProps['displayMode'];
 }
 
 /**
@@ -18,6 +22,7 @@ export function UnifiedMarkdownViewer({
   oldValue,
   newValue,
   proposalNumbers,
+  displayMode,
 }: UnifiedMarkdownViewerProps) {
   return (
     <PMBox data-diff-section>
@@ -26,6 +31,7 @@ export function UnifiedMarkdownViewer({
           oldValue={oldValue}
           newValue={newValue}
           proposalNumbers={proposalNumbers}
+          displayMode={displayMode ?? 'unified'}
           paddingVariant="none"
         />
       </MilkdownProvider>

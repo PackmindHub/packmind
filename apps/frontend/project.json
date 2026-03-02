@@ -26,6 +26,23 @@
       "options": {
         "command": "nx dev frontend"
       }
+    },
+    "storybook": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "cwd": "apps/frontend",
+        "command": "storybook dev -p 6006"
+      }
+    },
+    "build-storybook": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": ["{projectRoot}/storybook-static"],
+      "options": {
+        "cwd": "apps/frontend",
+        "command": "storybook build"
+      }
     }
   }
 }
