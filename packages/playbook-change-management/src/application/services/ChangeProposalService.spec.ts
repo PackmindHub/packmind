@@ -224,7 +224,7 @@ describe('ChangeProposalService', () => {
 
     const createProposal = <T extends ChangeProposalType>(
       type: T,
-      artefactId: string,
+      artefactId: string | null,
     ): ChangeProposal<T> => ({
       id: createChangeProposalId('change-proposal-id'),
       type,
@@ -442,7 +442,7 @@ describe('ChangeProposalService', () => {
     describe('when space has createCommand proposals', () => {
       const createCommandProposal = createProposal(
         ChangeProposalType.createCommand,
-        null as unknown as string,
+        null,
       );
 
       it('groups createCommand proposals under null key in commands', async () => {
@@ -456,7 +456,7 @@ describe('ChangeProposalService', () => {
       it('accumulates multiple createCommand proposals under the same null key', async () => {
         const anotherCreateCommandProposal = createProposal(
           ChangeProposalType.createCommand,
-          null as unknown as string,
+          null,
         );
         repository.findBySpaceId.mockResolvedValue([
           createCommandProposal,
@@ -517,7 +517,7 @@ describe('ChangeProposalService', () => {
 
     const createProposal = <T extends ChangeProposalType>(
       type: T,
-      artefactId: string,
+      artefactId: string | null,
     ): ChangeProposal<T> => ({
       id: createChangeProposalId('change-proposal-id'),
       type,
