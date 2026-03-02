@@ -224,7 +224,7 @@ describe('ChangeProposalService', () => {
 
     const createProposal = <T extends ChangeProposalType>(
       type: T,
-      artefactId: string,
+      artefactId: string | null,
     ): ChangeProposal<T> => ({
       id: createChangeProposalId('change-proposal-id'),
       type,
@@ -439,6 +439,36 @@ describe('ChangeProposalService', () => {
       });
     });
 
+    describe('when space has createCommand proposals', () => {
+      const createCommandProposal = createProposal(
+        ChangeProposalType.createCommand,
+        null,
+      );
+
+      it('groups createCommand proposals under null key in commands', async () => {
+        repository.findBySpaceId.mockResolvedValue([createCommandProposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(null)).toBe(1);
+      });
+
+      it('accumulates multiple createCommand proposals under the same null key', async () => {
+        const anotherCreateCommandProposal = createProposal(
+          ChangeProposalType.createCommand,
+          null,
+        );
+        repository.findBySpaceId.mockResolvedValue([
+          createCommandProposal,
+          anotherCreateCommandProposal,
+        ]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(null)).toBe(2);
+      });
+    });
+
     describe('when space has a mix of pending and non-pending proposals', () => {
       const proposals = [
         createProposal(ChangeProposalType.updateStandardName, standardId1),
@@ -487,7 +517,7 @@ describe('ChangeProposalService', () => {
 
     const createProposal = <T extends ChangeProposalType>(
       type: T,
-      artefactId: string,
+      artefactId: string | null,
     ): ChangeProposal<T> => ({
       id: createChangeProposalId('change-proposal-id'),
       type,

@@ -20,24 +20,29 @@ function ArtefactNavLink({
   orgSlug,
   spaceSlug,
 }: {
-  artefactId: string;
+  artefactId: string | null;
   name: string;
   changeProposalCount: number;
   artefactType: string;
   orgSlug: string;
   spaceSlug: string;
 }) {
+  const to =
+    artefactId === null
+      ? routes.space.toReviewChangesArtefactType(
+          orgSlug,
+          spaceSlug,
+          artefactType,
+        )
+      : routes.space.toReviewChangesArtefact(
+          orgSlug,
+          spaceSlug,
+          artefactType,
+          artefactId,
+        );
+
   return (
-    <NavLink
-      key={artefactId}
-      to={routes.space.toReviewChangesArtefact(
-        orgSlug,
-        spaceSlug,
-        artefactType,
-        artefactId,
-      )}
-      prefetch="intent"
-    >
+    <NavLink key={artefactId ?? artefactType} to={to} prefetch="intent">
       {({ isActive }) => (
         <PMLink
           variant="navbar"
@@ -48,16 +53,22 @@ function ArtefactNavLink({
           width="full"
         >
           <PMHStack width="full" justifyContent="space-between" gap={2}>
-            <PMText
-              fontSize="sm"
-              fontWeight={isActive ? 'bold' : 'medium'}
-              overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
-              flex={1}
-            >
-              {name}
-            </PMText>
+            <PMHStack gap={1} overflow="hidden" flex={1}>
+              <PMText
+                fontSize="sm"
+                fontWeight={isActive ? 'bold' : 'medium'}
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+              >
+                {name}
+              </PMText>
+              {artefactId === null && (
+                <PMBadge colorPalette="green" size="sm" fontSize="xs">
+                  New
+                </PMBadge>
+              )}
+            </PMHStack>
             <PMBadge colorPalette="blue" size="sm">
               {changeProposalCount}
             </PMBadge>
@@ -102,7 +113,7 @@ export function ReviewChangesSidebar({
         title={title}
         navEntries={items.map((item) => (
           <ArtefactNavLink
-            key={item.artefactId}
+            key={item.artefactId ?? `${key}-new`}
             artefactId={item.artefactId}
             name={item.name}
             changeProposalCount={item.changeProposalCount}

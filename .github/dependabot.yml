@@ -5,3 +5,6 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 15
+    ignore:
+      - dependency-name: "nx"
+      - dependency-name: "@nx/*"
