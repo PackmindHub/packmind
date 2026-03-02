@@ -7,16 +7,20 @@ import {
   createOrganizationId,
   createRecipeId,
   createSpaceId,
+  createStandardId,
   createUserId,
   IAccountsPort,
   IRecipesPort,
   ISpacesPort,
+  IStandardsPort,
   NewCommandPayload,
+  NewStandardPayload,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
+import { standardFactory } from '@packmind/standards/test/standardFactory';
 import { changeProposalFactory } from '@packmind/playbook-change-management/test/changeProposalFactory';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ApplyCreationChangeProposalsUseCase } from './ApplyCreationChangeProposalsUseCase';
@@ -60,6 +64,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
+  let standardsPort: jest.Mocked<IStandardsPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
@@ -77,6 +82,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       captureRecipe: jest.fn().mockResolvedValue(recipe),
     } as unknown as jest.Mocked<IRecipesPort>;
 
+    standardsPort = {
+      createStandardWithExamples: jest.fn(),
+    } as unknown as jest.Mocked<IStandardsPort>;
+
     changeProposalService = {
       findById: jest.fn().mockResolvedValue(proposal),
       batchUpdateProposalsInTransaction: jest.fn().mockResolvedValue(undefined),
@@ -90,6 +99,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       accountsPort,
       spacesPort,
       recipesPort,
+      standardsPort,
       changeProposalService,
       eventEmitterService,
       stubLogger(),
@@ -283,7 +293,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
     });
   });
 
-  describe('when proposal is not a createCommand type', () => {
+  describe('when proposal is not a supported creation type', () => {
     it('throws an error', async () => {
       changeProposalService.findById.mockResolvedValue({
         ...proposal,
@@ -299,7 +309,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           rejected: [],
         }),
       ).rejects.toThrow(
-        `Change proposal ${proposalId} is not a createCommand proposal (type: updateCommandName)`,
+        `Change proposal ${proposalId} has unsupported type for creation (type: updateCommandName)`,
       );
     });
   });
@@ -532,6 +542,359 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           organizationId,
           spaceId,
           accepted: [proposalId],
+          rejected: [],
+        })
+        .catch(() => undefined);
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when accepting a createStandard proposal', () => {
+    const standardId = createStandardId('new-standard');
+    const standardPayload: NewStandardPayload = {
+      name: 'My Standard',
+      description: 'A coding standard',
+      scope: '*.ts',
+      rules: [{ content: 'Use const for immutable variables' }],
+    };
+    const standardProposal = changeProposalFactory({
+      id: createChangeProposalId('standard-proposal-1'),
+      type: ChangeProposalType.createStandard,
+      artefactId: null,
+      payload: standardPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+    const standard = standardFactory({ id: standardId, spaceId });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(standardProposal);
+      standardsPort.createStandardWithExamples.mockResolvedValue(standard);
+    });
+
+    it('creates a standard via standardsPort', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [standardProposal.id],
+        rejected: [],
+      });
+
+      expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        spaceId,
+        name: standardPayload.name,
+        description: standardPayload.description,
+        summary: null,
+        scope: standardPayload.scope,
+        rules: [{ content: 'Use const for immutable variables' }],
+      });
+    });
+
+    it('returns the created standard id', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [standardProposal.id],
+        rejected: [],
+      });
+
+      expect(result.created).toEqual({
+        commands: [],
+        standards: [standardId],
+        skills: [],
+      });
+    });
+
+    it('returns empty rejected list', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [standardProposal.id],
+        rejected: [],
+      });
+
+      expect(result.rejected).toEqual([]);
+    });
+
+    it('calls batchUpdateProposalsInTransaction with accepted proposals', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [standardProposal.id],
+        rejected: [],
+      });
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).toHaveBeenCalledWith({
+        acceptedProposals: [{ proposal: standardProposal, userId }],
+        rejectedProposals: [],
+      });
+    });
+
+    describe('when scope is an array', () => {
+      it('joins scope array with comma', async () => {
+        const proposalWithArrayScope = changeProposalFactory({
+          id: createChangeProposalId('standard-proposal-2'),
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            ...standardPayload,
+            scope: ['*.ts', '*.tsx'],
+          },
+          status: ChangeProposalStatus.pending,
+          spaceId,
+        });
+
+        changeProposalService.findById.mockResolvedValue(
+          proposalWithArrayScope,
+        );
+
+        await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [proposalWithArrayScope.id],
+          rejected: [],
+        });
+
+        expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith(
+          expect.objectContaining({
+            scope: '*.ts, *.tsx',
+          }),
+        );
+      });
+    });
+
+    describe('when scope is null', () => {
+      it('passes null scope', async () => {
+        const proposalWithNullScope = changeProposalFactory({
+          id: createChangeProposalId('standard-proposal-3'),
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            ...standardPayload,
+            scope: null,
+          },
+          status: ChangeProposalStatus.pending,
+          spaceId,
+        });
+
+        changeProposalService.findById.mockResolvedValue(proposalWithNullScope);
+
+        await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [proposalWithNullScope.id],
+          rejected: [],
+        });
+
+        expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith(
+          expect.objectContaining({
+            scope: null,
+          }),
+        );
+      });
+    });
+  });
+
+  describe('when rejecting a createStandard proposal', () => {
+    const standardPayload: NewStandardPayload = {
+      name: 'My Standard',
+      description: 'A coding standard',
+      scope: '*.ts',
+      rules: [{ content: 'Use const for immutable variables' }],
+    };
+    const standardProposal = changeProposalFactory({
+      id: createChangeProposalId('standard-proposal-1'),
+      type: ChangeProposalType.createStandard,
+      artefactId: null,
+      payload: standardPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(standardProposal);
+    });
+
+    it('does not create any standard', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [standardProposal.id],
+      });
+
+      expect(standardsPort.createStandardWithExamples).not.toHaveBeenCalled();
+    });
+
+    it('returns empty created list', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [standardProposal.id],
+      });
+
+      expect(result.created).toEqual({
+        commands: [],
+        standards: [],
+        skills: [],
+      });
+    });
+
+    it('returns the rejected proposal id', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [standardProposal.id],
+      });
+
+      expect(result.rejected).toEqual([standardProposal.id]);
+    });
+
+    it('calls batchUpdateProposalsInTransaction with rejected proposals', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [standardProposal.id],
+      });
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).toHaveBeenCalledWith({
+        acceptedProposals: [],
+        rejectedProposals: [{ proposal: standardProposal, userId }],
+      });
+    });
+  });
+
+  describe('when accepting mixed createCommand and createStandard proposals', () => {
+    const standardId = createStandardId('new-standard');
+    const standardPayload: NewStandardPayload = {
+      name: 'My Standard',
+      description: 'A coding standard',
+      scope: '*.ts',
+      rules: [{ content: 'Use const for immutable variables' }],
+    };
+    const standardProposal = changeProposalFactory({
+      id: createChangeProposalId('standard-proposal-1'),
+      type: ChangeProposalType.createStandard,
+      artefactId: null,
+      payload: standardPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+    const standard = standardFactory({ id: standardId, spaceId });
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(proposal)
+        .mockResolvedValueOnce(standardProposal);
+      recipesPort.captureRecipe.mockResolvedValue(recipe);
+      standardsPort.createStandardWithExamples.mockResolvedValue(standard);
+    });
+
+    it('returns both created command and standard IDs', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId, standardProposal.id],
+        rejected: [],
+      });
+
+      expect(result.created).toEqual({
+        commands: [recipeId],
+        standards: [standardId],
+        skills: [],
+      });
+    });
+
+    it('calls captureRecipe for command proposal', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId, standardProposal.id],
+        rejected: [],
+      });
+
+      expect(recipesPort.captureRecipe).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls createStandardWithExamples for standard proposal', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId, standardProposal.id],
+        rejected: [],
+      });
+
+      expect(standardsPort.createStandardWithExamples).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when createStandardWithExamples fails', () => {
+    const standardPayload: NewStandardPayload = {
+      name: 'My Standard',
+      description: 'A coding standard',
+      scope: '*.ts',
+      rules: [{ content: 'Use const for immutable variables' }],
+    };
+    const standardProposal = changeProposalFactory({
+      id: createChangeProposalId('standard-proposal-1'),
+      type: ChangeProposalType.createStandard,
+      artefactId: null,
+      payload: standardPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(standardProposal);
+      standardsPort.createStandardWithExamples.mockRejectedValue(
+        new Error('Standard creation failed'),
+      );
+    });
+
+    it('throws the createStandardWithExamples error', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [standardProposal.id],
+          rejected: [],
+        }),
+      ).rejects.toThrow('Standard creation failed');
+    });
+
+    it('does not call batchUpdateProposalsInTransaction', async () => {
+      await useCase
+        .execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [standardProposal.id],
           rejected: [],
         })
         .catch(() => undefined);

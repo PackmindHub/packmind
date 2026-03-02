@@ -21,6 +21,7 @@ import {
   IApplyCreationChangeProposalsUseCase,
   IRecipesPort,
   ISpacesPort,
+  IStandardsPort,
   UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
@@ -32,6 +33,7 @@ import {
 } from './ICreateChangeProposalApplier';
 import { CommandCreateChangeProposalApplier } from './CommandCreateChangeProposalApplier';
 import { StandardCreateChangeProposalApplier } from './StandardCreateChangeProposalApplier';
+import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 
 export type {
   ApplyCreationChangeProposalsCommand,
@@ -56,6 +58,7 @@ export class ApplyCreationChangeProposalsUseCase
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
     recipesPort: IRecipesPort,
+    standardsPort: IStandardsPort,
     private readonly changeProposalService: ChangeProposalService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -66,7 +69,7 @@ export class ApplyCreationChangeProposalsUseCase
       [ChangeProposalType.createCommand]:
         new CommandCreateChangeProposalApplier(recipesPort),
       [ChangeProposalType.createStandard]:
-        new StandardCreateChangeProposalApplier(),
+        new StandardCreateChangeProposalApplier(standardsPort),
     };
   }
 
@@ -146,7 +149,8 @@ export class ApplyCreationChangeProposalsUseCase
       spaceId: command.spaceId,
       accepted: command.accepted.length,
       rejected: command.rejected.length,
-      created: createdIds.commands.length,
+      createdCommands: createdIds.commands.length,
+      createdStandards: createdIds.standards.length,
     });
 
     SSEEventPublisher.publishChangeProposalUpdateEvent(
@@ -195,7 +199,7 @@ export class ApplyCreationChangeProposalsUseCase
   }
 
   private assertAllProposalsValid(
-    proposals: (ChangeProposal<ChangeProposalType> | null)[],
+    proposals: (ChangeProposal | null)[],
     allIds: ChangeProposalId[],
   ): asserts proposals is ChangeProposal<SupportedCreateChangedProposalType>[] {
     for (let i = 0; i < proposals.length; i++) {
@@ -212,9 +216,18 @@ export class ApplyCreationChangeProposalsUseCase
         );
       }
 
-      if (proposal.type !== ChangeProposalType.createCommand) {
+      if (
+        !isExpectedChangeProposalType(
+          proposal,
+          ChangeProposalType.createCommand,
+        ) &&
+        !isExpectedChangeProposalType(
+          proposal,
+          ChangeProposalType.createStandard,
+        )
+      ) {
         throw new Error(
-          `Change proposal ${id} is not a createCommand proposal (type: ${proposal.type})`,
+          `Change proposal ${id} has unsupported type for creation (type: ${proposal.type})`,
         );
       }
     }

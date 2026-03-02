@@ -200,6 +200,7 @@ export class PlaybookChangeManagementAdapter
         accountsPort,
         spacesPort,
         recipesPort,
+        standardsPort,
         changeProposalService,
         eventEmitterService,
       );
