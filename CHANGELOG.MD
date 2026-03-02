@@ -13,6 +13,7 @@
 ## Fixed
 
 - Skill subfiles (references/, scripts/, assets/) were lost during push deployment for previously deployed skills (#125)
+- Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
 
 ## Removed
 

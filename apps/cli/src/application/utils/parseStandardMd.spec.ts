@@ -188,6 +188,62 @@ describe('parseStandardMd', () => {
       });
     });
 
+    it('extracts scope from paths block sequence with single item', () => {
+      const content =
+        '---\npaths:\n  - "**/*.ts"\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
+    it('extracts scope from paths block sequence with multiple items', () => {
+      const content =
+        '---\npaths:\n  - "**/*.ts"\n  - "**/*.tsx"\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts, **/*.tsx',
+        rules: ['Rule 1'],
+      });
+    });
+
+    it('extracts scope from paths block sequence with unquoted items', () => {
+      const content =
+        '---\npaths:\n  - src/**/*.ts\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: 'src/**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
+    it('extracts scope from globs key as fallback', () => {
+      const content =
+        '---\nglobs: "**/*.ts"\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
     describe('when alwaysApply true and no paths key', () => {
       it('returns empty scope', () => {
         const content =

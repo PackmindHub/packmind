@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
+
 ## Removed
 
 # [0.19.0] - 2026-02-27
