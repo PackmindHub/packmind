@@ -14,6 +14,7 @@ import {
   ListChangeProposalsBySpaceResponse,
   ListProposalsOverview,
   NewCommandPayload,
+  NewSkillPayload,
   NewStandardPayload,
   RecipeId,
   SkillId,
@@ -122,6 +123,16 @@ export class ListChangeProposalsBySpaceUseCase
             ? payload.scope.join(', ')
             : payload.scope,
           rules: payload.rules,
+        };
+      }
+      if (proposal.type === ChangeProposalType.createSkill) {
+        const payload = proposal.payload as NewSkillPayload;
+        return {
+          proposalId: proposal.id,
+          artefactType: 'skills' as const,
+          name: payload.name,
+          description: payload.description,
+          prompt: payload.prompt,
         };
       }
       const payload = proposal.payload as NewCommandPayload;
