@@ -25,7 +25,7 @@ import { organizationFactory } from '@packmind/accounts/test/organizationFactory
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
-import { changeProposalFactory } from '@packmind/playbook-change-management/test/changeProposalFactory';
+import { changeProposalFactory } from '../../../../test/changeProposalFactory';
 import { ApplyChangeProposalsUseCase } from './ApplyChangeProposalsUseCase';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { skillVersionFactory } from '@packmind/skills/test';
