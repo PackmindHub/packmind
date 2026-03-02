@@ -13,10 +13,10 @@ Write TypeORM migrations in the Packmind monorepo to manage database schema chan
 
 ## Context Validation Checkpoints
 
-- [ ] Have you identified the exact database schema changes needed?
-- [ ] Do you know the TypeORM column types for all fields?
-- [ ] Have you planned the rollback strategy (down method)?
-- [ ] Are you familiar with the shared migration utilities in @packmind/shared?
+* [ ] Have you identified the exact database schema changes needed?
+* [ ] Do you know the TypeORM column types for all fields?
+* [ ] Have you planned the rollback strategy (down method)?
+* [ ] Are you familiar with the shared migration utilities in @packmind/shared?
 
 ## Recipe Steps
 
@@ -45,7 +45,7 @@ export class YourMigrationName1234567890 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     this.logger.info('Starting migration: YourMigrationName');
-
+    
     try {
       // Your migration logic here
       this.logger.info('Migration YourMigrationName completed successfully');
@@ -59,7 +59,7 @@ export class YourMigrationName1234567890 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     this.logger.info('Starting rollback: YourMigrationName');
-
+    
     try {
       // Your rollback logic here
       this.logger.info('Rollback YourMigrationName completed successfully');
@@ -140,7 +140,7 @@ export class AddColumnsToTable1234567890 implements MigrationInterface {
 // Multiple columns with raw SQL
 public async up(queryRunner: QueryRunner): Promise<void> {
   await queryRunner.query(`
-    ALTER TABLE "your_table"
+    ALTER TABLE "your_table" 
     ADD COLUMN "column1" varchar NULL,
     ADD COLUMN "column2" varchar NULL,
     ADD COLUMN "column3" varchar NULL

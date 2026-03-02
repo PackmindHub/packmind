@@ -13,10 +13,10 @@ Create slot components to wrap Chakra UI primitives for enhanced custom composit
 
 ## Context Validation Checkpoints
 
-- [ ] Have you identified which Chakra UI component needs wrapping?
-- [ ] Do you know which slots the component has (e.g., Tab Trigger, Tab Content)?
-- [ ] Is the SlotComponent type available from packages/ui/src/lib/types/slot.ts?
-- [ ] Have you determined what custom props or behavior you need to add?
+* [ ] Have you identified which Chakra UI component needs wrapping?
+* [ ] Do you know which slots the component has (e.g., Tab Trigger, Tab Content)?
+* [ ] Is the SlotComponent type available from packages/ui/src/lib/types/slot.ts?
+* [ ] Have you determined what custom props or behavior you need to add?
 
 ## Recipe Steps
 

@@ -13,10 +13,10 @@ Implement gateways in the Packmind frontend to create a clean abstraction for AP
 
 ## Context Validation Checkpoints
 
-- [ ] Have you identified the domain and its entities?
-- [ ] Do you know which API endpoints the gateway will interact with?
-- [ ] Is the PackmindGateway base class available in your shared folder?
-- [ ] Have you defined the entity types in the domain package?
+* [ ] Have you identified the domain and its entities?
+* [ ] Do you know which API endpoints the gateway will interact with?
+* [ ] Is the PackmindGateway base class available in your shared folder?
+* [ ] Have you defined the entity types in the domain package?
 
 ## Recipe Steps
 
@@ -37,7 +37,7 @@ export interface I{Domain}Gateway {
 
 ### Step 2: Create Gateway Implementation
 
-Create {Domain}GatewayApi.ts that extends PackmindGateway and implements the interface. Pass the API endpoint to the super constructor and implement each method using this.\_api.
+Create {Domain}GatewayApi.ts that extends PackmindGateway and implements the interface. Pass the API endpoint to the super constructor and implement each method using this._api.
 
 ```typescript
 import { EntityType } from '@packmind/{domain}';
@@ -124,10 +124,10 @@ import { useGet{Entities}Query } from '../api/queries/{Domain}Queries';
 
 export const {Domain}List = () => {
   const { data: entities, isLoading, isError } = useGet{Entities}Query();
-
+  
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading entities.</p>;
-
+  
   return (
     <div>
       {entities?.map(entity => (
