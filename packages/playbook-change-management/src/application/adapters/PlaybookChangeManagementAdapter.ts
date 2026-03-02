@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   ApplyChangeProposalsCommand,
   ApplyChangeProposalsResponse,
@@ -120,6 +123,7 @@ export class PlaybookChangeManagementAdapter
     [ISpacesPortName]: ISpacesPort;
     [ISkillsPortName]: ISkillsPort;
     [IStandardsPortName]: IStandardsPort;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     this.logger.info('Initializing PlaybookChangeManagementAdapter with ports');
 
@@ -163,6 +167,14 @@ export class PlaybookChangeManagementAdapter
       );
     }
 
+    const { eventEmitterService } = ports;
+
+    if (!eventEmitterService) {
+      throw new Error(
+        'PlaybookChangeManagementAdapter: PackmindEventEmitterService not provided',
+      );
+    }
+
     const changeProposalService = this.services.getChangeProposalService();
     const conflictDetectionService =
       this.services.getConflictDetectionService();
@@ -180,6 +192,7 @@ export class PlaybookChangeManagementAdapter
       recipesPort,
       skillsPort,
       changeProposalService,
+      eventEmitterService,
     );
 
     this._applyCreationChangeProposals =
@@ -188,6 +201,7 @@ export class PlaybookChangeManagementAdapter
         spacesPort,
         recipesPort,
         changeProposalService,
+        eventEmitterService,
       );
 
     this._batchCreateChangeProposals = new BatchCreateChangeProposalsUseCase(
@@ -206,6 +220,7 @@ export class PlaybookChangeManagementAdapter
       spacesPort,
       changeProposalService,
       validators,
+      eventEmitterService,
     );
 
     this._listChangeProposalsByArtefact =

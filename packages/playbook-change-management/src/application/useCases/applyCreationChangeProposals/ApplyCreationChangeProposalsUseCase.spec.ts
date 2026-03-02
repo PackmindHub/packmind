@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposalStatus,
@@ -60,6 +61,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
     accountsPort = {
@@ -80,11 +82,16 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       batchUpdateProposalsInTransaction: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     useCase = new ApplyCreationChangeProposalsUseCase(
       accountsPort,
       spacesPort,
       recipesPort,
       changeProposalService,
+      eventEmitterService,
       stubLogger(),
     );
   });
@@ -156,6 +163,25 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejectedProposals: [],
       });
     });
+
+    it('tracks change_proposal_accepted event', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId],
+        rejected: [],
+      });
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.createCommand,
+          }),
+        }),
+      );
+    });
   });
 
   describe('when rejecting a createCommand proposal', () => {
@@ -214,6 +240,25 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         acceptedProposals: [],
         rejectedProposals: [{ proposal, userId }],
       });
+    });
+
+    it('tracks change_proposal_rejected event', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [proposalId],
+      });
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.createCommand,
+          }),
+        }),
+      );
     });
   });
 

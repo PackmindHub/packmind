@@ -2,17 +2,21 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
 import {
   ApplyCreationChangeProposalsCommand,
   ApplyCreationChangeProposalsResponse,
   ChangeProposal,
+  ChangeProposalAcceptedEvent,
   ChangeProposalId,
+  ChangeProposalRejectedEvent,
   ChangeProposalStatus,
   ChangeProposalType,
   createOrganizationId,
   createUserId,
+  getItemTypeFromChangeProposalType,
   IAccountsPort,
   IApplyCreationChangeProposalsUseCase,
   IRecipesPort,
@@ -53,6 +57,7 @@ export class ApplyCreationChangeProposalsUseCase
     private readonly spacesPort: ISpacesPort,
     recipesPort: IRecipesPort,
     private readonly changeProposalService: ChangeProposalService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -154,6 +159,34 @@ export class ApplyCreationChangeProposalsUseCase
         error: error instanceof Error ? error.message : String(error),
       });
     });
+
+    for (const { proposal } of acceptedProposals) {
+      this.eventEmitterService.emit(
+        new ChangeProposalAcceptedEvent({
+          userId: createUserId(command.userId),
+          organizationId: command.organization.id,
+          source: command.source ?? 'ui',
+          changeProposalId: proposal.id,
+          itemType: getItemTypeFromChangeProposalType(proposal.type),
+          itemId: String(proposal.artefactId ?? ''),
+          changeType: proposal.type,
+        }),
+      );
+    }
+
+    for (const { proposal } of rejectedProposals) {
+      this.eventEmitterService.emit(
+        new ChangeProposalRejectedEvent({
+          userId: createUserId(command.userId),
+          organizationId: command.organization.id,
+          source: command.source ?? 'ui',
+          changeProposalId: proposal.id,
+          itemType: getItemTypeFromChangeProposalType(proposal.type),
+          itemId: String(proposal.artefactId ?? ''),
+          changeType: proposal.type,
+        }),
+      );
+    }
 
     return {
       created: createdIds,

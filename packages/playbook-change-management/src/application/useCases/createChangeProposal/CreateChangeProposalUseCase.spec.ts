@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposal,
@@ -72,6 +73,7 @@ describe('CreateChangeProposalUseCase', () => {
   let skillsPort: jest.Mocked<ISkillsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let service: jest.Mocked<ChangeProposalService>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   const buildCommand = (
     overrides?: Partial<CreateChangeProposalCommand<ChangeProposalType>>,
@@ -114,6 +116,10 @@ describe('CreateChangeProposalUseCase', () => {
       findExistingPending: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     useCase = new CreateChangeProposalUseCase(
       accountsPort,
       spacesPort,
@@ -122,6 +128,7 @@ describe('CreateChangeProposalUseCase', () => {
         new CommandChangeProposalValidator(recipesPort),
         new SkillChangeProposalValidator(skillsPort),
       ],
+      eventEmitterService,
       stubLogger(),
     );
 
@@ -172,6 +179,20 @@ describe('CreateChangeProposalUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.wasCreated).toBe(true);
+    });
+
+    it('tracks change_proposal_submitted event', async () => {
+      await useCase.execute(command);
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.updateCommandName,
+            captureMode: ChangeProposalCaptureMode.commit,
+          }),
+        }),
+      );
     });
   });
 
@@ -725,6 +746,12 @@ describe('CreateChangeProposalUseCase', () => {
 
       expect(service.createChangeProposal).not.toHaveBeenCalled();
     });
+
+    it('does not track change_proposal_submitted event', async () => {
+      await useCase.execute(command);
+
+      expect(eventEmitterService.emit).not.toHaveBeenCalled();
+    });
   });
 
   describe('when validator returns resolvedPayload', () => {
@@ -749,6 +776,7 @@ describe('CreateChangeProposalUseCase', () => {
         spacesPort,
         service,
         [mockValidator],
+        eventEmitterService,
         stubLogger(),
       );
 
