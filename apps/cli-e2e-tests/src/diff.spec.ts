@@ -49,6 +49,12 @@ describeWithUserSignedUp('diff command', (getContext) => {
       spaceId,
     });
 
+    const listPackagesResponse = await runCli('install --list', {
+      apiKey,
+      cwd: testDir,
+    });
+    console.log(listPackagesResponse);
+
     // Install the package locally
     const installResult = await runCli(
       `install ${createPackageResponse.package.slug}`,
