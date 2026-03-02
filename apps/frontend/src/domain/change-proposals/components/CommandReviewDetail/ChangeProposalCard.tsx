@@ -1,7 +1,7 @@
 import { PMAccordion } from '@packmind/ui';
 import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
-import { ViewMode } from '../../hooks/useCommandReviewState';
+import { ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalCardHeader } from '../shared/ChangeProposalCardHeader';
 import { ChangeProposalCardBody } from './ChangeProposalCardBody';
 

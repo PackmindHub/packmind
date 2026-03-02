@@ -1,7 +1,7 @@
 import { PMSeparator, PMVStack } from '@packmind/ui';
 import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
-import { ViewMode } from '../../hooks/useCommandReviewState';
+import { ViewMode } from '../../hooks/useCardReviewState';
 import { ProposalMessage } from '../shared/ProposalMessage';
 import { CardToolbar } from '../shared/CardToolbar';
 import { DiffView } from './DiffView';

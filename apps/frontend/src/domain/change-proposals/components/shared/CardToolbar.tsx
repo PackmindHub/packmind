@@ -1,6 +1,6 @@
 import { PMButton, PMHStack } from '@packmind/ui';
 import { LuArrowUpRight, LuMinimize2 } from 'react-icons/lu';
-import { ViewMode } from '../../hooks/useCommandReviewState';
+import { ViewMode } from '../../hooks/useCardReviewState';
 import { CardActions } from './CardActions';
 import { ViewModeSelector } from './ViewModeSelector';
 

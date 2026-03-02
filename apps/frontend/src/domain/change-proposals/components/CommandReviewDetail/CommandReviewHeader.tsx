@@ -2,7 +2,7 @@ import { PMBox, PMHStack } from '@packmind/ui';
 import { ArtefactInfo } from './ArtefactInfo';
 import { ViewTabSelector } from './ViewTabSelector';
 import { ApplyButton } from './ApplyButton';
-import { ReviewTab } from '../../hooks/useCommandReviewState';
+import { ReviewTab } from '../../hooks/useCardReviewState';
 
 interface CommandReviewHeaderProps {
   recipeName: string;

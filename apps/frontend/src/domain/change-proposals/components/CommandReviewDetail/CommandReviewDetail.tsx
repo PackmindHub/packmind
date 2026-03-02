@@ -20,7 +20,7 @@ import {
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
-import { useCommandReviewState } from '../../hooks/useCommandReviewState';
+import { useCardReviewState } from '../../hooks/useCardReviewState';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
 import { computeCommandOutdatedIds } from '../../utils/computeOutdatedProposalIds';
 import { CommandReviewHeader } from './CommandReviewHeader';
@@ -67,7 +67,7 @@ export function CommandReviewDetail({
 
   const pool = useChangeProposalPool(selectedRecipeProposals);
 
-  const reviewState = useCommandReviewState();
+  const reviewState = useCardReviewState();
 
   const outdatedProposalIds = useMemo(
     () => computeCommandOutdatedIds(selectedRecipeProposals, selectedRecipe),

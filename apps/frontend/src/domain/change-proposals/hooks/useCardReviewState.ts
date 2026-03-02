@@ -4,7 +4,7 @@ import { ChangeProposalId } from '@packmind/types';
 export type ViewMode = 'diff' | 'focused' | 'inline';
 export type ReviewTab = 'changes' | 'original' | 'result';
 
-export function useCommandReviewState() {
+export function useCardReviewState() {
   const [activeTab, setActiveTab] = useState<ReviewTab>('changes');
   const [expandedCardIds, setExpandedCardIds] = useState<string[]>([]);
   const [viewModeByProposal, setViewModeByProposal] = useState<

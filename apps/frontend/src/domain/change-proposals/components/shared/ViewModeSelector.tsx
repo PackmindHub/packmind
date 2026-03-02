@@ -1,5 +1,5 @@
 import { PMSegmentGroup } from '@packmind/ui';
-import { ViewMode } from '../../hooks/useCommandReviewState';
+import { ViewMode } from '../../hooks/useCardReviewState';
 
 interface ViewModeSelectorProps {
   viewMode: ViewMode;

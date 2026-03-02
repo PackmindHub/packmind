@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { PMAccordion, PMBox, PMVStack } from '@packmind/ui';
 import { ChangeProposalId, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
-import { ViewMode } from '../../hooks/useCommandReviewState';
+import { ViewMode } from '../../hooks/useCardReviewState';
 import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
 import { ChangesSummaryBar } from '../shared/ChangesSummaryBar';
 import { ChangeProposalCard } from './ChangeProposalCard';

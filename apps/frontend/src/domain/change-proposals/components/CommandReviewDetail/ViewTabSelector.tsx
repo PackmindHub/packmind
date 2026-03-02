@@ -1,6 +1,6 @@
 import { PMHStack, PMIcon, PMSegmentGroup } from '@packmind/ui';
 import { LuRepeat2, LuEye, LuSparkles } from 'react-icons/lu';
-import { ReviewTab } from '../../hooks/useCommandReviewState';
+import { ReviewTab } from '../../hooks/useCardReviewState';
 import { type ComponentType } from 'react';
 
 interface ViewTabSelectorProps {
