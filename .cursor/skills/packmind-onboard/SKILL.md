@@ -1,7 +1,7 @@
 ---
-name: "packmind-onboard"
-description: "Complete automated onboarding: analyzes codebase, creates package, and generates standards & commands via CLI. Automatic package creation when none exist, user selection when packages are available."
-license: "Complete terms in LICENSE.txt"
+name: 'packmind-onboard'
+description: 'Complete automated onboarding: analyzes codebase, creates package, and generates standards & commands via CLI. Automatic package creation when none exist, user selection when packages are available.'
+license: 'Complete terms in LICENSE.txt'
 ---
 
 # packmind-onboard

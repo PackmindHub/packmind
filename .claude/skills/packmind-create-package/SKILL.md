@@ -1,5 +1,5 @@
 ---
-name: packmind-create-package
+name: 'packmind-create-package'
 description: 'Guide for creating Packmind packages via the CLI. This skill should be used when users want to create a new package to organize standards, commands, and skills for distribution.'
 license: 'Complete terms in LICENSE.txt'
 ---
@@ -40,7 +40,6 @@ packmind-cli install --list
 ```
 
 Review the output to:
-
 - Avoid duplicate or conflicting names
 - Follow existing naming conventions (lowercase, kebab-case slugs)
 - Understand how packages are organized in this workspace
@@ -90,11 +89,11 @@ You can install it with: packmind-cli packages install <slug>
 
 ## Troubleshooting
 
-| Error                                | Solution                 |
-| ------------------------------------ | ------------------------ |
-| "Not authenticated"                  | Run `packmind-cli login` |
-| "Network error"                      | Check connection, retry  |
-| "Name must be at least 3 characters" | Use a longer name        |
+| Error | Solution |
+|-------|----------|
+| "Not authenticated" | Run `packmind-cli login` |
+| "Network error" | Check connection, retry |
+| "Name must be at least 3 characters" | Use a longer name |
 
 ## Next Steps
 
