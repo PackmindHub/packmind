@@ -6,7 +6,7 @@
 
 ## Fixed
 
-- Fix ReDoS vulnerability in YAML block sequence regex for scope parsing
+- Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
 
 ## Removed
 
