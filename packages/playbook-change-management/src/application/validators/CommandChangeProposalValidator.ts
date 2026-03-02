@@ -23,11 +23,18 @@ const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set<SupportedType>(
   ],
 );
 
-const RECIPE_FIELD_BY_TYPE: Record<SupportedType, (recipe: Recipe) => string> =
-  {
-    [ChangeProposalType.updateCommandName]: (recipe) => recipe.name,
-    [ChangeProposalType.updateCommandDescription]: (recipe) => recipe.content,
-  };
+type UpdateSupportedType = Exclude<
+  SupportedType,
+  ChangeProposalType.createCommand
+>;
+
+const RECIPE_FIELD_BY_TYPE: Record<
+  UpdateSupportedType,
+  (recipe: Recipe) => string
+> = {
+  [ChangeProposalType.updateCommandName]: (recipe) => recipe.name,
+  [ChangeProposalType.updateCommandDescription]: (recipe) => recipe.content,
+};
 
 export class CommandChangeProposalValidator implements IChangeProposalValidator {
   constructor(private readonly recipesPort: IRecipesPort) {}
@@ -58,7 +65,7 @@ export class CommandChangeProposalValidator implements IChangeProposalValidator 
 
     const payload = command.payload as ScalarUpdatePayload;
     const currentValue =
-      RECIPE_FIELD_BY_TYPE[command.type as SupportedType](recipe);
+      RECIPE_FIELD_BY_TYPE[command.type as UpdateSupportedType](recipe);
     if (payload.oldValue !== currentValue) {
       throw new ChangeProposalPayloadMismatchError(
         command.type,
