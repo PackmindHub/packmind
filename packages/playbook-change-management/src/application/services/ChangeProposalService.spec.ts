@@ -442,30 +442,38 @@ describe('ChangeProposalService', () => {
     describe('when space has createCommand proposals', () => {
       const createCommandProposal = createProposal(
         ChangeProposalType.createCommand,
-        null,
+        null as unknown as ReturnType<typeof createStandardId>,
       );
 
-      it('groups createCommand proposals under null key in commands', async () => {
+      it('places createCommand proposals in creations array, not commands map', async () => {
         repository.findBySpaceId.mockResolvedValue([createCommandProposal]);
 
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.commands.get(null)).toBe(1);
+        expect(result.creations).toHaveLength(1);
       });
 
-      it('accumulates multiple createCommand proposals under the same null key', async () => {
-        const anotherCreateCommandProposal = createProposal(
+      it('does not add createCommand proposals to the commands map', async () => {
+        repository.findBySpaceId.mockResolvedValue([createCommandProposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.size).toBe(0);
+      });
+
+      it('accumulates multiple createCommand proposals in creations', async () => {
+        const second = createProposal(
           ChangeProposalType.createCommand,
-          null,
+          null as unknown as ReturnType<typeof createStandardId>,
         );
         repository.findBySpaceId.mockResolvedValue([
           createCommandProposal,
-          anotherCreateCommandProposal,
+          second,
         ]);
 
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.commands.get(null)).toBe(2);
+        expect(result.creations).toHaveLength(2);
       });
     });
 

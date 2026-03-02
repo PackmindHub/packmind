@@ -24,8 +24,9 @@ const origin = 'ChangeProposalService';
 
 export type GroupedProposalsByArtefact = {
   standards: Map<StandardId, number>;
-  commands: Map<RecipeId | null, number>;
+  commands: Map<RecipeId, number>;
   skills: Map<SkillId, number>;
+  creations: ChangeProposal<ChangeProposalType>[];
 };
 
 type ArtefactCategory = 'standards' | 'commands' | 'skills';
@@ -200,6 +201,7 @@ export class ChangeProposalService {
       standards: new Map<StandardId, number>(),
       commands: new Map<RecipeId, number>(),
       skills: new Map<SkillId, number>(),
+      creations: [],
     };
 
     for (const proposal of pendingProposals) {
@@ -212,8 +214,12 @@ export class ChangeProposalService {
           );
           break;
         case 'commands': {
-          const key = proposal.artefactId as RecipeId | null;
-          grouped.commands.set(key, (grouped.commands.get(key) ?? 0) + 1);
+          if (proposal.type === ChangeProposalType.createCommand) {
+            grouped.creations.push(proposal);
+          } else {
+            const key = proposal.artefactId as RecipeId;
+            grouped.commands.set(key, (grouped.commands.get(key) ?? 0) + 1);
+          }
           break;
         }
         case 'skills':
