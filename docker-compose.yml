@@ -317,8 +317,7 @@ services:
     environment:
       LIGHTPANDA_DISABLE_TELEMETRY: 'true'
     healthcheck:
-      test:
-        ['CMD-SHELL', 'wget -qO- http://127.0.0.1:9222/json/version || exit 1']
+      test: ['CMD', 'bash', '-c', '</dev/tcp/127.0.0.1/9222']
       interval: 2s
       timeout: 2s
       retries: 15
