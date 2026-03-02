@@ -128,7 +128,11 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejected: [],
       });
 
-      expect(result.created).toEqual([recipeId]);
+      expect(result.created).toEqual({
+        commands: [recipeId],
+        standards: [],
+        skills: [],
+      });
     });
 
     it('returns empty rejected list', async () => {
@@ -202,7 +206,11 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejected: [proposalId],
       });
 
-      expect(result.created).toEqual([]);
+      expect(result.created).toEqual({
+        commands: [],
+        standards: [],
+        skills: [],
+      });
     });
 
     it('returns the rejected proposal id', async () => {
@@ -341,7 +349,11 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejected: [],
       });
 
-      expect(result.created).toEqual([]);
+      expect(result.created).toEqual({
+        commands: [],
+        standards: [],
+        skills: [],
+      });
     });
 
     it('returns empty rejected list', async () => {
@@ -403,7 +415,11 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejected: [],
       });
 
-      expect(result.created).toEqual([recipeId, recipeId2]);
+      expect(result.created).toEqual({
+        commands: [recipeId, recipeId2],
+        standards: [],
+        skills: [],
+      });
     });
 
     it('calls captureRecipe for each accepted proposal', async () => {

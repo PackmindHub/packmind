@@ -168,7 +168,10 @@ export class OrganizationsSpacesChangeProposalsController {
       {
         organizationId,
         spaceId,
-        createdCount: result.created.length,
+        created: Object.entries(result.created).map(
+          ([artefactType, artefactIds]) =>
+            `${artefactType}: ${artefactIds.length}`,
+        ),
       },
     );
 

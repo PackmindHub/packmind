@@ -14,17 +14,24 @@ import {
   ChangeProposalRejectedEvent,
   ChangeProposalStatus,
   ChangeProposalType,
+  createOrganizationId,
   createUserId,
   getItemTypeFromChangeProposalType,
   IAccountsPort,
+  IApplyCreationChangeProposalsUseCase,
   IRecipesPort,
   ISpacesPort,
-  NewCommandPayload,
-  RecipeId,
   UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
+import {
+  CreatedIds,
+  ICreateChangeProposalApplier,
+  SupportedCreateChangedProposalType,
+} from './ICreateChangeProposalApplier';
+import { CommandCreateChangeProposalApplier } from './CommandCreateChangeProposalApplier';
+import { StandardCreateChangeProposalApplier } from './StandardCreateChangeProposalApplier';
 
 export type {
   ApplyCreationChangeProposalsCommand,
@@ -33,19 +40,34 @@ export type {
 
 const origin = 'ApplyCreationChangeProposalsUseCase';
 
-export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
-  ApplyCreationChangeProposalsCommand,
-  ApplyCreationChangeProposalsResponse
-> {
+export class ApplyCreationChangeProposalsUseCase
+  extends AbstractMemberUseCase<
+    ApplyCreationChangeProposalsCommand,
+    ApplyCreationChangeProposalsResponse
+  >
+  implements IApplyCreationChangeProposalsUseCase
+{
+  private readonly appliers: Record<
+    SupportedCreateChangedProposalType,
+    ICreateChangeProposalApplier<SupportedCreateChangedProposalType>
+  >;
+
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
-    private readonly recipesPort: IRecipesPort,
+    recipesPort: IRecipesPort,
     private readonly changeProposalService: ChangeProposalService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
+
+    this.appliers = {
+      [ChangeProposalType.createCommand]:
+        new CommandCreateChangeProposalApplier(recipesPort),
+      [ChangeProposalType.createStandard]:
+        new StandardCreateChangeProposalApplier(),
+    };
   }
 
   async executeForMembers(
@@ -65,25 +87,26 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
     this.assertAllProposalsValid(proposals, allIds);
 
     const proposalMap = new Map(proposals.map((p) => [p.id, p]));
-
-    const created: RecipeId[] = [];
+    let createdIds: CreatedIds = {
+      commands: [],
+      standards: [],
+      skills: [],
+    };
 
     for (const proposalId of command.accepted) {
       const proposal = proposalMap.get(proposalId);
       if (!proposal) {
         throw new Error(`Change proposal ${proposalId} not found`);
       }
-      const payload = proposal.payload as NewCommandPayload;
+      const applier = this.appliers[proposal.type];
 
-      const recipe = await this.recipesPort.captureRecipe({
-        userId: command.userId,
-        organizationId: command.organizationId,
-        spaceId: command.spaceId,
-        name: payload.name,
-        content: payload.content,
-      });
-
-      created.push(recipe.id);
+      const artefact = await applier.apply(
+        proposal,
+        createUserId(command.userId),
+        command.spaceId,
+        createOrganizationId(command.organizationId),
+      );
+      createdIds = applier.updateCreatedIds(createdIds, artefact);
     }
 
     const acceptedProposals = command.accepted
@@ -95,7 +118,7 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
         (
           item,
         ): item is {
-          proposal: ChangeProposal<ChangeProposalType>;
+          proposal: ChangeProposal<SupportedCreateChangedProposalType>;
           userId: UserId;
         } => item !== null,
       );
@@ -109,7 +132,7 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
         (
           item,
         ): item is {
-          proposal: ChangeProposal<ChangeProposalType>;
+          proposal: ChangeProposal<SupportedCreateChangedProposalType>;
           userId: UserId;
         } => item !== null,
       );
@@ -123,7 +146,7 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
       spaceId: command.spaceId,
       accepted: command.accepted.length,
       rejected: command.rejected.length,
-      created: created.length,
+      created: createdIds.commands.length,
     });
 
     SSEEventPublisher.publishChangeProposalUpdateEvent(
@@ -166,7 +189,7 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
     }
 
     return {
-      created,
+      created: createdIds,
       rejected: command.rejected,
     };
   }
@@ -174,7 +197,7 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
   private assertAllProposalsValid(
     proposals: (ChangeProposal<ChangeProposalType> | null)[],
     allIds: ChangeProposalId[],
-  ): asserts proposals is ChangeProposal<ChangeProposalType>[] {
+  ): asserts proposals is ChangeProposal<SupportedCreateChangedProposalType>[] {
     for (let i = 0; i < proposals.length; i++) {
       const proposal = proposals[i];
       const id = allIds[i];
