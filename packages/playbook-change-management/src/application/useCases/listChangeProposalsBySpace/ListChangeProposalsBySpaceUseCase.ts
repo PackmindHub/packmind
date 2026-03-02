@@ -14,6 +14,7 @@ import {
   ListChangeProposalsBySpaceResponse,
   ListProposalsOverview,
   NewCommandPayload,
+  NewStandardPayload,
   RecipeId,
   SkillId,
   StandardId,
@@ -110,6 +111,19 @@ export class ListChangeProposalsBySpaceUseCase
     proposals: ChangeProposal<ChangeProposalType>[],
   ): CreationProposalOverview[] {
     return proposals.map((proposal) => {
+      if (proposal.type === ChangeProposalType.createStandard) {
+        const payload = proposal.payload as NewStandardPayload;
+        return {
+          proposalId: proposal.id,
+          artefactType: 'standards' as const,
+          name: payload.name,
+          description: payload.description,
+          scope: Array.isArray(payload.scope)
+            ? payload.scope.join(', ')
+            : payload.scope,
+          rules: payload.rules,
+        };
+      }
       const payload = proposal.payload as NewCommandPayload;
       return {
         proposalId: proposal.id,

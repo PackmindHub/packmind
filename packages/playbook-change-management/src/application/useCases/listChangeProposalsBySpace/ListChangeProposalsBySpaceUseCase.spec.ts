@@ -401,6 +401,95 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     });
   });
 
+  describe('when createStandard proposals exist', () => {
+    const proposalId = createChangeProposalId('std-proposal-id');
+    const command = buildCommand();
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createStandard,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Standard',
+              description: 'A description',
+              scope: ['TypeScript'],
+              rules: [{ content: 'Rule one' }],
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+    });
+
+    it('returns creation overview with artefactType standards and standard fields', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.creations).toEqual([
+        {
+          proposalId,
+          artefactType: 'standards',
+          name: 'My Standard',
+          description: 'A description',
+          scope: 'TypeScript',
+          rules: [{ content: 'Rule one' }],
+        },
+      ]);
+    });
+
+    it('normalizes array scope to comma-separated string', async () => {
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createStandard,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Standard',
+              description: 'A description',
+              scope: ['TypeScript', 'JavaScript'],
+              rules: [],
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.creations[0]).toMatchObject({
+        scope: 'TypeScript, JavaScript',
+      });
+    });
+  });
+
   describe('when space does not belong to the organization', () => {
     const command = buildCommand();
     const otherOrgSpace = spaceFactory({
