@@ -24,6 +24,7 @@ export interface IUpdateHandlerDependencies {
   currentVersion: string;
   isExecutableMode: boolean;
   executablePath: string;
+  scriptPath?: string;
   platform: string;
   arch: string;
   fetchFn: typeof fetch;
@@ -175,16 +176,28 @@ async function updateViaExecutableReplace(
   }
 }
 
+export function isLocalNpmPackage(scriptPath?: string): boolean {
+  if (!scriptPath) return false;
+  return scriptPath.includes(path.join('node_modules', '@packmind', 'cli'));
+}
+
 export async function updateHandler(
   deps: IUpdateHandlerDependencies,
 ): Promise<void> {
   const execBasename = path.basename(deps.executablePath).replace(/\.exe$/, '');
   const jsRuntimes = ['node', 'bun', 'deno'];
   if (jsRuntimes.includes(execBasename)) {
-    logErrorConsole(
-      'The update command is not available when running the CLI via a JavaScript runtime.\n' +
-        'To update, use the standalone executable or run: npm install -g @packmind/cli@latest',
-    );
+    if (isLocalNpmPackage(deps.scriptPath)) {
+      logErrorConsole(
+        'Your CLI version is managed by your local package.json.\n' +
+          'To update, run: npm update @packmind/cli',
+      );
+    } else {
+      logErrorConsole(
+        'The update command is not available when running the CLI via a JavaScript runtime.\n' +
+          'To update, use the standalone executable or run: npm install -g @packmind/cli@latest',
+      );
+    }
     process.exit(1);
     return;
   }

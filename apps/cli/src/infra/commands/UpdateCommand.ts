@@ -20,6 +20,7 @@ export const updateCommand = command({
       currentVersion: CLI_VERSION,
       isExecutableMode: hasEmbeddedWasmFiles(),
       executablePath: process.execPath,
+      scriptPath: require.main?.filename,
       platform: process.platform,
       arch: process.arch,
       fetchFn: fetch,

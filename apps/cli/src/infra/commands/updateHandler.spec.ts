@@ -4,6 +4,7 @@ import {
   getPlatformAssetSuffix,
   fetchLatestVersionFromNpm,
   fetchLatestVersionFromGitHub,
+  isLocalNpmPackage,
 } from './updateHandler';
 import * as consoleLogger from '../utils/consoleLogger';
 
@@ -147,9 +148,35 @@ describe('updateHandler', () => {
     });
   });
 
+  describe('isLocalNpmPackage', () => {
+    describe('when path contains node_modules/@packmind/cli', () => {
+      it('returns true', () => {
+        expect(
+          isLocalNpmPackage(
+            '/home/user/project/node_modules/@packmind/cli/dist/main.cjs',
+          ),
+        ).toBe(true);
+      });
+    });
+
+    it('returns false for global npm installation path', () => {
+      expect(isLocalNpmPackage('/usr/local/bin/node')).toBe(false);
+    });
+
+    it('returns false for standalone executable', () => {
+      expect(isLocalNpmPackage('/usr/local/bin/packmind-cli')).toBe(false);
+    });
+
+    describe('when no path is provided', () => {
+      it('returns false', () => {
+        expect(isLocalNpmPackage(undefined)).toBe(false);
+      });
+    });
+  });
+
   describe('JS runtime guard', () => {
     describe.each(['node', 'bun', 'deno'])(
-      'when executablePath is %s',
+      'when executablePath is %s (non-local)',
       (runtime) => {
         beforeEach(async () => {
           deps.executablePath = `/usr/local/bin/${runtime}`;
@@ -160,10 +187,36 @@ describe('updateHandler', () => {
           expect(processExitSpy).toHaveBeenCalledWith(1);
         });
 
-        it('logs the error message', () => {
+        it('logs the generic error message', () => {
           expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
             'The update command is not available when running the CLI via a JavaScript runtime.\n' +
               'To update, use the standalone executable or run: npm install -g @packmind/cli@latest',
+          );
+        });
+
+        it('does not fetch', () => {
+          expect(mockFetch).not.toHaveBeenCalled();
+        });
+      },
+    );
+
+    describe.each(['node', 'bun', 'deno'])(
+      'when executablePath is %s (local npm package)',
+      (runtime) => {
+        beforeEach(async () => {
+          deps.executablePath = `/usr/local/bin/${runtime}`;
+          deps.scriptPath = `/home/user/project/node_modules/@packmind/cli/dist/main.cjs`;
+          await updateHandler(deps);
+        });
+
+        it('exits with code 1', () => {
+          expect(processExitSpy).toHaveBeenCalledWith(1);
+        });
+
+        it('logs the local package.json message', () => {
+          expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Your CLI version is managed by your local package.json.\n' +
+              'To update, run: npm update @packmind/cli',
           );
         });
 
