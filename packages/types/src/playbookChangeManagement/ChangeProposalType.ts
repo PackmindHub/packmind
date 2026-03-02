@@ -18,4 +18,7 @@ export enum ChangeProposalType {
   updateSkillFileContent = 'updateSkillFileContent',
   updateSkillFilePermissions = 'updateSkillFilePermissions',
   deleteSkillFile = 'deleteSkillFile',
+  createStandard = 'createStandard',
+  createCommand = 'createCommand',
+  createSkill = 'createSkill',
 }
