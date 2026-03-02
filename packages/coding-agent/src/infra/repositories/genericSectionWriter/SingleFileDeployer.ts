@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   CodingAgent,
+  CODING_AGENT_ARTEFACT_PATHS,
   FileUpdates,
   GitRepo,
   IGitPort,
@@ -428,17 +429,11 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
   private getSkillBasePath(skillSlug: string): string {
     const codingAgent = this.config.codingAgent;
-
-    switch (codingAgent) {
-      case 'claude':
-        return `.claude/skills/${skillSlug}`;
-      case 'cursor':
-        return `.cursor/skills/${skillSlug}`;
-      case 'continue':
-        return `.continue/skills/${skillSlug}`;
-      default:
-        return `.packmind/skills/${skillSlug}`;
-    }
+    const skillPath = codingAgent
+      ? CODING_AGENT_ARTEFACT_PATHS[codingAgent]?.skill
+      : undefined;
+    const basePath = skillPath ?? '.packmind/skills/';
+    return `${basePath}${skillSlug}`;
   }
 
   private generateSkillMarkdown(skillVersion: SkillVersion): string {

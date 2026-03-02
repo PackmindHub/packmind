@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CODING_AGENT_ARTEFACT_PATHS,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -19,10 +20,10 @@ import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDep
 const origin = 'CopilotDeployer';
 
 export class CopilotDeployer implements ICodingAgentDeployer {
+  private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.copilot;
   /** @deprecated Legacy path to clean up during migration */
   private static readonly RECIPES_INDEX_PATH =
     '.github/instructions/packmind-recipes-index.instructions.md';
-  private static readonly SKILLS_FOLDER_PATH = '.github/skills/';
 
   constructor(
     private readonly standardsPort?: IStandardsPort,
@@ -36,7 +37,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   }) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'CoPilot',
-      '.github/skills/',
+      CopilotDeployer.ARTEFACT_PATHS.skill,
     );
     return defaultSkillsDeployer.deployDefaultSkills(options);
   }
@@ -338,7 +339,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Delete individual Copilot prompt files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
-        path: `.github/prompts/${recipeVersion.slug}.prompt.md`,
+        path: `${CopilotDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.prompt.md`,
         type: DeleteItemType.File,
       });
     }
@@ -358,7 +359,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Delete individual Copilot configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `.github/instructions/packmind-${standardVersion.slug}.instructions.md`,
+        path: `${CopilotDeployer.ARTEFACT_PATHS.standard}packmind-${standardVersion.slug}.instructions.md`,
         type: DeleteItemType.File,
       });
     }
@@ -366,7 +367,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Delete skill directories for removed skills
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
-        path: `.github/skills/${skillVersion.slug}`,
+        path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -400,14 +401,14 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
     for (const recipeVersion of artifacts.recipeVersions) {
       fileUpdates.delete.push({
-        path: `.github/prompts/${recipeVersion.slug}.prompt.md`,
+        path: `${CopilotDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.prompt.md`,
         type: DeleteItemType.File,
       });
     }
 
     for (const standardVersion of artifacts.standardVersions) {
       fileUpdates.delete.push({
-        path: `.github/instructions/packmind-${standardVersion.slug}.instructions.md`,
+        path: `${CopilotDeployer.ARTEFACT_PATHS.standard}packmind-${standardVersion.slug}.instructions.md`,
         type: DeleteItemType.File,
       });
     }
@@ -415,7 +416,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       fileUpdates.delete.push({
-        path: `${CopilotDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -423,7 +424,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Delete user package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       fileUpdates.delete.push({
-        path: `${CopilotDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
+        path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -462,7 +463,7 @@ ${GenericStandardSectionWriter.formatStandardContent({
   link: `../../.packmind/standards/${standardVersion.slug}.md`,
 })}`;
 
-    const path = `.github/instructions/packmind-${standardVersion.slug}.instructions.md`;
+    const path = `${CopilotDeployer.ARTEFACT_PATHS.standard}packmind-${standardVersion.slug}.instructions.md`;
 
     return {
       path,
@@ -496,7 +497,7 @@ agent: 'agent'
 
 ${recipeVersion.content}`;
 
-    const path = `.github/prompts/${recipeVersion.slug}.prompt.md`;
+    const path = `${CopilotDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.prompt.md`;
 
     return {
       path,
@@ -506,7 +507,7 @@ ${recipeVersion.content}`;
 
   /**
    * Generate GitHub Copilot skill files for a specific skill version
-   * Skills are deployed to .github/skills/{skill-slug}/ following the Agent Skills specification
+   * Skills are deployed to the skill artifact path following the Agent Skills specification
    * Returns an array of files including SKILL.md and any additional files
    */
   private generateCopilotSkillFiles(
@@ -523,7 +524,7 @@ ${recipeVersion.content}`;
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
     files.push({
-      path: `.github/skills/${skillVersion.slug}/SKILL.md`,
+      path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/SKILL.md`,
       content: skillMdContent,
     });
 
@@ -535,7 +536,7 @@ ${recipeVersion.content}`;
           continue;
         }
         files.push({
-          path: `.github/skills/${skillVersion.slug}/${file.path}`,
+          path: `${CopilotDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
           skillFileId: file.id,
@@ -616,6 +617,6 @@ ${skillVersion.prompt}`;
   }
 
   getSkillsFolderPath(): string {
-    return CopilotDeployer.SKILLS_FOLDER_PATH;
+    return CopilotDeployer.ARTEFACT_PATHS.skill;
   }
 }
