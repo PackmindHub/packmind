@@ -4,6 +4,7 @@ interface DiffBlockProps {
   value: string;
   variant: 'removed' | 'added';
   isMarkdown: boolean;
+  showIndicator?: boolean;
 }
 
 const variantConfig = {
@@ -25,21 +26,24 @@ export function DiffBlock({
   value,
   variant,
   isMarkdown,
+  showIndicator = true,
 }: Readonly<DiffBlockProps>) {
   const config = variantConfig[variant];
 
   return (
     <PMHStack gap={2} alignItems="stretch">
-      <PMText
-        fontWeight="bold"
-        fontSize="sm"
-        color={config.indicatorColor}
-        fontFamily="mono"
-        pt={2}
-        flexShrink={0}
-      >
-        {config.indicator}
-      </PMText>
+      {showIndicator && (
+        <PMText
+          fontWeight="bold"
+          fontSize="sm"
+          color={config.indicatorColor}
+          fontFamily="mono"
+          pt={2}
+          flexShrink={0}
+        >
+          {config.indicator}
+        </PMText>
+      )}
       <PMBox
         flex={1}
         bg={config.bg}

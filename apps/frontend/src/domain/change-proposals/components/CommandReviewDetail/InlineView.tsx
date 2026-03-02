@@ -76,12 +76,14 @@ export function InlineView({ recipe, proposal }: Readonly<InlineViewProps>) {
                   value={section.newValue}
                   variant="added"
                   isMarkdown={true}
+                  showIndicator={false}
                 />
               ) : (
                 <DiffBlock
                   value={section.oldValue}
                   variant="removed"
                   isMarkdown={true}
+                  showIndicator={false}
                 />
               )}
             </PMBox>
