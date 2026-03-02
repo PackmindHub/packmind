@@ -70,19 +70,17 @@ function ArtefactNavLink({
 
 function CreationNavLink({
   proposal,
-  artefactType,
   orgSlug,
   spaceSlug,
 }: {
   proposal: CreationProposalOverview;
-  artefactType: string;
   orgSlug: string;
   spaceSlug: string;
 }) {
   const to = routes.space.toReviewChangesCreation(
     orgSlug,
     spaceSlug,
-    artefactType,
+    'commands',
     proposal.proposalId,
   );
 
@@ -142,7 +140,6 @@ export function ReviewChangesSidebar({
       <CreationNavLink
         key={proposal.proposalId}
         proposal={proposal}
-        artefactType="commands"
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
       />
