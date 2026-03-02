@@ -1,13 +1,6 @@
 import { useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import {
-  PMBox,
-  PMButton,
-  PMHStack,
-  PMSpinner,
-  PMText,
-  PMVStack,
-} from '@packmind/ui';
+import { Link, useParams } from 'react-router';
+import { PMBox, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   CommandCreationProposalOverview,
@@ -25,6 +18,13 @@ import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
+import { useCreationProposalCache } from '../../hooks/useCreationProposalCache';
+import { SubmissionBanner } from '../SubmissionBanner';
+import { ReviewActionButtons } from '../ReviewActionButtons';
+import {
+  ProposalDetailEmpty,
+  ProposalDetailLoading,
+} from '../ProposalDetailPlaceholder';
 
 interface CreateCommandReviewDetailProps {
   proposalId: string;
@@ -40,7 +40,6 @@ export function CreateCommandReviewDetail({
   const { organization } = useAuthContext();
   const { spaceId, space } = useCurrentSpace();
   const { orgSlug: orgSlugParam } = useParams<{ orgSlug: string }>();
-  const navigate = useNavigate();
 
   const orgSlug = orgSlugProp ?? orgSlugParam;
   const spaceSlug = spaceSlugProp ?? space?.slug;
@@ -58,23 +57,27 @@ export function CreateCommandReviewDetail({
       c.artefactType === 'commands' && c.proposalId === proposalId,
   );
 
+  const { displayedProposal, submittedState, setSubmittedState } =
+    useCreationProposalCache<CommandCreationProposalOverview>(proposal);
+
   const handleAccept = useCallback(async () => {
-    if (!organization?.id || !spaceId) return;
-
-    const response = await applyMutation.mutateAsync({
-      organizationId: organization.id as OrganizationId,
-      spaceId: spaceId as SpaceId,
-      accepted: [proposalId as ChangeProposalId],
-      rejected: [],
-    });
-
-    if (orgSlug && spaceSlug) {
+    if (!organization?.id || !spaceId || !orgSlug || !spaceSlug) return;
+    try {
+      const response = await applyMutation.mutateAsync({
+        organizationId: organization.id as OrganizationId,
+        spaceId: spaceId as SpaceId,
+        accepted: [proposalId as ChangeProposalId],
+        rejected: [],
+      });
       const createdCommandId = response.created.commands[0];
-      if (createdCommandId) {
-        navigate(routes.space.toCommand(orgSlug, spaceSlug, createdCommandId));
-      } else {
-        navigate(routes.space.toReviewChanges(orgSlug, spaceSlug));
-      }
+      setSubmittedState({
+        type: 'accepted',
+        artefactUrl: createdCommandId
+          ? routes.space.toCommand(orgSlug, spaceSlug, createdCommandId)
+          : routes.space.toCommands(orgSlug, spaceSlug),
+      });
+    } catch {
+      // error handled by mutation onError callback
     }
   }, [
     organization?.id,
@@ -83,60 +86,30 @@ export function CreateCommandReviewDetail({
     orgSlug,
     spaceSlug,
     applyMutation,
-    navigate,
+    setSubmittedState,
   ]);
 
   const handleReject = useCallback(async () => {
     if (!organization?.id || !spaceId) return;
-
-    await applyMutation.mutateAsync({
-      organizationId: organization.id as OrganizationId,
-      spaceId: spaceId as SpaceId,
-      accepted: [],
-      rejected: [proposalId as ChangeProposalId],
-    });
-
-    if (orgSlug && spaceSlug) {
-      navigate(routes.space.toReviewChanges(orgSlug, spaceSlug));
+    try {
+      await applyMutation.mutateAsync({
+        organizationId: organization.id as OrganizationId,
+        spaceId: spaceId as SpaceId,
+        accepted: [],
+        rejected: [proposalId as ChangeProposalId],
+      });
+      setSubmittedState({ type: 'rejected' });
+    } catch {
+      // error handled by mutation onError callback
     }
-  }, [
-    organization?.id,
-    spaceId,
-    proposalId,
-    orgSlug,
-    spaceSlug,
-    applyMutation,
-    navigate,
-  ]);
+  }, [organization?.id, spaceId, proposalId, applyMutation, setSubmittedState]);
 
-  if (isLoading) {
-    return (
-      <PMBox
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        minH="300px"
-        gridColumn="span 2"
-      >
-        <PMSpinner />
-      </PMBox>
-    );
+  if (isLoading && !displayedProposal) {
+    return <ProposalDetailLoading />;
   }
 
-  if (!proposal) {
-    return (
-      <PMBox
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        minH="300px"
-        gridColumn="span 2"
-      >
-        <PMText color="secondary">
-          This proposal has already been processed or does not exist.
-        </PMText>
-      </PMBox>
-    );
+  if (!displayedProposal) {
+    return <ProposalDetailEmpty />;
   }
 
   return (
@@ -151,33 +124,27 @@ export function CreateCommandReviewDetail({
         gap={4}
         minH="44px"
       >
-        <PMHStack gap={2}>
-          <PMButton
-            size="sm"
-            colorPalette="red"
-            variant="outline"
-            disabled={applyMutation.isPending}
-            onClick={handleReject}
-          >
-            Reject
-          </PMButton>
-          <PMButton
-            size="sm"
-            colorPalette="green"
-            disabled={applyMutation.isPending}
-            onClick={handleAccept}
-          >
-            {applyMutation.isPending ? 'Applying...' : 'Accept'}
-          </PMButton>
-        </PMHStack>
+        {!submittedState && (
+          <ReviewActionButtons
+            onAccept={handleAccept}
+            onReject={handleReject}
+            isPending={applyMutation.isPending}
+          />
+        )}
       </PMBox>
       <PMVStack gap={2} align="stretch" p={6}>
+        {submittedState && (
+          <SubmissionBanner
+            submittedState={submittedState}
+            artefactLabel="command"
+          />
+        )}
         <PMText fontSize="lg" fontWeight="semibold">
-          {proposal.name}
+          {displayedProposal.name}
         </PMText>
         <MarkdownEditorProvider>
           <MarkdownEditor
-            defaultValue={proposal.content}
+            defaultValue={displayedProposal.content}
             readOnly
             paddingVariant="none"
           />
