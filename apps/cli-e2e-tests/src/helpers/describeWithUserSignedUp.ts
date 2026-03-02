@@ -6,15 +6,14 @@ import {
   WithTempSpaceContext,
 } from './describeWithTempSpace';
 import { IPackmindGateway } from './IPackmindGateway';
-import { OrganizationId, SpaceId, UserId } from '@packmind/types';
+import { Organization, SpaceId, User } from '@packmind/types';
 import { PackmindGateway } from './gateways/PackmindGateway';
 
 export type UserSignedUpContext = WithTempSpaceContext & {
   gateway: IPackmindGateway;
   apiKey: string;
-  email: string;
-  userId: UserId;
-  organizationId: OrganizationId;
+  user: User;
+  organization: Organization;
   spaceId: SpaceId;
 };
 
@@ -94,9 +93,8 @@ export function describeWithUserSignedUp(
         return {
           apiKey,
           gateway,
-          email: user.email,
-          userId: user.id,
-          organizationId: organization.id,
+          user,
+          organization,
           spaceId: globalSpace.id,
           testDir,
         };

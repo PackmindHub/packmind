@@ -1,20 +1,23 @@
-import { describeWithUserSignedUp, runCli } from './helpers';
+import {
+  describeWithUserSignedUp,
+  runCli,
+  UserSignedUpContext,
+} from './helpers';
 
 import { describeWithTempSpace } from './helpers/describeWithTempSpace';
 
 describe('whoami command', () => {
   describeWithUserSignedUp('when user is signed in', (getContext) => {
-    let apiKey: string;
-    let testDir: string;
     let returnCode: number;
     let stdout: string;
+    let context: UserSignedUpContext;
 
     beforeEach(async () => {
-      const context = await getContext();
-      apiKey = context.apiKey;
-      testDir = context.testDir;
-
-      const result = await runCli('whoami', { apiKey, cwd: testDir });
+      context = await getContext();
+      const result = await runCli('whoami', {
+        apiKey: context.apiKey,
+        cwd: context.testDir,
+      });
 
       returnCode = result.returnCode;
       stdout = result.stdout;
@@ -28,8 +31,14 @@ describe('whoami command', () => {
       expect(stdout).toContain('Authenticated');
     });
 
-    it('shows host information', () => {
-      expect(stdout).toContain('Host:');
+    it('shows user and host information', () => {
+      expect(stdout.split('\n')).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Host: http://localhost:4200'),
+          expect.stringContaining(`Organization: ${context.organization.name}`),
+          expect.stringContaining(`User: ${context.user.email}`),
+        ]),
+      );
     });
   });
 

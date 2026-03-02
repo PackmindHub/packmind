@@ -3,9 +3,9 @@ import {
   runCli,
   updateFile,
   readFile,
+  setupGitRepo,
+  IPackmindGateway,
 } from './helpers';
-import { setupGitRepo } from './helpers/setupGitRepo';
-import { IPackmindGateway } from './helpers/IPackmindGateway';
 import { SpaceId } from '@packmind/types';
 
 describeWithUserSignedUp('diff command', (getContext) => {

@@ -1,11 +1,8 @@
-export { runCli, type RunCliOptions, type RunCliResult } from './runCli';
-export {
-  describeWithUserSignedUp,
-  type UserSignedUpContext,
-  type UserSignedUpOptions,
-} from './describeWithUserSignedUp';
-export { createTestUser, type TestUserCredentials } from './userFactory';
-export { readFile, updateFile, fileExists } from './fileHelpers';
+export * from './runCli';
+export * from './describeWithUserSignedUp';
+export * from './userFactory';
+export * from './fileHelpers';
+export * from './setupGitRepo';
 export { PackmindGateway } from './gateways/PackmindGateway';
 export type {
   IPackmindGateway,
