@@ -285,4 +285,199 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       ).rejects.toThrow();
     });
   });
+
+  describe('when both accepted and rejected lists are empty', () => {
+    it('returns empty created and rejected lists', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [],
+      });
+
+      expect(result.created).toEqual([]);
+    });
+
+    it('returns empty rejected list', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [],
+      });
+
+      expect(result.rejected).toEqual([]);
+    });
+
+    it('calls batchUpdateProposalsInTransaction with empty proposals', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [],
+      });
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).toHaveBeenCalledWith({
+        acceptedProposals: [],
+        rejectedProposals: [],
+      });
+    });
+  });
+
+  describe('when accepting multiple createCommand proposals', () => {
+    it('creates all recipes and returns all created IDs', async () => {
+      const proposalId2 = createChangeProposalId('proposal-2');
+      const recipeId2 = createRecipeId('recipe-2');
+      const proposal2 = changeProposalFactory({
+        id: proposalId2,
+        type: ChangeProposalType.createCommand,
+        artefactId: null,
+        payload,
+        status: ChangeProposalStatus.pending,
+        spaceId,
+      });
+      const recipe2 = recipeFactory({ id: recipeId2, spaceId });
+
+      changeProposalService.findById
+        .mockResolvedValueOnce(proposal)
+        .mockResolvedValueOnce(proposal2);
+      recipesPort.captureRecipe
+        .mockResolvedValueOnce(recipe)
+        .mockResolvedValueOnce(recipe2);
+
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId, proposalId2],
+        rejected: [],
+      });
+
+      expect(result.created).toEqual([recipeId, recipeId2]);
+    });
+
+    it('calls captureRecipe for each accepted proposal', async () => {
+      const proposalId2 = createChangeProposalId('proposal-2');
+      const proposal2 = changeProposalFactory({
+        id: proposalId2,
+        type: ChangeProposalType.createCommand,
+        artefactId: null,
+        payload,
+        status: ChangeProposalStatus.pending,
+        spaceId,
+      });
+
+      changeProposalService.findById
+        .mockResolvedValueOnce(proposal)
+        .mockResolvedValueOnce(proposal2);
+      recipesPort.captureRecipe.mockResolvedValue(recipe);
+
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId, proposalId2],
+        rejected: [],
+      });
+
+      expect(recipesPort.captureRecipe).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('when some proposals are accepted and others rejected', () => {
+    it('creates recipes only for accepted proposals', async () => {
+      const proposalId2 = createChangeProposalId('proposal-2');
+      const proposal2 = changeProposalFactory({
+        id: proposalId2,
+        type: ChangeProposalType.createCommand,
+        artefactId: null,
+        payload,
+        status: ChangeProposalStatus.pending,
+        spaceId,
+      });
+
+      changeProposalService.findById
+        .mockResolvedValueOnce(proposal)
+        .mockResolvedValueOnce(proposal2);
+      recipesPort.captureRecipe.mockResolvedValue(recipe);
+
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId],
+        rejected: [proposalId2],
+      });
+
+      expect(recipesPort.captureRecipe).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns correct split of created and rejected', async () => {
+      const proposalId2 = createChangeProposalId('proposal-2');
+      const proposal2 = changeProposalFactory({
+        id: proposalId2,
+        type: ChangeProposalType.createCommand,
+        artefactId: null,
+        payload,
+        status: ChangeProposalStatus.pending,
+        spaceId,
+      });
+
+      changeProposalService.findById
+        .mockResolvedValueOnce(proposal)
+        .mockResolvedValueOnce(proposal2);
+      recipesPort.captureRecipe.mockResolvedValue(recipe);
+
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId],
+        rejected: [proposalId2],
+      });
+
+      expect(result.rejected).toEqual([proposalId2]);
+    });
+  });
+
+  describe('when captureRecipe fails', () => {
+    beforeEach(() => {
+      recipesPort.captureRecipe.mockRejectedValue(
+        new Error('Recipe creation failed'),
+      );
+    });
+
+    it('throws the captureRecipe error', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [proposalId],
+          rejected: [],
+        }),
+      ).rejects.toThrow('Recipe creation failed');
+    });
+
+    it('does not call batchUpdateProposalsInTransaction', async () => {
+      await useCase
+        .execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [proposalId],
+          rejected: [],
+        })
+        .catch(() => undefined);
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).not.toHaveBeenCalled();
+    });
+  });
 });

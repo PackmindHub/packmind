@@ -5,6 +5,8 @@ import {
   SSEEventPublisher,
 } from '@packmind/node-utils';
 import {
+  ApplyCreationChangeProposalsCommand,
+  ApplyCreationChangeProposalsResponse,
   ChangeProposal,
   ChangeProposalId,
   ChangeProposalStatus,
@@ -13,26 +15,18 @@ import {
   IRecipesPort,
   ISpacesPort,
   NewCommandPayload,
-  PackmindCommand,
   RecipeId,
-  SpaceId,
   UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
+export type {
+  ApplyCreationChangeProposalsCommand,
+  ApplyCreationChangeProposalsResponse,
+};
+
 const origin = 'ApplyCreationChangeProposalsUseCase';
-
-export type ApplyCreationChangeProposalsCommand = PackmindCommand & {
-  spaceId: SpaceId;
-  accepted: ChangeProposalId[];
-  rejected: ChangeProposalId[];
-};
-
-export type ApplyCreationChangeProposalsResponse = {
-  created: RecipeId[];
-  rejected: ChangeProposalId[];
-};
 
 export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
   ApplyCreationChangeProposalsCommand,
