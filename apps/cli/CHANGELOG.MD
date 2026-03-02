@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- Fix ReDoS vulnerability in YAML block sequence regex for scope parsing
+
 ## Removed
 
 # [0.19.0] - 2026-02-27

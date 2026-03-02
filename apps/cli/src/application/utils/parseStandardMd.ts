@@ -251,7 +251,7 @@ function extractScopeFromKey(frontmatter: string, key: string): string {
 
   const items: string[] = [];
   for (let i = keyIndex + 1; i < lines.length; i++) {
-    const match = lines[i].match(/^\s+-\s+(.+)$/);
+    const match = lines[i].match(/^ +-\s(.+)$/);
     if (!match) break;
     items.push(stripYamlQuotes(match[1].trim()));
   }
