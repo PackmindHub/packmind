@@ -8,7 +8,12 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { ChangeProposalId, OrganizationId, SpaceId } from '@packmind/types';
+import {
+  ChangeProposalId,
+  CommandCreationProposalOverview,
+  OrganizationId,
+  SpaceId,
+} from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
@@ -49,7 +54,8 @@ export function CreateCommandReviewDetail({
   });
 
   const proposal = groupedProposals?.creations.find(
-    (c) => c.proposalId === proposalId,
+    (c): c is CommandCreationProposalOverview =>
+      c.artefactType === 'commands' && c.proposalId === proposalId,
   );
 
   const handleAccept = useCallback(async () => {

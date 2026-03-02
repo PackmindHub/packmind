@@ -379,7 +379,12 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.creations).toEqual([
-        { proposalId, name: 'My Command', content: 'Do something' },
+        {
+          proposalId,
+          artefactType: 'commands',
+          name: 'My Command',
+          content: 'Do something',
+        },
       ]);
     });
 

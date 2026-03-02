@@ -15,11 +15,25 @@ export type ListProposalsOverview<T extends StandardId | RecipeId | SkillId> = {
   changeProposalCount: number;
 };
 
-export type CreationProposalOverview = {
+export type CommandCreationProposalOverview = {
   proposalId: ChangeProposalId;
+  artefactType: 'commands';
   name: string;
   content: string;
 };
+
+export type StandardCreationProposalOverview = {
+  proposalId: ChangeProposalId;
+  artefactType: 'standards';
+  name: string;
+  description: string;
+  scope: string | null;
+  rules: Array<{ content: string }>;
+};
+
+export type CreationProposalOverview =
+  | CommandCreationProposalOverview
+  | StandardCreationProposalOverview;
 
 export type ListChangeProposalsBySpaceResponse = {
   standards: ListProposalsOverview<StandardId>[];

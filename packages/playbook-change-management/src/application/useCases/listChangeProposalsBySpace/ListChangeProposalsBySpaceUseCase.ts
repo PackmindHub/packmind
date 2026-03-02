@@ -113,6 +113,7 @@ export class ListChangeProposalsBySpaceUseCase
       const payload = proposal.payload as NewCommandPayload;
       return {
         proposalId: proposal.id,
+        artefactType: 'commands' as const,
         name: payload.name,
         content: payload.content,
       };
