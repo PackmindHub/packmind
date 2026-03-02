@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
 import {
@@ -9,11 +10,14 @@ import {
   ApplyChangeProposalsResponse,
   ArtefactVersionId,
   ChangeProposal,
+  ChangeProposalAcceptedEvent,
   ChangeProposalId,
+  ChangeProposalRejectedEvent,
   ChangeProposalStatus,
   ChangeProposalType,
   createOrganizationId,
   createUserId,
+  getItemTypeFromChangeProposalType,
   IAccountsPort,
   IApplyChangeProposalsUseCase,
   IRecipesPort,
@@ -56,6 +60,7 @@ export class ApplyChangeProposalsUseCase<
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
     private readonly changeProposalService: ChangeProposalService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -204,6 +209,34 @@ export class ApplyChangeProposalsUseCase<
         error: error instanceof Error ? error.message : String(error),
       });
     });
+
+    for (const { proposal } of acceptedProposals) {
+      this.eventEmitterService.emit(
+        new ChangeProposalAcceptedEvent({
+          userId: createUserId(command.userId),
+          organizationId: command.organization.id,
+          source: command.source ?? 'ui',
+          changeProposalId: proposal.id,
+          itemType: getItemTypeFromChangeProposalType(proposal.type),
+          itemId: String(proposal.artefactId ?? ''),
+          changeType: proposal.type,
+        }),
+      );
+    }
+
+    for (const { proposal } of rejectedProposals) {
+      this.eventEmitterService.emit(
+        new ChangeProposalRejectedEvent({
+          userId: createUserId(command.userId),
+          organizationId: command.organization.id,
+          source: command.source ?? 'ui',
+          changeProposalId: proposal.id,
+          itemType: getItemTypeFromChangeProposalType(proposal.type),
+          itemId: String(proposal.artefactId ?? ''),
+          changeType: proposal.type,
+        }),
+      );
+    }
 
     return {
       newArtefactVersion: newVersion.id as ArtefactVersionId<T>,

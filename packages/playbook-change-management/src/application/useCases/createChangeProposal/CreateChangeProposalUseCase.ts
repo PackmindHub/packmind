@@ -2,13 +2,16 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
 import {
   ChangeProposalType,
+  ChangeProposalSubmittedEvent,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   createUserId,
+  getItemTypeFromChangeProposalType,
   IAccountsPort,
   ICreateChangeProposalUseCase,
   ISpacesPort,
@@ -32,6 +35,7 @@ export class CreateChangeProposalUseCase
     private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     private readonly validators: IChangeProposalValidator[],
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -85,6 +89,19 @@ export class CreateChangeProposalUseCase
         error: error instanceof Error ? error.message : String(error),
       });
     });
+
+    this.eventEmitterService.emit(
+      new ChangeProposalSubmittedEvent({
+        userId: createUserId(command.userId),
+        organizationId: command.organization.id,
+        source: command.source ?? 'ui',
+        changeProposalId: changeProposal.id,
+        itemType: getItemTypeFromChangeProposalType(command.type),
+        itemId: String(changeProposal.artefactId ?? ''),
+        changeType: command.type,
+        captureMode: command.captureMode,
+      }),
+    );
 
     return { changeProposal, wasCreated: true };
   }

@@ -22,3 +22,29 @@ export enum ChangeProposalType {
   createCommand = 'createCommand',
   createSkill = 'createSkill',
 }
+
+export type ChangeProposalItemType = 'standard' | 'command' | 'skill';
+
+const standardTypes = new Set<ChangeProposalType>([
+  ChangeProposalType.updateStandardName,
+  ChangeProposalType.updateStandardDescription,
+  ChangeProposalType.updateStandardScope,
+  ChangeProposalType.addRule,
+  ChangeProposalType.updateRule,
+  ChangeProposalType.deleteRule,
+  ChangeProposalType.createStandard,
+]);
+
+const commandTypes = new Set<ChangeProposalType>([
+  ChangeProposalType.updateCommandName,
+  ChangeProposalType.updateCommandDescription,
+  ChangeProposalType.createCommand,
+]);
+
+export function getItemTypeFromChangeProposalType(
+  type: ChangeProposalType,
+): ChangeProposalItemType {
+  if (standardTypes.has(type)) return 'standard';
+  if (commandTypes.has(type)) return 'command';
+  return 'skill';
+}
