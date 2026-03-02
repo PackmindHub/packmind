@@ -35,6 +35,9 @@ describeWithUserSignedUp('diff command', (getContext) => {
         cwd: testDir,
       },
     );
+    // Configure git user for commits
+    execSync('git config user.email "test@packmind.com"', { cwd: testDir });
+    execSync('git config user.name "Test User"', { cwd: testDir });
     // Create initial commit to establish HEAD
     execSync('git commit --allow-empty -m "Initial commit"', {
       cwd: testDir,
