@@ -55,7 +55,7 @@ export function CreateCommandReviewDetail({
   const handleAccept = useCallback(async () => {
     if (!organization?.id || !spaceId) return;
 
-    await applyMutation.mutateAsync({
+    const response = await applyMutation.mutateAsync({
       organizationId: organization.id as OrganizationId,
       spaceId: spaceId as SpaceId,
       accepted: [proposalId as ChangeProposalId],
@@ -63,7 +63,12 @@ export function CreateCommandReviewDetail({
     });
 
     if (orgSlug && spaceSlug) {
-      navigate(routes.space.toReviewChanges(orgSlug, spaceSlug));
+      const createdCommandId = response.created.commands[0];
+      if (createdCommandId) {
+        navigate(routes.space.toCommand(orgSlug, spaceSlug, createdCommandId));
+      } else {
+        navigate(routes.space.toReviewChanges(orgSlug, spaceSlug));
+      }
     }
   }, [
     organization?.id,
