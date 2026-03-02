@@ -8,7 +8,7 @@ import {
 } from '@packmind/ui';
 import { ChangeProposalType } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
-import { DiffBlock } from './DiffBlock';
+import { DiffBlock } from '../shared/DiffBlock';
 import { EditableProposalField } from './EditableProposalField';
 import { EditPreview } from './EditPreview';
 

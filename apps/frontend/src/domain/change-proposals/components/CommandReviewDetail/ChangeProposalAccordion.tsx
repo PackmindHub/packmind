@@ -4,9 +4,9 @@ import { ChangeProposalId, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCommandReviewState';
 import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
-import { ChangesSummaryBar } from './ChangesSummaryBar';
+import { ChangesSummaryBar } from '../shared/ChangesSummaryBar';
 import { ChangeProposalCard } from './ChangeProposalCard';
-import { ReviewedSectionDivider } from './ReviewedSectionDivider';
+import { ReviewedSectionDivider } from '../shared/ReviewedSectionDivider';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 

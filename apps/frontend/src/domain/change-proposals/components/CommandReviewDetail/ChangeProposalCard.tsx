@@ -2,7 +2,7 @@ import { PMAccordion } from '@packmind/ui';
 import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCommandReviewState';
-import { ChangeProposalCardHeader } from './ChangeProposalCardHeader';
+import { ChangeProposalCardHeader } from '../shared/ChangeProposalCardHeader';
 import { ChangeProposalCardBody } from './ChangeProposalCardBody';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
