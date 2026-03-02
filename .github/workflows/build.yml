@@ -48,12 +48,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -70,7 +71,7 @@ jobs:
         run: ./node_modules/.bin/nx test api
       - run: cp apps/api/docker-package.json dist/apps/api/.
       - run: cp package.json dist/apps/api/.
-      - run: cp package-lock.json dist/apps/api/.
+      - run: cp pnpm-lock.yaml dist/apps/api/.
       - run: cp tsconfig.base.effective.json dist/apps/api/.
 
       - name: Upload API build artifacts
@@ -89,12 +90,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -102,9 +104,9 @@ jobs:
       - name: Generate Chakra types
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-        run: npm run chakra:typegen
+        run: pnpm run chakra:typegen
       - name: Typechecks
-        run: npm run typecheck:frontend
+        run: pnpm run typecheck:frontend
       - name: Test Frontend
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -137,12 +139,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -175,12 +178,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -215,11 +219,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -230,7 +235,7 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}

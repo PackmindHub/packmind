@@ -133,6 +133,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
+      - uses: pnpm/action-setup@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -155,7 +156,7 @@ jobs:
         working-directory: dist/apps/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: pnpm publish --access public --no-git-checks
       
       - name: Summary
         run: |
