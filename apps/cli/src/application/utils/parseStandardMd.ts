@@ -91,7 +91,9 @@ function parsePackmindStandard(content: string): ParsedStandardMd | null {
 
 function parseClaudeStandard(content: string): ParsedStandardMd | null {
   const { frontmatter, body } = extractFrontmatter(content);
-  const scope = extractScopeFromKey(frontmatter, 'paths');
+  const scope =
+    extractScopeFromKey(frontmatter, 'paths') ||
+    extractScopeFromKey(frontmatter, 'globs');
   const parsed = parseIdeStandardBody(body, scope);
   if (!parsed) return null;
   return addFrontmatterFields(parsed, frontmatter);
@@ -240,8 +242,21 @@ function stripYamlQuotes(value: string): string {
 
 function extractScopeFromKey(frontmatter: string, key: string): string {
   const rawValue = extractFrontmatterValue(frontmatter, key);
-  if (!rawValue) return '';
-  return normalizeScopeValue(rawValue);
+  if (rawValue) return normalizeScopeValue(rawValue);
+
+  // Handle YAML block sequence (paths:\n  - "value")
+  const lines = frontmatter.split('\n');
+  const keyIndex = lines.findIndex((l) => l.trim() === `${key}:`);
+  if (keyIndex === -1) return '';
+
+  const items: string[] = [];
+  for (let i = keyIndex + 1; i < lines.length; i++) {
+    const match = lines[i].match(/^\s+-\s+(.+)$/);
+    if (!match) break;
+    items.push(stripYamlQuotes(match[1].trim()));
+  }
+
+  return items.join(', ');
 }
 
 function normalizeScopeValue(rawValue: string): string {
