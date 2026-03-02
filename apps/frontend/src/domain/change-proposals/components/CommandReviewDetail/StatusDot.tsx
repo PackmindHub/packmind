@@ -3,7 +3,7 @@ import { PMBox } from '@packmind/ui';
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
 const colorByStatus: Record<PoolStatus, string> = {
-  pending: 'orange.400',
+  pending: 'yellow.400',
   accepted: 'green.400',
   dismissed: 'red.400',
 };

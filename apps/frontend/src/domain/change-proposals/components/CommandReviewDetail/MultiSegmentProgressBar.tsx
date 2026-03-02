@@ -1,4 +1,4 @@
-import { PMBox, PMHStack } from '@packmind/ui';
+import { PMBox } from '@packmind/ui';
 
 interface Segment {
   count: number;
@@ -16,19 +16,25 @@ export function MultiSegmentProgressBar({
   if (total === 0) return null;
 
   return (
-    <PMHStack
-      gap={0}
-      height="6px"
+    <PMBox
+      display="flex"
+      height="2px"
       borderRadius="full"
       overflow="hidden"
       width="full"
+      bg="bg.subtle"
     >
       {segments.map(
         (segment, i) =>
           segment.count > 0 && (
-            <PMBox key={i} flex={segment.count} bg={segment.color} />
+            <PMBox
+              key={i}
+              width={`${(segment.count / total) * 100}%`}
+              height="100%"
+              bg={segment.color}
+            />
           ),
       )}
-    </PMHStack>
+    </PMBox>
   );
 }

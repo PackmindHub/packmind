@@ -17,7 +17,7 @@ export function ChangesSummaryBar({
   const segments = [
     { count: acceptedCount, color: 'green.400' },
     { count: dismissedCount, color: 'red.400' },
-    { count: pendingCount, color: 'orange.400' },
+    { count: pendingCount, color: 'yellow.400' },
   ];
 
   return (
@@ -32,7 +32,7 @@ export function ChangesSummaryBar({
               width="8px"
               height="8px"
               borderRadius="full"
-              bg="orange.400"
+              bg="yellow.400"
             />
             <PMText>{pendingCount} pending</PMText>
           </PMHStack>
