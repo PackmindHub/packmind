@@ -53,16 +53,22 @@ function ArtefactNavLink({
           width="full"
         >
           <PMHStack width="full" justifyContent="space-between" gap={2}>
-            <PMText
-              fontSize="sm"
-              fontWeight={isActive ? 'bold' : 'medium'}
-              overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
-              flex={1}
-            >
-              {name}
-            </PMText>
+            <PMHStack gap={1} overflow="hidden" flex={1}>
+              <PMText
+                fontSize="sm"
+                fontWeight={isActive ? 'bold' : 'medium'}
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+              >
+                {name}
+              </PMText>
+              {artefactId === null && (
+                <PMBadge colorPalette="green" size="sm" fontSize="xs">
+                  New
+                </PMBadge>
+              )}
+            </PMHStack>
             <PMBadge colorPalette="blue" size="sm">
               {changeProposalCount}
             </PMBadge>
