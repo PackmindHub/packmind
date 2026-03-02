@@ -13,6 +13,10 @@ export default defineConfig({
     // video and screenshot disabled — Lightpanda has no rendering engine
     video: 'off',
     screenshot: 'off',
+    // Empty locale prevents Playwright from calling Emulation.setUserAgentOverride,
+    // which Lightpanda does not implement. Playwright's default is "en-US" which
+    // triggers that CDP command unconditionally (crPage.js: if options.locale → _updateUserAgent).
+    locale: '',
   },
   projects: [
     {
