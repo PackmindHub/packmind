@@ -68,7 +68,7 @@ type SkillChangeProposalPayloadMap = {
 export type NewStandardPayload = {
   name: string;
   description: string;
-  scope: string | null;
+  scope: string[] | string | null;
   rules: Array<{ content: string }>;
 };
 
