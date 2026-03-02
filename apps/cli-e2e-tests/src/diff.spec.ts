@@ -41,7 +41,7 @@ describeWithUserSignedUp('diff command', (getContext) => {
     command2Slug = command2.slug;
 
     // Create a package with both commands
-    await gateway.packages.create({
+    const createPackageResponse = await gateway.packages.create({
       name: 'My package',
       description: 'Test package for diff command',
       recipeIds: [command1.id, command2.id],
@@ -50,10 +50,13 @@ describeWithUserSignedUp('diff command', (getContext) => {
     });
 
     // Install the package locally
-    const installResult = await runCli('install my-package', {
-      apiKey,
-      cwd: testDir,
-    });
+    const installResult = await runCli(
+      `install ${createPackageResponse.package.slug}`,
+      {
+        apiKey,
+        cwd: testDir,
+      },
+    );
 
     if (installResult.returnCode !== 0) {
       throw new Error(
