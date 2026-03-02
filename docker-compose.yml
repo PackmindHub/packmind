@@ -99,7 +99,7 @@ services:
         apk add --no-cache python3 git make g++ py3-setuptools && \
         ln -sf /usr/bin/python3 /usr/bin/python && \
         rm -rf node_modules/.cache && \
-        npm install --unsafe-perm && \
+        npm install --unsafe-perm --no-audit && \
         chmod -R +x node_modules/.bin 2>/dev/null || true
     volumes:
       - .:/packmind
