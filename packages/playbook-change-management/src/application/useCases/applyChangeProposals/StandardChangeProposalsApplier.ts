@@ -15,6 +15,7 @@ import { DiffService } from '../../services/DiffService';
 
 const STANDARD_CHANGE_TYPES = [
   ChangeProposalType.updateStandardName,
+  ChangeProposalType.updateStandardScope,
   ChangeProposalType.updateStandardDescription,
   ChangeProposalType.addRule,
   ChangeProposalType.updateRule,
@@ -62,6 +63,18 @@ export class StandardChangeProposalsApplier extends AbstractChangeProposalsAppli
       return {
         ...source,
         name: changeProposal.payload.newValue,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateStandardScope,
+      )
+    ) {
+      return {
+        ...source,
+        scope: changeProposal.payload.newValue,
       };
     }
 
