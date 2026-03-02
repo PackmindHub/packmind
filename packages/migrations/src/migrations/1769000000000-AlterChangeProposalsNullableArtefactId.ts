@@ -39,7 +39,11 @@ export class AlterChangeProposalsNullableArtefactId1769000000000 implements Migr
     );
 
     try {
-      // Only safe if no null rows exist
+      await queryRunner.query(`
+        DELETE FROM "change_proposals"
+        WHERE "artefact_id" IS NULL
+      `);
+
       await queryRunner.query(`
         ALTER TABLE "change_proposals"
         ALTER COLUMN "artefact_id" SET NOT NULL
