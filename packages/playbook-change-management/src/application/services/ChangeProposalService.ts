@@ -43,6 +43,7 @@ function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
   if (
     type === ChangeProposalType.updateStandardName ||
     type === ChangeProposalType.updateStandardDescription ||
+    type === ChangeProposalType.updateStandardScope ||
     type === ChangeProposalType.addRule ||
     type === ChangeProposalType.updateRule ||
     type === ChangeProposalType.deleteRule
