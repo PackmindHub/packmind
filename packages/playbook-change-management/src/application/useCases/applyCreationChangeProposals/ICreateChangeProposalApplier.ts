@@ -4,6 +4,7 @@ import {
   ChangeProposalType,
   OrganizationId,
   Recipe,
+  Skill,
   SpaceId,
   Standard,
   UserId,
@@ -11,7 +12,8 @@ import {
 
 export type SupportedCreateChangedProposalType =
   | ChangeProposalType.createCommand
-  | ChangeProposalType.createStandard;
+  | ChangeProposalType.createStandard
+  | ChangeProposalType.createSkill;
 
 export type CreatedIds = ApplyCreationChangeProposalsResponse['created'];
 
@@ -20,7 +22,9 @@ type Artefact<CP extends SupportedCreateChangedProposalType> =
     ? Recipe
     : CP extends ChangeProposalType.createStandard
       ? Standard
-      : never;
+      : CP extends ChangeProposalType.createSkill
+        ? Skill
+        : never;
 
 export interface ICreateChangeProposalApplier<
   CP extends SupportedCreateChangedProposalType,

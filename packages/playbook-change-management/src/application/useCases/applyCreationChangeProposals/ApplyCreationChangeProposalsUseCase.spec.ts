@@ -6,14 +6,17 @@ import {
   createChangeProposalId,
   createOrganizationId,
   createRecipeId,
+  createSkillId,
   createSpaceId,
   createStandardId,
   createUserId,
   IAccountsPort,
   IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   NewCommandPayload,
+  NewSkillPayload,
   NewStandardPayload,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
@@ -21,6 +24,7 @@ import { organizationFactory } from '@packmind/accounts/test/organizationFactory
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { standardFactory } from '@packmind/standards/test/standardFactory';
+import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { changeProposalFactory } from '@packmind/playbook-change-management/test/changeProposalFactory';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ApplyCreationChangeProposalsUseCase } from './ApplyCreationChangeProposalsUseCase';
@@ -65,6 +69,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
+  let skillsPort: jest.Mocked<ISkillsPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
@@ -86,6 +91,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       createStandardWithExamples: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
+    skillsPort = {
+      uploadSkill: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
+
     changeProposalService = {
       findById: jest.fn().mockResolvedValue(proposal),
       batchUpdateProposalsInTransaction: jest.fn().mockResolvedValue(undefined),
@@ -100,6 +109,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       spacesPort,
       recipesPort,
       standardsPort,
+      skillsPort,
       changeProposalService,
       eventEmitterService,
       stubLogger(),
@@ -895,6 +905,350 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           organizationId,
           spaceId,
           accepted: [standardProposal.id],
+          rejected: [],
+        })
+        .catch(() => undefined);
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when accepting a createSkill proposal', () => {
+    const skillId = createSkillId('new-skill');
+    const skillPayload: NewSkillPayload = {
+      name: 'My Skill',
+      description: 'A coding skill',
+      prompt: 'This is the skill prompt with instructions',
+      license: 'MIT',
+      compatibility: '>=1.0.0',
+    };
+    const skillProposal = changeProposalFactory({
+      id: createChangeProposalId('skill-proposal-1'),
+      type: ChangeProposalType.createSkill,
+      artefactId: null,
+      payload: skillPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+    const skill = skillFactory({ id: skillId, spaceId });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(skillProposal);
+      skillsPort.uploadSkill.mockResolvedValue({
+        skill,
+        versionCreated: true,
+      });
+    });
+
+    it('creates a skill via skillsPort', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [skillProposal.id],
+        rejected: [],
+      });
+
+      expect(skillsPort.uploadSkill).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId,
+          organizationId,
+          spaceId,
+          files: expect.arrayContaining([
+            expect.objectContaining({
+              path: 'SKILL.md',
+              isBase64: false,
+            }),
+          ]),
+        }),
+      );
+    });
+
+    describe('generated SKILL.md', () => {
+      let skillMdFile: { path: string; content: string } | undefined;
+
+      beforeEach(async () => {
+        await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [skillProposal.id],
+          rejected: [],
+        });
+
+        const uploadCall = skillsPort.uploadSkill.mock.calls[0][0];
+        skillMdFile = uploadCall.files.find((f) => f.path === 'SKILL.md');
+      });
+
+      it('includes skill name', () => {
+        expect(skillMdFile?.content).toContain('name: My Skill');
+      });
+
+      it('includes skill description', () => {
+        expect(skillMdFile?.content).toContain('description: A coding skill');
+      });
+
+      it('includes license', () => {
+        expect(skillMdFile?.content).toContain('license: MIT');
+      });
+
+      it('includes compatibility', () => {
+        expect(skillMdFile?.content).toContain('compatibility: >=1.0.0');
+      });
+
+      it('includes prompt in body', () => {
+        expect(skillMdFile?.content).toContain(
+          'This is the skill prompt with instructions',
+        );
+      });
+    });
+
+    it('returns the created skill id', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [skillProposal.id],
+        rejected: [],
+      });
+
+      expect(result.created).toEqual({
+        commands: [],
+        standards: [],
+        skills: [skillId],
+      });
+    });
+
+    it('returns empty rejected list', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [skillProposal.id],
+        rejected: [],
+      });
+
+      expect(result.rejected).toEqual([]);
+    });
+
+    it('calls batchUpdateProposalsInTransaction with accepted proposals', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [skillProposal.id],
+        rejected: [],
+      });
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).toHaveBeenCalledWith({
+        acceptedProposals: [{ proposal: skillProposal, userId }],
+        rejectedProposals: [],
+      });
+    });
+
+    it('tracks change_proposal_accepted event', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [skillProposal.id],
+        rejected: [],
+      });
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            itemType: 'skill',
+            changeType: ChangeProposalType.createSkill,
+          }),
+        }),
+      );
+    });
+
+    describe('when payload includes additional files', () => {
+      it('includes all files in upload', async () => {
+        const proposalWithFiles = changeProposalFactory({
+          id: createChangeProposalId('skill-proposal-2'),
+          type: ChangeProposalType.createSkill,
+          artefactId: null,
+          payload: {
+            ...skillPayload,
+            files: [
+              {
+                path: 'helper.js',
+                content: 'export function helper() {}',
+                permissions: 'rw-r--r--',
+                isBase64: false,
+              },
+            ],
+          },
+          status: ChangeProposalStatus.pending,
+          spaceId,
+        });
+
+        changeProposalService.findById.mockResolvedValue(proposalWithFiles);
+
+        await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [proposalWithFiles.id],
+          rejected: [],
+        });
+
+        expect(skillsPort.uploadSkill).toHaveBeenCalledWith(
+          expect.objectContaining({
+            files: expect.arrayContaining([
+              expect.objectContaining({ path: 'SKILL.md' }),
+              expect.objectContaining({ path: 'helper.js' }),
+            ]),
+          }),
+        );
+      });
+    });
+  });
+
+  describe('when rejecting a createSkill proposal', () => {
+    const skillPayload: NewSkillPayload = {
+      name: 'My Skill',
+      description: 'A coding skill',
+      prompt: 'This is the skill prompt',
+    };
+    const skillProposal = changeProposalFactory({
+      id: createChangeProposalId('skill-proposal-1'),
+      type: ChangeProposalType.createSkill,
+      artefactId: null,
+      payload: skillPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(skillProposal);
+    });
+
+    it('does not create any skill', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [skillProposal.id],
+      });
+
+      expect(skillsPort.uploadSkill).not.toHaveBeenCalled();
+    });
+
+    it('returns empty created list', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [skillProposal.id],
+      });
+
+      expect(result.created).toEqual({
+        commands: [],
+        standards: [],
+        skills: [],
+      });
+    });
+
+    it('returns the rejected proposal id', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [skillProposal.id],
+      });
+
+      expect(result.rejected).toEqual([skillProposal.id]);
+    });
+
+    it('calls batchUpdateProposalsInTransaction with rejected proposals', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [skillProposal.id],
+      });
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).toHaveBeenCalledWith({
+        acceptedProposals: [],
+        rejectedProposals: [{ proposal: skillProposal, userId }],
+      });
+    });
+
+    it('tracks change_proposal_rejected event', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [skillProposal.id],
+      });
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            itemType: 'skill',
+            changeType: ChangeProposalType.createSkill,
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('when uploadSkill fails', () => {
+    const skillPayload: NewSkillPayload = {
+      name: 'My Skill',
+      description: 'A coding skill',
+      prompt: 'This is the skill prompt',
+    };
+    const skillProposal = changeProposalFactory({
+      id: createChangeProposalId('skill-proposal-1'),
+      type: ChangeProposalType.createSkill,
+      artefactId: null,
+      payload: skillPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(skillProposal);
+      skillsPort.uploadSkill.mockRejectedValue(
+        new Error('Skill upload failed'),
+      );
+    });
+
+    it('throws the uploadSkill error', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [skillProposal.id],
+          rejected: [],
+        }),
+      ).rejects.toThrow('Skill upload failed');
+    });
+
+    it('does not call batchUpdateProposalsInTransaction', async () => {
+      await useCase
+        .execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [skillProposal.id],
           rejected: [],
         })
         .catch(() => undefined);
