@@ -439,6 +439,23 @@ describe('ChangeProposalService', () => {
       });
     });
 
+    describe('when space has createCommand proposals', () => {
+      const createCommandProposal = createProposal(
+        ChangeProposalType.createCommand,
+        null as unknown as string,
+      );
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue([createCommandProposal]);
+      });
+
+      it('groups createCommand proposals under null key in commands', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(null)).toBe(1);
+      });
+    });
+
     describe('when space has a mix of pending and non-pending proposals', () => {
       const proposals = [
         createProposal(ChangeProposalType.updateStandardName, standardId1),

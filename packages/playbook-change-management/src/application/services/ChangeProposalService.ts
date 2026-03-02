@@ -24,7 +24,7 @@ const origin = 'ChangeProposalService';
 
 export type GroupedProposalsByArtefact = {
   standards: Map<StandardId, number>;
-  commands: Map<RecipeId, number>;
+  commands: Map<RecipeId | null, number>;
   skills: Map<SkillId, number>;
 };
 
@@ -33,7 +33,8 @@ type ArtefactCategory = 'standards' | 'commands' | 'skills';
 function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
   if (
     type === ChangeProposalType.updateCommandName ||
-    type === ChangeProposalType.updateCommandDescription
+    type === ChangeProposalType.updateCommandDescription ||
+    type === ChangeProposalType.createCommand
   ) {
     return 'commands';
   }
@@ -210,12 +211,11 @@ export class ChangeProposalService {
             (grouped.standards.get(proposal.artefactId as StandardId) ?? 0) + 1,
           );
           break;
-        case 'commands':
-          grouped.commands.set(
-            proposal.artefactId as RecipeId,
-            (grouped.commands.get(proposal.artefactId as RecipeId) ?? 0) + 1,
-          );
+        case 'commands': {
+          const key = proposal.artefactId as RecipeId | null;
+          grouped.commands.set(key, (grouped.commands.get(key) ?? 0) + 1);
           break;
+        }
         case 'skills':
           grouped.skills.set(
             proposal.artefactId as SkillId,

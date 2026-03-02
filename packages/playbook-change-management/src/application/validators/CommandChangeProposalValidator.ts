@@ -12,12 +12,14 @@ import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayl
 
 type SupportedType =
   | ChangeProposalType.updateCommandName
-  | ChangeProposalType.updateCommandDescription;
+  | ChangeProposalType.updateCommandDescription
+  | ChangeProposalType.createCommand;
 
 const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set<SupportedType>(
   [
     ChangeProposalType.updateCommandName,
     ChangeProposalType.updateCommandDescription,
+    ChangeProposalType.createCommand,
   ],
 );
 
@@ -37,6 +39,11 @@ export class CommandChangeProposalValidator implements IChangeProposalValidator 
   async validate(
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<{ artefactVersion: number }> {
+    // Creation proposals have no existing artefact — no validation needed
+    if (command.type === ChangeProposalType.createCommand) {
+      return { artefactVersion: 0 };
+    }
+
     const recipeId = command.artefactId as RecipeId;
 
     const recipe = await this.recipesPort.getRecipeById({
