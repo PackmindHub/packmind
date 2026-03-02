@@ -11,7 +11,10 @@ import {
   ChangeProposalId,
   ChangeProposalStatus,
   ChangeProposalType,
+  createUserId,
+  getItemTypeFromChangeProposalType,
   IAccountsPort,
+  IEventTrackingPort,
   IRecipesPort,
   ISpacesPort,
   NewCommandPayload,
@@ -37,6 +40,7 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly changeProposalService: ChangeProposalService,
+    private readonly eventTrackingPort: IEventTrackingPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -130,6 +134,44 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
         error: error instanceof Error ? error.message : String(error),
       });
     });
+
+    for (const { proposal } of acceptedProposals) {
+      this.eventTrackingPort
+        .trackEvent(
+          createUserId(command.userId),
+          command.organization.id,
+          'change_proposal_accepted',
+          {
+            itemType: getItemTypeFromChangeProposalType(proposal.type),
+            itemId: String(proposal.artefactId ?? ''),
+            changeType: proposal.type,
+          },
+        )
+        .catch((error) => {
+          this.logger.error('Failed to track change_proposal_accepted event', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
+    }
+
+    for (const { proposal } of rejectedProposals) {
+      this.eventTrackingPort
+        .trackEvent(
+          createUserId(command.userId),
+          command.organization.id,
+          'change_proposal_rejected',
+          {
+            itemType: getItemTypeFromChangeProposalType(proposal.type),
+            itemId: String(proposal.artefactId ?? ''),
+            changeType: proposal.type,
+          },
+        )
+        .catch((error) => {
+          this.logger.error('Failed to track change_proposal_rejected event', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
+    }
 
     return {
       created,

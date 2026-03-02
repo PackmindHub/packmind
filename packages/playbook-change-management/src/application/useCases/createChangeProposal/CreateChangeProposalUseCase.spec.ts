@@ -15,6 +15,7 @@ import {
   createSpaceId,
   createUserId,
   IAccountsPort,
+  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -72,6 +73,7 @@ describe('CreateChangeProposalUseCase', () => {
   let skillsPort: jest.Mocked<ISkillsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let service: jest.Mocked<ChangeProposalService>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
 
   const buildCommand = (
     overrides?: Partial<CreateChangeProposalCommand<ChangeProposalType>>,
@@ -114,6 +116,10 @@ describe('CreateChangeProposalUseCase', () => {
       findExistingPending: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IEventTrackingPort>;
+
     useCase = new CreateChangeProposalUseCase(
       accountsPort,
       spacesPort,
@@ -122,6 +128,7 @@ describe('CreateChangeProposalUseCase', () => {
         new CommandChangeProposalValidator(recipesPort),
         new SkillChangeProposalValidator(skillsPort),
       ],
+      eventTrackingPort,
       stubLogger(),
     );
 
@@ -172,6 +179,21 @@ describe('CreateChangeProposalUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.wasCreated).toBe(true);
+    });
+
+    it('tracks change_proposal_submitted event', async () => {
+      await useCase.execute(command);
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'change_proposal_submitted',
+        expect.objectContaining({
+          itemType: 'command',
+          changeType: ChangeProposalType.updateCommandName,
+          captureMode: ChangeProposalCaptureMode.commit,
+        }),
+      );
     });
   });
 
@@ -725,6 +747,12 @@ describe('CreateChangeProposalUseCase', () => {
 
       expect(service.createChangeProposal).not.toHaveBeenCalled();
     });
+
+    it('does not track change_proposal_submitted event', async () => {
+      await useCase.execute(command);
+
+      expect(eventTrackingPort.trackEvent).not.toHaveBeenCalled();
+    });
   });
 
   describe('when validator returns resolvedPayload', () => {
@@ -749,6 +777,7 @@ describe('CreateChangeProposalUseCase', () => {
         spacesPort,
         service,
         [mockValidator],
+        eventTrackingPort,
         stubLogger(),
       );
 

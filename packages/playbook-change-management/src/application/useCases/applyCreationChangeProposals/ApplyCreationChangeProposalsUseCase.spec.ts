@@ -8,6 +8,7 @@ import {
   createSpaceId,
   createUserId,
   IAccountsPort,
+  IEventTrackingPort,
   IRecipesPort,
   ISpacesPort,
   NewCommandPayload,
@@ -60,6 +61,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
 
   beforeEach(() => {
     accountsPort = {
@@ -80,11 +82,16 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       batchUpdateProposalsInTransaction: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IEventTrackingPort>;
+
     useCase = new ApplyCreationChangeProposalsUseCase(
       accountsPort,
       spacesPort,
       recipesPort,
       changeProposalService,
+      eventTrackingPort,
       stubLogger(),
     );
   });
@@ -152,6 +159,26 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejectedProposals: [],
       });
     });
+
+    it('tracks change_proposal_accepted event', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [proposalId],
+        rejected: [],
+      });
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'change_proposal_accepted',
+        expect.objectContaining({
+          itemType: 'command',
+          changeType: ChangeProposalType.createCommand,
+        }),
+      );
+    });
   });
 
   describe('when rejecting a createCommand proposal', () => {
@@ -206,6 +233,26 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         acceptedProposals: [],
         rejectedProposals: [{ proposal, userId }],
       });
+    });
+
+    it('tracks change_proposal_rejected event', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [],
+        rejected: [proposalId],
+      });
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'change_proposal_rejected',
+        expect.objectContaining({
+          itemType: 'command',
+          changeType: ChangeProposalType.createCommand,
+        }),
+      );
     });
   });
 

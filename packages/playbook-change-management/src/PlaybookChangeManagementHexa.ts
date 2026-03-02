@@ -4,6 +4,8 @@ import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   IPlaybookChangeManagementPort,
   IPlaybookChangeManagementPortName,
   IRecipesPort,
@@ -80,6 +82,9 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
       const skillsPort = registry.getAdapter<ISkillsPort>(ISkillsPortName);
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
+        IEventTrackingPortName,
+      );
 
       await this.playbookChangeManagementAdapter.initialize({
         [IAccountsPortName]: accountsPort,
@@ -87,6 +92,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
         [ISpacesPortName]: spacesPort,
         [ISkillsPortName]: skillsPort,
         [IStandardsPortName]: standardsPort,
+        [IEventTrackingPortName]: eventTrackingPort,
       });
 
       this.logger.info('PlaybookChangeManagementHexa initialized successfully');

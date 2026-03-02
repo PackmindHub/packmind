@@ -14,6 +14,8 @@ import {
   CreateChangeProposalResponse,
   IAccountsPort,
   IAccountsPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   IPlaybookChangeManagementPort,
   IRecipesPort,
   IRecipesPortName,
@@ -120,6 +122,7 @@ export class PlaybookChangeManagementAdapter
     [ISpacesPortName]: ISpacesPort;
     [ISkillsPortName]: ISkillsPort;
     [IStandardsPortName]: IStandardsPort;
+    [IEventTrackingPortName]: IEventTrackingPort;
   }): Promise<void> {
     this.logger.info('Initializing PlaybookChangeManagementAdapter with ports');
 
@@ -163,6 +166,14 @@ export class PlaybookChangeManagementAdapter
       );
     }
 
+    const eventTrackingPort = ports[IEventTrackingPortName];
+
+    if (!eventTrackingPort) {
+      throw new Error(
+        'PlaybookChangeManagementAdapter: IEventTrackingPort not provided',
+      );
+    }
+
     const changeProposalService = this.services.getChangeProposalService();
     const conflictDetectionService =
       this.services.getConflictDetectionService();
@@ -180,6 +191,7 @@ export class PlaybookChangeManagementAdapter
       recipesPort,
       skillsPort,
       changeProposalService,
+      eventTrackingPort,
     );
 
     this._applyCreationChangeProposals =
@@ -188,6 +200,7 @@ export class PlaybookChangeManagementAdapter
         spacesPort,
         recipesPort,
         changeProposalService,
+        eventTrackingPort,
       );
 
     this._batchCreateChangeProposals = new BatchCreateChangeProposalsUseCase(
@@ -206,6 +219,7 @@ export class PlaybookChangeManagementAdapter
       spacesPort,
       changeProposalService,
       validators,
+      eventTrackingPort,
     );
 
     this._listChangeProposalsByArtefact =

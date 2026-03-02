@@ -14,8 +14,10 @@ import {
   ChangeProposalType,
   createOrganizationId,
   createUserId,
+  getItemTypeFromChangeProposalType,
   IAccountsPort,
   IApplyChangeProposalsUseCase,
+  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -56,6 +58,7 @@ export class ApplyChangeProposalsUseCase<
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
     private readonly changeProposalService: ChangeProposalService,
+    private readonly eventTrackingPort: IEventTrackingPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -204,6 +207,44 @@ export class ApplyChangeProposalsUseCase<
         error: error instanceof Error ? error.message : String(error),
       });
     });
+
+    for (const { proposal } of acceptedProposals) {
+      this.eventTrackingPort
+        .trackEvent(
+          createUserId(command.userId),
+          command.organization.id,
+          'change_proposal_accepted',
+          {
+            itemType: getItemTypeFromChangeProposalType(proposal.type),
+            itemId: String(proposal.artefactId ?? ''),
+            changeType: proposal.type,
+          },
+        )
+        .catch((error) => {
+          this.logger.error('Failed to track change_proposal_accepted event', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
+    }
+
+    for (const { proposal } of rejectedProposals) {
+      this.eventTrackingPort
+        .trackEvent(
+          createUserId(command.userId),
+          command.organization.id,
+          'change_proposal_rejected',
+          {
+            itemType: getItemTypeFromChangeProposalType(proposal.type),
+            itemId: String(proposal.artefactId ?? ''),
+            changeType: proposal.type,
+          },
+        )
+        .catch((error) => {
+          this.logger.error('Failed to track change_proposal_rejected event', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
+    }
 
     return {
       newArtefactVersion: newVersion.id as ArtefactVersionId<T>,

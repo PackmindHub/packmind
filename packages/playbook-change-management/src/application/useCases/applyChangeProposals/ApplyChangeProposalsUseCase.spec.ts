@@ -9,6 +9,7 @@ import {
   createStandardId,
   createUserId,
   IAccountsPort,
+  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -57,6 +58,7 @@ describe('ApplyChangeProposalsUseCase', () => {
   let recipesPort: jest.Mocked<IRecipesPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
 
   beforeEach(() => {
     accountsPort = {
@@ -93,6 +95,10 @@ describe('ApplyChangeProposalsUseCase', () => {
       batchUpdateProposalsInTransaction: jest.fn(),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IEventTrackingPort>;
+
     useCase = new ApplyChangeProposalsUseCase(
       accountsPort,
       spacesPort,
@@ -100,6 +106,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       recipesPort,
       skillsPort,
       changeProposalService,
+      eventTrackingPort,
       stubLogger(),
     );
 
@@ -221,6 +228,40 @@ describe('ApplyChangeProposalsUseCase', () => {
         rejectedProposals: [],
       });
     });
+
+    it('tracks one change_proposal_accepted event per accepted proposal', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [changeProposal1.id, changeProposal2.id],
+        rejected: [],
+      });
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledTimes(2);
+    });
+
+    it('tracks change_proposal_accepted event with correct payload', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [changeProposal1.id, changeProposal2.id],
+        rejected: [],
+      });
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'change_proposal_accepted',
+        expect.objectContaining({
+          itemType: 'command',
+          changeType: ChangeProposalType.updateCommandName,
+        }),
+      );
+    });
   });
 
   describe('when rejecting recipe change proposals successfully', () => {
@@ -321,6 +362,40 @@ describe('ApplyChangeProposalsUseCase', () => {
           { proposal: changeProposal2, userId },
         ],
       });
+    });
+
+    it('tracks one change_proposal_rejected event per rejected proposal', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [],
+        rejected: [changeProposal1.id, changeProposal2.id],
+      });
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledTimes(2);
+    });
+
+    it('tracks change_proposal_rejected event with correct payload', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [],
+        rejected: [changeProposal1.id, changeProposal2.id],
+      });
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'change_proposal_rejected',
+        expect.objectContaining({
+          itemType: 'command',
+          changeType: ChangeProposalType.updateCommandName,
+        }),
+      );
     });
   });
 

@@ -9,8 +9,10 @@ import {
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   createUserId,
+  getItemTypeFromChangeProposalType,
   IAccountsPort,
   ICreateChangeProposalUseCase,
+  IEventTrackingPort,
   ISpacesPort,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
@@ -32,6 +34,7 @@ export class CreateChangeProposalUseCase
     private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     private readonly validators: IChangeProposalValidator[],
+    private readonly eventTrackingPort: IEventTrackingPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -85,6 +88,24 @@ export class CreateChangeProposalUseCase
         error: error instanceof Error ? error.message : String(error),
       });
     });
+
+    this.eventTrackingPort
+      .trackEvent(
+        createUserId(command.userId),
+        command.organization.id,
+        'change_proposal_submitted',
+        {
+          itemType: getItemTypeFromChangeProposalType(command.type),
+          itemId: String(changeProposal.artefactId ?? ''),
+          changeType: command.type,
+          captureMode: command.captureMode,
+        },
+      )
+      .catch((error) => {
+        this.logger.error('Failed to track change_proposal_submitted event', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
 
     return { changeProposal, wasCreated: true };
   }
