@@ -1,14 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AlterChangeProposalsNullableArtefactId1769000000000';
 
 export class AlterChangeProposalsNullableArtefactId1769000000000 implements MigrationInterface {
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   public async up(queryRunner: QueryRunner): Promise<void> {
