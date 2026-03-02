@@ -108,6 +108,13 @@ export const routes = {
       artefactId: string,
     ) =>
       `/org/${orgSlug}/space/${spaceSlug}/review-changes/${artefactType}/${artefactId}`,
+    toReviewChangesCreation: (
+      orgSlug: string,
+      spaceSlug: string,
+      artefactType: string,
+      proposalId: string,
+    ) =>
+      `/org/${orgSlug}/space/${spaceSlug}/review-changes/${artefactType}/new/${proposalId}`,
   },
 
   /**
