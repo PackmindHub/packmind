@@ -337,6 +337,41 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     });
   });
 
+  describe('when createCommand proposals have null artefactId', () => {
+    const command = buildCommand();
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map([[null, 1]]),
+        skills: new Map(),
+      });
+    });
+
+    it('includes a null-artefactId entry in commands', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.commands).toHaveLength(1);
+    });
+
+    it('returns synthetic New command entry', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.commands[0]).toEqual({
+        artefactId: null,
+        name: 'New command',
+        changeProposalCount: 1,
+      });
+    });
+
+    it('does not call recipesPort for null artefactId', async () => {
+      await useCase.execute(command);
+
+      expect(recipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when space does not belong to the organization', () => {
     const command = buildCommand();
     const otherOrgSpace = spaceFactory({

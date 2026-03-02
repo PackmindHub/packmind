@@ -82,11 +82,20 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private async enrichRecipesWithNames(
-    recipesMap: Map<RecipeId, number>,
+    recipesMap: Map<RecipeId | null, number>,
   ): Promise<ListProposalsOverview<RecipeId>[]> {
     const result: ListProposalsOverview<RecipeId>[] = [];
 
     for (const [artefactId, count] of recipesMap.entries()) {
+      if (artefactId === null) {
+        result.push({
+          artefactId: null,
+          name: 'New command',
+          changeProposalCount: count,
+        });
+        continue;
+      }
+
       const recipe = await this.recipesPort.getRecipeByIdInternal(artefactId);
       if (recipe) {
         result.push({
