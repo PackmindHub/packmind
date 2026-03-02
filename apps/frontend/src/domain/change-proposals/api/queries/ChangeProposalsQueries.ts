@@ -434,16 +434,19 @@ export const useApplyCreationChangeProposalsMutation = (params?: {
     ): Promise<ApplyCreationChangeProposalsResponse> => {
       return changeProposalsGateway.applyCreationChangeProposals(command);
     },
-    onSuccess: async (_response, variables) => {
+    onSuccess: async (response, variables) => {
       await queryClient.invalidateQueries({
         queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
       });
 
       const accepted = variables.accepted.length > 0;
       if (accepted && params?.orgSlug && params?.spaceSlug) {
+        const isStandard = response.created.standards.length > 0;
         pmToaster.create({
-          title: 'Command created',
-          description: 'The new command has been added to your space.',
+          title: isStandard ? 'Standard created' : 'Command created',
+          description: isStandard
+            ? 'The new standard has been added to your space.'
+            : 'The new command has been added to your space.',
           type: 'success',
         });
       } else {

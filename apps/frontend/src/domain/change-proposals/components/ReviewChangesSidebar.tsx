@@ -80,7 +80,7 @@ function CreationNavLink({
   const to = routes.space.toReviewChangesCreation(
     orgSlug,
     spaceSlug,
-    'commands',
+    proposal.artefactType,
     proposal.proposalId,
   );
 
@@ -131,12 +131,18 @@ export function ReviewChangesSidebar({
     return null;
   }
 
+  const commandCreations = groupedProposals.creations.filter(
+    (c) => c.artefactType === 'commands',
+  );
+  const standardCreations = groupedProposals.creations.filter(
+    (c) => c.artefactType === 'standards',
+  );
+
   const hasCommands =
-    groupedProposals.commands.length > 0 ||
-    groupedProposals.creations.length > 0;
+    groupedProposals.commands.length > 0 || commandCreations.length > 0;
 
   const commandNavEntries = [
-    ...groupedProposals.creations.map((proposal) => (
+    ...commandCreations.map((proposal) => (
       <CreationNavLink
         key={proposal.proposalId}
         proposal={proposal}
@@ -157,17 +163,30 @@ export function ReviewChangesSidebar({
     )),
   ];
 
-  const standardNavEntries = groupedProposals.standards.map((item) => (
-    <ArtefactNavLink
-      key={item.artefactId}
-      artefactId={item.artefactId}
-      name={item.name}
-      changeProposalCount={item.changeProposalCount}
-      artefactType="standards"
-      orgSlug={orgSlug}
-      spaceSlug={spaceSlug}
-    />
-  ));
+  const standardNavEntries = [
+    ...standardCreations.map((proposal) => (
+      <CreationNavLink
+        key={proposal.proposalId}
+        proposal={proposal}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    )),
+    ...groupedProposals.standards.map((item) => (
+      <ArtefactNavLink
+        key={item.artefactId}
+        artefactId={item.artefactId}
+        name={item.name}
+        changeProposalCount={item.changeProposalCount}
+        artefactType="standards"
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    )),
+  ];
+
+  const hasStandards =
+    groupedProposals.standards.length > 0 || standardCreations.length > 0;
 
   const skillNavEntries = groupedProposals.skills.map((item) => (
     <ArtefactNavLink
@@ -186,7 +205,7 @@ export function ReviewChangesSidebar({
       {hasCommands && (
         <PMVerticalNavSection title="Commands" navEntries={commandNavEntries} />
       )}
-      {standardNavEntries.length > 0 && (
+      {hasStandards && (
         <PMVerticalNavSection
           title="Standards"
           navEntries={standardNavEntries}

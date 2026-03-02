@@ -10,9 +10,9 @@ import {
 } from '@packmind/ui';
 import {
   ChangeProposalId,
-  CommandCreationProposalOverview,
   OrganizationId,
   SpaceId,
+  StandardCreationProposalOverview,
 } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -21,22 +21,18 @@ import {
   useApplyCreationChangeProposalsMutation,
 } from '../../api/queries/ChangeProposalsQueries';
 import { routes } from '../../../../shared/utils/routes';
-import {
-  MarkdownEditor,
-  MarkdownEditorProvider,
-} from '../../../../shared/components/editor/MarkdownEditor';
 
-interface CreateCommandReviewDetailProps {
+interface CreateStandardReviewDetailProps {
   proposalId: string;
   orgSlug?: string;
   spaceSlug?: string;
 }
 
-export function CreateCommandReviewDetail({
+export function CreateStandardReviewDetail({
   proposalId,
   orgSlug: orgSlugProp,
   spaceSlug: spaceSlugProp,
-}: Readonly<CreateCommandReviewDetailProps>) {
+}: Readonly<CreateStandardReviewDetailProps>) {
   const { organization } = useAuthContext();
   const { spaceId, space } = useCurrentSpace();
   const { orgSlug: orgSlugParam } = useParams<{ orgSlug: string }>();
@@ -54,8 +50,8 @@ export function CreateCommandReviewDetail({
   });
 
   const proposal = groupedProposals?.creations.find(
-    (c): c is CommandCreationProposalOverview =>
-      c.artefactType === 'commands' && c.proposalId === proposalId,
+    (c): c is StandardCreationProposalOverview =>
+      c.artefactType === 'standards' && c.proposalId === proposalId,
   );
 
   const handleAccept = useCallback(async () => {
@@ -69,9 +65,11 @@ export function CreateCommandReviewDetail({
     });
 
     if (orgSlug && spaceSlug) {
-      const createdCommandId = response.created.commands[0];
-      if (createdCommandId) {
-        navigate(routes.space.toCommand(orgSlug, spaceSlug, createdCommandId));
+      const createdStandardId = response.created.standards[0];
+      if (createdStandardId) {
+        navigate(
+          routes.space.toStandard(orgSlug, spaceSlug, createdStandardId),
+        );
       } else {
         navigate(routes.space.toReviewChanges(orgSlug, spaceSlug));
       }
@@ -171,17 +169,43 @@ export function CreateCommandReviewDetail({
           </PMButton>
         </PMHStack>
       </PMBox>
-      <PMVStack gap={2} align="stretch" p={6}>
+      <PMVStack gap={6} align="stretch" p={6}>
         <PMText fontSize="lg" fontWeight="semibold">
           {proposal.name}
         </PMText>
-        <MarkdownEditorProvider>
-          <MarkdownEditor
-            defaultValue={proposal.content}
-            readOnly
-            paddingVariant="none"
-          />
-        </MarkdownEditorProvider>
+        {proposal.scope && (
+          <PMVStack gap={1} align="stretch">
+            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
+              Scope
+            </PMText>
+            <PMText fontSize="sm">{proposal.scope}</PMText>
+          </PMVStack>
+        )}
+        {proposal.description && (
+          <PMVStack gap={1} align="stretch">
+            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
+              Description
+            </PMText>
+            <PMText fontSize="sm">{proposal.description}</PMText>
+          </PMVStack>
+        )}
+        {proposal.rules.length > 0 && (
+          <PMVStack gap={2} align="stretch">
+            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
+              Rules
+            </PMText>
+            <PMVStack gap={2} align="stretch">
+              {proposal.rules.map((rule, index) => (
+                <PMHStack key={index} gap={2} align="flex-start">
+                  <PMText fontSize="sm" color="secondary" flexShrink={0}>
+                    {index + 1}.
+                  </PMText>
+                  <PMText fontSize="sm">{rule.content}</PMText>
+                </PMHStack>
+              ))}
+            </PMVStack>
+          </PMVStack>
+        )}
       </PMVStack>
     </PMBox>
   );
