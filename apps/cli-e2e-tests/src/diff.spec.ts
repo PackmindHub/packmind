@@ -49,6 +49,12 @@ describeWithUserSignedUp('diff command', (getContext) => {
       spaceId,
     });
 
+    const whoamiResponse = await runCli('whoami', {
+      apiKey,
+      cwd: testDir,
+    });
+    console.log(whoamiResponse);
+
     const listPackagesResponse = await runCli('install --list', {
       apiKey,
       cwd: testDir,
