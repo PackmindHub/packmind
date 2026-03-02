@@ -43,7 +43,7 @@ export function ResultTabContent({
         </>
       ) : (
         <PMBox py={12} textAlign="center">
-          <PMText color="fg.muted" fontStyle="italic">
+          <PMText color="faded" fontStyle="italic">
             No accepted changes yet
           </PMText>
         </PMBox>
