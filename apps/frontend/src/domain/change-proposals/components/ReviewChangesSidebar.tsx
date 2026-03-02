@@ -1,6 +1,5 @@
 import { NavLink, useParams } from 'react-router';
 import {
-  PMAlert,
   PMBadge,
   PMBox,
   PMHStack,
@@ -8,8 +7,12 @@ import {
   PMText,
   PMVerticalNav,
   PMVerticalNavSection,
+  PMAlert,
 } from '@packmind/ui';
-import { ListChangeProposalsBySpaceResponse } from '@packmind/types';
+import {
+  CreationProposalOverview,
+  ListChangeProposalsBySpaceResponse,
+} from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
 
 function ArtefactNavLink({
@@ -20,29 +23,22 @@ function ArtefactNavLink({
   orgSlug,
   spaceSlug,
 }: {
-  artefactId: string | null;
+  artefactId: string;
   name: string;
   changeProposalCount: number;
   artefactType: string;
   orgSlug: string;
   spaceSlug: string;
 }) {
-  const to =
-    artefactId === null
-      ? routes.space.toReviewChangesArtefactType(
-          orgSlug,
-          spaceSlug,
-          artefactType,
-        )
-      : routes.space.toReviewChangesArtefact(
-          orgSlug,
-          spaceSlug,
-          artefactType,
-          artefactId,
-        );
+  const to = routes.space.toReviewChangesArtefact(
+    orgSlug,
+    spaceSlug,
+    artefactType,
+    artefactId,
+  );
 
   return (
-    <NavLink key={artefactId ?? artefactType} to={to} prefetch="intent">
+    <NavLink key={artefactId} to={to} prefetch="intent">
       {({ isActive }) => (
         <PMLink
           variant="navbar"
@@ -53,24 +49,66 @@ function ArtefactNavLink({
           width="full"
         >
           <PMHStack width="full" justifyContent="space-between" gap={2}>
-            <PMHStack gap={1} overflow="hidden" flex={1}>
-              <PMText
-                fontSize="sm"
-                fontWeight={isActive ? 'bold' : 'medium'}
-                overflow="hidden"
-                textOverflow="ellipsis"
-                whiteSpace="nowrap"
-              >
-                {name}
-              </PMText>
-              {artefactId === null && (
-                <PMBadge colorPalette="green" size="sm" fontSize="xs">
-                  New
-                </PMBadge>
-              )}
-            </PMHStack>
+            <PMText
+              fontSize="sm"
+              fontWeight={isActive ? 'bold' : 'medium'}
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+            >
+              {name}
+            </PMText>
             <PMBadge colorPalette="blue" size="sm">
               {changeProposalCount}
+            </PMBadge>
+          </PMHStack>
+        </PMLink>
+      )}
+    </NavLink>
+  );
+}
+
+function CreationNavLink({
+  proposal,
+  artefactType,
+  orgSlug,
+  spaceSlug,
+}: {
+  proposal: CreationProposalOverview;
+  artefactType: string;
+  orgSlug: string;
+  spaceSlug: string;
+}) {
+  const to = routes.space.toReviewChangesCreation(
+    orgSlug,
+    spaceSlug,
+    artefactType,
+    proposal.proposalId,
+  );
+
+  return (
+    <NavLink key={proposal.proposalId} to={to} prefetch="intent">
+      {({ isActive }) => (
+        <PMLink
+          variant="navbar"
+          data-active={isActive ? 'true' : undefined}
+          as="span"
+          display="flex"
+          alignItems="center"
+          width="full"
+        >
+          <PMHStack width="full" justifyContent="space-between" gap={2}>
+            <PMText
+              fontSize="sm"
+              fontWeight={isActive ? 'bold' : 'medium'}
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+            >
+              {proposal.name}
+            </PMText>
+            <PMBadge colorPalette="green" size="sm" fontSize="xs">
+              New
             </PMBadge>
           </PMHStack>
         </PMLink>
@@ -95,39 +133,71 @@ export function ReviewChangesSidebar({
     return null;
   }
 
-  const sectionConfig = [
-    { key: 'commands', title: 'Commands', items: groupedProposals.commands },
-    {
-      key: 'standards',
-      title: 'Standards',
-      items: groupedProposals.standards,
-    },
-    { key: 'skills', title: 'Skills', items: groupedProposals.skills },
-  ] as const;
+  const hasCommands =
+    groupedProposals.commands.length > 0 ||
+    groupedProposals.creations.length > 0;
 
-  const sections = sectionConfig
-    .filter(({ items }) => items.length > 0)
-    .map(({ key, title, items }) => (
-      <PMVerticalNavSection
-        key={key}
-        title={title}
-        navEntries={items.map((item) => (
-          <ArtefactNavLink
-            key={item.artefactId ?? `${key}-new`}
-            artefactId={item.artefactId}
-            name={item.name}
-            changeProposalCount={item.changeProposalCount}
-            artefactType={key}
-            orgSlug={orgSlug}
-            spaceSlug={spaceSlug}
-          />
-        ))}
+  const commandNavEntries = [
+    ...groupedProposals.creations.map((proposal) => (
+      <CreationNavLink
+        key={proposal.proposalId}
+        proposal={proposal}
+        artefactType="commands"
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
       />
-    ));
+    )),
+    ...groupedProposals.commands.map((item) => (
+      <ArtefactNavLink
+        key={item.artefactId}
+        artefactId={item.artefactId}
+        name={item.name}
+        changeProposalCount={item.changeProposalCount}
+        artefactType="commands"
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    )),
+  ];
+
+  const standardNavEntries = groupedProposals.standards.map((item) => (
+    <ArtefactNavLink
+      key={item.artefactId}
+      artefactId={item.artefactId}
+      name={item.name}
+      changeProposalCount={item.changeProposalCount}
+      artefactType="standards"
+      orgSlug={orgSlug}
+      spaceSlug={spaceSlug}
+    />
+  ));
+
+  const skillNavEntries = groupedProposals.skills.map((item) => (
+    <ArtefactNavLink
+      key={item.artefactId}
+      artefactId={item.artefactId}
+      name={item.name}
+      changeProposalCount={item.changeProposalCount}
+      artefactType="skills"
+      orgSlug={orgSlug}
+      spaceSlug={spaceSlug}
+    />
+  ));
 
   return (
     <PMVerticalNav logo={false} showLogoContainer={false} width="270px">
-      {sections}
+      {hasCommands && (
+        <PMVerticalNavSection title="Commands" navEntries={commandNavEntries} />
+      )}
+      {standardNavEntries.length > 0 && (
+        <PMVerticalNavSection
+          title="Standards"
+          navEntries={standardNavEntries}
+        />
+      )}
+      {skillNavEntries.length > 0 && (
+        <PMVerticalNavSection title="Skills" navEntries={skillNavEntries} />
+      )}
       <PMBox p={4} mt="auto">
         <PMAlert.Root status="info">
           <PMAlert.Indicator />
