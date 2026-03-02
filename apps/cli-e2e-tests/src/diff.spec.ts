@@ -49,18 +49,6 @@ describeWithUserSignedUp('diff command', (getContext) => {
       spaceId,
     });
 
-    const whoamiResponse = await runCli('whoami', {
-      apiKey,
-      cwd: testDir,
-    });
-    console.log(whoamiResponse);
-
-    const listPackagesResponse = await runCli('install --list', {
-      apiKey,
-      cwd: testDir,
-    });
-    console.log(listPackagesResponse);
-
     // Install the package locally
     const installResult = await runCli(
       `install ${createPackageResponse.package.slug}`,

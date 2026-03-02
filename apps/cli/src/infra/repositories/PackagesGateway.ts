@@ -15,13 +15,7 @@ export class PackagesGateway implements IPackagesGateway {
   ) {}
 
   public list: Gateway<IListPackagesUseCase> = async () => {
-    const { host, organizationId } = this.httpClient.getAuthContext();
-
-    // eslint-disable-next-line no-restricted-syntax
-    console.log('Getching available packages', {
-      host,
-      url: `/api/v0/organizations/${organizationId}/packages`,
-    });
+    const { organizationId } = this.httpClient.getAuthContext();
 
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/packages`,
