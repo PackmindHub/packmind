@@ -203,6 +203,8 @@ export function ProposalReviewPanel({
       reviewingProposal.type === ChangeProposalType.updateStandardName;
     const isDescriptionDiff =
       reviewingProposal.type === ChangeProposalType.updateStandardDescription;
+    const isScopeDiff =
+      reviewingProposal.type === ChangeProposalType.updateStandardScope;
 
     return (
       <PMVStack gap={4} align="stretch">
@@ -244,6 +246,14 @@ export function ProposalReviewPanel({
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedStandard.name}
             </PMText>
+
+            <PMText variant={'body'}>
+              <PMText variant={'body-important'}>Scope:</PMText>{' '}
+              {isScopeDiff && selectedStandard.scope
+                ? renderDiffText(payload.oldValue, payload.newValue)
+                : selectedStandard.scope}
+            </PMText>
+
             {renderMarkdownDiffOrPreview(
               isDescriptionDiff,
               showPreview,
@@ -357,6 +367,27 @@ export function ProposalReviewPanel({
             </PMText>
           )}
 
+          {unifiedResult.changes.scope ? (
+            <HighlightedText
+              oldValue={unifiedResult.changes.scope.originalValue}
+              newValue={unifiedResult.changes.scope.finalValue}
+              proposalNumbers={getProposalNumbers(
+                unifiedResult.changes.scope.proposalIds,
+                selectedStandardProposals,
+              )}
+            >
+              <PMText variant={'body'}>
+                <PMText variant={'body-important'}>Scope:</PMText>{' '}
+                {selectedStandard.scope}
+              </PMText>
+            </HighlightedText>
+          ) : (
+            <PMText variant={'body'}>
+              <PMText variant={'body-important'}>Scope:</PMText>{' '}
+              {selectedStandard.scope}
+            </PMText>
+          )}
+
           {/* Description */}
           {unifiedResult.changes.description ? (
             <UnifiedMarkdownViewer
@@ -463,6 +494,10 @@ export function ProposalReviewPanel({
           {/* Standard view (no unified view) */}
           <PMText fontSize="lg" fontWeight="semibold">
             {selectedStandard.name}
+          </PMText>
+          <PMText variant={'body'}>
+            <PMText variant={'body-important'}>Scope:</PMText>{' '}
+            {selectedStandard.scope}
           </PMText>
           <MarkdownEditorProvider>
             <MarkdownEditor

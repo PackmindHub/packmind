@@ -1,12 +1,12 @@
 import {
+  ChangeProposal,
   ChangeProposalId,
   ChangeProposalType,
+  createRuleId,
   Rule,
   RuleId,
   Standard,
   StandardVersionId,
-  createRuleId,
-  ChangeProposal,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
 import { buildProposalNumberMap } from './changeProposalHelpers';
@@ -25,12 +25,14 @@ export interface RuleChange {
 
 export interface ChangeTracker {
   name?: FieldChange;
+  scope?: FieldChange;
   description?: FieldChange;
   rules: RuleChange;
 }
 
 export interface AppliedStandard {
   name: string;
+  scope: string;
   description: string;
   rules: Rule[];
   changes: ChangeTracker;
@@ -59,6 +61,7 @@ export function applyStandardProposals(
 
   // Initialize result with current standard state
   let currentName = standard.name;
+  let currentScope = standard.scope ?? '';
   let currentDescription = standard.description;
   let currentRules = [...rules];
 
@@ -73,6 +76,7 @@ export function applyStandardProposals(
 
   // Track original values for change detection
   const originalName = standard.name;
+  const originalScope = standard.scope ?? '';
   const originalDescription = standard.description;
 
   // Apply each proposal sequentially
@@ -97,6 +101,30 @@ export function applyStandardProposals(
           } else {
             changes.name.finalValue = currentName;
             changes.name.proposalIds.push(proposal.id);
+          }
+        }
+        break;
+      }
+
+      case ChangeProposalType.updateStandardScope: {
+        if (
+          isExpectedChangeProposalType(
+            proposal,
+            ChangeProposalType.updateStandardScope,
+          )
+        ) {
+          currentScope = proposal.payload.newValue;
+
+          // Track description change
+          if (!changes.scope) {
+            changes.scope = {
+              originalValue: originalScope,
+              finalValue: currentScope,
+              proposalIds: [proposal.id],
+            };
+          } else {
+            changes.scope.finalValue = currentScope;
+            changes.scope.proposalIds.push(proposal.id);
           }
         }
         break;
@@ -207,6 +235,7 @@ export function applyStandardProposals(
 
   return {
     name: currentName,
+    scope: currentScope,
     description: currentDescription,
     rules: currentRules,
     changes,
