@@ -1,21 +1,20 @@
 // @ts-expect-error Missing types for the lib
 import stage from 'jest-stage';
-import { ApiContext, createUserWithApiKey } from './apiClient';
 import { createTestUser } from './userFactory';
 import {
   describeWithTempSpace,
   WithTempSpaceContext,
 } from './describeWithTempSpace';
+import { IPackmindGateway } from './IPackmindGateway';
+import { OrganizationId, SpaceId, UserId } from '@packmind/types';
 
 export type UserSignedUpContext = WithTempSpaceContext & {
+  gateway: IPackmindGateway;
   apiKey: string;
   email: string;
-  password: string;
-  userId: string;
-  organizationId: string;
-  spaceId: string;
-  baseUrl: string;
-  authCookie: string;
+  userId: UserId;
+  organizationId: OrganizationId;
+  spaceId: SpaceId;
 };
 
 export type UserSignedUpOptions = {
@@ -72,22 +71,33 @@ export function describeWithUserSignedUp(
         testDir,
       }: WithTempSpaceContext): Promise<UserSignedUpContext> => {
         options = { ...getDefaultOptions(), ...userOptions };
+        const { PackmindGateway } = await import('./gateways/PackmindGateway');
+        const gateway = new PackmindGateway(options.baseUrl);
 
-        const apiContext: ApiContext = await createUserWithApiKey({
+        const { user, organization } = await gateway.auth.signup({
           email: options.email,
           password: options.password,
-          baseUrl: options.baseUrl,
+          method: 'password',
+        });
+        await gateway.auth.signin({
+          email: options.email,
+          password: options.password,
         });
 
+        const { apiKey } = await gateway.auth.generateApiKey({});
+
+        // Initialize gateway with API key for authenticated requests
+        gateway.initializeWithApiKey(apiKey);
+
+        const globalSpace = await gateway.spaces.getGlobal();
+
         return {
-          apiKey: apiContext.apiKey,
-          email: apiContext.email,
-          password: apiContext.password,
-          userId: apiContext.userId,
-          organizationId: apiContext.organizationId,
-          spaceId: apiContext.spaceId,
-          baseUrl: apiContext.baseUrl,
-          authCookie: apiContext.authCookie,
+          apiKey,
+          gateway,
+          email: user.email,
+          userId: user.id,
+          organizationId: organization.id,
+          spaceId: globalSpace.id,
           testDir,
         };
       },

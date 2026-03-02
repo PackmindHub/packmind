@@ -1,20 +1,18 @@
 import {
   describeWithUserSignedUp,
   runCli,
-  createCommand,
-  createPackage,
   updateFile,
   readFile,
 } from './helpers';
 import { setupGitRepo } from './helpers/setupGitRepo';
+import { IPackmindGateway } from './helpers/IPackmindGateway';
+import { SpaceId } from '@packmind/types';
 
 describeWithUserSignedUp('diff command', (getContext) => {
+  let gateway: IPackmindGateway;
   let apiKey: string;
   let testDir: string;
-  let authCookie: string;
-  let organizationId: string;
-  let spaceId: string;
-  let baseUrl: string;
+  let spaceId: SpaceId;
   let commandSlug: string;
   let command2Slug: string;
 
@@ -24,41 +22,31 @@ describeWithUserSignedUp('diff command', (getContext) => {
 
     apiKey = context.apiKey;
     testDir = context.testDir;
-    authCookie = context.authCookie;
-    organizationId = context.organizationId;
     spaceId = context.spaceId;
-    baseUrl = context.baseUrl;
+    gateway = context.gateway;
 
     // Create two commands
-    const command1 = await createCommand({
+    const command1 = await gateway.commands.create({
       name: 'My command',
       content: '# My Command\n\nThis is my command content.',
-      authCookie,
-      organizationId,
       spaceId,
-      baseUrl,
     });
     commandSlug = command1.slug;
 
-    const command2 = await createCommand({
+    const command2 = await gateway.commands.create({
       name: 'My second command',
       content: '# My Second Command\n\nThis is my second command content.',
-      authCookie,
-      organizationId,
       spaceId,
-      baseUrl,
     });
     command2Slug = command2.slug;
 
     // Create a package with both commands
-    await createPackage({
+    await gateway.packages.create({
       name: 'My package',
       description: 'Test package for diff command',
       recipeIds: [command1.id, command2.id],
-      authCookie,
-      organizationId,
+      standardIds: [],
       spaceId,
-      baseUrl,
     });
 
     // Install the package locally
