@@ -1,25 +1,23 @@
-import { useMemo, useCallback } from 'react';
+import { ReactNode, useMemo, useCallback } from 'react';
 import { PMAccordion, PMBox, PMVStack } from '@packmind/ui';
-import { ChangeProposalId, Recipe } from '@packmind/types';
+import { ChangeProposalId } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
-import { ChangesSummaryBar } from '../shared/ChangesSummaryBar';
+import { ChangesSummaryBar } from './ChangesSummaryBar';
 import { ChangeProposalCard } from './ChangeProposalCard';
-import { ReviewedSectionDivider } from '../shared/ReviewedSectionDivider';
+import { ReviewedSectionDivider } from './ReviewedSectionDivider';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
 interface ChangeProposalAccordionProps {
   proposals: ChangeProposalWithConflicts[];
-  recipe: Recipe;
   acceptedProposalIds: Set<ChangeProposalId>;
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
   outdatedProposalIds: Set<ChangeProposalId>;
   expandedCardIds: string[];
-  editingProposalId: ChangeProposalId | null;
-  editedValues: Map<ChangeProposalId, string>;
+  editingProposalId?: ChangeProposalId | null;
   userLookup: Map<string, string>;
   onToggleCard: (ids: string[]) => void;
   getViewMode: (proposalId: ChangeProposalId) => ViewMode;
@@ -28,10 +26,10 @@ interface ChangeProposalAccordionProps {
   onAccept: (proposalId: ChangeProposalId) => void;
   onDismiss: (proposalId: ChangeProposalId) => void;
   onUndo: (proposalId: ChangeProposalId) => void;
-  onEditedValueChange: (proposalId: ChangeProposalId, value: string) => void;
-  onResetToOriginal: (proposalId: ChangeProposalId) => void;
-  onCancelEdit: () => void;
-  onSaveAndAccept: (proposalId: ChangeProposalId) => void;
+  renderExpandedView?: (
+    viewMode: ViewMode,
+    proposal: ChangeProposalWithConflicts,
+  ) => ReactNode;
 }
 
 function getPoolStatus(
@@ -46,14 +44,12 @@ function getPoolStatus(
 
 export function ChangeProposalAccordion({
   proposals,
-  recipe,
   acceptedProposalIds,
   rejectedProposalIds,
   blockedByConflictIds,
   outdatedProposalIds,
   expandedCardIds,
   editingProposalId,
-  editedValues,
   userLookup,
   onToggleCard,
   getViewMode,
@@ -62,10 +58,7 @@ export function ChangeProposalAccordion({
   onAccept,
   onDismiss,
   onUndo,
-  onEditedValueChange,
-  onResetToOriginal,
-  onCancelEdit,
-  onSaveAndAccept,
+  renderExpandedView,
 }: Readonly<ChangeProposalAccordionProps>) {
   const proposalNumberMap = useMemo(
     () => buildProposalNumberMap(proposals),
@@ -123,35 +116,26 @@ export function ChangeProposalAccordion({
       rejectedProposalIds,
     );
     const viewMode = getViewMode(proposal.id);
-    const isEditing = editingProposalId === proposal.id;
-    const payload = proposal.payload as { oldValue: string; newValue: string };
-    const editedValue = editedValues.get(proposal.id) ?? payload.newValue;
-    const isEditModified = editedValue !== payload.newValue;
     const authorName = userLookup.get(proposal.createdBy) ?? 'Unknown';
+    const isEditing = editingProposalId === proposal.id;
 
     return (
       <ChangeProposalCard
         key={proposal.id}
         proposal={proposal}
         proposalNumber={proposalNumberMap.get(proposal.id) ?? 0}
-        recipe={recipe}
         poolStatus={poolStatus}
         authorName={authorName}
         viewMode={viewMode}
-        isEditing={isEditing}
-        editedValue={editedValue}
         isOutdated={outdatedProposalIds.has(proposal.id)}
         isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
-        isEditModified={isEditModified}
+        showToolbar={!isEditing}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
         onEdit={() => onEdit(proposal.id)}
         onAccept={() => onAccept(proposal.id)}
         onDismiss={() => onDismiss(proposal.id)}
         onUndo={() => onUndo(proposal.id)}
-        onEditedValueChange={onEditedValueChange}
-        onResetToOriginal={onResetToOriginal}
-        onCancelEdit={onCancelEdit}
-        onSaveAndAccept={onSaveAndAccept}
+        renderExpandedView={renderExpandedView}
       />
     );
   };

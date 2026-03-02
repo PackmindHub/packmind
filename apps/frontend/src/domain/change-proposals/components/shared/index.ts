@@ -15,3 +15,6 @@ export { ViewTabSelector } from './ViewTabSelector';
 export { ApplyButton } from './ApplyButton';
 export { ReviewHeader } from './ReviewHeader';
 export { DiffView } from './DiffView';
+export { ChangeProposalCardBody } from './ChangeProposalCardBody';
+export { ChangeProposalCard } from './ChangeProposalCard';
+export { ChangeProposalAccordion } from './ChangeProposalAccordion';

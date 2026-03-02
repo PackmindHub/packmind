@@ -20,11 +20,15 @@ import {
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
-import { useCardReviewState } from '../../hooks/useCardReviewState';
+import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
+import { ChangeProposalWithConflicts } from '../../types';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
 import { computeCommandOutdatedIds } from '../../utils/computeOutdatedProposalIds';
+import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { CommandReviewHeader } from './CommandReviewHeader';
-import { ChangeProposalAccordion } from './ChangeProposalAccordion';
+import { FocusedView } from './FocusedView';
+import { InlineView } from './InlineView';
+import { EditView } from './EditView';
 import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
@@ -145,6 +149,43 @@ export function CommandReviewDetail({
     [pool, reviewState],
   );
 
+  const renderExpandedView = useCallback(
+    (viewMode: ViewMode, proposal: ChangeProposalWithConflicts) => {
+      if (!selectedRecipe) return null;
+
+      const isEditing = reviewState.editingProposalId === proposal.id;
+      if (isEditing) {
+        const payload = proposal.payload as {
+          oldValue: string;
+          newValue: string;
+        };
+        const editedValue =
+          reviewState.editedValues.get(proposal.id) ?? payload.newValue;
+        const isEditModified = editedValue !== payload.newValue;
+        return (
+          <EditView
+            proposal={proposal}
+            editedValue={editedValue}
+            onEditedValueChange={(v) =>
+              reviewState.setEditedValue(proposal.id, v)
+            }
+            onResetToOriginal={() => reviewState.resetEditedValue(proposal.id)}
+            onCancel={reviewState.cancelEditing}
+            onSaveAndAccept={() => handleSaveAndAccept(proposal.id)}
+            isModified={isEditModified}
+          />
+        );
+      }
+
+      if (viewMode === 'diff')
+        return <FocusedView recipe={selectedRecipe} proposal={proposal} />;
+      if (viewMode === 'inline')
+        return <InlineView recipe={selectedRecipe} proposal={proposal} />;
+      return null;
+    },
+    [selectedRecipe, reviewState, handleSaveAndAccept],
+  );
+
   const latestProposal = useMemo(() => {
     if (selectedRecipeProposals.length === 0) return null;
     return [...selectedRecipeProposals].sort(
@@ -195,14 +236,12 @@ export function CommandReviewDetail({
         {reviewState.activeTab === 'changes' && (
           <ChangeProposalAccordion
             proposals={selectedRecipeProposals}
-            recipe={selectedRecipe}
             acceptedProposalIds={pool.acceptedProposalIds}
             rejectedProposalIds={pool.rejectedProposalIds}
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
             editingProposalId={reviewState.editingProposalId}
-            editedValues={reviewState.editedValues}
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
@@ -211,10 +250,7 @@ export function CommandReviewDetail({
             onAccept={pool.handlePoolAccept}
             onDismiss={pool.handlePoolReject}
             onUndo={pool.handleUndoPool}
-            onEditedValueChange={reviewState.setEditedValue}
-            onResetToOriginal={reviewState.resetEditedValue}
-            onCancelEdit={reviewState.cancelEditing}
-            onSaveAndAccept={handleSaveAndAccept}
+            renderExpandedView={renderExpandedView}
           />
         )}
 

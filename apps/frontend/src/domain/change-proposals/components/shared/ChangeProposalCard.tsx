@@ -1,8 +1,9 @@
+import { ReactNode } from 'react';
 import { PMAccordion } from '@packmind/ui';
-import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
+import { ChangeProposalType } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
-import { ChangeProposalCardHeader } from '../shared/ChangeProposalCardHeader';
+import { ChangeProposalCardHeader } from './ChangeProposalCardHeader';
 import { ChangeProposalCardBody } from './ChangeProposalCardBody';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
@@ -10,47 +11,38 @@ type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 interface ChangeProposalCardProps {
   proposal: ChangeProposalWithConflicts;
   proposalNumber: number;
-  recipe: Recipe;
   poolStatus: PoolStatus;
   authorName: string;
   viewMode: ViewMode;
-  isEditing: boolean;
-  editedValue: string;
   isOutdated: boolean;
   isBlockedByConflict: boolean;
-  isEditModified: boolean;
+  showToolbar?: boolean;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
   onAccept: () => void;
   onDismiss: () => void;
   onUndo: () => void;
-  onEditedValueChange: (proposalId: ChangeProposalId, value: string) => void;
-  onResetToOriginal: (proposalId: ChangeProposalId) => void;
-  onCancelEdit: () => void;
-  onSaveAndAccept: (proposalId: ChangeProposalId) => void;
+  renderExpandedView?: (
+    viewMode: ViewMode,
+    proposal: ChangeProposalWithConflicts,
+  ) => ReactNode;
 }
 
 export function ChangeProposalCard({
   proposal,
   proposalNumber,
-  recipe,
   poolStatus,
   authorName,
   viewMode,
-  isEditing,
-  editedValue,
   isOutdated,
   isBlockedByConflict,
-  isEditModified,
+  showToolbar,
   onViewModeChange,
   onEdit,
   onAccept,
   onDismiss,
   onUndo,
-  onEditedValueChange,
-  onResetToOriginal,
-  onCancelEdit,
-  onSaveAndAccept,
+  renderExpandedView,
 }: Readonly<ChangeProposalCardProps>) {
   return (
     <PMAccordion.Item
@@ -71,23 +63,17 @@ export function ChangeProposalCard({
       <PMAccordion.ItemContent>
         <ChangeProposalCardBody
           proposal={proposal}
-          recipe={recipe}
           viewMode={viewMode}
           poolStatus={poolStatus}
-          isEditing={isEditing}
-          editedValue={editedValue}
           isOutdated={isOutdated}
           isBlockedByConflict={isBlockedByConflict}
-          isEditModified={isEditModified}
+          showToolbar={showToolbar}
           onViewModeChange={onViewModeChange}
           onEdit={onEdit}
           onAccept={onAccept}
           onDismiss={onDismiss}
           onUndo={onUndo}
-          onEditedValueChange={onEditedValueChange}
-          onResetToOriginal={onResetToOriginal}
-          onCancelEdit={onCancelEdit}
-          onSaveAndAccept={onSaveAndAccept}
+          renderExpandedView={renderExpandedView}
         />
       </PMAccordion.ItemContent>
     </PMAccordion.Item>
