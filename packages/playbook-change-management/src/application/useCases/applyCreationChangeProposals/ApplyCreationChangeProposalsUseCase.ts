@@ -20,6 +20,7 @@ import {
   IAccountsPort,
   IApplyCreationChangeProposalsUseCase,
   IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   UserId,
@@ -33,6 +34,7 @@ import {
 } from './ICreateChangeProposalApplier';
 import { CommandCreateChangeProposalApplier } from './CommandCreateChangeProposalApplier';
 import { StandardCreateChangeProposalApplier } from './StandardCreateChangeProposalApplier';
+import { SkillCreateChangeProposalApplier } from './SkillCreateChangeProposalApplier';
 import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 
 export type {
@@ -59,6 +61,7 @@ export class ApplyCreationChangeProposalsUseCase
     private readonly spacesPort: ISpacesPort,
     recipesPort: IRecipesPort,
     standardsPort: IStandardsPort,
+    skillsPort: ISkillsPort,
     private readonly changeProposalService: ChangeProposalService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -70,6 +73,9 @@ export class ApplyCreationChangeProposalsUseCase
         new CommandCreateChangeProposalApplier(recipesPort),
       [ChangeProposalType.createStandard]:
         new StandardCreateChangeProposalApplier(standardsPort),
+      [ChangeProposalType.createSkill]: new SkillCreateChangeProposalApplier(
+        skillsPort,
+      ),
     };
   }
 
@@ -151,6 +157,7 @@ export class ApplyCreationChangeProposalsUseCase
       rejected: command.rejected.length,
       createdCommands: createdIds.commands.length,
       createdStandards: createdIds.standards.length,
+      createdSkills: createdIds.skills.length,
     });
 
     SSEEventPublisher.publishChangeProposalUpdateEvent(
@@ -224,7 +231,8 @@ export class ApplyCreationChangeProposalsUseCase
         !isExpectedChangeProposalType(
           proposal,
           ChangeProposalType.createStandard,
-        )
+        ) &&
+        !isExpectedChangeProposalType(proposal, ChangeProposalType.createSkill)
       ) {
         throw new Error(
           `Change proposal ${id} has unsupported type for creation (type: ${proposal.type})`,
