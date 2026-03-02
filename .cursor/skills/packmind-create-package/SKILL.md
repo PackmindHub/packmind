@@ -1,5 +1,5 @@
 ---
-name: packmind-create-package
+name: 'packmind-create-package'
 description: 'Guide for creating Packmind packages via the CLI. This skill should be used when users want to create a new package to organize standards, commands, and skills for distribution.'
 license: 'Complete terms in LICENSE.txt'
 ---

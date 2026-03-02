@@ -134,7 +134,6 @@ src/handlers/
 ## Reporting Threshold
 
 Report only if:
-
 - ≥5 files in category AND
 - ≥3 share ≥2 structure markers
 
@@ -161,21 +160,21 @@ INSIGHT:
 When a file pattern is detected, propose a command:
 
 ```yaml
-name: 'create-[file-type]'
-summary: 'Scaffold a new [FileType] with standard structure'
+name: "create-[file-type]"
+summary: "Scaffold a new [FileType] with standard structure"
 whenToUse:
-  - 'Adding a new [file-type] to the codebase'
-  - 'Need consistent [file-type] structure'
+  - "Adding a new [file-type] to the codebase"
+  - "Need consistent [file-type] structure"
 contextValidationCheckpoints:
-  - 'What is the name of the new [file-type]?'
-  - 'Which module/domain does it belong to?'
+  - "What is the name of the new [file-type]?"
+  - "Which module/domain does it belong to?"
 steps:
-  - name: 'Create file'
-    description: 'Create [file-type] with standard template'
+  - name: "Create file"
+    description: "Create [file-type] with standard template"
     codeSnippet: |
       [extracted template]
-  - name: 'Add to index'
-    description: 'Export from module index if pattern requires'
-  - name: 'Create test file'
-    description: 'Create corresponding test file'
+  - name: "Add to index"
+    description: "Export from module index if pattern requires"
+  - name: "Create test file"
+    description: "Create corresponding test file"
 ```

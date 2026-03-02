@@ -7,7 +7,6 @@ license: 'Complete terms in LICENSE.txt'
 # packmind-onboard
 
 Action skill. Provides **complete automated onboarding** for Packmind:
-
 1. Creates or selects a package
 2. Analyzes codebase for patterns
 3. Generates draft Standards and Commands
@@ -79,7 +78,6 @@ packmind-cli packages create "${REPO_NAME}-standards"
 ```
 
 Print:
-
 ```
 No existing packages found — created a new one: ${REPO_NAME}-standards
 ```
@@ -87,14 +85,12 @@ No existing packages found — created a new one: ${REPO_NAME}-standards
 ### One package exists
 
 Ask via AskUserQuestion:
-
 - "Add to `{package-name}`?"
 - "Create new package instead"
 
 ### Multiple packages exist
 
 Ask via AskUserQuestion:
-
 - List each existing package as an option
 - Include "Create new package" option
 
@@ -123,9 +119,7 @@ Target package: [package-name]
 Before analyzing, detect and preserve any existing Packmind/agent configuration.
 
 ### Glob (broad, future-proof)
-
 Glob for markdown in these roots (recursive):
-
 - `.packmind/**/*.md`
 - `.claude/**/*.md`
 - `.agents/**/*.md`
@@ -133,9 +127,7 @@ Glob for markdown in these roots (recursive):
 - `**/rules/**/*.md`
 
 ### Classify
-
 Classify found files into counts:
-
 - **standards**: `.packmind/standards/**/*.md`
 - **commands**: `.packmind/commands/**/*.md`
 - **other_docs**: any markdown under `.claude/`, `.agents/`, or any `skills/` or `rules/` directory outside `.packmind`
@@ -159,7 +151,6 @@ No overwrites. New files (if you Export) will be added next to the existing ones
 ## Step 5 — Detect Project Stack (Minimal, Evidence-Based)
 
 ### Language markers (check presence)
-
 - JS/TS: `package.json`, `pnpm-lock.yaml`, `yarn.lock`, `tsconfig.json`
 - Python: `pyproject.toml`, `requirements.txt`, `setup.py`
 - Go: `go.mod`
@@ -170,7 +161,6 @@ No overwrites. New files (if you Export) will be added next to the existing ones
 - PHP: `composer.json`
 
 ### Architecture markers (check directories)
-
 - Hexagonal/DDD: `src/application/`, `src/domain/`, `src/infra/`
 - Layered/MVC: `src/controllers/`, `src/services/`
 - Monorepo: `packages/`, `apps/`
@@ -193,15 +183,14 @@ Stack detected (heuristic):
 
 Read each reference file for detailed search patterns, thresholds, and insight templates.
 
-| Analysis                  | Reference File                            | Output focus |
-| ------------------------- | ----------------------------------------- | ------------ |
-| File Template Consistency | `references/file-template-consistency.md` | Commands     |
-| CI/Local Workflow Parity  | `references/ci-local-workflow-parity.md`  | Commands     |
-| Role Taxonomy Drift       | `references/role-taxonomy-drift.md`       | Standards    |
-| Test Data Construction    | `references/test-data-construction.md`    | Standards    |
+| Analysis | Reference File | Output focus |
+|----------|----------------|--------------|
+| File Template Consistency | `references/file-template-consistency.md` | Commands |
+| CI/Local Workflow Parity | `references/ci-local-workflow-parity.md` | Commands |
+| Role Taxonomy Drift | `references/role-taxonomy-drift.md` | Standards |
+| Test Data Construction | `references/test-data-construction.md` | Standards |
 
 ### Output schema (internal; do not print as-is to user)
-
 For every finding, keep an internal record:
 
 ```
@@ -225,7 +214,7 @@ Generate all draft files in one batch, using the formats defined above.
 
 For each Standard insight, create a Markdown file at `.packmind/standards/_drafts/<slug>.draft.md`:
 
-````markdown
+```markdown
 # Standard Name
 
 What the standard covers and why.
@@ -247,15 +236,13 @@ Another rule can follow...
 ```typescript
 // Valid code example
 ```
-````
 
 ### Bad
 
 ```typescript
 // Invalid code example
 ```
-
-````
+```
 
 ### Command Draft Format
 
@@ -283,12 +270,11 @@ What this step does and how to implement it.
 
 ```typescript
 // Optional code example
-````
+```
 
 ### 2. Another Step
 
 Description of next step...
-
 ```
 
 ### Generation Rules
@@ -305,9 +291,8 @@ Description of next step...
 Present the generated draft files and ask for confirmation:
 
 ```
-
 ============================================================
-ANALYSIS COMPLETE
+  ANALYSIS COMPLETE
 ============================================================
 
 Target package: [package-name]
@@ -317,18 +302,16 @@ Analyses run: [N] checks
 DRAFTS CREATED:
 
 Standards ([N]):
-
-1. [Name] → .packmind/standards/\_drafts/[slug].draft.md
-2. ...
+  1. [Name] → .packmind/standards/_drafts/[slug].draft.md
+  2. ...
 
 Commands ([M]):
+  1. [Name] → .packmind/commands/_drafts/[slug].draft.md
+  2. ...
 
-1. [Name] → .packmind/commands/\_drafts/[slug].draft.md
-2. ...
-
-# Drafts are saved in .packmind/\*/\_drafts/ — you can review or edit them before creating.
-
-````
+Drafts are saved in .packmind/*/_drafts/ — you can review or edit them before creating.
+============================================================
+```
 
 Then ask via AskUserQuestion with three options:
 
@@ -364,7 +347,7 @@ Convert the markdown draft to this JSON format:
     }
   ]
 }
-````
+```
 
 #### Command JSON Schema
 
@@ -394,17 +377,13 @@ Convert the markdown draft to this JSON format:
 2. Convert to JSON matching the schema above
 3. Write the JSON to `.packmind/standards/_drafts/<slug>.json`
 4. Run CLI command to create:
-
 ```bash
 packmind-cli standards create .packmind/standards/_drafts/<slug>.json
 ```
-
 5. If creation succeeded, add to package:
-
 ```bash
 packmind-cli packages add --to <package-slug> --standard <slug>
 ```
-
 6. Track result (success/failure)
 
 **For each command draft:**
@@ -413,21 +392,16 @@ packmind-cli packages add --to <package-slug> --standard <slug>
 2. Convert to JSON matching the schema above
 3. Write the JSON to `.packmind/commands/_drafts/<slug>.json`
 4. Run CLI command to create:
-
 ```bash
 packmind-cli commands create .packmind/commands/_drafts/<slug>.json
 ```
-
 5. If creation succeeded, add to package:
-
 ```bash
 packmind-cli packages add --to <package-slug> --command <slug>
 ```
-
 6. Track result (success/failure)
 
 **Show progress:**
-
 ```
 Sending standards and commands to your Packmind organization...
 ✓ error-handling-pattern
@@ -441,7 +415,6 @@ Done: 3 created, 1 failed
 ### If user selected "Let me review drafts first"
 
 Print:
-
 ```
 Draft files ready for review at:
   - .packmind/standards/_drafts/
@@ -455,7 +428,6 @@ Exit the skill.
 ### If user selected "Cancel"
 
 Print:
-
 ```
 Onboarding cancelled.
 Draft files remain at .packmind/*/_drafts/ if you want to review them later.
@@ -582,10 +554,10 @@ packmind-cli install <package-slug>
 
 This deploys to agent-specific folders:
 
-| Agent   | Standards                                                       | Commands                                    |
-| ------- | --------------------------------------------------------------- | ------------------------------------------- |
-| Claude  | `.claude/rules/packmind/standard-[slug].md`                     | `.claude/commands/packmind/[slug].md`       |
-| Cursor  | `.cursor/rules/packmind/standard-[slug].mdc`                    | `.cursor/commands/packmind/[slug].mdc`      |
+| Agent | Standards | Commands |
+|-------|-----------|----------|
+| Claude | `.claude/rules/packmind/standard-[slug].md` | `.claude/commands/packmind/[slug].md` |
+| Cursor | `.cursor/rules/packmind/standard-[slug].mdc` | `.cursor/commands/packmind/[slug].mdc` |
 | Copilot | `.github/instructions/packmind-standard-[slug].instructions.md` | `.github/prompts/packmind-[slug].prompt.md` |
 
 ### 9.2 Cleanup and Summary

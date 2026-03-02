@@ -5,7 +5,6 @@ A reference skill that helps AI coding agents discover available standards, comm
 ## What This Skill Provides
 
 Quick reference for all CLI listing commands:
-
 - `packmind-cli standards list` - List coding standards
 - `packmind-cli commands list` - List reusable commands
 - `packmind-cli skills list` - List available skills
