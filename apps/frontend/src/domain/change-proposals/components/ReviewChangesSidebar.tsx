@@ -6,6 +6,7 @@ import {
   PMHStack,
   PMLink,
   PMText,
+  PMTooltip,
   PMVerticalNav,
   PMVerticalNavSection,
   PMVStack,
@@ -48,51 +49,54 @@ function ArtefactNavLink({
       prefetch="intent"
     >
       {({ isActive }) => (
-        <PMLink
-          variant="navbar"
-          data-active={isActive ? 'true' : undefined}
-          as="span"
-          display="flex"
-          alignItems="center"
-          width="full"
-          py={2}
-        >
-          <PMHStack width="full" justifyContent="space-between" gap={2}>
-            <PMVStack
-              gap={0}
-              flex={1}
-              overflow="hidden"
-              alignItems="flex-start"
+        <PMTooltip label={name} placement="bottom-start" openDelay={300}>
+          <PMLink
+            variant="navbar"
+            data-active={isActive ? 'true' : undefined}
+            as="span"
+            display="flex"
+            alignItems="center"
+            width="full"
+            py={2}
+          >
+            <PMHStack
+              width="full"
+              justifyContent="space-between"
+              gap={2}
+              minW={0}
             >
-              <PMText
-                fontSize="sm"
-                fontWeight={isActive ? 'bold' : 'medium'}
-                overflow="hidden"
-                textOverflow="ellipsis"
-                whiteSpace="nowrap"
+              <PMVStack gap={0} flex={1} minW={0} alignItems="flex-start">
+                <PMText
+                  fontSize="sm"
+                  fontWeight={isActive ? 'bold' : 'medium'}
+                  overflow="hidden"
+                  textOverflow="ellipsis"
+                  whiteSpace="nowrap"
+                  maxW="100%"
+                >
+                  {name}
+                </PMText>
+                <PMText fontSize="xs" opacity={0.5} fontWeight="normal">
+                  {typeLabel}
+                </PMText>
+              </PMVStack>
+              <PMFlex
+                alignItems="center"
+                justifyContent="center"
+                bg="yellow.800"
+                color="yellow.200"
+                borderRadius="full"
+                minWidth="24px"
+                height="24px"
+                fontSize="xs"
+                fontWeight="bold"
+                flexShrink={0}
               >
-                {name}
-              </PMText>
-              <PMText fontSize="xs" opacity={0.5} fontWeight="normal">
-                {typeLabel}
-              </PMText>
-            </PMVStack>
-            <PMFlex
-              alignItems="center"
-              justifyContent="center"
-              bg="yellow.800"
-              color="yellow.200"
-              borderRadius="full"
-              minWidth="24px"
-              height="24px"
-              fontSize="xs"
-              fontWeight="bold"
-              flexShrink={0}
-            >
-              {changeProposalCount}
-            </PMFlex>
-          </PMHStack>
-        </PMLink>
+                {changeProposalCount}
+              </PMFlex>
+            </PMHStack>
+          </PMLink>
+        </PMTooltip>
       )}
     </NavLink>
   );
