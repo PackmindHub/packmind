@@ -1,6 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  ChangeProposal,
+  ChangeProposalType,
+  CreationProposalOverview,
   IAccountsPort,
   IListChangeProposalsBySpace,
   IRecipesPort,
@@ -10,6 +13,7 @@ import {
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
   ListProposalsOverview,
+  NewCommandPayload,
   RecipeId,
   SkillId,
   StandardId,
@@ -54,11 +58,13 @@ export class ListChangeProposalsBySpaceUseCase
     const standards = await this.enrichStandardsWithNames(grouped.standards);
     const commands = await this.enrichRecipesWithNames(grouped.commands);
     const skills = await this.enrichSkillsWithNames(grouped.skills);
+    const creations = this.enrichCreations(grouped.creations);
 
     return {
       standards,
       commands,
       skills,
+      creations,
     };
   }
 
@@ -82,20 +88,11 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private async enrichRecipesWithNames(
-    recipesMap: Map<RecipeId | null, number>,
+    recipesMap: Map<RecipeId, number>,
   ): Promise<ListProposalsOverview<RecipeId>[]> {
     const result: ListProposalsOverview<RecipeId>[] = [];
 
     for (const [artefactId, count] of recipesMap.entries()) {
-      if (artefactId === null) {
-        result.push({
-          artefactId: null,
-          name: 'New command',
-          changeProposalCount: count,
-        });
-        continue;
-      }
-
       const recipe = await this.recipesPort.getRecipeByIdInternal(artefactId);
       if (recipe) {
         result.push({
@@ -107,6 +104,19 @@ export class ListChangeProposalsBySpaceUseCase
     }
 
     return result;
+  }
+
+  private enrichCreations(
+    proposals: ChangeProposal<ChangeProposalType>[],
+  ): CreationProposalOverview[] {
+    return proposals.map((proposal) => {
+      const payload = proposal.payload as NewCommandPayload;
+      return {
+        proposalId: proposal.id,
+        name: payload.name,
+        content: payload.content,
+      };
+    });
   }
 
   private async enrichSkillsWithNames(

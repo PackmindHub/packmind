@@ -1,6 +1,7 @@
 import {
   ChangeProposalType,
   IApplyChangeProposalsUseCase,
+  IApplyCreationChangeProposalsUseCase,
   IListChangeProposalsBySpace,
   IListChangeProposalsByArtefact,
   NewGateway,
@@ -87,6 +88,14 @@ export class ChangeProposalsGatewayApi
     async ({ organizationId, spaceId, artefactId, accepted, rejected }) => {
       return this._api.post(
         `/organizations/${organizationId}/spaces/${spaceId}/skills/${artefactId}/change-proposals/apply`,
+        { accepted, rejected },
+      );
+    };
+
+  applyCreationChangeProposals: NewGateway<IApplyCreationChangeProposalsUseCase> =
+    async ({ organizationId, spaceId, accepted, rejected }) => {
+      return this._api.post(
+        `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/apply`,
         { accepted, rejected },
       );
     };

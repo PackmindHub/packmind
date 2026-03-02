@@ -1,5 +1,9 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ChangeProposalCaptureMode,
+  ChangeProposalStatus,
+  ChangeProposalType,
+  createChangeProposalId,
   createOrganizationId,
   createRecipeId,
   createSkillId,
@@ -128,6 +132,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           [recipeId2, 1],
         ]),
         skills: new Map<SkillId, number>([[skillId1, 5]]),
+        creations: [],
       });
 
       standardsPort.getStandard.mockImplementation(async (id) => {
@@ -240,6 +245,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
         standards: new Map(),
         commands: new Map(),
         skills: new Map(),
+        creations: [],
       });
     });
 
@@ -289,6 +295,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
         standards: new Map([[standardId1, 2]]),
         commands: new Map([[recipeId1, 1]]),
         skills: new Map([[skillId1, 3]]),
+        creations: [],
       });
 
       standardsPort.getStandard.mockResolvedValue(null);
@@ -337,38 +344,55 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     });
   });
 
-  describe('when createCommand proposals have null artefactId', () => {
+  describe('when createCommand proposals exist', () => {
+    const proposalId = createChangeProposalId('proposal-id');
     const command = buildCommand();
 
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
       service.groupProposalsByArtefact.mockResolvedValue({
         standards: new Map(),
-        commands: new Map([[null, 1]]),
+        commands: new Map(),
         skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createCommand,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: { name: 'My Command', content: 'Do something' },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
       });
     });
 
-    it('includes a null-artefactId entry in commands', async () => {
+    it('returns creation overview with proposalId and payload fields', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.commands).toHaveLength(1);
+      expect(result.creations).toEqual([
+        { proposalId, name: 'My Command', content: 'Do something' },
+      ]);
     });
 
-    it('returns synthetic New command entry', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.commands[0]).toEqual({
-        artefactId: null,
-        name: 'New command',
-        changeProposalCount: 1,
-      });
-    });
-
-    it('does not call recipesPort for null artefactId', async () => {
+    it('does not call recipesPort for creation proposals', async () => {
       await useCase.execute(command);
 
       expect(recipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+    });
+
+    it('returns empty commands array alongside creations', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.commands).toEqual([]);
     });
   });
 
