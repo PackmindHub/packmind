@@ -18,10 +18,12 @@ export function FocusedView({ recipe, proposal }: Readonly<FocusedViewProps>) {
   if (isNameChange) {
     return (
       <PMBox>
-        <PMBox border="none" borderRadius="md" p={4} mb={4}>
-          <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
-            Name change
-          </PMText>
+        <PMBox borderRadius="md" p={4} mb={4}>
+          <PMBox mb={3}>
+            <PMText fontSize="xs" fontWeight="semibold" color="secondary">
+              Name change
+            </PMText>
+          </PMBox>
           <DiffBlock
             value={payload.oldValue}
             variant="removed"
@@ -43,13 +45,15 @@ export function FocusedView({ recipe, proposal }: Readonly<FocusedViewProps>) {
   if (isDescriptionChange) {
     return (
       <PMBox>
-        <PMHeading size="md" mb={4}>
-          {recipe.name}
-        </PMHeading>
-        <PMBox border="none" borderRadius="md" p={4}>
-          <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
-            Instructions change
-          </PMText>
+        <PMBox mb={2}>
+          <PMHeading size="md">{recipe.name}</PMHeading>
+        </PMBox>
+        <PMBox borderRadius="md" p={4}>
+          <PMBox mb={3}>
+            <PMText fontSize="xs" fontWeight="semibold" color="secondary">
+              Instructions change
+            </PMText>
+          </PMBox>
           <DiffBlock
             value={payload.oldValue}
             variant="removed"
