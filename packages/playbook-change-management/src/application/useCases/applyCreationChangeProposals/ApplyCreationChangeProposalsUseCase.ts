@@ -156,7 +156,7 @@ export class ApplyCreationChangeProposalsUseCase
     });
 
     return {
-      created: createdIds.commands,
+      created: createdIds,
       rejected: command.rejected,
     };
   }

@@ -1,13 +1,11 @@
 import {
+  ApplyCreationChangeProposalsResponse,
   ChangeProposal,
   ChangeProposalType,
   OrganizationId,
   Recipe,
-  RecipeId,
-  SkillId,
   SpaceId,
   Standard,
-  StandardId,
   UserId,
 } from '@packmind/types';
 
@@ -15,11 +13,7 @@ export type SupportedCreateChangedProposalType =
   | ChangeProposalType.createCommand
   | ChangeProposalType.createStandard;
 
-export type CreatedIds = {
-  commands: RecipeId[];
-  standards: StandardId[];
-  skills: SkillId[];
-};
+export type CreatedIds = ApplyCreationChangeProposalsResponse['created'];
 
 type Artefact<CP extends SupportedCreateChangedProposalType> =
   CP extends ChangeProposalType.createCommand
