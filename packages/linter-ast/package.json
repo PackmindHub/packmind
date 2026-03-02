@@ -10,7 +10,7 @@
   ],
   "dependencies": {
     "tslib": "^2.3.0",
-    "web-tree-sitter": "^0.25.0"
+    "web-tree-sitter": "^0.26.6"
   },
   "optionalDependencies": {
     "@packmind/linter-ast-typescript": "*",
