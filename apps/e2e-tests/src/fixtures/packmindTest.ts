@@ -10,14 +10,16 @@ import { PageFactory } from '../infra/PageFactory';
 // Override the built-in browser fixture to support Lightpanda via CDP
 const testBase = base.extend<Record<string, never>, { browser: Browser }>({
   browser: [
-    async (_fixtures, use) => {
+    // eslint-disable-next-line no-empty-pattern
+    async ({}, use) => {
       const wsEndpoint = process.env['LIGHTPANDA_WS_ENDPOINT'];
       if (wsEndpoint) {
         const browser = await chromium.connectOverCDP({
           endpointURL: wsEndpoint,
         });
         await use(browser as unknown as Browser);
-        await browser.disconnect();
+        // Browser.disconnect() does not exist on CDP-connected browsers in playwright-core.
+        // The connection closes naturally when the worker process exits; Lightpanda keeps running.
       } else {
         const browser = await chromium.launch();
         await use(browser);
