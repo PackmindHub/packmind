@@ -1,10 +1,12 @@
 import { PMSeparator, PMVStack } from '@packmind/ui';
-import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
+import { ChangeProposalId, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
+import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
+import { isMarkdownContent } from '../../utils/isMarkdownContent';
 import { ProposalMessage } from '../shared/ProposalMessage';
 import { CardToolbar } from '../shared/CardToolbar';
-import { DiffView } from './DiffView';
+import { DiffView } from '../shared/DiffView';
 import { FocusedView } from './FocusedView';
 import { InlineView } from './InlineView';
 import { EditView } from './EditView';
@@ -52,9 +54,8 @@ export function ChangeProposalCardBody({
   onCancelEdit,
   onSaveAndAccept,
 }: Readonly<ChangeProposalCardBodyProps>) {
-  const isDescriptionField =
-    proposal.type === ChangeProposalType.updateCommandDescription;
-  const payload = proposal.payload as { oldValue: string; newValue: string };
+  const { oldValue, newValue } = extractProposalDiffValues(proposal);
+  const markdown = isMarkdownContent(proposal.type);
 
   return (
     <PMVStack gap={0} alignItems="stretch">
@@ -100,9 +101,9 @@ export function ChangeProposalCardBody({
           />
         ) : viewMode === 'focused' ? (
           <DiffView
-            oldValue={payload.oldValue}
-            newValue={payload.newValue}
-            isDescriptionField={isDescriptionField}
+            oldValue={oldValue}
+            newValue={newValue}
+            isMarkdownContent={markdown}
           />
         ) : viewMode === 'diff' ? (
           <FocusedView recipe={recipe} proposal={proposal} />

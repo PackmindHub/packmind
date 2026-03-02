@@ -14,3 +14,4 @@ export { ArtefactInfo } from './ArtefactInfo';
 export { ViewTabSelector } from './ViewTabSelector';
 export { ApplyButton } from './ApplyButton';
 export { ReviewHeader } from './ReviewHeader';
+export { DiffView } from './DiffView';

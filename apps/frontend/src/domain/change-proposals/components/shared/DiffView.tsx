@@ -6,7 +6,7 @@ import { DiffBlock } from './DiffBlock';
 interface DiffViewProps {
   oldValue: string;
   newValue: string;
-  isDescriptionField: boolean;
+  isMarkdownContent: boolean;
 }
 
 function isChanged(
@@ -18,17 +18,17 @@ function isChanged(
 export function DiffView({
   oldValue,
   newValue,
-  isDescriptionField,
+  isMarkdownContent,
 }: Readonly<DiffViewProps>) {
   const changedSections = useMemo(
     () =>
-      isDescriptionField
+      isMarkdownContent
         ? buildDiffSections(oldValue, newValue).filter(isChanged)
         : [],
-    [oldValue, newValue, isDescriptionField],
+    [oldValue, newValue, isMarkdownContent],
   );
 
-  if (!isDescriptionField) {
+  if (!isMarkdownContent) {
     return (
       <PMVStack gap={3}>
         <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
