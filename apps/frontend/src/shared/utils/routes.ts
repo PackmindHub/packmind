@@ -96,6 +96,11 @@ export const routes = {
     ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/distributions`,
     toReviewChanges: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/review-changes`,
+    toReviewChangesArtefactType: (
+      orgSlug: string,
+      spaceSlug: string,
+      artefactType: string,
+    ) => `/org/${orgSlug}/space/${spaceSlug}/review-changes/${artefactType}`,
     toReviewChangesArtefact: (
       orgSlug: string,
       spaceSlug: string,

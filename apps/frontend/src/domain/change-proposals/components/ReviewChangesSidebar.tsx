@@ -20,24 +20,29 @@ function ArtefactNavLink({
   orgSlug,
   spaceSlug,
 }: {
-  artefactId: string;
+  artefactId: string | null;
   name: string;
   changeProposalCount: number;
   artefactType: string;
   orgSlug: string;
   spaceSlug: string;
 }) {
+  const to =
+    artefactId === null
+      ? routes.space.toReviewChangesArtefactType(
+          orgSlug,
+          spaceSlug,
+          artefactType,
+        )
+      : routes.space.toReviewChangesArtefact(
+          orgSlug,
+          spaceSlug,
+          artefactType,
+          artefactId,
+        );
+
   return (
-    <NavLink
-      key={artefactId}
-      to={routes.space.toReviewChangesArtefact(
-        orgSlug,
-        spaceSlug,
-        artefactType,
-        artefactId,
-      )}
-      prefetch="intent"
-    >
+    <NavLink key={artefactId ?? artefactType} to={to} prefetch="intent">
       {({ isActive }) => (
         <PMLink
           variant="navbar"
@@ -102,7 +107,7 @@ export function ReviewChangesSidebar({
         title={title}
         navEntries={items.map((item) => (
           <ArtefactNavLink
-            key={item.artefactId}
+            key={item.artefactId ?? `${key}-new`}
             artefactId={item.artefactId}
             name={item.name}
             changeProposalCount={item.changeProposalCount}
