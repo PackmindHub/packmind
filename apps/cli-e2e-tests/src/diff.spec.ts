@@ -6,6 +6,7 @@ import {
   updateFile,
   readFile,
 } from './helpers';
+import { setupGitRepo } from './helpers/setupGitRepo';
 
 describeWithUserSignedUp('diff command', (getContext) => {
   let apiKey: string;
@@ -19,29 +20,14 @@ describeWithUserSignedUp('diff command', (getContext) => {
 
   beforeEach(async () => {
     const context = await getContext();
+    await setupGitRepo(context.testDir);
+
     apiKey = context.apiKey;
     testDir = context.testDir;
     authCookie = context.authCookie;
     organizationId = context.organizationId;
     spaceId = context.spaceId;
     baseUrl = context.baseUrl;
-
-    // Initialize git repository with main branch
-    const { execSync } = await import('child_process');
-    execSync('git init -b main .', { cwd: testDir });
-    execSync(
-      'git remote add origin git@github.com:PackmindHub/sample-repo.git',
-      {
-        cwd: testDir,
-      },
-    );
-    // Configure git user for commits
-    execSync('git config user.email "test@packmind.com"', { cwd: testDir });
-    execSync('git config user.name "Test User"', { cwd: testDir });
-    // Create initial commit to establish HEAD
-    execSync('git commit --allow-empty -m "Initial commit"', {
-      cwd: testDir,
-    });
 
     // Create two commands
     const command1 = await createCommand({

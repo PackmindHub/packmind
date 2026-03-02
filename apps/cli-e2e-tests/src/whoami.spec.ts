@@ -1,5 +1,6 @@
 import { describeWithUserSignedUp, runCli } from './helpers';
-import { describeWithTempSpace } from './helpers/describeWithUserSignedUp';
+
+import { describeWithTempSpace } from './helpers/describeWithTempSpace';
 
 describe('whoami command', () => {
   describeWithUserSignedUp('when user is signed in', (getContext) => {

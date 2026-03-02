@@ -2,13 +2,10 @@
 import stage from 'jest-stage';
 import { ApiContext, createUserWithApiKey } from './apiClient';
 import { createTestUser } from './userFactory';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-
-export type WithTempSpaceContext = {
-  testDir: string; // Temporary directory for test execution
-};
+import {
+  describeWithTempSpace,
+  WithTempSpaceContext,
+} from './describeWithTempSpace';
 
 export type UserSignedUpContext = WithTempSpaceContext & {
   apiKey: string;
@@ -34,32 +31,6 @@ function getDefaultOptions(): UserSignedUpOptions {
     password: testUser.password,
     baseUrl: 'http://localhost:4200',
   };
-}
-
-export function describeWithTempSpace(
-  description: string,
-  tests: (getContext: () => Promise<WithTempSpaceContext>) => void,
-): void {
-  describe(description, () => {
-    let testDir: string;
-
-    stage(async (): Promise<WithTempSpaceContext> => {
-      // Create a temporary directory for this test execution
-      testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
-
-      return { testDir };
-    });
-
-    // Clean up test directory after all tests
-    afterEach(async () => {
-      if (testDir && fs.existsSync(testDir)) {
-        fs.rmSync(testDir, { recursive: true, force: true });
-      }
-    });
-
-    // Pass the stage getter to tests
-    tests(async () => stage());
-  });
 }
 
 /**
