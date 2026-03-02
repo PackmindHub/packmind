@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PMMarkdownViewer } from './PMMarkdownViewer';
 
 const meta: Meta<typeof PMMarkdownViewer> = {
