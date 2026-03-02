@@ -458,13 +458,21 @@ describe('SubmitDiffsUseCase', () => {
       mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1));
     });
 
-    it('submits successfully and is not skipped', async () => {
+    it('returns created count from batch response', async () => {
       const result = await useCase.execute({
         groupedDiffs: [createCommandGroup],
         message: 'test message',
       });
 
       expect(result.submitted).toBe(1);
+    });
+
+    it('returns empty skipped array', async () => {
+      const result = await useCase.execute({
+        groupedDiffs: [createCommandGroup],
+        message: 'test message',
+      });
+
       expect(result.skipped).toEqual([]);
     });
 
@@ -502,13 +510,21 @@ describe('SubmitDiffsUseCase', () => {
       },
     ];
 
-    it('is skipped with reason "Missing artifact metadata"', async () => {
+    it('returns 0 submitted', async () => {
       const result = await useCase.execute({
         groupedDiffs: [createCommandMissingSpaceGroup],
         message: 'test message',
       });
 
       expect(result.submitted).toBe(0);
+    });
+
+    it('skips with reason "Missing artifact metadata"', async () => {
+      const result = await useCase.execute({
+        groupedDiffs: [createCommandMissingSpaceGroup],
+        message: 'test message',
+      });
+
       expect(result.skipped).toEqual([
         { name: 'New Command', reason: 'Missing artifact metadata' },
       ]);

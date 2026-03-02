@@ -83,7 +83,7 @@ describe('diffAddHandler', () => {
   }
 
   describe('missing filePath', () => {
-    it('logs error and exits with 1', async () => {
+    it('logs error', async () => {
       const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
 
       await diffAddHandler(buildDeps({ filePath: undefined }));
@@ -91,6 +91,11 @@ describe('diffAddHandler', () => {
       expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Missing file path'),
       );
+    });
+
+    it('exits with 1', async () => {
+      await diffAddHandler(buildDeps({ filePath: undefined }));
+
       expect(mockExit).toHaveBeenCalledWith(1);
     });
 
@@ -102,7 +107,7 @@ describe('diffAddHandler', () => {
   });
 
   describe('unsupported file path', () => {
-    it('logs error and exits with 1', async () => {
+    it('logs error', async () => {
       const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
 
       await diffAddHandler(buildDeps({ filePath: 'src/index.ts' }));
@@ -110,6 +115,11 @@ describe('diffAddHandler', () => {
       expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Unsupported file path'),
       );
+    });
+
+    it('exits with 1', async () => {
+      await diffAddHandler(buildDeps({ filePath: 'src/index.ts' }));
+
       expect(mockExit).toHaveBeenCalledWith(1);
     });
 
@@ -121,38 +131,57 @@ describe('diffAddHandler', () => {
   });
 
   describe('file not found', () => {
-    it('logs error and exits with 1 when readFile throws', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-      const error = new Error('ENOENT: no such file or directory');
-      mockReadFile.mockImplementation(() => {
-        throw error;
+    describe('when readFile throws', () => {
+      beforeEach(() => {
+        mockReadFile.mockImplementation(() => {
+          throw new Error('ENOENT: no such file or directory');
+        });
       });
 
-      await diffAddHandler(buildDeps());
+      it('logs error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
 
-      expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to read file'),
-      );
-      expect(mockExit).toHaveBeenCalledWith(1);
+        await diffAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to read file'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
     });
   });
 
   describe('parse error', () => {
-    it('logs error and exits with 1 when file is empty', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-      mockReadFile.mockReturnValue('');
+    describe('when file is empty', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue('');
+      });
 
-      await diffAddHandler(buildDeps());
+      it('logs error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
 
-      expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to parse command file'),
-      );
-      expect(mockExit).toHaveBeenCalledWith(1);
+        await diffAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to parse command file'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
     });
   });
 
   describe('missing message in non-TTY mode', () => {
-    it('logs error about requiring -m flag and exits', async () => {
+    it('logs error about requiring -m flag', async () => {
       const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
       Object.defineProperty(process.stdin, 'isTTY', {
         value: false,
@@ -165,6 +194,17 @@ describe('diffAddHandler', () => {
       expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Non-interactive mode requires -m flag'),
       );
+    });
+
+    it('exits with 1', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        writable: true,
+        configurable: true,
+      });
+
+      await diffAddHandler(buildDeps({ message: undefined }));
+
       expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
@@ -212,7 +252,7 @@ describe('diffAddHandler', () => {
       );
     });
 
-    it('logs message info when submitted', async () => {
+    it('logs the message', async () => {
       const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
 
       await diffAddHandler(buildDeps());
@@ -224,18 +264,22 @@ describe('diffAddHandler', () => {
   });
 
   describe('submitted count correctness', () => {
-    it('displays correct count when multiple are submitted', async () => {
-      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
-      mockSubmitDiffs.mockResolvedValue({
-        submitted: 1,
-        alreadySubmitted: 0,
-        skipped: [],
-        errors: [],
+    describe('when multiple are submitted', () => {
+      it('displays correct count', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+        mockSubmitDiffs.mockResolvedValue({
+          submitted: 1,
+          alreadySubmitted: 0,
+          skipped: [],
+          errors: [],
+        });
+
+        await diffAddHandler(buildDeps());
+
+        expect(logSuccessConsole).toHaveBeenCalledWith('Summary: 1 submitted');
       });
-
-      await diffAddHandler(buildDeps());
-
-      expect(logSuccessConsole).toHaveBeenCalledWith('Summary: 1 submitted');
     });
 
     it('includes alreadySubmitted in summary', async () => {
@@ -256,8 +300,7 @@ describe('diffAddHandler', () => {
   });
 
   describe('API errors', () => {
-    it('logs errors from result.errors and exits with 1', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+    beforeEach(() => {
       mockSubmitDiffs.mockResolvedValue({
         submitted: 0,
         alreadySubmitted: 0,
@@ -266,32 +309,50 @@ describe('diffAddHandler', () => {
           { name: 'My Command', message: 'Server error', code: 'INTERNAL' },
         ],
       });
+    });
+
+    it('logs individual error details', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
 
       await diffAddHandler(buildDeps());
 
       expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Failed to submit "My Command"'),
       );
-      expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('1 error'),
-      );
-      expect(mockExit).toHaveBeenCalledWith(1);
     });
 
-    it('shows error summary when there are both submitted and errors', async () => {
+    it('logs error count in summary', async () => {
       const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-      mockSubmitDiffs.mockResolvedValue({
-        submitted: 0,
-        alreadySubmitted: 0,
-        skipped: [],
-        errors: [{ name: 'cmd', message: 'fail' }],
-      });
 
       await diffAddHandler(buildDeps());
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Summary'),
+        expect.stringContaining('1 error'),
       );
+    });
+
+    it('exits with 1', async () => {
+      await diffAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    describe('when there are both submitted and errors', () => {
+      it('shows error summary', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        mockSubmitDiffs.mockResolvedValue({
+          submitted: 0,
+          alreadySubmitted: 0,
+          skipped: [],
+          errors: [{ name: 'cmd', message: 'fail' }],
+        });
+
+        await diffAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Summary'),
+        );
+      });
     });
   });
 
@@ -302,6 +363,11 @@ describe('diffAddHandler', () => {
       await diffAddHandler(buildDeps({ message: '   ' }));
 
       expect(logErrorConsole).toHaveBeenCalledWith('Message cannot be empty.');
+    });
+
+    it('exits with 1 for empty message', async () => {
+      await diffAddHandler(buildDeps({ message: '   ' }));
+
       expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
