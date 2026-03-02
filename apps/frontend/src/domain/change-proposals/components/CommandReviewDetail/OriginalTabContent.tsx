@@ -10,15 +10,16 @@ export function OriginalTabContent({
 }: Readonly<OriginalTabContentProps>) {
   return (
     <PMBox p={6}>
-      <PMText
-        fontSize="xs"
-        fontWeight="semibold"
-        textTransform="uppercase"
-        color="secondary"
-        mb={3}
-      >
-        Original Version
-      </PMText>
+      <PMBox mb={6}>
+        <PMText
+          fontSize="2xs"
+          fontWeight="medium"
+          textTransform="uppercase"
+          color="faded"
+        >
+          Original Version
+        </PMText>
+      </PMBox>
       <PMHeading size="md" mb={4}>
         {recipe.name}
       </PMHeading>

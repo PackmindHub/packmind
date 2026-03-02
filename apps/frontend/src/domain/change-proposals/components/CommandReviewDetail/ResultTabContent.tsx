@@ -24,15 +24,16 @@ export function ResultTabContent({
 
   return (
     <PMBox p={6}>
-      <PMText
-        fontSize="xs"
-        fontWeight="semibold"
-        textTransform="uppercase"
-        color="secondary"
-        mb={3}
-      >
-        Version with accepted changes
-      </PMText>
+      <PMBox mb={6}>
+        <PMText
+          fontSize="2xs"
+          fontWeight="medium"
+          textTransform="uppercase"
+          color="faded"
+        >
+          Version with accepted changes
+        </PMText>
+      </PMBox>
       {hasAccepted ? (
         <>
           <PMHeading size="md" mb={4}>
@@ -41,9 +42,11 @@ export function ResultTabContent({
           <PMMarkdownViewer content={applied.content} />
         </>
       ) : (
-        <PMText color="secondary" fontStyle="italic">
-          No accepted changes yet
-        </PMText>
+        <PMBox py={12} textAlign="center">
+          <PMText color="fg.muted" fontStyle="italic">
+            No accepted changes yet
+          </PMText>
+        </PMBox>
       )}
     </PMBox>
   );
