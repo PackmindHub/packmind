@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createChangeProposalId,
@@ -9,7 +10,6 @@ import {
   createStandardId,
   createUserId,
   IAccountsPort,
-  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -58,7 +58,7 @@ describe('ApplyChangeProposalsUseCase', () => {
   let recipesPort: jest.Mocked<IRecipesPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
     accountsPort = {
@@ -95,9 +95,9 @@ describe('ApplyChangeProposalsUseCase', () => {
       batchUpdateProposalsInTransaction: jest.fn(),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new ApplyChangeProposalsUseCase(
       accountsPort,
@@ -106,7 +106,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       recipesPort,
       skillsPort,
       changeProposalService,
-      eventTrackingPort,
+      eventEmitterService,
       stubLogger(),
     );
 
@@ -239,7 +239,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         rejected: [],
       });
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledTimes(2);
+      expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
     });
 
     it('tracks change_proposal_accepted event with correct payload', async () => {
@@ -252,13 +252,12 @@ describe('ApplyChangeProposalsUseCase', () => {
         rejected: [],
       });
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'change_proposal_accepted',
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
-          itemType: 'command',
-          changeType: ChangeProposalType.updateCommandName,
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.updateCommandName,
+          }),
         }),
       );
     });
@@ -374,7 +373,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         rejected: [changeProposal1.id, changeProposal2.id],
       });
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledTimes(2);
+      expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
     });
 
     it('tracks change_proposal_rejected event with correct payload', async () => {
@@ -387,13 +386,12 @@ describe('ApplyChangeProposalsUseCase', () => {
         rejected: [changeProposal1.id, changeProposal2.id],
       });
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'change_proposal_rejected',
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
-          itemType: 'command',
-          changeType: ChangeProposalType.updateCommandName,
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.updateCommandName,
+          }),
         }),
       );
     });

@@ -2,17 +2,18 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
 import {
   ChangeProposalType,
+  ChangeProposalSubmittedEvent,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   createUserId,
   getItemTypeFromChangeProposalType,
   IAccountsPort,
   ICreateChangeProposalUseCase,
-  IEventTrackingPort,
   ISpacesPort,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
@@ -34,7 +35,7 @@ export class CreateChangeProposalUseCase
     private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     private readonly validators: IChangeProposalValidator[],
-    private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -89,23 +90,18 @@ export class CreateChangeProposalUseCase
       });
     });
 
-    this.eventTrackingPort
-      .trackEvent(
-        createUserId(command.userId),
-        command.organization.id,
-        'change_proposal_submitted',
-        {
-          itemType: getItemTypeFromChangeProposalType(command.type),
-          itemId: String(changeProposal.artefactId ?? ''),
-          changeType: command.type,
-          captureMode: command.captureMode,
-        },
-      )
-      .catch((error) => {
-        this.logger.error('Failed to track change_proposal_submitted event', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-      });
+    this.eventEmitterService.emit(
+      new ChangeProposalSubmittedEvent({
+        userId: createUserId(command.userId),
+        organizationId: command.organization.id,
+        source: command.source ?? 'ui',
+        changeProposalId: changeProposal.id,
+        itemType: getItemTypeFromChangeProposalType(command.type),
+        itemId: String(changeProposal.artefactId ?? ''),
+        changeType: command.type,
+        captureMode: command.captureMode,
+      }),
+    );
 
     return { changeProposal, wasCreated: true };
   }

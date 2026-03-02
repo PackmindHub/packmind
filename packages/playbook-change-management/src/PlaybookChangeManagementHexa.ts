@@ -1,11 +1,14 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IPlaybookChangeManagementPort,
   IPlaybookChangeManagementPortName,
   IRecipesPort,
@@ -82,9 +85,13 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
       const skillsPort = registry.getAdapter<ISkillsPort>(ISkillsPortName);
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
-      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
-        IEventTrackingPortName,
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
       );
+
+      if (!eventEmitterService) {
+        throw new Error('PackmindEventEmitterService not found in registry');
+      }
 
       await this.playbookChangeManagementAdapter.initialize({
         [IAccountsPortName]: accountsPort,
@@ -92,7 +99,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
         [ISpacesPortName]: spacesPort,
         [ISkillsPortName]: skillsPort,
         [IStandardsPortName]: standardsPort,
-        [IEventTrackingPortName]: eventTrackingPort,
+        eventEmitterService,
       });
 
       this.logger.info('PlaybookChangeManagementHexa initialized successfully');

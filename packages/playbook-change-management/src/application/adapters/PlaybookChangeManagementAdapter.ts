@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   ApplyChangeProposalsCommand,
   ApplyChangeProposalsResponse,
@@ -14,8 +17,6 @@ import {
   CreateChangeProposalResponse,
   IAccountsPort,
   IAccountsPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IPlaybookChangeManagementPort,
   IRecipesPort,
   IRecipesPortName,
@@ -122,7 +123,7 @@ export class PlaybookChangeManagementAdapter
     [ISpacesPortName]: ISpacesPort;
     [ISkillsPortName]: ISkillsPort;
     [IStandardsPortName]: IStandardsPort;
-    [IEventTrackingPortName]: IEventTrackingPort;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     this.logger.info('Initializing PlaybookChangeManagementAdapter with ports');
 
@@ -166,11 +167,11 @@ export class PlaybookChangeManagementAdapter
       );
     }
 
-    const eventTrackingPort = ports[IEventTrackingPortName];
+    const { eventEmitterService } = ports;
 
-    if (!eventTrackingPort) {
+    if (!eventEmitterService) {
       throw new Error(
-        'PlaybookChangeManagementAdapter: IEventTrackingPort not provided',
+        'PlaybookChangeManagementAdapter: PackmindEventEmitterService not provided',
       );
     }
 
@@ -191,7 +192,7 @@ export class PlaybookChangeManagementAdapter
       recipesPort,
       skillsPort,
       changeProposalService,
-      eventTrackingPort,
+      eventEmitterService,
     );
 
     this._applyCreationChangeProposals =
@@ -200,7 +201,7 @@ export class PlaybookChangeManagementAdapter
         spacesPort,
         recipesPort,
         changeProposalService,
-        eventTrackingPort,
+        eventEmitterService,
       );
 
     this._batchCreateChangeProposals = new BatchCreateChangeProposalsUseCase(
@@ -219,7 +220,7 @@ export class PlaybookChangeManagementAdapter
       spacesPort,
       changeProposalService,
       validators,
-      eventTrackingPort,
+      eventEmitterService,
     );
 
     this._listChangeProposalsByArtefact =

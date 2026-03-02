@@ -2,19 +2,21 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
 import {
   ApplyCreationChangeProposalsCommand,
   ApplyCreationChangeProposalsResponse,
   ChangeProposal,
+  ChangeProposalAcceptedEvent,
   ChangeProposalId,
+  ChangeProposalRejectedEvent,
   ChangeProposalStatus,
   ChangeProposalType,
   createUserId,
   getItemTypeFromChangeProposalType,
   IAccountsPort,
-  IEventTrackingPort,
   IRecipesPort,
   ISpacesPort,
   NewCommandPayload,
@@ -40,7 +42,7 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly changeProposalService: ChangeProposalService,
-    private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -136,41 +138,31 @@ export class ApplyCreationChangeProposalsUseCase extends AbstractMemberUseCase<
     });
 
     for (const { proposal } of acceptedProposals) {
-      this.eventTrackingPort
-        .trackEvent(
-          createUserId(command.userId),
-          command.organization.id,
-          'change_proposal_accepted',
-          {
-            itemType: getItemTypeFromChangeProposalType(proposal.type),
-            itemId: String(proposal.artefactId ?? ''),
-            changeType: proposal.type,
-          },
-        )
-        .catch((error) => {
-          this.logger.error('Failed to track change_proposal_accepted event', {
-            error: error instanceof Error ? error.message : String(error),
-          });
-        });
+      this.eventEmitterService.emit(
+        new ChangeProposalAcceptedEvent({
+          userId: createUserId(command.userId),
+          organizationId: command.organization.id,
+          source: command.source ?? 'ui',
+          changeProposalId: proposal.id,
+          itemType: getItemTypeFromChangeProposalType(proposal.type),
+          itemId: String(proposal.artefactId ?? ''),
+          changeType: proposal.type,
+        }),
+      );
     }
 
     for (const { proposal } of rejectedProposals) {
-      this.eventTrackingPort
-        .trackEvent(
-          createUserId(command.userId),
-          command.organization.id,
-          'change_proposal_rejected',
-          {
-            itemType: getItemTypeFromChangeProposalType(proposal.type),
-            itemId: String(proposal.artefactId ?? ''),
-            changeType: proposal.type,
-          },
-        )
-        .catch((error) => {
-          this.logger.error('Failed to track change_proposal_rejected event', {
-            error: error instanceof Error ? error.message : String(error),
-          });
-        });
+      this.eventEmitterService.emit(
+        new ChangeProposalRejectedEvent({
+          userId: createUserId(command.userId),
+          organizationId: command.organization.id,
+          source: command.source ?? 'ui',
+          changeProposalId: proposal.id,
+          itemType: getItemTypeFromChangeProposalType(proposal.type),
+          itemId: String(proposal.artefactId ?? ''),
+          changeType: proposal.type,
+        }),
+      );
     }
 
     return {

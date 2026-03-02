@@ -7,4 +7,5 @@ export * from './ChangeProposal';
 export * from './ChangeProposalCaptureMode';
 export * from './ChangeProposalArtefactIdType';
 export * from './contracts';
+export * from './events';
 export * from './ports';

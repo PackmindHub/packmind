@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposalStatus,
@@ -8,7 +9,6 @@ import {
   createSpaceId,
   createUserId,
   IAccountsPort,
-  IEventTrackingPort,
   IRecipesPort,
   ISpacesPort,
   NewCommandPayload,
@@ -61,7 +61,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
     accountsPort = {
@@ -82,16 +82,16 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       batchUpdateProposalsInTransaction: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new ApplyCreationChangeProposalsUseCase(
       accountsPort,
       spacesPort,
       recipesPort,
       changeProposalService,
-      eventTrackingPort,
+      eventEmitterService,
       stubLogger(),
     );
   });
@@ -169,13 +169,12 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejected: [],
       });
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'change_proposal_accepted',
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
-          itemType: 'command',
-          changeType: ChangeProposalType.createCommand,
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.createCommand,
+          }),
         }),
       );
     });
@@ -244,13 +243,12 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         rejected: [proposalId],
       });
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'change_proposal_rejected',
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
-          itemType: 'command',
-          changeType: ChangeProposalType.createCommand,
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.createCommand,
+          }),
         }),
       );
     });

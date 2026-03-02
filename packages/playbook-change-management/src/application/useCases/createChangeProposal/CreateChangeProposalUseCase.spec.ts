@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposal,
@@ -15,7 +16,6 @@ import {
   createSpaceId,
   createUserId,
   IAccountsPort,
-  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -73,7 +73,7 @@ describe('CreateChangeProposalUseCase', () => {
   let skillsPort: jest.Mocked<ISkillsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let service: jest.Mocked<ChangeProposalService>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   const buildCommand = (
     overrides?: Partial<CreateChangeProposalCommand<ChangeProposalType>>,
@@ -116,9 +116,9 @@ describe('CreateChangeProposalUseCase', () => {
       findExistingPending: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new CreateChangeProposalUseCase(
       accountsPort,
@@ -128,7 +128,7 @@ describe('CreateChangeProposalUseCase', () => {
         new CommandChangeProposalValidator(recipesPort),
         new SkillChangeProposalValidator(skillsPort),
       ],
-      eventTrackingPort,
+      eventEmitterService,
       stubLogger(),
     );
 
@@ -184,14 +184,13 @@ describe('CreateChangeProposalUseCase', () => {
     it('tracks change_proposal_submitted event', async () => {
       await useCase.execute(command);
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'change_proposal_submitted',
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
-          itemType: 'command',
-          changeType: ChangeProposalType.updateCommandName,
-          captureMode: ChangeProposalCaptureMode.commit,
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.updateCommandName,
+            captureMode: ChangeProposalCaptureMode.commit,
+          }),
         }),
       );
     });
@@ -751,7 +750,7 @@ describe('CreateChangeProposalUseCase', () => {
     it('does not track change_proposal_submitted event', async () => {
       await useCase.execute(command);
 
-      expect(eventTrackingPort.trackEvent).not.toHaveBeenCalled();
+      expect(eventEmitterService.emit).not.toHaveBeenCalled();
     });
   });
 
@@ -777,7 +776,7 @@ describe('CreateChangeProposalUseCase', () => {
         spacesPort,
         service,
         [mockValidator],
-        eventTrackingPort,
+        eventEmitterService,
         stubLogger(),
       );
 
