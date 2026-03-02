@@ -147,6 +147,60 @@ describe('updateHandler', () => {
     });
   });
 
+  describe('JS runtime guard', () => {
+    describe.each(['node', 'bun', 'deno'])(
+      'when executablePath is %s',
+      (runtime) => {
+        beforeEach(async () => {
+          deps.executablePath = `/usr/local/bin/${runtime}`;
+          await updateHandler(deps);
+        });
+
+        it('exits with code 1', () => {
+          expect(processExitSpy).toHaveBeenCalledWith(1);
+        });
+
+        it('logs the error message', () => {
+          expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'The update command is not available when running the CLI via a JavaScript runtime.\n' +
+              'To update, use the standalone executable or run: npm install -g @packmind/cli@latest',
+          );
+        });
+
+        it('does not fetch', () => {
+          expect(mockFetch).not.toHaveBeenCalled();
+        });
+      },
+    );
+
+    describe('when executablePath is node.exe', () => {
+      beforeEach(async () => {
+        deps.executablePath = '/usr/local/bin/node.exe';
+        await updateHandler(deps);
+      });
+
+      it('exits with code 1', () => {
+        expect(processExitSpy).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when executablePath is packmind-cli', () => {
+      beforeEach(async () => {
+        deps.executablePath = '/usr/local/bin/packmind-cli';
+        deps.currentVersion = '0.19.0';
+        mockFetch.mockResolvedValue({
+          ok: true,
+          json: async () => ({ version: '0.19.0' }),
+        } as Response);
+        await updateHandler(deps);
+      });
+
+      it('does not log an error', () => {
+        expect(mockConsoleLogger.logErrorConsole).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('updateHandler - npm mode', () => {
     describe('when current version matches latest', () => {
       beforeEach(async () => {

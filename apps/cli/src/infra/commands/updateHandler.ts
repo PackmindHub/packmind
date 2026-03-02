@@ -1,3 +1,4 @@
+import path from 'path';
 import { execSync } from 'child_process';
 import {
   createWriteStream,
@@ -177,6 +178,17 @@ async function updateViaExecutableReplace(
 export async function updateHandler(
   deps: IUpdateHandlerDependencies,
 ): Promise<void> {
+  const execBasename = path.basename(deps.executablePath).replace(/\.exe$/, '');
+  const jsRuntimes = ['node', 'bun', 'deno'];
+  if (jsRuntimes.includes(execBasename)) {
+    logErrorConsole(
+      'The update command is not available when running the CLI via a JavaScript runtime.\n' +
+        'To update, use the standalone executable or run: npm install -g @packmind/cli@latest',
+    );
+    process.exit(1);
+    return;
+  }
+
   logInfoConsole(
     `Current version: ${deps.currentVersion} (${deps.isExecutableMode ? 'standalone executable' : 'npm package'})`,
   );
@@ -220,6 +232,9 @@ export async function updateHandler(
 
     logConsole('');
     logSuccessConsole(`Updated to v${latestVersion}`);
+    if (deps.isExecutableMode) {
+      logInfoConsole(`Binary location: ${deps.executablePath}`);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 
