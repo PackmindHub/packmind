@@ -17,10 +17,10 @@ All documentation modifications MUST only be made within the `apps/doc/` folder,
 
 ## Context Validation Checkpoints
 
-- [ ] Have you analyzed the codebase to understand the feature thoroughly (backend API, packages, frontend, MCP server)?
-- [ ] Have you reviewed existing documentation in `apps/doc/` to understand the structure?
-- [ ] Do you know whether you need to create a new file or update an existing one within `apps/doc/`?
-- [ ] Have you identified what users need to accomplish versus what developers need to know?
+* [ ] Have you analyzed the codebase to understand the feature thoroughly (backend API, packages, frontend, MCP server)?
+* [ ] Have you reviewed existing documentation in `apps/doc/` to understand the structure?
+* [ ] Do you know whether you need to create a new file or update an existing one within `apps/doc/`?
+* [ ] Have you identified what users need to accomplish versus what developers need to know?
 
 ## Recipe Steps
 
@@ -60,11 +60,9 @@ What users can do with this feature and why it's useful.
 ## [Main Process 1]
 
 ### Step 1: [Action]
-
 Clear instructions with specific UI elements to click/interact with.
 
 ### Step 2: [Action]
-
 Continue with logical sequence of user actions.
 
 ## Troubleshooting

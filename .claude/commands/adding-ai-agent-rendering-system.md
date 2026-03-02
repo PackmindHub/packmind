@@ -6,29 +6,29 @@ Add a new AI agent rendering system to Packmind, supporting both single-file (li
 
 ## When to Use
 
-- When adding support for a new AI coding assistant (e.g., Continue, Cursor, Claude Code, GitHub Copilot)
+* When adding support for a new AI coding assistant (e.g., Continue, Cursor, Claude Code, GitHub Copilot)
 
-- When implementing a new rendering format for standards and recipes distribution
+* When implementing a new rendering format for standards and recipes distribution
 
-- When extending Packmind to support additional AI agent integrations
+* When extending Packmind to support additional AI agent integrations
 
-- When creating a new deployer that follows the ICodingAgentDeployer interface
+* When creating a new deployer that follows the ICodingAgentDeployer interface
 
 ## Context Validation Checkpoints
 
-- [ ] What is the file location pattern for this AI agent? (e.g., .continue/rules/, .cursor/rules/, CLAUDE.md)
+* [ ] What is the file location pattern for this AI agent? (e.g., .continue/rules/, .cursor/rules/, CLAUDE.md)
 
-- [ ] Does this agent support single-file or multi-file rendering?
+* [ ] Does this agent support single-file or multi-file rendering?
 
-- [ ] What frontmatter format does the agent require? (YAML, Markdown, plain text)
+* [ ] What frontmatter format does the agent require? (YAML, Markdown, plain text)
 
-- [ ] What file extensions should be used? (.md, .mdc, .txt, etc.)
+* [ ] What file extensions should be used? (.md, .mdc, .txt, etc.)
 
-- [ ] What naming convention should be used for files? (e.g., packmind-standard-{slug}.md, standard-{slug}.mdc)
+* [ ] What naming convention should be used for files? (e.g., packmind-standard-{slug}.md, standard-{slug}.mdc)
 
-- [ ] Does the agent require specific frontmatter properties? (name, globs, alwaysApply, description, etc.)
+* [ ] Does the agent require specific frontmatter properties? (name, globs, alwaysApply, description, etc.)
 
-- [ ] What is the relative path from agent files to .packmind/standards/ directory?
+* [ ] What is the relative path from agent files to .packmind/standards/ directory?
 
 ## Recipe Steps
 
@@ -80,9 +80,8 @@ import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecip
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 
 export class NewAgentDeployer implements ICodingAgentDeployer {
-  private static readonly RECIPES_INDEX_PATH =
-    '.new-agent/rules/packmind-recipes-index.md';
-
+  private static readonly RECIPES_INDEX_PATH = '.new-agent/rules/packmind-recipes-index.md';
+  
   // Implement all required methods:
   // - deployRecipes
   // - deployStandards
@@ -98,28 +97,26 @@ In the deployer, implement frontmatter generation based on the agent's requireme
 
 ```typescript
 // For Continue-style (with name and description)
-const frontmatter =
-  standardVersion.scope && standardVersion.scope.trim() !== ''
-    ? `---
+const frontmatter = standardVersion.scope && standardVersion.scope.trim() !== ''
+  ? `---
 name: ${standardVersion.name}
 globs: ${standardVersion.scope}
 alwaysApply: false
 description: ${summary}
 ---`
-    : `---
+  : `---
 name: ${standardVersion.name}
 alwaysApply: true
 description: ${summary}
 ---`;
 
 // For Cursor-style (simpler)
-const frontmatter =
-  standardVersion.scope && standardVersion.scope.trim() !== ''
-    ? `---
+const frontmatter = standardVersion.scope && standardVersion.scope.trim() !== ''
+  ? `---
 globs: ${standardVersion.scope}
 alwaysApply: false
 ---`
-    : `---
+  : `---
 alwaysApply: true
 ---`;
 ```
@@ -246,38 +243,38 @@ Ensure the relative path from agent files to `.packmind/standards/{slug}.md` is 
 
 ```typescript
 // For .continue/rules/ or .cursor/rules/packmind/
-link: `../../.packmind/standards/${standardVersion.slug}.md`;
+link: `../../.packmind/standards/${standardVersion.slug}.md`
 
 // For root-level files
-link: `.packmind/standards/${standardVersion.slug}.md`;
+link: `.packmind/standards/${standardVersion.slug}.md`
 ```
 
 ### Step 15: Update packages/deployments/src/application/utils/GitFileUtils.ts
 
 ```ts
-const agentToFile: Record<CodingAgent, string> = {
-  claude: 'CLAUDE.md',
-  agents_md: 'AGENTS.md',
-  cursor: '.cursor/rules/packmind/recipes-index.mdc',
-  copilot: '.github/copilot-instructions.md',
-  junie: '.junie.md',
-  packmind: '.packmind.md',
-  gitlab_duo: '.gitlab/duo_chat.yml',
-  continue: '.continue/rules/packmind-recipes-index.md',
-};
+  const agentToFile: Record<CodingAgent, string> = {
+    claude: 'CLAUDE.md',
+    agents_md: 'AGENTS.md',
+    cursor: '.cursor/rules/packmind/recipes-index.mdc',
+    copilot: '.github/copilot-instructions.md',
+    junie: '.junie.md',
+    packmind: '.packmind.md',
+    gitlab_duo: '.gitlab/duo_chat.yml',
+    continue: '.continue/rules/packmind-recipes-index.md',
+  };
 ```
 
 ### Step 16: Update apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx
 
 ```ts
 const formatNames: Record<RenderMode, string> = {
-  [RenderMode.AGENTS_MD]: 'AGENTS.md',
-  [RenderMode.JUNIE]: 'Junie',
-  [RenderMode.GH_COPILOT]: 'Github Copilot',
-  [RenderMode.CLAUDE]: 'Claude',
-  [RenderMode.CURSOR]: 'Cursor',
-  [RenderMode.PACKMIND]: 'Packmind',
-  [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
-  [RenderMode.CONTINUE]: 'Continue',
-};
+    [RenderMode.AGENTS_MD]: 'AGENTS.md',
+    [RenderMode.JUNIE]: 'Junie',
+    [RenderMode.GH_COPILOT]: 'Github Copilot',
+    [RenderMode.CLAUDE]: 'Claude',
+    [RenderMode.CURSOR]: 'Cursor',
+    [RenderMode.PACKMIND]: 'Packmind',
+    [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
+    [RenderMode.CONTINUE]: 'Continue',
+  };
 ```

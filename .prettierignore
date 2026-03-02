@@ -7,11 +7,11 @@
 /docs
 **/.react-router/
 **/build/
-.packmind
-.github
-.claude
-.junie
-.cursor
+**/.packmind
+**/.github
+**/.claude
+**/.junie
+**/.cursor
 CLAUDE.md
 AGENTS.md
 **/AGENTS.md

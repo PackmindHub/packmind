@@ -14,10 +14,10 @@ Enable parallel development on multiple branches simultaneously without switchin
 
 ## Context Validation Checkpoints
 
-- [ ] Is Cursor configured with `.cursor/worktrees.json` for automatic setup?
-- [ ] Do you have a clean main repository with no uncommitted changes?
-- [ ] Are you ready to commit your worktree changes before integrating back to main?
-- [ ] Do you want a linear git history (no merge commits)?
+* [ ] Is Cursor configured with `.cursor/worktrees.json` for automatic setup?
+* [ ] Do you have a clean main repository with no uncommitted changes?
+* [ ] Are you ready to commit your worktree changes before integrating back to main?
+* [ ] Do you want a linear git history (no merge commits)?
 
 ## Recipe Steps
 
