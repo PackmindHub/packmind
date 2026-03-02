@@ -14,6 +14,9 @@ import {
   SkillCreatedEvent,
   OrganizationCreatedEvent,
   UserSignedInEvent,
+  ChangeProposalSubmittedEvent,
+  ChangeProposalAcceptedEvent,
+  ChangeProposalRejectedEvent,
   createUserId,
   createOrganizationId,
   createRecipeId,
@@ -23,6 +26,7 @@ import {
   createStandardId,
   createStandardVersionId,
   createTargetId,
+  createChangeProposalId,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AmplitudeEventListener } from './AmplitudeEventListener';
@@ -418,6 +422,101 @@ describe('AmplitudeEventListener', () => {
           },
         );
       });
+    });
+  });
+
+  describe('ChangeProposalSubmittedEvent', () => {
+    it('tracks change_proposal_submitted event with correct payload', async () => {
+      const event = new ChangeProposalSubmittedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        changeProposalId: createChangeProposalId('cp-789'),
+        itemType: 'standard',
+        itemId: 'std-001',
+        changeType: 'addRule',
+        captureMode: 'commit',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'change_proposal_submitted',
+        {
+          changeProposalId: 'cp-789',
+          itemType: 'standard',
+          itemId: 'std-001',
+          changeType: 'addRule',
+          captureMode: 'commit',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('ChangeProposalAcceptedEvent', () => {
+    it('tracks change_proposal_accepted event with correct payload', async () => {
+      const event = new ChangeProposalAcceptedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        changeProposalId: createChangeProposalId('cp-789'),
+        itemType: 'command',
+        itemId: 'cmd-001',
+        changeType: 'updateCommandName',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'change_proposal_accepted',
+        {
+          changeProposalId: 'cp-789',
+          itemType: 'command',
+          itemId: 'cmd-001',
+          changeType: 'updateCommandName',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('ChangeProposalRejectedEvent', () => {
+    it('tracks change_proposal_rejected event with correct payload', async () => {
+      const event = new ChangeProposalRejectedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        changeProposalId: createChangeProposalId('cp-789'),
+        itemType: 'skill',
+        itemId: 'skill-001',
+        changeType: 'updateSkillName',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'change_proposal_rejected',
+        {
+          changeProposalId: 'cp-789',
+          itemType: 'skill',
+          itemId: 'skill-001',
+          changeType: 'updateSkillName',
+          source: 'ui',
+        },
+      );
     });
   });
 

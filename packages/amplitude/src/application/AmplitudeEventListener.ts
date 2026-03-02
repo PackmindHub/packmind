@@ -22,6 +22,9 @@ import {
   UserSignedInEvent,
   OrganizationCreatedEvent,
   StandardSampleSelectedEvent,
+  ChangeProposalSubmittedEvent,
+  ChangeProposalAcceptedEvent,
+  ChangeProposalRejectedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
@@ -61,6 +64,12 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(UserSignedUpEvent, this.onUserSignedUpEvent);
     this.subscribe(UserSignedInEvent, this.onUserSignedInEvent);
     this.subscribe(OrganizationCreatedEvent, this.onOrganizationCreatedEvent);
+    this.subscribe(
+      ChangeProposalSubmittedEvent,
+      this.onChangeProposalSubmitted,
+    );
+    this.subscribe(ChangeProposalAcceptedEvent, this.onChangeProposalAccepted);
+    this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
@@ -286,6 +295,52 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       (payload) => ({
         name: payload.name,
         method: payload.method,
+      }),
+    );
+  };
+
+  private onChangeProposalSubmitted = async (
+    event: ChangeProposalSubmittedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'change_proposal_submitted',
+      (payload) => ({
+        changeProposalId: payload.changeProposalId,
+        itemType: payload.itemType,
+        itemId: payload.itemId,
+        changeType: payload.changeType,
+        captureMode: payload.captureMode,
+      }),
+    );
+  };
+
+  private onChangeProposalAccepted = async (
+    event: ChangeProposalAcceptedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'change_proposal_accepted',
+      (payload) => ({
+        changeProposalId: payload.changeProposalId,
+        itemType: payload.itemType,
+        itemId: payload.itemId,
+        changeType: payload.changeType,
+      }),
+    );
+  };
+
+  private onChangeProposalRejected = async (
+    event: ChangeProposalRejectedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'change_proposal_rejected',
+      (payload) => ({
+        changeProposalId: payload.changeProposalId,
+        itemType: payload.itemType,
+        itemId: payload.itemId,
+        changeType: payload.changeType,
       }),
     );
   };
