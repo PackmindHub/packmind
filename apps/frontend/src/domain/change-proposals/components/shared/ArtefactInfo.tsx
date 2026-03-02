@@ -2,25 +2,25 @@ import { PMBadge, PMHStack, PMText } from '@packmind/ui';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 
 interface ArtefactInfoProps {
-  recipeName: string;
-  recipeVersion: number;
+  artefactName: string;
+  artefactVersion: number;
   latestAuthor: string;
   latestTime: Date;
 }
 
 export function ArtefactInfo({
-  recipeName,
-  recipeVersion,
+  artefactName,
+  artefactVersion,
   latestAuthor,
   latestTime,
 }: Readonly<ArtefactInfoProps>) {
   return (
     <PMHStack gap={2} alignItems="center">
       <PMText fontWeight="bold" fontSize="lg">
-        {recipeName}
+        {artefactName}
       </PMText>
       <PMBadge size="sm" colorPalette="gray">
-        Base v{recipeVersion}
+        Base v{artefactVersion}
       </PMBadge>
       <PMText fontSize="sm" color="secondary">
         {latestAuthor} &middot; {formatRelativeTime(latestTime)}

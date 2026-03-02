@@ -180,8 +180,8 @@ export function CommandReviewDetail({
         overflowY="auto"
       >
         <CommandReviewHeader
-          recipeName={selectedRecipe.name}
-          recipeVersion={selectedRecipe.version}
+          artefactName={selectedRecipe.name}
+          artefactVersion={selectedRecipe.version}
           latestAuthor={latestAuthor}
           latestTime={latestTime}
           activeTab={reviewState.activeTab}

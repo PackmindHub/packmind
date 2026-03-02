@@ -10,3 +10,7 @@ export { CardToolbar } from './CardToolbar';
 export { ChangesSummaryBar } from './ChangesSummaryBar';
 export { MultiSegmentProgressBar } from './MultiSegmentProgressBar';
 export { ReviewedSectionDivider } from './ReviewedSectionDivider';
+export { ArtefactInfo } from './ArtefactInfo';
+export { ViewTabSelector } from './ViewTabSelector';
+export { ApplyButton } from './ApplyButton';
+export { ReviewHeader } from './ReviewHeader';
