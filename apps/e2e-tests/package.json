@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false npx playwright test"
+    "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false pnpm exec playwright test"
   }
 }
