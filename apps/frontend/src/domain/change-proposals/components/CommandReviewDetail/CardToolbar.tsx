@@ -37,7 +37,7 @@ export function CardToolbar({
       <PMHStack gap={2} alignItems="center">
         <PMButton
           size="sm"
-          variant={isFocused ? 'secondary' : 'ghost'}
+          variant={isFocused ? 'secondary' : 'outline'}
           onClick={() => onViewModeChange(isFocused ? 'diff' : 'focused')}
         >
           {isFocused ? <LuArrowUpRight /> : <LuMinimize2 />}
