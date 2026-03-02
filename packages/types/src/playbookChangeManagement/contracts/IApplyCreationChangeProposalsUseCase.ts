@@ -2,6 +2,8 @@ import { RecipeId } from '../../recipes/RecipeId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { PackmindCommand } from '../../UseCase';
 import { ChangeProposalId } from '../ChangeProposalId';
+import { StandardId } from '../../standards';
+import { SkillId } from '../../skills';
 
 export type ApplyCreationChangeProposalsCommand = PackmindCommand & {
   spaceId: SpaceId;
@@ -10,7 +12,11 @@ export type ApplyCreationChangeProposalsCommand = PackmindCommand & {
 };
 
 export type ApplyCreationChangeProposalsResponse = {
-  created: RecipeId[];
+  created: {
+    commands: RecipeId[];
+    standards: StandardId[];
+    skills: SkillId[];
+  };
   rejected: ChangeProposalId[];
 };
 
