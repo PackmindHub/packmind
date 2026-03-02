@@ -1,8 +1,8 @@
 import { CodingAgent } from '@packmind/types';
 
 /**
- * Centralized configuration for coding agent file paths.
- * This is the single source of truth for where agent configuration files are stored.
+ * Centralized configuration for coding agent configuration file paths (e.g. CLAUDE.md, .cursorrules).
+ * For artefact directory paths (commands, standards, skills), see CODING_AGENT_ARTEFACT_PATHS in @packmind/types.
  */
 export const AGENT_FILE_PATHS: Record<CodingAgent, string> = {
   claude: 'CLAUDE.md',

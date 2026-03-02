@@ -15,7 +15,13 @@ import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 
 const SUPPORTED_ARTIFACT_TYPES = new Set(['command', 'skill', 'standard']);
 
-type ValidDiff = ArtefactDiff & { artifactId: string; spaceId: string };
+const CREATION_TYPES = new Set<ChangeProposalType>([
+  ChangeProposalType.createStandard,
+  ChangeProposalType.createCommand,
+  ChangeProposalType.createSkill,
+]);
+
+type ValidDiff = ArtefactDiff & { spaceId: string };
 
 export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
@@ -40,7 +46,14 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
       }
 
       for (const diff of group) {
-        if (!diff.artifactId || !diff.spaceId) {
+        if (!diff.spaceId) {
+          skipped.push({
+            name: diff.artifactName,
+            reason: 'Missing artifact metadata',
+          });
+          continue;
+        }
+        if (!diff.artifactId && !CREATION_TYPES.has(diff.type)) {
           skipped.push({
             name: diff.artifactName,
             reason: 'Missing artifact metadata',
@@ -72,8 +85,9 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
         spaceId: spaceId as SpaceId,
         proposals: diffs.map((diff) => ({
           type: diff.type,
-          artefactId:
-            diff.artifactId as ChangeProposalArtefactId<ChangeProposalType>,
+          artefactId: (CREATION_TYPES.has(diff.type)
+            ? null
+            : diff.artifactId) as ChangeProposalArtefactId<ChangeProposalType>,
           payload: diff.payload,
           captureMode: ChangeProposalCaptureMode.commit,
           message,
