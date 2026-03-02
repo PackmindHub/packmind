@@ -21,7 +21,7 @@ export function ChangesSummaryBar({
   ];
 
   return (
-    <PMBox px={6} py={3}>
+    <PMBox px={6} py={3} my={2}>
       <PMHStack justifyContent="space-between" mb={2}>
         <PMHStack gap={3} fontSize="sm" color="fg.subtle">
           <PMText>
