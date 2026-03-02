@@ -89,9 +89,9 @@ export type NewSkillPayload = {
 };
 
 type CreationChangeProposalPayloadMap = {
-  [ChangeProposalType.newStandard]: NewStandardPayload;
-  [ChangeProposalType.newCommand]: NewCommandPayload;
-  [ChangeProposalType.newSkill]: NewSkillPayload;
+  [ChangeProposalType.createStandard]: NewStandardPayload;
+  [ChangeProposalType.createCommand]: NewCommandPayload;
+  [ChangeProposalType.createSkill]: NewSkillPayload;
 };
 
 type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &

@@ -32,9 +32,9 @@ type SkillChangeProposalArtefactIdMap = {
 };
 
 type CreationChangeProposalArtefactIdMap = {
-  [ChangeProposalType.newStandard]: null;
-  [ChangeProposalType.newCommand]: null;
-  [ChangeProposalType.newSkill]: null;
+  [ChangeProposalType.createStandard]: null;
+  [ChangeProposalType.createCommand]: null;
+  [ChangeProposalType.createSkill]: null;
 };
 
 type ChangeProposalArtefactIdMap = CommandChangeProposalArtefactIdMap &

@@ -20,7 +20,7 @@ export const CHANGE_PROPOSAL_TYPE_LABELS: Record<ChangeProposalType, string> = {
   [ChangeProposalType.updateSkillFileContent]: 'File content',
   [ChangeProposalType.updateSkillFilePermissions]: 'File permissions',
   [ChangeProposalType.deleteSkillFile]: 'File (delete)',
-  [ChangeProposalType.newStandard]: 'New standard',
-  [ChangeProposalType.newCommand]: 'New command',
-  [ChangeProposalType.newSkill]: 'New skill',
+  [ChangeProposalType.createStandard]: 'New standard',
+  [ChangeProposalType.createCommand]: 'New command',
+  [ChangeProposalType.createSkill]: 'New skill',
 };

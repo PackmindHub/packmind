@@ -42,9 +42,9 @@ const conflictDetectors: ConflictDetectorMap = {
   [ChangeProposalType.updateSkillFilePermissions]:
     detectUpdateSkillPermissionsContentConflict,
   [ChangeProposalType.deleteSkillFile]: detectDeleteSkillFileConflict,
-  [ChangeProposalType.newStandard]: () => false,
-  [ChangeProposalType.newCommand]: () => false,
-  [ChangeProposalType.newSkill]: () => false,
+  [ChangeProposalType.createStandard]: () => false,
+  [ChangeProposalType.createCommand]: () => false,
+  [ChangeProposalType.createSkill]: () => false,
 };
 
 export function getConflictDetector<T extends ChangeProposalType>(
