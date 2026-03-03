@@ -12,6 +12,7 @@
   "plugins": [
     {
       "plugin": "@nx/webpack/plugin",
+      "include": ["apps/api/**"],
       "options": {
         "buildTargetName": "build",
         "serveTargetName": "serve",
@@ -22,12 +23,14 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
+      "include": ["apps/**", "packages/**", "tools/**"],
       "options": {
         "targetName": "lint"
       }
     },
     {
       "plugin": "@nx/react/router-plugin",
+      "include": ["apps/frontend/**"],
       "options": {
         "buildTargetName": "build",
         "devTargetName": "dev",
@@ -39,6 +42,7 @@
     },
     {
       "plugin": "@nx/vite/plugin",
+      "include": ["apps/frontend/**", "packages/ui/**"],
       "options": {
         "buildTargetName": "build",
         "serveTargetName": "serve",
@@ -52,29 +56,26 @@
     },
     {
       "plugin": "@nx/playwright/plugin",
+      "include": ["apps/e2e-tests/**"],
       "options": {
         "targetName": "e2e"
       }
     },
     {
       "plugin": "@nx/jest/plugin",
+      "include": ["apps/**", "packages/**", "tools/**"],
       "options": {
         "targetName": "test"
       }
     },
     {
       "plugin": "@nx/storybook/plugin",
+      "include": ["packages/ui/**"],
       "options": {
         "serveStorybookTargetName": "storybook",
         "buildStorybookTargetName": "build-storybook",
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static-storybook"
-      }
-    },
-    {
-      "plugin": "@nx/vitest",
-      "options": {
-        "testTargetName": "test"
       }
     }
   ],
@@ -120,6 +121,5 @@
     "enabled": false,
     "autoExit": true
   },
-  "useDaemonProcess": false,
   "cacheDirectory": ".nx/cache"
 }

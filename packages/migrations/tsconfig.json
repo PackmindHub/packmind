@@ -13,6 +13,9 @@
       "@packmind/ui": ["packages/ui/src/index.ts"]
     }
   },
+  "ts-node": {
+    "swc": true
+  },
   "files": [],
   "include": [],
   "references": [
