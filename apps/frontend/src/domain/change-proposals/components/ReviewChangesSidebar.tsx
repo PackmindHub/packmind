@@ -227,9 +227,18 @@ export function ReviewChangesSidebar({
 
       {isSkillSelected && allFilePaths.length > 0 && (
         <PMBox flex={1} minH={0} overflowY="auto" px={4}>
-          <PMHeading level="h6" color="faded" mb={2}>
-            FILE FILTER
-          </PMHeading>
+          <PMText
+            fontSize="xs"
+            color="faded"
+            fontWeight="bold"
+            textTransform="uppercase"
+            mb={2}
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+          >
+            {skillData?.skill?.name ?? 'Skill'}
+          </PMText>
           <SkillFileFilterTree
             allFilePaths={allFilePaths}
             filePathsWithChanges={filePathsWithChanges}
