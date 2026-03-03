@@ -9,6 +9,7 @@ import {
   logErrorConsole,
   logInfoConsole,
   logSuccessConsole,
+  logWarningConsole,
 } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
@@ -135,10 +136,15 @@ export async function diffAddHandler(
 
   if (summaryParts.length > 0) {
     const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
-    if (result.errors.length > 0) {
-      logErrorConsole(summaryMessage);
-    } else {
+    if (result.errors.length === 0 && result.alreadySubmitted === 0) {
       logSuccessConsole(summaryMessage);
+    } else if (
+      (result.errors.length > 0 && result.submitted > 0) ||
+      result.alreadySubmitted > 0
+    ) {
+      logWarningConsole(summaryMessage);
+    } else {
+      logErrorConsole(summaryMessage);
     }
   }
 
