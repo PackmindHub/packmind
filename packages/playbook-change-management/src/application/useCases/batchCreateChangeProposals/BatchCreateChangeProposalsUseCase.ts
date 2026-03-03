@@ -54,7 +54,13 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
           await this.playbookChangeManagementPort.createChangeProposal(
             itemCommand,
           );
-        if (result.wasCreated) {
+        if ('violation' in result) {
+          errors.push({
+            index: i,
+            message: result.violation,
+            code: 'ChangeProposalLimitExceededError',
+          });
+        } else if (result.wasCreated) {
           created++;
         } else {
           skipped++;
