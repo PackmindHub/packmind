@@ -22,7 +22,7 @@ export function describeWithTempSpace(
       return { testDir };
     });
 
-    // Clean up test directory after all tests
+    // Clean up test directory after each test
     afterEach(async () => {
       if (testDir && fs.existsSync(testDir)) {
         fs.rmSync(testDir, { recursive: true, force: true });
