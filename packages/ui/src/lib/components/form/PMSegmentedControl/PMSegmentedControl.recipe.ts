@@ -7,12 +7,12 @@ export const pmSegmentedControl = {
     },
     item: {
       cursor: 'pointer',
-      border: '1px solid',
-      borderColor: '{colors.border.primary}',
       '&[data-state=checked]': {
-        bg: '{colors.branding.primary}',
         color: '{colors.beige.1000}',
       },
+    },
+    indicator: {
+      bg: '{colors.branding.primary}',
     },
   },
 };
