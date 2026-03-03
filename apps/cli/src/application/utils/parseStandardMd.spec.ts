@@ -1,4 +1,4 @@
-import { parseStandardMd } from './parseStandardMd';
+import { parseStandardMd, parseStandardMdForAgent } from './parseStandardMd';
 
 describe('parseStandardMd', () => {
   describe('when file is in Packmind format', () => {
@@ -506,5 +506,84 @@ describe('parseStandardMd', () => {
 
       expect(result).toBeNull();
     });
+  });
+});
+
+describe('parseStandardMdForAgent', () => {
+  it('parses Packmind format for packmind agent', () => {
+    const content = '# My Standard\n\nDescription\n\n## Rules\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'packmind');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Claude format for claude agent', () => {
+    const content =
+      '---\npaths: "**/*.ts"\nalwaysApply: false\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'claude');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Cursor format for cursor agent', () => {
+    const content =
+      '---\nglobs: **/*.ts\nalwaysApply: false\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'cursor');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Continue format for continue agent', () => {
+    const content =
+      '---\nglobs: "**/*.ts"\nalwaysApply: false\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'continue');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Copilot format for copilot agent', () => {
+    const content =
+      "---\napplyTo: '**/*.ts'\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1";
+
+    const result = parseStandardMdForAgent(content, 'copilot');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('returns null when content does not match agent format', () => {
+    const content = 'Some random content without heading';
+
+    const result = parseStandardMdForAgent(content, 'claude');
+
+    expect(result).toBeNull();
   });
 });
