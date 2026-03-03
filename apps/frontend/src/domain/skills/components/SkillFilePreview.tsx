@@ -22,9 +22,13 @@ import {
 
 interface ISkillFilePreviewProps {
   file: SkillFile | null;
+  clipboardContent?: string;
 }
 
-export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
+export const SkillFilePreview = ({
+  file,
+  clipboardContent,
+}: ISkillFilePreviewProps) => {
   if (!file) {
     return (
       <PMEmptyState
@@ -134,7 +138,7 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
               <LuDownload />
             </PMIconButton>
           </PMTooltip>
-          <PMCopiable.Root value={file.content}>
+          <PMCopiable.Root value={clipboardContent ?? file.content}>
             <PMTooltip label="Copy to clipboard">
               <PMCopiable.Trigger asChild>
                 <PMIconButton
