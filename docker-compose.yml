@@ -100,8 +100,7 @@ services:
       - sh
       - -c
       - |
-        apk add --no-cache python3 git make g++ py3-setuptools && \
-        ln -sf /usr/bin/python3 /usr/bin/python && \
+        apk add --no-cache git && \
         rm -rf node_modules/.cache && \
         npm install --unsafe-perm --audit=false --fund=false && \
         chmod -R +x node_modules/.bin 2>/dev/null || true
