@@ -9,7 +9,6 @@ import {
   OrganizationId,
   SpaceId,
   Standard,
-  UserId,
 } from '@packmind/types';
 
 export class StandardCreateChangeProposalApplier implements ICreateChangeProposalApplier<ChangeProposalType.createStandard> {
@@ -17,7 +16,6 @@ export class StandardCreateChangeProposalApplier implements ICreateChangeProposa
 
   async apply(
     changeProposal: ChangeProposal<ChangeProposalType.createStandard>,
-    userId: UserId,
     spaceId: SpaceId,
     organizationId: OrganizationId,
   ): Promise<Standard> {
@@ -32,7 +30,7 @@ export class StandardCreateChangeProposalApplier implements ICreateChangeProposa
       summary: null,
       rules: rules.map((rule) => ({ content: rule.content })),
       organizationId,
-      userId,
+      userId: changeProposal.createdBy,
       scope: normalizedScope,
       spaceId,
     });

@@ -7,7 +7,6 @@ import {
   Skill,
   SpaceId,
   Standard,
-  UserId,
 } from '@packmind/types';
 
 export type SupportedCreateChangedProposalType =
@@ -31,7 +30,6 @@ export interface ICreateChangeProposalApplier<
 > {
   apply(
     changeProposal: ChangeProposal<CP>,
-    userId: UserId,
     spaceId: SpaceId,
     organizationId: OrganizationId,
   ): Promise<Artefact<CP>>;

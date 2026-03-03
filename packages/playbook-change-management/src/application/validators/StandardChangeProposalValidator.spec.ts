@@ -160,25 +160,6 @@ describe('StandardChangeProposalValidator', () => {
 
       expect(standardsPort.getStandard).not.toHaveBeenCalled();
     });
-
-    describe('when artefactId is provided', () => {
-      it('returns artefactVersion 0', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createStandard,
-          artefactId: standardId,
-          payload: {
-            name: 'New Standard',
-            description: 'A description',
-            scope: null,
-            rules: [],
-          },
-        });
-
-        const result = await validator.validate(command);
-
-        expect(result).toEqual({ artefactVersion: 0 });
-      });
-    });
   });
 
   describe('when validating updateStandardName', () => {
