@@ -589,91 +589,65 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       standardsPort.createStandardWithExamples.mockResolvedValue(standard);
     });
 
-    it('creates a standard via standardsPort', async () => {
-      await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+    describe('when accepted', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [standardProposal.id],
+          rejected: [],
+        });
       });
 
-      expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
-        userId: standardProposal.createdBy,
-        organizationId,
-        spaceId,
-        name: standardPayload.name,
-        description: standardPayload.description,
-        summary: null,
-        scope: standardPayload.scope,
-        rules: [{ content: 'Use const for immutable variables' }],
-      });
-    });
-
-    it('returns the created standard id', async () => {
-      const result = await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+      it('creates a standard via standardsPort', () => {
+        expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
+          userId: standardProposal.createdBy,
+          organizationId,
+          spaceId,
+          name: standardPayload.name,
+          description: standardPayload.description,
+          summary: null,
+          scope: standardPayload.scope,
+          rules: [{ content: 'Use const for immutable variables' }],
+        });
       });
 
-      expect(result.created).toEqual({
-        commands: [],
-        standards: [standardId],
-        skills: [],
-      });
-    });
-
-    it('returns empty rejected list', async () => {
-      const result = await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+      it('returns the created standard id', () => {
+        expect(result.created).toEqual({
+          commands: [],
+          standards: [standardId],
+          skills: [],
+        });
       });
 
-      expect(result.rejected).toEqual([]);
-    });
-
-    it('calls batchUpdateProposalsInTransaction with accepted proposals', async () => {
-      await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+      it('returns empty rejected list', () => {
+        expect(result.rejected).toEqual([]);
       });
 
-      expect(
-        changeProposalService.batchUpdateProposalsInTransaction,
-      ).toHaveBeenCalledWith({
-        acceptedProposals: [{ proposal: standardProposal, userId }],
-        rejectedProposals: [],
-      });
-    });
-
-    it('emits accepted event with itemType, changeType, and created standard id', async () => {
-      await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+      it('calls batchUpdateProposalsInTransaction with accepted proposals', () => {
+        expect(
+          changeProposalService.batchUpdateProposalsInTransaction,
+        ).toHaveBeenCalledWith({
+          acceptedProposals: [{ proposal: standardProposal, userId }],
+          rejectedProposals: [],
+        });
       });
 
-      expect(eventEmitterService.emit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          payload: expect.objectContaining({
-            userId: userId,
-            itemType: 'standard',
-            changeType: ChangeProposalType.createStandard,
-            itemId: standardId,
+      it('emits accepted event with itemType, changeType, and created standard id', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              userId: userId,
+              itemType: 'standard',
+              changeType: ChangeProposalType.createStandard,
+              itemId: standardId,
+            }),
           }),
-        }),
-      );
+        );
+      });
     });
 
     describe('when scope is an array', () => {
