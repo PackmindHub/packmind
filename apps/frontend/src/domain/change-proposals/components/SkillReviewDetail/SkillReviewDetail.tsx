@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
@@ -21,9 +21,18 @@ import {
 import { getSkillByIdKey } from '../../../skills/api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
-import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
+import {
+  useCardReviewState,
+  ReviewTab,
+  ViewMode,
+} from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
 import { computeSkillOutdatedIds } from '../../utils/computeOutdatedProposalIds';
+import {
+  filterProposalsByFilePath,
+  getFilePathsWithChanges,
+  hasChangesForFilter,
+} from '../../utils/filterProposalsByFilePath';
 import { ReviewHeader } from '../shared/ReviewHeader';
 import { SkillGroupedAccordion } from './SkillGroupedAccordion';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
@@ -37,7 +46,7 @@ import { SkillFocusedView } from './SkillFocusedView';
 import { SkillInlineView } from './SkillInlineView';
 import { SkillOriginalTabContent } from './SkillOriginalTabContent';
 import { SkillResultTabContent } from './SkillResultTabContent';
-import { useBlocker, useBeforeUnload } from 'react-router';
+import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
 
 interface SkillReviewDetailProps {
   artefactId: string;
@@ -76,6 +85,39 @@ export function SkillReviewDetail({
   const pool = useChangeProposalPool(selectedSkillProposals);
 
   const reviewState = useCardReviewState();
+
+  const [searchParams] = useSearchParams();
+  const filePathFilter = searchParams.get('file') ?? '';
+
+  const filePathsWithChanges = useMemo(
+    () => getFilePathsWithChanges(selectedSkillProposals, files),
+    [selectedSkillProposals, files],
+  );
+
+  const filteredProposals = useMemo(
+    () =>
+      filterProposalsByFilePath(selectedSkillProposals, files, filePathFilter),
+    [selectedSkillProposals, files, filePathFilter],
+  );
+
+  const filterHasChanges = useMemo(
+    () => hasChangesForFilter(filePathsWithChanges, filePathFilter),
+    [filePathsWithChanges, filePathFilter],
+  );
+
+  const disabledTabs: ReviewTab[] = useMemo(
+    () =>
+      !selectedSkillProposalsData || filterHasChanges
+        ? []
+        : ['changes', 'result'],
+    [selectedSkillProposalsData, filterHasChanges],
+  );
+
+  useEffect(() => {
+    if (!selectedSkillProposalsData) return;
+    reviewState.setActiveTab(filterHasChanges ? 'changes' : 'original');
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only auto-switch when file filter changes
+  }, [filePathFilter]);
 
   const outdatedProposalIds = useMemo(
     () => computeSkillOutdatedIds(selectedSkillProposals, skill, files),
@@ -210,11 +252,12 @@ export function SkillReviewDetail({
           hasPooledDecisions={pool.hasPooledDecisions}
           isSaving={applySkillChangeProposalsMutation.isPending}
           onSave={handleSave}
+          disabledTabs={disabledTabs}
         />
 
         {reviewState.activeTab === 'changes' && (
           <SkillGroupedAccordion
-            proposals={selectedSkillProposals}
+            proposals={filteredProposals}
             files={files}
             acceptedProposalIds={pool.acceptedProposalIds}
             rejectedProposalIds={pool.rejectedProposalIds}
@@ -237,7 +280,11 @@ export function SkillReviewDetail({
         )}
 
         {reviewState.activeTab === 'original' && (
-          <SkillOriginalTabContent skill={skill} files={files} />
+          <SkillOriginalTabContent
+            skill={skill}
+            files={files}
+            filePathFilter={filePathFilter}
+          />
         )}
 
         {reviewState.activeTab === 'result' && (
@@ -246,6 +293,7 @@ export function SkillReviewDetail({
             files={files}
             proposals={selectedSkillProposals}
             acceptedProposalIds={pool.acceptedProposalIds}
+            filePathFilter={filePathFilter}
           />
         )}
       </PMBox>
