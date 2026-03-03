@@ -1,4 +1,4 @@
-import { PMAccordion, PMHStack } from '@packmind/ui';
+import { PMAccordion, PMBadge, PMHStack } from '@packmind/ui';
 import { ChangeProposalType } from '@packmind/types';
 import { ProposalLabel } from './ProposalLabel';
 import { StatusDot } from './StatusDot';
@@ -13,6 +13,7 @@ interface ChangeProposalCardHeaderProps {
   authorName: string;
   createdAt: Date;
   artefactVersion: number;
+  filePath?: string;
 }
 
 export function ChangeProposalCardHeader({
@@ -22,6 +23,7 @@ export function ChangeProposalCardHeader({
   authorName,
   createdAt,
   artefactVersion,
+  filePath,
 }: Readonly<ChangeProposalCardHeaderProps>) {
   return (
     <PMAccordion.ItemTrigger px={4} py={3} _hover={{ cursor: 'pointer' }}>
@@ -32,6 +34,11 @@ export function ChangeProposalCardHeader({
           proposalType={proposalType}
         />
         <StatusDot status={poolStatus} />
+        {filePath && (
+          <PMBadge variant="outline" size="sm" fontFamily="mono">
+            {filePath}
+          </PMBadge>
+        )}
         <PMHStack flex={1} justifyContent="flex-end">
           <ProposalMeta
             authorName={authorName}

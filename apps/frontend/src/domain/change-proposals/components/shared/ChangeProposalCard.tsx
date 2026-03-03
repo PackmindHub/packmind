@@ -18,6 +18,7 @@ interface ChangeProposalCardProps {
   isBlockedByConflict: boolean;
   showToolbar?: boolean;
   showEditButton?: boolean;
+  filePath?: string;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
   onAccept: () => void;
@@ -39,6 +40,7 @@ export function ChangeProposalCard({
   isBlockedByConflict,
   showToolbar,
   showEditButton,
+  filePath,
   onViewModeChange,
   onEdit,
   onAccept,
@@ -61,6 +63,7 @@ export function ChangeProposalCard({
         authorName={authorName}
         createdAt={proposal.createdAt}
         artefactVersion={proposal.artefactVersion}
+        filePath={filePath}
       />
       <PMAccordion.ItemContent>
         <ChangeProposalCardBody
