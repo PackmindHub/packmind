@@ -778,27 +778,58 @@ describe('diffAddHandler', () => {
       );
     });
 
-    it('handles standard with no rules', async () => {
-      const noRulesContent = '# Empty Standard\n\nJust a description.\n';
-      mockReadFile.mockReturnValue(noRulesContent);
+    describe('when packmind standard has no rules', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          '# Empty Standard\n\nJust a description.\n',
+        );
+      });
 
-      await diffAddHandler(
-        buildDeps({
-          filePath: '.packmind/standards/empty.md',
-          message: 'Add empty standard',
-        }),
-      );
+      it('logs no-rules error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Standard has no rules'),
+        );
+      });
 
-      expect(mockSubmitDiffs).toHaveBeenCalledWith(
-        [
-          [
-            expect.objectContaining({
-              payload: expect.objectContaining({ rules: [] }),
-            }),
-          ],
-        ],
-        'Add empty standard',
-      );
+      it('includes packmind format example in error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('## Rules'),
+        );
+      });
+
+      it('does not call submitDiffs', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(mockSubmitDiffs).not.toHaveBeenCalled();
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
     });
   });
 
@@ -864,7 +895,7 @@ describe('diffAddHandler', () => {
         );
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to parse standard file'),
+          expect.stringContaining('File format is invalid'),
         );
       });
 
@@ -877,6 +908,102 @@ describe('diffAddHandler', () => {
         );
 
         expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when claude rules file lacks ## Standard: header', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          'Everything about our testing conventions\n- single assertion\n- does not start with should',
+        );
+      });
+
+      it('logs format error with expected format example', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/jest-conventions.md',
+            message: 'Add jest conventions',
+          }),
+        );
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('## Standard: <name>'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/jest-conventions.md',
+            message: 'Add jest conventions',
+          }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when claude standard has heading but no rules', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          '## Standard: Empty\n\nJust a description.\n',
+        );
+      });
+
+      it('logs no-rules error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/packmind/standard-empty.md',
+            message: 'Add empty',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Standard has no rules'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/packmind/standard-empty.md',
+            message: 'Add empty',
+          }),
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when standard contains only the fallback placeholder rule', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          '# Template Standard\n\nDescription\n\n## Rules\n\n* No rules defined yet.\n',
+        );
+      });
+
+      it('logs no-rules error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/template.md',
+            message: 'Add template',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Standard has no rules'),
+        );
+      });
+
+      it('does not call submitDiffs', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/template.md',
+            message: 'Add template',
+          }),
+        );
+        expect(mockSubmitDiffs).not.toHaveBeenCalled();
       });
     });
   });
