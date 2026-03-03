@@ -1,5 +1,8 @@
 name: Build and Test
 
+env:
+  HUSKY: '0'
+
 on:
   workflow_call:
     inputs:
@@ -53,7 +56,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -94,7 +97,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -142,7 +145,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -180,7 +183,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -230,7 +233,7 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
 
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
