@@ -4,6 +4,7 @@ import { ChangeProposalCaptureMode } from '../ChangeProposalCaptureMode';
 import { ChangeProposalPayload } from '../ChangeProposalPayload';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { ChangeProposalArtefactId } from '../ChangeProposalArtefactIdType';
+import { ChangeProposalViolation } from '../ChangeProposalViolation';
 import { SpaceId } from '../../spaces';
 
 export type CreateChangeProposalCommand<T extends ChangeProposalType> =
@@ -16,10 +17,14 @@ export type CreateChangeProposalCommand<T extends ChangeProposalType> =
     message?: string;
   };
 
-export type CreateChangeProposalResponse<T extends ChangeProposalType> = {
-  changeProposal: ChangeProposal<T>;
-  wasCreated?: boolean;
-};
+export type CreateChangeProposalResponse<T extends ChangeProposalType> =
+  | { changeProposal: ChangeProposal<T>; wasCreated: boolean }
+  | {
+      changeProposal: null;
+      wasCreated: false;
+      violation: ChangeProposalViolation;
+      violationMessage: string;
+    };
 
 export type ICreateChangeProposalUseCase<T extends ChangeProposalType> = {
   execute: (

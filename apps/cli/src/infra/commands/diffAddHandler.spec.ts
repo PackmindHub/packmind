@@ -603,33 +603,36 @@ describe('diffAddHandler', () => {
   });
 
   describe('standard file parse failure', () => {
-    it('logs error when content does not match any standard format', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-      mockReadFile.mockReturnValue('Some random content without heading');
+    describe('when content does not match any standard format', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue('Some random content without heading');
+      });
 
-      await diffAddHandler(
-        buildDeps({
-          filePath: '.packmind/standards/bad.md',
-          message: 'Add bad standard',
-        }),
-      );
+      it('logs error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
 
-      expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to parse standard file'),
-      );
-    });
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/bad.md',
+            message: 'Add bad standard',
+          }),
+        );
 
-    it('exits with 1 on parse failure', async () => {
-      mockReadFile.mockReturnValue('Some random content without heading');
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to parse standard file'),
+        );
+      });
 
-      await diffAddHandler(
-        buildDeps({
-          filePath: '.packmind/standards/bad.md',
-          message: 'Add bad standard',
-        }),
-      );
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/bad.md',
+            message: 'Add bad standard',
+          }),
+        );
 
-      expect(mockExit).toHaveBeenCalledWith(1);
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
     });
   });
 });

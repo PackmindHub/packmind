@@ -579,11 +579,13 @@ describe('parseStandardMdForAgent', () => {
     });
   });
 
-  it('returns null when content does not match agent format', () => {
-    const content = 'Some random content without heading';
+  describe('when content does not match agent format', () => {
+    it('returns null', () => {
+      const content = 'Some random content without heading';
 
-    const result = parseStandardMdForAgent(content, 'claude');
+      const result = parseStandardMdForAgent(content, 'claude');
 
-    expect(result).toBeNull();
+      expect(result).toBeNull();
+    });
   });
 });

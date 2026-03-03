@@ -5,6 +5,7 @@ import {
   BatchCreateChangeProposalsCommand,
   ChangeProposalCaptureMode,
   ChangeProposalType,
+  ChangeProposalViolation,
   createOrganizationId,
   createSpaceId,
   createUserId,
@@ -202,6 +203,47 @@ describe('BatchCreateChangeProposalsUseCase', () => {
     });
 
     it('still creates the remaining proposals successfully', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.created).toBe(1);
+    });
+  });
+
+  describe('when one proposal returns a violation branch', () => {
+    const proposals = [
+      buildProposalItem({ artefactId: 'artefact-1' }),
+      buildProposalItem({ artefactId: 'artefact-2' }),
+    ];
+    const command = buildCommand(proposals);
+
+    beforeEach(() => {
+      playbookChangeManagementPort.createChangeProposal
+        .mockResolvedValueOnce({
+          changeProposal: {} as never,
+          wasCreated: true,
+        })
+        .mockResolvedValueOnce({
+          changeProposal: null,
+          wasCreated: false,
+          violation: ChangeProposalViolation.TOO_MANY_RULES,
+          violationMessage:
+            'A standard cannot have more than 500 rules (got 502)',
+        });
+    });
+
+    it('adds an error with human-readable message', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.errors).toEqual([
+        {
+          index: 1,
+          message: 'A standard cannot have more than 500 rules (got 502)',
+          code: ChangeProposalViolation.TOO_MANY_RULES,
+        },
+      ]);
+    });
+
+    it('still creates the other proposals', async () => {
       const result = await useCase.execute(command);
 
       expect(result.created).toBe(1);

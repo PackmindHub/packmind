@@ -18,6 +18,7 @@ import {
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
+import { ChangeProposalLimitExceededError } from '../../errors/ChangeProposalLimitExceededError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { IChangeProposalValidator } from '../../validators/IChangeProposalValidator';
 
@@ -55,8 +56,25 @@ export class CreateChangeProposalUseCase
       command.organization.id,
     );
 
-    const { artefactVersion, resolvedPayload } =
-      await validator.validate(command);
+    let artefactVersion: number;
+    let resolvedPayload: Awaited<
+      ReturnType<typeof validator.validate>
+    >['resolvedPayload'];
+
+    try {
+      ({ artefactVersion, resolvedPayload } =
+        await validator.validate(command));
+    } catch (error) {
+      if (error instanceof ChangeProposalLimitExceededError) {
+        return {
+          changeProposal: null,
+          wasCreated: false,
+          violation: error.changeProposal,
+          violationMessage: error.message,
+        };
+      }
+      throw error;
+    }
 
     const resolvedCommand = resolvedPayload
       ? { ...command, payload: resolvedPayload }

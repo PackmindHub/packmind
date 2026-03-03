@@ -5,6 +5,7 @@ import {
   ChangeProposalCaptureMode,
   ChangeProposalStatus,
   ChangeProposalType,
+  ChangeProposalViolation,
   createChangeProposalId,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
@@ -31,6 +32,7 @@ import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnersh
 import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
 import { SkillFileNotFoundError } from '../../errors/SkillFileNotFoundError';
 import { SkillVersionNotFoundError } from '../../errors/SkillVersionNotFoundError';
+import { ChangeProposalLimitExceededError } from '../../errors/ChangeProposalLimitExceededError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { CreateChangeProposalUseCase } from './CreateChangeProposalUseCase';
 import { CommandChangeProposalValidator } from '../../validators/CommandChangeProposalValidator';
@@ -810,6 +812,57 @@ describe('CreateChangeProposalUseCase', () => {
         expect.objectContaining({ payload: resolvedPayload }),
         5,
       );
+    });
+  });
+
+  describe('when validator throws ChangeProposalLimitExceededError', () => {
+    const command = buildCommand();
+    let mockValidator: jest.Mocked<IChangeProposalValidator>;
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+
+      mockValidator = {
+        supports: jest.fn().mockReturnValue(true),
+        validate: jest
+          .fn()
+          .mockRejectedValue(
+            new ChangeProposalLimitExceededError(
+              ChangeProposalViolation.TOO_MANY_RULES,
+              500,
+              502,
+            ),
+          ),
+      };
+
+      useCase = new CreateChangeProposalUseCase(
+        accountsPort,
+        spacesPort,
+        service,
+        [mockValidator],
+        eventEmitterService,
+        stubLogger(),
+      );
+    });
+
+    it('returns violation enum', async () => {
+      const result = await useCase.execute(command);
+      expect(result).toMatchObject({
+        violation: ChangeProposalViolation.TOO_MANY_RULES,
+      });
+    });
+
+    it('returns human-readable violationMessage', async () => {
+      const result = await useCase.execute(command);
+      expect(result).toMatchObject({
+        violationMessage:
+          'A standard cannot have more than 500 rules (got 502)',
+      });
+    });
+
+    it('returns wasCreated false', async () => {
+      const result = await useCase.execute(command);
+      expect(result).toMatchObject({ wasCreated: false });
     });
   });
 
