@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMSpinner } from '@packmind/ui';
+import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
   ChangeProposalId,
   OrganizationId,
@@ -23,10 +23,16 @@ import {
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
+import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
+import { ChangeProposalWithConflicts } from '../../types';
 import { getStandardByIdKey } from '../../../standards/api/queryKeys';
 import { computeStandardOutdatedIds } from '../../utils/computeOutdatedProposalIds';
-import { ReviewDetailLayout } from '../ReviewDetailLayout';
-import { ProposalReviewPanel } from './ProposalReviewPanel';
+import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
+import { ReviewHeader } from '../shared/ReviewHeader';
+import { StandardFocusedView } from './StandardFocusedView';
+import { StandardInlineView } from './StandardInlineView';
+import { StandardOriginalTabContent } from './StandardOriginalTabContent';
+import { StandardResultTabContent } from './StandardResultTabContent';
 import { useBlocker, useBeforeUnload } from 'react-router';
 
 interface StandardReviewDetailProps {
@@ -69,29 +75,7 @@ export function StandardReviewDetail({
 
   const pool = useChangeProposalPool(selectedStandardProposals);
 
-  const [showUnifiedView, setShowUnifiedView] = useState(false);
-
-  const handleUnifiedViewChange = useCallback(
-    (checked: boolean) => {
-      setShowUnifiedView(checked);
-      if (checked && pool.reviewingProposalId) {
-        // When toggling unified view ON, clear the selected proposal
-        pool.handleSelectProposal(pool.reviewingProposalId);
-      }
-    },
-    [pool],
-  );
-
-  const handleSelectProposal = useCallback(
-    (proposalId: ChangeProposalId) => {
-      // When selecting a proposal, turn off unified view
-      if (showUnifiedView) {
-        setShowUnifiedView(false);
-      }
-      pool.handleSelectProposal(proposalId);
-    },
-    [pool, showUnifiedView],
-  );
+  const reviewState = useCardReviewState();
 
   const outdatedProposalIds = useMemo(
     () =>
@@ -148,53 +132,112 @@ export function StandardReviewDetail({
   }, [
     organizationId,
     spaceId,
-    pool,
+    pool.acceptedProposalIds,
+    pool.rejectedProposalIds,
+    pool.hasPooledDecisions,
     applyStandardChangeProposalsMutation,
     queryClient,
+    pool.resetPool,
     standardId,
   ]);
 
+  const renderExpandedView = useCallback(
+    (viewMode: ViewMode, proposal: ChangeProposalWithConflicts) => {
+      if (viewMode === 'diff')
+        return <StandardFocusedView proposal={proposal} />;
+      if (viewMode === 'inline')
+        return <StandardInlineView proposal={proposal} />;
+      return null;
+    },
+    [],
+  );
+
+  const latestProposal = useMemo(() => {
+    if (selectedStandardProposals.length === 0) return null;
+    return [...selectedStandardProposals].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+  }, [selectedStandardProposals]);
+
+  const latestAuthor = latestProposal
+    ? (userLookup.get(latestProposal.createdBy) ?? 'Unknown')
+    : '';
+  const latestTime = latestProposal?.createdAt ?? new Date();
+
+  if (isLoadingProposals || isLoadingRules) {
+    return (
+      <PMBox gridColumn="span 2" display="flex" justifyContent="center" p={8}>
+        <PMSpinner />
+      </PMBox>
+    );
+  }
+
+  if (!selectedStandard) {
+    return null;
+  }
+
   return (
     <>
-      <ReviewDetailLayout
-        proposals={selectedStandardProposals}
-        reviewingProposalId={pool.reviewingProposalId}
-        acceptedProposalIds={pool.acceptedProposalIds}
-        rejectedProposalIds={pool.rejectedProposalIds}
-        blockedByConflictIds={pool.blockedByConflictIds}
-        hasPooledDecisions={pool.hasPooledDecisions}
-        outdatedProposalIds={outdatedProposalIds}
-        userLookup={userLookup}
-        showUnifiedView={showUnifiedView}
-        onSelectProposal={handleSelectProposal}
-        onPoolAccept={pool.handlePoolAccept}
-        onPoolReject={pool.handlePoolReject}
-        onUndoPool={pool.handleUndoPool}
-        onUnifiedViewChange={handleUnifiedViewChange}
-        onSave={handleSave}
-        isSaving={applyStandardChangeProposalsMutation.isPending}
+      <PMBox
+        gridColumn="span 2"
+        display="flex"
+        flexDirection="column"
+        height="full"
+        overflowY="auto"
       >
-        {isLoadingProposals || isLoadingRules ? (
-          <PMSpinner />
-        ) : (
-          <ProposalReviewPanel
-            selectedStandard={selectedStandard}
-            selectedStandardProposals={selectedStandardProposals}
-            rules={rules}
-            reviewingProposalId={pool.reviewingProposalId}
-            outdatedProposalIds={outdatedProposalIds}
+        <ReviewHeader
+          artefactName={selectedStandard.name}
+          artefactVersion={selectedStandard.version}
+          latestAuthor={latestAuthor}
+          latestTime={latestTime}
+          activeTab={reviewState.activeTab}
+          onTabChange={reviewState.setActiveTab}
+          acceptedCount={pool.acceptedProposalIds.size}
+          hasPooledDecisions={pool.hasPooledDecisions}
+          isSaving={applyStandardChangeProposalsMutation.isPending}
+          onSave={handleSave}
+        />
+
+        {reviewState.activeTab === 'changes' && (
+          <ChangeProposalAccordion
+            proposals={selectedStandardProposals}
             acceptedProposalIds={pool.acceptedProposalIds}
             rejectedProposalIds={pool.rejectedProposalIds}
             blockedByConflictIds={pool.blockedByConflictIds}
+            outdatedProposalIds={outdatedProposalIds}
+            expandedCardIds={reviewState.expandedCardIds}
             userLookup={userLookup}
-            showUnifiedView={showUnifiedView}
-            onSelectProposal={handleSelectProposal}
-            onPoolAccept={pool.handlePoolAccept}
-            onPoolReject={pool.handlePoolReject}
-            onUndoPool={pool.handleUndoPool}
+            onToggleCard={reviewState.toggleCard}
+            getViewMode={reviewState.getViewMode}
+            onViewModeChange={reviewState.setViewMode}
+            onEdit={() => {
+              /* Edit mode is out of scope for standards */
+            }}
+            onAccept={pool.handlePoolAccept}
+            onDismiss={pool.handlePoolReject}
+            onUndo={pool.handleUndoPool}
+            renderExpandedView={renderExpandedView}
           />
         )}
-      </ReviewDetailLayout>
+
+        {reviewState.activeTab === 'original' && (
+          <StandardOriginalTabContent
+            standard={selectedStandard}
+            rules={rules}
+          />
+        )}
+
+        {reviewState.activeTab === 'result' && (
+          <StandardResultTabContent
+            standard={selectedStandard}
+            rules={rules}
+            proposals={selectedStandardProposals}
+            acceptedProposalIds={pool.acceptedProposalIds}
+          />
+        )}
+      </PMBox>
+
       <PMAlertDialog
         open={blocker.state === 'blocked'}
         onOpenChange={(details) => {
