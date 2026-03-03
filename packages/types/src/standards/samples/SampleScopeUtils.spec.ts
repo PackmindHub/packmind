@@ -203,7 +203,7 @@ describe('SampleScopeUtils', () => {
       it('returns DART for flutter', () => {
         const result = getSampleExampleLanguage('flutter', 'framework');
 
-        expect(result).toBe('DART');
+        expect(result).toBe(ProgrammingLanguage.DART);
       });
     });
 
