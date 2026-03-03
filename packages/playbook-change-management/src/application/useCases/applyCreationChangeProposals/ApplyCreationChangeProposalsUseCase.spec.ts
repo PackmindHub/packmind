@@ -196,6 +196,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'command',
             changeType: ChangeProposalType.createCommand,
             itemId: recipeId,
@@ -275,8 +276,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'command',
             changeType: ChangeProposalType.createCommand,
+            itemId: '',
           }),
         }),
       );
@@ -664,6 +667,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'standard',
             changeType: ChangeProposalType.createStandard,
             itemId: standardId,
@@ -1083,6 +1087,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'skill',
             changeType: ChangeProposalType.createSkill,
             itemId: skillId,
@@ -1222,8 +1227,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'skill',
             changeType: ChangeProposalType.createSkill,
+            itemId: '',
           }),
         }),
       );
