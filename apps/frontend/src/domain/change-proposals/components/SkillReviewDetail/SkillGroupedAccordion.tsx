@@ -101,10 +101,7 @@ export function SkillGroupedAccordion({
     [onToggleCard],
   );
 
-  const renderCard = (
-    proposal: ChangeProposalWithConflicts,
-    filePath: string,
-  ) => {
+  const renderCard = (proposal: ChangeProposalWithConflicts) => {
     const poolStatus = getPoolStatus(
       proposal.id,
       acceptedProposalIds,
@@ -125,7 +122,6 @@ export function SkillGroupedAccordion({
         isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
         showToolbar={true}
         showEditButton={showEditButton}
-        filePath={filePath}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
         onEdit={() => onEdit(proposal.id)}
         onAccept={() => onAccept(proposal.id)}
@@ -155,11 +151,11 @@ export function SkillGroupedAccordion({
           changeCount={group.changeCount}
           pendingCount={group.pendingCount}
         />
-        {pending.map((p) => renderCard(p, group.filePath))}
+        {pending.map((p) => renderCard(p))}
         {reviewed.length > 0 && (
           <>
             <ReviewedSectionDivider count={reviewed.length} />
-            {reviewed.map((p) => renderCard(p, group.filePath))}
+            {reviewed.map((p) => renderCard(p))}
           </>
         )}
       </PMVStack>

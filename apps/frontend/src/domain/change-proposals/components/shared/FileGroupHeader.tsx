@@ -13,15 +13,23 @@ export function FileGroupHeader({
   pendingCount,
 }: Readonly<FileGroupHeaderProps>) {
   return (
-    <PMBox bg="background.secondary" borderRadius="md" px={4} py={2}>
-      <PMHStack gap={3} alignItems="center">
-        <PMIcon color="secondary">
+    <PMBox
+      width="full"
+      bg="bg.panel"
+      borderRadius="md"
+      px={4}
+      py={2}
+      borderBottom="1px solid"
+      borderColor="border.tertiary"
+    >
+      <PMHStack gap={3} alignItems="center" justifyContent="flex-start">
+        <PMIcon color="text.faded">
           <LuFile />
         </PMIcon>
-        <PMText fontSize="sm" fontWeight="bold" color="primary">
+        <PMText fontSize="sm" fontWeight="semibold" color="faded">
           {filePath}
         </PMText>
-        <PMText fontSize="xs" color="secondary">
+        <PMText fontSize="xs" color="faded">
           {changeCount} change{changeCount !== 1 ? 's' : ''}
         </PMText>
         {pendingCount > 0 && (
