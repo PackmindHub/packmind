@@ -15,6 +15,7 @@ interface ReviewHeaderProps {
   hasPooledDecisions: boolean;
   isSaving: boolean;
   onSave: () => void;
+  disabledTabs?: ReviewTab[];
 }
 
 export function ReviewHeader({
@@ -28,6 +29,7 @@ export function ReviewHeader({
   hasPooledDecisions,
   isSaving,
   onSave,
+  disabledTabs,
 }: Readonly<ReviewHeaderProps>) {
   return (
     <PMBox
@@ -48,7 +50,11 @@ export function ReviewHeader({
           latestTime={latestTime}
         />
         <PMHStack gap={4} alignItems="center">
-          <ViewTabSelector activeTab={activeTab} onTabChange={onTabChange} />
+          <ViewTabSelector
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+            disabledTabs={disabledTabs}
+          />
           <ApplyButton
             acceptedCount={acceptedCount}
             hasPooledDecisions={hasPooledDecisions}

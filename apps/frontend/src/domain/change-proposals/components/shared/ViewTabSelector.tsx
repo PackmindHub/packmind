@@ -6,6 +6,7 @@ import { type ComponentType } from 'react';
 interface ViewTabSelectorProps {
   activeTab: ReviewTab;
   onTabChange: (tab: ReviewTab) => void;
+  disabledTabs?: ReviewTab[];
 }
 
 const tabs: { label: string; value: ReviewTab; icon: ComponentType }[] = [
@@ -17,6 +18,7 @@ const tabs: { label: string; value: ReviewTab; icon: ComponentType }[] = [
 export function ViewTabSelector({
   activeTab,
   onTabChange,
+  disabledTabs,
 }: Readonly<ViewTabSelectorProps>) {
   return (
     <PMSegmentGroup.Root
@@ -26,7 +28,11 @@ export function ViewTabSelector({
     >
       <PMSegmentGroup.Indicator />
       {tabs.map((tab) => (
-        <PMSegmentGroup.Item key={tab.value} value={tab.value}>
+        <PMSegmentGroup.Item
+          key={tab.value}
+          value={tab.value}
+          disabled={disabledTabs?.includes(tab.value)}
+        >
           <PMSegmentGroup.ItemText>
             <PMHStack gap={1} alignItems="center">
               <PMIcon>
