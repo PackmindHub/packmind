@@ -191,6 +191,12 @@ describe('SampleScopeUtils', () => {
 
         expect(result).toBe(ProgrammingLanguage.JAVASCRIPT);
       });
+
+      it('returns DART for flutter', () => {
+        const result = getSampleExampleLanguage('flutter', 'framework');
+
+        expect(result).toBe(ProgrammingLanguage.DART);
+      });
     });
 
     describe('with samples without example language', () => {
@@ -198,12 +204,6 @@ describe('SampleScopeUtils', () => {
         const result = getSampleExampleLanguage('terraform', 'framework');
 
         expect(result).toBeNull();
-      });
-
-      it('returns DART for flutter', () => {
-        const result = getSampleExampleLanguage('flutter', 'framework');
-
-        expect(result).toBe(ProgrammingLanguage.DART);
       });
     });
 
