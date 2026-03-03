@@ -180,7 +180,7 @@ export class ApplyCreationChangeProposalsUseCase
           source: command.source ?? 'ui',
           changeProposalId: proposal.id,
           itemType: getItemTypeFromChangeProposalType(proposal.type),
-          itemId: createdArtefactIdByProposalId.get(proposal.id) ?? '',
+          itemId: createdArtefactIdByProposalId.get(proposal.id)!,
           changeType: proposal.type,
         }),
       );
@@ -194,6 +194,7 @@ export class ApplyCreationChangeProposalsUseCase
           source: command.source ?? 'ui',
           changeProposalId: proposal.id,
           itemType: getItemTypeFromChangeProposalType(proposal.type),
+          // creation proposals have no artefactId before they are applied — empty string is correct for rejections
           itemId: String(proposal.artefactId ?? ''),
           changeType: proposal.type,
         }),
