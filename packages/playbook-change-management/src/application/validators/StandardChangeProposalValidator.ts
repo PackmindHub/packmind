@@ -79,6 +79,17 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
     const currentValue =
       STANDARD_FIELD_BY_TYPE[command.type as ScalarStandardType](standard);
 
+    if (command.type === ChangeProposalType.updateStandardScope) {
+      if (normalizeScope(payload.oldValue) !== normalizeScope(currentValue)) {
+        throw new ChangeProposalPayloadMismatchError(
+          command.type,
+          payload.oldValue,
+          currentValue,
+        );
+      }
+      return { artefactVersion: standard.version };
+    }
+
     if (payload.oldValue !== currentValue) {
       throw new ChangeProposalPayloadMismatchError(
         command.type,
@@ -146,4 +157,11 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
       },
     };
   }
+}
+
+function normalizeScope(scope: string): string {
+  return scope
+    .split(',')
+    .map((s) => s.trim())
+    .join(', ');
 }

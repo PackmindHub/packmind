@@ -465,6 +465,31 @@ describe('StandardChangeProposalValidator', () => {
     });
   });
 
+  describe('when validating updateScope', () => {
+    describe('when the comma-separated value do not exactly match', () => {
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue({
+          ...standard,
+          scope: '**/*.ts,**/*.js',
+        });
+      });
+
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: '**/*.ts, **/*.js',
+            newValue: '**/*.tsx',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+  });
+
   describe('when standard not found', () => {
     beforeEach(() => {
       standardsPort.getStandard.mockResolvedValue(null);
