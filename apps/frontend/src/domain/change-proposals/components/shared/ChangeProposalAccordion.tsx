@@ -18,6 +18,7 @@ interface ChangeProposalAccordionProps {
   outdatedProposalIds: Set<ChangeProposalId>;
   expandedCardIds: string[];
   editingProposalId?: ChangeProposalId | null;
+  showEditButton?: boolean;
   userLookup: Map<string, string>;
   onToggleCard: (ids: string[]) => void;
   getViewMode: (proposalId: ChangeProposalId) => ViewMode;
@@ -50,6 +51,7 @@ export function ChangeProposalAccordion({
   outdatedProposalIds,
   expandedCardIds,
   editingProposalId,
+  showEditButton,
   userLookup,
   onToggleCard,
   getViewMode,
@@ -130,6 +132,7 @@ export function ChangeProposalAccordion({
         isOutdated={outdatedProposalIds.has(proposal.id)}
         isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
         showToolbar={!isEditing}
+        showEditButton={showEditButton}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
         onEdit={() => onEdit(proposal.id)}
         onAccept={() => onAccept(proposal.id)}

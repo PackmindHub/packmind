@@ -31,8 +31,12 @@ export function DiffView({
   if (!isMarkdownContent) {
     return (
       <PMVStack gap={3} alignItems="stretch">
-        <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
-        <DiffBlock value={newValue} variant="added" isMarkdown={false} />
+        {oldValue && (
+          <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
+        )}
+        {newValue && (
+          <DiffBlock value={newValue} variant="added" isMarkdown={false} />
+        )}
       </PMVStack>
     );
   }

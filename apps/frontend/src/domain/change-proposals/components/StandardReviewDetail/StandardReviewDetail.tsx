@@ -143,13 +143,27 @@ export function StandardReviewDetail({
 
   const renderExpandedView = useCallback(
     (viewMode: ViewMode, proposal: ChangeProposalWithConflicts) => {
+      if (!selectedStandard) return null;
+
       if (viewMode === 'diff')
-        return <StandardFocusedView proposal={proposal} />;
+        return (
+          <StandardFocusedView
+            proposal={proposal}
+            standard={selectedStandard}
+            rules={rules}
+          />
+        );
       if (viewMode === 'inline')
-        return <StandardInlineView proposal={proposal} />;
+        return (
+          <StandardInlineView
+            proposal={proposal}
+            standard={selectedStandard}
+            rules={rules}
+          />
+        );
       return null;
     },
-    [],
+    [selectedStandard, rules],
   );
 
   const latestProposal = useMemo(() => {
@@ -207,6 +221,7 @@ export function StandardReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
+            showEditButton={false}
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}

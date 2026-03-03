@@ -11,6 +11,7 @@ interface CardToolbarProps {
   isOutdated: boolean;
   isBlockedByConflict: boolean;
   viewMode: ViewMode;
+  showEditButton?: boolean;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
   onAccept: () => void;
@@ -23,6 +24,7 @@ export function CardToolbar({
   isOutdated,
   isBlockedByConflict,
   viewMode,
+  showEditButton,
   onViewModeChange,
   onEdit,
   onAccept,
@@ -54,6 +56,7 @@ export function CardToolbar({
         poolStatus={poolStatus}
         isOutdated={isOutdated}
         isBlockedByConflict={isBlockedByConflict}
+        showEditButton={showEditButton}
         onEdit={onEdit}
         onAccept={onAccept}
         onDismiss={onDismiss}

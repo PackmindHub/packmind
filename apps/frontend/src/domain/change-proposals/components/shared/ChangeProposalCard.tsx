@@ -17,6 +17,7 @@ interface ChangeProposalCardProps {
   isOutdated: boolean;
   isBlockedByConflict: boolean;
   showToolbar?: boolean;
+  showEditButton?: boolean;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
   onAccept: () => void;
@@ -37,6 +38,7 @@ export function ChangeProposalCard({
   isOutdated,
   isBlockedByConflict,
   showToolbar,
+  showEditButton,
   onViewModeChange,
   onEdit,
   onAccept,
@@ -68,6 +70,7 @@ export function ChangeProposalCard({
           isOutdated={isOutdated}
           isBlockedByConflict={isBlockedByConflict}
           showToolbar={showToolbar}
+          showEditButton={showEditButton}
           onViewModeChange={onViewModeChange}
           onEdit={onEdit}
           onAccept={onAccept}

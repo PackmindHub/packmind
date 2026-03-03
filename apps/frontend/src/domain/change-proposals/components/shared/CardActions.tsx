@@ -7,6 +7,7 @@ interface CardActionsProps {
   poolStatus: PoolStatus;
   isOutdated: boolean;
   isBlockedByConflict: boolean;
+  showEditButton?: boolean;
   onEdit: () => void;
   onAccept: () => void;
   onDismiss: () => void;
@@ -17,6 +18,7 @@ export function CardActions({
   poolStatus,
   isOutdated,
   isBlockedByConflict,
+  showEditButton = true,
   onEdit,
   onAccept,
   onDismiss,
@@ -54,10 +56,12 @@ export function CardActions({
 
   return (
     <PMHStack gap={2}>
-      <PMButton size="xs" variant="outline" onClick={onEdit}>
-        <LuPencil />
-        Edit
-      </PMButton>
+      {showEditButton && (
+        <PMButton size="xs" variant="outline" onClick={onEdit}>
+          <LuPencil />
+          Edit
+        </PMButton>
+      )}
       {acceptTooltip ? (
         <PMTooltip label={acceptTooltip}>{acceptButton}</PMTooltip>
       ) : (
