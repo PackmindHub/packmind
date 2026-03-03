@@ -18,20 +18,26 @@ export async function setupGitRepo(
 ) {
   const fullOptions = { ...defaultSetupGitRepoOptions, ...opts };
 
-  // Initialize git repository with main branch
-  execSync('git init -b main .', { cwd: testDir });
-  execSync(`git remote add origin ${fullOptions.gitRemoteUrl}`, {
-    cwd: testDir,
-  });
-  // Configure git user for commits
-  execSync(`git config user.email "${fullOptions.gitUserEmail}"`, {
-    cwd: testDir,
-  });
-  execSync(`git config user.name "${fullOptions.gitUserName}"`, {
-    cwd: testDir,
-  });
-  // Create initial commit to establish HEAD
-  execSync('git commit --allow-empty -m "Initial commit"', {
-    cwd: testDir,
-  });
+  try {
+    // Initialize git repository with main branch
+    execSync('git init -b main .', { cwd: testDir });
+    execSync(`git remote add origin ${fullOptions.gitRemoteUrl}`, {
+      cwd: testDir,
+    });
+    // Configure git user for commits
+    execSync(`git config user.email "${fullOptions.gitUserEmail}"`, {
+      cwd: testDir,
+    });
+    execSync(`git config user.name "${fullOptions.gitUserName}"`, {
+      cwd: testDir,
+    });
+    // Create initial commit to establish HEAD
+    execSync('git commit --allow-empty -m "Initial commit"', {
+      cwd: testDir,
+    });
+  } catch (error) {
+    throw new Error(
+      `Failed to setup git repository in ${testDir}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
