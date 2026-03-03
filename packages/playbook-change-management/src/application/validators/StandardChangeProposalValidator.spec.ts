@@ -109,6 +109,10 @@ describe('StandardChangeProposalValidator', () => {
       expect(validator.supports(ChangeProposalType.updateRule)).toBe(true);
     });
 
+    it('returns true for createStandard', () => {
+      expect(validator.supports(ChangeProposalType.createStandard)).toBe(true);
+    });
+
     it('returns false for updateCommandDescription', () => {
       expect(
         validator.supports(ChangeProposalType.updateCommandDescription),
@@ -119,6 +123,61 @@ describe('StandardChangeProposalValidator', () => {
       expect(validator.supports(ChangeProposalType.updateSkillName)).toBe(
         false,
       );
+    });
+  });
+
+  describe('when type is createStandard', () => {
+    it('returns artefactVersion 0', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.createStandard,
+        artefactId: null,
+        payload: {
+          name: 'New Standard',
+          description: 'A description',
+          scope: null,
+          rules: [],
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 0 });
+    });
+
+    it('does not call standardsPort', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.createStandard,
+        artefactId: null,
+        payload: {
+          name: 'New Standard',
+          description: 'A description',
+          scope: null,
+          rules: [],
+        },
+      });
+
+      await validator.validate(command);
+
+      expect(standardsPort.getStandard).not.toHaveBeenCalled();
+    });
+
+    describe('when artefactId is provided', () => {
+      it('returns artefactVersion 0', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createStandard,
+          artefactId: standardId,
+          payload: {
+            name: 'New Standard',
+            description: 'A description',
+            scope: null,
+            rules: [],
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 0 });
+      });
     });
   });
 

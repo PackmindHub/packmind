@@ -594,6 +594,62 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
       expect(result.creations[0]).toMatchObject({ rules: [] });
     });
 
+    describe('when createSkill proposals exist', () => {
+      const skillProposalId = createChangeProposalId('skill-proposal-id');
+      const command = buildCommand();
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        service.groupProposalsByArtefact.mockResolvedValue({
+          standards: new Map(),
+          commands: new Map(),
+          skills: new Map(),
+          creations: [
+            {
+              id: skillProposalId,
+              type: ChangeProposalType.createSkill,
+              artefactId: null,
+              artefactVersion: 0,
+              spaceId,
+              payload: {
+                name: 'My Skill',
+                description: 'A skill description',
+                prompt: 'You are a helpful assistant.',
+              },
+              captureMode: ChangeProposalCaptureMode.commit,
+              message: '',
+              status: ChangeProposalStatus.pending,
+              createdBy: userId,
+              resolvedBy: null,
+              resolvedAt: null,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ],
+        });
+      });
+
+      it('returns creation overview with proposalId and payload fields', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.creations).toEqual([
+          {
+            proposalId: skillProposalId,
+            artefactType: 'skills',
+            name: 'My Skill',
+            description: 'A skill description',
+            prompt: 'You are a helpful assistant.',
+          },
+        ]);
+      });
+
+      it('returns empty skills array alongside creations', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.skills).toEqual([]);
+      });
+    });
+
     it('falls through to command branch for unknown proposal types', async () => {
       service.groupProposalsByArtefact.mockResolvedValue({
         standards: new Map(),

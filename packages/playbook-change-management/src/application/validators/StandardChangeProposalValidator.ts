@@ -23,6 +23,7 @@ type ScalarStandardType =
   | ChangeProposalType.updateStandardScope;
 
 const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
+  ChangeProposalType.createStandard,
   ChangeProposalType.updateStandardName,
   ChangeProposalType.updateStandardDescription,
   ChangeProposalType.updateStandardScope,
@@ -51,6 +52,10 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
   async validate(
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<{ artefactVersion: number }> {
+    if (command.type === ChangeProposalType.createStandard) {
+      return { artefactVersion: 0 };
+    }
+
     const standardId = command.artefactId as StandardId;
 
     const standard = await this.standardsPort.getStandard(standardId);

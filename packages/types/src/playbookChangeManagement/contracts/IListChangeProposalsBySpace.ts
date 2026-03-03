@@ -31,9 +31,18 @@ export type StandardCreationProposalOverview = {
   rules: Array<{ content: string }>;
 };
 
+export type SkillCreationProposalOverview = {
+  proposalId: ChangeProposalId;
+  artefactType: 'skills';
+  name: string;
+  description: string;
+  prompt: string;
+};
+
 export type CreationProposalOverview =
   | CommandCreationProposalOverview
-  | StandardCreationProposalOverview;
+  | StandardCreationProposalOverview
+  | SkillCreationProposalOverview;
 
 export type ListChangeProposalsBySpaceResponse = {
   standards: ListProposalsOverview<StandardId>[];

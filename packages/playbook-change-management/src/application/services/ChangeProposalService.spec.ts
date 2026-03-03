@@ -477,6 +477,52 @@ describe('ChangeProposalService', () => {
       });
     });
 
+    describe('when space has createStandard proposals', () => {
+      const createStandardProposal = createProposal(
+        ChangeProposalType.createStandard,
+        null as unknown as ReturnType<typeof createStandardId>,
+      );
+
+      it('places createStandard proposals in creations array, not standards map', async () => {
+        repository.findBySpaceId.mockResolvedValue([createStandardProposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.creations).toHaveLength(1);
+      });
+
+      it('does not add createStandard proposals to the standards map', async () => {
+        repository.findBySpaceId.mockResolvedValue([createStandardProposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.size).toBe(0);
+      });
+    });
+
+    describe('when space has createSkill proposals', () => {
+      const createSkillProposal = createProposal(
+        ChangeProposalType.createSkill,
+        null as unknown as ReturnType<typeof createSkillId>,
+      );
+
+      it('places createSkill proposals in creations array, not skills map', async () => {
+        repository.findBySpaceId.mockResolvedValue([createSkillProposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.creations).toHaveLength(1);
+      });
+
+      it('does not add createSkill proposals to the skills map', async () => {
+        repository.findBySpaceId.mockResolvedValue([createSkillProposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.size).toBe(0);
+      });
+    });
+
     describe('when space has a mix of pending and non-pending proposals', () => {
       const proposals = [
         createProposal(ChangeProposalType.updateStandardName, standardId1),

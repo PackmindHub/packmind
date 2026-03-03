@@ -440,15 +440,23 @@ export const useApplyCreationChangeProposalsMutation = (params?: {
       });
 
       const accepted = variables.accepted.length > 0;
-      if (accepted && params?.orgSlug && params?.spaceSlug) {
-        const isStandard = response.created.standards.length > 0;
-        pmToaster.create({
-          title: isStandard ? 'Standard created' : 'Command created',
-          description: isStandard
-            ? 'The new standard has been added to your space.'
-            : 'The new command has been added to your space.',
-          type: 'success',
-        });
+      if (accepted) {
+        const { title, description } =
+          response.created.standards.length > 0
+            ? {
+                title: 'Standard created',
+                description: 'The new standard has been added to your space.',
+              }
+            : response.created.skills.length > 0
+              ? {
+                  title: 'Skill created',
+                  description: 'The new skill has been added to your space.',
+                }
+              : {
+                  title: 'Command created',
+                  description: 'The new command has been added to your space.',
+                };
+        pmToaster.create({ title, description, type: 'success' });
       } else {
         pmToaster.create({
           title: 'Proposal rejected',
