@@ -22,6 +22,12 @@ describe('ChangeProposalRepository', () => {
 
   const spaceAId = createSpaceId('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
   const spaceBId = createSpaceId('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+  const createStandardPayload = {
+    name: 'New Standard',
+    description: 'A description',
+    scope: null,
+    rules: [],
+  };
 
   beforeAll(() => fixture.initialize());
 
@@ -189,12 +195,6 @@ describe('ChangeProposalRepository', () => {
 
     describe('when a pending proposal matching all criteria exists with a null artefactId', () => {
       let result: ChangeProposal<ChangeProposalType> | null;
-      const createStandardPayload = {
-        name: 'New Standard',
-        description: 'A description',
-        scope: null,
-        rules: [],
-      };
 
       beforeEach(async () => {
         await repository.save(
@@ -224,13 +224,6 @@ describe('ChangeProposalRepository', () => {
 
     describe('when artefactId is null but only proposals with non-null artefactId exist', () => {
       it('returns null', async () => {
-        const createStandardPayload = {
-          name: 'New Standard',
-          description: 'A description',
-          scope: null,
-          rules: [],
-        };
-
         await repository.save(
           changeProposalFactory({
             spaceId: spaceAId,
@@ -256,13 +249,6 @@ describe('ChangeProposalRepository', () => {
 
     describe('when artefactId is non-null but only proposals with null artefactId exist', () => {
       it('returns null', async () => {
-        const createStandardPayload = {
-          name: 'New Standard',
-          description: 'A description',
-          scope: null,
-          rules: [],
-        };
-
         await repository.save(
           changeProposalFactory({
             spaceId: spaceAId,
