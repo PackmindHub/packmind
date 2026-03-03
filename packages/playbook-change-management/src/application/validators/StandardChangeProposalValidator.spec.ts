@@ -12,6 +12,7 @@ import {
 import { MemberContext } from '@packmind/node-utils';
 import { StandardChangeProposalValidator } from './StandardChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
+import { ChangeProposalLimitExceededError } from '../errors/ChangeProposalLimitExceededError';
 
 describe('StandardChangeProposalValidator', () => {
   const standardId = createStandardId('standard-1');
@@ -159,6 +160,124 @@ describe('StandardChangeProposalValidator', () => {
       await validator.validate(command);
 
       expect(standardsPort.getStandard).not.toHaveBeenCalled();
+    });
+
+    describe('when standard name exceeds 250 characters', () => {
+      it('throws ChangeProposalLimitExceededError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            name: 'A'.repeat(251),
+            description: 'A description',
+            scope: null,
+            rules: [],
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalLimitExceededError,
+        );
+      });
+    });
+
+    describe('when standard name is exactly 250 characters', () => {
+      it('returns artefactVersion 0', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            name: 'A'.repeat(250),
+            description: 'A description',
+            scope: null,
+            rules: [],
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 0 });
+      });
+    });
+
+    describe('when rules count exceeds 500', () => {
+      it('throws ChangeProposalLimitExceededError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            name: 'New Standard',
+            description: 'A description',
+            scope: null,
+            rules: Array.from({ length: 501 }, (_, i) => ({
+              content: `Rule ${i}`,
+            })),
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalLimitExceededError,
+        );
+      });
+    });
+
+    describe('when rules count is exactly 500', () => {
+      it('returns artefactVersion 0', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            name: 'New Standard',
+            description: 'A description',
+            scope: null,
+            rules: Array.from({ length: 500 }, (_, i) => ({
+              content: `Rule ${i}`,
+            })),
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 0 });
+      });
+    });
+
+    describe('when a rule content exceeds 1000 characters', () => {
+      it('throws ChangeProposalLimitExceededError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            name: 'New Standard',
+            description: 'A description',
+            scope: null,
+            rules: [{ content: 'A'.repeat(1001) }],
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalLimitExceededError,
+        );
+      });
+    });
+
+    describe('when a rule content is exactly 1000 characters', () => {
+      it('returns artefactVersion 0', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createStandard,
+          artefactId: null,
+          payload: {
+            name: 'New Standard',
+            description: 'A description',
+            scope: null,
+            rules: [{ content: 'A'.repeat(1000) }],
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 0 });
+      });
     });
   });
 
