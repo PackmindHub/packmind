@@ -8,6 +8,7 @@ import {
 import { IPackmindGateway } from './IPackmindGateway';
 import { Organization, SpaceId, User } from '@packmind/types';
 import { PackmindGateway } from './gateways/PackmindGateway';
+import { getPackmindInstanceUrl } from './config';
 
 export type UserSignedUpContext = WithTempSpaceContext & {
   gateway: IPackmindGateway;
@@ -28,7 +29,7 @@ function getDefaultOptions(): UserSignedUpOptions {
   return {
     email: testUser.email,
     password: testUser.password,
-    baseUrl: 'http://localhost:4200',
+    baseUrl: getPackmindInstanceUrl(),
   };
 }
 

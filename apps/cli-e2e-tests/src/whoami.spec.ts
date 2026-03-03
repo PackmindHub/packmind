@@ -2,6 +2,7 @@ import {
   describeWithUserSignedUp,
   runCli,
   UserSignedUpContext,
+  getPackmindInstanceUrl,
 } from './helpers';
 
 import { describeWithTempSpace } from './helpers/describeWithTempSpace';
@@ -34,7 +35,7 @@ describe('whoami command', () => {
     it('shows user and host information', () => {
       expect(stdout.split('\n')).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('Host: http://localhost:4200'),
+          expect.stringContaining(`Host: ${getPackmindInstanceUrl()}`),
           expect.stringContaining(`Organization: ${context.organization.name}`),
           expect.stringContaining(`User: ${context.user.email}`),
         ]),
