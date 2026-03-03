@@ -57,8 +57,8 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
         if ('violation' in result) {
           errors.push({
             index: i,
-            message: result.violation,
-            code: 'ChangeProposalLimitExceededError',
+            message: result.violationMessage,
+            code: result.violation,
           });
         } else if (result.wasCreated) {
           created++;
