@@ -122,7 +122,7 @@ services:
         echo "[migrations] $(ts) tsconfig ready"
         echo "[migrations] $(ts) Running TypeORM migrations directly (bypassing Nx)..."
         cd packages/migrations
-        npm run typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each
+        npm run --no-update-notifier typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each
         echo "[migrations] $(ts) Done."
       '
     environment:
