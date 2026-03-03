@@ -8,10 +8,7 @@ import path from 'path';
  * @param testDir - Test directory path
  * @returns File contents as string
  */
-export async function readFile(
-  filePath: string,
-  testDir: string,
-): Promise<string> {
+export function readFile(filePath: string, testDir: string): string {
   const fullPath = path.join(testDir, filePath);
   return fs.readFileSync(fullPath, 'utf-8');
 }
@@ -24,11 +21,11 @@ export async function readFile(
  * @param content - Content to write
  * @param testDir - Test directory path
  */
-export async function updateFile(
+export function updateFile(
   filePath: string,
   content: string,
   testDir: string,
-): Promise<void> {
+): void {
   const fullPath = path.join(testDir, filePath);
   const dir = path.dirname(fullPath);
 

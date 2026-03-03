@@ -72,8 +72,8 @@ describeWithUserSignedUp('diff command', (getContext) => {
     beforeEach(async () => {
       // Read the command file and append new content
       const commandPath = `.packmind/commands/${commandSlug}.md`;
-      const originalContent = await readFile(commandPath, testDir);
-      await updateFile(
+      const originalContent = readFile(commandPath, testDir);
+      updateFile(
         commandPath,
         `${originalContent}\n\nSome new content here`,
         testDir,
@@ -104,8 +104,8 @@ describeWithUserSignedUp('diff command', (getContext) => {
       beforeEach(async () => {
         // Make another change to the same command
         const commandPath = `.packmind/commands/${command2Slug}.md`;
-        const currentContent = await readFile(commandPath, testDir);
-        await updateFile(
+        const currentContent = readFile(commandPath, testDir);
+        updateFile(
           commandPath,
           `${currentContent}\n\nYet another new content`,
           testDir,
