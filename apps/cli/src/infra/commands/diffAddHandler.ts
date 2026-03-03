@@ -260,8 +260,14 @@ function buildDiff(
   if (!parsed) {
     return {
       success: false,
-      error:
-        'Failed to parse standard file: file content does not match any recognized standard format.',
+      error: `File format is invalid. It should be formatted like:\n\n${getStandardFormatExample(codingAgent)}`,
+    };
+  }
+
+  if (parsed.rules.length === 0) {
+    return {
+      success: false,
+      error: `Standard has no rules. Add at least one rule, formatted like:\n\n${getStandardFormatExample(codingAgent)}`,
     };
   }
 
@@ -279,6 +285,13 @@ function buildDiff(
       artifactType: 'standard',
     },
   };
+}
+
+function getStandardFormatExample(agent: MultiFileCodingAgent): string {
+  if (agent === 'packmind') {
+    return '# <name>\n\n<description>\n\n## Rules\n\n* <rule 1>\n* <rule 2>';
+  }
+  return '## Standard: <name>\n\n<description>\n\n* <rule 1>\n* <rule 2>';
 }
 
 function isErrnoException(err: unknown): err is NodeJS.ErrnoException {
