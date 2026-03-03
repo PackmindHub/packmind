@@ -29,6 +29,7 @@ export enum ProgrammingLanguage {
   SAP_CDS = 'SAP_CDS',
   SAP_HANA_SQL = 'SAP_HANA_SQL',
   SWIFT = 'SWIFT',
+  DART = 'DART',
   PROPERTIES = 'PROPERTIES',
 }
 
@@ -165,6 +166,10 @@ export const ProgrammingLanguageDetails: Record<
   [ProgrammingLanguage.SWIFT]: {
     displayName: 'Swift',
     fileExtensions: ['swift'],
+  },
+  [ProgrammingLanguage.DART]: {
+    displayName: 'Dart',
+    fileExtensions: ['dart'],
   },
   [ProgrammingLanguage.PROPERTIES]: {
     displayName: 'Properties',
