@@ -65,7 +65,7 @@ export class AuthGateway implements IAuthGateway {
 
   generateApiKey: Gateway<IGenerateApiKeyUseCase> = async () => {
     if (!this.authCookie) {
-      throw new Error('Not authenticated. Call signup first.');
+      throw new Error('Not authenticated. Call signin first.');
     }
 
     const response = await fetch(
