@@ -440,15 +440,30 @@ export const useApplyCreationChangeProposalsMutation = (params?: {
       });
 
       const accepted = variables.accepted.length > 0;
-      if (accepted && params?.orgSlug && params?.spaceSlug) {
-        const isStandard = response.created.standards.length > 0;
-        pmToaster.create({
-          title: isStandard ? 'Standard created' : 'Command created',
-          description: isStandard
-            ? 'The new standard has been added to your space.'
-            : 'The new command has been added to your space.',
-          type: 'success',
-        });
+      // orgSlug/spaceSlug guard removed: the toast is informational only and does not
+      // depend on navigation slugs; post-accept redirect is handled by the caller components.
+      if (accepted) {
+        const createdType =
+          response.created.standards.length > 0
+            ? 'standard'
+            : response.created.skills.length > 0
+              ? 'skill'
+              : 'command';
+        const toastMessages = {
+          standard: {
+            title: 'Standard created',
+            description: 'The new standard has been added to your space.',
+          },
+          skill: {
+            title: 'Skill created',
+            description: 'The new skill has been added to your space.',
+          },
+          command: {
+            title: 'Command created',
+            description: 'The new command has been added to your space.',
+          },
+        } as const;
+        pmToaster.create({ ...toastMessages[createdType], type: 'success' });
       } else {
         pmToaster.create({
           title: 'Proposal rejected',

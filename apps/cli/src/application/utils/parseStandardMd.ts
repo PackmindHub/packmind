@@ -1,3 +1,5 @@
+import { normalizeLineEndings } from './normalizeLineEndings';
+
 export type ParsedStandardMd = {
   name: string;
   description: string;
@@ -35,6 +37,7 @@ export function parseStandardMd(
 }
 
 function parsePackmindStandard(content: string): ParsedStandardMd | null {
+  content = normalizeLineEndings(content);
   const lines = content.split('\n');
   let name: string | null = null;
   let nameLineIndex = -1;
@@ -151,6 +154,7 @@ function extractFrontmatter(content: string): {
   frontmatter: string;
   body: string;
 } {
+  content = normalizeLineEndings(content);
   const match = content.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!match) {
     return { frontmatter: '', body: content };

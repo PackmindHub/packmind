@@ -41,6 +41,14 @@ describe('stripFrontmatter', () => {
     });
   });
 
+  describe('when content has CRLF line endings', () => {
+    it('strips frontmatter correctly', () => {
+      const content = `---\r\ndescription: 'My command'\r\nagent: 'agent'\r\n---\r\n\r\nThis is the body`;
+
+      expect(stripFrontmatter(content)).toBe('This is the body');
+    });
+  });
+
   describe('when frontmatter has no closing delimiter', () => {
     it('returns content as-is', () => {
       const content = `---\ndescription: 'unclosed'\nno closing`;

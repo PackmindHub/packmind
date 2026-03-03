@@ -6,6 +6,7 @@ jest.mock('../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
 }));
 
 jest.mock('../utils/editorMessage', () => ({
@@ -156,6 +157,36 @@ describe('diffAddHandler', () => {
     });
   });
 
+  describe('directory path instead of file', () => {
+    describe('when readFile throws EISDIR', () => {
+      beforeEach(() => {
+        const error = new Error(
+          "EISDIR: illegal operation on a directory, read '/project/.claude/commands'",
+        ) as NodeJS.ErrnoException;
+        error.code = 'EISDIR';
+        mockReadFile.mockImplementation(() => {
+          throw error;
+        });
+      });
+
+      it('logs a clear directory error message', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Path is a directory, not a file'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
   describe('parse error', () => {
     describe('when file is empty', () => {
       beforeEach(() => {
@@ -283,7 +314,7 @@ describe('diffAddHandler', () => {
     });
 
     it('includes alreadySubmitted in summary', async () => {
-      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
       mockSubmitDiffs.mockResolvedValue({
         submitted: 0,
         alreadySubmitted: 1,
@@ -293,7 +324,7 @@ describe('diffAddHandler', () => {
 
       await diffAddHandler(buildDeps());
 
-      expect(logSuccessConsole).toHaveBeenCalledWith(
+      expect(logWarningConsole).toHaveBeenCalledWith(
         'Summary: 1 already submitted',
       );
     });

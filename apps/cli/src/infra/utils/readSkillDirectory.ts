@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { minimatch } from 'minimatch';
 
+import { normalizeLineEndings } from '../../application/utils/normalizeLineEndings';
 import { isBinaryFile } from './binaryDetection';
 import { modeToPermissionStringOrDefault } from './permissions';
 
@@ -25,15 +26,6 @@ function normalizePath(filePath: string): string {
     normalized = normalized.substring(1);
   }
   return normalized;
-}
-
-/**
- * Normalizes line endings by:
- * 1. Converting CRLF (\r\n) to LF (\n)
- * 2. Converting CR (\r) to LF (\n)
- */
-function normalizeLineEndings(content: string): string {
-  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB

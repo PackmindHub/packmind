@@ -9,7 +9,6 @@ import {
   OrganizationId,
   Skill,
   SpaceId,
-  UserId,
 } from '@packmind/types';
 
 export class SkillCreateChangeProposalApplier implements ICreateChangeProposalApplier<ChangeProposalType.createSkill> {
@@ -17,7 +16,6 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
 
   async apply(
     changeProposal: ChangeProposal<ChangeProposalType.createSkill>,
-    userId: UserId,
     spaceId: SpaceId,
     organizationId: OrganizationId,
   ): Promise<Skill> {
@@ -60,7 +58,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
     ];
 
     const result = await this.skillsPort.uploadSkill({
-      userId,
+      userId: changeProposal.createdBy,
       organizationId,
       spaceId,
       files: uploadFiles,

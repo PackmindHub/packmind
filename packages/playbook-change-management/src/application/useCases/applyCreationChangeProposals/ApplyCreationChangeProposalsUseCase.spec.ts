@@ -131,7 +131,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
 
       expect(recipesPort.captureRecipe).toHaveBeenCalledWith({
-        userId,
+        userId: proposal.createdBy,
         organizationId,
         spaceId,
         name: payload.name,
@@ -184,7 +184,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_accepted event', async () => {
+    it('emits accepted event with itemType, changeType, and created artefact id', async () => {
       await useCase.execute({
         userId,
         organizationId,
@@ -196,8 +196,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'command',
             changeType: ChangeProposalType.createCommand,
+            itemId: recipeId,
           }),
         }),
       );
@@ -262,7 +264,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_rejected event', async () => {
+    it('emits rejected event with itemType and changeType', async () => {
       await useCase.execute({
         userId,
         organizationId,
@@ -274,8 +276,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'command',
             changeType: ChangeProposalType.createCommand,
+            itemId: '',
           }),
         }),
       );
@@ -585,69 +589,64 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       standardsPort.createStandardWithExamples.mockResolvedValue(standard);
     });
 
-    it('creates a standard via standardsPort', async () => {
-      await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+    describe('when accepted', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [standardProposal.id],
+          rejected: [],
+        });
       });
 
-      expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
-        userId,
-        organizationId,
-        spaceId,
-        name: standardPayload.name,
-        description: standardPayload.description,
-        summary: null,
-        scope: standardPayload.scope,
-        rules: [{ content: 'Use const for immutable variables' }],
-      });
-    });
-
-    it('returns the created standard id', async () => {
-      const result = await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+      it('creates a standard via standardsPort', () => {
+        expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
+          userId: standardProposal.createdBy,
+          organizationId,
+          spaceId,
+          name: standardPayload.name,
+          description: standardPayload.description,
+          summary: null,
+          scope: standardPayload.scope,
+          rules: [{ content: 'Use const for immutable variables' }],
+        });
       });
 
-      expect(result.created).toEqual({
-        commands: [],
-        standards: [standardId],
-        skills: [],
-      });
-    });
-
-    it('returns empty rejected list', async () => {
-      const result = await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+      it('returns the created standard id', () => {
+        expect(result.created).toEqual({
+          commands: [],
+          standards: [standardId],
+          skills: [],
+        });
       });
 
-      expect(result.rejected).toEqual([]);
-    });
-
-    it('calls batchUpdateProposalsInTransaction with accepted proposals', async () => {
-      await useCase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        accepted: [standardProposal.id],
-        rejected: [],
+      it('returns empty rejected list', () => {
+        expect(result.rejected).toEqual([]);
       });
 
-      expect(
-        changeProposalService.batchUpdateProposalsInTransaction,
-      ).toHaveBeenCalledWith({
-        acceptedProposals: [{ proposal: standardProposal, userId }],
-        rejectedProposals: [],
+      it('calls batchUpdateProposalsInTransaction with accepted proposals', () => {
+        expect(
+          changeProposalService.batchUpdateProposalsInTransaction,
+        ).toHaveBeenCalledWith({
+          acceptedProposals: [{ proposal: standardProposal, userId }],
+          rejectedProposals: [],
+        });
+      });
+
+      it('emits accepted event with itemType, changeType, and created standard id', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              userId: userId,
+              itemType: 'standard',
+              changeType: ChangeProposalType.createStandard,
+              itemId: standardId,
+            }),
+          }),
+        );
       });
     });
 
@@ -953,7 +952,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
 
       expect(skillsPort.uploadSkill).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId,
+          userId: skillProposal.createdBy,
           organizationId,
           spaceId,
           files: expect.arrayContaining([
@@ -1050,7 +1049,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_accepted event', async () => {
+    it('emits accepted event with itemType, changeType, and created skill id', async () => {
       await useCase.execute({
         userId,
         organizationId,
@@ -1062,8 +1061,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'skill',
             changeType: ChangeProposalType.createSkill,
+            itemId: skillId,
           }),
         }),
       );
@@ -1188,7 +1189,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_rejected event', async () => {
+    it('emits rejected event with itemType and changeType', async () => {
       await useCase.execute({
         userId,
         organizationId,
@@ -1200,8 +1201,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            userId: userId,
             itemType: 'skill',
             changeType: ChangeProposalType.createSkill,
+            itemId: '',
           }),
         }),
       );

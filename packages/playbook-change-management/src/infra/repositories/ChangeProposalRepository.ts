@@ -78,9 +78,12 @@ export class ChangeProposalRepository
       .andWhere('change_proposal.created_by = :createdBy', {
         createdBy: criteria.createdBy,
       })
-      .andWhere('change_proposal.artefact_id = :artefactId', {
-        artefactId: criteria.artefactId,
-      })
+      .andWhere(
+        criteria.artefactId === null
+          ? 'change_proposal.artefact_id IS NULL'
+          : 'change_proposal.artefact_id = :artefactId',
+        criteria.artefactId === null ? {} : { artefactId: criteria.artefactId },
+      )
       .andWhere('change_proposal.type = :type', { type: criteria.type })
       .andWhere('change_proposal.status = :status', {
         status: ChangeProposalStatus.pending,

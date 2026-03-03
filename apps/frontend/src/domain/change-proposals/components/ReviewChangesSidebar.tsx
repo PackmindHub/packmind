@@ -137,6 +137,9 @@ export function ReviewChangesSidebar({
   const standardCreations = groupedProposals.creations.filter(
     (c) => c.artefactType === 'standards',
   );
+  const skillCreations = groupedProposals.creations.filter(
+    (c) => c.artefactType === 'skills',
+  );
 
   const hasCommands =
     groupedProposals.commands.length > 0 || commandCreations.length > 0;
@@ -188,17 +191,27 @@ export function ReviewChangesSidebar({
   const hasStandards =
     groupedProposals.standards.length > 0 || standardCreations.length > 0;
 
-  const skillNavEntries = groupedProposals.skills.map((item) => (
-    <ArtefactNavLink
-      key={item.artefactId}
-      artefactId={item.artefactId}
-      name={item.name}
-      changeProposalCount={item.changeProposalCount}
-      artefactType="skills"
-      orgSlug={orgSlug}
-      spaceSlug={spaceSlug}
-    />
-  ));
+  const skillNavEntries = [
+    ...skillCreations.map((proposal) => (
+      <CreationNavLink
+        key={proposal.proposalId}
+        proposal={proposal}
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    )),
+    ...groupedProposals.skills.map((item) => (
+      <ArtefactNavLink
+        key={item.artefactId}
+        artefactId={item.artefactId}
+        name={item.name}
+        changeProposalCount={item.changeProposalCount}
+        artefactType="skills"
+        orgSlug={orgSlug}
+        spaceSlug={spaceSlug}
+      />
+    )),
+  ];
 
   return (
     <PMVerticalNav logo={false} showLogoContainer={false} width="270px">

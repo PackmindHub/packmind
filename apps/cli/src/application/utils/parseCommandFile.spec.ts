@@ -194,6 +194,33 @@ describe('parseCommandFile', () => {
     });
   });
 
+  describe('when content has CRLF line endings', () => {
+    it('detects frontmatter and extracts name correctly', () => {
+      const content = '---\r\nname: My Command\r\n---\r\n\r\nBody content';
+
+      const result = parseCommandFile(content, 'commands/some-file.md');
+
+      expect(result).toEqual({
+        success: true,
+        parsed: {
+          name: 'My Command',
+          content: '---\nname: My Command\n---\n\nBody content',
+        },
+      });
+    });
+
+    it('returns error for malformed frontmatter with CRLF', () => {
+      const content = '---\r\nname: My Command\r\nNo closing delimiter';
+
+      const result = parseCommandFile(content, 'commands/some-file.md');
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Malformed frontmatter: opening --- without closing ---',
+      });
+    });
+  });
+
   describe('content preservation', () => {
     it('returns the full raw content including frontmatter', () => {
       const content = "---\nname: 'My Command'\n---\n\nBody with instructions";

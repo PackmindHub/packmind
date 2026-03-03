@@ -2,6 +2,8 @@
 
 ## Added
 
+- New command `update` allows to update `packmind-cli` to the newest version (#154)
+
 ## Changed
 
 ## Fixed

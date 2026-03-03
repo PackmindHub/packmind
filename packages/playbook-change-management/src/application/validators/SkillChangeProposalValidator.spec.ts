@@ -111,6 +111,52 @@ describe('SkillChangeProposalValidator', () => {
     jest.clearAllMocks();
   });
 
+  describe('supports', () => {
+    it('returns true for createSkill', () => {
+      expect(validator.supports(ChangeProposalType.createSkill)).toBe(true);
+    });
+
+    it('returns false for updateStandardName', () => {
+      expect(validator.supports(ChangeProposalType.updateStandardName)).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('when type is createSkill', () => {
+    it('returns artefactVersion 0', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.createSkill,
+        artefactId: null,
+        payload: {
+          name: 'New Skill',
+          description: 'A description',
+          prompt: 'Do something useful',
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 0 });
+    });
+
+    it('does not call skillsPort', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.createSkill,
+        artefactId: null,
+        payload: {
+          name: 'New Skill',
+          description: 'A description',
+          prompt: 'Do something useful',
+        },
+      });
+
+      await validator.validate(command);
+
+      expect(skillsPort.getSkill).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when file ID matches in latest version', () => {
     beforeEach(() => {
       skillsPort.getSkillFiles.mockResolvedValue([
