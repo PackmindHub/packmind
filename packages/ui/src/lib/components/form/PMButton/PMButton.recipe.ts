@@ -53,14 +53,15 @@ export const pmButtonRecipe = defineRecipe({
         },
       },
       danger: {
-        bg: '{colors.red.500}',
-        borderColor: '{colors.red.500}',
+        bg: '{colors.red.800}',
+        color: '{colors.red.100}',
+        borderColor: '{colors.red.800}',
         _hover: {
-          bg: '{colors.red.900}',
+          bg: '{colors.red.700}',
         },
         _disabled: {
           bg: '{colors.red.900}',
-          color: '{colors.red.500}',
+          color: '{colors.red.300}',
           borderColor: '{colors.red.1000}',
         },
       },

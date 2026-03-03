@@ -1,0 +1,15 @@
+---
+globs: **
+alwaysApply: false
+---
+## Standard: Use cases
+
+Define use case structures in TypeScript by aligning public methods with distinct use case files and implementing role-specific abstract classes for access control to ensure organized code management and proper user authorization when developing applications with a hexagonal architecture. :
+* Admin use cases must extend `AbstractAdminUseCase` and implement `executeForAdmins`
+* Gateway interfaces should only be defined as an object of `Gateway<...>` (or `PublicGateway<...>` for public endpoints)
+* Member use cases must extend `AbstractMemberUseCase` and implement `executeForMembers`
+* Never spead command as multiple arguments in an hexagon or UseCases class
+* Public use cases must implement `IPublicUseCase` directly
+* The only allowed public method for a use case is `execute` (or `executeForMembers` and `executeForAdmins` for the ones extending the abstract use cases)
+
+Full standard is available here for further request: [Use cases](../../../.packmind/standards/use-cases.md)

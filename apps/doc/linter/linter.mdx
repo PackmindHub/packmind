@@ -184,6 +184,26 @@ When creating rules that apply to multiple languages:
 
 4. **Activate independently**: You can activate the TypeScript program while keeping the JavaScript program in draft.
 
+## Rule Severity
+
+Each active detection program can be assigned a severity level that controls how violations are reported when running the linter.
+
+### Severity Levels
+
+**ERROR** — A blocking severity. When the linter detects a violation for a rule with ERROR severity, it exits with a non-zero exit code. This is suitable for rules that must never be violated and should block CI/CD pipelines.
+
+**WARNING** — An informational severity. Violations are reported in the linter output but the exit code remains zero. This is suitable for rules that are important to highlight but should not block the build.
+
+### Configuring Severity
+
+You can configure the severity of each rule's detection program directly from the rule's detection settings in the Packmind interface. The severity selector appears next to the active detection program for each language.
+
+- Navigate to your rule's detection settings
+- Locate the active detection program for the desired language
+- Use the severity dropdown to switch between **ERROR** and **WARNING**
+
+Severity can also be set programmatically via the Packmind API or configured in your `packmind.json` file when using the CLI.
+
 ## Related Documentation
 
 - [Standards Management](/concepts/standards-management): Learn how to create rules and add code examples
