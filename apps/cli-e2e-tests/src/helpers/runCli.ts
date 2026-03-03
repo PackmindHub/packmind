@@ -21,12 +21,14 @@ export interface RunCliResult {
 function parseCommandArgs(command: string): string[] {
   const args: string[] = [];
   let current = '';
-  let inQuotes = false;
+  let quoteChar: '"' | "'" | null = null;
 
   for (const char of command) {
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ' ' && !inQuotes) {
+    if ((char === '"' || char === "'") && quoteChar === null) {
+      quoteChar = char;
+    } else if (char === quoteChar) {
+      quoteChar = null;
+    } else if (char === ' ' && quoteChar === null) {
       if (current) {
         args.push(current);
         current = '';
