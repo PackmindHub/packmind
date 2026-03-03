@@ -23,6 +23,7 @@ export type CreateChangeProposalResponse<T extends ChangeProposalType> =
       changeProposal: null;
       wasCreated: false;
       violation: ChangeProposalViolation;
+      violationMessage: string;
     };
 
 export type ICreateChangeProposalUseCase<T extends ChangeProposalType> = {
