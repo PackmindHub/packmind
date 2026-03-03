@@ -1,9 +1,11 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposal,
   ChangeProposalCaptureMode,
   ChangeProposalStatus,
   ChangeProposalType,
+  ChangeProposalViolation,
   createChangeProposalId,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
@@ -30,6 +32,7 @@ import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnersh
 import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
 import { SkillFileNotFoundError } from '../../errors/SkillFileNotFoundError';
 import { SkillVersionNotFoundError } from '../../errors/SkillVersionNotFoundError';
+import { ChangeProposalLimitExceededError } from '../../errors/ChangeProposalLimitExceededError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { CreateChangeProposalUseCase } from './CreateChangeProposalUseCase';
 import { CommandChangeProposalValidator } from '../../validators/CommandChangeProposalValidator';
@@ -72,6 +75,7 @@ describe('CreateChangeProposalUseCase', () => {
   let skillsPort: jest.Mocked<ISkillsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let service: jest.Mocked<ChangeProposalService>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   const buildCommand = (
     overrides?: Partial<CreateChangeProposalCommand<ChangeProposalType>>,
@@ -114,6 +118,10 @@ describe('CreateChangeProposalUseCase', () => {
       findExistingPending: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     useCase = new CreateChangeProposalUseCase(
       accountsPort,
       spacesPort,
@@ -122,6 +130,7 @@ describe('CreateChangeProposalUseCase', () => {
         new CommandChangeProposalValidator(recipesPort),
         new SkillChangeProposalValidator(skillsPort),
       ],
+      eventEmitterService,
       stubLogger(),
     );
 
@@ -172,6 +181,20 @@ describe('CreateChangeProposalUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.wasCreated).toBe(true);
+    });
+
+    it('tracks change_proposal_submitted event', async () => {
+      await useCase.execute(command);
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            itemType: 'command',
+            changeType: ChangeProposalType.updateCommandName,
+            captureMode: ChangeProposalCaptureMode.commit,
+          }),
+        }),
+      );
     });
   });
 
@@ -725,6 +748,12 @@ describe('CreateChangeProposalUseCase', () => {
 
       expect(service.createChangeProposal).not.toHaveBeenCalled();
     });
+
+    it('does not track change_proposal_submitted event', async () => {
+      await useCase.execute(command);
+
+      expect(eventEmitterService.emit).not.toHaveBeenCalled();
+    });
   });
 
   describe('when validator returns resolvedPayload', () => {
@@ -749,6 +778,7 @@ describe('CreateChangeProposalUseCase', () => {
         spacesPort,
         service,
         [mockValidator],
+        eventEmitterService,
         stubLogger(),
       );
 
@@ -782,6 +812,57 @@ describe('CreateChangeProposalUseCase', () => {
         expect.objectContaining({ payload: resolvedPayload }),
         5,
       );
+    });
+  });
+
+  describe('when validator throws ChangeProposalLimitExceededError', () => {
+    const command = buildCommand();
+    let mockValidator: jest.Mocked<IChangeProposalValidator>;
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+
+      mockValidator = {
+        supports: jest.fn().mockReturnValue(true),
+        validate: jest
+          .fn()
+          .mockRejectedValue(
+            new ChangeProposalLimitExceededError(
+              ChangeProposalViolation.TOO_MANY_RULES,
+              500,
+              502,
+            ),
+          ),
+      };
+
+      useCase = new CreateChangeProposalUseCase(
+        accountsPort,
+        spacesPort,
+        service,
+        [mockValidator],
+        eventEmitterService,
+        stubLogger(),
+      );
+    });
+
+    it('returns violation enum', async () => {
+      const result = await useCase.execute(command);
+      expect(result).toMatchObject({
+        violation: ChangeProposalViolation.TOO_MANY_RULES,
+      });
+    });
+
+    it('returns human-readable violationMessage', async () => {
+      const result = await useCase.execute(command);
+      expect(result).toMatchObject({
+        violationMessage:
+          'A standard cannot have more than 500 rules (got 502)',
+      });
+    });
+
+    it('returns wasCreated false', async () => {
+      const result = await useCase.execute(command);
+      expect(result).toMatchObject({ wasCreated: false });
     });
   });
 

@@ -1,5 +1,9 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ChangeProposalCaptureMode,
+  ChangeProposalStatus,
+  ChangeProposalType,
+  createChangeProposalId,
   createOrganizationId,
   createRecipeId,
   createSkillId,
@@ -128,6 +132,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           [recipeId2, 1],
         ]),
         skills: new Map<SkillId, number>([[skillId1, 5]]),
+        creations: [],
       });
 
       standardsPort.getStandard.mockImplementation(async (id) => {
@@ -240,6 +245,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
         standards: new Map(),
         commands: new Map(),
         skills: new Map(),
+        creations: [],
       });
     });
 
@@ -289,6 +295,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
         standards: new Map([[standardId1, 2]]),
         commands: new Map([[recipeId1, 1]]),
         skills: new Map([[skillId1, 3]]),
+        creations: [],
       });
 
       standardsPort.getStandard.mockResolvedValue(null);
@@ -334,6 +341,346 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
       });
 
       expect(service.groupProposalsByArtefact).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when createCommand proposals exist', () => {
+    const proposalId = createChangeProposalId('proposal-id');
+    const command = buildCommand();
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createCommand,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: { name: 'My Command', content: 'Do something' },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+    });
+
+    it('returns creation overview with proposalId and payload fields', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.creations).toEqual([
+        {
+          proposalId,
+          artefactType: 'commands',
+          name: 'My Command',
+          content: 'Do something',
+        },
+      ]);
+    });
+
+    it('does not call recipesPort for creation proposals', async () => {
+      await useCase.execute(command);
+
+      expect(recipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+    });
+
+    it('returns empty commands array alongside creations', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.commands).toEqual([]);
+    });
+  });
+
+  describe('when createStandard proposals exist', () => {
+    const proposalId = createChangeProposalId('std-proposal-id');
+    const command = buildCommand();
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createStandard,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Standard',
+              description: 'A description',
+              scope: ['TypeScript'],
+              rules: [{ content: 'Rule one' }],
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+    });
+
+    it('returns creation overview with artefactType standards and standard fields', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.creations).toEqual([
+        {
+          proposalId,
+          artefactType: 'standards',
+          name: 'My Standard',
+          description: 'A description',
+          scope: 'TypeScript',
+          rules: [{ content: 'Rule one' }],
+        },
+      ]);
+    });
+
+    it('normalizes array scope to comma-separated string', async () => {
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createStandard,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Standard',
+              description: 'A description',
+              scope: ['TypeScript', 'JavaScript'],
+              rules: [],
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.creations[0]).toMatchObject({
+        scope: 'TypeScript, JavaScript',
+      });
+    });
+
+    it('passes string scope through unchanged', async () => {
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createStandard,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Standard',
+              description: 'A description',
+              scope: 'TypeScript',
+              rules: [],
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.creations[0]).toMatchObject({ scope: 'TypeScript' });
+    });
+
+    it('passes null scope through as null', async () => {
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createStandard,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Standard',
+              description: 'A description',
+              scope: null,
+              rules: [],
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.creations[0]).toMatchObject({ scope: null });
+    });
+
+    it('preserves empty rules array', async () => {
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: ChangeProposalType.createStandard,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Standard',
+              description: 'A description',
+              scope: null,
+              rules: [],
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.creations[0]).toMatchObject({ rules: [] });
+    });
+
+    describe('when createSkill proposals exist', () => {
+      const skillProposalId = createChangeProposalId('skill-proposal-id');
+      const command = buildCommand();
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        service.groupProposalsByArtefact.mockResolvedValue({
+          standards: new Map(),
+          commands: new Map(),
+          skills: new Map(),
+          creations: [
+            {
+              id: skillProposalId,
+              type: ChangeProposalType.createSkill,
+              artefactId: null,
+              artefactVersion: 0,
+              spaceId,
+              payload: {
+                name: 'My Skill',
+                description: 'A skill description',
+                prompt: 'You are a helpful assistant.',
+              },
+              captureMode: ChangeProposalCaptureMode.commit,
+              message: '',
+              status: ChangeProposalStatus.pending,
+              createdBy: userId,
+              resolvedBy: null,
+              resolvedAt: null,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ],
+        });
+      });
+
+      it('returns creation overview with proposalId and payload fields', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.creations).toEqual([
+          {
+            proposalId: skillProposalId,
+            artefactType: 'skills',
+            name: 'My Skill',
+            description: 'A skill description',
+            prompt: 'You are a helpful assistant.',
+          },
+        ]);
+      });
+
+      it('returns empty skills array alongside creations', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.skills).toEqual([]);
+      });
+    });
+
+    it('falls through to command branch for unknown proposal types', async () => {
+      service.groupProposalsByArtefact.mockResolvedValue({
+        standards: new Map(),
+        commands: new Map(),
+        skills: new Map(),
+        creations: [
+          {
+            id: proposalId,
+            type: 'unknownType' as ChangeProposalType,
+            artefactId: null,
+            artefactVersion: 0,
+            spaceId,
+            payload: {
+              name: 'My Command',
+              content: 'Do something',
+            },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: '',
+            status: ChangeProposalStatus.pending,
+            createdBy: userId,
+            resolvedBy: null,
+            resolvedAt: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.creations[0]).toMatchObject({ artefactType: 'commands' });
     });
   });
 

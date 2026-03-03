@@ -1,8 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   ApplyChangeProposalsCommand,
   ApplyChangeProposalsResponse,
+  ApplyCreationChangeProposalsCommand,
+  ApplyCreationChangeProposalsResponse,
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
   ChangeProposalType,
@@ -31,6 +36,7 @@ import {
 } from '@packmind/types';
 import { PlaybookChangeManagementServices } from '../services/PlaybookChangeManagementServices';
 import { ApplyChangeProposalsUseCase } from '../useCases/applyChangeProposals/ApplyChangeProposalsUseCase';
+import { ApplyCreationChangeProposalsUseCase } from '../useCases/applyCreationChangeProposals/ApplyCreationChangeProposalsUseCase';
 import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/CreateChangeProposalUseCase';
 import { ListChangeProposalsByArtefactUseCase } from '../useCases/listChangeProposalsByArtefact/ListChangeProposalsByArtefactUseCase';
 import { ListChangeProposalsBySpaceUseCase } from '../useCases/listChangeProposalsBySpace/ListChangeProposalsBySpaceUseCase';
@@ -51,6 +57,7 @@ export class PlaybookChangeManagementAdapter
   private _applyChangeProposals!: ApplyChangeProposalsUseCase<
     StandardId | RecipeId | SkillId
   >;
+  private _applyCreationChangeProposals!: ApplyCreationChangeProposalsUseCase;
   private _batchCreateChangeProposals!: BatchCreateChangeProposalsUseCase;
   private _checkChangeProposals!: CheckChangeProposalsUseCase;
   private _createChangeProposal!: CreateChangeProposalUseCase;
@@ -68,6 +75,12 @@ export class PlaybookChangeManagementAdapter
     command: ApplyChangeProposalsCommand<T>,
   ): Promise<ApplyChangeProposalsResponse<T>> {
     return this._applyChangeProposals.execute(command);
+  }
+
+  async applyCreationChangeProposals(
+    command: ApplyCreationChangeProposalsCommand,
+  ): Promise<ApplyCreationChangeProposalsResponse> {
+    return this._applyCreationChangeProposals.execute(command);
   }
 
   async batchCreateChangeProposals(
@@ -110,6 +123,7 @@ export class PlaybookChangeManagementAdapter
     [ISpacesPortName]: ISpacesPort;
     [ISkillsPortName]: ISkillsPort;
     [IStandardsPortName]: IStandardsPort;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     this.logger.info('Initializing PlaybookChangeManagementAdapter with ports');
 
@@ -153,6 +167,14 @@ export class PlaybookChangeManagementAdapter
       );
     }
 
+    const { eventEmitterService } = ports;
+
+    if (!eventEmitterService) {
+      throw new Error(
+        'PlaybookChangeManagementAdapter: PackmindEventEmitterService not provided',
+      );
+    }
+
     const changeProposalService = this.services.getChangeProposalService();
     const conflictDetectionService =
       this.services.getConflictDetectionService();
@@ -170,7 +192,19 @@ export class PlaybookChangeManagementAdapter
       recipesPort,
       skillsPort,
       changeProposalService,
+      eventEmitterService,
     );
+
+    this._applyCreationChangeProposals =
+      new ApplyCreationChangeProposalsUseCase(
+        accountsPort,
+        spacesPort,
+        recipesPort,
+        standardsPort,
+        skillsPort,
+        changeProposalService,
+        eventEmitterService,
+      );
 
     this._batchCreateChangeProposals = new BatchCreateChangeProposalsUseCase(
       accountsPort,
@@ -188,6 +222,7 @@ export class PlaybookChangeManagementAdapter
       spacesPort,
       changeProposalService,
       validators,
+      eventEmitterService,
     );
 
     this._listChangeProposalsByArtefact =
@@ -218,6 +253,7 @@ export class PlaybookChangeManagementAdapter
   public isReady(): boolean {
     return (
       this._applyChangeProposals !== undefined &&
+      this._applyCreationChangeProposals !== undefined &&
       this._batchCreateChangeProposals !== undefined &&
       this._checkChangeProposals !== undefined &&
       this._createChangeProposal !== undefined &&

@@ -13,10 +13,10 @@ Create new models and update existing ones with TypeORM to ensure proper databas
 
 ## Context Validation Checkpoints
 
-- [ ] Have you identified which hexagon package the model belongs to?
-- [ ] Do you know the TypeORM column types needed for each property?
-- [ ] Have you considered backward compatibility when adding required fields?
-- [ ] Is there an existing test factory for similar entities to use as reference?
+* [ ] Have you identified which hexagon package the model belongs to?
+* [ ] Do you know the TypeORM column types needed for each property?
+* [ ] Have you considered backward compatibility when adding required fields?
+* [ ] Is there an existing test factory for similar entities to use as reference?
 
 ## Recipe Steps
 
@@ -40,11 +40,7 @@ Create the TypeORM schema in packages/<hexagon>/src/infra/schemas/<MyModel>Schem
 ```typescript
 import { EntitySchema } from 'typeorm';
 import { MyModel } from '../../domain/entities/MyModel';
-import {
-  WithTimestamps,
-  uuidSchema,
-  timestampsSchemas,
-} from '@packmind/node-utils';
+import { WithTimestamps, uuidSchema, timestampsSchemas } from '@packmind/node-utils';
 
 export const MyModelSchema = new EntitySchema<WithTimestamps<MyModel>>({
   name: 'MyModel',
@@ -75,9 +71,7 @@ import { Repository } from 'typeorm';
 
 export class MyModelRepository implements IMyModelRepository {
   constructor(
-    private readonly repository: Repository<MyModel> = dataSource.getRepository<MyModel>(
-      MyModelSchema,
-    ),
+    private readonly repository: Repository<MyModel> = dataSource.getRepository<MyModel>(MyModelSchema)
   ) {}
 
   async add(model: MyModel): Promise<MyModel> {

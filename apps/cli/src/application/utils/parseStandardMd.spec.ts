@@ -1,4 +1,4 @@
-import { parseStandardMd } from './parseStandardMd';
+import { parseStandardMd, parseStandardMdForAgent } from './parseStandardMd';
 
 describe('parseStandardMd', () => {
   describe('when file is in Packmind format', () => {
@@ -184,6 +184,62 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '**/*.ts, **/*.tsx',
+        rules: ['Rule 1'],
+      });
+    });
+
+    it('extracts scope from paths block sequence with single item', () => {
+      const content =
+        '---\npaths:\n  - "**/*.ts"\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
+    it('extracts scope from paths block sequence with multiple items', () => {
+      const content =
+        '---\npaths:\n  - "**/*.ts"\n  - "**/*.tsx"\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts, **/*.tsx',
+        rules: ['Rule 1'],
+      });
+    });
+
+    it('extracts scope from paths block sequence with unquoted items', () => {
+      const content =
+        '---\npaths:\n  - src/**/*.ts\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: 'src/**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
+    it('extracts scope from globs key as fallback', () => {
+      const content =
+        '---\nglobs: "**/*.ts"\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
         rules: ['Rule 1'],
       });
     });
@@ -447,6 +503,87 @@ describe('parseStandardMd', () => {
       const content = '# Some Standard\n\nDescription';
 
       const result = parseStandardMd(content, 'unknown/path/file.md');
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe('parseStandardMdForAgent', () => {
+  it('parses Packmind format for packmind agent', () => {
+    const content = '# My Standard\n\nDescription\n\n## Rules\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'packmind');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Claude format for claude agent', () => {
+    const content =
+      '---\npaths: "**/*.ts"\nalwaysApply: false\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'claude');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Cursor format for cursor agent', () => {
+    const content =
+      '---\nglobs: **/*.ts\nalwaysApply: false\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'cursor');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Continue format for continue agent', () => {
+    const content =
+      '---\nglobs: "**/*.ts"\nalwaysApply: false\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1';
+
+    const result = parseStandardMdForAgent(content, 'continue');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Copilot format for copilot agent', () => {
+    const content =
+      "---\napplyTo: '**/*.ts'\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1";
+
+    const result = parseStandardMdForAgent(content, 'copilot');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  describe('when content does not match agent format', () => {
+    it('returns null', () => {
+      const content = 'Some random content without heading';
+
+      const result = parseStandardMdForAgent(content, 'claude');
 
       expect(result).toBeNull();
     });

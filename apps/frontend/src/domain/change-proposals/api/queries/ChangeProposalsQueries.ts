@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ApplyChangeProposalsCommand,
+  ApplyCreationChangeProposalsCommand,
+  ApplyCreationChangeProposalsResponse,
   ChangeProposalType,
   OrganizationId,
   RecipeId,
@@ -12,6 +14,7 @@ import { pmToaster } from '@packmind/ui';
 import { changeProposalsGateway } from '../gateways';
 import { CreateChangeProposalParams } from '../gateways/IChangeProposalsGateway';
 import {
+  APPLY_CREATION_CHANGE_PROPOSALS_MUTATION_KEY,
   APPLY_RECIPE_CHANGE_PROPOSALS_MUTATION_KEY,
   APPLY_SKILL_CHANGE_PROPOSALS_MUTATION_KEY,
   APPLY_STANDARD_CHANGE_PROPOSALS_MUTATION_KEY,
@@ -407,6 +410,72 @@ export const useApplySkillChangeProposalsMutation = (params?: {
       console.log('error: ', error);
       console.log('variables: ', variables);
       console.log('context: ', context);
+
+      pmToaster.create({
+        title: 'Failed to apply changes',
+        description:
+          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        type: 'error',
+      });
+    },
+  });
+};
+
+export const useApplyCreationChangeProposalsMutation = (params?: {
+  orgSlug?: string;
+  spaceSlug?: string;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [...APPLY_CREATION_CHANGE_PROPOSALS_MUTATION_KEY],
+    mutationFn: async (
+      command: Omit<ApplyCreationChangeProposalsCommand, 'userId'>,
+    ): Promise<ApplyCreationChangeProposalsResponse> => {
+      return changeProposalsGateway.applyCreationChangeProposals(command);
+    },
+    onSuccess: async (response, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+
+      const accepted = variables.accepted.length > 0;
+      // orgSlug/spaceSlug guard removed: the toast is informational only and does not
+      // depend on navigation slugs; post-accept redirect is handled by the caller components.
+      if (accepted) {
+        const createdType =
+          response.created.standards.length > 0
+            ? 'standard'
+            : response.created.skills.length > 0
+              ? 'skill'
+              : 'command';
+        const toastMessages = {
+          standard: {
+            title: 'Standard created',
+            description: 'The new standard has been added to your space.',
+          },
+          skill: {
+            title: 'Skill created',
+            description: 'The new skill has been added to your space.',
+          },
+          command: {
+            title: 'Command created',
+            description: 'The new command has been added to your space.',
+          },
+        } as const;
+        pmToaster.create({ ...toastMessages[createdType], type: 'success' });
+      } else {
+        pmToaster.create({
+          title: 'Proposal rejected',
+          type: 'success',
+        });
+      }
+    },
+    onError: (error, variables, context) => {
+      console.error('Error applying creation change proposals');
+      console.log('error:', error);
+      console.log('variables:', variables);
+      console.log('context:', context);
 
       pmToaster.create({
         title: 'Failed to apply changes',

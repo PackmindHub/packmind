@@ -1,6 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  ChangeProposal,
+  ChangeProposalType,
+  CreationProposalOverview,
   IAccountsPort,
   IListChangeProposalsBySpace,
   IRecipesPort,
@@ -10,6 +13,9 @@ import {
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
   ListProposalsOverview,
+  NewCommandPayload,
+  NewSkillPayload,
+  NewStandardPayload,
   RecipeId,
   SkillId,
   StandardId,
@@ -54,11 +60,13 @@ export class ListChangeProposalsBySpaceUseCase
     const standards = await this.enrichStandardsWithNames(grouped.standards);
     const commands = await this.enrichRecipesWithNames(grouped.commands);
     const skills = await this.enrichSkillsWithNames(grouped.skills);
+    const creations = this.enrichCreations(grouped.creations);
 
     return {
       standards,
       commands,
       skills,
+      creations,
     };
   }
 
@@ -98,6 +106,43 @@ export class ListChangeProposalsBySpaceUseCase
     }
 
     return result;
+  }
+
+  private enrichCreations(
+    proposals: ChangeProposal<ChangeProposalType>[],
+  ): CreationProposalOverview[] {
+    return proposals.map((proposal) => {
+      if (proposal.type === ChangeProposalType.createStandard) {
+        const payload = proposal.payload as NewStandardPayload;
+        return {
+          proposalId: proposal.id,
+          artefactType: 'standards' as const,
+          name: payload.name,
+          description: payload.description,
+          scope: Array.isArray(payload.scope)
+            ? payload.scope.join(', ')
+            : payload.scope,
+          rules: payload.rules,
+        };
+      }
+      if (proposal.type === ChangeProposalType.createSkill) {
+        const payload = proposal.payload as NewSkillPayload;
+        return {
+          proposalId: proposal.id,
+          artefactType: 'skills' as const,
+          name: payload.name,
+          description: payload.description,
+          prompt: payload.prompt,
+        };
+      }
+      const payload = proposal.payload as NewCommandPayload;
+      return {
+        proposalId: proposal.id,
+        artefactType: 'commands' as const,
+        name: payload.name,
+        content: payload.content,
+      };
+    });
   }
 
   private async enrichSkillsWithNames(

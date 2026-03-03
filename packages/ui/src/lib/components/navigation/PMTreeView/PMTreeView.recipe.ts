@@ -43,7 +43,7 @@ export const pmTreeViewRecipe = defineSlotRecipe({
         },
         branchControl: {
           _selected: {
-            bg: 'transparent',
+            bg: 'blue.900',
           },
         },
       },

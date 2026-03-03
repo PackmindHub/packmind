@@ -1,5 +1,6 @@
 export * from './ChangeProposalId';
 export * from './ChangeProposalType';
+export * from './ChangeProposalViolation';
 export * from './ChangeProposalTypeLabels';
 export * from './ChangeProposalStatus';
 export * from './ChangeProposalPayload';
@@ -7,4 +8,5 @@ export * from './ChangeProposal';
 export * from './ChangeProposalCaptureMode';
 export * from './ChangeProposalArtefactIdType';
 export * from './contracts';
+export * from './events';
 export * from './ports';

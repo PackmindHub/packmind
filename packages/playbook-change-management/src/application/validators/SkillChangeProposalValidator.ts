@@ -27,6 +27,7 @@ type ScalarSkillType =
   | ChangeProposalType.updateSkillAllowedTools;
 
 const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
+  ChangeProposalType.createSkill,
   ChangeProposalType.updateSkillName,
   ChangeProposalType.updateSkillDescription,
   ChangeProposalType.updateSkillPrompt,
@@ -73,6 +74,10 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
   async validate(
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<{ artefactVersion: number }> {
+    if (command.type === ChangeProposalType.createSkill) {
+      return { artefactVersion: 0 };
+    }
+
     const skillId = command.artefactId as SkillId;
 
     const skill = await this.skillsPort.getSkill(skillId);

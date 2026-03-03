@@ -441,6 +441,105 @@ describe('SubmitDiffsUseCase', () => {
     });
   });
 
+  describe('when diff is a creation type without artifactId', () => {
+    const createCommandGroup: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/new-command.md',
+        type: ChangeProposalType.createCommand,
+        payload: { name: 'New Command', content: 'command content' },
+        artifactName: 'New Command',
+        artifactType: 'command',
+        artifactId: undefined,
+        spaceId: 'spc-456',
+      },
+    ];
+
+    beforeEach(() => {
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1));
+    });
+
+    it('returns created count from batch response', async () => {
+      const result = await useCase.execute({
+        groupedDiffs: [createCommandGroup],
+        message: 'test message',
+      });
+
+      expect(result.submitted).toBe(1);
+    });
+
+    it('returns empty skipped array', async () => {
+      const result = await useCase.execute({
+        groupedDiffs: [createCommandGroup],
+        message: 'test message',
+      });
+
+      expect(result.skipped).toEqual([]);
+    });
+
+    it('sends null as artefactId in the batchCreate call', async () => {
+      await useCase.execute({
+        groupedDiffs: [createCommandGroup],
+        message: 'test message',
+      });
+
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
+        spaceId: 'spc-456',
+        proposals: [
+          {
+            type: ChangeProposalType.createCommand,
+            artefactId: null,
+            payload: { name: 'New Command', content: 'command content' },
+            captureMode: ChangeProposalCaptureMode.commit,
+            message: 'test message',
+          },
+        ],
+      });
+    });
+  });
+
+  describe('when creation type diff is missing spaceId', () => {
+    const createCommandMissingSpaceGroup: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/new-command.md',
+        type: ChangeProposalType.createCommand,
+        payload: { name: 'New Command', content: 'command content' },
+        artifactName: 'New Command',
+        artifactType: 'command',
+        artifactId: undefined,
+        spaceId: undefined,
+      },
+    ];
+
+    it('returns 0 submitted', async () => {
+      const result = await useCase.execute({
+        groupedDiffs: [createCommandMissingSpaceGroup],
+        message: 'test message',
+      });
+
+      expect(result.submitted).toBe(0);
+    });
+
+    it('skips with reason "Missing artifact metadata"', async () => {
+      const result = await useCase.execute({
+        groupedDiffs: [createCommandMissingSpaceGroup],
+        message: 'test message',
+      });
+
+      expect(result.skipped).toEqual([
+        { name: 'New Command', reason: 'Missing artifact metadata' },
+      ]);
+    });
+
+    it('does not call batchCreate', async () => {
+      await useCase.execute({
+        groupedDiffs: [createCommandMissingSpaceGroup],
+        message: 'test message',
+      });
+
+      expect(mockChangeProposals.batchCreate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when diff is missing spaceId', () => {
     const missingSpaceIdGroup: ArtefactDiff[] = [
       {

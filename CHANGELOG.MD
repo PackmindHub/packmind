@@ -2,6 +2,7 @@
 
 ## Added
 
+- Add Dart programming language support: `.dart` file recognition, syntax highlighting, and language selection (#183)
 - Rules can now be linted with severity error (default) or warning - Enterprise version only
 - A user can provide a message when submitting change proposals (#142)
 - The `diff` command now detects updated rules using similarity matching: when a rule is modified rather than deleted and re-added, it is submitted as an `updateRule` change proposal
@@ -13,6 +14,8 @@
 ## Fixed
 
 - Skill subfiles (references/, scripts/, assets/) were lost during push deployment for previously deployed skills (#125)
+- Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
+- `packmind-create-standard` skill now documents scope as comma-separated glob patterns instead of natural language, preventing standards from never matching files (#181)
 
 ## Removed
 

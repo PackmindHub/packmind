@@ -12,9 +12,11 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  ApplyCreationChangeProposalsResponse,
   BatchCreateChangeProposalItem,
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
+  ChangeProposalId,
   ChangeProposalType,
   CheckChangeProposalsCommand,
   CheckChangeProposalsResponse,
@@ -124,6 +126,52 @@ export class OrganizationsSpacesChangeProposalsController {
         spaceId,
         created: result.created,
         errors: result.errors.length,
+      },
+    );
+
+    return result;
+  }
+
+  /**
+   * Apply or reject creation change proposals (e.g., createCommand)
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/apply
+   */
+  @Post('apply')
+  async applyCreationChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body()
+    body: { accepted: ChangeProposalId[]; rejected: ChangeProposalId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApplyCreationChangeProposalsResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/apply',
+      {
+        organizationId,
+        spaceId,
+        acceptedCount: body.accepted.length,
+        rejectedCount: body.rejected.length,
+      },
+    );
+
+    const result =
+      await this.changeProposalsService.applyCreationChangeProposals({
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+        accepted: body.accepted,
+        rejected: body.rejected,
+      });
+
+    this.logger.info(
+      'POST .../change-proposals/apply - Applied creation proposals successfully',
+      {
+        organizationId,
+        spaceId,
+        created: Object.entries(result.created).map(
+          ([artefactType, artefactIds]) =>
+            `${artefactType}: ${artefactIds.length}`,
+        ),
       },
     );
 

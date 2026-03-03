@@ -2,7 +2,7 @@
 description: 'Create a new buildable TypeScript package in the Packmind Nx monorepo, wiring up TypeScript paths, TypeORM, and Webpack so it can serve as a reusable shared or domain-specific library for consistent, type-safe code reuse across applications.'
 ---
 
-# Create New Package
+# Create New Package 
 
 Create a new buildable TypeScript package in the Packmind monorepo using Nx tools and configure it for use across applications.
 
@@ -15,11 +15,11 @@ Create a new buildable TypeScript package in the Packmind monorepo using Nx tool
 
 ## Context Validation Checkpoints
 
-- [ ] What is the package name and its primary responsibility?
-- [ ] Which packages or applications will consume this package?
-- [ ] Will the package be used by the API application (requires webpack config)?
-- [ ] What external dependencies does the package require (e.g., TypeORM, Winston)?
-- [ ] Are there any special build requirements (e.g., WASM files, assets)?
+* [ ] What is the package name and its primary responsibility?
+* [ ] Which packages or applications will consume this package?
+* [ ] Will the package be used by the API application (requires webpack config)?
+* [ ] What external dependencies does the package require (e.g., TypeORM, Winston)?
+* [ ] Are there any special build requirements (e.g., WASM files, assets)?
 
 ## Recipe Steps
 
@@ -72,7 +72,6 @@ Add the path alias to `tsconfig.base.json` (Nx generates it without `@packmind/`
 Add the package to TypeScript path mappings in all datasource configuration files. This is required for `typeorm-ts-node-commonjs` to resolve package imports when running migrations.
 
 **Files to update:**
-
 - `packages/migrations/datasourceDocker.ts`
 - `packages/migrations/datasource.ts`
 - `packages/migrations/datasourceMigrations.ts`
@@ -95,10 +94,7 @@ If your package will be consumed by the API application, add webpack aliases to 
 module.exports = function getBaseWebpackPaths(__dirname) {
   return {
     // ... existing aliases
-    '@packmind/<package-name>': join(
-      __dirname,
-      '../../packages/<package-name>/src',
-    ),
+    '@packmind/<package-name>': join(__dirname, '../../packages/<package-name>/src'),
   };
 };
 ```

@@ -2,9 +2,13 @@
 
 ## Added
 
+- New command `update` allows to update `packmind-cli` to the newest version (#154)
+
 ## Changed
 
 ## Fixed
+
+- Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
 
 ## Removed
 

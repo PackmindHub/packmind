@@ -13,10 +13,10 @@ Implement a standardized repository with soft delete functionality and comprehen
 
 ## Context Validation Checkpoints
 
-- [ ] Have you defined the entity and its TypeORM schema?
-- [ ] Do you know which domain-specific finder methods are needed?
-- [ ] Have you created a test factory for the entity?
-- [ ] Is the AbstractRepository base class available in @packmind/shared?
+* [ ] Have you defined the entity and its TypeORM schema?
+* [ ] Do you know which domain-specific finder methods are needed?
+* [ ] Have you created a test factory for the entity?
+* [ ] Is the AbstractRepository base class available in @packmind/shared?
 
 ## Recipe Steps
 
@@ -60,9 +60,7 @@ export class EntityRepository
   implements IEntityRepository
 {
   constructor(
-    repository: Repository<Entity> = localDataSource.getRepository<Entity>(
-      EntitySchema,
-    ),
+    repository: Repository<Entity> = localDataSource.getRepository<Entity>(EntitySchema),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super('entity', repository, logger, EntitySchema);
@@ -84,7 +82,7 @@ export class EntityRepository
         where: { slug },
         withDeleted: opts?.includeDeleted ?? false,
       });
-
+      
       if (entity) {
         this.logger.info('Entity found by slug', { slug, entityId: entity.id });
       } else {
@@ -211,9 +209,7 @@ describe('findBySlug', () => {
 
     it('can find a deleted entity by slug if includeDeleted flag is true', async () => {
       expect(
-        await entityRepository.findBySlug(entity.slug, {
-          includeDeleted: true,
-        }),
+        await entityRepository.findBySlug(entity.slug, { includeDeleted: true }),
       ).toMatchObject({ id: entity.id, name: entity.name });
     });
   });

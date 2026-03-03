@@ -35,6 +35,7 @@ describe('StandardChangeProposalsApplier', () => {
 
   const standardVersion = standardVersionFactory({
     name: 'TypeScript Best Practices',
+    scope: '**/*.ts',
     description: 'A collection of TypeScript best practices',
     rules: [rule1, rule2],
   });
@@ -44,6 +45,9 @@ describe('StandardChangeProposalsApplier', () => {
       const changeProposals = [
         changeProposalFactory({
           type: ChangeProposalType.updateStandardName,
+        }),
+        changeProposalFactory({
+          type: ChangeProposalType.updateStandardScope,
         }),
         changeProposalFactory({
           type: ChangeProposalType.updateStandardDescription,
@@ -95,6 +99,37 @@ describe('StandardChangeProposalsApplier', () => {
         expect(newStandardVersion).toEqual({
           ...standardVersion,
           name: `${standardVersion.name}--after`,
+        });
+      });
+    });
+
+    describe('when updating the standard scope', () => {
+      const changeProposals = [
+        changeProposalFactory({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: standardVersion.name,
+            newValue: `**/*.spec.ts`,
+          },
+        }),
+        changeProposalFactory({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: standardVersion.name,
+            newValue: `**/*.test.ts`,
+          },
+        }),
+      ];
+
+      it('overrides the standard scope with each proposal', () => {
+        const newStandardVersion = applier.applyChangeProposals(
+          standardVersion,
+          changeProposals,
+        );
+
+        expect(newStandardVersion).toEqual({
+          ...standardVersion,
+          scope: `**/*.test.ts`,
         });
       });
     });

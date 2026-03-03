@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CODING_AGENT_ARTEFACT_PATHS,
   DeleteItem,
   DeleteItemType,
   FileUpdates,
@@ -20,12 +21,13 @@ import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDep
 const origin = 'ClaudeDeployer';
 
 export class ClaudeDeployer implements ICodingAgentDeployer {
-  private static readonly STANDARDS_FOLDER_PATH = '.claude/rules/packmind/';
-  private static readonly COMMANDS_FOLDER_PATH = '.claude/commands/';
+  private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.claude;
+  /** Packmind-managed subdirectory within the broader standard path */
+  private static readonly STANDARD_DEPLOY_DIR =
+    CODING_AGENT_ARTEFACT_PATHS.claude.standard + 'packmind/';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_COMMANDS_FOLDER_PATH =
     '.claude/commands/packmind/';
-  private static readonly SKILLS_FOLDER_PATH = '.claude/skills/';
   private static readonly CLAUDE_MD_PATH = 'CLAUDE.md';
 
   constructor(
@@ -40,7 +42,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
   }) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Claude',
-      '.claude/skills/',
+      ClaudeDeployer.ARTEFACT_PATHS.skill,
     );
     return defaultSkillsDeployer.deployDefaultSkills(options);
   }
@@ -113,7 +115,7 @@ description: '${escapeSingleQuotes(description)}'
 
 ${recipeVersion.content}`;
 
-    const path = `${ClaudeDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`;
+    const path = `${ClaudeDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
 
     return {
       path,
@@ -408,7 +410,7 @@ ${recipeVersion.content}`;
     // Delete individual Claude command files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
-        path: `${ClaudeDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        path: `${ClaudeDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -425,7 +427,7 @@ ${recipeVersion.content}`;
     // Delete individual Claude configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `${ClaudeDeployer.STANDARDS_FOLDER_PATH}standard-${standardVersion.slug}.md`,
+        path: `${ClaudeDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -439,7 +441,7 @@ ${recipeVersion.content}`;
       installed.standardVersions.length === 0
     ) {
       fileUpdates.delete.push({
-        path: ClaudeDeployer.STANDARDS_FOLDER_PATH,
+        path: ClaudeDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       });
     }
@@ -448,7 +450,7 @@ ${recipeVersion.content}`;
     // (git port will expand directory paths to individual files)
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
-        path: `.claude/skills/${skillVersion.slug}`,
+        path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -473,7 +475,7 @@ ${recipeVersion.content}`;
         type: DeleteItemType.Directory,
       },
       {
-        path: ClaudeDeployer.STANDARDS_FOLDER_PATH,
+        path: ClaudeDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       },
     ];
@@ -481,7 +483,7 @@ ${recipeVersion.content}`;
     // Delete individual command files for recipes
     for (const recipeVersion of artifacts.recipeVersions) {
       deleteItems.push({
-        path: `${ClaudeDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        path: `${ClaudeDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -489,7 +491,7 @@ ${recipeVersion.content}`;
     // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       deleteItems.push({
-        path: `${ClaudeDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -497,7 +499,7 @@ ${recipeVersion.content}`;
     // Delete user package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       deleteItems.push({
-        path: `${ClaudeDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
+        path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -517,15 +519,15 @@ ${recipeVersion.content}`;
   }
 
   /**
-   * Format globs value for YAML frontmatter.
-   * Parses comma-separated globs and formats them as a YAML array.
-   * Quotes individual globs that start with one or two asterisks/stars to prevent YAML syntax issues.
-   * Note: Commas inside braces are not treated as separators (e.g., a pattern with braces is a single glob).
+   * Format paths value for YAML frontmatter.
+   * Parses comma-separated paths and formats them as a YAML block sequence.
+   * All paths are double-quoted for consistency.
+   * Note: Commas inside braces are not treated as separators (e.g., a pattern with braces is a single path).
    */
-  private formatGlobsValue(scope: string): string {
-    // Parse comma-separated globs, but don't split on commas inside braces {}
-    const globs: string[] = [];
-    let currentGlob = '';
+  private formatPathsValue(scope: string): string {
+    // Parse comma-separated paths, but don't split on commas inside braces {}
+    const paths: string[] = [];
+    let currentPath = '';
     let braceDepth = 0;
 
     for (let i = 0; i < scope.length; i++) {
@@ -533,46 +535,30 @@ ${recipeVersion.content}`;
 
       if (char === '{') {
         braceDepth++;
-        currentGlob += char;
+        currentPath += char;
       } else if (char === '}') {
         braceDepth--;
-        currentGlob += char;
+        currentPath += char;
       } else if (char === ',' && braceDepth === 0) {
         // Only split on commas that are not inside braces
-        const trimmed = currentGlob.trim();
+        const trimmed = currentPath.trim();
         if (trimmed) {
-          globs.push(trimmed);
+          paths.push(trimmed);
         }
-        currentGlob = '';
+        currentPath = '';
       } else {
-        currentGlob += char;
+        currentPath += char;
       }
     }
 
-    // Add the last glob
-    const trimmed = currentGlob.trim();
+    // Add the last path
+    const trimmed = currentPath.trim();
     if (trimmed) {
-      globs.push(trimmed);
+      paths.push(trimmed);
     }
 
-    // If only one glob, check if it needs quoting
-    if (globs.length === 1) {
-      const glob = globs[0];
-      if (glob.startsWith('**/') || glob.startsWith('*')) {
-        return `"${glob}"`;
-      }
-      return glob;
-    }
-
-    // Multiple globs: format as YAML array
-    const quotedGlobs = globs.map((glob) => {
-      if (glob.startsWith('**/') || glob.startsWith('*')) {
-        return `"${glob}"`;
-      }
-      return glob;
-    });
-
-    return `[${quotedGlobs.join(', ')}]`;
+    // Format as YAML block sequence with double-quoted values
+    return paths.map((p) => `\n  - "${p}"`).join('');
   }
 
   /**
@@ -606,7 +592,7 @@ ${recipeVersion.content}`;
       // When the scope is not null or empty
       frontmatter = `---
 name: '${escapeSingleQuotes(standardVersion.name)}'
-paths: ${this.formatGlobsValue(standardVersion.scope)}
+paths:${this.formatPathsValue(standardVersion.scope)}
 alwaysApply: false
 description: '${escapeSingleQuotes(summary)}'
 ---`;
@@ -623,7 +609,7 @@ description: '${escapeSingleQuotes(summary)}'
 
 ${instructionContent}`;
 
-    const path = `${ClaudeDeployer.STANDARDS_FOLDER_PATH}standard-${standardVersion.slug}.md`;
+    const path = `${ClaudeDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`;
 
     return {
       path,
@@ -639,7 +625,7 @@ ${instructionContent}`;
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
     files.push({
-      path: `.claude/skills/${skillVersion.slug}/SKILL.md`,
+      path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/SKILL.md`,
       content: skillMdContent,
     });
 
@@ -651,7 +637,7 @@ ${instructionContent}`;
           continue;
         }
         files.push({
-          path: `.claude/skills/${skillVersion.slug}/${file.path}`,
+          path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
           skillFileId: file.id,
@@ -724,6 +710,6 @@ ${skillVersion.prompt}`;
   }
 
   getSkillsFolderPath(): string {
-    return ClaudeDeployer.SKILLS_FOLDER_PATH;
+    return ClaudeDeployer.ARTEFACT_PATHS.skill;
   }
 }
