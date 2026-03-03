@@ -40,12 +40,18 @@ const ARTIFACT_CONFIG = {
       'Standards are reusable coding guidelines that AI coding assistants use to ensure consistency across your codebase.',
     createTitle: 'Create a standard',
     slashCommand: '/packmind-create-standard',
+    cliDescription: 'The CLI is required to create and manage standards.',
+    guidanceText:
+      'Your agent will guide you through the creation process by asking about the topic of the standard you want to create.',
   },
   command: {
     intro:
       'Commands are reusable prompts that help you speed up recurring dev tasks with consistent results across your team.',
     createTitle: 'Create a command',
     slashCommand: '/packmind-create-command',
+    cliDescription: 'The CLI is required to create and manage commands.',
+    guidanceText:
+      'Your agent will guide you through the creation process by asking about the topic of the command you want to create.',
   },
 } as const;
 
@@ -117,7 +123,7 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
               stepNumber={1}
               icon={LuTerminal}
               title="Install the Packmind CLI"
-              description="The CLI is required to create and manage standards and commands."
+              description={config.cliDescription}
             />
           </PMAccordion.ItemTrigger>
           <PMAccordion.ItemContent p={6}>
@@ -305,7 +311,6 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
             <PMVStack align="flex-start" gap={4} width="full">
               <PMText as="p" color="secondary">
                 Open your AI coding assistant and run the following command
-                (works in Claude Code and Cursor)
               </PMText>
               <PMBox width="1/2">
                 <CopiableTextField
@@ -315,8 +320,7 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
                 />
               </PMBox>
               <PMText as="p" color="tertiary" variant="small">
-                Your agent will guide you through the creation process by asking
-                about what you want to create.
+                {config.guidanceText}
               </PMText>
             </PMVStack>
           </PMAccordion.ItemContent>
