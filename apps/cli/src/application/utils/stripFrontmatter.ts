@@ -1,6 +1,10 @@
+import { normalizeLineEndings } from './normalizeLineEndings';
+
 const FRONTMATTER_DELIMITER = '---';
 
 export function stripFrontmatter(content: string): string {
+  content = normalizeLineEndings(content);
+
   if (!content.startsWith(`${FRONTMATTER_DELIMITER}\n`)) {
     return content;
   }
