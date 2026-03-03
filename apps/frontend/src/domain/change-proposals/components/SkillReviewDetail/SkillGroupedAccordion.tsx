@@ -4,10 +4,7 @@ import { ChangeProposalId, SkillFile } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
-import {
-  groupSkillProposalsByFile,
-  FileGroup,
-} from '../../utils/groupSkillProposalsByFile';
+import { groupSkillProposalsByFile } from '../../utils/groupSkillProposalsByFile';
 import { ChangesSummaryBar } from '../shared/ChangesSummaryBar';
 import { ChangeProposalCard } from '../shared/ChangeProposalCard';
 import { ReviewedSectionDivider } from '../shared/ReviewedSectionDivider';
@@ -101,6 +98,57 @@ export function SkillGroupedAccordion({
     [onToggleCard],
   );
 
+  const { pendingFileGroups, reviewedFileGroups, totalReviewedCount } =
+    useMemo(() => {
+      const pending: {
+        filePath: string;
+        changeCount: number;
+        pendingCount: number;
+        proposals: ChangeProposalWithConflicts[];
+      }[] = [];
+      const reviewed: {
+        filePath: string;
+        proposals: ChangeProposalWithConflicts[];
+      }[] = [];
+      let reviewedCount = 0;
+
+      for (const group of fileGroups) {
+        const pendingProposals = group.proposals.filter(
+          (p) =>
+            getPoolStatus(p.id, acceptedProposalIds, rejectedProposalIds) ===
+            'pending',
+        );
+        const reviewedProposals = group.proposals.filter(
+          (p) =>
+            getPoolStatus(p.id, acceptedProposalIds, rejectedProposalIds) !==
+            'pending',
+        );
+
+        if (pendingProposals.length > 0) {
+          pending.push({
+            filePath: group.filePath,
+            changeCount: group.changeCount,
+            pendingCount: group.pendingCount,
+            proposals: pendingProposals,
+          });
+        }
+
+        if (reviewedProposals.length > 0) {
+          reviewed.push({
+            filePath: group.filePath,
+            proposals: reviewedProposals,
+          });
+          reviewedCount += reviewedProposals.length;
+        }
+      }
+
+      return {
+        pendingFileGroups: pending,
+        reviewedFileGroups: reviewed,
+        totalReviewedCount: reviewedCount,
+      };
+    }, [fileGroups, acceptedProposalIds, rejectedProposalIds]);
+
   const renderCard = (proposal: ChangeProposalWithConflicts) => {
     const poolStatus = getPoolStatus(
       proposal.id,
@@ -132,36 +180,6 @@ export function SkillGroupedAccordion({
     );
   };
 
-  const renderGroup = (group: FileGroup) => {
-    const pending = group.proposals.filter(
-      (p) =>
-        getPoolStatus(p.id, acceptedProposalIds, rejectedProposalIds) ===
-        'pending',
-    );
-    const reviewed = group.proposals.filter(
-      (p) =>
-        getPoolStatus(p.id, acceptedProposalIds, rejectedProposalIds) !==
-        'pending',
-    );
-
-    return (
-      <PMVStack key={group.filePath} gap={3} width="full">
-        <FileGroupHeader
-          filePath={group.filePath}
-          changeCount={group.changeCount}
-          pendingCount={group.pendingCount}
-        />
-        {pending.map((p) => renderCard(p))}
-        {reviewed.length > 0 && (
-          <>
-            <ReviewedSectionDivider count={reviewed.length} />
-            {reviewed.map((p) => renderCard(p))}
-          </>
-        )}
-      </PMVStack>
-    );
-  };
-
   return (
     <PMBox>
       <ChangesSummaryBar
@@ -178,7 +196,35 @@ export function SkillGroupedAccordion({
           onValueChange={handleValueChange}
         >
           <PMVStack gap={5} width="full">
-            {fileGroups.map(renderGroup)}
+            {pendingFileGroups.map((group) => (
+              <PMVStack key={group.filePath} gap={3} width="full">
+                <FileGroupHeader
+                  filePath={group.filePath}
+                  changeCount={group.changeCount}
+                  pendingCount={group.pendingCount}
+                />
+                {group.proposals.map(renderCard)}
+              </PMVStack>
+            ))}
+            {totalReviewedCount > 0 && (
+              <>
+                <ReviewedSectionDivider count={totalReviewedCount} />
+                {reviewedFileGroups.map((group) => (
+                  <PMVStack
+                    key={`reviewed-${group.filePath}`}
+                    gap={3}
+                    width="full"
+                  >
+                    <FileGroupHeader
+                      filePath={group.filePath}
+                      changeCount={group.proposals.length}
+                      pendingCount={0}
+                    />
+                    {group.proposals.map(renderCard)}
+                  </PMVStack>
+                ))}
+              </>
+            )}
           </PMVStack>
         </PMAccordion.Root>
       </PMBox>
