@@ -45,7 +45,7 @@ export async function diffAddHandler(
   const artefactResult = resolveArtefactFromPath(absolutePath);
   if (!artefactResult) {
     logErrorConsole(
-      `Unsupported file path: ${absolutePath}. File must be in a known agent command directory (e.g. .claude/commands/, .cursor/commands/).`,
+      `Unsupported file path: ${absolutePath}. File must be in a recognized agent command directory.`,
     );
     exit(1);
     return;
@@ -55,8 +55,14 @@ export async function diffAddHandler(
   try {
     content = readFile(absolutePath);
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    logErrorConsole(`Failed to read file: ${errorMessage}`);
+    if (isErrnoException(err) && err.code === 'EISDIR') {
+      logErrorConsole(
+        `Path is a directory, not a file: ${absolutePath}. Please provide a path to a command file.`,
+      );
+    } else {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logErrorConsole(`Failed to read file: ${errorMessage}`);
+    }
     exit(1);
     return;
   }
@@ -148,4 +154,8 @@ export async function diffAddHandler(
   }
 
   exit(0);
+}
+
+function isErrnoException(err: unknown): err is NodeJS.ErrnoException {
+  return err instanceof Error && 'code' in err;
 }

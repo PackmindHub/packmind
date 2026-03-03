@@ -156,6 +156,36 @@ describe('diffAddHandler', () => {
     });
   });
 
+  describe('directory path instead of file', () => {
+    describe('when readFile throws EISDIR', () => {
+      beforeEach(() => {
+        const error = new Error(
+          "EISDIR: illegal operation on a directory, read '/project/.claude/commands'",
+        ) as NodeJS.ErrnoException;
+        error.code = 'EISDIR';
+        mockReadFile.mockImplementation(() => {
+          throw error;
+        });
+      });
+
+      it('logs a clear directory error message', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Path is a directory, not a file'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
   describe('parse error', () => {
     describe('when file is empty', () => {
       beforeEach(() => {

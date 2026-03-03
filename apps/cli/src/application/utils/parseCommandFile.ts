@@ -1,5 +1,7 @@
 import * as path from 'path';
 
+import { normalizeLineEndings } from './normalizeLineEndings';
+
 const FRONTMATTER_DELIMITER = '---';
 
 export type ParseCommandFileResult =
@@ -10,6 +12,8 @@ export function parseCommandFile(
   content: string,
   filePath: string,
 ): ParseCommandFileResult {
+  content = normalizeLineEndings(content);
+
   if (!content || content.trim().length === 0) {
     return { success: false, error: 'File is empty' };
   }
