@@ -106,6 +106,7 @@
     "pretty-quick": "^4.2.2",
     "sass": "^1.55.0",
     "storybook": "10.2.14",
+    "swc-loader": "^0.2.7",
     "tar-fs": "^2.1.4",
     "ts-jest": "^29.4.6",
     "ts-node": "10.9.2",
