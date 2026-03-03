@@ -27,7 +27,6 @@
   },
   "workspaces": [
     "packages/*",
-    "packages/linter-ast/parsers/*",
     "apps/*"
   ],
   "devDependencies": {
