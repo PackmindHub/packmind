@@ -164,7 +164,9 @@ describe('StandardChangeProposalValidator', () => {
     });
 
     describe('when standard name exceeds 250 characters', () => {
-      it('throws ChangeProposalLimitExceededError', async () => {
+      let error: ChangeProposalLimitExceededError;
+
+      beforeEach(async () => {
         const command = buildCommand({
           type: ChangeProposalType.createStandard,
           artefactId: null,
@@ -176,44 +178,20 @@ describe('StandardChangeProposalValidator', () => {
           },
         });
 
-        await expect(validator.validate(command)).rejects.toBeInstanceOf(
-          ChangeProposalLimitExceededError,
-        );
+        error = await validator.validate(command).catch((e) => e);
       });
 
-      it('sets changeProposal to STANDARD_NAME_TOO_LONG', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createStandard,
-          artefactId: null,
-          payload: {
-            name: 'A'.repeat(251),
-            description: 'A description',
-            scope: null,
-            rules: [],
-          },
-        });
+      it('throws ChangeProposalLimitExceededError', () => {
+        expect(error).toBeInstanceOf(ChangeProposalLimitExceededError);
+      });
 
-        const error = await validator.validate(command).catch((e) => e);
-
+      it('sets changeProposal to STANDARD_NAME_TOO_LONG', () => {
         expect(error.changeProposal).toBe(
           ChangeProposalViolation.STANDARD_NAME_TOO_LONG,
         );
       });
 
-      it('sets wasCreated to false', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createStandard,
-          artefactId: null,
-          payload: {
-            name: 'A'.repeat(251),
-            description: 'A description',
-            scope: null,
-            rules: [],
-          },
-        });
-
-        const error = await validator.validate(command).catch((e) => e);
-
+      it('sets wasCreated to false', () => {
         expect(error.wasCreated).toBe(false);
       });
     });
@@ -238,7 +216,9 @@ describe('StandardChangeProposalValidator', () => {
     });
 
     describe('when rules count exceeds 500', () => {
-      it('throws ChangeProposalLimitExceededError', async () => {
+      let error: ChangeProposalLimitExceededError;
+
+      beforeEach(async () => {
         const command = buildCommand({
           type: ChangeProposalType.createStandard,
           artefactId: null,
@@ -252,48 +232,20 @@ describe('StandardChangeProposalValidator', () => {
           },
         });
 
-        await expect(validator.validate(command)).rejects.toBeInstanceOf(
-          ChangeProposalLimitExceededError,
-        );
+        error = await validator.validate(command).catch((e) => e);
       });
 
-      it('sets changeProposal to TOO_MANY_RULES', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createStandard,
-          artefactId: null,
-          payload: {
-            name: 'New Standard',
-            description: 'A description',
-            scope: null,
-            rules: Array.from({ length: 501 }, (_, i) => ({
-              content: `Rule ${i}`,
-            })),
-          },
-        });
+      it('throws ChangeProposalLimitExceededError', () => {
+        expect(error).toBeInstanceOf(ChangeProposalLimitExceededError);
+      });
 
-        const error = await validator.validate(command).catch((e) => e);
-
+      it('sets changeProposal to TOO_MANY_RULES', () => {
         expect(error.changeProposal).toBe(
           ChangeProposalViolation.TOO_MANY_RULES,
         );
       });
 
-      it('sets wasCreated to false', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createStandard,
-          artefactId: null,
-          payload: {
-            name: 'New Standard',
-            description: 'A description',
-            scope: null,
-            rules: Array.from({ length: 501 }, (_, i) => ({
-              content: `Rule ${i}`,
-            })),
-          },
-        });
-
-        const error = await validator.validate(command).catch((e) => e);
-
+      it('sets wasCreated to false', () => {
         expect(error.wasCreated).toBe(false);
       });
     });
@@ -320,7 +272,9 @@ describe('StandardChangeProposalValidator', () => {
     });
 
     describe('when a rule content exceeds 1000 characters', () => {
-      it('throws ChangeProposalLimitExceededError', async () => {
+      let error: ChangeProposalLimitExceededError;
+
+      beforeEach(async () => {
         const command = buildCommand({
           type: ChangeProposalType.createStandard,
           artefactId: null,
@@ -332,44 +286,20 @@ describe('StandardChangeProposalValidator', () => {
           },
         });
 
-        await expect(validator.validate(command)).rejects.toBeInstanceOf(
-          ChangeProposalLimitExceededError,
-        );
+        error = await validator.validate(command).catch((e) => e);
       });
 
-      it('sets changeProposal to RULE_CONTENT_TOO_LONG', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createStandard,
-          artefactId: null,
-          payload: {
-            name: 'New Standard',
-            description: 'A description',
-            scope: null,
-            rules: [{ content: 'A'.repeat(1001) }],
-          },
-        });
+      it('throws ChangeProposalLimitExceededError', () => {
+        expect(error).toBeInstanceOf(ChangeProposalLimitExceededError);
+      });
 
-        const error = await validator.validate(command).catch((e) => e);
-
+      it('sets changeProposal to RULE_CONTENT_TOO_LONG', () => {
         expect(error.changeProposal).toBe(
           ChangeProposalViolation.RULE_CONTENT_TOO_LONG,
         );
       });
 
-      it('sets wasCreated to false', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createStandard,
-          artefactId: null,
-          payload: {
-            name: 'New Standard',
-            description: 'A description',
-            scope: null,
-            rules: [{ content: 'A'.repeat(1001) }],
-          },
-        });
-
-        const error = await validator.validate(command).catch((e) => e);
-
+      it('sets wasCreated to false', () => {
         expect(error.wasCreated).toBe(false);
       });
     });
