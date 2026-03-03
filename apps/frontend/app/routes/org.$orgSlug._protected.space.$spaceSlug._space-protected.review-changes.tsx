@@ -32,6 +32,7 @@ export default function ReviewChangesLayoutRouteModule() {
 
   const hasProposals =
     !!groupedProposals?.commands?.length ||
+    !!groupedProposals?.creations?.length ||
     !!groupedProposals?.standards?.length ||
     !!groupedProposals?.skills?.length;
 

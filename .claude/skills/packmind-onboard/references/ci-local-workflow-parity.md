@@ -158,7 +158,6 @@ docker-compose
 ## Reporting Threshold
 
 Report only if:
-
 - ≥1 meaningful CI step lacks local entrypoint
 
 ## Insight Template
@@ -183,40 +182,40 @@ INSIGHT:
 When workflow gaps exist, propose:
 
 ```yaml
-name: 'pre-pr-quality-check'
-summary: 'Run all CI checks locally before creating a PR'
+name: "pre-pr-quality-check"
+summary: "Run all CI checks locally before creating a PR"
 whenToUse:
-  - 'Before creating a pull request'
-  - 'After completing a feature to verify CI will pass'
-  - 'When CI fails and you want to debug locally'
+  - "Before creating a pull request"
+  - "After completing a feature to verify CI will pass"
+  - "When CI fails and you want to debug locally"
 contextValidationCheckpoints:
-  - 'Are all dependencies installed?'
-  - 'Is the development environment configured?'
+  - "Are all dependencies installed?"
+  - "Is the development environment configured?"
 steps:
-  - name: 'Run linting'
-    description: 'Execute lint checks'
+  - name: "Run linting"
+    description: "Execute lint checks"
     codeSnippet: |
       [extracted from CI or local scripts]
-  - name: 'Run type checking'
-    description: 'Verify type correctness'
+  - name: "Run type checking"
+    description: "Verify type correctness"
     codeSnippet: |
       [extracted from CI or local scripts]
-  - name: 'Run tests'
-    description: 'Execute test suite'
+  - name: "Run tests"
+    description: "Execute test suite"
     codeSnippet: |
       [extracted from CI or local scripts]
-  - name: 'Run build'
-    description: 'Verify build succeeds'
+  - name: "Run build"
+    description: "Verify build succeeds"
     codeSnippet: |
       [extracted from CI or local scripts]
 ```
 
 ## Gap Categories
 
-| Category     | CI Example                       | Local Gap                         |
-| ------------ | -------------------------------- | --------------------------------- |
-| **Security** | `npm audit --audit-level=high`   | Often not in package.json scripts |
-| **Coverage** | `--coverage --coverageThreshold` | Thresholds may differ locally     |
-| **E2E**      | `cypress run`                    | May require specific env setup    |
-| **Docker**   | `docker build`                   | Requires Docker daemon            |
-| **Secrets**  | env var checks                   | Secrets not available locally     |
+| Category | CI Example | Local Gap |
+|----------|------------|-----------|
+| **Security** | `npm audit --audit-level=high` | Often not in package.json scripts |
+| **Coverage** | `--coverage --coverageThreshold` | Thresholds may differ locally |
+| **E2E** | `cypress run` | May require specific env setup |
+| **Docker** | `docker build` | Requires Docker daemon |
+| **Secrets** | env var checks | Secrets not available locally |

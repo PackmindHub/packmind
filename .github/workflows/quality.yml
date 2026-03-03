@@ -60,7 +60,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --no-audit
       - name: Generate Proprietary tsconfig
         env:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}

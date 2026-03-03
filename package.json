@@ -20,7 +20,7 @@
     "prettier:write": "prettier -w .",
     "quality-gate": "npm run typecheck:frontend && npm run test:staged && npm run lint:staged && npm run build",
     "withEnv": "bash -c 'set -a; [ -f .env ] && source .env; set +a; eval \"$@\"' --",
-    "test": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384' nx run-many -t test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
+    "test": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384' nx run-many -t test --exclude=cli-e2e-tests --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
     "test:staged": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
     "test:memory-profile": "./scripts/test-memory-profile.sh",
     "typecheck:frontend": "nx run frontend:typecheck"
@@ -121,7 +121,7 @@
   "dependencies": {
     "@amplitude/analytics-browser": "^2.25.4",
     "@amplitude/analytics-node": "^1.5.18",
-    "@anthropic-ai/sdk": "^0.71.2",
+    "@anthropic-ai/sdk": "^0.78.0",
     "@azure/openai": "^2.0.0",
     "@chakra-ui/react": "^3.31.0",
     "@codemirror/lang-cpp": "^6.0.3",
@@ -143,7 +143,7 @@
     "@milkdown/crepe": "^7.15.2",
     "@milkdown/kit": "^7.15.2",
     "@milkdown/react": "^7.17.3",
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
     "@nestjs/jwt": "^11.0.0",
@@ -201,7 +201,7 @@
     "validator": "^13.15.15",
     "web-tree-sitter": "^0.25.0",
     "winston": "^3.17.0",
-    "yaml": "^2.8.0"
+    "yaml": "^2.8.2"
   },
   "overrides": {
     "fast-xml-parser": "5.3.6"

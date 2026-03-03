@@ -7,9 +7,11 @@ import { ChangeProposalRepository } from './ChangeProposalRepository';
 import { ChangeProposalSchema } from '../schemas/ChangeProposalSchema';
 import {
   ChangeProposal,
+  ChangeProposalStatus,
   ChangeProposalType,
   createSpaceId,
   createStandardId,
+  createUserId,
 } from '@packmind/types';
 import { changeProposalFactory } from '../../../test';
 
@@ -20,6 +22,12 @@ describe('ChangeProposalRepository', () => {
 
   const spaceAId = createSpaceId('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
   const spaceBId = createSpaceId('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+  const createStandardPayload = {
+    name: 'New Standard',
+    description: 'A description',
+    scope: null,
+    rules: [],
+  };
 
   beforeAll(() => fixture.initialize());
 
@@ -146,6 +154,135 @@ describe('ChangeProposalRepository', () => {
         const result = await repository.findBySpaceId(spaceAId);
 
         expect(result).toEqual([]);
+      });
+    });
+  });
+
+  describe('findExistingPending', () => {
+    const artefactId = createStandardId('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
+    const createdBy = createUserId('ffffffff-ffff-ffff-ffff-ffffffffffff');
+    const type = ChangeProposalType.updateStandardName;
+    const payload = { oldValue: 'Old Name', newValue: 'New Name' };
+
+    describe('when a pending proposal matching all criteria exists with a non-null artefactId', () => {
+      let result: ChangeProposal<ChangeProposalType> | null;
+
+      beforeEach(async () => {
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            createdBy,
+            artefactId,
+            type,
+            payload,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+
+        result = await repository.findExistingPending({
+          spaceId: spaceAId,
+          createdBy,
+          artefactId,
+          type,
+          payload,
+        });
+      });
+
+      it('returns the matching proposal', () => {
+        expect(result).not.toBeNull();
+      });
+    });
+
+    describe('when a pending proposal matching all criteria exists with a null artefactId', () => {
+      let result: ChangeProposal<ChangeProposalType> | null;
+
+      beforeEach(async () => {
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            createdBy,
+            artefactId: null,
+            type: ChangeProposalType.createStandard,
+            payload: createStandardPayload,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+
+        result = await repository.findExistingPending({
+          spaceId: spaceAId,
+          createdBy,
+          artefactId: null,
+          type: ChangeProposalType.createStandard,
+          payload: createStandardPayload,
+        });
+      });
+
+      it('returns the matching proposal', () => {
+        expect(result).not.toBeNull();
+      });
+    });
+
+    describe('when artefactId is null but only proposals with non-null artefactId exist', () => {
+      it('returns null', async () => {
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            createdBy,
+            artefactId,
+            type: ChangeProposalType.createStandard,
+            payload: createStandardPayload,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+
+        const result = await repository.findExistingPending({
+          spaceId: spaceAId,
+          createdBy,
+          artefactId: null,
+          type: ChangeProposalType.createStandard,
+          payload: createStandardPayload,
+        });
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('when artefactId is non-null but only proposals with null artefactId exist', () => {
+      it('returns null', async () => {
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            createdBy,
+            artefactId: null,
+            type: ChangeProposalType.createStandard,
+            payload: createStandardPayload,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+
+        const result = await repository.findExistingPending({
+          spaceId: spaceAId,
+          createdBy,
+          artefactId,
+          type: ChangeProposalType.createStandard,
+          payload: createStandardPayload,
+        });
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('when no pending proposal exists matching the criteria', () => {
+      it('returns null', async () => {
+        const result = await repository.findExistingPending({
+          spaceId: spaceAId,
+          createdBy,
+          artefactId,
+          type,
+          payload,
+        });
+
+        expect(result).toBeNull();
       });
     });
   });

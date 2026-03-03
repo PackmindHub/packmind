@@ -15,7 +15,7 @@ export const ChangeProposalSchema = new EntitySchema<
   tableName: 'change_proposals',
   columns: {
     type: { type: 'varchar' },
-    artefactId: { name: 'artefact_id', type: 'varchar' },
+    artefactId: { name: 'artefact_id', type: 'varchar', nullable: true },
     artefactVersion: { name: 'artefact_version', type: 'int' },
     spaceId: { name: 'space_id', type: 'uuid' },
     payload: { type: 'jsonb' },

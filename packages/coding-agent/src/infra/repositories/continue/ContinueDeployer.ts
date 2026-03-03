@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CODING_AGENT_ARTEFACT_PATHS,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -17,8 +18,10 @@ import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
 const origin = 'ContinueDeployer';
 
 export class ContinueDeployer implements ICodingAgentDeployer {
-  private static readonly COMMANDS_FOLDER_PATH = '.continue/prompts/';
-  private static readonly STANDARDS_FOLDER_PATH = '.continue/rules/packmind/';
+  private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.continue;
+  /** Packmind-managed subdirectory within the broader standard path */
+  private static readonly STANDARD_DEPLOY_DIR =
+    CODING_AGENT_ARTEFACT_PATHS.continue.standard + 'packmind/';
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.continue/rules/packmind/recipes-index.md';
 
@@ -260,7 +263,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     // Delete individual Continue command files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
-        path: `${ContinueDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        path: `${ContinueDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -269,7 +272,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     const hasRemovedRecipes = removed.recipeVersions.length > 0;
     if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
-        path: ContinueDeployer.COMMANDS_FOLDER_PATH,
+        path: ContinueDeployer.ARTEFACT_PATHS.command,
         type: DeleteItemType.Directory,
       });
       // Also delete the legacy recipes-index.md if it exists
@@ -282,7 +285,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     // Delete individual Continue configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `${ContinueDeployer.STANDARDS_FOLDER_PATH}standard-${standardVersion.slug}.md`,
+        path: `${ContinueDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -296,7 +299,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       installed.standardVersions.length === 0
     ) {
       fileUpdates.delete.push({
-        path: ContinueDeployer.STANDARDS_FOLDER_PATH,
+        path: ContinueDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       });
     }
@@ -323,7 +326,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
           type: DeleteItemType.File,
         },
         {
-          path: ContinueDeployer.STANDARDS_FOLDER_PATH,
+          path: ContinueDeployer.STANDARD_DEPLOY_DIR,
           type: DeleteItemType.Directory,
         },
       ],
@@ -331,14 +334,14 @@ export class ContinueDeployer implements ICodingAgentDeployer {
 
     for (const recipeVersion of artifacts.recipeVersions) {
       fileUpdates.delete.push({
-        path: `${ContinueDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        path: `${ContinueDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
 
     for (const standardVersion of artifacts.standardVersions) {
       fileUpdates.delete.push({
-        path: `${ContinueDeployer.STANDARDS_FOLDER_PATH}standard-${standardVersion.slug}.md`,
+        path: `${ContinueDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -365,7 +368,7 @@ invokable: true
 
 ${recipeVersion.content}`;
 
-    const path = `${ContinueDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`;
+    const path = `${ContinueDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
 
     return {
       path,
@@ -484,7 +487,7 @@ description: '${escapeSingleQuotes(summary)}'
 
 ${instructionContent}`;
 
-    const path = `.continue/rules/packmind/standard-${standardVersion.slug}.md`;
+    const path = `${ContinueDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`;
 
     return {
       path,

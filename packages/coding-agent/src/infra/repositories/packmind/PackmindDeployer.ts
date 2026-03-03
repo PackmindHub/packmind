@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CODING_AGENT_ARTEFACT_PATHS,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -18,6 +19,7 @@ import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWr
 const origin = 'PackmindDeployer';
 
 export class PackmindDeployer implements ICodingAgentDeployer {
+  private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.packmind;
   private static readonly COMMANDS_INDEX_PATH = '.packmind/commands-index.md';
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.packmind/recipes-index.md';
@@ -50,7 +52,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
 
     // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
-      const commandFilePath = `.packmind/commands/${recipeVersion.slug}.md`;
+      const commandFilePath = `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
       const targetPrefixedPath = getTargetPrefixedPath(commandFilePath, target);
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
@@ -111,7 +113,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         )) ??
         [];
 
-      const standardFilePath = `.packmind/standards/${standardVersion.slug}.md`;
+      const standardFilePath = `${PackmindDeployer.ARTEFACT_PATHS.standard}${standardVersion.slug}.md`;
       const targetPrefixedPath = getTargetPrefixedPath(
         standardFilePath,
         target,
@@ -160,7 +162,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
 
     // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
-      const commandFilePath = `.packmind/commands/${recipeVersion.slug}.md`;
+      const commandFilePath = `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
         path: commandFilePath,
         content: recipeVersion.content,
@@ -208,7 +210,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         )) ??
         [];
 
-      const standardFilePath = `.packmind/standards/${standardVersion.slug}.md`;
+      const standardFilePath = `${PackmindDeployer.ARTEFACT_PATHS.standard}${standardVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
         path: standardFilePath,
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
@@ -277,7 +279,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
 
     // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
-      const commandFilePath = `.packmind/commands/${recipeVersion.slug}.md`;
+      const commandFilePath = `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
         path: commandFilePath,
         content: recipeVersion.content,
@@ -311,7 +313,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         )) ??
         [];
 
-      const standardFilePath = `.packmind/standards/${standardVersion.slug}.md`;
+      const standardFilePath = `${PackmindDeployer.ARTEFACT_PATHS.standard}${standardVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
         path: standardFilePath,
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
@@ -368,7 +370,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     // Delete individual command files for removed commands
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
-        path: `.packmind/commands/${recipeVersion.slug}.md`,
+        path: `${PackmindDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -384,7 +386,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     // Delete individual standard files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `.packmind/standards/${standardVersion.slug}.md`,
+        path: `${PackmindDeployer.ARTEFACT_PATHS.standard}${standardVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -406,11 +408,11 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       installed.standardVersions.length === 0
     ) {
       fileUpdates.delete.push({
-        path: '.packmind/commands/',
+        path: PackmindDeployer.ARTEFACT_PATHS.command,
         type: DeleteItemType.Directory,
       });
       fileUpdates.delete.push({
-        path: '.packmind/standards/',
+        path: PackmindDeployer.ARTEFACT_PATHS.standard,
         type: DeleteItemType.Directory,
       });
       fileUpdates.delete.push({
@@ -437,11 +439,11 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       createOrUpdate: [],
       delete: [
         {
-          path: '.packmind/commands/',
+          path: PackmindDeployer.ARTEFACT_PATHS.command,
           type: DeleteItemType.Directory,
         },
         {
-          path: '.packmind/standards/',
+          path: PackmindDeployer.ARTEFACT_PATHS.standard,
           type: DeleteItemType.Directory,
         },
         {

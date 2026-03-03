@@ -14,16 +14,15 @@ Read-only codebase analysis skill that identifies non-linter architectural patte
 
 ## Available Analyses
 
-| Category              | Analyses                                       |
-| --------------------- | ---------------------------------------------- |
-| **Infrastructure**    | CI/Local Workflow Parity                       |
+| Category | Analyses |
+|----------|----------|
+| **Infrastructure** | CI/Local Workflow Parity |
 | **Code Organization** | File Template Consistency, Role Taxonomy Drift |
-| **Testing**           | Test Data Construction                         |
+| **Testing** | Test Data Construction |
 
 ## Usage
 
 Ask your AI agent to onboard:
-
 - "Onboard this project to Packmind"
 - "Analyze this codebase for standards"
 - "Generate coding standards for this project"

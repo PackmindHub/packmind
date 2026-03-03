@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  ApplyCreationChangeProposalsCommand,
+  ApplyCreationChangeProposalsResponse,
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
   ChangeProposalType,
@@ -39,6 +41,14 @@ export class ChangeProposalsService {
     command: CreateChangeProposalCommand<ChangeProposalType>,
   ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
     return this.playbookChangeManagementAdapter.createChangeProposal(command);
+  }
+
+  async applyCreationChangeProposals(
+    command: ApplyCreationChangeProposalsCommand,
+  ): Promise<ApplyCreationChangeProposalsResponse> {
+    return this.playbookChangeManagementAdapter.applyCreationChangeProposals(
+      command,
+    );
   }
 
   async listChangeProposalsBySpace(

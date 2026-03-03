@@ -22,6 +22,10 @@ import {
   ListChangeProposalsByArtefactCommand,
   ListChangeProposalsByArtefactResponse,
 } from '../contracts/IListChangeProposalsByArtefact';
+import {
+  ApplyCreationChangeProposalsCommand,
+  ApplyCreationChangeProposalsResponse,
+} from '../contracts/IApplyCreationChangeProposalsUseCase';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { RecipeId } from '../../recipes/RecipeId';
 import { SkillId } from '../../skills/SkillId';
@@ -54,4 +58,8 @@ export interface IPlaybookChangeManagementPort {
   checkChangeProposals(
     command: CheckChangeProposalsCommand,
   ): Promise<CheckChangeProposalsResponse>;
+
+  applyCreationChangeProposals(
+    command: ApplyCreationChangeProposalsCommand,
+  ): Promise<ApplyCreationChangeProposalsResponse>;
 }

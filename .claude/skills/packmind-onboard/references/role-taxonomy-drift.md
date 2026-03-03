@@ -142,29 +142,28 @@ Handler.*{
 
 ## Expected Responsibilities
 
-| Role           | Expected                       | Red Flags                         |
-| -------------- | ------------------------------ | --------------------------------- |
-| **Controller** | HTTP handling, request mapping | Business logic, direct DB access  |
-| **Service**    | Business logic, orchestration  | HTTP concerns, raw queries        |
-| **UseCase**    | Single business operation      | Multiple concerns, infrastructure |
-| **Handler**    | Event/command processing       | HTTP responses                    |
-| **Repository** | Data access abstraction        | Business rules, validation        |
-| **Manager**    | Ambiguous - investigate        | Often a code smell                |
+| Role | Expected | Red Flags |
+|------|----------|-----------|
+| **Controller** | HTTP handling, request mapping | Business logic, direct DB access |
+| **Service** | Business logic, orchestration | HTTP concerns, raw queries |
+| **UseCase** | Single business operation | Multiple concerns, infrastructure |
+| **Handler** | Event/command processing | HTTP responses |
+| **Repository** | Data access abstraction | Business rules, validation |
+| **Manager** | Ambiguous - investigate | Often a code smell |
 
 ## Drift Categories
 
-| Drift Type             | Example                        | Impact                |
-| ---------------------- | ------------------------------ | --------------------- |
+| Drift Type | Example | Impact |
+|------------|---------|--------|
 | **Bloated controller** | Controller with business logic | Hard to test, coupled |
-| **Anemic service**     | Service just delegates         | Unnecessary layer     |
-| **Fat repository**     | Repo with business rules       | Logic in wrong layer  |
-| **Confused handler**   | Handler doing everything       | Unclear boundaries    |
-| **God manager**        | Manager with all concerns      | Unmaintainable        |
+| **Anemic service** | Service just delegates | Unnecessary layer |
+| **Fat repository** | Repo with business rules | Logic in wrong layer |
+| **Confused handler** | Handler doing everything | Unclear boundaries |
+| **God manager** | Manager with all concerns | Unmaintainable |
 
 ## Reporting Threshold
 
 Report only if:
-
 - ≥3 files with same role name AND
 - (Inconsistent responsibilities OR mixed concerns detected)
 

@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CODING_AGENT_ARTEFACT_PATHS,
   DeleteItem,
   DeleteItemType,
   FileUpdates,
@@ -20,10 +21,12 @@ import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDep
 const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
-  private static readonly COMMANDS_PATH = '.cursor/commands';
+  private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.cursor;
+  /** Packmind-managed subdirectory within the broader standard path */
+  private static readonly STANDARD_DEPLOY_DIR =
+    CODING_AGENT_ARTEFACT_PATHS.cursor.standard + 'packmind/';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_COMMANDS_PATH = '.cursor/commands/packmind';
-  private static readonly SKILLS_FOLDER_PATH = '.cursor/skills/';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.cursor/rules/packmind/recipes-index.mdc';
@@ -40,7 +43,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
   }) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Cursor',
-      '.cursor/skills/',
+      CursorDeployer.ARTEFACT_PATHS.skill,
     );
     return defaultSkillsDeployer.deployDefaultSkills(options);
   }
@@ -366,7 +369,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Delete individual command files for removed recipes
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
-        path: `${CursorDeployer.COMMANDS_PATH}/${recipeVersion.slug}.md`,
+        path: `${CursorDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -374,7 +377,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Delete individual Cursor configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `.cursor/rules/packmind/standard-${standardVersion.slug}.mdc`,
+        path: `${CursorDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.mdc`,
         type: DeleteItemType.File,
       });
     }
@@ -392,7 +395,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     const hasRemovedStandards = removed.standardVersions.length > 0;
     if (hasRemovedStandards && installed.standardVersions.length === 0) {
       fileUpdates.delete.push({
-        path: '.cursor/rules/packmind/',
+        path: CursorDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       });
     }
@@ -401,7 +404,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // (git port will expand directory paths to individual files)
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
-        path: `.cursor/skills/${skillVersion.slug}`,
+        path: `${CursorDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -426,7 +429,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         type: DeleteItemType.Directory,
       },
       {
-        path: '.cursor/rules/packmind/',
+        path: CursorDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       },
       {
@@ -438,7 +441,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Delete individual command files for recipes
     for (const recipeVersion of artifacts.recipeVersions) {
       deleteItems.push({
-        path: `${CursorDeployer.COMMANDS_PATH}/${recipeVersion.slug}.md`,
+        path: `${CursorDeployer.ARTEFACT_PATHS.command}${recipeVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -446,7 +449,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Delete default skills (managed by Packmind)
     for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
       deleteItems.push({
-        path: `${CursorDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        path: `${CursorDeployer.ARTEFACT_PATHS.skill}${slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -454,7 +457,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Delete user package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       deleteItems.push({
-        path: `${CursorDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
+        path: `${CursorDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -476,7 +479,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
       recipeSlug: recipe.slug,
     });
 
-    const path = `${CursorDeployer.COMMANDS_PATH}/${recipe.slug}.md`;
+    const path = `${CursorDeployer.ARTEFACT_PATHS.command}${recipe.slug}.md`;
     const content = recipe.content;
 
     return {
@@ -529,7 +532,7 @@ alwaysApply: true
 ${instructionContent}`;
     }
 
-    const path = `.cursor/rules/packmind/standard-${standardVersion.slug}.mdc`;
+    const path = `${CursorDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.mdc`;
 
     return {
       path,
@@ -538,7 +541,7 @@ ${instructionContent}`;
   }
 
   getSkillsFolderPath(): string {
-    return CursorDeployer.SKILLS_FOLDER_PATH;
+    return CursorDeployer.ARTEFACT_PATHS.skill;
   }
 
   private generateCursorSkillFiles(
@@ -549,7 +552,7 @@ ${instructionContent}`;
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
     files.push({
-      path: `.cursor/skills/${skillVersion.slug}/SKILL.md`,
+      path: `${CursorDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/SKILL.md`,
       content: skillMdContent,
     });
 
@@ -561,7 +564,7 @@ ${instructionContent}`;
           continue;
         }
         files.push({
-          path: `.cursor/skills/${skillVersion.slug}/${file.path}`,
+          path: `${CursorDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
           skillFileId: file.id,

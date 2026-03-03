@@ -632,10 +632,12 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain(`paths: "${standard.scope}"`);
+          expect(standardFile.content).toContain(
+            `paths:\n  - "${standard.scope}"`,
+          );
         });
 
-        it('quotes globs starting with **/', async () => {
+        it('quotes paths starting with **/', async () => {
           const standard = standardFactory({
             name: 'Test Standard',
             slug: 'test-standard',
@@ -662,10 +664,10 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain('paths: "**/*.spec.ts"');
+          expect(standardFile.content).toContain('paths:\n  - "**/*.spec.ts"');
         });
 
-        it('quotes globs starting with *', async () => {
+        it('quotes paths starting with *', async () => {
           const standard = standardFactory({
             name: 'Test Standard',
             slug: 'test-standard',
@@ -692,10 +694,10 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain('paths: "*.spec.ts"');
+          expect(standardFile.content).toContain('paths:\n  - "*.spec.ts"');
         });
 
-        it('includes unquoted globs not starting with *', async () => {
+        it('quotes paths not starting with *', async () => {
           const standard = standardFactory({
             name: 'Test Standard',
             slug: 'test-standard',
@@ -722,42 +724,12 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain(`paths: ${standard.scope}`);
-        });
-
-        it('does not quote globs not starting with *', async () => {
-          const standard = standardFactory({
-            name: 'Test Standard',
-            slug: 'test-standard',
-            scope: 'src/**/*.ts',
-          });
-
-          const standardVersion: StandardVersion = {
-            id: createStandardVersionId('standard-version-1'),
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: 1,
-            summary: 'A test standard summary',
-            userId: createUserId('user-1'),
-            scope: standard.scope,
-            rules: [] as Rule[],
-          };
-
-          const result = await deployer.deployStandards(
-            [standardVersion],
-            mockGitRepo,
-            mockTarget,
-          );
-
-          const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).not.toContain(
-            `paths: "${standard.scope}"`,
+          expect(standardFile.content).toContain(
+            `paths:\n  - "${standard.scope}"`,
           );
         });
 
-        it('formats multiple comma-separated globs as array', async () => {
+        it('formats multiple comma-separated paths as block sequence', async () => {
           const standard = standardFactory({
             name: 'Test Standard',
             slug: 'test-standard',
@@ -785,11 +757,11 @@ describe('ClaudeDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            'paths: ["**/*.spec.ts", "**/*.test.ts"]',
+            'paths:\n  - "**/*.spec.ts"\n  - "**/*.test.ts"',
           );
         });
 
-        it('formats multiple globs with mixed quoting requirements', async () => {
+        it('formats multiple paths with block sequence', async () => {
           const standard = standardFactory({
             name: 'Test Standard',
             slug: 'test-standard',
@@ -817,7 +789,7 @@ describe('ClaudeDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            'paths: ["**/*.spec.ts", src/**/*.ts]',
+            'paths:\n  - "**/*.spec.ts"\n  - "src/**/*.ts"',
           );
         });
 
@@ -848,7 +820,7 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain('paths: "**/*.{ts,tsx}"');
+          expect(standardFile.content).toContain('paths:\n  - "**/*.{ts,tsx}"');
         });
 
         it('sets alwaysApply to false', async () => {
@@ -1301,7 +1273,7 @@ describe('ClaudeDeployer', () => {
           file.path.includes('frontend-standard'),
         );
         if (frontendFile) {
-          expect(frontendFile.content).toContain('paths: "**/*.{ts,tsx}"');
+          expect(frontendFile.content).toContain('paths:\n  - "**/*.{ts,tsx}"');
         }
       });
 

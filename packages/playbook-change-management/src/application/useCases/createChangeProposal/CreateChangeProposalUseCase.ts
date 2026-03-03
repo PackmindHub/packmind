@@ -2,19 +2,23 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
 import {
   ChangeProposalType,
+  ChangeProposalSubmittedEvent,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   createUserId,
+  getItemTypeFromChangeProposalType,
   IAccountsPort,
   ICreateChangeProposalUseCase,
   ISpacesPort,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
+import { ChangeProposalLimitExceededError } from '../../errors/ChangeProposalLimitExceededError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { IChangeProposalValidator } from '../../validators/IChangeProposalValidator';
 
@@ -32,6 +36,7 @@ export class CreateChangeProposalUseCase
     private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     private readonly validators: IChangeProposalValidator[],
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -51,8 +56,25 @@ export class CreateChangeProposalUseCase
       command.organization.id,
     );
 
-    const { artefactVersion, resolvedPayload } =
-      await validator.validate(command);
+    let artefactVersion: number;
+    let resolvedPayload: Awaited<
+      ReturnType<typeof validator.validate>
+    >['resolvedPayload'];
+
+    try {
+      ({ artefactVersion, resolvedPayload } =
+        await validator.validate(command));
+    } catch (error) {
+      if (error instanceof ChangeProposalLimitExceededError) {
+        return {
+          changeProposal: null,
+          wasCreated: false,
+          violation: error.changeProposal,
+          violationMessage: error.message,
+        };
+      }
+      throw error;
+    }
 
     const resolvedCommand = resolvedPayload
       ? { ...command, payload: resolvedPayload }
@@ -85,6 +107,19 @@ export class CreateChangeProposalUseCase
         error: error instanceof Error ? error.message : String(error),
       });
     });
+
+    this.eventEmitterService.emit(
+      new ChangeProposalSubmittedEvent({
+        userId: createUserId(command.userId),
+        organizationId: command.organization.id,
+        source: command.source ?? 'ui',
+        changeProposalId: changeProposal.id,
+        itemType: getItemTypeFromChangeProposalType(command.type),
+        itemId: String(changeProposal.artefactId ?? ''),
+        changeType: command.type,
+        captureMode: command.captureMode,
+      }),
+    );
 
     return { changeProposal, wasCreated: true };
   }

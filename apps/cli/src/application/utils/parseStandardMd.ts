@@ -1,3 +1,7 @@
+import { MultiFileCodingAgent } from '@packmind/types';
+
+import { normalizeLineEndings } from './normalizeLineEndings';
+
 export type ParsedStandardMd = {
   name: string;
   description: string;
@@ -34,7 +38,33 @@ export function parseStandardMd(
   return deployer.parse(content);
 }
 
+const AGENT_PARSERS: Record<
+  MultiFileCodingAgent,
+  (content: string) => ParsedStandardMd | null
+> = {
+  packmind: parsePackmindStandard,
+  claude: parseClaudeStandard,
+  cursor: parseCursorStandard,
+  continue: parseContinueStandard,
+  copilot: parseCopilotStandard,
+};
+
+/**
+ * Parses standard markdown content using the parser associated with the given
+ * coding agent, bypassing filename-based pattern matching.
+ *
+ * This is used by `diff add` where the directory already identifies the agent,
+ * so the strict filename prefix check from `parseStandardMd` is not needed.
+ */
+export function parseStandardMdForAgent(
+  content: string,
+  agent: MultiFileCodingAgent,
+): ParsedStandardMd | null {
+  return AGENT_PARSERS[agent](content);
+}
+
 function parsePackmindStandard(content: string): ParsedStandardMd | null {
+  content = normalizeLineEndings(content);
   const lines = content.split('\n');
   let name: string | null = null;
   let nameLineIndex = -1;
@@ -91,7 +121,9 @@ function parsePackmindStandard(content: string): ParsedStandardMd | null {
 
 function parseClaudeStandard(content: string): ParsedStandardMd | null {
   const { frontmatter, body } = extractFrontmatter(content);
-  const scope = extractScopeFromKey(frontmatter, 'paths');
+  const scope =
+    extractScopeFromKey(frontmatter, 'paths') ||
+    extractScopeFromKey(frontmatter, 'globs');
   const parsed = parseIdeStandardBody(body, scope);
   if (!parsed) return null;
   return addFrontmatterFields(parsed, frontmatter);
@@ -149,6 +181,7 @@ function extractFrontmatter(content: string): {
   frontmatter: string;
   body: string;
 } {
+  content = normalizeLineEndings(content);
   const match = content.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!match) {
     return { frontmatter: '', body: content };
@@ -240,8 +273,21 @@ function stripYamlQuotes(value: string): string {
 
 function extractScopeFromKey(frontmatter: string, key: string): string {
   const rawValue = extractFrontmatterValue(frontmatter, key);
-  if (!rawValue) return '';
-  return normalizeScopeValue(rawValue);
+  if (rawValue) return normalizeScopeValue(rawValue);
+
+  // Handle YAML block sequence (paths:\n  - "value")
+  const lines = frontmatter.split('\n');
+  const keyIndex = lines.findIndex((l) => l.trim() === `${key}:`);
+  if (keyIndex === -1) return '';
+
+  const items: string[] = [];
+  for (let i = keyIndex + 1; i < lines.length; i++) {
+    const match = lines[i].match(/^ +-\s(.+)$/);
+    if (!match) break;
+    items.push(stripYamlQuotes(match[1].trim()));
+  }
+
+  return items.join(', ');
 }
 
 function normalizeScopeValue(rawValue: string): string {

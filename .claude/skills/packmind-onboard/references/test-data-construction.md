@@ -95,12 +95,12 @@ Object.assign(
 
 ## Classification Criteria
 
-| Pattern              | Indicators                                                 |
-| -------------------- | ---------------------------------------------------------- |
-| **Helpers/builders** | Dedicated factory functions reused across ≥3 test files    |
-| **Inline**           | Objects created directly in test bodies; no shared helpers |
-| **Fixtures**         | External JSON/YAML files or fixture directories            |
-| **Mixed**            | Multiple patterns without dominant approach                |
+| Pattern | Indicators |
+|---------|------------|
+| **Helpers/builders** | Dedicated factory functions reused across ≥3 test files |
+| **Inline** | Objects created directly in test bodies; no shared helpers |
+| **Fixtures** | External JSON/YAML files or fixture directories |
+| **Mixed** | Multiple patterns without dominant approach |
 
 ## Sampling Method
 
@@ -112,7 +112,6 @@ Object.assign(
 ## Reporting Threshold
 
 Report only if:
-
 - ≥2 patterns appear in sample, OR
 - Shared builder exists but many tests still use inline (inconsistency)
 

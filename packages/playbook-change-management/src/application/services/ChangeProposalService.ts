@@ -26,6 +26,7 @@ export type GroupedProposalsByArtefact = {
   standards: Map<StandardId, number>;
   commands: Map<RecipeId, number>;
   skills: Map<SkillId, number>;
+  creations: ChangeProposal<ChangeProposalType>[];
 };
 
 type ArtefactCategory = 'standards' | 'commands' | 'skills';
@@ -33,7 +34,8 @@ type ArtefactCategory = 'standards' | 'commands' | 'skills';
 function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
   if (
     type === ChangeProposalType.updateCommandName ||
-    type === ChangeProposalType.updateCommandDescription
+    type === ChangeProposalType.updateCommandDescription ||
+    type === ChangeProposalType.createCommand
   ) {
     return 'commands';
   }
@@ -41,9 +43,11 @@ function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
   if (
     type === ChangeProposalType.updateStandardName ||
     type === ChangeProposalType.updateStandardDescription ||
+    type === ChangeProposalType.updateStandardScope ||
     type === ChangeProposalType.addRule ||
     type === ChangeProposalType.updateRule ||
-    type === ChangeProposalType.deleteRule
+    type === ChangeProposalType.deleteRule ||
+    type === ChangeProposalType.createStandard
   ) {
     return 'standards';
   }
@@ -199,29 +203,44 @@ export class ChangeProposalService {
       standards: new Map<StandardId, number>(),
       commands: new Map<RecipeId, number>(),
       skills: new Map<SkillId, number>(),
+      creations: [],
     };
 
     for (const proposal of pendingProposals) {
       const artefactCategory = getArtefactCategory(proposal.type);
       switch (artefactCategory) {
-        case 'standards':
-          grouped.standards.set(
-            proposal.artefactId as StandardId,
-            (grouped.standards.get(proposal.artefactId as StandardId) ?? 0) + 1,
-          );
+        case 'standards': {
+          if (proposal.type === ChangeProposalType.createStandard) {
+            grouped.creations.push(proposal);
+          } else {
+            grouped.standards.set(
+              proposal.artefactId as StandardId,
+              (grouped.standards.get(proposal.artefactId as StandardId) ?? 0) +
+                1,
+            );
+          }
           break;
-        case 'commands':
-          grouped.commands.set(
-            proposal.artefactId as RecipeId,
-            (grouped.commands.get(proposal.artefactId as RecipeId) ?? 0) + 1,
-          );
+        }
+        case 'commands': {
+          if (proposal.type === ChangeProposalType.createCommand) {
+            grouped.creations.push(proposal);
+          } else {
+            const key = proposal.artefactId as RecipeId;
+            grouped.commands.set(key, (grouped.commands.get(key) ?? 0) + 1);
+          }
           break;
-        case 'skills':
-          grouped.skills.set(
-            proposal.artefactId as SkillId,
-            (grouped.skills.get(proposal.artefactId as SkillId) ?? 0) + 1,
-          );
+        }
+        case 'skills': {
+          if (proposal.type === ChangeProposalType.createSkill) {
+            grouped.creations.push(proposal);
+          } else {
+            grouped.skills.set(
+              proposal.artefactId as SkillId,
+              (grouped.skills.get(proposal.artefactId as SkillId) ?? 0) + 1,
+            );
+          }
           break;
+        }
       }
     }
 
