@@ -1,20 +1,7 @@
-import { useCallback } from 'react';
-import { useParams } from 'react-router';
 import { PMBox, PMText, PMVStack } from '@packmind/ui';
-import {
-  ChangeProposalId,
-  OrganizationId,
-  SkillCreationProposalOverview,
-  SpaceId,
-} from '@packmind/types';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
-import {
-  useGetGroupedChangeProposalsQuery,
-  useApplyCreationChangeProposalsMutation,
-} from '../../api/queries/ChangeProposalsQueries';
+import { SkillCreationProposalOverview } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
-import { useCreationProposalCache } from '../../hooks/useCreationProposalCache';
+import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { SubmissionBanner } from '../SubmissionBanner';
 import { ReviewActionButtons } from '../ReviewActionButtons';
 import {
@@ -33,69 +20,22 @@ export function CreateSkillReviewDetail({
   orgSlug: orgSlugProp,
   spaceSlug: spaceSlugProp,
 }: Readonly<CreateSkillReviewDetailProps>) {
-  const { organization } = useAuthContext();
-  const { spaceId, space } = useCurrentSpace();
-  const { orgSlug: orgSlugParam } = useParams<{ orgSlug: string }>();
-
-  const orgSlug = orgSlugProp ?? orgSlugParam;
-  const spaceSlug = spaceSlugProp ?? space?.slug;
-
-  const { data: groupedProposals, isLoading } =
-    useGetGroupedChangeProposalsQuery();
-
-  const applyMutation = useApplyCreationChangeProposalsMutation({
-    orgSlug,
-    spaceSlug,
-  });
-
-  const proposal = groupedProposals?.creations.find(
-    (c): c is SkillCreationProposalOverview =>
-      c.artefactType === 'skills' && c.proposalId === proposalId,
-  );
-
-  const { displayedProposal, submittedState, setSubmittedState } =
-    useCreationProposalCache<SkillCreationProposalOverview>(proposal);
-
-  const handleAccept = useCallback(async () => {
-    if (!organization?.id || !spaceId || !orgSlug || !spaceSlug) return;
-    try {
-      await applyMutation.mutateAsync({
-        organizationId: organization.id as OrganizationId,
-        spaceId: spaceId as SpaceId,
-        accepted: [proposalId as ChangeProposalId],
-        rejected: [],
-      });
-      setSubmittedState({
-        type: 'accepted',
-        artefactUrl: routes.space.toSkills(orgSlug, spaceSlug),
-      });
-    } catch {
-      // error handled by mutation onError callback
-    }
-  }, [
-    organization?.id,
-    spaceId,
+  const {
+    displayedProposal,
+    submittedState,
+    handleAccept,
+    handleReject,
+    isPending,
+    isLoading,
+  } = useCreationReviewDetail<SkillCreationProposalOverview>({
     proposalId,
-    orgSlug,
-    spaceSlug,
-    applyMutation,
-    setSubmittedState,
-  ]);
-
-  const handleReject = useCallback(async () => {
-    if (!organization?.id || !spaceId) return;
-    try {
-      await applyMutation.mutateAsync({
-        organizationId: organization.id as OrganizationId,
-        spaceId: spaceId as SpaceId,
-        accepted: [],
-        rejected: [proposalId as ChangeProposalId],
-      });
-      setSubmittedState({ type: 'rejected' });
-    } catch {
-      // error handled by mutation onError callback
-    }
-  }, [organization?.id, spaceId, proposalId, applyMutation, setSubmittedState]);
+    orgSlugProp,
+    spaceSlugProp,
+    filter: (c): c is SkillCreationProposalOverview =>
+      c.artefactType === 'skills',
+    getAcceptUrl: (_response, orgSlug, spaceSlug) =>
+      routes.space.toSkills(orgSlug, spaceSlug),
+  });
 
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
@@ -121,7 +61,7 @@ export function CreateSkillReviewDetail({
           <ReviewActionButtons
             onAccept={handleAccept}
             onReject={handleReject}
-            isPending={applyMutation.isPending}
+            isPending={isPending}
           />
         )}
       </PMBox>
