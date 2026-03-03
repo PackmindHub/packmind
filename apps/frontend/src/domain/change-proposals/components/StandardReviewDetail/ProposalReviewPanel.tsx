@@ -249,9 +249,9 @@ export function ProposalReviewPanel({
 
             <PMText variant={'body'}>
               <PMText variant={'body-important'}>Scope:</PMText>{' '}
-              {isScopeDiff && selectedStandard.scope
+              {isScopeDiff
                 ? renderDiffText(payload.oldValue, payload.newValue)
-                : selectedStandard.scope}
+                : (selectedStandard.scope ?? '')}
             </PMText>
 
             {renderMarkdownDiffOrPreview(
