@@ -116,12 +116,14 @@ services:
     entrypoint: >
       sh -lc '
         set -euo pipefail
+        ts() { date "+%H:%M:%S"; }
+        echo "[migrations] $(ts) start"
         node scripts/select-tsconfig.mjs;
-        echo "[migrations] node: $(node -v)"
-        echo "[migrations] Running TypeORM migrations directly (bypassing Nx)..."
+        echo "[migrations] $(ts) tsconfig ready"
+        echo "[migrations] $(ts) Running TypeORM migrations directly (bypassing Nx)..."
         cd packages/migrations
         npm run typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each
-        echo "[migrations] Done."
+        echo "[migrations] $(ts) Done."
       '
     environment:
       CI: ${CI:-}
