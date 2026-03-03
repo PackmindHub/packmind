@@ -1,5 +1,6 @@
 import {
   ChangeProposalType,
+  ChangeProposalViolation,
   CollectionItemDeletePayload,
   CollectionItemUpdatePayload,
   CreateChangeProposalCommand,
@@ -63,7 +64,7 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
 
       if (payload.name.length > STANDARD_NAME_MAX_LENGTH) {
         throw new ChangeProposalLimitExceededError(
-          'Standard name',
+          ChangeProposalViolation.STANDARD_NAME_TOO_LONG,
           STANDARD_NAME_MAX_LENGTH,
           payload.name.length,
         );
@@ -71,7 +72,7 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
 
       if (payload.rules.length > RULES_MAX_COUNT) {
         throw new ChangeProposalLimitExceededError(
-          'Rules count',
+          ChangeProposalViolation.TOO_MANY_RULES,
           RULES_MAX_COUNT,
           payload.rules.length,
         );
@@ -82,7 +83,7 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
       );
       if (oversizedRule) {
         throw new ChangeProposalLimitExceededError(
-          'Rule content',
+          ChangeProposalViolation.RULE_CONTENT_TOO_LONG,
           RULE_CONTENT_MAX_LENGTH,
           oversizedRule.content.length,
         );
