@@ -200,10 +200,10 @@ describe('SampleScopeUtils', () => {
         expect(result).toBeNull();
       });
 
-      it('returns null for flutter', () => {
+      it('returns DART for flutter', () => {
         const result = getSampleExampleLanguage('flutter', 'framework');
 
-        expect(result).toBeNull();
+        expect(result).toBe('DART');
       });
     });
 
