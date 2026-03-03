@@ -52,6 +52,7 @@ describe('diffAddHandler', () => {
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
   let mockReadFile: jest.Mock;
+  let mockReadSkillDirectory: jest.Mock;
 
   beforeEach(() => {
     mockSubmitDiffs = jest.fn().mockResolvedValue({
@@ -78,6 +79,7 @@ describe('diffAddHandler', () => {
     mockExit = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/project');
     mockReadFile = jest.fn().mockReturnValue(VALID_COMMAND_CONTENT);
+    mockReadSkillDirectory = jest.fn().mockResolvedValue([]);
 
     // Reset stdin.isTTY for each test
     Object.defineProperty(process.stdin, 'isTTY', {
@@ -101,6 +103,7 @@ describe('diffAddHandler', () => {
       exit: mockExit,
       getCwd: mockGetCwd,
       readFile: mockReadFile,
+      readSkillDirectory: mockReadSkillDirectory,
       ...overrides,
     };
   }
@@ -420,6 +423,248 @@ describe('diffAddHandler', () => {
 
     it('exits with 1 for empty message', async () => {
       await diffAddHandler(buildDeps({ message: '   ' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('skill happy path', () => {
+    const VALID_SKILL_MD_CONTENT = [
+      '---',
+      'name: My Skill',
+      'description: A useful skill',
+      '---',
+      'This is the prompt body.',
+    ].join('\n');
+
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: '644',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('calls submitDiffs with createSkill diff', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              filePath: '/project/.claude/skills/my-skill/SKILL.md',
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'My Skill',
+                description: 'A useful skill',
+                prompt: 'This is the prompt body.',
+                files: [],
+              },
+              artifactName: 'My Skill',
+              artifactType: 'skill',
+              spaceId: 'space-123',
+            }),
+          ],
+        ],
+        'Add skill',
+      );
+    });
+
+    it('exits with 0 on success', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('calls readSkillDirectory with directory path when SKILL.md is given', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+        '/project/.claude/skills/my-skill',
+      );
+    });
+
+    it('calls readSkillDirectory with directory path when directory is given', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+        '/project/.claude/skills/my-skill',
+      );
+    });
+
+    it('does not call readFile for skill paths', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockReadFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('skill with supporting files', () => {
+    const VALID_SKILL_MD_CONTENT = [
+      '---',
+      'name: Complex Skill',
+      'description: Skill with files',
+      'license: MIT',
+      '---',
+      'The prompt.',
+    ].join('\n');
+
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/complex/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: '644',
+          isBase64: false,
+        },
+        {
+          path: '/project/.claude/skills/complex/helper.py',
+          relativePath: 'helper.py',
+          content: 'print("hello")',
+          size: 14,
+          permissions: '755',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('includes supporting files in the payload', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/complex/SKILL.md',
+          message: 'Add complex skill',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'Complex Skill',
+                description: 'Skill with files',
+                prompt: 'The prompt.',
+                license: 'MIT',
+                files: [
+                  {
+                    path: 'helper.py',
+                    content: 'print("hello")',
+                    permissions: '755',
+                    isBase64: false,
+                  },
+                ],
+              },
+            }),
+          ],
+        ],
+        'Add complex skill',
+      );
+    });
+  });
+
+  describe('skill directory read failure', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockRejectedValue(
+        new Error('ENOENT: no such file or directory'),
+      );
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/missing/SKILL.md',
+          message: 'Add missing skill',
+        }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to read skill directory'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/missing/SKILL.md',
+          message: 'Add missing skill',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('skill parse failure', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/bad/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: 'No frontmatter here',
+          size: 19,
+          permissions: '644',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/bad/SKILL.md',
+          message: 'Add bad skill',
+        }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to parse SKILL.md'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/bad/SKILL.md',
+          message: 'Add bad skill',
+        }),
+      );
 
       expect(mockExit).toHaveBeenCalledWith(1);
     });

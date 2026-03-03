@@ -173,6 +173,82 @@ describe('resolveArtefactFromPath', () => {
     });
   });
 
+  describe('when path matches a known skill pattern', () => {
+    it('returns skill for Claude (.claude/skills/)', () => {
+      const result = resolveArtefactFromPath(
+        '.claude/skills/my-skill/SKILL.md',
+      );
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'claude',
+      });
+    });
+
+    it('returns skill for Cursor (.cursor/skills/)', () => {
+      const result = resolveArtefactFromPath(
+        '.cursor/skills/my-skill/SKILL.md',
+      );
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'cursor',
+      });
+    });
+
+    it('returns skill for Copilot (.github/skills/)', () => {
+      const result = resolveArtefactFromPath(
+        '.github/skills/my-skill/SKILL.md',
+      );
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'copilot',
+      });
+    });
+
+    it('matches directory paths without SKILL.md', () => {
+      const result = resolveArtefactFromPath('.claude/skills/my-skill/');
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'claude',
+      });
+    });
+
+    it('does not match Continue (empty skill path)', () => {
+      const result = resolveArtefactFromPath(
+        '.continue/skills/my-skill/SKILL.md',
+      );
+      expect(result).toBeNull();
+    });
+
+    it('does not match Packmind (empty skill path)', () => {
+      const result = resolveArtefactFromPath(
+        '.packmind/skills/my-skill/SKILL.md',
+      );
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('when skill path is absolute', () => {
+    it('matches Unix absolute paths', () => {
+      const result = resolveArtefactFromPath(
+        '/home/user/project/.claude/skills/my-skill/SKILL.md',
+      );
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'claude',
+      });
+    });
+
+    it('matches Windows absolute paths', () => {
+      const result = resolveArtefactFromPath(
+        'C:\\Users\\user\\project\\.cursor\\skills\\my-skill\\SKILL.md',
+      );
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'cursor',
+      });
+    });
+  });
+
   describe('when path does not match any known pattern', () => {
     it('returns null for an unrelated file', () => {
       const result = resolveArtefactFromPath('src/index.ts');

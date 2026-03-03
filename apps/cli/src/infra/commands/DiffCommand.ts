@@ -11,6 +11,7 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { diffArtefactsHandler } from './diffArtefactsHandler';
 import { diffAddHandler } from './diffAddHandler';
+import { readSkillDirectory } from '../utils/readSkillDirectory';
 
 export const diffCommand = command({
   name: 'diff',
@@ -50,6 +51,7 @@ export const diffCommand = command({
         exit: process.exit,
         getCwd: () => process.cwd(),
         readFile: (p) => readFileSync(p, 'utf-8'),
+        readSkillDirectory,
       });
       return;
     }
