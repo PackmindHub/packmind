@@ -70,6 +70,7 @@ export class CreateChangeProposalUseCase
           changeProposal: null,
           wasCreated: false,
           violation: error.changeProposal,
+          violationMessage: error.message,
         };
       }
       throw error;
