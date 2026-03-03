@@ -200,8 +200,7 @@ export const frameworkSampleMappings: Record<string, ISampleLanguageMapping> = {
     exampleLanguage: null,
   },
   flutter: {
-    languages: [],
-    hardcodedPatterns: ['**/*.dart'],
-    exampleLanguage: null,
+    languages: [ProgrammingLanguage.DART],
+    exampleLanguage: ProgrammingLanguage.DART,
   },
 };
