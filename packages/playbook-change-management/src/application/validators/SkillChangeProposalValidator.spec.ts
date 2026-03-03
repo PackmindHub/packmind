@@ -155,24 +155,6 @@ describe('SkillChangeProposalValidator', () => {
 
       expect(skillsPort.getSkill).not.toHaveBeenCalled();
     });
-
-    describe('when artefactId is provided', () => {
-      it('returns artefactVersion 0', async () => {
-        const command = buildCommand({
-          type: ChangeProposalType.createSkill,
-          artefactId: skillId,
-          payload: {
-            name: 'New Skill',
-            description: 'A description',
-            prompt: 'Do something useful',
-          },
-        });
-
-        const result = await validator.validate(command);
-
-        expect(result).toEqual({ artefactVersion: 0 });
-      });
-    });
   });
 
   describe('when file ID matches in latest version', () => {

@@ -254,6 +254,38 @@ describe('ChangeProposalRepository', () => {
       });
     });
 
+    describe('when artefactId is non-null but only proposals with null artefactId exist', () => {
+      it('returns null', async () => {
+        const createStandardPayload = {
+          name: 'New Standard',
+          description: 'A description',
+          scope: null,
+          rules: [],
+        };
+
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            createdBy,
+            artefactId: null,
+            type: ChangeProposalType.createStandard,
+            payload: createStandardPayload,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+
+        const result = await repository.findExistingPending({
+          spaceId: spaceAId,
+          createdBy,
+          artefactId,
+          type: ChangeProposalType.createStandard,
+          payload: createStandardPayload,
+        });
+
+        expect(result).toBeNull();
+      });
+    });
+
     describe('when no pending proposal exists matching the criteria', () => {
       it('returns null', async () => {
         const result = await repository.findExistingPending({
