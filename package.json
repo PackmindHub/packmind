@@ -50,7 +50,6 @@
     "@nx/react": "22.5.3",
     "@nx/storybook": "22.5.3",
     "@nx/vite": "22.5.3",
-    "@nx/vitest": "22.5.3",
     "@nx/web": "22.5.3",
     "@nx/webpack": "22.5.3",
     "@playwright/test": "^1.56.1",
