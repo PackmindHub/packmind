@@ -20,6 +20,7 @@ import { yaml } from '@codemirror/lang-yaml';
 import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { ruby } from '@codemirror/legacy-modes/mode/ruby';
 import { swift } from '@codemirror/legacy-modes/mode/swift';
+import { dart } from '@codemirror/legacy-modes/mode/clike';
 import { StreamLanguage } from '@codemirror/language';
 // Note: Kotlin support would require: import { kotlin } from '@codemirror/lang-kotlin';
 
@@ -123,6 +124,9 @@ const getLanguageExtensions = (language?: string) => {
     case 'SWIFT':
       normalizedLanguage = 'SWIFT';
       break;
+    case 'DART':
+      normalizedLanguage = 'DART';
+      break;
     case 'AVRO':
     case 'AVSC':
     case 'AVDL':
@@ -190,6 +194,8 @@ const getLanguageExtensions = (language?: string) => {
       return [StreamLanguage.define(ruby)];
     case 'SWIFT':
       return [StreamLanguage.define(swift)];
+    case 'DART':
+      return [StreamLanguage.define(dart)];
     case 'AVRO':
       // Avro schema files (.avsc) are JSON-based
       return [json()];
