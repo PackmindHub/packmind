@@ -39,16 +39,24 @@ export class PackmindHttpClient {
   }
 
   getOrganizationId(): string {
-    // Decode the API key to get organization ID
-    const decoded = JSON.parse(
-      Buffer.from(this.apiKey, 'base64').toString('utf-8'),
-    );
-    const jwtPayload = this.decodeJwt(decoded.jwt);
-    const orgId = jwtPayload?.organization?.id;
-    if (!orgId) {
-      throw new Error('Could not extract organization ID from API key.');
+    try {
+      const decoded = JSON.parse(
+        Buffer.from(this.apiKey, 'base64').toString('utf-8'),
+      );
+      if (!decoded?.jwt) {
+        throw new Error('API key does not contain a jwt field.');
+      }
+      const jwtPayload = this.decodeJwt(decoded.jwt);
+      const orgId = jwtPayload?.organization?.id;
+      if (!orgId) {
+        throw new Error('Could not extract organization ID from API key.');
+      }
+      return orgId;
+    } catch (err) {
+      throw new Error(
+        `Invalid API key: ${err instanceof Error ? err.message : 'unknown error'}`,
+      );
     }
-    return orgId;
   }
 
   private decodeJwt(jwt: string): { organization?: { id?: string } } | null {
