@@ -11,7 +11,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
-import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
+import { GETTING_STARTED_CREATE_STANDARD_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
 import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
@@ -126,9 +126,9 @@ export const StandardsBlankState = ({
                 </PMBox>
               </PMBox>
               <GettingStartedLearnMoreDialog
-                body={GETTING_STARTED_CREATE_DIALOG.body}
-                title={GETTING_STARTED_CREATE_DIALOG.title}
-                buttonLabel="Configure my agent"
+                body={GETTING_STARTED_CREATE_STANDARD_DIALOG.body}
+                title={GETTING_STARTED_CREATE_STANDARD_DIALOG.title}
+                buttonLabel="Create"
                 buttonVariant="tertiary"
                 buttonMarginTop={'auto'}
               />
