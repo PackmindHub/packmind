@@ -86,7 +86,7 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
   artifactType,
 }) => {
   const config = ARTIFACT_CONFIG[artifactType];
-  const { loginCode, codeExpiresAt, isGenerating, regenerate } =
+  const { loginCode, codeExpiresAt, isGenerating, isError, regenerate } =
     useCliLoginCode();
   const [selectedOs, setSelectedOs] = useState<OsType>(detectUserOs);
 
@@ -142,6 +142,25 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
                         <PMText as="p" color="tertiary">
                           Generating install command...
                         </PMText>
+                      ) : isError ? (
+                        <PMVStack gap={3} align="flex-start">
+                          <PMAlert.Root status="error">
+                            <PMAlert.Indicator />
+                            <PMAlert.Content>
+                              <PMAlert.Description>
+                                Failed to generate install command. Please try
+                                again.
+                              </PMAlert.Description>
+                            </PMAlert.Content>
+                          </PMAlert.Root>
+                          <PMButton
+                            variant="tertiary"
+                            size="xs"
+                            onClick={regenerate}
+                          >
+                            Retry
+                          </PMButton>
+                        </PMVStack>
                       ) : (
                         loginCode && (
                           <>
