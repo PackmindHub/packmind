@@ -25,6 +25,8 @@ services:
           [ $$i -eq 30 ] && exit 1;
           sleep 1;
         done;
+        echo '[nx-daemon] Socket ready, pre-warming project graph...';
+        npx nx show projects >/dev/null 2>&1 &
         tail -f /dev/null
       "
     volumes:
