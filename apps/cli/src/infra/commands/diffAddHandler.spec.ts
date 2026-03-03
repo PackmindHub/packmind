@@ -491,30 +491,34 @@ describe('diffAddHandler', () => {
       expect(mockExit).toHaveBeenCalledWith(0);
     });
 
-    it('calls readSkillDirectory with directory path when SKILL.md is given', async () => {
-      await diffAddHandler(
-        buildDeps({
-          filePath: '.claude/skills/my-skill/SKILL.md',
-          message: 'Add skill',
-        }),
-      );
+    describe('when SKILL.md is given', () => {
+      it('calls readSkillDirectory with directory path', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/SKILL.md',
+            message: 'Add skill',
+          }),
+        );
 
-      expect(mockReadSkillDirectory).toHaveBeenCalledWith(
-        '/project/.claude/skills/my-skill',
-      );
+        expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+          '/project/.claude/skills/my-skill',
+        );
+      });
     });
 
-    it('calls readSkillDirectory with directory path when directory is given', async () => {
-      await diffAddHandler(
-        buildDeps({
-          filePath: '.claude/skills/my-skill/',
-          message: 'Add skill',
-        }),
-      );
+    describe('when directory is given', () => {
+      it('calls readSkillDirectory with directory path', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/',
+            message: 'Add skill',
+          }),
+        );
 
-      expect(mockReadSkillDirectory).toHaveBeenCalledWith(
-        '/project/.claude/skills/my-skill',
-      );
+        expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+          '/project/.claude/skills/my-skill',
+        );
+      });
     });
 
     it('does not call readFile for skill paths', async () => {
