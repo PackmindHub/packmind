@@ -114,39 +114,19 @@ services:
         set -euo pipefail
         node scripts/select-tsconfig.mjs;
         echo "[migrations] node: $(node -v)"
-        echo "[migrations] CI: ${CI:-not set}"
-        echo "[migrations] NX_* env:"; env | grep -E "^NX_" || true
-        if [ -n "${CI:-}" ]; then
-          echo "[migrations] CI mode -> WITHOUT daemon (verbose, no cache)"
-          export NX_DAEMON=false
-          exec npx nx run migrations:run --verbose --skip-nx-cache
-        fi
-        echo "[migrations] /nx-sock:"; ls -l /nx-sock || true
-        echo "[migrations] Checking daemon status..."
-        if npx nx daemon --status >/dev/null 2>&1; then
-          echo "[migrations] Daemon OK -> WITH daemon (verbose, no cache)"
-          exec env DEBUG="nx:*" NX_PERF_LOGGING=true NODE_OPTIONS="--trace-uncaught" \
-            npx nx run migrations:run --verbose --skip-nx-cache
-        else
-          echo "[migrations] Daemon NOT reachable -> WITHOUT daemon (verbose, no cache)"
-          exec env DEBUG="nx:*" NX_PERF_LOGGING=true NODE_OPTIONS="--trace-uncaught" NX_DAEMON=false \
-            npx nx run migrations:run --no-daemon --verbose --skip-nx-cache
-        fi
+        echo "[migrations] Running TypeORM migrations directly (bypassing Nx)..."
+        cd packages/migrations
+        npm run typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each
+        echo "[migrations] Done."
       '
     environment:
-      <<: *nx-env
       CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
     volumes:
       - .:/packmind
-      - dev-dist:/packmind/dist
-      - dev-tmp:/packmind/tmp
       - dev-node_modules:/packmind/node_modules
-      - dev-nx-sock:/nx-sock
     depends_on:
-      nx-daemon:
-        condition: service_healthy
-        required: false
       install-dependencies:
         condition: service_completed_successfully
       postgres:
