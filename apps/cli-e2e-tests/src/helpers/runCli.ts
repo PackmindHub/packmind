@@ -95,10 +95,14 @@ export async function runCli(
     });
 
     child.on('error', (error) => {
+      // Clean up temporary directory on error
+      fs.rmSync(tempHome, { recursive: true, force: true });
       reject(error);
     });
 
     child.on('close', (code) => {
+      // Clean up temporary directory after CLI process completes
+      fs.rmSync(tempHome, { recursive: true, force: true });
       resolve({
         returnCode: code ?? 0,
         stdout,
