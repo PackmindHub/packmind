@@ -131,7 +131,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
 
       expect(recipesPort.captureRecipe).toHaveBeenCalledWith({
-        userId,
+        userId: proposal.createdBy,
         organizationId,
         spaceId,
         name: payload.name,
@@ -184,7 +184,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_accepted event', async () => {
+    it('emits accepted event with itemType, changeType, and created artefact id', async () => {
       await useCase.execute({
         userId,
         organizationId,
@@ -198,6 +198,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           payload: expect.objectContaining({
             itemType: 'command',
             changeType: ChangeProposalType.createCommand,
+            itemId: recipeId,
           }),
         }),
       );
@@ -262,7 +263,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_rejected event', async () => {
+    it('emits rejected event with itemType and changeType', async () => {
       await useCase.execute({
         userId,
         organizationId,
@@ -595,7 +596,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
 
       expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
-        userId,
+        userId: standardProposal.createdBy,
         organizationId,
         spaceId,
         name: standardPayload.name,
@@ -649,6 +650,26 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         acceptedProposals: [{ proposal: standardProposal, userId }],
         rejectedProposals: [],
       });
+    });
+
+    it('emits accepted event with itemType, changeType, and created standard id', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        accepted: [standardProposal.id],
+        rejected: [],
+      });
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            itemType: 'standard',
+            changeType: ChangeProposalType.createStandard,
+            itemId: standardId,
+          }),
+        }),
+      );
     });
 
     describe('when scope is an array', () => {
@@ -953,7 +974,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
 
       expect(skillsPort.uploadSkill).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId,
+          userId: skillProposal.createdBy,
           organizationId,
           spaceId,
           files: expect.arrayContaining([
@@ -1050,7 +1071,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_accepted event', async () => {
+    it('emits accepted event with itemType, changeType, and created skill id', async () => {
       await useCase.execute({
         userId,
         organizationId,
@@ -1064,6 +1085,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           payload: expect.objectContaining({
             itemType: 'skill',
             changeType: ChangeProposalType.createSkill,
+            itemId: skillId,
           }),
         }),
       );
@@ -1188,7 +1210,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
     });
 
-    it('tracks change_proposal_rejected event', async () => {
+    it('emits rejected event with itemType and changeType', async () => {
       await useCase.execute({
         userId,
         organizationId,

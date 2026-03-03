@@ -9,7 +9,6 @@ import {
   OrganizationId,
   Recipe,
   SpaceId,
-  UserId,
 } from '@packmind/types';
 
 export class CommandCreateChangeProposalApplier implements ICreateChangeProposalApplier<ChangeProposalType.createCommand> {
@@ -17,12 +16,11 @@ export class CommandCreateChangeProposalApplier implements ICreateChangeProposal
 
   apply(
     changeProposal: ChangeProposal<ChangeProposalType.createCommand>,
-    userId: UserId,
     spaceId: SpaceId,
     organizationId: OrganizationId,
   ): Promise<Recipe> {
     return this.recipesPort.captureRecipe({
-      userId,
+      userId: changeProposal.createdBy,
       organizationId,
       spaceId,
       name: changeProposal.payload.name,
