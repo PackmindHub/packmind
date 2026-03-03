@@ -28,7 +28,7 @@ function getDefaultOptions(): UserSignedUpOptions {
   return {
     email: testUser.email,
     password: testUser.password,
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:4201',
   };
 }
 
