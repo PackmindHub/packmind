@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Req,
+  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
@@ -30,6 +31,7 @@ import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 import {
+  ChangeProposalLimitExceededError,
   ChangeProposalPayloadMismatchError,
   UnsupportedChangeProposalTypeError,
 } from '@packmind/playbook-change-management';
@@ -230,6 +232,10 @@ export class OrganizationsSpacesChangeProposalsController {
 
       if (error instanceof ChangeProposalPayloadMismatchError) {
         throw new ConflictException(error.message);
+      }
+
+      if (error instanceof ChangeProposalLimitExceededError) {
+        throw new UnprocessableEntityException(error.message);
       }
 
       const errorMessage =
