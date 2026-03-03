@@ -53,7 +53,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --no-audit
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -94,7 +94,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --no-audit
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -142,7 +142,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --no-audit
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -180,7 +180,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --no-audit
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -230,7 +230,7 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
 
-      - run: npm ci
+      - run: npm ci --no-audit
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
