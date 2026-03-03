@@ -11,7 +11,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
-import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
+import { GETTING_STARTED_CREATE_COMMAND_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
 import { LuBot, LuPencilLine } from 'react-icons/lu';
 import { RecipesExampleDialog } from './RecipesExampleDialog';
@@ -76,9 +76,9 @@ export const RecipesBlankState = ({
                 </PMBox>
               </PMBox>
               <GettingStartedLearnMoreDialog
-                body={GETTING_STARTED_CREATE_DIALOG.body}
-                title={GETTING_STARTED_CREATE_DIALOG.title}
-                buttonLabel="Configure my agent"
+                body={GETTING_STARTED_CREATE_COMMAND_DIALOG.body}
+                title={GETTING_STARTED_CREATE_COMMAND_DIALOG.title}
+                buttonLabel="Create"
                 buttonVariant="tertiary"
                 buttonMarginTop={'auto'}
               />
