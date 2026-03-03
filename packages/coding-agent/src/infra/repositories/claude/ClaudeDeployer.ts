@@ -22,6 +22,9 @@ const origin = 'ClaudeDeployer';
 
 export class ClaudeDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.claude;
+  /** Packmind-managed subdirectory within the broader standard path */
+  private static readonly STANDARD_DEPLOY_DIR =
+    CODING_AGENT_ARTEFACT_PATHS.claude.standard + 'packmind/';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_COMMANDS_FOLDER_PATH =
     '.claude/commands/packmind/';
@@ -424,7 +427,7 @@ ${recipeVersion.content}`;
     // Delete individual Claude configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `${ClaudeDeployer.ARTEFACT_PATHS.standard}standard-${standardVersion.slug}.md`,
+        path: `${ClaudeDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -438,7 +441,7 @@ ${recipeVersion.content}`;
       installed.standardVersions.length === 0
     ) {
       fileUpdates.delete.push({
-        path: ClaudeDeployer.ARTEFACT_PATHS.standard,
+        path: ClaudeDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       });
     }
@@ -472,7 +475,7 @@ ${recipeVersion.content}`;
         type: DeleteItemType.Directory,
       },
       {
-        path: ClaudeDeployer.ARTEFACT_PATHS.standard,
+        path: ClaudeDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       },
     ];
@@ -606,7 +609,7 @@ description: '${escapeSingleQuotes(summary)}'
 
 ${instructionContent}`;
 
-    const path = `${ClaudeDeployer.ARTEFACT_PATHS.standard}standard-${standardVersion.slug}.md`;
+    const path = `${ClaudeDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`;
 
     return {
       path,

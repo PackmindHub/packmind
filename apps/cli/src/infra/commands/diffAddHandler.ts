@@ -1,9 +1,14 @@
 import * as path from 'path';
 
-import { ChangeProposalType } from '@packmind/types';
+import {
+  ArtifactType,
+  ChangeProposalType,
+  MultiFileCodingAgent,
+} from '@packmind/types';
 
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
 import { parseCommandFile } from '../../application/utils/parseCommandFile';
+import { parseStandardMdForAgent } from '../../application/utils/parseStandardMd';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 import {
   logErrorConsole,
@@ -46,7 +51,7 @@ export async function diffAddHandler(
   const artefactResult = resolveArtefactFromPath(absolutePath);
   if (!artefactResult) {
     logErrorConsole(
-      `Unsupported file path: ${absolutePath}. File must be in a recognized agent command directory.`,
+      `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command or standard).`,
     );
     exit(1);
     return;
@@ -58,7 +63,7 @@ export async function diffAddHandler(
   } catch (err) {
     if (isErrnoException(err) && err.code === 'EISDIR') {
       logErrorConsole(
-        `Path is a directory, not a file: ${absolutePath}. Please provide a path to a command file.`,
+        `Path is a directory, not a file: ${absolutePath}. Please provide a path to an artefact file.`,
       );
     } else {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -68,14 +73,17 @@ export async function diffAddHandler(
     return;
   }
 
-  const parseResult = parseCommandFile(content, absolutePath);
-  if (!parseResult.success) {
-    logErrorConsole(`Failed to parse command file: ${parseResult.error}`);
+  const diffResult = buildDiff(
+    artefactResult.artifactType,
+    content,
+    absolutePath,
+    artefactResult.codingAgent,
+  );
+  if (!diffResult.success) {
+    logErrorConsole(diffResult.error);
     exit(1);
     return;
   }
-
-  const { name, content: parsedContent } = parseResult.parsed;
 
   let message: string;
   if (messageFlag !== undefined) {
@@ -107,12 +115,9 @@ export async function diffAddHandler(
 
   const space = await packmindCliHexa.getPackmindGateway().spaces.getGlobal();
 
-  const diff: ArtefactDiff<ChangeProposalType.createCommand> = {
+  const diff: ArtefactDiff = {
+    ...diffResult.diff,
     filePath: absolutePath,
-    type: ChangeProposalType.createCommand,
-    payload: { name, content: parsedContent },
-    artifactName: name,
-    artifactType: 'command',
     spaceId: space.id,
   };
 
@@ -160,6 +165,72 @@ export async function diffAddHandler(
   }
 
   exit(0);
+}
+
+type BuildDiffSuccess = {
+  success: true;
+  diff: Pick<
+    ArtefactDiff,
+    'type' | 'payload' | 'artifactName' | 'artifactType'
+  >;
+};
+
+type BuildDiffFailure = {
+  success: false;
+  error: string;
+};
+
+function buildDiff(
+  artifactType: ArtifactType,
+  content: string,
+  filePath: string,
+  codingAgent: MultiFileCodingAgent,
+): BuildDiffSuccess | BuildDiffFailure {
+  if (artifactType === 'command') {
+    const parseResult = parseCommandFile(content, filePath);
+    if (!parseResult.success) {
+      return {
+        success: false,
+        error: `Failed to parse command file: ${parseResult.error}`,
+      };
+    }
+    return {
+      success: true,
+      diff: {
+        type: ChangeProposalType.createCommand,
+        payload: {
+          name: parseResult.parsed.name,
+          content: parseResult.parsed.content,
+        },
+        artifactName: parseResult.parsed.name,
+        artifactType: 'command',
+      },
+    };
+  }
+
+  const parsed = parseStandardMdForAgent(content, codingAgent);
+  if (!parsed) {
+    return {
+      success: false,
+      error:
+        'Failed to parse standard file: file content does not match any recognized standard format.',
+    };
+  }
+
+  return {
+    success: true,
+    diff: {
+      type: ChangeProposalType.createStandard,
+      payload: {
+        name: parsed.name,
+        description: parsed.description,
+        scope: parsed.scope || null,
+        rules: parsed.rules.map((r) => ({ content: r })),
+      },
+      artifactName: parsed.name,
+      artifactType: 'standard',
+    },
+  };
 }
 
 function isErrnoException(err: unknown): err is NodeJS.ErrnoException {

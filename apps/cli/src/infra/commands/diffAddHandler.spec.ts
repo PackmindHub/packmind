@@ -23,6 +23,28 @@ jest.mock('../utils/editorMessage', () => ({
 const VALID_COMMAND_PATH = '/project/.claude/commands/my-command.md';
 const VALID_COMMAND_CONTENT = '---\nname: My Command\n---\nDo something useful';
 
+const VALID_STANDARD_CONTENT = [
+  '# My Standard',
+  '',
+  'A description of the standard.',
+  '',
+  '## Rules',
+  '',
+  '* Do not use var',
+  '* Always use const',
+].join('\n');
+
+const STANDARD_WITH_SCOPE_CONTENT = [
+  '---',
+  'globs: "**/*.ts"',
+  '---',
+  '## Standard: Scoped Standard',
+  '',
+  'Description with scope.',
+  '',
+  '* Rule one',
+].join('\n');
+
 describe('diffAddHandler', () => {
   let mockSubmitDiffs: jest.Mock;
   let mockGetGlobal: jest.Mock;
@@ -420,6 +442,194 @@ describe('diffAddHandler', () => {
         ],
         'Add new command',
       );
+    });
+  });
+
+  describe('standard file happy path', () => {
+    it('calls submitDiffs with createStandard diff for .packmind/standards/', async () => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.packmind/standards/my-standard.md',
+          message: 'Add standard',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              filePath: '/project/.packmind/standards/my-standard.md',
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'My Standard',
+                description: 'A description of the standard.',
+                scope: null,
+                rules: [
+                  { content: 'Do not use var' },
+                  { content: 'Always use const' },
+                ],
+              },
+              artifactName: 'My Standard',
+              artifactType: 'standard',
+              spaceId: 'space-123',
+            }),
+          ],
+        ],
+        'Add standard',
+      );
+    });
+
+    it('calls submitDiffs with createStandard diff for .claude/rules/packmind/', async () => {
+      mockReadFile.mockReturnValue(STANDARD_WITH_SCOPE_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/rules/packmind/standard-scoped.md',
+          message: 'Add scoped standard',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'Scoped Standard',
+                description: 'Description with scope.',
+                scope: '**/*.ts',
+                rules: [{ content: 'Rule one' }],
+              },
+              artifactName: 'Scoped Standard',
+              artifactType: 'standard',
+            }),
+          ],
+        ],
+        'Add scoped standard',
+      );
+    });
+
+    it('maps empty scope to null', async () => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.packmind/standards/my-standard.md',
+          message: 'Add standard',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              payload: expect.objectContaining({ scope: null }),
+            }),
+          ],
+        ],
+        'Add standard',
+      );
+    });
+
+    it('handles standard with no rules', async () => {
+      const noRulesContent = '# Empty Standard\n\nJust a description.\n';
+      mockReadFile.mockReturnValue(noRulesContent);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.packmind/standards/empty.md',
+          message: 'Add empty standard',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              payload: expect.objectContaining({ rules: [] }),
+            }),
+          ],
+        ],
+        'Add empty standard',
+      );
+    });
+  });
+
+  describe('standard file without standard- prefix', () => {
+    it('parses correctly using agent-based parser', async () => {
+      mockReadFile.mockReturnValue(STANDARD_WITH_SCOPE_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/rules/packmind/my-custom-rule.md',
+          message: 'Add custom rule',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'Scoped Standard',
+                description: 'Description with scope.',
+                scope: '**/*.ts',
+                rules: [{ content: 'Rule one' }],
+              },
+              artifactName: 'Scoped Standard',
+              artifactType: 'standard',
+            }),
+          ],
+        ],
+        'Add custom rule',
+      );
+    });
+
+    it('exits with 0 on success', async () => {
+      mockReadFile.mockReturnValue(STANDARD_WITH_SCOPE_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/rules/packmind/my-custom-rule.md',
+          message: 'Add custom rule',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('standard file parse failure', () => {
+    it('logs error when content does not match any standard format', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      mockReadFile.mockReturnValue('Some random content without heading');
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.packmind/standards/bad.md',
+          message: 'Add bad standard',
+        }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to parse standard file'),
+      );
+    });
+
+    it('exits with 1 on parse failure', async () => {
+      mockReadFile.mockReturnValue('Some random content without heading');
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.packmind/standards/bad.md',
+          message: 'Add bad standard',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
 });

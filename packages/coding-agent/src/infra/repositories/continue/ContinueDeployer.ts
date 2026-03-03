@@ -19,6 +19,9 @@ const origin = 'ContinueDeployer';
 
 export class ContinueDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.continue;
+  /** Packmind-managed subdirectory within the broader standard path */
+  private static readonly STANDARD_DEPLOY_DIR =
+    CODING_AGENT_ARTEFACT_PATHS.continue.standard + 'packmind/';
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.continue/rules/packmind/recipes-index.md';
 
@@ -282,7 +285,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     // Delete individual Continue configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `${ContinueDeployer.ARTEFACT_PATHS.standard}standard-${standardVersion.slug}.md`,
+        path: `${ContinueDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -296,7 +299,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       installed.standardVersions.length === 0
     ) {
       fileUpdates.delete.push({
-        path: ContinueDeployer.ARTEFACT_PATHS.standard,
+        path: ContinueDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       });
     }
@@ -323,7 +326,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
           type: DeleteItemType.File,
         },
         {
-          path: ContinueDeployer.ARTEFACT_PATHS.standard,
+          path: ContinueDeployer.STANDARD_DEPLOY_DIR,
           type: DeleteItemType.Directory,
         },
       ],
@@ -338,7 +341,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
 
     for (const standardVersion of artifacts.standardVersions) {
       fileUpdates.delete.push({
-        path: `${ContinueDeployer.ARTEFACT_PATHS.standard}standard-${standardVersion.slug}.md`,
+        path: `${ContinueDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`,
         type: DeleteItemType.File,
       });
     }
@@ -484,7 +487,7 @@ description: '${escapeSingleQuotes(summary)}'
 
 ${instructionContent}`;
 
-    const path = `${ContinueDeployer.ARTEFACT_PATHS.standard}standard-${standardVersion.slug}.md`;
+    const path = `${ContinueDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.md`;
 
     return {
       path,

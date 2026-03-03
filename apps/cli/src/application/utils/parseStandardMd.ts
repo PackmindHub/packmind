@@ -1,3 +1,5 @@
+import { MultiFileCodingAgent } from '@packmind/types';
+
 import { normalizeLineEndings } from './normalizeLineEndings';
 
 export type ParsedStandardMd = {
@@ -34,6 +36,31 @@ export function parseStandardMd(
     return null;
   }
   return deployer.parse(content);
+}
+
+const AGENT_PARSERS: Record<
+  MultiFileCodingAgent,
+  (content: string) => ParsedStandardMd | null
+> = {
+  packmind: parsePackmindStandard,
+  claude: parseClaudeStandard,
+  cursor: parseCursorStandard,
+  continue: parseContinueStandard,
+  copilot: parseCopilotStandard,
+};
+
+/**
+ * Parses standard markdown content using the parser associated with the given
+ * coding agent, bypassing filename-based pattern matching.
+ *
+ * This is used by `diff add` where the directory already identifies the agent,
+ * so the strict filename prefix check from `parseStandardMd` is not needed.
+ */
+export function parseStandardMdForAgent(
+  content: string,
+  agent: MultiFileCodingAgent,
+): ParsedStandardMd | null {
+  return AGENT_PARSERS[agent](content);
 }
 
 function parsePackmindStandard(content: string): ParsedStandardMd | null {
