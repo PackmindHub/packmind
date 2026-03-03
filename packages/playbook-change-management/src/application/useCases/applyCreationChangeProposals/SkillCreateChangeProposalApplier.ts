@@ -91,7 +91,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       frontmatter.push(`metadata: ${JSON.stringify(metadata.metadata)}`);
     }
     if (metadata.allowedTools) {
-      frontmatter.push(`allowed_tools: ${metadata.allowedTools}`);
+      frontmatter.push(`allowed-tools: ${metadata.allowedTools}`);
     }
 
     return `---\n${frontmatter.join('\n')}\n---\n\n${metadata.prompt}`;
