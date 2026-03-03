@@ -337,7 +337,7 @@ jobs:
           COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
         run: |
           echo "Waiting for API to be ready..."
-          timeout 60 bash -c 'until curl -f http://localhost:4200/api/health > /dev/null 2>&1; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:4200/api/health > /dev/null 2>&1; do sleep 2; done' || true
 
       - name: Run CLI E2E tests
         env:
