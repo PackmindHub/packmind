@@ -322,7 +322,7 @@ jobs:
             docker --version
             docker compose version
             echo "Starting containers..."
-            docker compose up -d --wait-timeout 300
+            docker compose up -d --wait --wait-timeout 300
             echo "Docker compose up completed. Container status:"
             docker compose ps -a
             docker ps -a --format 'table {{.Names}}\t{{.Status}}'
