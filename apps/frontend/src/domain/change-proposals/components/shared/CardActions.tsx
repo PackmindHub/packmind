@@ -40,7 +40,7 @@ export function CardActions({
 
   const acceptButton = (
     <PMButton
-      size="sm"
+      size="xs"
       variant="outline"
       disabled={acceptDisabled}
       onClick={onAccept}
@@ -54,7 +54,7 @@ export function CardActions({
 
   return (
     <PMHStack gap={2}>
-      <PMButton size="sm" variant="outline" onClick={onEdit}>
+      <PMButton size="xs" variant="outline" onClick={onEdit}>
         <LuPencil />
         Edit
       </PMButton>
@@ -64,7 +64,7 @@ export function CardActions({
         acceptButton
       )}
       <PMButton
-        size="sm"
+        size="xs"
         variant="outline"
         onClick={onDismiss}
         color="red.300"

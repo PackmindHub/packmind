@@ -24,7 +24,7 @@ export function ChangeProposalCardHeader({
   artefactVersion,
 }: Readonly<ChangeProposalCardHeaderProps>) {
   return (
-    <PMAccordion.ItemTrigger px={4} py={3}>
+    <PMAccordion.ItemTrigger px={4} py={3} _hover={{ cursor: 'pointer' }}>
       <PMHStack flex={1} gap={3} alignItems="center">
         <PMAccordion.ItemIndicator />
         <ProposalLabel

@@ -16,8 +16,7 @@ export function ApplyButton({
   return (
     <PMButton
       size="sm"
-      variant="outline"
-      colorPalette="blue"
+      variant="primary"
       disabled={!hasPooledDecisions || isSaving}
       loading={isSaving}
       loadingText="Applying..."
