@@ -4,180 +4,194 @@
  * for projects that use @swc/jest as their transformer.
  *
  * Note: apps/frontend uses ts-jest and should NOT import from this file.
+ *
+ * Compatibility: This file must work on both:
+ * - Node 22+ (native type stripping, treats files without export/import as CJS)
+ * - Node < 22 with ts-node (compiles TS, treats files without export/import as scripts)
+ *
+ * An IIFE wraps all declarations to avoid TS2451 "Cannot redeclare block-scoped
+ * variable" errors when ts-node treats the file as a script (global scope) and
+ * variable names conflict with ambient declarations (e.g. pathsToModuleNameMapper
+ * from ts-jest types). No `export` keyword is used because Node 22 would then
+ * treat the file as ESM, breaking `module.exports`.
  */
 
-// Helper to convert TypeScript paths to Jest moduleNameMapper format
-function pathsToModuleNameMapper(
-  paths: Record<string, string[]>,
-  prefix: string,
-) {
-  const moduleNameMapper: Record<string, string> = {};
-  for (const [key, [value]] of Object.entries(paths)) {
-    // Convert TS path pattern to Jest regex pattern
-    const regexKey = '^' + key.replace(/\*/g, '(.*)') + '$';
-    // Replace each * with its corresponding capture group ($1, $2, etc.)
-    let groupIndex = 0;
-    const mappedValue = prefix + value.replace(/\*/g, () => `$${++groupIndex}`);
-    moduleNameMapper[regexKey] = mappedValue;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+module.exports = (() => {
+  // Helper to convert TypeScript paths to Jest moduleNameMapper format
+  function pathsToModuleNameMapper(
+    paths: Record<string, string[]>,
+    prefix: string,
+  ) {
+    const moduleNameMapper: Record<string, string> = {};
+    for (const [key, [value]] of Object.entries(paths)) {
+      // Convert TS path pattern to Jest regex pattern
+      const regexKey = '^' + key.replace(/\*/g, '(.*)') + '$';
+      // Replace each * with its corresponding capture group ($1, $2, etc.)
+      let groupIndex = 0;
+      const mappedValue =
+        prefix + value.replace(/\*/g, () => `$${++groupIndex}`);
+      moduleNameMapper[regexKey] = mappedValue;
+    }
+    return moduleNameMapper;
   }
-  return moduleNameMapper;
-}
 
-/**
- * Standard SWC Jest transformer configuration for TypeScript projects
- */
-const swcTransformConfig = {
-  jsc: {
-    parser: { syntax: 'typescript' as const, tsx: false },
-    target: 'es2022' as const,
-  },
-};
-
-/**
- * SWC Jest transformer configuration with additional options for better compatibility
- */
-const swcTransformConfigWithDefineFields = {
-  jsc: {
-    parser: { syntax: 'typescript' as const, tsx: false },
-    target: 'es2022' as const,
-    transform: {
-      // Enable better module mocking compatibility
-      useDefineForClassFields: false,
+  /**
+   * Standard SWC Jest transformer configuration for TypeScript projects
+   */
+  const swcTransformConfig = {
+    jsc: {
+      parser: { syntax: 'typescript' as const, tsx: false },
+      target: 'es2022' as const,
     },
-  },
-  module: {
-    // Use commonjs for better Jest compatibility with mocks
-    type: 'commonjs' as const,
-  },
-};
+  };
 
-/**
- * SWC Jest transformer configuration with decorator support (without extra transforms)
- */
-const swcTransformConfigWithDecoratorsOnly = {
-  jsc: {
-    parser: {
-      syntax: 'typescript' as const,
-      tsx: false,
-      decorators: true, // Enable decorators
-    },
-    target: 'es2022' as const,
-    transform: {
-      legacyDecorator: true, // Use legacy decorator implementation
-      decoratorMetadata: true, // Enable decorator metadata
-    },
-  },
-};
-
-/**
- * SWC Jest transformer configuration for NestJS projects with decorator support
- */
-const swcTransformConfigWithDecorators = {
-  jsc: {
-    parser: {
-      syntax: 'typescript' as const,
-      tsx: false,
-      decorators: true, // Enable decorators for NestJS
-    },
-    target: 'es2022' as const,
-    transform: {
-      legacyDecorator: true, // Use legacy decorator implementation
-      decoratorMetadata: true, // Enable decorator metadata (needed for NestJS DI)
-      useDefineForClassFields: false,
-    },
-  },
-  module: {
-    type: 'commonjs' as const,
-  },
-};
-
-/**
- * Standard transform configuration for @swc/jest
- */
-const swcTransform = {
-  '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfig],
-};
-
-/**
- * Transform configuration for @swc/jest with better compatibility
- */
-const swcTransformWithDefineFields = {
-  '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDefineFields],
-};
-
-/**
- * Transform configuration for @swc/jest with decorators only
- */
-const swcTransformWithDecoratorsOnly = {
-  '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDecoratorsOnly],
-};
-
-/**
- * Transform configuration for @swc/jest with NestJS decorator support
- */
-const swcTransformWithDecorators = {
-  '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDecorators],
-};
-
-/**
- * Standard transformIgnorePatterns for node packages
- */
-const standardTransformIgnorePatterns = ['/node_modules/(?!slug).+\\.js$'];
-
-/**
- * Standard moduleFileExtensions for TypeScript projects
- */
-const standardModuleFileExtensions = ['ts', 'js', 'html'];
-
-/**
- * SWC Jest transformer configuration for React/TSX projects
- */
-const swcTransformConfigTsx = {
-  jsc: {
-    parser: {
-      syntax: 'typescript' as const,
-      tsx: true,
-      decorators: false,
-    },
-    transform: {
-      react: {
-        runtime: 'automatic',
+  /**
+   * SWC Jest transformer configuration with additional options for better compatibility
+   */
+  const swcTransformConfigWithDefineFields = {
+    jsc: {
+      parser: { syntax: 'typescript' as const, tsx: false },
+      target: 'es2022' as const,
+      transform: {
+        // Enable better module mocking compatibility
+        useDefineForClassFields: false,
       },
     },
-    target: 'es2022' as const,
-  },
-  module: {
-    type: 'commonjs' as const,
-  },
-};
+    module: {
+      // Use commonjs for better Jest compatibility with mocks
+      type: 'commonjs' as const,
+    },
+  };
 
-/**
- * Transform configuration for @swc/jest with TSX support (React components)
- */
-const swcTransformTsx = {
-  '^.+\\.[tj]sx?$': ['@swc/jest', swcTransformConfigTsx],
-};
+  /**
+   * SWC Jest transformer configuration with decorator support (without extra transforms)
+   */
+  const swcTransformConfigWithDecoratorsOnly = {
+    jsc: {
+      parser: {
+        syntax: 'typescript' as const,
+        tsx: false,
+        decorators: true, // Enable decorators
+      },
+      target: 'es2022' as const,
+      transform: {
+        legacyDecorator: true, // Use legacy decorator implementation
+        decoratorMetadata: true, // Enable decorator metadata
+      },
+    },
+  };
 
-/**
- * Transform ignore patterns for frontend with Chakra UI, framer-motion, etc.
- */
-const frontendTransformIgnorePatterns = [
-  '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
-];
+  /**
+   * SWC Jest transformer configuration for NestJS projects with decorator support
+   */
+  const swcTransformConfigWithDecorators = {
+    jsc: {
+      parser: {
+        syntax: 'typescript' as const,
+        tsx: false,
+        decorators: true, // Enable decorators for NestJS
+      },
+      target: 'es2022' as const,
+      transform: {
+        legacyDecorator: true, // Use legacy decorator implementation
+        decoratorMetadata: true, // Enable decorator metadata (needed for NestJS DI)
+        useDefineForClassFields: false,
+      },
+    },
+    module: {
+      type: 'commonjs' as const,
+    },
+  };
 
-module.exports = {
-  pathsToModuleNameMapper,
-  swcTransformConfig,
-  swcTransformConfigWithDefineFields,
-  swcTransformConfigWithDecoratorsOnly,
-  swcTransformConfigWithDecorators,
-  swcTransform,
-  swcTransformWithDefineFields,
-  swcTransformWithDecoratorsOnly,
-  swcTransformWithDecorators,
-  standardTransformIgnorePatterns,
-  standardModuleFileExtensions,
-  swcTransformConfigTsx,
-  swcTransformTsx,
-  frontendTransformIgnorePatterns,
-};
+  /**
+   * Standard transform configuration for @swc/jest
+   */
+  const swcTransform = {
+    '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfig],
+  };
+
+  /**
+   * Transform configuration for @swc/jest with better compatibility
+   */
+  const swcTransformWithDefineFields = {
+    '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDefineFields],
+  };
+
+  /**
+   * Transform configuration for @swc/jest with decorators only
+   */
+  const swcTransformWithDecoratorsOnly = {
+    '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDecoratorsOnly],
+  };
+
+  /**
+   * Transform configuration for @swc/jest with NestJS decorator support
+   */
+  const swcTransformWithDecorators = {
+    '^.+\\.[tj]s$': ['@swc/jest', swcTransformConfigWithDecorators],
+  };
+
+  /**
+   * Standard transformIgnorePatterns for node packages
+   */
+  const standardTransformIgnorePatterns = ['/node_modules/(?!slug).+\\.js$'];
+
+  /**
+   * Standard moduleFileExtensions for TypeScript projects
+   */
+  const standardModuleFileExtensions = ['ts', 'js', 'html'];
+
+  /**
+   * SWC Jest transformer configuration for React/TSX projects
+   */
+  const swcTransformConfigTsx = {
+    jsc: {
+      parser: {
+        syntax: 'typescript' as const,
+        tsx: true,
+        decorators: false,
+      },
+      transform: {
+        react: {
+          runtime: 'automatic',
+        },
+      },
+      target: 'es2022' as const,
+    },
+    module: {
+      type: 'commonjs' as const,
+    },
+  };
+
+  /**
+   * Transform configuration for @swc/jest with TSX support (React components)
+   */
+  const swcTransformTsx = {
+    '^.+\\.[tj]sx?$': ['@swc/jest', swcTransformConfigTsx],
+  };
+
+  /**
+   * Transform ignore patterns for frontend with Chakra UI, framer-motion, etc.
+   */
+  const frontendTransformIgnorePatterns = [
+    '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
+  ];
+
+  return {
+    pathsToModuleNameMapper,
+    swcTransformConfig,
+    swcTransformConfigWithDefineFields,
+    swcTransformConfigWithDecoratorsOnly,
+    swcTransformConfigWithDecorators,
+    swcTransform,
+    swcTransformWithDefineFields,
+    swcTransformWithDecoratorsOnly,
+    swcTransformWithDecorators,
+    standardTransformIgnorePatterns,
+    standardModuleFileExtensions,
+    swcTransformConfigTsx,
+    swcTransformTsx,
+    frontendTransformIgnorePatterns,
+  };
+})();
