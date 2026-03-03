@@ -133,6 +133,11 @@ export class ListChangeProposalsBySpaceUseCase
           name: payload.name,
           description: payload.description,
           prompt: payload.prompt,
+          license: payload.license,
+          compatibility: payload.compatibility,
+          metadata: payload.metadata,
+          allowedTools: payload.allowedTools,
+          files: payload.files,
         };
       }
       const payload = proposal.payload as NewCommandPayload;

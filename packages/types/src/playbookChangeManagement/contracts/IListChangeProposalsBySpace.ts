@@ -1,4 +1,5 @@
 import { RecipeId } from '../../recipes/RecipeId';
+import { SkillFile } from '../../skills/SkillFile';
 import { SkillId } from '../../skills/SkillId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { StandardId } from '../../standards/StandardId';
@@ -37,6 +38,11 @@ export type SkillCreationProposalOverview = {
   name: string;
   description: string;
   prompt: string;
+  license?: string;
+  compatibility?: string;
+  metadata?: Record<string, string>;
+  allowedTools?: string;
+  files?: Array<Omit<SkillFile, 'id' | 'skillVersionId'>>;
 };
 
 export type CreationProposalOverview =

@@ -9,6 +9,7 @@ import {
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
 import { parseCommandFile } from '../../application/utils/parseCommandFile';
 import { parseStandardMdForAgent } from '../../application/utils/parseStandardMd';
+import { parseSkillDirectory } from '../../application/utils/parseSkillDirectory';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 import {
   logErrorConsole,
@@ -19,6 +20,15 @@ import {
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 
+type SkillFile = {
+  path: string;
+  relativePath: string;
+  content: string;
+  size: number;
+  permissions: string;
+  isBase64: boolean;
+};
+
 export type DiffAddHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   filePath: string | undefined;
@@ -26,6 +36,7 @@ export type DiffAddHandlerDependencies = {
   exit: (code: number) => void;
   getCwd: () => string;
   readFile: (path: string) => string;
+  readSkillDirectory: (dirPath: string) => Promise<SkillFile[]>;
 };
 
 export async function diffAddHandler(
@@ -38,6 +49,7 @@ export async function diffAddHandler(
     exit,
     getCwd,
     readFile,
+    readSkillDirectory,
   } = deps;
 
   if (!filePath) {
@@ -51,38 +63,74 @@ export async function diffAddHandler(
   const artefactResult = resolveArtefactFromPath(absolutePath);
   if (!artefactResult) {
     logErrorConsole(
-      `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command or standard).`,
+      `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command, standard, or skill).`,
     );
     exit(1);
     return;
   }
 
-  let content: string;
-  try {
-    content = readFile(absolutePath);
-  } catch (err) {
-    if (isErrnoException(err) && err.code === 'EISDIR') {
-      logErrorConsole(
-        `Path is a directory, not a file: ${absolutePath}. Please provide a path to an artefact file.`,
-      );
-    } else {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logErrorConsole(`Failed to read file: ${errorMessage}`);
-    }
-    exit(1);
-    return;
-  }
+  let diffResult: BuildDiffSuccess;
 
-  const diffResult = buildDiff(
-    artefactResult.artifactType,
-    content,
-    absolutePath,
-    artefactResult.codingAgent,
-  );
-  if (!diffResult.success) {
-    logErrorConsole(diffResult.error);
-    exit(1);
-    return;
+  if (artefactResult.artifactType === 'skill') {
+    const dirPath = absolutePath.endsWith('SKILL.md')
+      ? path.dirname(absolutePath)
+      : absolutePath;
+
+    let files: SkillFile[];
+    try {
+      files = await readSkillDirectory(dirPath);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logErrorConsole(`Failed to read skill directory: ${errorMessage}`);
+      exit(1);
+      return;
+    }
+
+    const parseResult = parseSkillDirectory(files);
+    if (!parseResult.success) {
+      logErrorConsole(parseResult.error);
+      exit(1);
+      return;
+    }
+
+    diffResult = {
+      success: true,
+      diff: {
+        type: ChangeProposalType.createSkill,
+        payload: parseResult.payload,
+        artifactName: parseResult.payload.name,
+        artifactType: 'skill',
+      },
+    };
+  } else {
+    let content: string;
+    try {
+      content = readFile(absolutePath);
+    } catch (err) {
+      if (isErrnoException(err) && err.code === 'EISDIR') {
+        logErrorConsole(
+          `Path is a directory, not a file: ${absolutePath}. Please provide a path to an artefact file.`,
+        );
+      } else {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logErrorConsole(`Failed to read file: ${errorMessage}`);
+      }
+      exit(1);
+      return;
+    }
+
+    const buildResult = buildDiff(
+      artefactResult.artifactType,
+      content,
+      absolutePath,
+      artefactResult.codingAgent,
+    );
+    if (!buildResult.success) {
+      logErrorConsole(buildResult.error);
+      exit(1);
+      return;
+    }
+    diffResult = buildResult;
   }
 
   let message: string;

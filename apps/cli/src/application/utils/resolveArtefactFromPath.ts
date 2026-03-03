@@ -39,5 +39,14 @@ export function resolveArtefactFromPath(
     }
   }
 
+  for (const [agent, paths] of Object.entries(CODING_AGENT_ARTEFACT_PATHS)) {
+    if (paths.skill && normalized.includes(paths.skill)) {
+      return {
+        artifactType: 'skill',
+        codingAgent: agent as MultiFileCodingAgent,
+      };
+    }
+  }
+
   return null;
 }

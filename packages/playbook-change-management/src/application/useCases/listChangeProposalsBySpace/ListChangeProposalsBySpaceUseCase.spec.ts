@@ -650,6 +650,78 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
       });
     });
 
+    describe('when createSkill proposals have optional fields', () => {
+      const skillProposalId = createChangeProposalId('skill-full-proposal-id');
+      const command = buildCommand();
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        service.groupProposalsByArtefact.mockResolvedValue({
+          standards: new Map(),
+          commands: new Map(),
+          skills: new Map(),
+          creations: [
+            {
+              id: skillProposalId,
+              type: ChangeProposalType.createSkill,
+              artefactId: null,
+              artefactVersion: 0,
+              spaceId,
+              payload: {
+                name: 'Full Skill',
+                description: 'A complete skill',
+                prompt: 'Do the thing.',
+                license: 'MIT',
+                compatibility: '>=2.0',
+                allowedTools: 'Read, Write',
+                files: [
+                  {
+                    path: 'scripts/init.sh',
+                    content: '#!/bin/bash\necho hello',
+                    permissions: '755',
+                    isBase64: false,
+                  },
+                ],
+              },
+              captureMode: ChangeProposalCaptureMode.commit,
+              message: '',
+              status: ChangeProposalStatus.pending,
+              createdBy: userId,
+              resolvedBy: null,
+              resolvedAt: null,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ],
+        });
+      });
+
+      it('includes license, compatibility, allowedTools, and files in overview', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.creations).toEqual([
+          {
+            proposalId: skillProposalId,
+            artefactType: 'skills',
+            name: 'Full Skill',
+            description: 'A complete skill',
+            prompt: 'Do the thing.',
+            license: 'MIT',
+            compatibility: '>=2.0',
+            allowedTools: 'Read, Write',
+            files: [
+              {
+                path: 'scripts/init.sh',
+                content: '#!/bin/bash\necho hello',
+                permissions: '755',
+                isBase64: false,
+              },
+            ],
+          },
+        ]);
+      });
+    });
+
     it('falls through to command branch for unknown proposal types', async () => {
       service.groupProposalsByArtefact.mockResolvedValue({
         standards: new Map(),
