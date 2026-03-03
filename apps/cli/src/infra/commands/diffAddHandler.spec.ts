@@ -6,6 +6,7 @@ jest.mock('../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
 }));
 
 jest.mock('../utils/editorMessage', () => ({
@@ -313,7 +314,7 @@ describe('diffAddHandler', () => {
     });
 
     it('includes alreadySubmitted in summary', async () => {
-      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
       mockSubmitDiffs.mockResolvedValue({
         submitted: 0,
         alreadySubmitted: 1,
@@ -323,7 +324,7 @@ describe('diffAddHandler', () => {
 
       await diffAddHandler(buildDeps());
 
-      expect(logSuccessConsole).toHaveBeenCalledWith(
+      expect(logWarningConsole).toHaveBeenCalledWith(
         'Summary: 1 already submitted',
       );
     });
