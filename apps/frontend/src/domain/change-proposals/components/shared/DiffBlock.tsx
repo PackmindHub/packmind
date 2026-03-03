@@ -1,10 +1,18 @@
-import { PMBox, PMHStack, PMMarkdownViewer, PMText } from '@packmind/ui';
+import {
+  PMBox,
+  PMCodeMirror,
+  PMHStack,
+  PMMarkdownViewer,
+  PMText,
+} from '@packmind/ui';
+import { getFileLanguage } from '../../../skills/utils/fileTreeUtils';
 
 interface DiffBlockProps {
   value: string;
   variant: 'removed' | 'added';
   isMarkdown: boolean;
   showIndicator?: boolean;
+  filePath?: string;
 }
 
 const variantConfig = {
@@ -27,6 +35,7 @@ export function DiffBlock({
   variant,
   isMarkdown,
   showIndicator = true,
+  filePath,
 }: Readonly<DiffBlockProps>) {
   const config = variantConfig[variant];
 
@@ -54,6 +63,12 @@ export function DiffBlock({
       >
         {isMarkdown ? (
           <PMMarkdownViewer content={value} />
+        ) : filePath ? (
+          <PMCodeMirror
+            value={value}
+            language={getFileLanguage(filePath)}
+            readOnly
+          />
         ) : (
           <PMText fontSize="sm">{value}</PMText>
         )}

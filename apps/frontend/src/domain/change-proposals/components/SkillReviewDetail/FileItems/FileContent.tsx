@@ -1,5 +1,6 @@
-import { PMBox, PMMarkdownViewer, PMText } from '@packmind/ui';
+import { PMBox, PMCodeMirror, PMMarkdownViewer, PMText } from '@packmind/ui';
 import { SkillFile } from '@packmind/types';
+import { getFileLanguage } from '../../../../skills/utils/fileTreeUtils';
 
 const MARKDOWN_EXTENSIONS = ['.md', '.mdx', '.mdc'];
 
@@ -29,16 +30,10 @@ export function FileContent({
     );
   }
   return (
-    <PMBox
-      as="pre"
-      fontSize="xs"
-      overflow="auto"
-      maxHeight="200px"
-      p={2}
-      borderRadius="sm"
-      bg="background.secondary"
-    >
-      {file.content}
-    </PMBox>
+    <PMCodeMirror
+      value={file.content}
+      language={getFileLanguage(file.path)}
+      readOnly
+    />
   );
 }

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   PMBox,
+  PMCodeMirror,
   PMHeading,
   PMMarkdownViewer,
   PMText,
@@ -20,6 +21,7 @@ import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues
 import { renderDiffText } from '../../utils/renderDiffText';
 import { buildDiffSections } from '../../utils/buildDiffSections';
 import { isMarkdownPath } from './FileItems/FileContent';
+import { getFileLanguage } from '../../../skills/utils/fileTreeUtils';
 
 interface SkillInlineViewProps {
   proposal: ChangeProposalWithConflicts;
@@ -318,9 +320,11 @@ function FileInlineView({
           {isMarkdown ? (
             <PMMarkdownViewer content={newValue} />
           ) : (
-            <PMText fontSize="sm" color="success">
-              {newValue}
-            </PMText>
+            <PMCodeMirror
+              value={newValue}
+              language={getFileLanguage(filePath)}
+              readOnly
+            />
           )}
         </PMBox>
       )}
@@ -338,9 +342,13 @@ function FileInlineView({
               <PMMarkdownViewer content={oldValue} />
             </PMBox>
           ) : (
-            <PMText fontSize="sm" textDecoration="line-through" color="error">
-              {oldValue}
-            </PMText>
+            <PMBox opacity={0.7}>
+              <PMCodeMirror
+                value={oldValue}
+                language={getFileLanguage(filePath)}
+                readOnly
+              />
+            </PMBox>
           )}
         </PMBox>
       )}

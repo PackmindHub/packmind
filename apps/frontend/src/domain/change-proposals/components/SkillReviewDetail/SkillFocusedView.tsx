@@ -426,6 +426,7 @@ function FileFocusedView({
           value={newValue}
           variant="added"
           isMarkdown={isMarkdown}
+          filePath={filePath}
           showIndicator={false}
         />
       )}
@@ -435,6 +436,7 @@ function FileFocusedView({
           value={oldValue}
           variant="removed"
           isMarkdown={isMarkdown}
+          filePath={filePath}
           showIndicator={false}
         />
       )}
@@ -449,8 +451,18 @@ function FileFocusedView({
           />
         ) : (
           <PMVStack gap={2} align="stretch">
-            <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
-            <DiffBlock value={newValue} variant="added" isMarkdown={false} />
+            <DiffBlock
+              value={oldValue}
+              variant="removed"
+              isMarkdown={false}
+              filePath={filePath}
+            />
+            <DiffBlock
+              value={newValue}
+              variant="added"
+              isMarkdown={false}
+              filePath={filePath}
+            />
           </PMVStack>
         ))}
 
