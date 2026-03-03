@@ -25,6 +25,7 @@ The Packmind CLI provides the following commands:
 - **`commands list`** - List all commands in your organization
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
+- **`update`** - Update the CLI to the latest version
 
 ## Installation
 
@@ -1160,6 +1161,71 @@ When you modify a rule in a standard file, Packmind automatically determines whe
   in a git repository with a configured remote. Make sure you have run
   `packmind-cli install` to set up your `packmind.json` before using `diff`.
 </Tip>
+
+## Update Command
+
+Update the Packmind CLI to the latest version.
+
+```bash
+packmind-cli update
+```
+
+This checks for a newer version and updates the CLI in place:
+
+- **Standalone executable** — Downloads the latest binary from GitHub and replaces the current executable automatically.
+- **npm global install** — Runs `npm install -g @packmind/cli@latest` to update through npm.
+
+**Example output:**
+
+```
+Current version: 1.2.0 (standalone executable)
+New version available: 1.2.0 -> 1.3.0
+Downloading packmind-cli-macos-arm64...
+Downloaded successfully (12.4 MB)
+
+Updated to v1.3.0
+Binary location: /usr/local/bin/packmind-cli
+```
+
+If you are already on the latest version:
+
+```
+Already up to date (v1.3.0)
+```
+
+<Tip>
+  **Permission error on Linux/macOS** — If you see a permission denied error,
+  run the command with `sudo`:
+
+```bash
+sudo packmind-cli update
+```
+
+</Tip>
+
+### Check for Updates Without Installing
+
+Use the `--check` flag to see if a newer version is available without performing the update:
+
+```bash
+packmind-cli update --check
+```
+
+This is useful in CI/CD pipelines or scripts where you want to detect outdated CLI versions without automatically upgrading. The command exits with code `1` if a newer version is available, and code `0` if already up to date.
+
+**Example:**
+
+```bash
+if ! packmind-cli update --check; then
+  echo "A new version of packmind-cli is available. Run 'packmind-cli update' to upgrade."
+fi
+```
+
+<Note>
+  The `update` command is available for standalone executables and npm global
+  installs only. If you manage the CLI through a local `package.json`, update it
+  with `npm update @packmind/cli` instead.
+</Note>
 
 ## Related Documentation
 
