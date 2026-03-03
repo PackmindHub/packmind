@@ -14,10 +14,15 @@ Before running these tests, you need:
 
 2. **Clean Environment**: Ensure `PACKMIND_API_KEY_V3` is not set in your `.env` file or shell environment, as tests need to control authentication state
 
-3. **Running API** (for authenticated tests only): The API server must be running at `http://localhost:4200`
+3. **Running API** (for authenticated tests only): The API server must be running. By default, tests expect it at `http://localhost:4200`, but you can override this with the `PACKMIND_INSTANCE_URL` environment variable:
 
    ```bash
    docker compose up
+   ```
+
+   ```bash
+   # Optional: Override the default Packmind instance URL
+   export PACKMIND_INSTANCE_URL=http://localhost:3000
    ```
 
    **Note**: Basic tests like `whoami-basic.spec.ts` don't require the API and can run standalone.

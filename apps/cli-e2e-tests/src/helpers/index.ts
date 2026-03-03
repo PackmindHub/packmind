@@ -3,6 +3,7 @@ export * from './describeWithUserSignedUp';
 export * from './userFactory';
 export * from './fileHelpers';
 export * from './setupGitRepo';
+export * from './config';
 export { PackmindGateway } from './gateways/PackmindGateway';
 export type {
   IPackmindGateway,
