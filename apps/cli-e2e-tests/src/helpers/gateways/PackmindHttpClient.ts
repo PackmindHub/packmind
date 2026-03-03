@@ -44,7 +44,11 @@ export class PackmindHttpClient {
       Buffer.from(this.apiKey, 'base64').toString('utf-8'),
     );
     const jwtPayload = this.decodeJwt(decoded.jwt);
-    return jwtPayload?.organization?.id;
+    const orgId = jwtPayload?.organization?.id;
+    if (!orgId) {
+      throw new Error('Could not extract organization ID from API key.');
+    }
+    return orgId;
   }
 
   private decodeJwt(jwt: string): { organization?: { id?: string } } | null {
