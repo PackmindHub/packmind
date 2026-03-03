@@ -26,6 +26,13 @@ import { ChangeProposalWithConflicts } from '../../types';
 import { computeSkillOutdatedIds } from '../../utils/computeOutdatedProposalIds';
 import { ReviewHeader } from '../shared/ReviewHeader';
 import { SkillGroupedAccordion } from './SkillGroupedAccordion';
+import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
+import {
+  getProposalFilePath,
+  SKILL_MD_PATH,
+} from '../../utils/groupSkillProposalsByFile';
+import { isMarkdownPath } from './FileItems/FileContent';
+import { DiffView } from '../shared/DiffView';
 import { SkillFocusedView } from './SkillFocusedView';
 import { SkillInlineView } from './SkillInlineView';
 import { SkillOriginalTabContent } from './SkillOriginalTabContent';
@@ -133,6 +140,18 @@ export function SkillReviewDetail({
     (viewMode: ViewMode, proposal: ChangeProposalWithConflicts) => {
       if (!skill) return null;
 
+      if (viewMode === 'focused') {
+        const filePath = getProposalFilePath(proposal, files);
+        if (filePath === SKILL_MD_PATH) return null;
+        const { oldValue, newValue } = extractProposalDiffValues(proposal);
+        return (
+          <DiffView
+            oldValue={oldValue}
+            newValue={newValue}
+            isMarkdownContent={isMarkdownPath(filePath)}
+          />
+        );
+      }
       if (viewMode === 'diff')
         return (
           <SkillFocusedView proposal={proposal} skill={skill} files={files} />

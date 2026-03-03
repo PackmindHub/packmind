@@ -19,6 +19,7 @@ import { ChangeProposalWithConflicts } from '../../types';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { renderDiffText } from '../../utils/renderDiffText';
 import { buildDiffSections } from '../../utils/buildDiffSections';
+import { isMarkdownPath } from './FileItems/FileContent';
 
 interface SkillInlineViewProps {
   proposal: ChangeProposalWithConflicts;
@@ -298,6 +299,8 @@ function FileInlineView({
     isUpdatePermissions,
   ]);
 
+  const isMarkdown = isMarkdownPath(filePath);
+
   return (
     <PMBox>
       <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
@@ -312,9 +315,13 @@ function FileInlineView({
           borderColor="green.500/30"
           borderRadius="md"
         >
-          <PMText fontSize="sm" color="success">
-            {newValue}
-          </PMText>
+          {isMarkdown ? (
+            <PMMarkdownViewer content={newValue} />
+          ) : (
+            <PMText fontSize="sm" color="success">
+              {newValue}
+            </PMText>
+          )}
         </PMBox>
       )}
 
@@ -326,23 +333,32 @@ function FileInlineView({
           borderColor="red.500/30"
           borderRadius="md"
         >
-          <PMText fontSize="sm" textDecoration="line-through" color="error">
-            {oldValue}
-          </PMText>
+          {isMarkdown ? (
+            <PMBox opacity={0.7} textDecoration="line-through">
+              <PMMarkdownViewer content={oldValue} />
+            </PMBox>
+          ) : (
+            <PMText fontSize="sm" textDecoration="line-through" color="error">
+              {oldValue}
+            </PMText>
+          )}
         </PMBox>
       )}
 
-      {isUpdateContent && (
-        <PMBox
-          p={3}
-          bg="background.tertiary"
-          borderLeft="2px solid"
-          borderColor="border.tertiary"
-          borderRadius="md"
-        >
-          <PMText fontSize="sm">{renderDiffText(oldValue, newValue)}</PMText>
-        </PMBox>
-      )}
+      {isUpdateContent &&
+        (isMarkdown ? (
+          <DescriptionInlineDiff oldValue={oldValue} newValue={newValue} />
+        ) : (
+          <PMBox
+            p={3}
+            bg="background.tertiary"
+            borderLeft="2px solid"
+            borderColor="border.tertiary"
+            borderRadius="md"
+          >
+            <PMText fontSize="sm">{renderDiffText(oldValue, newValue)}</PMText>
+          </PMBox>
+        ))}
 
       {isUpdatePermissions && (
         <PMVStack gap={2} align="stretch">

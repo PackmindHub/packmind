@@ -80,17 +80,19 @@ export function ChangeProposalCardBody({
 
       <PMSeparator borderColor="border.tertiary" />
       <PMVStack p={4} alignItems="stretch">
-        {!showToolbar && renderExpandedView ? (
-          renderExpandedView(viewMode, proposal)
-        ) : viewMode === 'focused' ? (
-          <DiffView
-            oldValue={oldValue}
-            newValue={newValue}
-            isMarkdownContent={markdown}
-          />
-        ) : renderExpandedView ? (
-          renderExpandedView(viewMode, proposal)
-        ) : null}
+        {!showToolbar && renderExpandedView
+          ? renderExpandedView(viewMode, proposal)
+          : viewMode === 'focused'
+            ? (renderExpandedView?.(viewMode, proposal) ?? (
+                <DiffView
+                  oldValue={oldValue}
+                  newValue={newValue}
+                  isMarkdownContent={markdown}
+                />
+              ))
+            : renderExpandedView
+              ? renderExpandedView(viewMode, proposal)
+              : null}
       </PMVStack>
     </PMVStack>
   );

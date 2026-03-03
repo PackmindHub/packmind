@@ -19,7 +19,7 @@ import { ChangeProposalWithConflicts } from '../../types';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { buildDiffSections } from '../../utils/buildDiffSections';
 import { DiffBlock } from '../shared/DiffBlock';
-import { FileContent } from './FileItems/FileContent';
+import { FileContent, isMarkdownPath } from './FileItems/FileContent';
 
 interface SkillFocusedViewProps {
   proposal: ChangeProposalWithConflicts;
@@ -304,10 +304,18 @@ function RenderDiffSections({
     return (
       <PMVStack gap={2} align="stretch">
         {oldValue && (
-          <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
+          <DiffBlock
+            value={oldValue}
+            variant="removed"
+            isMarkdown={isMarkdownField}
+          />
         )}
         {newValue && (
-          <DiffBlock value={newValue} variant="added" isMarkdown={false} />
+          <DiffBlock
+            value={newValue}
+            variant="added"
+            isMarkdown={isMarkdownField}
+          />
         )}
       </PMVStack>
     );
@@ -397,6 +405,16 @@ function FileFocusedView({
     isUpdatePermissions,
   ]);
 
+  const isMarkdown = isMarkdownPath(filePath);
+
+  const diffSections = useMemo(
+    () =>
+      isMarkdown && isUpdateContent
+        ? buildDiffSections(oldValue, newValue)
+        : [],
+    [isMarkdown, isUpdateContent, oldValue, newValue],
+  );
+
   return (
     <PMBox>
       <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
@@ -407,7 +425,7 @@ function FileFocusedView({
         <DiffBlock
           value={newValue}
           variant="added"
-          isMarkdown={false}
+          isMarkdown={isMarkdown}
           showIndicator={false}
         />
       )}
@@ -416,17 +434,25 @@ function FileFocusedView({
         <DiffBlock
           value={oldValue}
           variant="removed"
-          isMarkdown={false}
+          isMarkdown={isMarkdown}
           showIndicator={false}
         />
       )}
 
-      {isUpdateContent && (
-        <PMVStack gap={2} align="stretch">
-          <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
-          <DiffBlock value={newValue} variant="added" isMarkdown={false} />
-        </PMVStack>
-      )}
+      {isUpdateContent &&
+        (isMarkdown ? (
+          <RenderDiffSections
+            diffSections={diffSections}
+            isMarkdownField={true}
+            oldValue={oldValue}
+            newValue={newValue}
+          />
+        ) : (
+          <PMVStack gap={2} align="stretch">
+            <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
+            <DiffBlock value={newValue} variant="added" isMarkdown={false} />
+          </PMVStack>
+        ))}
 
       {isUpdatePermissions && (
         <PMVStack gap={2} align="stretch">
