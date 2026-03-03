@@ -3,6 +3,7 @@ import { PMGrid, PMBox, PMText, PMSpinner, PMVStack } from '@packmind/ui';
 import { useGetGroupedChangeProposalsQuery } from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { ReviewChangesSidebar } from '../../src/domain/change-proposals/components/ReviewChangesSidebar';
 import { ReviewChangesBlankState } from '../../src/domain/change-proposals/components/ReviewChangesBlankState';
+import { EnterprisePlanBanner } from '../../src/shared/components/EnterprisePlanBanner';
 
 export default function ReviewChangesLayoutRouteModule() {
   const {
@@ -43,18 +44,21 @@ export default function ReviewChangesLayoutRouteModule() {
   }
 
   return (
-    <PMGrid
-      height="full"
-      gridTemplateColumns={{
-        base: 'minmax(240px, 270px) 1fr minmax(280px, 320px)',
-      }}
-      gridTemplateRows="auto 1fr"
-      overflowX="auto"
-    >
-      <PMBox gridRow="1 / -1" gridColumn="1" overflowY="auto">
-        <ReviewChangesSidebar groupedProposals={groupedProposals} />
-      </PMBox>
-      <Outlet />
-    </PMGrid>
+    <PMBox height="full" display="flex" flexDirection="column">
+      <EnterprisePlanBanner />
+      <PMGrid
+        flex="1"
+        minHeight={0}
+        gridTemplateColumns={{
+          base: 'minmax(240px, 270px) 1fr minmax(280px, 320px)',
+        }}
+        overflowX="auto"
+      >
+        <PMBox gridColumn="1" overflowY="auto">
+          <ReviewChangesSidebar groupedProposals={groupedProposals} />
+        </PMBox>
+        <Outlet />
+      </PMGrid>
+    </PMBox>
   );
 }
