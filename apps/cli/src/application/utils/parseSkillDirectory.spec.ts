@@ -12,7 +12,7 @@ function buildSkillMdFile(content = VALID_SKILL_MD) {
   return {
     relativePath: 'SKILL.md',
     content,
-    permissions: '644',
+    permissions: 'rw-r--r--',
     isBase64: false,
   };
 }
@@ -24,7 +24,7 @@ function buildSupportingFile(
   return {
     relativePath,
     content,
-    permissions: '644',
+    permissions: 'rw-r--r--',
     isBase64: false,
   };
 }
@@ -159,6 +159,7 @@ describe('parseSkillDirectory', () => {
           name: 'My Skill',
           description: 'A useful skill',
           prompt: 'This is the prompt body.',
+          skillMdPermissions: 'rw-r--r--',
           files: [],
         },
       });
@@ -186,6 +187,7 @@ describe('parseSkillDirectory', () => {
           name: 'Full Skill',
           description: 'Has everything',
           prompt: 'The prompt.',
+          skillMdPermissions: 'rw-r--r--',
           license: 'MIT',
           compatibility: '>=1.0',
           allowedTools: 'Read, Write',
@@ -203,7 +205,7 @@ describe('parseSkillDirectory', () => {
         {
           relativePath: 'data/image.png',
           content: 'base64data',
-          permissions: '644',
+          permissions: 'rw-r--r--',
           isBase64: true,
         },
       ]);
@@ -214,17 +216,18 @@ describe('parseSkillDirectory', () => {
           name: 'My Skill',
           description: 'A useful skill',
           prompt: 'This is the prompt body.',
+          skillMdPermissions: 'rw-r--r--',
           files: [
             {
               path: 'helper.py',
               content: 'print("hello")',
-              permissions: '644',
+              permissions: 'rw-r--r--',
               isBase64: false,
             },
             {
               path: 'data/image.png',
               content: 'base64data',
-              permissions: '644',
+              permissions: 'rw-r--r--',
               isBase64: true,
             },
           ],
@@ -251,6 +254,7 @@ describe('parseSkillDirectory', () => {
           name: 'Trimmed Name',
           description: 'Trimmed Desc',
           prompt: 'Prompt.',
+          skillMdPermissions: 'rw-r--r--',
           files: [],
         },
       });

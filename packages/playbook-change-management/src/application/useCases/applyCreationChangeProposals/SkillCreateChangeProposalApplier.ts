@@ -23,6 +23,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       name,
       description,
       prompt,
+      skillMdPermissions,
       license,
       compatibility,
       metadata,
@@ -46,7 +47,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       {
         path: 'SKILL.md',
         content: skillMdContent,
-        permissions: 'rw-r--r--',
+        permissions: skillMdPermissions,
         isBase64: false,
       },
       ...(files || []).map((file) => ({
