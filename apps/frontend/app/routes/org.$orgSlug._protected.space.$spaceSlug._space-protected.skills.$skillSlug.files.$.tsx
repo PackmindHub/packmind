@@ -4,6 +4,7 @@ import { PMHStack, PMSeparator, PMText, PMVStack } from '@packmind/ui';
 import { createSkillFileId, SkillFile } from '@packmind/types';
 
 import { SkillFilePreview } from '../../src/domain/skills/components/SkillFilePreview';
+import { buildSkillMdContent } from '../../src/domain/skills/utils/skillMdUtils';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
@@ -13,7 +14,7 @@ export default function SkillFilesRouteModule() {
   const { skill, files, latestVersion } =
     useOutletContext<ISkillDetailsOutletContext>();
 
-  // Create virtual SKILL.md file
+  // Create virtual SKILL.md file (content is body only — frontmatter is shown separately)
   const skillMdFile = useMemo<SkillFile>(
     () => ({
       id: createSkillFileId(''),
@@ -23,6 +24,12 @@ export default function SkillFilesRouteModule() {
       content: latestVersion.prompt,
       isBase64: false,
     }),
+    [latestVersion],
+  );
+
+  // Full SKILL.md content (frontmatter + body) used for clipboard only
+  const skillMdClipboardContent = useMemo(
+    () => buildSkillMdContent(latestVersion),
     [latestVersion],
   );
 
@@ -136,7 +143,14 @@ export default function SkillFilesRouteModule() {
           p={4}
           overflow="hidden"
         >
-          <SkillFilePreview file={selectedFile} />
+          <SkillFilePreview
+            file={selectedFile}
+            clipboardContent={
+              selectedFile?.path === SKILL_MD_FILENAME
+                ? skillMdClipboardContent
+                : undefined
+            }
+          />
         </PMVStack>
       </PMVStack>
     </div>
