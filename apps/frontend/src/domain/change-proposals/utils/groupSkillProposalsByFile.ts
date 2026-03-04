@@ -5,11 +5,14 @@ import {
   CollectionItemDeletePayload,
   CollectionItemUpdatePayload,
   SkillFile,
+  SkillFileContentUpdatePayload,
   SkillFileId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
+import { SCALAR_SKILL_TYPES } from '../constants/skillProposalTypes';
 
 export const SKILL_MD_PATH = '/SKILL.md';
+export const UNKNOWN_FILE_PATH = '/unknown.md';
 
 export interface FileGroup {
   filePath: string;
@@ -17,16 +20,6 @@ export interface FileGroup {
   changeCount: number;
   pendingCount: number;
 }
-
-const SCALAR_SKILL_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillName,
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-  ChangeProposalType.updateSkillMetadata,
-  ChangeProposalType.updateSkillLicense,
-  ChangeProposalType.updateSkillCompatibility,
-  ChangeProposalType.updateSkillAllowedTools,
-]);
 
 export function getProposalFilePath(
   proposal: ChangeProposalWithConflicts,
@@ -57,10 +50,35 @@ export function getProposalFilePath(
     const payload =
       proposal.payload as CollectionItemUpdatePayload<SkillFileId>;
     const file = files.find((f) => f.id === payload.targetId);
-    return file?.path ?? SKILL_MD_PATH;
+    return file?.path ?? UNKNOWN_FILE_PATH;
   }
 
-  return SKILL_MD_PATH;
+  return UNKNOWN_FILE_PATH;
+}
+
+export function isBinaryProposal(
+  proposal: ChangeProposalWithConflicts,
+): boolean {
+  if (proposal.type === ChangeProposalType.addSkillFile) {
+    const payload = proposal.payload as CollectionItemAddPayload<
+      Omit<SkillFile, 'id' | 'skillVersionId'>
+    >;
+    return payload.item.isBase64;
+  }
+
+  if (proposal.type === ChangeProposalType.deleteSkillFile) {
+    const payload = proposal.payload as CollectionItemDeletePayload<
+      Omit<SkillFile, 'skillVersionId'>
+    >;
+    return payload.item.isBase64;
+  }
+
+  if (proposal.type === ChangeProposalType.updateSkillFileContent) {
+    const payload = proposal.payload as SkillFileContentUpdatePayload;
+    return payload.isBase64 ?? false;
+  }
+
+  return false;
 }
 
 export function groupSkillProposalsByFile(

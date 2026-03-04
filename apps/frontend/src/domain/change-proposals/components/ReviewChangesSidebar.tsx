@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, useParams, useSearchParams } from 'react-router';
 import {
   PMBox,
@@ -31,34 +31,49 @@ const artefactTypeLabels: Record<string, string> = {
   skills: 'Skill',
 };
 
-function ArtefactNavLink({
-  artefactId,
-  name,
-  changeProposalCount,
-  artefactType,
-  orgSlug,
-  spaceSlug,
+function NavBadge({
+  children,
+  minWidth,
+  px,
 }: {
-  artefactId: string;
+  children: React.ReactNode;
+  minWidth?: string;
+  px?: number;
+}) {
+  return (
+    <PMFlex
+      alignItems="center"
+      justifyContent="center"
+      bg="yellow.800"
+      color="yellow.200"
+      borderRadius="full"
+      minWidth={minWidth}
+      px={px}
+      height="24px"
+      fontSize="xs"
+      fontWeight="bold"
+      flexShrink={0}
+    >
+      {children}
+    </PMFlex>
+  );
+}
+
+function SidebarNavLink({
+  to,
+  name,
+  artefactType,
+  badge,
+}: {
+  to: string;
   name: string;
-  changeProposalCount: number;
   artefactType: string;
-  orgSlug: string;
-  spaceSlug: string;
+  badge: React.ReactNode;
 }) {
   const typeLabel = artefactTypeLabels[artefactType] ?? artefactType;
 
   return (
-    <NavLink
-      key={artefactId}
-      to={routes.space.toReviewChangesArtefact(
-        orgSlug,
-        spaceSlug,
-        artefactType,
-        artefactId,
-      )}
-      prefetch="intent"
-    >
+    <NavLink to={to} prefetch="intent">
       {({ isActive }) => (
         <PMTooltip label={name} placement="bottom-start" openDelay={300}>
           <PMLink
@@ -91,20 +106,7 @@ function ArtefactNavLink({
                   {typeLabel}
                 </PMText>
               </PMVStack>
-              <PMFlex
-                alignItems="center"
-                justifyContent="center"
-                bg="yellow.800"
-                color="yellow.200"
-                borderRadius="full"
-                minWidth="24px"
-                height="24px"
-                fontSize="xs"
-                fontWeight="bold"
-                flexShrink={0}
-              >
-                {changeProposalCount}
-              </PMFlex>
+              {badge}
             </PMHStack>
           </PMLink>
         </PMTooltip>
@@ -206,22 +208,50 @@ export function ReviewChangesSidebar({
       <PMBox flex={1} minH={0} overflowY="auto">
         <PMVerticalNavSection
           title="CHANGES TO REVIEW"
-          navEntries={allItems.map((item) => (
-            <PMBox
-              key={item.artefactId}
-              borderBottom="1px solid"
-              borderColor="{colors.border.tertiary}"
-            >
-              <ArtefactNavLink
-                artefactId={item.artefactId}
-                name={item.name}
-                changeProposalCount={item.changeProposalCount}
-                artefactType={item.artefactType}
-                orgSlug={orgSlug}
-                spaceSlug={spaceSlug}
-              />
-            </PMBox>
-          ))}
+          navEntries={[
+            ...allItems.map((item) => (
+              <PMBox
+                key={`artefact-${item.artefactId}`}
+                borderBottom="1px solid"
+                borderColor="{colors.border.tertiary}"
+              >
+                <SidebarNavLink
+                  to={routes.space.toReviewChangesArtefact(
+                    orgSlug,
+                    spaceSlug,
+                    item.artefactType,
+                    item.artefactId,
+                  )}
+                  name={item.name}
+                  artefactType={item.artefactType}
+                  badge={
+                    <NavBadge minWidth="24px">
+                      {item.changeProposalCount}
+                    </NavBadge>
+                  }
+                />
+              </PMBox>
+            )),
+            ...(groupedProposals.creations ?? []).map((item) => (
+              <PMBox
+                key={`creation-${item.proposalId}`}
+                borderBottom="1px solid"
+                borderColor="{colors.border.tertiary}"
+              >
+                <SidebarNavLink
+                  to={routes.space.toReviewChangesCreation(
+                    orgSlug,
+                    spaceSlug,
+                    item.artefactType,
+                    item.proposalId,
+                  )}
+                  name={item.name}
+                  artefactType={item.artefactType}
+                  badge={<NavBadge px={2}>New</NavBadge>}
+                />
+              </PMBox>
+            )),
+          ]}
         />
       </PMBox>
 

@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
   ChangeProposalId,
-  ChangeProposalType,
   OrganizationId,
   SkillId,
   SpaceId,
@@ -39,20 +38,18 @@ import { SkillGroupedAccordion } from './SkillGroupedAccordion';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import {
   getProposalFilePath,
+  isBinaryProposal,
   SKILL_MD_PATH,
 } from '../../utils/groupSkillProposalsByFile';
 import { isMarkdownPath } from './FileItems/FileContent';
+import { BinaryFilePlaceholder } from '../shared/BinaryFilePlaceholder';
 import { DiffView } from '../shared/DiffView';
 import { SkillFocusedView } from './SkillFocusedView';
 import { SkillInlineView } from './SkillInlineView';
 import { SkillOriginalTabContent } from './SkillOriginalTabContent';
 import { SkillResultTabContent } from './SkillResultTabContent';
 import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
-
-const SKILL_MD_MARKDOWN_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-]);
+import { SKILL_MD_MARKDOWN_TYPES } from '../../constants/skillProposalTypes';
 
 interface SkillReviewDetailProps {
   artefactId: string;
@@ -189,6 +186,9 @@ export function SkillReviewDetail({
       if (!skill) return null;
 
       if (viewMode === 'focused') {
+        if (isBinaryProposal(proposal)) {
+          return <BinaryFilePlaceholder />;
+        }
         const filePath = getProposalFilePath(proposal, files);
         const { oldValue, newValue } = extractProposalDiffValues(proposal);
         const isMarkdownContent =
@@ -205,13 +205,9 @@ export function SkillReviewDetail({
         );
       }
       if (viewMode === 'diff')
-        return (
-          <SkillFocusedView proposal={proposal} skill={skill} files={files} />
-        );
+        return <SkillFocusedView proposal={proposal} files={files} />;
       if (viewMode === 'inline')
-        return (
-          <SkillInlineView proposal={proposal} skill={skill} files={files} />
-        );
+        return <SkillInlineView proposal={proposal} files={files} />;
       return null;
     },
     [skill, files],

@@ -15,6 +15,7 @@ import {
   detectDeleteRuleConflict,
   detectDeleteSkillFileConflict,
 } from './detectSubItemDeleteConflict';
+import { detectRemoveConflict } from './detectRemoveConflict';
 
 type ConflictDetectorMap = {
   [K in ChangeProposalType]: ConflictDetector<K>;
@@ -45,6 +46,9 @@ const conflictDetectors: ConflictDetectorMap = {
   [ChangeProposalType.createStandard]: () => false,
   [ChangeProposalType.createCommand]: () => false,
   [ChangeProposalType.createSkill]: () => false,
+  [ChangeProposalType.removeStandard]: detectRemoveConflict,
+  [ChangeProposalType.removeCommand]: detectRemoveConflict,
+  [ChangeProposalType.removeSkill]: detectRemoveConflict,
 };
 
 export function getConflictDetector<T extends ChangeProposalType>(

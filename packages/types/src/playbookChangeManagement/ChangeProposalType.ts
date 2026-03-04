@@ -21,6 +21,9 @@ export enum ChangeProposalType {
   createStandard = 'createStandard',
   createCommand = 'createCommand',
   createSkill = 'createSkill',
+  removeStandard = 'removeStandard',
+  removeCommand = 'removeCommand',
+  removeSkill = 'removeSkill',
 }
 
 export type ChangeProposalItemType = 'standard' | 'command' | 'skill';
@@ -33,12 +36,14 @@ const standardTypes = new Set<ChangeProposalType>([
   ChangeProposalType.updateRule,
   ChangeProposalType.deleteRule,
   ChangeProposalType.createStandard,
+  ChangeProposalType.removeStandard,
 ]);
 
 const commandTypes = new Set<ChangeProposalType>([
   ChangeProposalType.updateCommandName,
   ChangeProposalType.updateCommandDescription,
   ChangeProposalType.createCommand,
+  ChangeProposalType.removeCommand,
 ]);
 
 export function getItemTypeFromChangeProposalType(

@@ -5,7 +5,8 @@ import { PMTabsContent } from './PMTabsContent';
 type PMTabData = {
   value: string;
   triggerLabel: React.ReactNode;
-  content: React.ReactNode;
+  content?: React.ReactNode;
+  disabled?: boolean;
 };
 
 interface PMTabsProps extends TabsRootProps {
@@ -17,19 +18,25 @@ interface PMTabsProps extends TabsRootProps {
 export const PMTabs = ({ tabs, defaultValue, ...rest }: PMTabsProps) => {
   return (
     <Tabs.Root defaultValue={defaultValue} {...rest}>
-      <Tabs.List>
+      <Tabs.List mb={0}>
         {tabs.map((tab) => (
-          <PMTabsTrigger key={tab.value} value={tab.value}>
+          <PMTabsTrigger
+            key={tab.value}
+            value={tab.value}
+            disabled={tab.disabled}
+          >
             {tab.triggerLabel}
           </PMTabsTrigger>
         ))}
       </Tabs.List>
 
-      {tabs.map((tab) => (
-        <PMTabsContent key={tab.value} value={tab.value}>
-          {tab.content}
-        </PMTabsContent>
-      ))}
+      {tabs
+        .filter((tab) => tab.content != null)
+        .map((tab) => (
+          <PMTabsContent key={tab.value} value={tab.value}>
+            {tab.content}
+          </PMTabsContent>
+        ))}
     </Tabs.Root>
   );
 };
