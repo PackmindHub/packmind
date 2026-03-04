@@ -7,42 +7,24 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import {
-  ChangeProposalType,
-  CollectionItemAddPayload,
-  CollectionItemDeletePayload,
-  CollectionItemUpdatePayload,
-  Skill,
-  SkillFile,
-  SkillFileId,
-} from '@packmind/types';
+import { ChangeProposalType, Skill, SkillFile } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { renderDiffText } from '../../utils/renderDiffText';
 import { buildDiffSections } from '../../utils/buildDiffSections';
 import { isMarkdownPath } from './FileItems/FileContent';
 import { getFileLanguage } from '../../../skills/utils/fileTreeUtils';
+import {
+  SCALAR_SKILL_TYPES,
+  SKILL_MD_MARKDOWN_TYPES,
+} from '../../constants/skillProposalTypes';
+import { getProposalFilePath } from '../../utils/groupSkillProposalsByFile';
 
 interface SkillInlineViewProps {
   proposal: ChangeProposalWithConflicts;
   skill: Skill;
   files: SkillFile[];
 }
-
-const SCALAR_SKILL_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillName,
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-  ChangeProposalType.updateSkillMetadata,
-  ChangeProposalType.updateSkillLicense,
-  ChangeProposalType.updateSkillCompatibility,
-  ChangeProposalType.updateSkillAllowedTools,
-]);
-
-const MARKDOWN_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-]);
 
 export function SkillInlineView({
   proposal,
@@ -272,34 +254,10 @@ function FileInlineView({
   const isUpdatePermissions =
     proposal.type === ChangeProposalType.updateSkillFilePermissions;
 
-  const filePath = useMemo(() => {
-    if (isAddFile) {
-      const payload = proposal.payload as CollectionItemAddPayload<
-        Omit<SkillFile, 'id' | 'skillVersionId'>
-      >;
-      return payload.item.path;
-    }
-    if (isDeleteFile) {
-      const payload = proposal.payload as CollectionItemDeletePayload<
-        Omit<SkillFile, 'skillVersionId'>
-      >;
-      return payload.item.path;
-    }
-    if (isUpdateContent || isUpdatePermissions) {
-      const payload =
-        proposal.payload as CollectionItemUpdatePayload<SkillFileId>;
-      const file = files.find((f) => f.id === payload.targetId);
-      return file?.path ?? 'Unknown file';
-    }
-    return 'Unknown file';
-  }, [
-    proposal,
-    files,
-    isAddFile,
-    isDeleteFile,
-    isUpdateContent,
-    isUpdatePermissions,
-  ]);
+  const filePath = useMemo(
+    () => getProposalFilePath(proposal, files),
+    [proposal, files],
+  );
 
   const isMarkdown = isMarkdownPath(filePath);
 

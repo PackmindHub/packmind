@@ -6,41 +6,23 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import {
-  ChangeProposalType,
-  CollectionItemAddPayload,
-  CollectionItemDeletePayload,
-  CollectionItemUpdatePayload,
-  Skill,
-  SkillFile,
-  SkillFileId,
-} from '@packmind/types';
+import { ChangeProposalType, Skill, SkillFile } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { buildDiffSections } from '../../utils/buildDiffSections';
 import { DiffBlock } from '../shared/DiffBlock';
-import { FileContent, isMarkdownPath } from './FileItems/FileContent';
+import { isMarkdownPath } from './FileItems/FileContent';
+import {
+  SCALAR_SKILL_TYPES,
+  SKILL_MD_MARKDOWN_TYPES,
+} from '../../constants/skillProposalTypes';
+import { getProposalFilePath } from '../../utils/groupSkillProposalsByFile';
 
 interface SkillFocusedViewProps {
   proposal: ChangeProposalWithConflicts;
   skill: Skill;
   files: SkillFile[];
 }
-
-const SCALAR_SKILL_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillName,
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-  ChangeProposalType.updateSkillMetadata,
-  ChangeProposalType.updateSkillLicense,
-  ChangeProposalType.updateSkillCompatibility,
-  ChangeProposalType.updateSkillAllowedTools,
-]);
-
-const MARKDOWN_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-]);
 
 const contextOpacity = 0.5;
 
@@ -52,7 +34,7 @@ export function SkillFocusedView({
   const { oldValue, newValue } = extractProposalDiffValues(proposal);
   const isScalar = SCALAR_SKILL_TYPES.has(proposal.type);
 
-  const isMarkdownField = MARKDOWN_TYPES.has(proposal.type);
+  const isMarkdownField = SKILL_MD_MARKDOWN_TYPES.has(proposal.type);
 
   const diffSections = useMemo(
     () => (isMarkdownField ? buildDiffSections(oldValue, newValue) : []),
@@ -376,34 +358,10 @@ function FileFocusedView({
   const isUpdatePermissions =
     proposal.type === ChangeProposalType.updateSkillFilePermissions;
 
-  const filePath = useMemo(() => {
-    if (isAddFile) {
-      const payload = proposal.payload as CollectionItemAddPayload<
-        Omit<SkillFile, 'id' | 'skillVersionId'>
-      >;
-      return payload.item.path;
-    }
-    if (isDeleteFile) {
-      const payload = proposal.payload as CollectionItemDeletePayload<
-        Omit<SkillFile, 'skillVersionId'>
-      >;
-      return payload.item.path;
-    }
-    if (isUpdateContent || isUpdatePermissions) {
-      const payload =
-        proposal.payload as CollectionItemUpdatePayload<SkillFileId>;
-      const file = files.find((f) => f.id === payload.targetId);
-      return file?.path ?? 'Unknown file';
-    }
-    return 'Unknown file';
-  }, [
-    proposal,
-    files,
-    isAddFile,
-    isDeleteFile,
-    isUpdateContent,
-    isUpdatePermissions,
-  ]);
+  const filePath = useMemo(
+    () => getProposalFilePath(proposal, files),
+    [proposal, files],
+  );
 
   const isMarkdown = isMarkdownPath(filePath);
 

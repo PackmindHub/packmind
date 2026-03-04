@@ -8,6 +8,7 @@ import {
   SkillFileId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
+import { SCALAR_SKILL_TYPES } from '../constants/skillProposalTypes';
 
 export const SKILL_MD_PATH = '/SKILL.md';
 
@@ -17,16 +18,6 @@ export interface FileGroup {
   changeCount: number;
   pendingCount: number;
 }
-
-const SCALAR_SKILL_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillName,
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-  ChangeProposalType.updateSkillMetadata,
-  ChangeProposalType.updateSkillLicense,
-  ChangeProposalType.updateSkillCompatibility,
-  ChangeProposalType.updateSkillAllowedTools,
-]);
 
 export function getProposalFilePath(
   proposal: ChangeProposalWithConflicts,

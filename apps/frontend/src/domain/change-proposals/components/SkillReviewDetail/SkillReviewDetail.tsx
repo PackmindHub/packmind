@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
   ChangeProposalId,
-  ChangeProposalType,
   OrganizationId,
   SkillId,
   SpaceId,
@@ -48,11 +47,7 @@ import { SkillInlineView } from './SkillInlineView';
 import { SkillOriginalTabContent } from './SkillOriginalTabContent';
 import { SkillResultTabContent } from './SkillResultTabContent';
 import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
-
-const SKILL_MD_MARKDOWN_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-]);
+import { SKILL_MD_MARKDOWN_TYPES } from '../../constants/skillProposalTypes';
 
 interface SkillReviewDetailProps {
   artefactId: string;
