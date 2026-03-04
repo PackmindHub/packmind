@@ -88,6 +88,8 @@ describe('SkillCreateChangeProposalApplier', () => {
     });
 
     describe('when license contains YAML special characters', () => {
+      let parsed: ReturnType<typeof parseSkillMdContent>;
+
       beforeEach(async () => {
         const proposal = changeProposalFactory({
           type: ChangeProposalType.createSkill,
@@ -101,17 +103,14 @@ describe('SkillCreateChangeProposalApplier', () => {
           },
         });
         await applier.apply(proposal, spaceId, organizationId);
+        parsed = parseSkillMdContent(capturedSkillMdContent);
       });
 
       it('preserves the license value', () => {
-        const parsed = parseSkillMdContent(capturedSkillMdContent);
-
         expect(parsed?.properties.license).toBe('MIT: v2');
       });
 
       it('preserves the compatibility value', () => {
-        const parsed = parseSkillMdContent(capturedSkillMdContent);
-
         expect(parsed?.properties.compatibility).toBe('[cursor, claude]');
       });
     });
@@ -141,8 +140,9 @@ describe('SkillCreateChangeProposalApplier', () => {
 
   describe('generateSkillMd — metadata serialization', () => {
     describe('when metadata has unordered keys', () => {
-      it('serializes metadata with keys sorted alphabetically', async () => {
-        const metadata = { z: 'last', a: 'first', m: 'middle' };
+      const metadata = { z: 'last', a: 'first', m: 'middle' };
+
+      beforeEach(async () => {
         const proposal = changeProposalFactory({
           type: ChangeProposalType.createSkill,
           createdBy: userId,
@@ -153,9 +153,10 @@ describe('SkillCreateChangeProposalApplier', () => {
             metadata,
           },
         });
-
         await applier.apply(proposal, spaceId, organizationId);
+      });
 
+      it('serializes metadata with keys sorted alphabetically', () => {
         expect(capturedSkillMdContent).toContain(
           `metadata: ${serializeSkillMetadata(metadata)}`,
         );
@@ -164,6 +165,8 @@ describe('SkillCreateChangeProposalApplier', () => {
   });
 
   describe('generateSkillMd — happy path', () => {
+    let parsed: ReturnType<typeof parseSkillMdContent>;
+
     beforeEach(async () => {
       const proposal = changeProposalFactory({
         type: ChangeProposalType.createSkill,
@@ -179,41 +182,30 @@ describe('SkillCreateChangeProposalApplier', () => {
         },
       });
       await applier.apply(proposal, spaceId, organizationId);
+      parsed = parseSkillMdContent(capturedSkillMdContent);
     });
 
     it('parses the name correctly', () => {
-      const parsed = parseSkillMdContent(capturedSkillMdContent);
-
       expect(parsed?.properties.name).toBe('My Skill');
     });
 
     it('parses the description correctly', () => {
-      const parsed = parseSkillMdContent(capturedSkillMdContent);
-
       expect(parsed?.properties.description).toBe('A useful skill');
     });
 
     it('parses the license correctly', () => {
-      const parsed = parseSkillMdContent(capturedSkillMdContent);
-
       expect(parsed?.properties.license).toBe('MIT');
     });
 
     it('parses the compatibility correctly', () => {
-      const parsed = parseSkillMdContent(capturedSkillMdContent);
-
       expect(parsed?.properties.compatibility).toBe('cursor');
     });
 
     it('parses the allowedTools correctly', () => {
-      const parsed = parseSkillMdContent(capturedSkillMdContent);
-
       expect(parsed?.properties.allowedTools).toBe('Read,Write');
     });
 
     it('parses the prompt body correctly', () => {
-      const parsed = parseSkillMdContent(capturedSkillMdContent);
-
       expect(parsed?.body).toBe('Do the thing');
     });
   });
