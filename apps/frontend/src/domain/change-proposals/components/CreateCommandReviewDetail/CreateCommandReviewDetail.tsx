@@ -6,6 +6,7 @@ import {
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
+import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { SubmissionBanner } from '../SubmissionBanner';
 import { ReviewActionButtons } from '../ReviewActionButtons';
 import {
@@ -85,7 +86,7 @@ export function CreateCommandReviewDetail({
         </PMText>
         <MarkdownEditorProvider>
           <MarkdownEditor
-            defaultValue={displayedProposal.content}
+            defaultValue={stripFrontmatter(displayedProposal.content)}
             readOnly
             paddingVariant="none"
           />

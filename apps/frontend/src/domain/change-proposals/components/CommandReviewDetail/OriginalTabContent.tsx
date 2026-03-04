@@ -1,5 +1,6 @@
 import { PMBox, PMHeading, PMMarkdownViewer, PMText } from '@packmind/ui';
 import { Recipe } from '@packmind/types';
+import { stripFrontmatter } from '../../utils/stripFrontmatter';
 
 interface OriginalTabContentProps {
   recipe: Recipe;
@@ -23,7 +24,7 @@ export function OriginalTabContent({
       <PMHeading size="md" mb={4}>
         {recipe.name}
       </PMHeading>
-      <PMMarkdownViewer content={recipe.content} />
+      <PMMarkdownViewer content={stripFrontmatter(recipe.content)} />
     </PMBox>
   );
 }
