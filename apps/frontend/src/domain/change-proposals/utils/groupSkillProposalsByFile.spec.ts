@@ -15,6 +15,7 @@ import {
 import { ChangeProposalWithConflicts } from '../types';
 import {
   SKILL_MD_PATH,
+  UNKNOWN_FILE_PATH,
   getProposalFilePath,
   groupSkillProposalsByFile,
 } from './groupSkillProposalsByFile';
@@ -168,7 +169,7 @@ describe('getProposalFilePath', () => {
   });
 
   describe('when file is not found', () => {
-    it('falls back to SKILL.md', () => {
+    it('falls back to unknown file path', () => {
       const proposal = changeProposalFactory({
         type: ChangeProposalType.updateSkillFileContent,
         payload: {
@@ -177,7 +178,7 @@ describe('getProposalFilePath', () => {
           newValue: 'new',
         },
       });
-      expect(getProposalFilePath(proposal, files)).toBe(SKILL_MD_PATH);
+      expect(getProposalFilePath(proposal, files)).toBe(UNKNOWN_FILE_PATH);
     });
   });
 });

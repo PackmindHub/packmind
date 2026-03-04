@@ -11,6 +11,7 @@ import { ChangeProposalWithConflicts } from '../types';
 import { SCALAR_SKILL_TYPES } from '../constants/skillProposalTypes';
 
 export const SKILL_MD_PATH = '/SKILL.md';
+export const UNKNOWN_FILE_PATH = '/unknown.md';
 
 export interface FileGroup {
   filePath: string;
@@ -48,10 +49,10 @@ export function getProposalFilePath(
     const payload =
       proposal.payload as CollectionItemUpdatePayload<SkillFileId>;
     const file = files.find((f) => f.id === payload.targetId);
-    return file?.path ?? SKILL_MD_PATH;
+    return file?.path ?? UNKNOWN_FILE_PATH;
   }
 
-  return SKILL_MD_PATH;
+  return UNKNOWN_FILE_PATH;
 }
 
 export function groupSkillProposalsByFile(
