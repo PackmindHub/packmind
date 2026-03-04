@@ -34,7 +34,15 @@ export const PackageCountHeaderInfo = ({
     organizationId,
   });
 
-  if (isLoading || count === 0) return null;
+  if (isLoading) return null;
+
+  if (count === 0) {
+    return (
+      <PMText variant="small" color="secondary">
+        Not included in any package
+      </PMText>
+    );
+  }
 
   return (
     <PMPopover.Root positioning={{ placement: 'bottom' }}>
