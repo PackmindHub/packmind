@@ -19,6 +19,7 @@ export const useCliLoginCode = () => {
     loginCode: mutation.data?.code || null,
     codeExpiresAt: mutation.data?.expiresAt,
     isGenerating: mutation.isPending,
+    isError: mutation.isError,
     regenerate,
   };
 };

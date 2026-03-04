@@ -1,17 +1,17 @@
 import { ReactNode } from 'react';
-import { CreateWithMcpContent } from './CreateWithMcpContent';
+import { CreateFromCodeContent } from '../../../../shared/components/cli/CreateFromCodeContent';
 
 type GettingStartedDialog = {
   title?: string;
   body: ReactNode;
 };
 
-const DEFAULT_DIALOGS = {
-  create: {
-    title: 'How to create commands and standards',
-    body: <CreateWithMcpContent />,
-  },
+export const GETTING_STARTED_CREATE_STANDARD_DIALOG: GettingStartedDialog = {
+  title: 'How to create standards',
+  body: <CreateFromCodeContent artifactType="standard" />,
 };
 
-// Export public constant to reuse the same "create" dialog content elsewhere (e.g., Standards empty state)
-export const GETTING_STARTED_CREATE_DIALOG = DEFAULT_DIALOGS.create;
+export const GETTING_STARTED_CREATE_COMMAND_DIALOG: GettingStartedDialog = {
+  title: 'How to create commands',
+  body: <CreateFromCodeContent artifactType="command" />,
+};
