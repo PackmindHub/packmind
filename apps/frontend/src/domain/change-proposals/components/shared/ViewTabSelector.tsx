@@ -1,4 +1,4 @@
-import { PMHStack, PMIcon, PMSegmentGroup } from '@packmind/ui';
+import { PMHStack, PMIcon, PMTabs } from '@packmind/ui';
 import { LuRepeat2, LuEye, LuSparkles } from 'react-icons/lu';
 import { ReviewTab } from '../../hooks/useCardReviewState';
 import { type ComponentType } from 'react';
@@ -9,7 +9,11 @@ interface ViewTabSelectorProps {
   disabledTabs?: ReviewTab[];
 }
 
-const tabs: { label: string; value: ReviewTab; icon: ComponentType }[] = [
+const tabDefinitions: {
+  label: string;
+  value: ReviewTab;
+  icon: ComponentType;
+}[] = [
   { label: 'Changes', value: 'changes', icon: LuRepeat2 },
   { label: 'Original', value: 'original', icon: LuEye },
   { label: 'Result', value: 'result', icon: LuSparkles },
@@ -20,30 +24,27 @@ export function ViewTabSelector({
   onTabChange,
   disabledTabs,
 }: Readonly<ViewTabSelectorProps>) {
+  const tabs = tabDefinitions.map((tab) => ({
+    value: tab.value,
+    triggerLabel: (
+      <PMHStack gap={1} alignItems="center">
+        <PMIcon>
+          <tab.icon />
+        </PMIcon>
+        {tab.label}
+      </PMHStack>
+    ),
+    disabled: disabledTabs?.includes(tab.value),
+  }));
+
   return (
-    <PMSegmentGroup.Root
-      size="sm"
+    <PMTabs
+      tabs={tabs}
+      defaultValue={activeTab}
       value={activeTab}
-      onValueChange={(e) => onTabChange(e.value as ReviewTab)}
-    >
-      <PMSegmentGroup.Indicator />
-      {tabs.map((tab) => (
-        <PMSegmentGroup.Item
-          key={tab.value}
-          value={tab.value}
-          disabled={disabledTabs?.includes(tab.value)}
-        >
-          <PMSegmentGroup.ItemText>
-            <PMHStack gap={1} alignItems="center">
-              <PMIcon>
-                <tab.icon />
-              </PMIcon>
-              {tab.label}
-            </PMHStack>
-          </PMSegmentGroup.ItemText>
-          <PMSegmentGroup.ItemHiddenInput />
-        </PMSegmentGroup.Item>
-      ))}
-    </PMSegmentGroup.Root>
+      onValueChange={(details) => onTabChange(details.value as ReviewTab)}
+      variant="enclosed"
+      size="sm"
+    />
   );
 }
