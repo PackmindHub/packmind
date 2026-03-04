@@ -32,7 +32,12 @@
         "main": "apps/mcp-server/src/main.ts",
         "tsConfig": "apps/mcp-server/tsconfig.app.json",
         "assets": [
-          "apps/mcp-server/src/assets"
+          "apps/mcp-server/src/assets",
+          {
+            "input": "packages/linter-ast/res",
+            "glob": "*.wasm",
+            "output": "."
+          }
         ],
         "generatePackageJson": true,
         "esbuildOptions": {
@@ -48,14 +53,6 @@
           "watch": true
         },
         "production": {
-          "assets": [
-            "apps/mcp-server/src/assets",
-            {
-              "input": "packages/linter-ast/res",
-              "glob": "*.wasm",
-              "output": "."
-            }
-          ],
           "esbuildOptions": {
             "sourcemap": false,
             "outExtension": {
