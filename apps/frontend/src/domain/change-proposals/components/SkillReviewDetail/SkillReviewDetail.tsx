@@ -38,9 +38,11 @@ import { SkillGroupedAccordion } from './SkillGroupedAccordion';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import {
   getProposalFilePath,
+  isBinaryProposal,
   SKILL_MD_PATH,
 } from '../../utils/groupSkillProposalsByFile';
 import { isMarkdownPath } from './FileItems/FileContent';
+import { BinaryFilePlaceholder } from '../shared/BinaryFilePlaceholder';
 import { DiffView } from '../shared/DiffView';
 import { SkillFocusedView } from './SkillFocusedView';
 import { SkillInlineView } from './SkillInlineView';
@@ -184,6 +186,9 @@ export function SkillReviewDetail({
       if (!skill) return null;
 
       if (viewMode === 'focused') {
+        if (isBinaryProposal(proposal)) {
+          return <BinaryFilePlaceholder />;
+        }
         const filePath = getProposalFilePath(proposal, files);
         const { oldValue, newValue } = extractProposalDiffValues(proposal);
         const isMarkdownContent =

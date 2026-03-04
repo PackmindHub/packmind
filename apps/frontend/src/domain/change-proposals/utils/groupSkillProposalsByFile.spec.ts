@@ -18,6 +18,7 @@ import {
   UNKNOWN_FILE_PATH,
   getProposalFilePath,
   groupSkillProposalsByFile,
+  isBinaryProposal,
 } from './groupSkillProposalsByFile';
 
 const skillFileFactory = (overrides?: Partial<SkillFile>): SkillFile => ({
@@ -387,6 +388,114 @@ describe('groupSkillProposalsByFile', () => {
 
     it('sorts newer proposal last', () => {
       expect(result[0].proposals[1].id).toBe(p1.id);
+    });
+  });
+});
+
+describe('isBinaryProposal', () => {
+  describe('when proposal is addSkillFile with isBase64 true', () => {
+    it('returns true', () => {
+      const proposal = changeProposalFactory({
+        type: ChangeProposalType.addSkillFile,
+        payload: {
+          item: {
+            path: 'icon.png',
+            content: 'base64content',
+            permissions: 'rw-r--r--',
+            isBase64: true,
+          },
+        },
+      });
+      expect(isBinaryProposal(proposal)).toBe(true);
+    });
+  });
+
+  describe('when proposal is addSkillFile with isBase64 false', () => {
+    it('returns false', () => {
+      const proposal = changeProposalFactory({
+        type: ChangeProposalType.addSkillFile,
+        payload: {
+          item: {
+            path: 'readme.md',
+            content: '# Hello',
+            permissions: 'rw-r--r--',
+            isBase64: false,
+          },
+        },
+      });
+      expect(isBinaryProposal(proposal)).toBe(false);
+    });
+  });
+
+  describe('when proposal is deleteSkillFile with isBase64 true', () => {
+    it('returns true', () => {
+      const proposal = changeProposalFactory({
+        type: ChangeProposalType.deleteSkillFile,
+        payload: {
+          targetId: createSkillFileId('file-1'),
+          item: {
+            id: createSkillFileId('file-1'),
+            path: 'doc.pdf',
+            content: 'base64content',
+            permissions: 'rw-r--r--',
+            isBase64: true,
+          },
+        },
+      });
+      expect(isBinaryProposal(proposal)).toBe(true);
+    });
+  });
+
+  describe('when proposal is updateSkillFileContent with isBase64 true', () => {
+    it('returns true', () => {
+      const proposal = changeProposalFactory({
+        type: ChangeProposalType.updateSkillFileContent,
+        payload: {
+          targetId: createSkillFileId('file-1'),
+          oldValue: 'old-base64',
+          newValue: 'new-base64',
+          isBase64: true,
+        },
+      });
+      expect(isBinaryProposal(proposal)).toBe(true);
+    });
+  });
+
+  describe('when proposal is updateSkillFileContent without isBase64', () => {
+    it('returns false', () => {
+      const proposal = changeProposalFactory({
+        type: ChangeProposalType.updateSkillFileContent,
+        payload: {
+          targetId: createSkillFileId('file-1'),
+          oldValue: 'old text',
+          newValue: 'new text',
+        },
+      });
+      expect(isBinaryProposal(proposal)).toBe(false);
+    });
+  });
+
+  describe('when proposal is updateSkillFilePermissions', () => {
+    it('returns false', () => {
+      const proposal = changeProposalFactory({
+        type: ChangeProposalType.updateSkillFilePermissions,
+        payload: {
+          targetId: createSkillFileId('file-1'),
+          oldValue: 'read',
+          newValue: 'read-write',
+        },
+      });
+      expect(isBinaryProposal(proposal)).toBe(false);
+    });
+  });
+
+  describe('when proposal is a scalar type', () => {
+    it('returns false', () => {
+      const proposal = changeProposalFactory({
+        type: ChangeProposalType.updateSkillName,
+        payload: { oldValue: 'Old', newValue: 'New' },
+      });
+      expect(isBinaryProposal(proposal)).toBe(false);
     });
   });
 });

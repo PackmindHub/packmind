@@ -11,13 +11,17 @@ import { ChangeProposalWithConflicts } from '../../types';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { renderDiffText } from '../../utils/renderDiffText';
 import { buildDiffSections } from '../../utils/buildDiffSections';
+import { BinaryFilePlaceholder } from '../shared/BinaryFilePlaceholder';
 import { isMarkdownPath } from './FileItems/FileContent';
 import { getFileLanguage } from '../../../skills/utils/fileTreeUtils';
 import {
   SCALAR_SKILL_TYPES,
   SKILL_MD_MARKDOWN_TYPES,
 } from '../../constants/skillProposalTypes';
-import { getProposalFilePath } from '../../utils/groupSkillProposalsByFile';
+import {
+  getProposalFilePath,
+  isBinaryProposal,
+} from '../../utils/groupSkillProposalsByFile';
 
 interface SkillInlineViewProps {
   proposal: ChangeProposalWithConflicts;
@@ -117,7 +121,19 @@ function FileInlineView({
     [proposal, files],
   );
 
+  const isBinary = isBinaryProposal(proposal);
   const isMarkdown = isMarkdownPath(filePath);
+
+  if (isBinary) {
+    return (
+      <PMBox>
+        <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
+          {filePath}
+        </PMText>
+        <BinaryFilePlaceholder />
+      </PMBox>
+    );
+  }
 
   return (
     <PMBox>

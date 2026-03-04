@@ -5,6 +5,7 @@ import {
   CollectionItemDeletePayload,
   CollectionItemUpdatePayload,
   SkillFile,
+  SkillFileContentUpdatePayload,
   SkillFileId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
@@ -53,6 +54,31 @@ export function getProposalFilePath(
   }
 
   return UNKNOWN_FILE_PATH;
+}
+
+export function isBinaryProposal(
+  proposal: ChangeProposalWithConflicts,
+): boolean {
+  if (proposal.type === ChangeProposalType.addSkillFile) {
+    const payload = proposal.payload as CollectionItemAddPayload<
+      Omit<SkillFile, 'id' | 'skillVersionId'>
+    >;
+    return payload.item.isBase64;
+  }
+
+  if (proposal.type === ChangeProposalType.deleteSkillFile) {
+    const payload = proposal.payload as CollectionItemDeletePayload<
+      Omit<SkillFile, 'skillVersionId'>
+    >;
+    return payload.item.isBase64;
+  }
+
+  if (proposal.type === ChangeProposalType.updateSkillFileContent) {
+    const payload = proposal.payload as SkillFileContentUpdatePayload;
+    return payload.isBase64 ?? false;
+  }
+
+  return false;
 }
 
 export function groupSkillProposalsByFile(

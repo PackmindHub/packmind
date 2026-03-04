@@ -4,13 +4,17 @@ import { ChangeProposalType, SkillFile } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { buildDiffSections } from '../../utils/buildDiffSections';
+import { BinaryFilePlaceholder } from '../shared/BinaryFilePlaceholder';
 import { DiffBlock } from '../shared/DiffBlock';
 import { isMarkdownPath } from './FileItems/FileContent';
 import {
   SCALAR_SKILL_TYPES,
   SKILL_MD_MARKDOWN_TYPES,
 } from '../../constants/skillProposalTypes';
-import { getProposalFilePath } from '../../utils/groupSkillProposalsByFile';
+import {
+  getProposalFilePath,
+  isBinaryProposal,
+} from '../../utils/groupSkillProposalsByFile';
 
 interface SkillFocusedViewProps {
   proposal: ChangeProposalWithConflicts;
@@ -152,6 +156,7 @@ function FileFocusedView({
     [proposal, files],
   );
 
+  const isBinary = isBinaryProposal(proposal);
   const isMarkdown = isMarkdownPath(filePath);
 
   const diffSections = useMemo(
@@ -161,6 +166,17 @@ function FileFocusedView({
         : [],
     [isMarkdown, isUpdateContent, oldValue, newValue],
   );
+
+  if (isBinary) {
+    return (
+      <PMBox>
+        <PMText fontSize="xs" fontWeight="semibold" color="secondary" mb={2}>
+          {filePath}
+        </PMText>
+        <BinaryFilePlaceholder />
+      </PMBox>
+    );
+  }
 
   return (
     <PMBox>
