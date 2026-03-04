@@ -200,13 +200,9 @@ export function SkillReviewDetail({
         );
       }
       if (viewMode === 'diff')
-        return (
-          <SkillFocusedView proposal={proposal} skill={skill} files={files} />
-        );
+        return <SkillFocusedView proposal={proposal} files={files} />;
       if (viewMode === 'inline')
-        return (
-          <SkillInlineView proposal={proposal} skill={skill} files={files} />
-        );
+        return <SkillInlineView proposal={proposal} files={files} />;
       return null;
     },
     [skill, files],

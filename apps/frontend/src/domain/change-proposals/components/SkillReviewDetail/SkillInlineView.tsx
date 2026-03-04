@@ -2,12 +2,11 @@ import { useMemo } from 'react';
 import {
   PMBox,
   PMCodeMirror,
-  PMHeading,
   PMMarkdownViewer,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { ChangeProposalType, Skill, SkillFile } from '@packmind/types';
+import { ChangeProposalType, SkillFile } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { renderDiffText } from '../../utils/renderDiffText';
@@ -22,26 +21,30 @@ import { getProposalFilePath } from '../../utils/groupSkillProposalsByFile';
 
 interface SkillInlineViewProps {
   proposal: ChangeProposalWithConflicts;
-  skill: Skill;
   files: SkillFile[];
 }
 
 export function SkillInlineView({
   proposal,
-  skill,
   files,
 }: Readonly<SkillInlineViewProps>) {
   const { oldValue, newValue } = extractProposalDiffValues(proposal);
   const isScalar = SCALAR_SKILL_TYPES.has(proposal.type);
+  const isMarkdownField = SKILL_MD_MARKDOWN_TYPES.has(proposal.type);
 
   if (isScalar) {
-    return (
-      <SkillMdInlineView
-        proposal={proposal}
-        skill={skill}
-        oldValue={oldValue}
-        newValue={newValue}
-      />
+    return isMarkdownField ? (
+      <DescriptionInlineDiff oldValue={oldValue} newValue={newValue} />
+    ) : (
+      <PMBox
+        p={3}
+        bg="background.tertiary"
+        borderLeft="2px solid"
+        borderColor="border.tertiary"
+        borderRadius="md"
+      >
+        <PMText fontSize="sm">{renderDiffText(oldValue, newValue)}</PMText>
+      </PMBox>
     );
   }
 
@@ -52,151 +55,6 @@ export function SkillInlineView({
       oldValue={oldValue}
       newValue={newValue}
     />
-  );
-}
-
-function SkillMdInlineView({
-  proposal,
-  skill,
-  oldValue,
-  newValue,
-}: Readonly<{
-  proposal: ChangeProposalWithConflicts;
-  skill: Skill;
-  oldValue: string;
-  newValue: string;
-}>) {
-  const isNameChange = proposal.type === ChangeProposalType.updateSkillName;
-  const isDescriptionChange =
-    proposal.type === ChangeProposalType.updateSkillDescription;
-  const isPromptChange = proposal.type === ChangeProposalType.updateSkillPrompt;
-  const isMetadataChange =
-    proposal.type === ChangeProposalType.updateSkillMetadata;
-  const isLicenseChange =
-    proposal.type === ChangeProposalType.updateSkillLicense;
-  const isCompatibilityChange =
-    proposal.type === ChangeProposalType.updateSkillCompatibility;
-  const isAllowedToolsChange =
-    proposal.type === ChangeProposalType.updateSkillAllowedTools;
-
-  const isFieldChange =
-    isLicenseChange ||
-    isCompatibilityChange ||
-    isAllowedToolsChange ||
-    isMetadataChange;
-
-  return (
-    <PMBox>
-      {/* Name section */}
-      <PMBox mb={4}>
-        {isNameChange ? (
-          <PMHeading size="md">{renderDiffText(oldValue, newValue)}</PMHeading>
-        ) : (
-          <PMHeading size="md" color={isFieldChange ? 'faded' : undefined}>
-            {skill.name}
-          </PMHeading>
-        )}
-      </PMBox>
-
-      {/* Description section */}
-      <PMBox
-        mb={4}
-        opacity={isDescriptionChange ? 1 : isFieldChange ? 0.5 : 0.7}
-      >
-        {isDescriptionChange ? (
-          <DescriptionInlineDiff oldValue={oldValue} newValue={newValue} />
-        ) : (
-          <PMMarkdownViewer content={skill.description} />
-        )}
-      </PMBox>
-
-      {/* Prompt section */}
-      <PMBox mb={4} opacity={isPromptChange ? 1 : isFieldChange ? 0.5 : 0.7}>
-        <PMText fontSize="sm" fontWeight="semibold" mb={1}>
-          Prompt
-        </PMText>
-        {isPromptChange ? (
-          <DescriptionInlineDiff oldValue={oldValue} newValue={newValue} />
-        ) : (
-          <PMMarkdownViewer content={skill.prompt} />
-        )}
-      </PMBox>
-
-      {/* Optional fields */}
-      {(skill.license || isLicenseChange) && (
-        <InlineOptionalField
-          label="License"
-          isChanged={isLicenseChange}
-          currentValue={skill.license}
-          oldValue={oldValue}
-          newValue={newValue}
-        />
-      )}
-
-      {(skill.compatibility || isCompatibilityChange) && (
-        <InlineOptionalField
-          label="Compatibility"
-          isChanged={isCompatibilityChange}
-          currentValue={skill.compatibility}
-          oldValue={oldValue}
-          newValue={newValue}
-        />
-      )}
-
-      {(skill.allowedTools || isAllowedToolsChange) && (
-        <InlineOptionalField
-          label="Allowed Tools"
-          isChanged={isAllowedToolsChange}
-          currentValue={skill.allowedTools}
-          oldValue={oldValue}
-          newValue={newValue}
-        />
-      )}
-
-      {(skill.metadata || isMetadataChange) && (
-        <PMBox mb={4}>
-          <PMText fontSize="sm" fontWeight="semibold" mb={1}>
-            Metadata
-          </PMText>
-          {isMetadataChange ? (
-            <PMText fontSize="sm">{renderDiffText(oldValue, newValue)}</PMText>
-          ) : (
-            <PMText fontSize="sm" color="faded">
-              {JSON.stringify(skill.metadata)}
-            </PMText>
-          )}
-        </PMBox>
-      )}
-    </PMBox>
-  );
-}
-
-function InlineOptionalField({
-  label,
-  isChanged,
-  currentValue,
-  oldValue,
-  newValue,
-}: Readonly<{
-  label: string;
-  isChanged: boolean;
-  currentValue: string | undefined;
-  oldValue: string;
-  newValue: string;
-}>) {
-  return (
-    <PMBox mb={4}>
-      <PMText fontSize="sm" fontWeight="semibold" mb={1}>
-        {label}
-      </PMText>
-      {isChanged ? (
-        <PMText fontSize="sm">{renderDiffText(oldValue, newValue)}</PMText>
-      ) : (
-        <PMText fontSize="sm" color="faded">
-          {currentValue}
-        </PMText>
-      )}
-    </PMBox>
   );
 }
 
