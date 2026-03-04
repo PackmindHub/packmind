@@ -39,6 +39,7 @@ import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import {
   GET_RULES_BY_STANDARD_ID_KEY,
   getStandardByIdKey,
+  getStandardsBySpaceKey,
 } from '../../../standards/api/queryKeys';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -435,9 +436,45 @@ export const useApplyCreationChangeProposalsMutation = (params?: {
       return changeProposalsGateway.applyCreationChangeProposals(command);
     },
     onSuccess: async (response, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
-      });
+      const invalidations: Promise<void>[] = [
+        queryClient.invalidateQueries({
+          queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+        }),
+      ];
+
+      if (response.created.standards.length > 0) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: getStandardsBySpaceKey(variables.spaceId),
+          }),
+        );
+      }
+
+      if (response.created.skills.length > 0) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: GET_SKILLS_KEY,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [
+              ORGANIZATION_QUERY_SCOPE,
+              SPACES_SCOPE,
+              variables.spaceId,
+              SKILLS_QUERY_SCOPE,
+            ],
+          }),
+        );
+      }
+
+      if (response.created.commands.length > 0) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: GET_RECIPES_KEY,
+          }),
+        );
+      }
+
+      await Promise.all(invalidations);
 
       const accepted = variables.accepted.length > 0;
       // orgSlug/spaceSlug guard removed: the toast is informational only and does not
