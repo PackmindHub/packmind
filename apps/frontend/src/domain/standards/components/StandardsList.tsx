@@ -25,10 +25,12 @@ import { StandardId } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { StandardsBlankState } from './StandardsBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
+import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -39,7 +41,8 @@ export const StandardsList = ({
   orgSlug,
   onEmptyStateChange,
 }: StandardsListProps = {}) => {
-  const { spaceSlug } = useCurrentSpace();
+  const { spaceSlug, spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
   const {
     data: listStandardsResponse,
     isLoading,
@@ -197,13 +200,25 @@ export const StandardsList = ({
           </>
         ),
         version: standard.version,
+        packages: (
+          <PackageCountBadge
+            artifactId={standard.id}
+            artifactType="standard"
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            spaceId={spaceId}
+            organizationId={organization?.id}
+          />
+        ),
       })),
     );
   }, [
     listStandardsResponse,
     selectedStandardIds,
     spaceSlug,
+    spaceId,
     orgSlug,
+    organization?.id,
     sortKey,
     sortDirection,
     searchQuery,
@@ -263,6 +278,12 @@ export const StandardsList = ({
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'packages',
+      header: 'Packages',
+      width: '120px',
+      align: 'center',
     },
   ];
 

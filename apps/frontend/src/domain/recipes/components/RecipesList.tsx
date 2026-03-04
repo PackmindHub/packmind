@@ -30,6 +30,7 @@ import { routes } from '../../../shared/utils/routes';
 import { WithTimestamps } from '@packmind/types';
 import { RecipesBlankState } from './RecipesBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
+import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -189,6 +190,16 @@ export const RecipesList = ({
           </>
         ),
         version: recipe.version,
+        packages: (
+          <PackageCountBadge
+            artifactId={recipe.id}
+            artifactType="recipe"
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            spaceId={spaceId}
+            organizationId={organization?.id}
+          />
+        ),
       })),
     );
   }, [
@@ -196,6 +207,8 @@ export const RecipesList = ({
     selectedRecipeIds,
     orgSlug,
     spaceSlug,
+    spaceId,
+    organization?.id,
     sortKey,
     sortDirection,
     searchQuery,
@@ -256,6 +269,12 @@ export const RecipesList = ({
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'packages',
+      header: 'Packages',
+      width: '120px',
+      align: 'center',
     },
   ];
 

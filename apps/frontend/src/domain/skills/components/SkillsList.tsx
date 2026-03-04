@@ -23,17 +23,20 @@ import {
   useDeleteSkillsBatchMutation,
 } from '../api/queries/SkillsQueries';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
+import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
 
 interface ISkillsListProps {
   orgSlug: string;
 }
 
 export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
-  const { spaceSlug } = useCurrentSpace();
+  const { spaceSlug, spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
   const { data: skills, isLoading, isError } = useGetSkillsQuery();
   const deleteBatchMutation = useDeleteSkillsBatchMutation();
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
@@ -164,13 +167,25 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         ) : (
           <span>-</span>
         ),
+        packages: (
+          <PackageCountBadge
+            artifactId={skill.id}
+            artifactType="skill"
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            spaceId={spaceId}
+            organizationId={organization?.id}
+          />
+        ),
       })),
     );
   }, [
     skills,
     selectedSkillIds,
     spaceSlug,
+    spaceId,
     orgSlug,
+    organization?.id,
     sortKey,
     sortDirection,
     searchQuery,
@@ -229,6 +244,12 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'packages',
+      header: 'Packages',
+      width: '120px',
+      align: 'center',
     },
   ];
 
