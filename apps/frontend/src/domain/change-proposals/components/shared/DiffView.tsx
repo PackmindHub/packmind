@@ -7,6 +7,7 @@ interface DiffViewProps {
   oldValue: string;
   newValue: string;
   isMarkdownContent: boolean;
+  filePath?: string;
 }
 
 function isChanged(
@@ -19,27 +20,12 @@ export function DiffView({
   oldValue,
   newValue,
   isMarkdownContent,
+  filePath,
 }: Readonly<DiffViewProps>) {
   const changedSections = useMemo(
-    () =>
-      isMarkdownContent
-        ? buildDiffSections(oldValue, newValue).filter(isChanged)
-        : [],
-    [oldValue, newValue, isMarkdownContent],
+    () => buildDiffSections(oldValue, newValue).filter(isChanged),
+    [oldValue, newValue],
   );
-
-  if (!isMarkdownContent) {
-    return (
-      <PMVStack gap={3} alignItems="stretch">
-        {oldValue && (
-          <DiffBlock value={oldValue} variant="removed" isMarkdown={false} />
-        )}
-        {newValue && (
-          <DiffBlock value={newValue} variant="added" isMarkdown={false} />
-        )}
-      </PMVStack>
-    );
-  }
 
   return (
     <PMVStack gap={3} alignItems="stretch">
@@ -49,7 +35,8 @@ export function DiffView({
             <DiffBlock
               value={section.oldValue}
               variant="removed"
-              isMarkdown={true}
+              isMarkdown={isMarkdownContent}
+              filePath={filePath}
             />
           )}
           {section.newValue && (
@@ -57,7 +44,8 @@ export function DiffView({
               <DiffBlock
                 value={section.newValue}
                 variant="added"
-                isMarkdown={true}
+                isMarkdown={isMarkdownContent}
+                filePath={filePath}
               />
             </PMBox>
           )}
