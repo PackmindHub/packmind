@@ -10,6 +10,7 @@ import {
   Skill,
   SpaceId,
 } from '@packmind/types';
+import { serializeSkillMetadata } from '@packmind/node-utils';
 
 export class SkillCreateChangeProposalApplier implements ICreateChangeProposalApplier<ChangeProposalType.createSkill> {
   constructor(private readonly skillsPort: ISkillsPort) {}
@@ -78,21 +79,27 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
     allowedTools?: string;
   }): string {
     const frontmatter = [
-      `name: ${metadata.name}`,
-      `description: ${metadata.description}`,
+      `name: ${JSON.stringify(metadata.name)}`,
+      `description: ${JSON.stringify(metadata.description)}`,
     ];
 
     if (metadata.license) {
-      frontmatter.push(`license: ${metadata.license}`);
+      frontmatter.push(`license: ${JSON.stringify(metadata.license)}`);
     }
     if (metadata.compatibility) {
-      frontmatter.push(`compatibility: ${metadata.compatibility}`);
+      frontmatter.push(
+        `compatibility: ${JSON.stringify(metadata.compatibility)}`,
+      );
     }
     if (metadata.metadata) {
-      frontmatter.push(`metadata: ${JSON.stringify(metadata.metadata)}`);
+      frontmatter.push(
+        `metadata: ${serializeSkillMetadata(metadata.metadata)}`,
+      );
     }
     if (metadata.allowedTools) {
-      frontmatter.push(`allowed-tools: ${metadata.allowedTools}`);
+      frontmatter.push(
+        `allowed-tools: ${JSON.stringify(metadata.allowedTools)}`,
+      );
     }
 
     return `---\n${frontmatter.join('\n')}\n---\n\n${metadata.prompt}`;

@@ -3,6 +3,7 @@ import { PMBox, PMHeading, PMMarkdownViewer, PMText } from '@packmind/ui';
 import { ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { buildDiffSections } from '../../utils/buildDiffSections';
+import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { DiffBlock } from '../shared/DiffBlock';
 
 interface InlineViewProps {
@@ -48,7 +49,7 @@ export function InlineView({ recipe, proposal }: Readonly<InlineViewProps>) {
             />
           )}
         </PMBox>
-        <PMMarkdownViewer content={recipe.content} />
+        <PMMarkdownViewer content={stripFrontmatter(recipe.content)} />
       </PMBox>
     );
   }

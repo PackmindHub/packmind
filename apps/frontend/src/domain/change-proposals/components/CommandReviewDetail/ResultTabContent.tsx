@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { ChangeProposalId, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { applyRecipeProposals } from '../../utils/applyRecipeProposals';
+import { stripFrontmatter } from '../../utils/stripFrontmatter';
 
 interface ResultTabContentProps {
   recipe: Recipe;
@@ -39,7 +40,7 @@ export function ResultTabContent({
           <PMHeading size="md" mb={4}>
             {applied.name}
           </PMHeading>
-          <PMMarkdownViewer content={applied.content} />
+          <PMMarkdownViewer content={stripFrontmatter(applied.content)} />
         </>
       ) : (
         <PMBox py={12} textAlign="center">

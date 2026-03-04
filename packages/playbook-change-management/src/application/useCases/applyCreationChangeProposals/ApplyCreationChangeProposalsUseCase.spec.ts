@@ -983,19 +983,19 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
 
       it('includes skill name', () => {
-        expect(skillMdFile?.content).toContain('name: My Skill');
+        expect(skillMdFile?.content).toContain('name: "My Skill"');
       });
 
       it('includes skill description', () => {
-        expect(skillMdFile?.content).toContain('description: A coding skill');
+        expect(skillMdFile?.content).toContain('description: "A coding skill"');
       });
 
       it('includes license', () => {
-        expect(skillMdFile?.content).toContain('license: MIT');
+        expect(skillMdFile?.content).toContain('license: "MIT"');
       });
 
       it('includes compatibility', () => {
-        expect(skillMdFile?.content).toContain('compatibility: >=1.0.0');
+        expect(skillMdFile?.content).toContain('compatibility: ">=1.0.0"');
       });
 
       it('includes prompt in body', () => {
