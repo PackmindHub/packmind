@@ -2,15 +2,21 @@
 
 ## Added
 
-- New command `update` allows to update `packmind-cli` to the newest version (#154)
-
 ## Changed
 
 ## Fixed
 
-- Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
-
 ## Removed
+
+# [0.20.0] - 2026-03-04
+
+## Added
+
+- New command `update` allows to update `packmind-cli` to the newest version (#154)
+
+## Fixed
+
+- Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
 
 # [0.19.0] - 2026-02-27
 
@@ -226,7 +232,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.19.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.20.0...HEAD
+[0.20.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.19.0...release-cli/0.20.0
 [0.19.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.18.0...release-cli/0.19.0
 [0.18.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.17.0...release-cli/0.18.0
 [0.17.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.1...release-cli/0.17.0
