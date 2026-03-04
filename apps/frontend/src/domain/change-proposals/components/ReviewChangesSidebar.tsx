@@ -155,7 +155,7 @@ export function ReviewChangesSidebar({
       .filter((path) => path !== 'SKILL.md');
 
     const pathSet = new Set([...existingPaths, ...addFilePaths]);
-    return Array.from(pathSet).sort();
+    return Array.from(pathSet).sort((a, b) => a.localeCompare(b));
   }, [isSkillSelected, files, proposals]);
 
   const filePathsWithChanges = useMemo(
