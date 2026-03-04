@@ -920,6 +920,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       name: 'My Skill',
       description: 'A coding skill',
       prompt: 'This is the skill prompt with instructions',
+      skillMdPermissions: 'rw-r--r--',
       license: 'MIT',
       compatibility: '>=1.0.0',
     };
@@ -1118,6 +1119,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       name: 'My Skill',
       description: 'A coding skill',
       prompt: 'This is the skill prompt',
+      skillMdPermissions: 'rw-r--r--',
     };
     const skillProposal = changeProposalFactory({
       id: createChangeProposalId('skill-proposal-1'),
@@ -1216,6 +1218,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       name: 'My Skill',
       description: 'A coding skill',
       prompt: 'This is the skill prompt',
+      skillMdPermissions: 'rw-r--r--',
     };
     const skillProposal = changeProposalFactory({
       id: createChangeProposalId('skill-proposal-1'),

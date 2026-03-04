@@ -444,7 +444,7 @@ describe('diffAddHandler', () => {
           relativePath: 'SKILL.md',
           content: VALID_SKILL_MD_CONTENT,
           size: VALID_SKILL_MD_CONTENT.length,
-          permissions: '644',
+          permissions: 'rw-r--r--',
           isBase64: false,
         },
       ]);
@@ -468,6 +468,7 @@ describe('diffAddHandler', () => {
                 name: 'My Skill',
                 description: 'A useful skill',
                 prompt: 'This is the prompt body.',
+                skillMdPermissions: 'rw-r--r--',
                 files: [],
               },
               artifactName: 'My Skill',
@@ -550,7 +551,7 @@ describe('diffAddHandler', () => {
           relativePath: 'SKILL.md',
           content: VALID_SKILL_MD_CONTENT,
           size: VALID_SKILL_MD_CONTENT.length,
-          permissions: '644',
+          permissions: 'rw-r--r--',
           isBase64: false,
         },
         {
@@ -581,6 +582,7 @@ describe('diffAddHandler', () => {
                 name: 'Complex Skill',
                 description: 'Skill with files',
                 prompt: 'The prompt.',
+                skillMdPermissions: 'rw-r--r--',
                 license: 'MIT',
                 files: [
                   {
@@ -641,7 +643,7 @@ describe('diffAddHandler', () => {
           relativePath: 'SKILL.md',
           content: 'No frontmatter here',
           size: 19,
-          permissions: '644',
+          permissions: 'rw-r--r--',
           isBase64: false,
         },
       ]);

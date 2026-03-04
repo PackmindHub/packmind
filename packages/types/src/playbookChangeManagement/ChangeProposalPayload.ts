@@ -102,6 +102,7 @@ export type NewSkillPayload = {
   name: string;
   description: string;
   prompt: string;
+  skillMdPermissions: string;
   license?: string;
   compatibility?: string;
   metadata?: Record<string, string>;

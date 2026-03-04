@@ -81,6 +81,7 @@ export function parseSkillDirectory(
     name: name.trim(),
     description: description.trim(),
     prompt: body,
+    skillMdPermissions: skillMdFile.permissions,
   };
 
   if (typeof properties.license === 'string') {
