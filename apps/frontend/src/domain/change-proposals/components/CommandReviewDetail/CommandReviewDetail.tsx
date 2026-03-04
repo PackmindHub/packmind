@@ -251,6 +251,7 @@ export function CommandReviewDetail({
             onDismiss={pool.handlePoolReject}
             onUndo={pool.handleUndoPool}
             renderExpandedView={renderExpandedView}
+            showEditButton={false} /* Edit mode is out of scope for commands */
           />
         )}
 
