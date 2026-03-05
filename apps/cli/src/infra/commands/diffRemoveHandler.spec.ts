@@ -19,6 +19,7 @@ describe('diffRemoveHandler', () => {
   let mockGetGitRemoteUrlFromPath: jest.Mock;
   let mockGetCurrentBranch: jest.Mock;
   let mockGetDeployed: jest.Mock;
+  let mockSubmitDiffs: jest.Mock;
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
@@ -41,6 +42,13 @@ describe('diffRemoveHandler', () => {
       .mockReturnValue('https://github.com/org/repo.git');
     mockGetCurrentBranch = jest.fn().mockReturnValue('main');
 
+    mockSubmitDiffs = jest.fn().mockResolvedValue({
+      submitted: 1,
+      alreadySubmitted: 0,
+      skipped: [],
+      errors: [],
+    });
+
     mockGetDeployed = jest.fn().mockResolvedValue({
       fileUpdates: {
         createOrUpdate: [
@@ -49,11 +57,15 @@ describe('diffRemoveHandler', () => {
             content: '# My Standard\n\n* Rule 1',
             artifactType: 'standard',
             artifactName: 'my-standard',
+            artifactId: 'standard-123',
+            spaceId: 'space-456',
           },
         ],
         delete: [],
       },
       skillFolders: [],
+      targetId: 'target-789',
+      packageIds: ['package-001'],
     });
 
     mockPackmindCliHexa = {
@@ -64,6 +76,7 @@ describe('diffRemoveHandler', () => {
       getPackmindGateway: () => ({
         deployment: { getDeployed: mockGetDeployed },
       }),
+      submitDiffs: mockSubmitDiffs,
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -329,13 +342,34 @@ describe('diffRemoveHandler', () => {
   });
 
   describe('when artifact is deployed by Packmind', () => {
+    it('submits change proposal for removal', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              type: 'removeStandard',
+              payload: {
+                targetId: 'target-789',
+                packageIds: ['package-001'],
+              },
+              artifactId: 'standard-123',
+              spaceId: 'space-456',
+            }),
+          ],
+        ],
+        'Remove artifact from deployment',
+      );
+    });
+
     it('logs success message', async () => {
       const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
 
       await diffRemoveHandler(buildDeps());
 
       expect(logSuccessConsole).toHaveBeenCalledWith(
-        'This artefact can be removed',
+        'Change proposal for removal submitted successfully',
       );
     });
 
@@ -370,11 +404,15 @@ describe('diffRemoveHandler', () => {
               content: '# My Standard\n\n* Rule 1',
               artifactType: 'standard',
               artifactName: 'my-standard',
+              artifactId: 'standard-123',
+              spaceId: 'space-456',
             },
           ],
           delete: [],
         },
         skillFolders: [],
+        targetId: 'target-789',
+        packageIds: ['package-001'],
       });
     });
 
@@ -393,7 +431,7 @@ describe('diffRemoveHandler', () => {
         );
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
-          'This artefact can be removed',
+          'Change proposal for removal submitted successfully',
         );
       });
 

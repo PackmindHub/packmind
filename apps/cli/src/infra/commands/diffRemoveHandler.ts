@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
 import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ArtifactType } from '@packmind/types';
+import { ArtifactType, ChangeProposalType } from '@packmind/types';
 import { normalizePath } from '../../application/utils/pathUtils';
 
 export type DiffRemoveHandlerDependencies = {
@@ -147,18 +147,75 @@ export async function diffRemoveHandler(
     normalizedFilePath = normalizedFilePath.slice(1);
   }
 
-  // Check if the file exists in deployed content
-  const isDeployed = deployedContent.fileUpdates.createOrUpdate.some(
+  // Check if the file exists in deployed content and extract metadata
+  const deployedFile = deployedContent.fileUpdates.createOrUpdate.find(
     (file) => normalizePath(file.path) === normalizedFilePath,
   );
 
-  if (!isDeployed) {
+  if (!deployedFile) {
     const artifactTypeLabel = ARTIFACT_TYPE_LABELS[artefactResult.artifactType];
     logErrorConsole(`This ${artifactTypeLabel} does not come from Packmind`);
     exit(1);
     return;
   }
 
-  logSuccessConsole('This artefact can be removed');
+  // Validate we have the necessary metadata for creating a change proposal
+  if (!deployedFile.artifactId || !deployedFile.spaceId) {
+    logErrorConsole(
+      'Missing artifact metadata. Cannot create change proposal for removal.',
+    );
+    exit(1);
+    return;
+  }
+
+  if (!deployedContent.targetId || !deployedContent.packageIds) {
+    logErrorConsole(
+      'Missing target or package information. Cannot create change proposal for removal.',
+    );
+    exit(1);
+    return;
+  }
+
+  // Submit change proposal for removal
+  const changeProposalType =
+    artefactResult.artifactType === 'standard'
+      ? ChangeProposalType.removeStandard
+      : artefactResult.artifactType === 'command'
+        ? ChangeProposalType.removeCommand
+        : ChangeProposalType.removeSkill;
+
+  const diff = {
+    filePath: absolutePath,
+    type: changeProposalType,
+    payload: {
+      targetId: deployedContent.targetId,
+      packageIds: deployedContent.packageIds,
+    },
+    artifactName: deployedFile.artifactName || artefactResult.artifactType,
+    artifactType: artefactResult.artifactType,
+    artifactId: deployedFile.artifactId,
+    spaceId: deployedFile.spaceId,
+  };
+
+  const result = await packmindCliHexa.submitDiffs(
+    [[diff]],
+    'Remove artifact from deployment',
+  );
+
+  for (const err of result.errors) {
+    logErrorConsole(`Failed to submit removal: ${err.message}`);
+  }
+
+  if (result.errors.length > 0) {
+    exit(1);
+    return;
+  }
+
+  if (result.submitted > 0) {
+    logSuccessConsole('Change proposal for removal submitted successfully');
+  } else if (result.alreadySubmitted > 0) {
+    logSuccessConsole('Change proposal for removal already submitted');
+  }
+
   exit(0);
 }

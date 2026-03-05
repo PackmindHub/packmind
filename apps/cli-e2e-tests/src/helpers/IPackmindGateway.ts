@@ -8,6 +8,7 @@ import {
   PublicGateway,
   Space,
 } from '@packmind/types';
+import { IDeploymentsGateway } from './gateways/DeploymentsGateway';
 
 export interface IAuthGateway {
   signup: PublicGateway<ISignUpWithOrganizationUseCase>;
@@ -32,4 +33,5 @@ export interface IPackmindGateway {
   spaces: ISpaceGateway;
   commands: ICommandGateway;
   packages: IPackageGateway;
+  deployments: IDeploymentsGateway;
 }
