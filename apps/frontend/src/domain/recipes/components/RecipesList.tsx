@@ -30,10 +30,9 @@ import { routes } from '../../../shared/utils/routes';
 import { WithTimestamps } from '@packmind/types';
 import { RecipesBlankState } from './RecipesBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import { PackageCountBadge, formatPackageNames } from '../../deployments/components/PackageCountBadge';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
-import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
 
 interface RecipesListProps {
   orgSlug: string;
