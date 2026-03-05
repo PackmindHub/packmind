@@ -1,0 +1,430 @@
+import {
+  diffRemoveHandler,
+  DiffRemoveHandlerDependencies,
+} from './diffRemoveHandler';
+import { PackmindCliHexa } from '../../PackmindCliHexa';
+
+jest.mock('../utils/consoleLogger', () => ({
+  logErrorConsole: jest.fn(),
+  logSuccessConsole: jest.fn(),
+}));
+
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+}));
+
+describe('diffRemoveHandler', () => {
+  let mockReadFullConfig: jest.Mock;
+  let mockTryGetGitRepositoryRoot: jest.Mock;
+  let mockGetGitRemoteUrlFromPath: jest.Mock;
+  let mockGetCurrentBranch: jest.Mock;
+  let mockGetDeployed: jest.Mock;
+  let mockPackmindCliHexa: PackmindCliHexa;
+  let mockExit: jest.Mock;
+  let mockGetCwd: jest.Mock;
+  let mockExistsSync: jest.Mock;
+
+  beforeEach(() => {
+    const fs = jest.requireMock('fs');
+    mockExistsSync = fs.existsSync;
+    mockExistsSync.mockReturnValue(true); // Default to file exists
+    mockReadFullConfig = jest.fn().mockResolvedValue({
+      packages: { 'test-package': '*' },
+      agents: ['packmind'],
+    });
+
+    mockTryGetGitRepositoryRoot = jest
+      .fn()
+      .mockResolvedValue('/project/git-root');
+    mockGetGitRemoteUrlFromPath = jest
+      .fn()
+      .mockReturnValue('https://github.com/org/repo.git');
+    mockGetCurrentBranch = jest.fn().mockReturnValue('main');
+
+    mockGetDeployed = jest.fn().mockResolvedValue({
+      fileUpdates: {
+        createOrUpdate: [
+          {
+            path: '.packmind/standards/my-standard.md',
+            content: '# My Standard\n\n* Rule 1',
+            artifactType: 'standard',
+            artifactName: 'my-standard',
+          },
+        ],
+        delete: [],
+      },
+      skillFolders: [],
+    });
+
+    mockPackmindCliHexa = {
+      readFullConfig: mockReadFullConfig,
+      tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
+      getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
+      getCurrentBranch: mockGetCurrentBranch,
+      getPackmindGateway: () => ({
+        deployment: { getDeployed: mockGetDeployed },
+      }),
+    } as unknown as PackmindCliHexa;
+
+    mockExit = jest.fn();
+    mockGetCwd = jest.fn().mockReturnValue('/project/git-root');
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function buildDeps(
+    overrides: Partial<DiffRemoveHandlerDependencies> = {},
+  ): DiffRemoveHandlerDependencies {
+    return {
+      packmindCliHexa: mockPackmindCliHexa,
+      filePath: '.packmind/standards/my-standard.md',
+      exit: mockExit,
+      getCwd: mockGetCwd,
+      ...overrides,
+    };
+  }
+
+  describe('when filePath is missing', () => {
+    it('logs error message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps({ filePath: undefined }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Missing file path'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps({ filePath: undefined }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call getDeployed', async () => {
+      await diffRemoveHandler(buildDeps({ filePath: undefined }));
+
+      expect(mockGetDeployed).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when filePath is not in a recognized artefact directory', () => {
+    it('logs error message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps({ filePath: 'src/index.ts' }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Unsupported file path'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps({ filePath: 'src/index.ts' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call getDeployed', async () => {
+      await diffRemoveHandler(buildDeps({ filePath: 'src/index.ts' }));
+
+      expect(mockGetDeployed).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when file does not exist', () => {
+    beforeEach(() => {
+      mockExistsSync.mockReturnValue(false);
+    });
+
+    it('logs error message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('File or directory does not exist'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call getDeployed', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockGetDeployed).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when config parsing fails', () => {
+    beforeEach(() => {
+      mockReadFullConfig.mockRejectedValue(
+        new Error('Invalid JSON in packmind.json'),
+      );
+    });
+
+    it('logs failed to parse message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Failed to parse packmind.json',
+      );
+    });
+
+    it('logs the error details', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Invalid JSON in packmind.json',
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when no packages are configured', () => {
+    beforeEach(() => {
+      mockReadFullConfig.mockResolvedValue({
+        packages: {},
+      });
+    });
+
+    it('logs error message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('No packages configured'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when git repository info cannot be determined', () => {
+    describe('when not in a git repository', () => {
+      beforeEach(() => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(null);
+      });
+
+      it('logs error message', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffRemoveHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Could not determine git repository info'),
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when git remote URL is missing', () => {
+      beforeEach(() => {
+        mockGetGitRemoteUrlFromPath.mockImplementation(() => {
+          throw new Error('No remote configured');
+        });
+      });
+
+      it('logs error message', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffRemoveHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Could not determine git repository info'),
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
+  describe('when artifact is not deployed by Packmind', () => {
+    beforeEach(() => {
+      mockGetDeployed.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/another-standard.md',
+              content: '# Another Standard\n\n* Rule 1',
+              artifactType: 'standard',
+              artifactName: 'another-standard',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+    });
+
+    it('logs error message for standard', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'This standard does not come from Packmind',
+      );
+    });
+
+    it('logs error message for command', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(
+        buildDeps({ filePath: '.packmind/commands/my-command.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'This command does not come from Packmind',
+      );
+    });
+
+    it('logs error message for skill', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      // Use claude skill path since packmind doesn't support skills (empty path)
+      await diffRemoveHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'This skill does not come from Packmind',
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when artifact is deployed by Packmind', () => {
+    it('logs success message', async () => {
+      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        'This artefact can be removed',
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('calls getDeployed with correct parameters', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockGetDeployed).toHaveBeenCalledWith({
+        packagesSlugs: ['test-package'],
+        gitRemoteUrl: 'https://github.com/org/repo.git',
+        gitBranch: 'main',
+        relativePath: '/',
+        agents: ['packmind'],
+      });
+    });
+  });
+
+  describe('when working in a subdirectory', () => {
+    beforeEach(() => {
+      mockGetCwd.mockReturnValue('/project/git-root/apps/frontend');
+      // The file path in createOrUpdate is relative to git root
+      mockGetDeployed.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'apps/frontend/.packmind/standards/my-standard.md',
+              content: '# My Standard\n\n* Rule 1',
+              artifactType: 'standard',
+              artifactName: 'my-standard',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+    });
+
+    describe('when file exists in deployed content', () => {
+      it('logs success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+
+        // Use absolute path within the subdirectory
+        await diffRemoveHandler(
+          buildDeps({
+            filePath:
+              '/project/git-root/apps/frontend/.packmind/standards/my-standard.md',
+          }),
+        );
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          'This artefact can be removed',
+        );
+      });
+
+      it('exits with code 0', async () => {
+        // Use absolute path within the subdirectory
+        await diffRemoveHandler(
+          buildDeps({
+            filePath:
+              '/project/git-root/apps/frontend/.packmind/standards/my-standard.md',
+          }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    it('passes correct relativePath to getDeployed', async () => {
+      await diffRemoveHandler(
+        buildDeps({
+          filePath:
+            '/project/git-root/apps/frontend/.packmind/standards/my-standard.md',
+        }),
+      );
+
+      expect(mockGetDeployed).toHaveBeenCalledWith({
+        packagesSlugs: ['test-package'],
+        gitRemoteUrl: 'https://github.com/org/repo.git',
+        gitBranch: 'main',
+        relativePath: '/apps/frontend/',
+        agents: ['packmind'],
+      });
+    });
+  });
+});
