@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
-import { PMMenu, PMPortal, PMText, PMVStack } from '@packmind/ui';
+import { LuChevronRight } from 'react-icons/lu';
+import { PMMenu, PMHStack, PMPortal, PMText, PMVStack } from '@packmind/ui';
 import { Package } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -65,7 +66,13 @@ export const PackagesDropdown = ({
         <PMMenu.Positioner>
           <PMMenu.Content minW="350px">
             {sorted.map((pkg) => (
-              <PMMenu.Item key={pkg.id} value={pkg.id} asChild p={3}>
+              <PMMenu.Item
+                key={pkg.id}
+                value={pkg.id}
+                asChild
+                p={3}
+                cursor="pointer"
+              >
                 <Link
                   target="_blank"
                   to={
@@ -75,18 +82,21 @@ export const PackagesDropdown = ({
                   }
                   style={{ textDecoration: 'none' }}
                 >
-                  <PMVStack alignItems="flex-start" gap={0}>
-                    <PMText fontWeight="semibold" fontSize="sm">
-                      {pkg.name}
-                    </PMText>
-                    {pkg.description && (
-                      <PMText fontSize="xs" color="secondary">
-                        {pkg.description.length > 100
-                          ? `${pkg.description.slice(0, 100)}...`
-                          : pkg.description}
+                  <PMHStack justifyContent="space-between" width="100%">
+                    <PMVStack alignItems="flex-start" gap={0}>
+                      <PMText fontWeight="semibold" fontSize="sm">
+                        {pkg.name}
                       </PMText>
-                    )}
-                  </PMVStack>
+                      {pkg.description && (
+                        <PMText fontSize="xs" color="secondary">
+                          {pkg.description.length > 100
+                            ? `${pkg.description.slice(0, 100)}...`
+                            : pkg.description}
+                        </PMText>
+                      )}
+                    </PMVStack>
+                    <LuChevronRight />
+                  </PMHStack>
                 </Link>
               </PMMenu.Item>
             ))}

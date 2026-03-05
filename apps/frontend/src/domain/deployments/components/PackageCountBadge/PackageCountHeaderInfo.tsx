@@ -1,4 +1,4 @@
-import { PMText } from '@packmind/ui';
+import { PMHStack, PMLink, PMText } from '@packmind/ui';
 import {
   OrganizationId,
   RecipeId,
@@ -49,15 +49,19 @@ export const PackageCountHeaderInfo = ({
       orgSlug={orgSlug}
       spaceSlug={spaceSlug}
     >
-      <PMText
-        variant="small"
-        color="secondary"
-        cursor="pointer"
-        _hover={{ textDecoration: 'underline' }}
+      <PMHStack
+        gap={1}
+        alignItems="center"
         data-testid="package-count-header-info"
       >
-        Included in {count} package{count > 1 ? 's' : ''}
-      </PMText>
+        <PMText variant="small" color="secondary">
+          Package:
+        </PMText>
+        <PMText variant="small">in {count}</PMText>
+        <PMLink fontSize="xs" variant="underline">
+          View all
+        </PMLink>
+      </PMHStack>
     </PackagesDropdown>
   );
 };
