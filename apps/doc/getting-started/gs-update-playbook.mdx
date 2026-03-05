@@ -1,0 +1,72 @@
+---
+title: 'Update your playbook'
+---
+
+The `update-playbook` skill helps you keep your Packmind playbook up to date by analyzing your coding sessions and proposing changes to your standards, commands, and skills. It bridges the gap between day-to-day development and playbook maintenance, so best practices stay current without manual effort.
+
+<Info>
+  Learn more about how skills work in the [Skills
+  Management](/concepts/skills-management) section.
+</Info>
+
+## Prerequisites
+
+- The CLI must be installed: see [CLI Installation](/tools/cli#installation)
+- You must be authenticated: run `packmind-cli login`
+- You must have an existing Packmind organization with at least one package installed
+
+## When Does It Trigger?
+
+The skill activates automatically when you use phrases like:
+
+- "update the playbook"
+- "sync standards"
+- "check if we need new standards"
+
+It can also be triggered after coding sessions where new patterns, decisions, or conventions emerged.
+
+## How It Works
+
+The skill follows a four-phase process to go from session context to actionable playbook changes.
+
+### Phase 1: Summarize the Session
+
+The AI reviews your conversation and extracts key information:
+
+- What was built or changed
+- What patterns emerged or were established
+- What decisions were made and why
+- What mistakes were corrected
+
+### Phase 2: Analyze Existing Artifacts
+
+Using the session summary, the AI evaluates your current playbook across three domains in parallel:
+
+- **Standards** — Are existing standards still accurate? Should new lintable rules be added?
+- **Commands** — Do any existing commands need updating based on recent work?
+- **Skills** — Are current skills still relevant? Should new capabilities be captured?
+
+### Phase 3: Propose a Change Report
+
+The AI consolidates its analysis into a numbered change report covering:
+
+- Updates to existing skills, standards, or commands
+- New standards or skills to create
+- Artifacts to deprecate
+
+You can then choose which changes to apply — all of them, a specific selection, or everything except certain items.
+
+### Phase 4: Apply Approved Changes
+
+For each approved change, the AI:
+
+1. Edits the relevant local artifact files or delegates to the appropriate creation skill
+2. Runs `packmind-cli diff` to preview the changes
+3. Submits the changes as proposals for human review on Packmind
+4. Optionally propagates validated changes locally with `packmind-cli install --recursive`
+
+## Tips
+
+- **Run it regularly** — Trigger the skill after meaningful coding sessions to capture patterns while they are fresh
+- **Review proposals carefully** — The skill submits changes as proposals, so your team can review and approve them on Packmind before they are distributed
+- **Combine with distribution** — After approving proposals, distribute updated packages to keep all repositories in sync. See [Distribute Your Package](/getting-started/gs-distribute)
