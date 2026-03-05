@@ -23,19 +23,29 @@ import {
   useDeleteSkillsBatchMutation,
 } from '../api/queries/SkillsQueries';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
+import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
+import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
 
 interface ISkillsListProps {
   orgSlug: string;
 }
 
 export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
-  const { spaceSlug } = useCurrentSpace();
+  const { spaceSlug, spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
   const { data: skills, isLoading, isError } = useGetSkillsQuery();
   const deleteBatchMutation = useDeleteSkillsBatchMutation();
+  const { data: packagesResponse } = useListPackagesBySpaceQuery(
+    spaceId,
+    organization?.id,
+  );
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
     {
       defaultSortKey: 'name',
@@ -101,6 +111,18 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
+    const packageNamesById =
+      sortKey === 'packages'
+        ? new Map(
+            filteredSkills.map((s) => [
+              s.id,
+              formatPackageNames(
+                getArtifactPackages(packagesResponse?.packages, s.id, 'skill'),
+              ),
+            ]),
+          )
+        : null;
+
     const sortedSkills = [...filteredSkills].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
@@ -118,6 +140,13 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'packages':
+          return (
+            direction *
+            (packageNamesById?.get(a.id) ?? '').localeCompare(
+              packageNamesById?.get(b.id) ?? '',
+            )
+          );
         default:
           return 0;
       }
@@ -164,16 +193,29 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         ) : (
           <span>-</span>
         ),
+        packages: (
+          <PackageCountBadge
+            artifactId={skill.id}
+            artifactType="skill"
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            spaceId={spaceId}
+            organizationId={organization?.id}
+          />
+        ),
       })),
     );
   }, [
     skills,
     selectedSkillIds,
     spaceSlug,
+    spaceId,
     orgSlug,
+    organization?.id,
     sortKey,
     sortDirection,
     searchQuery,
+    packagesResponse,
   ]);
 
   const isAllSelected =
@@ -229,6 +271,14 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'packages',
+      header: 'Packages',
+      width: '220px',
+      align: 'left',
+      sortable: true,
+      sortDirection: getSortDirection('packages'),
     },
   ];
 
