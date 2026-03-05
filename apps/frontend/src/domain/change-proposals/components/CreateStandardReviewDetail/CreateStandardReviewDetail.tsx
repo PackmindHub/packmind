@@ -1,9 +1,18 @@
-import { PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMBox,
+  PMHeading,
+  PMMarkdownViewer,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
+import { useMemo } from 'react';
 import { StandardCreationProposalOverview } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
+import { useUserLookup } from '../../hooks/useUserLookup';
 import { SubmissionBanner } from '../SubmissionBanner';
-import { ReviewActionButtons } from '../ReviewActionButtons';
+import { CreationReviewHeader } from '../shared/CreationReviewHeader';
+import { ProposalMessage } from '../shared/ProposalMessage';
 import {
   ProposalDetailEmpty,
   ProposalDetailLoading,
@@ -41,6 +50,18 @@ export function CreateStandardReviewDetail({
     },
   });
 
+  const userLookup = useUserLookup();
+
+  const sortedRules = useMemo(
+    () =>
+      displayedProposal
+        ? [...displayedProposal.rules].sort((a, b) =>
+            a.content.toLowerCase().localeCompare(b.content.toLowerCase()),
+          )
+        : [],
+    [displayedProposal],
+  );
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -49,25 +70,28 @@ export function CreateStandardReviewDetail({
     return <ProposalDetailEmpty />;
   }
 
+  const authorName =
+    userLookup.get(displayedProposal.createdBy) ?? 'Unknown user';
+
   return (
     <PMBox gridColumn="span 2" overflowY="auto">
+      <CreationReviewHeader
+        artefactName={displayedProposal.name}
+        latestAuthor={authorName}
+        latestTime={new Date(displayedProposal.lastContributedAt)}
+        onAccept={handleAccept}
+        onDismiss={handleReject}
+        isPending={isPending}
+        isSubmitted={!!submittedState}
+      />
       <PMBox
-        borderBottomWidth="1px"
-        paddingX={6}
-        paddingY={2}
-        display="flex"
-        justifyContent="flex-end"
-        alignItems="center"
-        gap={4}
-        minH="44px"
+        px={6}
+        py={2}
+        border="sm"
+        borderTop="none"
+        borderColor="border.tertiary"
       >
-        {!submittedState && (
-          <ReviewActionButtons
-            onAccept={handleAccept}
-            onReject={handleReject}
-            isPending={isPending}
-          />
-        )}
+        <ProposalMessage message={displayedProposal.message} />
       </PMBox>
       <PMVStack gap={6} align="stretch" p={6}>
         {submittedState && (
@@ -76,40 +100,34 @@ export function CreateStandardReviewDetail({
             artefactLabel="standard"
           />
         )}
-        <PMText fontSize="lg" fontWeight="semibold">
+        <PMHeading size="md" mb={4}>
           {displayedProposal.name}
-        </PMText>
+        </PMHeading>
+        <PMMarkdownViewer content={displayedProposal.description} />
+
         {displayedProposal.scope && (
-          <PMVStack gap={1} align="stretch">
-            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
+          <PMBox mt={4}>
+            <PMText as="p" fontSize="sm" fontWeight="semibold" mb={1}>
               Scope
             </PMText>
-            <PMText fontSize="sm">{displayedProposal.scope}</PMText>
-          </PMVStack>
-        )}
-        {displayedProposal.description && (
-          <PMVStack gap={1} align="stretch">
-            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
-              Description
+            <PMText fontSize="sm" color="faded">
+              {displayedProposal.scope}
             </PMText>
-            <PMText fontSize="sm">{displayedProposal.description}</PMText>
-          </PMVStack>
+          </PMBox>
         )}
-        {displayedProposal.rules.length > 0 && (
-          <PMVStack gap={2} align="stretch">
-            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
+
+        {sortedRules.length > 0 && (
+          <PMVStack gap={2} align="stretch" marginTop={6}>
+            <PMText fontSize="md" fontWeight="semibold">
               Rules
             </PMText>
-            <PMVStack gap={2} align="stretch">
-              {displayedProposal.rules.map((rule, index) => (
-                <PMHStack key={index} gap={2} align="flex-start">
-                  <PMText fontSize="sm" color="secondary" flexShrink={0}>
-                    {index + 1}.
-                  </PMText>
-                  <PMText fontSize="sm">{rule.content}</PMText>
-                </PMHStack>
-              ))}
-            </PMVStack>
+            {sortedRules.map((rule, index) => (
+              <PMBox key={index} p={3} bg="background.tertiary">
+                <PMText fontSize="sm" color="primary">
+                  {rule.content}
+                </PMText>
+              </PMBox>
+            ))}
           </PMVStack>
         )}
       </PMVStack>

@@ -409,6 +409,8 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           artefactType: 'commands',
           name: 'My Command',
           content: 'Do something',
+          message: '',
+          createdBy: userId,
           lastContributedAt: commandCreatedAt.toISOString(),
         },
       ]);
@@ -475,6 +477,8 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           description: 'A description',
           scope: 'TypeScript',
           rules: [{ content: 'Rule one' }],
+          message: '',
+          createdBy: userId,
           lastContributedAt: standardCreatedAt.toISOString(),
         },
       ]);
@@ -668,6 +672,8 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             name: 'My Skill',
             description: 'A skill description',
             prompt: 'You are a helpful assistant.',
+            message: '',
+            createdBy: userId,
             lastContributedAt: skillCreatedAt.toISOString(),
           },
         ]);
@@ -748,6 +754,8 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
                 isBase64: false,
               },
             ],
+            message: '',
+            createdBy: userId,
             lastContributedAt: fullSkillCreatedAt.toISOString(),
           },
         ]);

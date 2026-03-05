@@ -3,7 +3,6 @@ import { NavLink, useParams, useSearchParams } from 'react-router';
 import {
   PMBox,
   PMFlex,
-  PMHeading,
   PMHStack,
   PMLink,
   PMText,
@@ -16,6 +15,7 @@ import {
   ChangeProposalType,
   CollectionItemAddPayload,
   ListChangeProposalsBySpaceResponse,
+  SkillCreationProposalOverview,
   SkillFile,
   SkillId,
 } from '@packmind/types';
@@ -122,15 +122,19 @@ interface ReviewChangesSidebarProps {
 export function ReviewChangesSidebar({
   groupedProposals,
 }: ReviewChangesSidebarProps) {
-  const { orgSlug, spaceSlug, artefactType, artefactId } = useParams<{
-    orgSlug: string;
-    spaceSlug: string;
-    artefactType: string;
-    artefactId: string;
-  }>();
+  const { orgSlug, spaceSlug, artefactType, artefactId, proposalId } =
+    useParams<{
+      orgSlug: string;
+      spaceSlug: string;
+      artefactType: string;
+      artefactId: string;
+      proposalId: string;
+    }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const isSkillSelected = artefactType === 'skills' && !!artefactId;
+  const isSkillCreationSelected =
+    artefactType === 'skills' && !artefactId && !!proposalId;
   const skillId = isSkillSelected ? (artefactId as SkillId) : undefined;
 
   const { data: skillData } = useGetSkillWithFilesByIdQuery(skillId);
@@ -166,6 +170,27 @@ export function ReviewChangesSidebar({
         ? getFilePathsWithChanges(proposals, files)
         : new Set<string>(),
     [isSkillSelected, proposals, files],
+  );
+
+  const skillCreation = useMemo(() => {
+    if (!isSkillCreationSelected) return undefined;
+    return groupedProposals.creations.find(
+      (c): c is SkillCreationProposalOverview =>
+        c.proposalId === proposalId && c.artefactType === 'skills',
+    );
+  }, [isSkillCreationSelected, groupedProposals.creations, proposalId]);
+
+  const creationFilePaths = useMemo(() => {
+    if (!skillCreation?.files) return [];
+    return skillCreation.files
+      .map((f) => f.path)
+      .filter((p) => p !== 'SKILL.md')
+      .sort((a, b) => a.localeCompare(b));
+  }, [skillCreation]);
+
+  const creationFilePathsWithChanges = useMemo(
+    () => new Set(creationFilePaths),
+    [creationFilePaths],
   );
 
   const selectedFilter = searchParams.get('file') ?? '';
@@ -276,6 +301,29 @@ export function ReviewChangesSidebar({
           <SkillFileFilterTree
             allFilePaths={allFilePaths}
             filePathsWithChanges={filePathsWithChanges}
+            selectedFilter={selectedFilter}
+            onFilterSelect={handleFilterSelect}
+          />
+        </PMBox>
+      )}
+
+      {isSkillCreationSelected && creationFilePaths.length > 0 && (
+        <PMBox flex={1} minH={0} overflowY="auto" px={4}>
+          <PMText
+            fontSize="xs"
+            color="faded"
+            fontWeight="bold"
+            textTransform="uppercase"
+            mb={2}
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+          >
+            {skillCreation?.name ?? 'Skill'}
+          </PMText>
+          <SkillFileFilterTree
+            allFilePaths={creationFilePaths}
+            filePathsWithChanges={creationFilePathsWithChanges}
             selectedFilter={selectedFilter}
             onFilterSelect={handleFilterSelect}
           />

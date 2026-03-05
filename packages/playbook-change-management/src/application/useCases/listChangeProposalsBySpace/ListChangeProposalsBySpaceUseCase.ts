@@ -129,6 +129,8 @@ export class ListChangeProposalsBySpaceUseCase
             ? payload.scope.join(', ')
             : payload.scope,
           rules: payload.rules,
+          message: proposal.message,
+          createdBy: proposal.createdBy,
           lastContributedAt,
         };
       }
@@ -145,6 +147,8 @@ export class ListChangeProposalsBySpaceUseCase
           metadata: payload.metadata,
           allowedTools: payload.allowedTools,
           files: payload.files,
+          message: proposal.message,
+          createdBy: proposal.createdBy,
           lastContributedAt,
         };
       }
@@ -154,6 +158,8 @@ export class ListChangeProposalsBySpaceUseCase
         artefactType: 'commands' as const,
         name: payload.name,
         content: payload.content,
+        message: proposal.message,
+        createdBy: proposal.createdBy,
         lastContributedAt,
       };
     });

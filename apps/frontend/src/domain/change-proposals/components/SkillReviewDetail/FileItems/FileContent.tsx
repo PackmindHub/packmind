@@ -1,6 +1,15 @@
-import { PMBox, PMCodeMirror, PMMarkdownViewer, PMText } from '@packmind/ui';
+import {
+  PMBox,
+  PMButton,
+  PMCodeMirror,
+  PMEmptyState,
+  PMMarkdownViewer,
+} from '@packmind/ui';
 import { SkillFile } from '@packmind/types';
-import { getFileLanguage } from '../../../../skills/utils/fileTreeUtils';
+import {
+  getFileLanguage,
+  getMimeType,
+} from '../../../../skills/utils/fileTreeUtils';
 
 const MARKDOWN_EXTENSIONS = ['.md', '.mdx', '.mdc'];
 
@@ -16,10 +25,28 @@ export function FileContent({
   file: Pick<SkillFile, 'isBase64' | 'path' | 'content'>;
 }) {
   if (file.isBase64) {
+    const fileName = file.path.split('/').pop() ?? 'file';
+    const handleDownload = () => {
+      const binaryString = atob(file.content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: getMimeType(file.path) });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
     return (
-      <PMText fontSize="xs" color="secondary">
-        Binary file
-      </PMText>
+      <PMEmptyState
+        title="Preview unavailable"
+        description="Binary file cannot be previewed"
+      >
+        <PMButton onClick={handleDownload}>Download file</PMButton>
+      </PMEmptyState>
     );
   }
   if (isMarkdownPath(file.path)) {
