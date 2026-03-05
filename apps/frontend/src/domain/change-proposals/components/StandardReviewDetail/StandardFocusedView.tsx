@@ -131,7 +131,7 @@ export function StandardFocusedView({
             </PMVStack>
           ) : (
             <PMBox opacity={contextOpacity}>
-              <PMText fontSize="xs" fontWeight="semibold" color="secondary">
+              <PMText as="p" fontSize="md" fontWeight="semibold">
                 Scope
               </PMText>
               <PMText fontSize="sm" color="faded" mt={1}>

@@ -111,7 +111,7 @@ export function StandardInlineView({
       {/* Scope section */}
       {(standard.scope || isScopeChange) && (
         <PMBox mb={4}>
-          <PMText fontSize="sm" fontWeight="semibold" mb={1}>
+          <PMText as="p" fontSize="md" fontWeight="semibold" mb={1}>
             Scope
           </PMText>
           {isScopeChange ? (
@@ -127,11 +127,7 @@ export function StandardInlineView({
       {/* Rules section */}
       {(sortedRules.length > 0 || isAddRule) && (
         <PMVStack gap={2} align="stretch" marginTop={2}>
-          <PMText
-            fontSize="md"
-            fontWeight="semibold"
-            color={isRuleChange ? undefined : 'faded'}
-          >
+          <PMText fontSize="md" fontWeight="semibold">
             Rules
           </PMText>
 

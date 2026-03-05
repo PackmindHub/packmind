@@ -58,6 +58,17 @@ export function StandardResultTabContent({
           </PMHeading>
           <PMMarkdownViewer content={applied.description} />
 
+          {applied.scope && (
+            <PMBox mt={4}>
+              <PMText as="p" fontSize="sm" fontWeight="semibold" mb={1}>
+                Scope
+              </PMText>
+              <PMText fontSize="sm" color="faded">
+                {applied.scope}
+              </PMText>
+            </PMBox>
+          )}
+
           {sortedRules.length > 0 && (
             <PMVStack gap={2} align="stretch" marginTop={6}>
               <PMText fontSize="md" fontWeight="semibold">
