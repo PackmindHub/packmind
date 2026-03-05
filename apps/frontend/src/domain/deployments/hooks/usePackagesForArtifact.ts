@@ -18,12 +18,12 @@ interface UsePackagesForArtifactParams {
   organizationId: OrganizationId | undefined;
 }
 
-export function getArtifactPackageCount(
+export function getArtifactPackages(
   packages: Package[] | undefined,
   artifactId: StandardId | RecipeId | SkillId,
   artifactType: ArtifactType,
-): number {
-  if (!packages) return 0;
+): Package[] {
+  if (!packages) return [];
 
   return packages.filter((pkg) => {
     switch (artifactType) {
@@ -34,7 +34,7 @@ export function getArtifactPackageCount(
       case 'skill':
         return pkg.skills?.includes(artifactId as SkillId);
     }
-  }).length;
+  });
 }
 
 export function usePackagesForArtifact({

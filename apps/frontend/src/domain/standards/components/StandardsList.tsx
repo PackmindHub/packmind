@@ -32,7 +32,8 @@ import { StandardsBlankState } from './StandardsBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
-import { getArtifactPackageCount } from '../../deployments/hooks/usePackagesForArtifact';
+import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
+import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -157,17 +158,13 @@ export const StandardsList = ({
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
         case 'packages': {
-          const countA = getArtifactPackageCount(
-            packagesResponse?.packages,
-            a.id,
-            'standard',
+          const namesA = formatPackageNames(
+            getArtifactPackages(packagesResponse?.packages, a.id, 'standard'),
           );
-          const countB = getArtifactPackageCount(
-            packagesResponse?.packages,
-            b.id,
-            'standard',
+          const namesB = formatPackageNames(
+            getArtifactPackages(packagesResponse?.packages, b.id, 'standard'),
           );
-          return direction * (countA - countB);
+          return direction * namesA.localeCompare(namesB);
         }
         default:
           return 0;
