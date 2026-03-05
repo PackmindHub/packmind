@@ -20,6 +20,7 @@ import {
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
+import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
 import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
@@ -69,6 +70,7 @@ export function CommandReviewDetail({
   const { data: selectedRecipe } = useGetRecipeByIdQuery(recipeId);
 
   const pool = useChangeProposalPool(selectedRecipeProposals);
+  const navigateToNextArtifact = useNavigateAfterApply(artefactId);
 
   const reviewState = useCardReviewState();
 
@@ -145,6 +147,7 @@ export function CommandReviewDetail({
       ]);
 
       pool.resetPool();
+      navigateToNextArtifact();
     } catch {
       // Errors are handled by the mutation onError callbacks
     }
@@ -157,6 +160,7 @@ export function CommandReviewDetail({
     applyRecipeChangeProposalsMutation,
     queryClient,
     pool.resetPool,
+    navigateToNextArtifact,
   ]);
 
   const renderExpandedView = useCallback(
