@@ -6,7 +6,10 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { useMemo } from 'react';
-import { StandardCreationProposalOverview } from '@packmind/types';
+import {
+  ChangeProposalId,
+  StandardCreationProposalOverview,
+} from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { useUserLookup } from '../../hooks/useUserLookup';
@@ -19,7 +22,7 @@ import {
 } from '../ProposalDetailPlaceholder';
 
 interface CreateStandardReviewDetailProps {
-  proposalId: string;
+  proposalId: ChangeProposalId;
   orgSlug?: string;
   spaceSlug?: string;
 }
@@ -79,7 +82,7 @@ export function CreateStandardReviewDetail({
         artefactName={displayedProposal.name}
         latestAuthor={authorName}
         latestTime={new Date(displayedProposal.lastContributedAt)}
-        onAccept={handleAccept}
+        onAccept={() => handleAccept(displayedProposal.payload)}
         onDismiss={handleReject}
         isPending={isPending}
         isSubmitted={!!submittedState}

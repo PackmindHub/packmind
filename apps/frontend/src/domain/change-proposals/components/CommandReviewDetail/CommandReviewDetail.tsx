@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
+  AcceptedChangeProposal,
   ChangeProposalId,
+  ChangeProposalStatus,
   OrganizationId,
   RecipeId,
   SpaceId,
@@ -32,6 +34,7 @@ import { InlineView } from './InlineView';
 import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
+import { getDecision } from '../../utils/GetDecision';
 
 interface CommandReviewDetailProps {
   artefactId: string;
@@ -125,12 +128,23 @@ export function CommandReviewDetail({
     if (!organizationId || !spaceId) return;
     if (!pool.hasPooledDecisions) return;
 
+    const accepted = selectedRecipeProposals.reduce((acc, changeProposal) => {
+      if (pool.acceptedProposalIds.has(changeProposal.id)) {
+        acc.push({
+          ...changeProposal,
+          status: ChangeProposalStatus.applied,
+          decision: getDecision(changeProposal),
+        });
+      }
+      return acc;
+    }, [] as AcceptedChangeProposal[]);
+
     try {
       await applyRecipeChangeProposalsMutation.mutateAsync({
         organizationId: organizationId as OrganizationId,
         spaceId: spaceId as SpaceId,
         artefactId: recipeId,
-        accepted: Array.from(pool.acceptedProposalIds),
+        accepted,
         rejected: Array.from(pool.rejectedProposalIds),
       });
 

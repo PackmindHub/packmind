@@ -1,8 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  AcceptedChangeProposal,
   ChangeProposal,
   ChangeProposalArtefactId,
-  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalPayload,
   ChangeProposalStatus,
@@ -147,7 +147,7 @@ export class ChangeProposalService {
    */
   async batchUpdateProposalsInTransaction(params: {
     acceptedProposals: Array<{
-      proposal: ChangeProposal<ChangeProposalType>;
+      proposal: AcceptedChangeProposal<ChangeProposalType>;
       userId: UserId;
     }>;
     rejectedProposals: Array<{
@@ -164,8 +164,6 @@ export class ChangeProposalService {
       for (const { proposal, userId } of acceptedProposals) {
         const appliedProposal: ChangeProposal<ChangeProposalType> = {
           ...proposal,
-          status: ChangeProposalStatus.applied,
-          decision: computeProposalDecision(proposal),
           resolvedBy: userId,
           resolvedAt: now,
           updatedAt: now,
@@ -314,24 +312,4 @@ export class ChangeProposalService {
 
     return proposals;
   }
-}
-
-/*
- * Crappy solution until we send a correct payload when validating multiple change proposals.
- * */
-function computeProposalDecision<T extends ChangeProposalType>(
-  proposal: ChangeProposal<T>,
-): ChangeProposalDecision<T> {
-  if (
-    isExpectedChangeProposalType(proposal, ChangeProposalType.removeStandard) ||
-    isExpectedChangeProposalType(proposal, ChangeProposalType.removeCommand) ||
-    isExpectedChangeProposalType(proposal, ChangeProposalType.removeSkill)
-  ) {
-    return {
-      delete: false,
-      packageIds: [],
-    } as unknown as ChangeProposalDecision<T>;
-  }
-
-  return proposal.payload as ChangeProposalDecision<T>;
 }

@@ -16,6 +16,7 @@ import {
   ChangeProposalType,
   createOrganizationId,
   createUserId,
+  CreationChangeProposalTypes,
   getItemTypeFromChangeProposalType,
   IAccountsPort,
   IApplyCreationChangeProposalsUseCase,
@@ -30,7 +31,6 @@ import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import {
   CreatedIds,
   ICreateChangeProposalApplier,
-  SupportedCreateChangedProposalType,
 } from './ICreateChangeProposalApplier';
 import { CommandCreateChangeProposalApplier } from './CommandCreateChangeProposalApplier';
 import { StandardCreateChangeProposalApplier } from './StandardCreateChangeProposalApplier';
@@ -52,8 +52,8 @@ export class ApplyCreationChangeProposalsUseCase
   implements IApplyCreationChangeProposalsUseCase
 {
   private readonly appliers: Record<
-    SupportedCreateChangedProposalType,
-    ICreateChangeProposalApplier<SupportedCreateChangedProposalType>
+    CreationChangeProposalTypes,
+    ICreateChangeProposalApplier<CreationChangeProposalTypes>
   >;
 
   constructor(
@@ -88,11 +88,13 @@ export class ApplyCreationChangeProposalsUseCase
       command.organization.id,
     );
 
-    const allIds = [...command.accepted, ...command.rejected];
+    const acceptedIds = command.accepted.map((p) => p.id);
+    const allIds = [...acceptedIds, ...command.rejected];
     const proposals = await Promise.all(
       allIds.map((id) => this.changeProposalService.findById(id)),
     );
 
+    this.assertProposalsAreCreationProposal(command.accepted);
     this.assertAllProposalsValid(proposals, allIds);
 
     const proposalMap = new Map(proposals.map((p) => [p.id, p]));
@@ -103,35 +105,32 @@ export class ApplyCreationChangeProposalsUseCase
     };
     const createdArtefactIdByProposalId = new Map<ChangeProposalId, string>();
 
-    for (const proposalId of command.accepted) {
-      const proposal = proposalMap.get(proposalId);
-      if (!proposal) {
-        throw new Error(`Change proposal ${proposalId} not found`);
+    for (const acceptedProposal of command.accepted) {
+      const dbProposal = proposalMap.get(acceptedProposal.id);
+      if (!dbProposal) {
+        throw new Error(
+          `Change proposal ${acceptedProposal.id} not found in database`,
+        );
       }
-      const applier = this.appliers[proposal.type];
+
+      // Validate that the proposal from command matches the one in DB
+      this.assertProposalMatchesDatabase(acceptedProposal, dbProposal);
+
+      const applier = this.appliers[acceptedProposal.type];
 
       const artefact = await applier.apply(
-        proposal,
+        acceptedProposal,
         command.spaceId,
         createOrganizationId(command.organizationId),
       );
-      createdArtefactIdByProposalId.set(proposalId, artefact.id);
+      createdArtefactIdByProposalId.set(acceptedProposal.id, artefact.id);
       createdIds = applier.updateCreatedIds(createdIds, artefact);
     }
 
-    const acceptedProposals = command.accepted
-      .map((id) => {
-        const proposal = proposalMap.get(id);
-        return proposal ? { proposal, userId: command.userId as UserId } : null;
-      })
-      .filter(
-        (
-          item,
-        ): item is {
-          proposal: ChangeProposal<SupportedCreateChangedProposalType>;
-          userId: UserId;
-        } => item !== null,
-      );
+    const acceptedProposals = command.accepted.map((proposal) => ({
+      proposal,
+      userId: command.userId as UserId,
+    }));
 
     const rejectedProposals = command.rejected
       .map((id) => {
@@ -142,7 +141,7 @@ export class ApplyCreationChangeProposalsUseCase
         (
           item,
         ): item is {
-          proposal: ChangeProposal<SupportedCreateChangedProposalType>;
+          proposal: ChangeProposal<CreationChangeProposalTypes>;
           userId: UserId;
         } => item !== null,
       );
@@ -173,6 +172,13 @@ export class ApplyCreationChangeProposalsUseCase
     });
 
     for (const { proposal } of acceptedProposals) {
+      const createdArtefactId = createdArtefactIdByProposalId.get(proposal.id);
+      if (!createdArtefactId) {
+        throw new Error(
+          `Created artefact ID not found for proposal ${proposal.id}`,
+        );
+      }
+
       this.eventEmitterService.emit(
         new ChangeProposalAcceptedEvent({
           userId: createUserId(command.userId),
@@ -180,7 +186,7 @@ export class ApplyCreationChangeProposalsUseCase
           source: command.source ?? 'ui',
           changeProposalId: proposal.id,
           itemType: getItemTypeFromChangeProposalType(proposal.type),
-          itemId: createdArtefactIdByProposalId.get(proposal.id)!,
+          itemId: createdArtefactId,
           changeType: proposal.type,
         }),
       );
@@ -207,10 +213,18 @@ export class ApplyCreationChangeProposalsUseCase
     };
   }
 
+  private assertProposalsAreCreationProposal(
+    proposals: ChangeProposal[],
+  ): asserts proposals is ChangeProposal<CreationChangeProposalTypes>[] {
+    for (const proposal of proposals) {
+      this.assertProposalIsCreationProposal(proposal);
+    }
+  }
+
   private assertAllProposalsValid(
     proposals: (ChangeProposal | null)[],
     allIds: ChangeProposalId[],
-  ): asserts proposals is ChangeProposal<SupportedCreateChangedProposalType>[] {
+  ): asserts proposals is ChangeProposal<CreationChangeProposalTypes>[] {
     for (let i = 0; i < proposals.length; i++) {
       const proposal = proposals[i];
       const id = allIds[i];
@@ -225,21 +239,47 @@ export class ApplyCreationChangeProposalsUseCase
         );
       }
 
-      if (
-        !isExpectedChangeProposalType(
-          proposal,
-          ChangeProposalType.createCommand,
-        ) &&
-        !isExpectedChangeProposalType(
-          proposal,
-          ChangeProposalType.createStandard,
-        ) &&
-        !isExpectedChangeProposalType(proposal, ChangeProposalType.createSkill)
-      ) {
-        throw new Error(
-          `Change proposal ${id} has unsupported type for creation (type: ${proposal.type})`,
-        );
-      }
+      this.assertProposalIsCreationProposal(proposal);
+    }
+  }
+
+  private assertProposalIsCreationProposal(
+    proposal: ChangeProposal,
+  ): asserts proposal is ChangeProposal<CreationChangeProposalTypes> {
+    if (
+      !isExpectedChangeProposalType(
+        proposal,
+        ChangeProposalType.createCommand,
+      ) &&
+      !isExpectedChangeProposalType(
+        proposal,
+        ChangeProposalType.createStandard,
+      ) &&
+      !isExpectedChangeProposalType(proposal, ChangeProposalType.createSkill)
+    ) {
+      throw new Error(
+        `Change proposal ${proposal.id} has unsupported type for creation (type: ${proposal.type})`,
+      );
+    }
+  }
+
+  private assertProposalMatchesDatabase(
+    acceptedProposal: ChangeProposal<CreationChangeProposalTypes>,
+    dbProposal: ChangeProposal<CreationChangeProposalTypes>,
+  ): void {
+    if (acceptedProposal.type !== dbProposal.type) {
+      throw new Error(
+        `Change proposal ${acceptedProposal.id} type mismatch: expected ${dbProposal.type}, got ${acceptedProposal.type}`,
+      );
+    }
+
+    if (
+      JSON.stringify(acceptedProposal.payload) !==
+      JSON.stringify(dbProposal.payload)
+    ) {
+      throw new Error(
+        `Change proposal ${acceptedProposal.id} payload mismatch`,
+      );
     }
   }
 }

@@ -31,6 +31,11 @@ export type CreationChangeProposalTypes =
   | ChangeProposalType.createStandard
   | ChangeProposalType.createSkill;
 
+export type RemoveChangeProposalTypes =
+  | ChangeProposalType.createCommand
+  | ChangeProposalType.createStandard
+  | ChangeProposalType.createSkill;
+
 export type ChangeProposalItemType = 'standard' | 'command' | 'skill';
 
 const standardTypes = new Set<ChangeProposalType>([
