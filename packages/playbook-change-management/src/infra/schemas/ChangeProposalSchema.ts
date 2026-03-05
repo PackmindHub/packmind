@@ -29,6 +29,11 @@ export const ChangeProposalSchema = new EntitySchema<
       type: 'timestamp with time zone',
       nullable: true,
     },
+    decision: {
+      type: 'jsonb',
+      nullable: true,
+      default: null,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

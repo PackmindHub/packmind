@@ -4,6 +4,7 @@ import { AuthGateway } from './AuthGateway';
 import { SpaceGateway } from './SpaceGateway';
 import { CommandGateway } from './CommandGateway';
 import { PackageGateway } from './PackageGateway';
+import { DeploymentsGateway } from './DeploymentsGateway';
 
 export class PackmindGateway implements IPackmindGateway {
   private httpClient?: PackmindHttpClient;
@@ -11,6 +12,7 @@ export class PackmindGateway implements IPackmindGateway {
   private _spaces?: SpaceGateway;
   private _commands?: CommandGateway;
   private _packages?: PackageGateway;
+  private _deployments?: DeploymentsGateway;
 
   constructor(
     private readonly baseUrl: string,
@@ -41,6 +43,11 @@ export class PackmindGateway implements IPackmindGateway {
     return this._packages;
   }
 
+  get deployments(): DeploymentsGateway {
+    this._deployments ??= new DeploymentsGateway(this.getHttpClient());
+    return this._deployments;
+  }
+
   /**
    * Initialize the gateway with an API key after authentication
    */
@@ -50,6 +57,7 @@ export class PackmindGateway implements IPackmindGateway {
     this._spaces = undefined;
     this._commands = undefined;
     this._packages = undefined;
+    this._deployments = undefined;
   }
 
   private getHttpClient(): PackmindHttpClient {

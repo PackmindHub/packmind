@@ -4,6 +4,7 @@ export * from './ChangeProposalViolation';
 export * from './ChangeProposalTypeLabels';
 export * from './ChangeProposalStatus';
 export * from './ChangeProposalPayload';
+export * from './ChangeProposalDecision';
 export * from './ChangeProposal';
 export * from './ChangeProposalCaptureMode';
 export * from './ChangeProposalArtefactIdType';

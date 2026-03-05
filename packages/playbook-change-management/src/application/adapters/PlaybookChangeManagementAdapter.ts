@@ -46,6 +46,7 @@ import { IChangeProposalValidator } from '../validators/IChangeProposalValidator
 import { CommandChangeProposalValidator } from '../validators/CommandChangeProposalValidator';
 import { SkillChangeProposalValidator } from '../validators/SkillChangeProposalValidator';
 import { StandardChangeProposalValidator } from '../validators/StandardChangeProposalValidator';
+import { RemovalChangeProposalValidator } from '../validators/RemovalChangeProposalValidator';
 
 const origin = 'PlaybookChangeManagementAdapter';
 
@@ -183,6 +184,11 @@ export class PlaybookChangeManagementAdapter
       new CommandChangeProposalValidator(recipesPort),
       new SkillChangeProposalValidator(skillsPort),
       new StandardChangeProposalValidator(standardsPort),
+      new RemovalChangeProposalValidator(
+        standardsPort,
+        recipesPort,
+        skillsPort,
+      ),
     ];
 
     this._applyChangeProposals = new ApplyChangeProposalsUseCase(

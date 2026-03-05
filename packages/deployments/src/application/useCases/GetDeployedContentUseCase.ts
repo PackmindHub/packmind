@@ -10,6 +10,7 @@ import {
   ISkillsPort,
   IStandardsPort,
   normalizeCodingAgents,
+  PackageId,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { PackageService } from '../services/PackageService';
@@ -229,7 +230,23 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillFolderCount: skillFolders.length,
     });
 
-    // Step 11: Return response
-    return { fileUpdates, skillFolders };
+    // Step 11: Extract package IDs
+    let packageIds: PackageId[] | undefined;
+    if (command.packagesSlugs.length > 0 && target) {
+      const packages =
+        await this.packageService.getPackagesBySlugsWithArtefacts(
+          command.packagesSlugs,
+          command.organization.id,
+        );
+      packageIds = packages.map((pkg) => pkg.id);
+    }
+
+    // Step 12: Return response
+    return {
+      fileUpdates,
+      skillFolders,
+      targetId: target?.id,
+      packageIds,
+    };
   }
 }

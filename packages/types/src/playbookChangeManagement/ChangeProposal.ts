@@ -6,6 +6,7 @@ import { ChangeProposalType } from './ChangeProposalType';
 import { ChangeProposalCaptureMode } from './ChangeProposalCaptureMode';
 import { ChangeProposalArtefactId } from './ChangeProposalArtefactIdType';
 import { SpaceId } from '../spaces';
+import { ChangeProposalDecision } from './ChangeProposalDecision';
 
 export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
   {
@@ -16,11 +17,24 @@ export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
     spaceId: SpaceId;
     payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
-    status: ChangeProposalStatus;
     message: string;
     createdBy: UserId;
     resolvedBy: UserId | null;
     resolvedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
-  };
+  } & ChangeProposalWithDecision<T>;
+
+type ChangeProposalWithDecision<T extends ChangeProposalType> =
+  | {
+      status: ChangeProposalStatus.pending;
+      decision: null;
+    }
+  | {
+      status: ChangeProposalStatus.rejected;
+      decision: null;
+    }
+  | {
+      status: ChangeProposalStatus.applied;
+      decision: ChangeProposalDecision<T>;
+    };
