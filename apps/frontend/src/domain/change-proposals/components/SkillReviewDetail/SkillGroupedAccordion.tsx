@@ -93,39 +93,6 @@ export function SkillGroupedAccordion({
     [proposals.length, acceptedProposalIds.size, rejectedProposalIds.size],
   );
 
-  const flatPending = useMemo(
-    () => pendingFileGroups.flatMap((g) => g.proposals),
-    [pendingFileGroups],
-  );
-
-  const expandNextPending = useCallback(
-    (proposalId: ChangeProposalId) => {
-      if (!onExpandCard) return;
-      const idx = flatPending.findIndex((p) => p.id === proposalId);
-      const next = flatPending
-        .slice(idx + 1)
-        .find((p) => !expandedCardIds.includes(p.id));
-      if (next) onExpandCard(next.id);
-    },
-    [onExpandCard, flatPending, expandedCardIds],
-  );
-
-  const handleAccept = useCallback(
-    (proposalId: ChangeProposalId) => {
-      onAccept(proposalId);
-      expandNextPending(proposalId);
-    },
-    [onAccept, expandNextPending],
-  );
-
-  const handleDismiss = useCallback(
-    (proposalId: ChangeProposalId) => {
-      onDismiss(proposalId);
-      expandNextPending(proposalId);
-    },
-    [onDismiss, expandNextPending],
-  );
-
   const handleValueChange = useCallback(
     (details: { value: string[] }) => {
       onToggleCard(details.value);
@@ -183,6 +150,39 @@ export function SkillGroupedAccordion({
         totalReviewedCount: reviewedCount,
       };
     }, [fileGroups, acceptedProposalIds, rejectedProposalIds]);
+
+  const flatPending = useMemo(
+    () => pendingFileGroups.flatMap((g) => g.proposals),
+    [pendingFileGroups],
+  );
+
+  const expandNextPending = useCallback(
+    (proposalId: ChangeProposalId) => {
+      if (!onExpandCard) return;
+      const idx = flatPending.findIndex((p) => p.id === proposalId);
+      const next = flatPending
+        .slice(idx + 1)
+        .find((p) => !expandedCardIds.includes(p.id));
+      if (next) onExpandCard(next.id);
+    },
+    [onExpandCard, flatPending, expandedCardIds],
+  );
+
+  const handleAccept = useCallback(
+    (proposalId: ChangeProposalId) => {
+      onAccept(proposalId);
+      expandNextPending(proposalId);
+    },
+    [onAccept, expandNextPending],
+  );
+
+  const handleDismiss = useCallback(
+    (proposalId: ChangeProposalId) => {
+      onDismiss(proposalId);
+      expandNextPending(proposalId);
+    },
+    [onDismiss, expandNextPending],
+  );
 
   const renderCard = (proposal: ChangeProposalWithConflicts) => {
     const poolStatus = getPoolStatus(

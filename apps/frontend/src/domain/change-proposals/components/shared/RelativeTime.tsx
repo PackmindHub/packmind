@@ -1,4 +1,4 @@
-import { PMText, PMTooltip } from '@packmind/ui';
+import { PMText, PMTextColors, PMTooltip } from '@packmind/ui';
 import {
   formatExactDate,
   formatRelativeTime,
@@ -7,13 +7,13 @@ import {
 interface RelativeTimeProps {
   date: Date;
   fontSize?: string;
-  color?: string;
+  color?: PMTextColors;
 }
 
 export function RelativeTime({
   date,
-  fontSize = 'inherit',
-  color = 'inherit',
+  fontSize,
+  color,
 }: Readonly<RelativeTimeProps>) {
   return (
     <PMTooltip label={formatExactDate(date)}>
