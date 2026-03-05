@@ -61,6 +61,7 @@ export const diffCommand = command({
       await diffRemoveHandler({
         packmindCliHexa,
         filePath: positionals[1],
+        message,
         exit: process.exit,
         getCwd: () => process.cwd(),
       });
