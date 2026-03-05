@@ -31,6 +31,8 @@ import { WithTimestamps } from '@packmind/types';
 import { RecipesBlankState } from './RecipesBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { getArtifactPackageCount } from '../../deployments/hooks/usePackagesForArtifact';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -45,6 +47,10 @@ export const RecipesList = ({
   const { spaceSlug, spaceId } = useCurrentSpace();
   const { data: recipes, isLoading, isError } = useGetRecipesQuery();
   const deleteBatchMutation = useDeleteRecipesBatchMutation();
+  const { data: packagesResponse } = useListPackagesBySpaceQuery(
+    spaceId,
+    organization?.id,
+  );
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedRecipeIds, setSelectedRecipeIds] = React.useState<RecipeId[]>(
     [],
@@ -142,6 +148,19 @@ export const RecipesList = ({
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'packages': {
+          const countA = getArtifactPackageCount(
+            packagesResponse?.packages,
+            a.id,
+            'recipe',
+          );
+          const countB = getArtifactPackageCount(
+            packagesResponse?.packages,
+            b.id,
+            'recipe',
+          );
+          return direction * (countA - countB);
+        }
         default:
           return 0;
       }
@@ -212,6 +231,7 @@ export const RecipesList = ({
     sortKey,
     sortDirection,
     searchQuery,
+    packagesResponse,
   ]);
 
   const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
@@ -273,8 +293,10 @@ export const RecipesList = ({
     {
       key: 'packages',
       header: 'Packages',
-      width: '120px',
-      align: 'center',
+      width: '220px',
+      align: 'left',
+      sortable: true,
+      sortDirection: getSortDirection('packages'),
     },
   ];
 

@@ -29,6 +29,8 @@ import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { getArtifactPackageCount } from '../../deployments/hooks/usePackagesForArtifact';
 
 interface ISkillsListProps {
   orgSlug: string;
@@ -39,6 +41,10 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   const { organization } = useAuthContext();
   const { data: skills, isLoading, isError } = useGetSkillsQuery();
   const deleteBatchMutation = useDeleteSkillsBatchMutation();
+  const { data: packagesResponse } = useListPackagesBySpaceQuery(
+    spaceId,
+    organization?.id,
+  );
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
     {
       defaultSortKey: 'name',
@@ -121,6 +127,19 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'packages': {
+          const countA = getArtifactPackageCount(
+            packagesResponse?.packages,
+            a.id,
+            'skill',
+          );
+          const countB = getArtifactPackageCount(
+            packagesResponse?.packages,
+            b.id,
+            'skill',
+          );
+          return direction * (countA - countB);
+        }
         default:
           return 0;
       }
@@ -189,6 +208,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     sortKey,
     sortDirection,
     searchQuery,
+    packagesResponse,
   ]);
 
   const isAllSelected =
@@ -248,8 +268,10 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     {
       key: 'packages',
       header: 'Packages',
-      width: '120px',
-      align: 'center',
+      width: '220px',
+      align: 'left',
+      sortable: true,
+      sortDirection: getSortDirection('packages'),
     },
   ];
 

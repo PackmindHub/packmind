@@ -31,6 +31,8 @@ import { StandardSamplesModal } from './StandardSamplesModal';
 import { StandardsBlankState } from './StandardsBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { getArtifactPackageCount } from '../../deployments/hooks/usePackagesForArtifact';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -49,6 +51,10 @@ export const StandardsList = ({
     isError,
   } = useGetStandardsQuery();
   const deleteBatchMutation = useDeleteStandardsBatchMutation();
+  const { data: packagesResponse } = useListPackagesBySpaceQuery(
+    spaceId,
+    organization?.id,
+  );
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = React.useState<
     StandardId[]
@@ -150,6 +156,19 @@ export const StandardsList = ({
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'packages': {
+          const countA = getArtifactPackageCount(
+            packagesResponse?.packages,
+            a.id,
+            'standard',
+          );
+          const countB = getArtifactPackageCount(
+            packagesResponse?.packages,
+            b.id,
+            'standard',
+          );
+          return direction * (countA - countB);
+        }
         default:
           return 0;
       }
@@ -222,6 +241,7 @@ export const StandardsList = ({
     sortKey,
     sortDirection,
     searchQuery,
+    packagesResponse,
   ]);
 
   const isAllSelected =
@@ -282,8 +302,10 @@ export const StandardsList = ({
     {
       key: 'packages',
       header: 'Packages',
-      width: '120px',
-      align: 'center',
+      width: '220px',
+      align: 'left',
+      sortable: true,
+      sortDirection: getSortDirection('packages'),
     },
   ];
 

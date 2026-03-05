@@ -4,7 +4,8 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import { PackageCountBadge } from './PackageCountBadge';
-import { createPackageId, createStandardId } from '@packmind/types';
+import { formatPackageNames } from './PackagesDropdown';
+import { createPackageId, createStandardId, Package } from '@packmind/types';
 import * as usePackagesForArtifactModule from '../../hooks/usePackagesForArtifact';
 
 jest.mock('../../hooks/usePackagesForArtifact');
@@ -31,29 +32,22 @@ const defaultProps = {
   organizationId: undefined,
 };
 
+const makePackage = (id: string, name: string, description = ''): Package =>
+  ({
+    id: createPackageId(id),
+    name,
+    slug: name.toLowerCase().replace(/\s+/g, '-'),
+    description,
+    spaceId: '' as never,
+    createdBy: '' as never,
+    recipes: [],
+    standards: [],
+    skills: [],
+  }) as Package;
+
 const twoPackages = [
-  {
-    id: createPackageId('pkg-1'),
-    name: 'Package Alpha',
-    slug: 'package-alpha',
-    description: '',
-    spaceId: '' as never,
-    createdBy: '' as never,
-    recipes: [],
-    standards: [],
-    skills: [],
-  },
-  {
-    id: createPackageId('pkg-2'),
-    name: 'Package Beta',
-    slug: 'package-beta',
-    description: '',
-    spaceId: '' as never,
-    createdBy: '' as never,
-    recipes: [],
-    standards: [],
-    skills: [],
-  },
+  makePackage('pkg-1', 'Package Alpha'),
+  makePackage('pkg-2', 'Package Beta'),
 ];
 
 describe('PackageCountBadge', () => {
@@ -84,21 +78,19 @@ describe('PackageCountBadge', () => {
       });
     });
 
-    it('renders the count badge', () => {
+    it('renders formatted package names', () => {
       renderWithProviders(<PackageCountBadge {...defaultProps} />);
 
-      expect(screen.getByTestId('package-count-badge')).toHaveTextContent('2');
+      expect(screen.getByTestId('package-count-names')).toHaveTextContent(
+        'Package Alpha, Package Beta',
+      );
     });
 
-    it('renders package links in a popover on click', () => {
+    it('renders a clickable trigger with package names', () => {
       renderWithProviders(<PackageCountBadge {...defaultProps} />);
 
-      screen.getByTestId('package-count-badge').click();
-
-      expect(screen.getByText('Package Alpha').closest('a')).toHaveAttribute(
-        'target',
-        '_blank',
-      );
+      const trigger = screen.getByTestId('package-count-names');
+      expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
     });
   });
 
@@ -117,6 +109,70 @@ describe('PackageCountBadge', () => {
       );
 
       expect(container.firstChild).toBeNull();
+    });
+  });
+});
+
+describe('formatPackageNames', () => {
+  it('returns empty string for empty array', () => {
+    expect(formatPackageNames([])).toBe('');
+  });
+
+  describe('with names fitting within limit', () => {
+    it('returns all names joined by comma', () => {
+      const packages = [makePackage('1', 'Alpha'), makePackage('2', 'Beta')];
+
+      expect(formatPackageNames(packages)).toBe('Alpha, Beta');
+    });
+
+    it('sorts names alphabetically', () => {
+      const packages = [
+        makePackage('1', 'Zulu'),
+        makePackage('2', 'Alpha'),
+        makePackage('3', 'Mike'),
+      ];
+
+      expect(formatPackageNames(packages)).toBe('Alpha, Mike, Zulu');
+    });
+  });
+
+  describe('with names exceeding limit', () => {
+    it('appends "and X more" suffix', () => {
+      const packages = [
+        makePackage('1', 'A very long package name here'),
+        makePackage('2', 'Another long package name'),
+        makePackage('3', 'Third package'),
+      ];
+
+      const result = formatPackageNames(packages, 50);
+
+      expect(result).toMatch(/and \d+ more$/);
+    });
+
+    it('includes at least the first name alphabetically', () => {
+      const packages = [
+        makePackage('1', 'Zzz very long package name that exceeds the limit'),
+        makePackage('2', 'Aaa short'),
+      ];
+
+      const result = formatPackageNames(packages, 10);
+
+      expect(result).toBe('Aaa short and 1 more');
+    });
+
+    it('shows a single long name in full', () => {
+      const packages = [
+        makePackage(
+          '1',
+          'This is a very long package name that exceeds sixty characters easily',
+        ),
+      ];
+
+      const result = formatPackageNames(packages, 10);
+
+      expect(result).toBe(
+        'This is a very long package name that exceeds sixty characters easily',
+      );
     });
   });
 });
