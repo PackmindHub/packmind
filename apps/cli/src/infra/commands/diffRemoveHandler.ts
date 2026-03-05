@@ -217,5 +217,17 @@ export async function diffRemoveHandler(
     logSuccessConsole('Change proposal for removal already submitted');
   }
 
+  // Delete the file after successful submission
+  try {
+    fs.unlinkSync(absolutePath);
+    logSuccessConsole(`File deleted: ${filePath}`);
+  } catch (err) {
+    logErrorConsole(
+      `Failed to delete file: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    exit(1);
+    return;
+  }
+
   exit(0);
 }

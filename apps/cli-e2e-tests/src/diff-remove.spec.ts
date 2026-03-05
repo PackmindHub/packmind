@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   describeWithUserSignedUp,
   runCli,
@@ -167,6 +169,14 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
 
     it('notifies the user that the change proposal was submitted', () => {
       expect(stdout).toContain('Change proposal for removal submitted');
+    });
+
+    it('deletes the file', () => {
+      const filePath = path.join(
+        testDir,
+        `.packmind/commands/${command.slug}.md`,
+      );
+      expect(fs.existsSync(filePath)).toBe(false);
     });
 
     describe('when verifying change proposal creation', () => {

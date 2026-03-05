@@ -11,6 +11,7 @@ jest.mock('../utils/consoleLogger', () => ({
 
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
+  unlinkSync: jest.fn(),
 }));
 
 describe('diffRemoveHandler', () => {
@@ -24,11 +25,14 @@ describe('diffRemoveHandler', () => {
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
   let mockExistsSync: jest.Mock;
+  let mockUnlinkSync: jest.Mock;
 
   beforeEach(() => {
     const fs = jest.requireMock('fs');
     mockExistsSync = fs.existsSync;
     mockExistsSync.mockReturnValue(true); // Default to file exists
+    mockUnlinkSync = fs.unlinkSync;
+    mockUnlinkSync.mockReturnValue(undefined); // Default to successful deletion
     mockReadFullConfig = jest.fn().mockResolvedValue({
       packages: { 'test-package': '*' },
       agents: ['packmind'],
@@ -379,6 +383,24 @@ describe('diffRemoveHandler', () => {
       expect(mockExit).toHaveBeenCalledWith(0);
     });
 
+    it('deletes the file', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockUnlinkSync).toHaveBeenCalledWith(
+        '/project/git-root/.packmind/standards/my-standard.md',
+      );
+    });
+
+    it('logs file deletion success message', async () => {
+      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        'File deleted: .packmind/standards/my-standard.md',
+      );
+    });
+
     it('calls getDeployed with correct parameters', async () => {
       await diffRemoveHandler(buildDeps());
 
@@ -463,6 +485,36 @@ describe('diffRemoveHandler', () => {
         relativePath: '/apps/frontend/',
         agents: ['packmind'],
       });
+    });
+  });
+
+  describe('when file deletion fails', () => {
+    beforeEach(() => {
+      mockUnlinkSync.mockImplementation(() => {
+        throw new Error('Permission denied');
+      });
+    });
+
+    it('logs error message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to delete file'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('still submits the change proposal', async () => {
+      await diffRemoveHandler(buildDeps());
+
+      expect(mockSubmitDiffs).toHaveBeenCalled();
     });
   });
 });
