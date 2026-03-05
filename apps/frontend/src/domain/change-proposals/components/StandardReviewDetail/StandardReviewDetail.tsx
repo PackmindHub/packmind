@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
@@ -76,6 +76,35 @@ export function StandardReviewDetail({
   const pool = useChangeProposalPool(selectedStandardProposals);
 
   const reviewState = useCardReviewState();
+
+  const hasInitiallyExpanded = useRef(false);
+  useEffect(() => {
+    if (hasInitiallyExpanded.current) return;
+    if (selectedStandardProposals.length === 0) return;
+
+    const sorted = [...selectedStandardProposals].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+    reviewState.toggleCard([sorted[0].id]);
+    hasInitiallyExpanded.current = true;
+  }, [selectedStandardProposals, reviewState.toggleCard]);
+
+  const handleAcceptAndCollapse = useCallback(
+    (proposalId: ChangeProposalId) => {
+      pool.handlePoolAccept(proposalId);
+      reviewState.collapseCard(proposalId);
+    },
+    [pool.handlePoolAccept, reviewState.collapseCard],
+  );
+
+  const handleDismissAndCollapse = useCallback(
+    (proposalId: ChangeProposalId) => {
+      pool.handlePoolReject(proposalId);
+      reviewState.collapseCard(proposalId);
+    },
+    [pool.handlePoolReject, reviewState.collapseCard],
+  );
 
   const outdatedProposalIds = useMemo(
     () =>
@@ -229,8 +258,8 @@ export function StandardReviewDetail({
             onEdit={() => {
               /* Edit mode is out of scope for standards */
             }}
-            onAccept={pool.handlePoolAccept}
-            onDismiss={pool.handlePoolReject}
+            onAccept={handleAcceptAndCollapse}
+            onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
             renderExpandedView={renderExpandedView}
           />

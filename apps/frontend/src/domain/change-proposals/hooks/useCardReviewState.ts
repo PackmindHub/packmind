@@ -20,6 +20,10 @@ export function useCardReviewState() {
     setExpandedCardIds(ids);
   }, []);
 
+  const collapseCard = useCallback((id: string) => {
+    setExpandedCardIds((prev) => prev.filter((cardId) => cardId !== id));
+  }, []);
+
   const getViewMode = useCallback(
     (proposalId: ChangeProposalId): ViewMode =>
       viewModeByProposal.get(proposalId) ?? 'focused',
@@ -79,6 +83,7 @@ export function useCardReviewState() {
     setActiveTab,
     expandedCardIds,
     toggleCard,
+    collapseCard,
     editingProposalId,
     editedValues,
     getViewMode,
