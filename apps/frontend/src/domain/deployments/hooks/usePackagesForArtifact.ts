@@ -51,7 +51,11 @@ export function usePackagesForArtifact({
   const packages = useMemo(() => {
     if (!packagesResponse?.packages || !artifactId) return [];
 
-    return getArtifactPackages(packagesResponse.packages, artifactId, artifactType);
+    return getArtifactPackages(
+      packagesResponse.packages,
+      artifactId,
+      artifactType,
+    );
   }, [packagesResponse, artifactId, artifactType]);
 
   return {
