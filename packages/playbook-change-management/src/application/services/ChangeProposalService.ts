@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   ChangeProposal,
   ChangeProposalArtefactId,
+  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalPayload,
   ChangeProposalStatus,
@@ -19,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataSource } from 'typeorm';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalSchema } from '../../infra/schemas/ChangeProposalSchema';
+import { isExpectedChangeProposalType } from '../utils/isExpectedChangeProposalType';
 
 const origin = 'ChangeProposalService';
 
@@ -83,6 +85,7 @@ export class ChangeProposalService {
       captureMode: command.captureMode,
       message: command.message ?? '',
       status: ChangeProposalStatus.pending,
+      decision: null,
       createdBy,
       resolvedBy: null,
       resolvedAt: null,
@@ -160,6 +163,7 @@ export class ChangeProposalService {
         const appliedProposal: ChangeProposal<ChangeProposalType> = {
           ...proposal,
           status: ChangeProposalStatus.applied,
+          decision: computeProposalDecision(proposal),
           resolvedBy: userId,
           resolvedAt: now,
           updatedAt: now,
@@ -178,6 +182,7 @@ export class ChangeProposalService {
         const rejectedProposal: ChangeProposal<ChangeProposalType> = {
           ...proposal,
           status: ChangeProposalStatus.rejected,
+          decision: null,
           resolvedBy: userId,
           resolvedAt: now,
           updatedAt: now,
@@ -292,4 +297,24 @@ export class ChangeProposalService {
 
     return proposals;
   }
+}
+
+/*
+ * Crappy solution until we send a correct payload when validating multiple change proposals.
+ * */
+function computeProposalDecision<T extends ChangeProposalType>(
+  proposal: ChangeProposal<T>,
+): ChangeProposalDecision<T> {
+  if (
+    isExpectedChangeProposalType(proposal, ChangeProposalType.removeStandard) ||
+    isExpectedChangeProposalType(proposal, ChangeProposalType.removeCommand) ||
+    isExpectedChangeProposalType(proposal, ChangeProposalType.removeSkill)
+  ) {
+    return {
+      delete: false,
+      packageIds: [],
+    } as unknown as ChangeProposalDecision<T>;
+  }
+
+  return proposal.payload as ChangeProposalDecision<T>;
 }

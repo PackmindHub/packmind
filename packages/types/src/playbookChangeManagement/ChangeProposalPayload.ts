@@ -69,22 +69,10 @@ type SkillChangeProposalPayloadMap = {
 /*
  * Note: the `delete` and `removeFromPackages` fields are there to store the user decision when applying the changeProposal.
  * */
-export type RemoveArtefactPayload =
-  | {
-      targetId: TargetId;
-      packageIds: PackageId[];
-    }
-  | {
-      targetId: TargetId;
-      packageIds: PackageId[];
-      delete: true;
-    }
-  | {
-      targetId: TargetId;
-      packageIds: PackageId[];
-      delete: false;
-      removeFromPackages: PackageId[];
-    };
+export type RemoveArtefactPayload = {
+  targetId: TargetId;
+  packageIds: PackageId[];
+};
 
 export type NewStandardPayload = {
   name: string;
@@ -122,7 +110,7 @@ type RemovalChangeProposalPayloadMap = {
   [ChangeProposalType.removeSkill]: RemoveArtefactPayload;
 };
 
-type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
+export type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
   StandardChangeProposalPayloadMap &
   SkillChangeProposalPayloadMap &
   CreationChangeProposalPayloadMap &
