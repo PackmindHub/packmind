@@ -50,8 +50,10 @@ describe('DefaultSkillsDeployer', () => {
         ).toBe(true);
       });
 
-      it('includes update-playbook', () => {
-        expect(paths.some((p) => p.includes('update-playbook'))).toBe(true);
+      it('includes packmind-update-playbook', () => {
+        expect(paths.some((p) => p.includes('packmind-update-playbook'))).toBe(
+          true,
+        );
       });
     });
 
@@ -117,8 +119,10 @@ describe('DefaultSkillsDeployer', () => {
           );
         });
 
-        it('excludes update-playbook (requires 0.21.0)', () => {
-          expect(paths.some((p) => p.includes('update-playbook'))).toBe(false);
+        it('excludes packmind-update-playbook (requires 0.21.0)', () => {
+          expect(
+            paths.some((p) => p.includes('packmind-update-playbook')),
+          ).toBe(false);
         });
       });
 
@@ -195,8 +199,10 @@ describe('DefaultSkillsDeployer', () => {
           ).toBe(true);
         });
 
-        it('includes update-playbook', () => {
-          expect(paths.some((p) => p.includes('update-playbook'))).toBe(true);
+        it('includes packmind-update-playbook', () => {
+          expect(
+            paths.some((p) => p.includes('packmind-update-playbook')),
+          ).toBe(true);
         });
       });
     });
