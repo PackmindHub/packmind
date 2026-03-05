@@ -1,12 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
-import {
-  ChangeProposalId,
-  OrganizationId,
-  RecipeId,
-  SpaceId,
-} from '@packmind/types';
+import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetRecipeByIdQuery } from '../../../recipes/api/queries/RecipesQueries';
@@ -28,7 +23,6 @@ import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { CommandReviewHeader } from './CommandReviewHeader';
 import { FocusedView } from './FocusedView';
 import { InlineView } from './InlineView';
-import { EditView } from './EditView';
 import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
@@ -131,51 +125,9 @@ export function CommandReviewDetail({
     pool.resetPool,
   ]);
 
-  const handleEdit = useCallback(
-    (proposalId: ChangeProposalId) => {
-      const proposal = selectedRecipeProposals.find((p) => p.id === proposalId);
-      if (!proposal) return;
-      const payload = proposal.payload as { newValue: string };
-      reviewState.startEditing(proposalId, payload.newValue);
-    },
-    [selectedRecipeProposals, reviewState],
-  );
-
-  const handleSaveAndAccept = useCallback(
-    (proposalId: ChangeProposalId) => {
-      pool.handlePoolAccept(proposalId);
-      reviewState.cancelEditing();
-    },
-    [pool, reviewState],
-  );
-
   const renderExpandedView = useCallback(
     (viewMode: ViewMode, proposal: ChangeProposalWithConflicts) => {
       if (!selectedRecipe) return null;
-
-      const isEditing = reviewState.editingProposalId === proposal.id;
-      if (isEditing) {
-        const payload = proposal.payload as {
-          oldValue: string;
-          newValue: string;
-        };
-        const editedValue =
-          reviewState.editedValues.get(proposal.id) ?? payload.newValue;
-        const isEditModified = editedValue !== payload.newValue;
-        return (
-          <EditView
-            proposal={proposal}
-            editedValue={editedValue}
-            onEditedValueChange={(v) =>
-              reviewState.setEditedValue(proposal.id, v)
-            }
-            onResetToOriginal={() => reviewState.resetEditedValue(proposal.id)}
-            onCancel={reviewState.cancelEditing}
-            onSaveAndAccept={() => handleSaveAndAccept(proposal.id)}
-            isModified={isEditModified}
-          />
-        );
-      }
 
       if (viewMode === 'diff')
         return <FocusedView recipe={selectedRecipe} proposal={proposal} />;
@@ -183,7 +135,7 @@ export function CommandReviewDetail({
         return <InlineView recipe={selectedRecipe} proposal={proposal} />;
       return null;
     },
-    [selectedRecipe, reviewState, handleSaveAndAccept],
+    [selectedRecipe],
   );
 
   const latestProposal = useMemo(() => {
@@ -241,17 +193,18 @@ export function CommandReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            editingProposalId={reviewState.editingProposalId}
+            showEditButton={false}
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={handleEdit}
+            onEdit={() => {
+              /* Edit mode is not supported for commands */
+            }}
             onAccept={pool.handlePoolAccept}
             onDismiss={pool.handlePoolReject}
             onUndo={pool.handleUndoPool}
             renderExpandedView={renderExpandedView}
-            showEditButton={false} /* Edit mode is out of scope for commands */
           />
         )}
 
