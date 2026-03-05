@@ -370,8 +370,8 @@ describe('CopilotDeployer', () => {
           item.path.startsWith('.github/skills/'),
         );
 
-        // Should include: 6 default skills + 1 managed skill = 7 total
-        expect(skillDeleteItems).toHaveLength(7);
+        // Should include: 7 default skills + 1 managed skill = 8 total
+        expect(skillDeleteItems).toHaveLength(8);
       });
     });
   });

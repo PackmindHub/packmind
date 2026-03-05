@@ -7,6 +7,7 @@ import { CreateSkillDeployer } from './CreateSkillDeployer';
 import { CreateStandardDeployer } from './CreateStandardDeployer';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
+import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
 
 export type DeployDefaultSkillsOptions = {
   cliVersion?: string;
@@ -21,6 +22,7 @@ export class DefaultSkillsDeployer {
     new CreateCommandDeployer(),
     new CreatePackageDeployer(),
     new CliListCommandsDeployer(),
+    new UpdatePlaybookDeployer(),
   ];
 
   constructor(
@@ -36,6 +38,7 @@ export class DefaultSkillsDeployer {
       'packmind-create-command',
       'packmind-create-package',
       'packmind-cli-list-commands',
+      'update-playbook',
     ];
   }
 
