@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { LuFolder, LuFile, LuChevronRight, LuFiles } from 'react-icons/lu';
 import {
   createFileTreeCollection,
@@ -45,7 +45,7 @@ export function SkillFileFilterTree({
     [allFilePaths],
   );
 
-  const allExpandedValues = useMemo(() => {
+  const [expandedValue, setExpandedValue] = useState(() => {
     const dirs = new Set<string>();
     for (const filePath of allFilePaths) {
       const parts = filePath.split('/');
@@ -54,7 +54,7 @@ export function SkillFileFilterTree({
       }
     }
     return Array.from(dirs);
-  }, [allFilePaths]);
+  });
 
   const hasSkillMdChanges = filePathsWithChanges.has(SKILL_MD_PATH);
   const isAllFilesSelected = selectedFilter === '';
@@ -127,7 +127,10 @@ export function SkillFileFilterTree({
                 onFilterSelect(value);
               }
             }}
-            expandedValue={allExpandedValues}
+            expandedValue={expandedValue}
+            onExpandedChange={(details: { expandedValue: string[] }) => {
+              setExpandedValue(details.expandedValue);
+            }}
             width="full"
             size="sm"
           >
@@ -145,8 +148,7 @@ export function SkillFileFilterTree({
                     return (
                       <PMTreeView.Branch>
                         <PMTreeView.BranchControl
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             onFilterSelect(node.value);
                           }}
                           bg={isDirSelected ? 'blue.900' : undefined}

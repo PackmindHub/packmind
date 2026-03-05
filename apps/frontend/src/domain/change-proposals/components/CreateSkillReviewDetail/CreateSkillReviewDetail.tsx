@@ -7,6 +7,7 @@ import {
   PMHStack,
   PMIcon,
   PMMarkdownViewer,
+  PMSeparator,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -80,6 +81,18 @@ export function CreateSkillReviewDetail({
     );
   }, [allFiles, fileFilter]);
 
+  const hasInfoFields = useMemo(
+    () =>
+      Boolean(
+        displayedProposal?.license ||
+        displayedProposal?.compatibility ||
+        displayedProposal?.allowedTools ||
+        (displayedProposal?.metadata &&
+          Object.keys(displayedProposal.metadata).length > 0),
+      ),
+    [displayedProposal],
+  );
+
   const showDescription = !fileFilter || fileFilter === '/SKILL.md';
 
   const defaultExpandedValues = useMemo(
@@ -127,7 +140,74 @@ export function CreateSkillReviewDetail({
         )}
 
         {showDescription && (
-          <PMMarkdownViewer content={displayedProposal.description} />
+          <PMVStack
+            align="stretch"
+            gap={2}
+            border="solid 1px"
+            borderColor="border.tertiary"
+            borderRadius="md"
+            p={4}
+          >
+            <PMVStack gap={2} align="flex-start">
+              <PMText color="secondary" fontSize="sm">
+                Description:
+              </PMText>
+              <PMMarkdownViewer content={displayedProposal.description} />
+            </PMVStack>
+            {hasInfoFields && (
+              <>
+                <PMSeparator my={2} borderColor="border.tertiary" />
+                {displayedProposal.license && (
+                  <PMHStack gap={2}>
+                    <PMText color="secondary" fontSize="sm">
+                      License:
+                    </PMText>
+                    <PMText fontSize="sm">{displayedProposal.license}</PMText>
+                  </PMHStack>
+                )}
+                {displayedProposal.compatibility && (
+                  <PMHStack gap={2}>
+                    <PMText color="secondary" fontSize="sm">
+                      Compatibility:
+                    </PMText>
+                    <PMText fontSize="sm">
+                      {displayedProposal.compatibility}
+                    </PMText>
+                  </PMHStack>
+                )}
+                {displayedProposal.allowedTools && (
+                  <PMHStack gap={2}>
+                    <PMText color="secondary" fontSize="sm">
+                      Allowed Tools:
+                    </PMText>
+                    <PMText fontSize="sm">
+                      {displayedProposal.allowedTools}
+                    </PMText>
+                  </PMHStack>
+                )}
+                {displayedProposal.metadata &&
+                  Object.keys(displayedProposal.metadata).length > 0 && (
+                    <PMVStack gap={1} align="stretch">
+                      <PMText color="secondary" fontSize="sm">
+                        Metadata:
+                      </PMText>
+                      <PMVStack gap={1} pl={4} align="flex-start">
+                        {Object.entries(displayedProposal.metadata).map(
+                          ([key, value]) => (
+                            <PMHStack key={key} gap={2}>
+                              <PMText color="secondary" fontSize="sm">
+                                - {key}:
+                              </PMText>
+                              <PMText fontSize="sm">{value}</PMText>
+                            </PMHStack>
+                          ),
+                        )}
+                      </PMVStack>
+                    </PMVStack>
+                  )}
+              </>
+            )}
+          </PMVStack>
         )}
 
         {filteredFiles.length > 0 && (
