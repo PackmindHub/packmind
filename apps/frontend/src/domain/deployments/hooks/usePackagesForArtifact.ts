@@ -51,16 +51,7 @@ export function usePackagesForArtifact({
   const packages = useMemo(() => {
     if (!packagesResponse?.packages || !artifactId) return [];
 
-    return packagesResponse.packages.filter((pkg: Package) => {
-      switch (artifactType) {
-        case 'standard':
-          return pkg.standards?.includes(artifactId as StandardId);
-        case 'recipe':
-          return pkg.recipes?.includes(artifactId as RecipeId);
-        case 'skill':
-          return pkg.skills?.includes(artifactId as SkillId);
-      }
-    });
+    return getArtifactPackages(packagesResponse.packages, artifactId, artifactType);
   }, [packagesResponse, artifactId, artifactType]);
 
   return {
