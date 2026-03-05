@@ -1,14 +1,12 @@
-import { PMBox, PMText, PMVStack } from '@packmind/ui';
+import { PMBox, PMHeading, PMMarkdownViewer, PMVStack } from '@packmind/ui';
 import { CommandCreationProposalOverview } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
-import {
-  MarkdownEditor,
-  MarkdownEditorProvider,
-} from '../../../../shared/components/editor/MarkdownEditor';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
+import { useUserLookup } from '../../hooks/useUserLookup';
 import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { SubmissionBanner } from '../SubmissionBanner';
-import { ReviewActionButtons } from '../ReviewActionButtons';
+import { CreationReviewHeader } from '../shared/CreationReviewHeader';
+import { ProposalMessage } from '../shared/ProposalMessage';
 import {
   ProposalDetailEmpty,
   ProposalDetailLoading,
@@ -46,6 +44,8 @@ export function CreateCommandReviewDetail({
     },
   });
 
+  const userLookup = useUserLookup();
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -54,25 +54,28 @@ export function CreateCommandReviewDetail({
     return <ProposalDetailEmpty />;
   }
 
+  const authorName =
+    userLookup.get(displayedProposal.createdBy) ?? 'Unknown user';
+
   return (
     <PMBox gridColumn="span 2" overflowY="auto">
+      <CreationReviewHeader
+        artefactName={displayedProposal.name}
+        latestAuthor={authorName}
+        latestTime={new Date(displayedProposal.lastContributedAt)}
+        onAccept={handleAccept}
+        onDismiss={handleReject}
+        isPending={isPending}
+        isSubmitted={!!submittedState}
+      />
       <PMBox
-        borderBottomWidth="1px"
-        paddingX={6}
-        paddingY={2}
-        display="flex"
-        justifyContent="flex-end"
-        alignItems="center"
-        gap={4}
-        minH="44px"
+        px={6}
+        py={2}
+        border="sm"
+        borderTop="none"
+        borderColor="border.tertiary"
       >
-        {!submittedState && (
-          <ReviewActionButtons
-            onAccept={handleAccept}
-            onReject={handleReject}
-            isPending={isPending}
-          />
-        )}
+        <ProposalMessage message={displayedProposal.message} />
       </PMBox>
       <PMVStack gap={2} align="stretch" p={6}>
         {submittedState && (
@@ -81,16 +84,12 @@ export function CreateCommandReviewDetail({
             artefactLabel="command"
           />
         )}
-        <PMText fontSize="lg" fontWeight="semibold">
+        <PMHeading size="md" mb={4}>
           {displayedProposal.name}
-        </PMText>
-        <MarkdownEditorProvider>
-          <MarkdownEditor
-            defaultValue={stripFrontmatter(displayedProposal.content)}
-            readOnly
-            paddingVariant="none"
-          />
-        </MarkdownEditorProvider>
+        </PMHeading>
+        <PMMarkdownViewer
+          content={stripFrontmatter(displayedProposal.content)}
+        />
       </PMVStack>
     </PMBox>
   );

@@ -1,3 +1,4 @@
+import { UserId } from '../../accounts/User';
 import { RecipeId } from '../../recipes/RecipeId';
 import { SkillFile } from '../../skills/SkillFile';
 import { SkillId } from '../../skills/SkillId';
@@ -22,6 +23,8 @@ export type CommandCreationProposalOverview = {
   artefactType: 'commands';
   name: string;
   content: string;
+  message: string;
+  createdBy: UserId;
   lastContributedAt: string;
 };
 
@@ -32,6 +35,8 @@ export type StandardCreationProposalOverview = {
   description: string;
   scope: string | null;
   rules: Array<{ content: string }>;
+  message: string;
+  createdBy: UserId;
   lastContributedAt: string;
 };
 
@@ -46,6 +51,8 @@ export type SkillCreationProposalOverview = {
   metadata?: Record<string, string>;
   allowedTools?: string;
   files?: Array<Omit<SkillFile, 'id' | 'skillVersionId'>>;
+  message: string;
+  createdBy: UserId;
   lastContributedAt: string;
 };
 

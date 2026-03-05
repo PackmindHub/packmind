@@ -1,13 +1,27 @@
-import { PMBox, PMText, PMVStack } from '@packmind/ui';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router';
+import { LuFile } from 'react-icons/lu';
+import {
+  PMAccordion,
+  PMBox,
+  PMHStack,
+  PMIcon,
+  PMMarkdownViewer,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
 import { SkillCreationProposalOverview } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
+import { useUserLookup } from '../../hooks/useUserLookup';
 import { SubmissionBanner } from '../SubmissionBanner';
-import { ReviewActionButtons } from '../ReviewActionButtons';
+import { CreationReviewHeader } from '../shared/CreationReviewHeader';
+import { ProposalMessage } from '../shared/ProposalMessage';
 import {
   ProposalDetailEmpty,
   ProposalDetailLoading,
 } from '../ProposalDetailPlaceholder';
+import { FileContent } from '../SkillReviewDetail/FileItems/FileContent';
 
 interface CreateSkillReviewDetailProps {
   proposalId: string;
@@ -37,6 +51,42 @@ export function CreateSkillReviewDetail({
       routes.space.toSkills(orgSlug, spaceSlug),
   });
 
+  const userLookup = useUserLookup();
+  const [searchParams] = useSearchParams();
+  const fileFilter = searchParams.get('file') ?? '';
+
+  const allFiles = useMemo(() => {
+    const skillMdFile = {
+      path: 'SKILL.md',
+      content: displayedProposal?.prompt ?? '',
+      isBase64: false,
+    };
+
+    const otherFiles = displayedProposal?.files
+      ? [...displayedProposal.files]
+          .filter((f) => f.path !== 'SKILL.md')
+          .sort((a, b) => a.path.localeCompare(b.path))
+      : [];
+
+    return [skillMdFile, ...otherFiles];
+  }, [displayedProposal?.files, displayedProposal?.prompt]);
+
+  const filteredFiles = useMemo(() => {
+    if (!fileFilter) return allFiles;
+    if (fileFilter === '/SKILL.md')
+      return allFiles.filter((f) => f.path === 'SKILL.md');
+    return allFiles.filter(
+      (f) => f.path === fileFilter || f.path.startsWith(fileFilter + '/'),
+    );
+  }, [allFiles, fileFilter]);
+
+  const showDescription = !fileFilter || fileFilter === '/SKILL.md';
+
+  const defaultExpandedValues = useMemo(
+    () => allFiles.map((f) => f.path),
+    [allFiles],
+  );
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -45,25 +95,28 @@ export function CreateSkillReviewDetail({
     return <ProposalDetailEmpty />;
   }
 
+  const authorName =
+    userLookup.get(displayedProposal.createdBy) ?? 'Unknown user';
+
   return (
     <PMBox gridColumn="span 2" overflowY="auto">
+      <CreationReviewHeader
+        artefactName={displayedProposal.name}
+        latestAuthor={authorName}
+        latestTime={new Date(displayedProposal.lastContributedAt)}
+        onAccept={handleAccept}
+        onDismiss={handleReject}
+        isPending={isPending}
+        isSubmitted={!!submittedState}
+      />
       <PMBox
-        borderBottomWidth="1px"
-        paddingX={6}
-        paddingY={2}
-        display="flex"
-        justifyContent="flex-end"
-        alignItems="center"
-        gap={4}
-        minH="44px"
+        px={6}
+        py={2}
+        border="sm"
+        borderTop="none"
+        borderColor="border.tertiary"
       >
-        {!submittedState && (
-          <ReviewActionButtons
-            onAccept={handleAccept}
-            onReject={handleReject}
-            isPending={isPending}
-          />
-        )}
+        <ProposalMessage message={displayedProposal.message} />
       </PMBox>
       <PMVStack gap={6} align="stretch" p={6}>
         {submittedState && (
@@ -72,24 +125,72 @@ export function CreateSkillReviewDetail({
             artefactLabel="skill"
           />
         )}
-        <PMText fontSize="lg" fontWeight="semibold">
-          {displayedProposal.name}
-        </PMText>
-        {displayedProposal.description && (
-          <PMVStack gap={1} align="stretch">
-            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
-              Description
-            </PMText>
-            <PMText fontSize="sm">{displayedProposal.description}</PMText>
-          </PMVStack>
+
+        {showDescription && (
+          <PMMarkdownViewer content={displayedProposal.description} />
         )}
-        {displayedProposal.prompt && (
-          <PMVStack gap={1} align="stretch">
-            <PMText fontSize="sm" fontWeight="semibold" color="secondary">
-              Prompt
-            </PMText>
-            <PMText fontSize="sm">{displayedProposal.prompt}</PMText>
-          </PMVStack>
+
+        {filteredFiles.length > 0 && (
+          <PMAccordion.Root
+            collapsible
+            multiple
+            width="full"
+            defaultValue={defaultExpandedValues}
+          >
+            <PMVStack gap={4} width="full">
+              {filteredFiles.map((file) => (
+                <PMAccordion.Item
+                  key={file.path}
+                  value={file.path}
+                  width="full"
+                  border="none"
+                >
+                  <PMAccordion.ItemTrigger cursor="pointer" padding={0}>
+                    <PMBox
+                      width="full"
+                      bg="bg.panel"
+                      borderRadius="md"
+                      px={4}
+                      py={2}
+                      css={{
+                        '[data-state=open] &': {
+                          borderBottomRadius: 0,
+                        },
+                      }}
+                    >
+                      <PMHStack
+                        gap={3}
+                        alignItems="center"
+                        justifyContent="flex-start"
+                      >
+                        <PMIcon color="text.faded">
+                          <LuFile />
+                        </PMIcon>
+                        <PMText
+                          fontSize="sm"
+                          fontWeight="semibold"
+                          color="faded"
+                        >
+                          {file.path}
+                        </PMText>
+                      </PMHStack>
+                    </PMBox>
+                  </PMAccordion.ItemTrigger>
+                  <PMAccordion.ItemContent>
+                    <PMBox
+                      p={2}
+                      border="sm"
+                      borderBottomRadius="sm"
+                      borderTop="none"
+                      borderColor="border.tertiary"
+                    >
+                      <FileContent file={file} />
+                    </PMBox>
+                  </PMAccordion.ItemContent>
+                </PMAccordion.Item>
+              ))}
+            </PMVStack>
+          </PMAccordion.Root>
         )}
       </PMVStack>
     </PMBox>
