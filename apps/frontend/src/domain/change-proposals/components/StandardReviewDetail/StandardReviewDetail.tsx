@@ -23,6 +23,7 @@ import {
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
+import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
 import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
 import { getStandardByIdKey } from '../../../standards/api/queryKeys';
@@ -74,6 +75,7 @@ export function StandardReviewDetail({
   const rules = rulesData ?? [];
 
   const pool = useChangeProposalPool(selectedStandardProposals);
+  const navigateToNextArtifact = useNavigateAfterApply(artefactId);
 
   const reviewState = useCardReviewState();
 
@@ -155,6 +157,7 @@ export function StandardReviewDetail({
       ]);
 
       pool.resetPool();
+      navigateToNextArtifact();
     } catch {
       // Errors are handled by the mutation onError callbacks
     }
@@ -168,6 +171,7 @@ export function StandardReviewDetail({
     queryClient,
     pool.resetPool,
     standardId,
+    navigateToNextArtifact,
   ]);
 
   const renderExpandedView = useCallback(

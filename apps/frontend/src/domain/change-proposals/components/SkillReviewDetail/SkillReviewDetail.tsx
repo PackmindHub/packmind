@@ -21,6 +21,7 @@ import {
 import { getSkillByIdKey } from '../../../skills/api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
+import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
 import {
   useCardReviewState,
   ReviewTab,
@@ -86,6 +87,7 @@ export function SkillReviewDetail({
     selectedSkillProposalsData?.changeProposals ?? [];
 
   const pool = useChangeProposalPool(selectedSkillProposals);
+  const navigateToNextArtifact = useNavigateAfterApply(artefactId);
 
   const reviewState = useCardReviewState();
 
@@ -195,6 +197,7 @@ export function SkillReviewDetail({
       ]);
 
       pool.resetPool();
+      navigateToNextArtifact();
     } catch {
       // Errors are handled by the mutation onError callbacks
     }
@@ -208,6 +211,7 @@ export function SkillReviewDetail({
     queryClient,
     pool.resetPool,
     skillId,
+    navigateToNextArtifact,
   ]);
 
   const renderExpandedView = useCallback(
