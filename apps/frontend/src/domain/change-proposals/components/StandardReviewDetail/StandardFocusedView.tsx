@@ -100,7 +100,7 @@ export function StandardFocusedView({
             <DiffBlock value={newValue} variant="added" isMarkdown={false} />
           </PMVStack>
         ) : (
-          <PMHeading size="md" color="primary" opacity={contextOpacity}>
+          <PMHeading size="h5" color="primary" opacity={contextOpacity}>
             {standard.name}
           </PMHeading>
         )}
@@ -131,7 +131,7 @@ export function StandardFocusedView({
             </PMVStack>
           ) : (
             <PMBox opacity={contextOpacity}>
-              <PMText fontSize="xs" fontWeight="semibold" color="secondary">
+              <PMText as="p" fontSize="md" fontWeight="semibold">
                 Scope
               </PMText>
               <PMText fontSize="sm" color="faded" mt={1}>
@@ -145,7 +145,7 @@ export function StandardFocusedView({
       {/* Description section */}
       <PMBox mb={4}>
         {isDescriptionChange ? (
-          <PMBox>
+          <PMBox fontSize="sm">
             {descriptionSections.map((section, index) =>
               section.type === 'unchanged' ? (
                 <PMMarkdownViewer key={index} content={section.value} />
@@ -179,7 +179,7 @@ export function StandardFocusedView({
             )}
           </PMBox>
         ) : (
-          <PMBox opacity={contextOpacity}>
+          <PMBox opacity={contextOpacity} fontSize="sm">
             <PMMarkdownViewer content={standard.description} />
           </PMBox>
         )}

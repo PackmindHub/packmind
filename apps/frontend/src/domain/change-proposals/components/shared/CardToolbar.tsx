@@ -38,7 +38,7 @@ export function CardToolbar({
     <PMHStack justifyContent="space-between" alignItems="center">
       <PMHStack gap={2} alignItems="center">
         <PMButton
-          size="xs"
+          size="sm"
           variant={'secondary'}
           onClick={() => onViewModeChange(isFocused ? 'diff' : 'focused')}
         >

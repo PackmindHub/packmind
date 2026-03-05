@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
@@ -28,7 +28,6 @@ import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { CommandReviewHeader } from './CommandReviewHeader';
 import { FocusedView } from './FocusedView';
 import { InlineView } from './InlineView';
-import { EditView } from './EditView';
 import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
@@ -72,6 +71,35 @@ export function CommandReviewDetail({
   const pool = useChangeProposalPool(selectedRecipeProposals);
 
   const reviewState = useCardReviewState();
+
+  const hasInitiallyExpanded = useRef(false);
+  useEffect(() => {
+    if (hasInitiallyExpanded.current) return;
+    if (selectedRecipeProposals.length === 0) return;
+
+    const sorted = [...selectedRecipeProposals].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+    reviewState.toggleCard([sorted[0].id]);
+    hasInitiallyExpanded.current = true;
+  }, [selectedRecipeProposals, reviewState.toggleCard]);
+
+  const handleAcceptAndCollapse = useCallback(
+    (proposalId: ChangeProposalId) => {
+      pool.handlePoolAccept(proposalId);
+      reviewState.collapseCard(proposalId);
+    },
+    [pool.handlePoolAccept, reviewState.collapseCard],
+  );
+
+  const handleDismissAndCollapse = useCallback(
+    (proposalId: ChangeProposalId) => {
+      pool.handlePoolReject(proposalId);
+      reviewState.collapseCard(proposalId);
+    },
+    [pool.handlePoolReject, reviewState.collapseCard],
+  );
 
   const outdatedProposalIds = useMemo(
     () => computeCommandOutdatedIds(selectedRecipeProposals, selectedRecipe),
@@ -131,51 +159,9 @@ export function CommandReviewDetail({
     pool.resetPool,
   ]);
 
-  const handleEdit = useCallback(
-    (proposalId: ChangeProposalId) => {
-      const proposal = selectedRecipeProposals.find((p) => p.id === proposalId);
-      if (!proposal) return;
-      const payload = proposal.payload as { newValue: string };
-      reviewState.startEditing(proposalId, payload.newValue);
-    },
-    [selectedRecipeProposals, reviewState],
-  );
-
-  const handleSaveAndAccept = useCallback(
-    (proposalId: ChangeProposalId) => {
-      pool.handlePoolAccept(proposalId);
-      reviewState.cancelEditing();
-    },
-    [pool, reviewState],
-  );
-
   const renderExpandedView = useCallback(
     (viewMode: ViewMode, proposal: ChangeProposalWithConflicts) => {
       if (!selectedRecipe) return null;
-
-      const isEditing = reviewState.editingProposalId === proposal.id;
-      if (isEditing) {
-        const payload = proposal.payload as {
-          oldValue: string;
-          newValue: string;
-        };
-        const editedValue =
-          reviewState.editedValues.get(proposal.id) ?? payload.newValue;
-        const isEditModified = editedValue !== payload.newValue;
-        return (
-          <EditView
-            proposal={proposal}
-            editedValue={editedValue}
-            onEditedValueChange={(v) =>
-              reviewState.setEditedValue(proposal.id, v)
-            }
-            onResetToOriginal={() => reviewState.resetEditedValue(proposal.id)}
-            onCancel={reviewState.cancelEditing}
-            onSaveAndAccept={() => handleSaveAndAccept(proposal.id)}
-            isModified={isEditModified}
-          />
-        );
-      }
 
       if (viewMode === 'diff')
         return <FocusedView recipe={selectedRecipe} proposal={proposal} />;
@@ -183,7 +169,7 @@ export function CommandReviewDetail({
         return <InlineView recipe={selectedRecipe} proposal={proposal} />;
       return null;
     },
-    [selectedRecipe, reviewState, handleSaveAndAccept],
+    [selectedRecipe],
   );
 
   const latestProposal = useMemo(() => {
@@ -241,17 +227,19 @@ export function CommandReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            editingProposalId={reviewState.editingProposalId}
+            showEditButton={false}
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={handleEdit}
-            onAccept={pool.handlePoolAccept}
-            onDismiss={pool.handlePoolReject}
+            onEdit={() => {
+              /* Edit mode is not supported for commands */
+            }}
+            onAccept={handleAcceptAndCollapse}
+            onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
+            onExpandCard={reviewState.expandCard}
             renderExpandedView={renderExpandedView}
-            showEditButton={false} /* Edit mode is out of scope for commands */
           />
         )}
 

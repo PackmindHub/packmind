@@ -49,7 +49,9 @@ export function InlineView({ recipe, proposal }: Readonly<InlineViewProps>) {
             />
           )}
         </PMBox>
-        <PMMarkdownViewer content={stripFrontmatter(recipe.content)} />
+        <PMBox fontSize="sm">
+          <PMMarkdownViewer content={stripFrontmatter(recipe.content)} />
+        </PMBox>
       </PMBox>
     );
   }
@@ -58,38 +60,40 @@ export function InlineView({ recipe, proposal }: Readonly<InlineViewProps>) {
     return (
       <PMBox>
         <PMBox mb={2}>
-          <PMHeading size="md">{recipe.name}</PMHeading>
+          <PMHeading size="h5">{recipe.name}</PMHeading>
         </PMBox>
-        {sections.map((section, index) =>
-          section.type === 'unchanged' ? (
-            <PMMarkdownViewer key={index} content={section.value} />
-          ) : (
-            <PMBox
-              key={index}
-              borderRadius="md"
-              border="1px dashed"
-              borderColor="border.tertiary"
-              p={4}
-              my={2}
-            >
-              {section.newValue ? (
-                <DiffBlock
-                  value={section.newValue}
-                  variant="added"
-                  isMarkdown={true}
-                  showIndicator={false}
-                />
-              ) : (
-                <DiffBlock
-                  value={section.oldValue}
-                  variant="removed"
-                  isMarkdown={true}
-                  showIndicator={false}
-                />
-              )}
-            </PMBox>
-          ),
-        )}
+        <PMBox fontSize="sm">
+          {sections.map((section, index) =>
+            section.type === 'unchanged' ? (
+              <PMMarkdownViewer key={index} content={section.value} />
+            ) : (
+              <PMBox
+                key={index}
+                borderRadius="md"
+                border="1px dashed"
+                borderColor="border.tertiary"
+                p={4}
+                my={2}
+              >
+                {section.newValue ? (
+                  <DiffBlock
+                    value={section.newValue}
+                    variant="added"
+                    isMarkdown={true}
+                    showIndicator={false}
+                  />
+                ) : (
+                  <DiffBlock
+                    value={section.oldValue}
+                    variant="removed"
+                    isMarkdown={true}
+                    showIndicator={false}
+                  />
+                )}
+              </PMBox>
+            ),
+          )}
+        </PMBox>
       </PMBox>
     );
   }

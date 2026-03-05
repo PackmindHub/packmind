@@ -60,6 +60,7 @@ export function DiffBlock({
         borderColor={config.borderColor}
         borderRadius="md"
         p={3}
+        fontSize="sm"
       >
         {isMarkdown ? (
           <PMMarkdownViewer content={value} />

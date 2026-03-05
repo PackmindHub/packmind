@@ -27,6 +27,7 @@ interface ChangeProposalAccordionProps {
   onAccept: (proposalId: ChangeProposalId) => void;
   onDismiss: (proposalId: ChangeProposalId) => void;
   onUndo: (proposalId: ChangeProposalId) => void;
+  onExpandCard?: (id: string) => void;
   renderExpandedView?: (
     viewMode: ViewMode,
     proposal: ChangeProposalWithConflicts,
@@ -60,6 +61,7 @@ export function ChangeProposalAccordion({
   onAccept,
   onDismiss,
   onUndo,
+  onExpandCard,
   renderExpandedView,
 }: Readonly<ChangeProposalAccordionProps>) {
   const proposalNumberMap = useMemo(
@@ -104,6 +106,34 @@ export function ChangeProposalAccordion({
     ],
   );
 
+  const expandNextPending = useCallback(
+    (proposalId: ChangeProposalId) => {
+      if (!onExpandCard) return;
+      const idx = pending.findIndex((p) => p.id === proposalId);
+      const next = pending
+        .slice(idx + 1)
+        .find((p) => !expandedCardIds.includes(p.id));
+      if (next) onExpandCard(next.id);
+    },
+    [onExpandCard, pending, expandedCardIds],
+  );
+
+  const handleAccept = useCallback(
+    (proposalId: ChangeProposalId) => {
+      onAccept(proposalId);
+      expandNextPending(proposalId);
+    },
+    [onAccept, expandNextPending],
+  );
+
+  const handleDismiss = useCallback(
+    (proposalId: ChangeProposalId) => {
+      onDismiss(proposalId);
+      expandNextPending(proposalId);
+    },
+    [onDismiss, expandNextPending],
+  );
+
   const handleValueChange = useCallback(
     (details: { value: string[] }) => {
       onToggleCard(details.value);
@@ -135,8 +165,8 @@ export function ChangeProposalAccordion({
         showEditButton={showEditButton}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
         onEdit={() => onEdit(proposal.id)}
-        onAccept={() => onAccept(proposal.id)}
-        onDismiss={() => onDismiss(proposal.id)}
+        onAccept={() => handleAccept(proposal.id)}
+        onDismiss={() => handleDismiss(proposal.id)}
         onUndo={() => onUndo(proposal.id)}
         renderExpandedView={renderExpandedView}
       />

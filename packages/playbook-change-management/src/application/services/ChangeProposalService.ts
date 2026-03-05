@@ -22,10 +22,15 @@ import { ChangeProposalSchema } from '../../infra/schemas/ChangeProposalSchema';
 
 const origin = 'ChangeProposalService';
 
+export type ArtefactProposalStats = {
+  count: number;
+  lastContributedAt: Date;
+};
+
 export type GroupedProposalsByArtefact = {
-  standards: Map<StandardId, number>;
-  commands: Map<RecipeId, number>;
-  skills: Map<SkillId, number>;
+  standards: Map<StandardId, ArtefactProposalStats>;
+  commands: Map<RecipeId, ArtefactProposalStats>;
+  skills: Map<SkillId, ArtefactProposalStats>;
   creations: ChangeProposal<ChangeProposalType>[];
 };
 
@@ -200,9 +205,9 @@ export class ChangeProposalService {
     );
 
     const grouped: GroupedProposalsByArtefact = {
-      standards: new Map<StandardId, number>(),
-      commands: new Map<RecipeId, number>(),
-      skills: new Map<SkillId, number>(),
+      standards: new Map<StandardId, ArtefactProposalStats>(),
+      commands: new Map<RecipeId, ArtefactProposalStats>(),
+      skills: new Map<SkillId, ArtefactProposalStats>(),
       creations: [],
     };
 
@@ -213,11 +218,15 @@ export class ChangeProposalService {
           if (proposal.type === ChangeProposalType.createStandard) {
             grouped.creations.push(proposal);
           } else {
-            grouped.standards.set(
-              proposal.artefactId as StandardId,
-              (grouped.standards.get(proposal.artefactId as StandardId) ?? 0) +
-                1,
-            );
+            const key = proposal.artefactId as StandardId;
+            const existing = grouped.standards.get(key);
+            grouped.standards.set(key, {
+              count: (existing?.count ?? 0) + 1,
+              lastContributedAt:
+                existing && existing.lastContributedAt > proposal.createdAt
+                  ? existing.lastContributedAt
+                  : proposal.createdAt,
+            });
           }
           break;
         }
@@ -226,7 +235,14 @@ export class ChangeProposalService {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as RecipeId;
-            grouped.commands.set(key, (grouped.commands.get(key) ?? 0) + 1);
+            const existing = grouped.commands.get(key);
+            grouped.commands.set(key, {
+              count: (existing?.count ?? 0) + 1,
+              lastContributedAt:
+                existing && existing.lastContributedAt > proposal.createdAt
+                  ? existing.lastContributedAt
+                  : proposal.createdAt,
+            });
           }
           break;
         }
@@ -234,10 +250,15 @@ export class ChangeProposalService {
           if (proposal.type === ChangeProposalType.createSkill) {
             grouped.creations.push(proposal);
           } else {
-            grouped.skills.set(
-              proposal.artefactId as SkillId,
-              (grouped.skills.get(proposal.artefactId as SkillId) ?? 0) + 1,
-            );
+            const key = proposal.artefactId as SkillId;
+            const existing = grouped.skills.get(key);
+            grouped.skills.set(key, {
+              count: (existing?.count ?? 0) + 1,
+              lastContributedAt:
+                existing && existing.lastContributedAt > proposal.createdAt
+                  ? existing.lastContributedAt
+                  : proposal.createdAt,
+            });
           }
           break;
         }

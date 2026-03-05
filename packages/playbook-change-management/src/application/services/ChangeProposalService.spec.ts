@@ -225,6 +225,7 @@ describe('ChangeProposalService', () => {
     const createProposal = <T extends ChangeProposalType>(
       type: T,
       artefactId: string | null,
+      createdAt: Date = new Date(),
     ): ChangeProposal<T> => ({
       id: createChangeProposalId('change-proposal-id'),
       type,
@@ -241,7 +242,7 @@ describe('ChangeProposalService', () => {
       createdBy: createUserId('user-id'),
       resolvedBy: null,
       resolvedAt: null,
-      createdAt: new Date(),
+      createdAt,
       updatedAt: new Date(),
     });
 
@@ -298,37 +299,37 @@ describe('ChangeProposalService', () => {
       it('counts proposals for first standard', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.standards.get(standardId1)).toBe(2);
+        expect(result.standards.get(standardId1)?.count).toBe(2);
       });
 
       it('counts proposals for second standard', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.standards.get(standardId2)).toBe(1);
+        expect(result.standards.get(standardId2)?.count).toBe(1);
       });
 
       it('counts proposals for first command', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.commands.get(recipeId1)).toBe(2);
+        expect(result.commands.get(recipeId1)?.count).toBe(2);
       });
 
       it('counts proposals for second command', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.commands.get(recipeId2)).toBe(1);
+        expect(result.commands.get(recipeId2)?.count).toBe(1);
       });
 
       it('counts proposals for first skill', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.skills.get(skillId1)).toBe(2);
+        expect(result.skills.get(skillId1)?.count).toBe(2);
       });
 
       it('counts proposals for second skill', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.skills.get(skillId2)).toBe(1);
+        expect(result.skills.get(skillId2)?.count).toBe(1);
       });
 
       it('counts total standards', async () => {
@@ -350,6 +351,59 @@ describe('ChangeProposalService', () => {
       });
     });
 
+    describe('when tracking lastContributedAt', () => {
+      const olderDate = new Date('2024-01-01T00:00:00Z');
+      const newerDate = new Date('2024-06-15T12:00:00Z');
+
+      const proposals = [
+        createProposal(
+          ChangeProposalType.updateStandardName,
+          standardId1,
+          olderDate,
+        ),
+        createProposal(ChangeProposalType.addRule, standardId1, newerDate),
+        createProposal(
+          ChangeProposalType.updateCommandName,
+          recipeId1,
+          newerDate,
+        ),
+        createProposal(
+          ChangeProposalType.updateCommandDescription,
+          recipeId1,
+          olderDate,
+        ),
+        createProposal(ChangeProposalType.updateSkillName, skillId1, olderDate),
+      ];
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue(proposals);
+      });
+
+      it('tracks max createdAt for standards', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.get(standardId1)?.lastContributedAt).toEqual(
+          newerDate,
+        );
+      });
+
+      it('tracks max createdAt for commands', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(recipeId1)?.lastContributedAt).toEqual(
+          newerDate,
+        );
+      });
+
+      it('tracks createdAt for skills with single proposal', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.get(skillId1)?.lastContributedAt).toEqual(
+          olderDate,
+        );
+      });
+    });
+
     describe('when space has only standard proposals', () => {
       const proposals = [
         createProposal(ChangeProposalType.updateStandardName, standardId1),
@@ -364,7 +418,7 @@ describe('ChangeProposalService', () => {
       it('counts standard proposals', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.standards.get(standardId1)).toBe(3);
+        expect(result.standards.get(standardId1)?.count).toBe(3);
       });
 
       it('has no command proposals', async () => {
@@ -399,7 +453,7 @@ describe('ChangeProposalService', () => {
       it('counts command proposals', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.commands.get(recipeId1)).toBe(2);
+        expect(result.commands.get(recipeId1)?.count).toBe(2);
       });
 
       it('has no skill proposals', async () => {
@@ -435,7 +489,7 @@ describe('ChangeProposalService', () => {
       it('counts skill proposals', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.skills.get(skillId1)).toBe(3);
+        expect(result.skills.get(skillId1)?.count).toBe(3);
       });
     });
 
@@ -548,13 +602,13 @@ describe('ChangeProposalService', () => {
       it('counts only pending standard proposals', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.standards.get(standardId1)).toBe(1);
+        expect(result.standards.get(standardId1)?.count).toBe(1);
       });
 
       it('counts only pending command proposals', async () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
-        expect(result.commands.get(recipeId1)).toBe(1);
+        expect(result.commands.get(recipeId1)?.count).toBe(1);
       });
 
       it('excludes non-pending skill proposals entirely', async () => {

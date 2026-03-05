@@ -97,7 +97,7 @@ function RenderDiffSections({
   }
 
   return (
-    <PMBox>
+    <PMBox fontSize="sm">
       {diffSections.map((section, index) =>
         section.type === 'unchanged' ? (
           <PMMarkdownViewer key={index} content={section.value} />

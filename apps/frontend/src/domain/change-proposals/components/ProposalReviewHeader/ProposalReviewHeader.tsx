@@ -17,8 +17,8 @@ import {
 } from '../../utils/changeProposalHelpers';
 import { ConflictWarning } from '../ChangeProposals/ConflictWarning';
 import { DiffNavigator } from '../DiffNavigator';
-import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
+import { RelativeTime } from '../shared/RelativeTime';
 
 interface ProposalReviewHeaderProps {
   proposal: ChangeProposalWithConflicts;
@@ -144,7 +144,7 @@ export function ProposalReviewHeader({
             )}
             <PMText fontSize="sm" color="secondary">
               #{proposalNumberMap.get(proposal.id)} -{' '}
-              {formatRelativeTime(proposal.createdAt)}
+              <RelativeTime date={proposal.createdAt} />
             </PMText>
             {diffNavigation && (
               <DiffNavigator

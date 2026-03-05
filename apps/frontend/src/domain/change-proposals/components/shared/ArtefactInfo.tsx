@@ -1,5 +1,5 @@
 import { PMBadge, PMHStack, PMText } from '@packmind/ui';
-import { formatRelativeTime } from '../../utils/formatRelativeTime';
+import { RelativeTime } from './RelativeTime';
 
 interface ArtefactInfoProps {
   artefactName: string;
@@ -23,7 +23,7 @@ export function ArtefactInfo({
         Base v{artefactVersion}
       </PMBadge>
       <PMText fontSize="sm" color="secondary">
-        {latestAuthor} &middot; {formatRelativeTime(latestTime)}
+        {latestAuthor} &middot; <RelativeTime date={latestTime} />
       </PMText>
     </PMHStack>
   );

@@ -14,6 +14,7 @@ export type ListProposalsOverview<T extends StandardId | RecipeId | SkillId> = {
   artefactId: T;
   name: string;
   changeProposalCount: number;
+  lastContributedAt: string;
 };
 
 export type CommandCreationProposalOverview = {
@@ -21,6 +22,7 @@ export type CommandCreationProposalOverview = {
   artefactType: 'commands';
   name: string;
   content: string;
+  lastContributedAt: string;
 };
 
 export type StandardCreationProposalOverview = {
@@ -30,6 +32,7 @@ export type StandardCreationProposalOverview = {
   description: string;
   scope: string | null;
   rules: Array<{ content: string }>;
+  lastContributedAt: string;
 };
 
 export type SkillCreationProposalOverview = {
@@ -43,6 +46,7 @@ export type SkillCreationProposalOverview = {
   metadata?: Record<string, string>;
   allowedTools?: string;
   files?: Array<Omit<SkillFile, 'id' | 'skillVersionId'>>;
+  lastContributedAt: string;
 };
 
 export type CreationProposalOverview =

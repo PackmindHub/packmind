@@ -12,8 +12,8 @@ import { ChangeProposalId, UserId } from '@packmind/types';
 import { LuCircleAlert } from 'react-icons/lu';
 import { ChangeProposalWithConflicts } from '../../types';
 import { getChangeProposalFieldLabel } from '../../utils/changeProposalHelpers';
-import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { UserAvatarWithInitials } from '../../../accounts/components/UserAvatarWithInitials';
+import { RelativeTime } from '../shared/RelativeTime';
 
 interface ProposalCardBaseProps {
   proposal: ChangeProposalWithConflicts;
@@ -57,7 +57,7 @@ export function ProposalCardBase({
           <PMHStack gap={1} align="center">
             <PMText fontSize="xs" color="secondary">
               {proposalNumber !== undefined && `#${proposalNumber} - `}
-              {formatRelativeTime(proposal.createdAt)}
+              <RelativeTime date={proposal.createdAt} />
             </PMText>
             <PMText fontSize="xs" color="secondary">
               -
