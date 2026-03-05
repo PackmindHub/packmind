@@ -20,7 +20,10 @@ import {
   SkillId,
   StandardId,
 } from '@packmind/types';
-import { ChangeProposalService } from '../../services/ChangeProposalService';
+import {
+  ArtefactProposalStats,
+  ChangeProposalService,
+} from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
 const origin = 'ListChangeProposalsBySpaceUseCase';
@@ -71,17 +74,18 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private async enrichStandardsWithNames(
-    standardsMap: Map<StandardId, number>,
+    standardsMap: Map<StandardId, ArtefactProposalStats>,
   ): Promise<ListProposalsOverview<StandardId>[]> {
     const result: ListProposalsOverview<StandardId>[] = [];
 
-    for (const [artefactId, count] of standardsMap.entries()) {
+    for (const [artefactId, stats] of standardsMap.entries()) {
       const standard = await this.standardsPort.getStandard(artefactId);
       if (standard) {
         result.push({
           artefactId,
           name: standard.name,
-          changeProposalCount: count,
+          changeProposalCount: stats.count,
+          lastContributedAt: stats.lastContributedAt.toISOString(),
         });
       }
     }
@@ -90,17 +94,18 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private async enrichRecipesWithNames(
-    recipesMap: Map<RecipeId, number>,
+    recipesMap: Map<RecipeId, ArtefactProposalStats>,
   ): Promise<ListProposalsOverview<RecipeId>[]> {
     const result: ListProposalsOverview<RecipeId>[] = [];
 
-    for (const [artefactId, count] of recipesMap.entries()) {
+    for (const [artefactId, stats] of recipesMap.entries()) {
       const recipe = await this.recipesPort.getRecipeByIdInternal(artefactId);
       if (recipe) {
         result.push({
           artefactId,
           name: recipe.name,
-          changeProposalCount: count,
+          changeProposalCount: stats.count,
+          lastContributedAt: stats.lastContributedAt.toISOString(),
         });
       }
     }
@@ -112,6 +117,7 @@ export class ListChangeProposalsBySpaceUseCase
     proposals: ChangeProposal<ChangeProposalType>[],
   ): CreationProposalOverview[] {
     return proposals.map((proposal) => {
+      const lastContributedAt = proposal.createdAt.toISOString();
       if (proposal.type === ChangeProposalType.createStandard) {
         const payload = proposal.payload as NewStandardPayload;
         return {
@@ -123,6 +129,7 @@ export class ListChangeProposalsBySpaceUseCase
             ? payload.scope.join(', ')
             : payload.scope,
           rules: payload.rules,
+          lastContributedAt,
         };
       }
       if (proposal.type === ChangeProposalType.createSkill) {
@@ -138,6 +145,7 @@ export class ListChangeProposalsBySpaceUseCase
           metadata: payload.metadata,
           allowedTools: payload.allowedTools,
           files: payload.files,
+          lastContributedAt,
         };
       }
       const payload = proposal.payload as NewCommandPayload;
@@ -146,22 +154,24 @@ export class ListChangeProposalsBySpaceUseCase
         artefactType: 'commands' as const,
         name: payload.name,
         content: payload.content,
+        lastContributedAt,
       };
     });
   }
 
   private async enrichSkillsWithNames(
-    skillsMap: Map<SkillId, number>,
+    skillsMap: Map<SkillId, ArtefactProposalStats>,
   ): Promise<ListProposalsOverview<SkillId>[]> {
     const result: ListProposalsOverview<SkillId>[] = [];
 
-    for (const [artefactId, count] of skillsMap.entries()) {
+    for (const [artefactId, stats] of skillsMap.entries()) {
       const skill = await this.skillsPort.getSkill(artefactId);
       if (skill) {
         result.push({
           artefactId,
           name: skill.name,
-          changeProposalCount: count,
+          changeProposalCount: stats.count,
+          lastContributedAt: stats.lastContributedAt.toISOString(),
         });
       }
     }

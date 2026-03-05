@@ -26,7 +26,10 @@ import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { standardFactory } from '@packmind/standards/test/standardFactory';
 import { skillFactory } from '@packmind/skills/test/skillFactory';
-import { ChangeProposalService } from '../../services/ChangeProposalService';
+import {
+  ArtefactProposalStats,
+  ChangeProposalService,
+} from '../../services/ChangeProposalService';
 import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ListChangeProposalsBySpaceUseCase } from './ListChangeProposalsBySpaceUseCase';
@@ -118,20 +121,27 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
 
   describe('when listing proposals successfully', () => {
     const command = buildCommand();
+    const standardDate1 = new Date('2024-03-15T10:00:00Z');
+    const standardDate2 = new Date('2024-03-14T08:00:00Z');
+    const recipeDate1 = new Date('2024-03-13T12:00:00Z');
+    const recipeDate2 = new Date('2024-03-12T14:00:00Z');
+    const skillDate1 = new Date('2024-03-16T09:00:00Z');
 
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
 
       service.groupProposalsByArtefact.mockResolvedValue({
-        standards: new Map<StandardId, number>([
-          [standardId1, 3],
-          [standardId2, 1],
+        standards: new Map<StandardId, ArtefactProposalStats>([
+          [standardId1, { count: 3, lastContributedAt: standardDate1 }],
+          [standardId2, { count: 1, lastContributedAt: standardDate2 }],
         ]),
-        commands: new Map<RecipeId, number>([
-          [recipeId1, 2],
-          [recipeId2, 1],
+        commands: new Map<RecipeId, ArtefactProposalStats>([
+          [recipeId1, { count: 2, lastContributedAt: recipeDate1 }],
+          [recipeId2, { count: 1, lastContributedAt: recipeDate2 }],
         ]),
-        skills: new Map<SkillId, number>([[skillId1, 5]]),
+        skills: new Map<SkillId, ArtefactProposalStats>([
+          [skillId1, { count: 5, lastContributedAt: skillDate1 }],
+        ]),
         creations: [],
       });
 
@@ -167,11 +177,13 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           artefactId: standardId1,
           name: 'Standard 1',
           changeProposalCount: 3,
+          lastContributedAt: standardDate1.toISOString(),
         },
         {
           artefactId: standardId2,
           name: 'Standard 2',
           changeProposalCount: 1,
+          lastContributedAt: standardDate2.toISOString(),
         },
       ]);
     });
@@ -184,11 +196,13 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           artefactId: recipeId1,
           name: 'Recipe 1',
           changeProposalCount: 2,
+          lastContributedAt: recipeDate1.toISOString(),
         },
         {
           artefactId: recipeId2,
           name: 'Recipe 2',
           changeProposalCount: 1,
+          lastContributedAt: recipeDate2.toISOString(),
         },
       ]);
     });
@@ -201,6 +215,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           artefactId: skillId1,
           name: 'Skill 1',
           changeProposalCount: 5,
+          lastContributedAt: skillDate1.toISOString(),
         },
       ]);
     });
@@ -292,9 +307,18 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
       service.groupProposalsByArtefact.mockResolvedValue({
-        standards: new Map([[standardId1, 2]]),
-        commands: new Map([[recipeId1, 1]]),
-        skills: new Map([[skillId1, 3]]),
+        standards: new Map([
+          [
+            standardId1,
+            { count: 2, lastContributedAt: new Date('2024-01-01') },
+          ],
+        ]),
+        commands: new Map([
+          [recipeId1, { count: 1, lastContributedAt: new Date('2024-01-01') }],
+        ]),
+        skills: new Map([
+          [skillId1, { count: 3, lastContributedAt: new Date('2024-01-01') }],
+        ]),
         creations: [],
       });
 
@@ -347,6 +371,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
   describe('when createCommand proposals exist', () => {
     const proposalId = createChangeProposalId('proposal-id');
     const command = buildCommand();
+    const commandCreatedAt = new Date('2024-05-10T15:00:00Z');
 
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
@@ -368,7 +393,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
-            createdAt: new Date(),
+            createdAt: commandCreatedAt,
             updatedAt: new Date(),
           },
         ],
@@ -384,6 +409,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           artefactType: 'commands',
           name: 'My Command',
           content: 'Do something',
+          lastContributedAt: commandCreatedAt.toISOString(),
         },
       ]);
     });
@@ -404,6 +430,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
   describe('when createStandard proposals exist', () => {
     const proposalId = createChangeProposalId('std-proposal-id');
     const command = buildCommand();
+    const standardCreatedAt = new Date('2024-04-20T11:00:00Z');
 
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
@@ -430,7 +457,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
-            createdAt: new Date(),
+            createdAt: standardCreatedAt,
             updatedAt: new Date(),
           },
         ],
@@ -448,6 +475,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
           description: 'A description',
           scope: 'TypeScript',
           rules: [{ content: 'Rule one' }],
+          lastContributedAt: standardCreatedAt.toISOString(),
         },
       ]);
     });
@@ -597,6 +625,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     describe('when createSkill proposals exist', () => {
       const skillProposalId = createChangeProposalId('skill-proposal-id');
       const command = buildCommand();
+      const skillCreatedAt = new Date('2024-06-01T16:00:00Z');
 
       beforeEach(() => {
         spacesPort.getSpaceById.mockResolvedValue(space);
@@ -622,7 +651,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
               createdBy: userId,
               resolvedBy: null,
               resolvedAt: null,
-              createdAt: new Date(),
+              createdAt: skillCreatedAt,
               updatedAt: new Date(),
             },
           ],
@@ -639,6 +668,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             name: 'My Skill',
             description: 'A skill description',
             prompt: 'You are a helpful assistant.',
+            lastContributedAt: skillCreatedAt.toISOString(),
           },
         ]);
       });
@@ -653,6 +683,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     describe('when createSkill proposals have optional fields', () => {
       const skillProposalId = createChangeProposalId('skill-full-proposal-id');
       const command = buildCommand();
+      const fullSkillCreatedAt = new Date('2024-07-01T10:00:00Z');
 
       beforeEach(() => {
         spacesPort.getSpaceById.mockResolvedValue(space);
@@ -689,7 +720,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
               createdBy: userId,
               resolvedBy: null,
               resolvedAt: null,
-              createdAt: new Date(),
+              createdAt: fullSkillCreatedAt,
               updatedAt: new Date(),
             },
           ],
@@ -717,6 +748,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
                 isBase64: false,
               },
             ],
+            lastContributedAt: fullSkillCreatedAt.toISOString(),
           },
         ]);
       });

@@ -201,7 +201,11 @@ export function ReviewChangesSidebar({
       ...item,
       artefactType: 'skills' as const,
     })),
-  ];
+  ].sort((a, b) => b.lastContributedAt.localeCompare(a.lastContributedAt));
+
+  const sortedCreations = [...(groupedProposals.creations ?? [])].sort((a, b) =>
+    b.lastContributedAt.localeCompare(a.lastContributedAt),
+  );
 
   return (
     <PMVerticalNav logo={false} showLogoContainer={false} width="270px">
@@ -232,7 +236,7 @@ export function ReviewChangesSidebar({
                 />
               </PMBox>
             )),
-            ...(groupedProposals.creations ?? []).map((item) => (
+            ...sortedCreations.map((item) => (
               <PMBox
                 key={`creation-${item.proposalId}`}
                 borderBottom="1px solid"
