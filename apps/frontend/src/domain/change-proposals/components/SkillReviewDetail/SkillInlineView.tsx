@@ -75,7 +75,7 @@ function DescriptionInlineDiff({
   );
 
   return (
-    <PMBox>
+    <PMBox fontSize="sm">
       {sections.map((section, index) =>
         section.type === 'unchanged' ? (
           <PMMarkdownViewer key={index} content={section.value} />
@@ -148,6 +148,7 @@ function FileInlineView({
           borderLeft="2px solid"
           borderColor="green.500/30"
           borderRadius="md"
+          fontSize="sm"
         >
           {isMarkdown ? (
             <PMMarkdownViewer content={newValue} />
@@ -168,6 +169,7 @@ function FileInlineView({
           borderLeft="2px solid"
           borderColor="red.500/30"
           borderRadius="md"
+          fontSize="sm"
         >
           {isMarkdown ? (
             <PMBox opacity={0.7} textDecoration="line-through">

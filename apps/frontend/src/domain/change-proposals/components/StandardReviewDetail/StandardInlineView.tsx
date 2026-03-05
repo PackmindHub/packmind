@@ -87,9 +87,9 @@ export function StandardInlineView({
       {/* Name section */}
       <PMBox mb={4}>
         {isNameChange ? (
-          <PMHeading size="md">{renderDiffText(oldValue, newValue)}</PMHeading>
+          <PMHeading size="h5">{renderDiffText(oldValue, newValue)}</PMHeading>
         ) : (
-          <PMHeading size="md" color={isRuleChange ? 'faded' : undefined}>
+          <PMHeading size="h5" color={isRuleChange ? 'faded' : undefined}>
             {standard.name}
           </PMHeading>
         )}
@@ -98,6 +98,7 @@ export function StandardInlineView({
       {/* Description section */}
       <PMBox
         mb={4}
+        fontSize="sm"
         opacity={isDescriptionChange ? 1 : isRuleChange ? 0.5 : 0.7}
       >
         {isDescriptionChange ? (
@@ -223,7 +224,7 @@ function DescriptionInlineDiff({
   );
 
   return (
-    <PMBox>
+    <PMBox fontSize="sm">
       {sections.map((section, index) =>
         section.type === 'unchanged' ? (
           <PMMarkdownViewer key={index} content={section.value} />
