@@ -21,9 +21,13 @@ export function ViewModeSelector({
       value={viewMode}
       onValueChange={(e) => onViewModeChange(e.value as ViewMode)}
     >
-      <PMSegmentGroup.Indicator />
+      <PMSegmentGroup.Indicator bg="background.tertiary" />
       {viewModeItems.map((item) => (
-        <PMSegmentGroup.Item key={item.value} value={item.value}>
+        <PMSegmentGroup.Item
+          key={item.value}
+          value={item.value}
+          _checked={{ color: 'text.primary' }}
+        >
           <PMSegmentGroup.ItemText>{item.label}</PMSegmentGroup.ItemText>
           <PMSegmentGroup.ItemHiddenInput />
         </PMSegmentGroup.Item>
