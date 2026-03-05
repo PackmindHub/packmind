@@ -26,14 +26,14 @@ export const PackageCountHeaderInfo = ({
   spaceId,
   organizationId,
 }: PackageCountHeaderInfoProps) => {
-  const { packages, count, isLoading } = usePackagesForArtifact({
+  const { packages, count, isLoading, isError } = usePackagesForArtifact({
     artifactId,
     artifactType,
     spaceId,
     organizationId,
   });
 
-  if (isLoading) return null;
+  if (isLoading || isError) return null;
 
   if (count === 0) {
     return (

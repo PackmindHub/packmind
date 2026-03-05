@@ -130,6 +130,18 @@ export const RecipesList = ({
       recipe.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
+    const packageNamesById =
+      sortKey === 'packages'
+        ? new Map(
+            filteredRecipes.map((r) => [
+              r.id,
+              formatPackageNames(
+                getArtifactPackages(packagesResponse?.packages, r.id, 'recipe'),
+              ),
+            ]),
+          )
+        : null;
+
     const sortedRecipes = [...filteredRecipes].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
@@ -151,15 +163,13 @@ export const RecipesList = ({
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
-        case 'packages': {
-          const namesA = formatPackageNames(
-            getArtifactPackages(packagesResponse?.packages, a.id, 'recipe'),
+        case 'packages':
+          return (
+            direction *
+            (packageNamesById?.get(a.id) ?? '').localeCompare(
+              packageNamesById?.get(b.id) ?? '',
+            )
           );
-          const namesB = formatPackageNames(
-            getArtifactPackages(packagesResponse?.packages, b.id, 'recipe'),
-          );
-          return direction * namesA.localeCompare(namesB);
-        }
         default:
           return 0;
       }

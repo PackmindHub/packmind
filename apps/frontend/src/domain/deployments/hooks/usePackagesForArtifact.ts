@@ -43,10 +43,11 @@ export function usePackagesForArtifact({
   spaceId,
   organizationId,
 }: UsePackagesForArtifactParams) {
-  const { data: packagesResponse, isLoading } = useListPackagesBySpaceQuery(
-    spaceId,
-    organizationId,
-  );
+  const {
+    data: packagesResponse,
+    isLoading,
+    isError,
+  } = useListPackagesBySpaceQuery(spaceId, organizationId);
 
   const packages = useMemo(() => {
     if (!packagesResponse?.packages || !artifactId) return [];
@@ -62,5 +63,6 @@ export function usePackagesForArtifact({
     packages,
     count: packages.length,
     isLoading,
+    isError,
   };
 }

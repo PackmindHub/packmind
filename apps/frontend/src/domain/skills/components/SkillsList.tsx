@@ -111,6 +111,18 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
+    const packageNamesById =
+      sortKey === 'packages'
+        ? new Map(
+            filteredSkills.map((s) => [
+              s.id,
+              formatPackageNames(
+                getArtifactPackages(packagesResponse?.packages, s.id, 'skill'),
+              ),
+            ]),
+          )
+        : null;
+
     const sortedSkills = [...filteredSkills].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
@@ -128,15 +140,13 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
-        case 'packages': {
-          const namesA = formatPackageNames(
-            getArtifactPackages(packagesResponse?.packages, a.id, 'skill'),
+        case 'packages':
+          return (
+            direction *
+            (packageNamesById?.get(a.id) ?? '').localeCompare(
+              packageNamesById?.get(b.id) ?? '',
+            )
           );
-          const namesB = formatPackageNames(
-            getArtifactPackages(packagesResponse?.packages, b.id, 'skill'),
-          );
-          return direction * namesA.localeCompare(namesB);
-        }
         default:
           return 0;
       }

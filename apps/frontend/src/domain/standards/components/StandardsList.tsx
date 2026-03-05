@@ -140,6 +140,22 @@ export const StandardsList = ({
         standard.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
+    const packageNamesById =
+      sortKey === 'packages'
+        ? new Map(
+            filteredStandards.map((s) => [
+              s.id,
+              formatPackageNames(
+                getArtifactPackages(
+                  packagesResponse?.packages,
+                  s.id,
+                  'standard',
+                ),
+              ),
+            ]),
+          )
+        : null;
+
     const sortedStandards = [...filteredStandards].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
@@ -157,15 +173,13 @@ export const StandardsList = ({
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
-        case 'packages': {
-          const namesA = formatPackageNames(
-            getArtifactPackages(packagesResponse?.packages, a.id, 'standard'),
+        case 'packages':
+          return (
+            direction *
+            (packageNamesById?.get(a.id) ?? '').localeCompare(
+              packageNamesById?.get(b.id) ?? '',
+            )
           );
-          const namesB = formatPackageNames(
-            getArtifactPackages(packagesResponse?.packages, b.id, 'standard'),
-          );
-          return direction * namesA.localeCompare(namesB);
-        }
         default:
           return 0;
       }

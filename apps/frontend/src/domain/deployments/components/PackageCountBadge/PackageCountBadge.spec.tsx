@@ -57,6 +57,7 @@ describe('PackageCountBadge', () => {
         packages: [],
         count: 0,
         isLoading: false,
+        isError: false,
       });
     });
 
@@ -75,6 +76,7 @@ describe('PackageCountBadge', () => {
         packages: twoPackages,
         count: 2,
         isLoading: false,
+        isError: false,
       });
     });
 
@@ -100,10 +102,30 @@ describe('PackageCountBadge', () => {
         packages: [],
         count: 0,
         isLoading: true,
+        isError: false,
       });
     });
 
     it('renders nothing', () => {
+      const { container } = renderWithProviders(
+        <PackageCountBadge {...defaultProps} />,
+      );
+
+      expect(container.firstChild).toBeNull();
+    });
+  });
+
+  describe('when query fails', () => {
+    beforeEach(() => {
+      mockUsePackagesForArtifact.mockReturnValue({
+        packages: [],
+        count: 0,
+        isLoading: false,
+        isError: true,
+      });
+    });
+
+    it('renders nothing instead of misleading empty state', () => {
       const { container } = renderWithProviders(
         <PackageCountBadge {...defaultProps} />,
       );

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router';
 import { LuChevronRight } from 'react-icons/lu';
 import { PMMenu, PMHStack, PMPortal, PMText, PMVStack } from '@packmind/ui';
@@ -55,8 +56,12 @@ export const PackagesDropdown = ({
   spaceSlug,
   children,
 }: PackagesDropdownProps) => {
-  const sorted = [...packages].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+  const sorted = useMemo(
+    () =>
+      [...packages].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+      ),
+    [packages],
   );
 
   return (
