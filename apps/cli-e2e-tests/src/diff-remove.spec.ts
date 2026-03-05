@@ -147,7 +147,7 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
 
     beforeEach(async () => {
       const result = await runCli(
-        `diff remove .packmind/commands/${command.slug}.md`,
+        `diff remove .packmind/commands/${command.slug}.md -m "Remove command from project"`,
         {
           apiKey,
           cwd: testDir,

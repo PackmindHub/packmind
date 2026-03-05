@@ -89,6 +89,7 @@ describe('diffRemoveHandler', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    process.stdin.isTTY = true; // Reset to default
   });
 
   function buildDeps(
@@ -97,6 +98,7 @@ describe('diffRemoveHandler', () => {
     return {
       packmindCliHexa: mockPackmindCliHexa,
       filePath: '.packmind/standards/my-standard.md',
+      message: 'Remove standard from project',
       exit: mockExit,
       getCwd: mockGetCwd,
       ...overrides,
@@ -148,6 +150,58 @@ describe('diffRemoveHandler', () => {
       await diffRemoveHandler(buildDeps({ filePath: 'src/index.ts' }));
 
       expect(mockGetDeployed).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when message is not provided in non-interactive mode', () => {
+    beforeEach(() => {
+      process.stdin.isTTY = false;
+    });
+
+    it('logs error message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps({ message: undefined }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Non-interactive mode requires -m flag'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps({ message: undefined }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call submitDiffs', async () => {
+      await diffRemoveHandler(buildDeps({ message: undefined }));
+
+      expect(mockSubmitDiffs).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when message is empty', () => {
+    it('logs error message', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffRemoveHandler(buildDeps({ message: '' }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Message cannot be empty'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffRemoveHandler(buildDeps({ message: '' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call submitDiffs', async () => {
+      await diffRemoveHandler(buildDeps({ message: '' }));
+
+      expect(mockSubmitDiffs).not.toHaveBeenCalled();
     });
   });
 
@@ -363,7 +417,7 @@ describe('diffRemoveHandler', () => {
             }),
           ],
         ],
-        'Remove artifact from deployment',
+        'Remove standard from project',
       );
     });
 

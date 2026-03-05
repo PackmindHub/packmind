@@ -6,10 +6,12 @@ import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ArtifactType, ChangeProposalType } from '@packmind/types';
 import { normalizePath } from '../../application/utils/pathUtils';
+import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 
 export type DiffRemoveHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   filePath: string | undefined;
+  message: string | undefined;
   exit: (code: number) => void;
   getCwd: () => string;
 };
@@ -23,11 +25,17 @@ const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
 export async function diffRemoveHandler(
   deps: DiffRemoveHandlerDependencies,
 ): Promise<void> {
-  const { packmindCliHexa, filePath, exit, getCwd } = deps;
+  const {
+    packmindCliHexa,
+    filePath,
+    message: messageFlag,
+    exit,
+    getCwd,
+  } = deps;
 
   if (!filePath) {
     logErrorConsole(
-      'Missing file path. Usage: packmind-cli diff remove <path>',
+      'Missing file path. Usage: packmind-cli diff remove <path> -m "message"',
     );
     exit(1);
     return;
@@ -176,6 +184,35 @@ export async function diffRemoveHandler(
     return;
   }
 
+  // Validate and get message
+  let message: string;
+  if (messageFlag !== undefined) {
+    const validation = validateMessage(messageFlag);
+    if (!validation.valid) {
+      logErrorConsole(validation.error);
+      exit(1);
+      return;
+    }
+    message = validation.message;
+  } else if (process.stdin.isTTY) {
+    const editorMessage = openEditorForMessage();
+    const validation = validateMessage(editorMessage);
+    if (!validation.valid) {
+      logErrorConsole(
+        'Aborting submission: empty message. Use -m to provide a message.',
+      );
+      exit(1);
+      return;
+    }
+    message = validation.message;
+  } else {
+    logErrorConsole(
+      'Non-interactive mode requires -m flag. Usage: packmind-cli diff remove <path> -m "your message"',
+    );
+    exit(1);
+    return;
+  }
+
   // Submit change proposal for removal
   const changeProposalType =
     artefactResult.artifactType === 'standard'
@@ -197,10 +234,7 @@ export async function diffRemoveHandler(
     spaceId: deployedFile.spaceId,
   };
 
-  const result = await packmindCliHexa.submitDiffs(
-    [[diff]],
-    'Remove artifact from deployment',
-  );
+  const result = await packmindCliHexa.submitDiffs([[diff]], message);
 
   for (const err of result.errors) {
     logErrorConsole(`Failed to submit removal: ${err.message}`);
