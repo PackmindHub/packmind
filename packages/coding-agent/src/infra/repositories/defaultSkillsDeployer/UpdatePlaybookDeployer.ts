@@ -8,11 +8,11 @@ import { DOMAIN_SKILLS } from './skills/update-playbook/references/domain-skills
 import { DOMAIN_COMMANDS } from './skills/update-playbook/references/domain-commands';
 
 export class UpdatePlaybookDeployer implements ISkillDeployer {
-  public readonly slug = 'update-playbook';
+  public readonly slug = 'packmind-update-playbook';
   public readonly minimumVersion = '0.21.0';
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
-    const basePath = `${skillsFolderPath}update-playbook`;
+    const basePath = `${skillsFolderPath}packmind-update-playbook`;
 
     return {
       createOrUpdate: [

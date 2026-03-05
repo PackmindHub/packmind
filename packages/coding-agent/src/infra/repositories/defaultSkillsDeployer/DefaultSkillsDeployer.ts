@@ -38,7 +38,7 @@ export class DefaultSkillsDeployer {
       'packmind-create-command',
       'packmind-create-package',
       'packmind-cli-list-commands',
-      'update-playbook',
+      'packmind-update-playbook',
     ];
   }
 
