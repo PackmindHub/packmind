@@ -28,6 +28,7 @@ jobs:
     secrets:
       VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
       VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
   # Stage 2: Quality and Security Checks
   quality:

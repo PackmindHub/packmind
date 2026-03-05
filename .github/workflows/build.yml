@@ -17,6 +17,9 @@ on:
       VITE_CRISP_WEBSITE_ID:
         required: false
         description: 'Crisp Website ID for chat support (proprietary only)'
+      DEPOT_TOKEN:
+        required: false
+        description: 'Depot.dev registry token for cached Docker image pulls'
     outputs:
       api-artifact:
         description: 'API build artifact name'
