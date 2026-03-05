@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import { PackageCountBadge } from './PackageCountBadge';
+import { PackageCountHeaderInfo } from './PackageCountHeaderInfo';
 import { formatPackageNames } from './PackagesDropdown';
 import { createPackageId, createStandardId, Package } from '@packmind/types';
 import * as usePackagesForArtifactModule from '../../hooks/usePackagesForArtifact';
@@ -131,6 +132,90 @@ describe('PackageCountBadge', () => {
       );
 
       expect(container.firstChild).toBeNull();
+    });
+  });
+});
+
+describe('PackageCountHeaderInfo', () => {
+  describe('when loading', () => {
+    beforeEach(() => {
+      mockUsePackagesForArtifact.mockReturnValue({
+        packages: [],
+        count: 0,
+        isLoading: true,
+        isError: false,
+      });
+    });
+
+    it('renders nothing', () => {
+      const { container } = renderWithProviders(
+        <PackageCountHeaderInfo {...defaultProps} />,
+      );
+
+      expect(container.firstChild).toBeNull();
+    });
+  });
+
+  describe('when query fails', () => {
+    beforeEach(() => {
+      mockUsePackagesForArtifact.mockReturnValue({
+        packages: [],
+        count: 0,
+        isLoading: false,
+        isError: true,
+      });
+    });
+
+    it('renders nothing', () => {
+      const { container } = renderWithProviders(
+        <PackageCountHeaderInfo {...defaultProps} />,
+      );
+
+      expect(container.firstChild).toBeNull();
+    });
+  });
+
+  describe('when no packages contain the artifact', () => {
+    beforeEach(() => {
+      mockUsePackagesForArtifact.mockReturnValue({
+        packages: [],
+        count: 0,
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    it('renders "Not included in any package" message', () => {
+      renderWithProviders(<PackageCountHeaderInfo {...defaultProps} />);
+
+      expect(
+        screen.getByText('Not included in any package'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when packages contain the artifact', () => {
+    beforeEach(() => {
+      mockUsePackagesForArtifact.mockReturnValue({
+        packages: twoPackages,
+        count: 2,
+        isLoading: false,
+        isError: false,
+      });
+    });
+
+    it('renders the package count trigger', () => {
+      renderWithProviders(<PackageCountHeaderInfo {...defaultProps} />);
+
+      expect(
+        screen.getByTestId('package-count-header-info'),
+      ).toBeInTheDocument();
+    });
+
+    it('displays the package count', () => {
+      renderWithProviders(<PackageCountHeaderInfo {...defaultProps} />);
+
+      expect(screen.getByText('in 2')).toBeInTheDocument();
     });
   });
 });
