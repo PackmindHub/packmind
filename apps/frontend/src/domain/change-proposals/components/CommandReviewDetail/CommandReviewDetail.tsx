@@ -238,6 +238,7 @@ export function CommandReviewDetail({
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
+            onExpandCard={reviewState.expandCard}
             renderExpandedView={renderExpandedView}
           />
         )}

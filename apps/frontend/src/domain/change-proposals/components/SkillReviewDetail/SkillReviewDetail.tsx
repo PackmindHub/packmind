@@ -310,6 +310,7 @@ export function SkillReviewDetail({
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
+            onExpandCard={reviewState.expandCard}
             renderExpandedView={renderExpandedView}
           />
         )}

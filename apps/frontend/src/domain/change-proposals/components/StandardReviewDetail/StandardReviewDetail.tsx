@@ -261,6 +261,7 @@ export function StandardReviewDetail({
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
+            onExpandCard={reviewState.expandCard}
             renderExpandedView={renderExpandedView}
           />
         )}
