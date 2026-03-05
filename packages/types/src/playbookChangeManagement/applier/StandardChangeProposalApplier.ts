@@ -1,53 +1,14 @@
-import { AbstractChangeProposalsApplier } from './AbstractChangeProposalsApplier';
-import {
-  ChangeProposal,
-  ChangeProposalType,
-  IStandardsPort,
-  OrganizationId,
-  SpaceId,
-  StandardId,
-  StandardVersion,
-  UserId,
-  createRuleId,
-} from '@packmind/types';
-import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
-import { DiffService } from '../../services/DiffService';
+import { AbstractChangeProposalApplier } from './AbstractChangeProposalApplier';
+import { ChangeProposal } from '../ChangeProposal';
+import { ChangeProposalType } from '../ChangeProposalType';
+import { StandardVersion } from '../../standards/StandardVersion';
+import { createRuleId } from '../../standards/RuleId';
+import { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
+import { STANDARD_CHANGE_TYPES } from './types';
 
-const STANDARD_CHANGE_TYPES = [
-  ChangeProposalType.updateStandardName,
-  ChangeProposalType.updateStandardScope,
-  ChangeProposalType.updateStandardDescription,
-  ChangeProposalType.addRule,
-  ChangeProposalType.updateRule,
-  ChangeProposalType.deleteRule,
-];
-
-export class StandardChangeProposalsApplier extends AbstractChangeProposalsApplier<StandardVersion> {
-  constructor(
-    diffService: DiffService,
-    private readonly standardsPort: IStandardsPort,
-  ) {
-    super(diffService);
-  }
-
+export class StandardChangeProposalApplier extends AbstractChangeProposalApplier<StandardVersion> {
   areChangesApplicable(changeProposals: ChangeProposal[]): boolean {
     return this.checkChangesApplicable(changeProposals, STANDARD_CHANGE_TYPES);
-  }
-
-  async getVersion(artefactId: StandardId): Promise<StandardVersion> {
-    const standardVersion =
-      await this.standardsPort.getLatestStandardVersion(artefactId);
-
-    if (!standardVersion) {
-      throw new Error(`Unable to find standard version with id ${artefactId}.`);
-    }
-
-    const rules = await this.standardsPort.getRulesByStandardId(artefactId);
-
-    return {
-      ...standardVersion,
-      rules,
-    };
   }
 
   protected applyChangeProposal(
@@ -151,45 +112,5 @@ export class StandardChangeProposalsApplier extends AbstractChangeProposalsAppli
     }
 
     throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
-  }
-
-  async saveNewVersion(
-    version: StandardVersion,
-    userId: UserId,
-    spaceId: SpaceId,
-    organizationId: OrganizationId,
-  ): Promise<StandardVersion> {
-    const updatedStandard = await this.standardsPort.updateStandard({
-      userId,
-      organizationId,
-      spaceId,
-      standardId: version.standardId,
-      name: version.name,
-      description: version.description,
-      rules: (version.rules || []).map((rule) => ({
-        id: rule.id,
-        content: rule.content,
-      })),
-      scope: version.scope,
-    });
-
-    const newVersion = await this.standardsPort.getLatestStandardVersion(
-      updatedStandard.id,
-    );
-
-    if (!newVersion) {
-      throw new Error(
-        `Failed to retrieve latest version for standard ${updatedStandard.id}`,
-      );
-    }
-
-    const rules = await this.standardsPort.getRulesByStandardId(
-      updatedStandard.id,
-    );
-
-    return {
-      ...newVersion,
-      rules,
-    };
   }
 }

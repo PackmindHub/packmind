@@ -1,7 +1,5 @@
-import { AbstractChangeProposalsApplier } from './AbstractChangeProposalsApplier';
+import { CommandChangeProposalApplier, DiffService } from '@packmind/types';
 import {
-  ChangeProposal,
-  ChangeProposalType,
   IRecipesPort,
   OrganizationId,
   RecipeId,
@@ -9,24 +7,17 @@ import {
   SpaceId,
   UserId,
 } from '@packmind/types';
-import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
-import { DiffService } from '../../services/DiffService';
+import { IChangesProposalApplier } from './IChangesProposalApplier';
 
-const RECIPE_CHANGE_TYPES = [
-  ChangeProposalType.updateCommandName,
-  ChangeProposalType.updateCommandDescription,
-];
-
-export class CommandChangeProposalsApplier extends AbstractChangeProposalsApplier<RecipeVersion> {
+export class PersistableCommandChangeProposalApplier
+  extends CommandChangeProposalApplier
+  implements IChangesProposalApplier<RecipeVersion>
+{
   constructor(
     diffService: DiffService,
-    private recipesPort: IRecipesPort,
+    private readonly recipesPort: IRecipesPort,
   ) {
     super(diffService);
-  }
-
-  areChangesApplicable(changeProposals: ChangeProposal[]): boolean {
-    return this.checkChangesApplicable(changeProposals, RECIPE_CHANGE_TYPES);
   }
 
   async getVersion(artefactId: RecipeId): Promise<RecipeVersion> {
@@ -46,40 +37,6 @@ export class CommandChangeProposalsApplier extends AbstractChangeProposalsApplie
     }
 
     return recipeVersion;
-  }
-
-  protected applyChangeProposal(
-    source: RecipeVersion,
-    changeProposal: ChangeProposal,
-  ): RecipeVersion {
-    if (
-      isExpectedChangeProposalType(
-        changeProposal,
-        ChangeProposalType.updateCommandName,
-      )
-    ) {
-      return {
-        ...source,
-        name: changeProposal.payload.newValue,
-      };
-    }
-
-    if (
-      isExpectedChangeProposalType(
-        changeProposal,
-        ChangeProposalType.updateCommandDescription,
-      )
-    ) {
-      return {
-        ...source,
-        content: this.applyDiff(
-          changeProposal.id,
-          changeProposal.payload,
-          source.content,
-        ),
-      };
-    }
-    throw new Error('Method not implemented.');
   }
 
   async saveNewVersion(

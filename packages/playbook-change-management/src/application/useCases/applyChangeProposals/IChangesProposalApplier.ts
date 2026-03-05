@@ -4,17 +4,12 @@ import {
   Recipe,
   RecipeVersion,
   Skill,
-  SkillFile,
-  SkillVersion,
+  SkillVersionWithFiles,
   SpaceId,
   Standard,
   StandardVersion,
   UserId,
 } from '@packmind/types';
-
-export type SkillVersionWithFiles = SkillVersion & {
-  files: SkillFile[];
-};
 
 export type ObjectVersions =
   | RecipeVersion
