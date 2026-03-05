@@ -49,6 +49,10 @@ describe('DefaultSkillsDeployer', () => {
           paths.some((p) => p.includes('packmind-cli-list-commands')),
         ).toBe(true);
       });
+
+      it('includes update-playbook', () => {
+        expect(paths.some((p) => p.includes('update-playbook'))).toBe(true);
+      });
     });
 
     describe('with includeBeta set to true', () => {
@@ -111,6 +115,10 @@ describe('DefaultSkillsDeployer', () => {
           expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
             false,
           );
+        });
+
+        it('excludes update-playbook (requires 0.21.0)', () => {
+          expect(paths.some((p) => p.includes('update-playbook'))).toBe(false);
         });
       });
 
@@ -185,6 +193,10 @@ describe('DefaultSkillsDeployer', () => {
           expect(
             paths.some((p) => p.includes('packmind-cli-list-commands')),
           ).toBe(true);
+        });
+
+        it('includes update-playbook', () => {
+          expect(paths.some((p) => p.includes('update-playbook'))).toBe(true);
         });
       });
     });
