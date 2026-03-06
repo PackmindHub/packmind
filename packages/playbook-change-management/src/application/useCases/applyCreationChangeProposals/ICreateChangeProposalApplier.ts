@@ -2,6 +2,7 @@ import {
   ApplyCreationChangeProposalsResponse,
   ChangeProposal,
   ChangeProposalType,
+  CreationChangeProposalTypes,
   OrganizationId,
   Recipe,
   Skill,
@@ -9,14 +10,9 @@ import {
   Standard,
 } from '@packmind/types';
 
-export type SupportedCreateChangedProposalType =
-  | ChangeProposalType.createCommand
-  | ChangeProposalType.createStandard
-  | ChangeProposalType.createSkill;
-
 export type CreatedIds = ApplyCreationChangeProposalsResponse['created'];
 
-type Artefact<CP extends SupportedCreateChangedProposalType> =
+type Artefact<CP extends CreationChangeProposalTypes> =
   CP extends ChangeProposalType.createCommand
     ? Recipe
     : CP extends ChangeProposalType.createStandard
@@ -26,7 +22,7 @@ type Artefact<CP extends SupportedCreateChangedProposalType> =
         : never;
 
 export interface ICreateChangeProposalApplier<
-  CP extends SupportedCreateChangedProposalType,
+  CP extends CreationChangeProposalTypes,
 > {
   apply(
     changeProposal: ChangeProposal<CP>,

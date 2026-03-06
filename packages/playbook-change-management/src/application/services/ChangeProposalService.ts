@@ -1,8 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  AcceptedChangeProposal,
   ChangeProposal,
   ChangeProposalArtefactId,
-  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalPayload,
   ChangeProposalStatus,
@@ -10,6 +10,8 @@ import {
   CreateChangeProposalCommand,
   createChangeProposalId,
   createUserId,
+  CreationChangeProposalTypes,
+  PendingChangeProposal,
   RecipeId,
   SkillId,
   SpaceId,
@@ -33,7 +35,7 @@ export type GroupedProposalsByArtefact = {
   standards: Map<StandardId, ArtefactProposalStats>;
   commands: Map<RecipeId, ArtefactProposalStats>;
   skills: Map<SkillId, ArtefactProposalStats>;
-  creations: ChangeProposal<ChangeProposalType>[];
+  creations: PendingChangeProposal<CreationChangeProposalTypes>[];
 };
 
 type ArtefactCategory = 'standards' | 'commands' | 'skills';
@@ -145,7 +147,7 @@ export class ChangeProposalService {
    */
   async batchUpdateProposalsInTransaction(params: {
     acceptedProposals: Array<{
-      proposal: ChangeProposal<ChangeProposalType>;
+      proposal: AcceptedChangeProposal<ChangeProposalType>;
       userId: UserId;
     }>;
     rejectedProposals: Array<{
@@ -162,8 +164,6 @@ export class ChangeProposalService {
       for (const { proposal, userId } of acceptedProposals) {
         const appliedProposal: ChangeProposal<ChangeProposalType> = {
           ...proposal,
-          status: ChangeProposalStatus.applied,
-          decision: computeProposalDecision(proposal),
           resolvedBy: userId,
           resolvedAt: now,
           updatedAt: now,
@@ -220,7 +220,12 @@ export class ChangeProposalService {
       const artefactCategory = getArtefactCategory(proposal.type);
       switch (artefactCategory) {
         case 'standards': {
-          if (proposal.type === ChangeProposalType.createStandard) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createStandard,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as StandardId;
@@ -236,7 +241,12 @@ export class ChangeProposalService {
           break;
         }
         case 'commands': {
-          if (proposal.type === ChangeProposalType.createCommand) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createCommand,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as RecipeId;
@@ -252,7 +262,12 @@ export class ChangeProposalService {
           break;
         }
         case 'skills': {
-          if (proposal.type === ChangeProposalType.createSkill) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createSkill,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as SkillId;
@@ -297,24 +312,4 @@ export class ChangeProposalService {
 
     return proposals;
   }
-}
-
-/*
- * Crappy solution until we send a correct payload when validating multiple change proposals.
- * */
-function computeProposalDecision<T extends ChangeProposalType>(
-  proposal: ChangeProposal<T>,
-): ChangeProposalDecision<T> {
-  if (
-    isExpectedChangeProposalType(proposal, ChangeProposalType.removeStandard) ||
-    isExpectedChangeProposalType(proposal, ChangeProposalType.removeCommand) ||
-    isExpectedChangeProposalType(proposal, ChangeProposalType.removeSkill)
-  ) {
-    return {
-      delete: false,
-      packageIds: [],
-    } as unknown as ChangeProposalDecision<T>;
-  }
-
-  return proposal.payload as ChangeProposalDecision<T>;
 }

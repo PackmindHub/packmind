@@ -84,7 +84,8 @@ export class ApplyChangeProposalsUseCase<
       this.skillsPort,
     );
 
-    const allChangeProposalIds = [...command.accepted, ...command.rejected];
+    const acceptedIds = command.accepted.map((p) => p.id);
+    const allChangeProposalIds = [...acceptedIds, ...command.rejected];
 
     // Fetch all proposals
     const changeProposals = await Promise.all(
@@ -97,14 +98,31 @@ export class ApplyChangeProposalsUseCase<
       command.artefactId,
     );
 
+    const proposalMap = new Map(
+      changeProposals.map((p) => [p?.id, p] as const),
+    );
+
+    // Validate that proposals from command match those in DB
+    for (const acceptedProposal of command.accepted) {
+      const dbProposal = proposalMap.get(acceptedProposal.id);
+      if (!dbProposal) {
+        throw new Error(
+          `Change proposal ${acceptedProposal.id} not found in database`,
+        );
+      }
+      this.assertProposalMatchesDatabase(acceptedProposal, dbProposal);
+    }
+
     const changesApplier = this.getApplier(changeProposals);
     const currentVersion = await changesApplier.getVersion(command.artefactId);
 
-    const changeProposalsToApply = command.accepted.map((changeProposalId) => {
-      const proposal = changeProposals.find((p) => p?.id === changeProposalId);
+    const changeProposalsToApply = command.accepted.map((acceptedProposal) => {
+      const proposal = proposalMap.get(acceptedProposal.id);
 
       if (!proposal) {
-        throw new Error(`Change proposal ${changeProposalId} not found`);
+        throw new Error(
+          `Change proposal ${acceptedProposal.id} not found in database`,
+        );
       }
       return proposal;
     });
@@ -144,19 +162,10 @@ export class ApplyChangeProposalsUseCase<
 
     // 3. Mark all proposals as applied/rejected in a single transaction
     // This ensures atomicity - if any proposal update fails, all are rolled back
-    const acceptedProposals = command.accepted
-      .map((id) => {
-        const proposal = changeProposals.find((p) => p?.id === id);
-        return proposal ? { proposal, userId: command.userId as UserId } : null;
-      })
-      .filter(
-        (
-          item,
-        ): item is {
-          proposal: ChangeProposal<ChangeProposalType>;
-          userId: UserId;
-        } => item !== null,
-      );
+    const acceptedProposals = command.accepted.map((proposal) => ({
+      proposal,
+      userId: command.userId as UserId,
+    }));
 
     const rejectedProposals = command.rejected
       .map((id) => {
@@ -291,5 +300,25 @@ export class ApplyChangeProposalsUseCase<
     throw new Error(
       `Unable to find a valid applier for changes: ${changeProposalTypes}`,
     );
+  }
+
+  private assertProposalMatchesDatabase(
+    acceptedProposal: ChangeProposal<ChangeProposalType>,
+    dbProposal: ChangeProposal<ChangeProposalType>,
+  ): void {
+    if (acceptedProposal.type !== dbProposal.type) {
+      throw new Error(
+        `Change proposal ${acceptedProposal.id} type mismatch: expected ${dbProposal.type}, got ${acceptedProposal.type}`,
+      );
+    }
+
+    if (
+      JSON.stringify(acceptedProposal.payload) !==
+      JSON.stringify(dbProposal.payload)
+    ) {
+      throw new Error(
+        `Change proposal ${acceptedProposal.id} payload mismatch`,
+      );
+    }
   }
 }

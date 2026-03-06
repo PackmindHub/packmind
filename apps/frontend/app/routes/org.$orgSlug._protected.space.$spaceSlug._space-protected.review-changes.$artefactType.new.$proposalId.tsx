@@ -2,6 +2,7 @@ import { useParams } from 'react-router';
 import { CreateCommandReviewDetail } from '../../src/domain/change-proposals/components/CreateCommandReviewDetail';
 import { CreateSkillReviewDetail } from '../../src/domain/change-proposals/components/CreateSkillReviewDetail';
 import { CreateStandardReviewDetail } from '../../src/domain/change-proposals/components/CreateStandardReviewDetail';
+import { createChangeProposalId } from '@packmind/types';
 
 export default function ReviewChangesCreationDetailRouteModule() {
   const { artefactType, proposalId, orgSlug, spaceSlug } = useParams<{
@@ -17,7 +18,7 @@ export default function ReviewChangesCreationDetailRouteModule() {
     return (
       <CreateCommandReviewDetail
         key={proposalId}
-        proposalId={proposalId}
+        proposalId={createChangeProposalId(proposalId)}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
       />
@@ -28,7 +29,7 @@ export default function ReviewChangesCreationDetailRouteModule() {
     return (
       <CreateStandardReviewDetail
         key={proposalId}
-        proposalId={proposalId}
+        proposalId={createChangeProposalId(proposalId)}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
       />
@@ -39,7 +40,7 @@ export default function ReviewChangesCreationDetailRouteModule() {
     return (
       <CreateSkillReviewDetail
         key={proposalId}
-        proposalId={proposalId}
+        proposalId={createChangeProposalId(proposalId)}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
       />

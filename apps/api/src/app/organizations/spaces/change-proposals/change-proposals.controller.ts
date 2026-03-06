@@ -12,6 +12,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  AcceptedChangeProposal,
   ApplyCreationChangeProposalsResponse,
   BatchCreateChangeProposalItem,
   BatchCreateChangeProposalsCommand,
@@ -141,7 +142,7 @@ export class OrganizationsSpacesChangeProposalsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Body()
-    body: { accepted: ChangeProposalId[]; rejected: ChangeProposalId[] },
+    body: { accepted: AcceptedChangeProposal[]; rejected: ChangeProposalId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<ApplyCreationChangeProposalsResponse> {
     this.logger.info(
