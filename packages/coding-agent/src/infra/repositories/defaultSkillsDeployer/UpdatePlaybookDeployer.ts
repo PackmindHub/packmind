@@ -2,7 +2,7 @@ import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
 import { getSkillMd } from './skills/update-playbook/skill';
-import { README } from './skills/update-playbook/readme';
+import { AGENT_SKILLS_SPECIFICATION } from './skills/update-playbook/references/agent-skills-specification';
 import { DOMAIN_STANDARDS } from './skills/update-playbook/references/domain-standards';
 import { DOMAIN_SKILLS } from './skills/update-playbook/references/domain-skills';
 import { DOMAIN_COMMANDS } from './skills/update-playbook/references/domain-commands';
@@ -17,7 +17,6 @@ export class UpdatePlaybookDeployer implements ISkillDeployer {
     return {
       createOrUpdate: [
         { path: `${basePath}/SKILL.md`, content: getSkillMd() },
-        { path: `${basePath}/README.md`, content: README },
         { path: `${basePath}/LICENSE.txt`, content: LICENSE_TXT },
         {
           path: `${basePath}/references/domain-standards.md`,
@@ -30,6 +29,10 @@ export class UpdatePlaybookDeployer implements ISkillDeployer {
         {
           path: `${basePath}/references/domain-commands.md`,
           content: DOMAIN_COMMANDS,
+        },
+        {
+          path: `${basePath}/references/agent-skills-specification.md`,
+          content: AGENT_SKILLS_SPECIFICATION,
         },
       ],
       delete: [],
