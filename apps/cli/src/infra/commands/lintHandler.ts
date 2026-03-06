@@ -11,6 +11,7 @@ import {
   logInfoConsole,
   logWarningConsole,
 } from '../utils/consoleLogger';
+import { PackmindIgnoreReader } from '../../application/services/PackmindIgnoreReader';
 
 const SEVERITY_LEVELS: Record<DetectionSeverity, number> = {
   [DetectionSeverity.WARNING]: 0,
@@ -41,6 +42,7 @@ export type LintHandlerDependencies = {
   ideLintLogger: IDELintLogger;
   resolvePath: (targetPath: string) => string;
   exit: (code: number) => void;
+  packmindIgnoreReader?: PackmindIgnoreReader;
 };
 
 function isNotLoggedInError(error: unknown): boolean {
@@ -68,6 +70,7 @@ export async function lintHandler(
     ideLintLogger,
     resolvePath,
     exit,
+    packmindIgnoreReader = new PackmindIgnoreReader(),
   } = deps;
 
   if (draft && !rule) {
@@ -78,14 +81,18 @@ export async function lintHandler(
   const targetPath = path ?? '.';
   const absolutePath = resolvePath(targetPath);
 
-  if (diff) {
-    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
-    if (!gitRoot) {
-      throw new Error(
-        'The --changed-files and --changed-lines options require the project to be in a Git repository',
-      );
-    }
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
+
+  if (diff && !gitRoot) {
+    throw new Error(
+      'The --changed-files and --changed-lines options require the project to be in a Git repository',
+    );
   }
+
+  const ignorePatterns = await packmindIgnoreReader.readIgnorePatterns(
+    absolutePath,
+    gitRoot,
+  );
 
   let violations: LintViolation[] = [];
 
@@ -98,15 +105,13 @@ export async function lintHandler(
         ruleId: rule?.ruleId,
         language,
         diffMode: diff,
+        ignorePatterns,
       });
       violations = result.violations;
     } else {
-      const stopDirectory =
-        await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
-
       const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
         absolutePath,
-        stopDirectory,
+        gitRoot,
       );
 
       if (!hierarchicalConfig.hasConfigs) {
@@ -118,6 +123,7 @@ export async function lintHandler(
       const result = await packmindCliHexa.lintFilesFromConfig({
         path: absolutePath,
         diffMode: diff,
+        ignorePatterns,
       });
       violations = result.violations;
     }

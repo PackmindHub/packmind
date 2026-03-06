@@ -11,6 +11,7 @@ import {
   LintHandlerDependencies,
   Loggers,
 } from './lintHandler';
+import { PackmindIgnoreReader } from '../../application/services/PackmindIgnoreReader';
 
 import {
   logErrorConsole,
@@ -30,6 +31,7 @@ describe('lintHandler', () => {
   let mockIDELogger: jest.Mocked<IDELintLogger>;
   let mockExit: jest.Mock;
   let mockResolvePath: jest.Mock;
+  let mockIgnoreReader: jest.Mocked<PackmindIgnoreReader>;
   let deps: LintHandlerDependencies;
 
   beforeEach(() => {
@@ -48,6 +50,10 @@ describe('lintHandler', () => {
       logViolations: jest.fn(),
     } as unknown as jest.Mocked<IDELintLogger>;
 
+    mockIgnoreReader = {
+      readIgnorePatterns: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<PackmindIgnoreReader>;
+
     mockExit = jest.fn();
     mockResolvePath = jest.fn((path) => `/absolute/${path}`);
 
@@ -57,6 +63,7 @@ describe('lintHandler', () => {
       ideLintLogger: mockIDELogger,
       exit: mockExit,
       resolvePath: mockResolvePath,
+      packmindIgnoreReader: mockIgnoreReader,
     };
   });
 
@@ -767,6 +774,84 @@ describe('lintHandler', () => {
 
         expect(logErrorConsole).toHaveBeenCalledWith(
           expect.stringMatching(/^Lint failed in \d+\.\d+s$/),
+        );
+      });
+    });
+  });
+
+  describe('.packmindignore support', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
+      mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+        hasConfigs: true,
+        configs: [{ path: '/project/packmind.json' }],
+      });
+      mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+        violations: [],
+      });
+      mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
+        violations: [],
+        summary: {
+          totalFiles: 0,
+          violatedFiles: 0,
+          totalViolations: 0,
+          standardsChecked: [],
+        },
+      });
+    });
+
+    it('reads ignore patterns from the resolved path up to git root', async () => {
+      await lintHandler(createArgs({ path: '/project' }), deps);
+
+      expect(mockIgnoreReader.readIgnorePatterns).toHaveBeenCalledWith(
+        '/absolute//project',
+        '/project',
+      );
+    });
+
+    it('passes ignore patterns to lintFilesFromConfig', async () => {
+      mockIgnoreReader.readIgnorePatterns.mockResolvedValue([
+        'generated',
+        '*.test.ts',
+      ]);
+
+      await lintHandler(createArgs({ path: '/project' }), deps);
+
+      expect(mockPackmindCliHexa.lintFilesFromConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ignorePatterns: ['generated', '*.test.ts'],
+        }),
+      );
+    });
+
+    it('passes ignore patterns to lintFilesAgainstRule', async () => {
+      mockIgnoreReader.readIgnorePatterns.mockResolvedValue(['docs']);
+
+      await lintHandler(
+        createArgs({
+          rule: { standardSlug: 'test', ruleId: 'rule-1' as never },
+          draft: true,
+        }),
+        deps,
+      );
+
+      expect(mockPackmindCliHexa.lintFilesAgainstRule).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ignorePatterns: ['docs'],
+        }),
+      );
+    });
+
+    describe('when no .packmindignore files exist', () => {
+      it('passes empty ignore patterns', async () => {
+        mockIgnoreReader.readIgnorePatterns.mockResolvedValue([]);
+
+        await lintHandler(createArgs({ path: '/project' }), deps);
+
+        expect(mockPackmindCliHexa.lintFilesFromConfig).toHaveBeenCalledWith(
+          expect.objectContaining({
+            ignorePatterns: [],
+          }),
         );
       });
     });
