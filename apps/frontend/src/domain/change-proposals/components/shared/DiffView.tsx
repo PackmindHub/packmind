@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { PMBox, PMVStack } from '@packmind/ui';
-import { DiffSection, buildDiffSections } from '../../utils/buildDiffSections';
+import { buildDiffSections } from '../../utils/buildDiffSections';
 import { DiffBlock } from './DiffBlock';
+import { DiffSectionSeparator } from './DiffSectionSeparator';
 
 interface DiffViewProps {
   oldValue: string;
@@ -10,27 +11,35 @@ interface DiffViewProps {
   filePath?: string;
 }
 
-function isChanged(
-  section: DiffSection,
-): section is Extract<DiffSection, { type: 'changed' }> {
-  return section.type === 'changed';
-}
-
 export function DiffView({
   oldValue,
   newValue,
   isMarkdownContent,
   filePath,
 }: Readonly<DiffViewProps>) {
-  const changedSections = useMemo(
-    () => buildDiffSections(oldValue, newValue).filter(isChanged),
+  const sections = useMemo(
+    () => buildDiffSections(oldValue, newValue),
     [oldValue, newValue],
   );
 
-  return (
-    <PMVStack gap={3} alignItems="stretch">
-      {changedSections.map((section, index) => (
-        <PMBox key={index}>
+  const elements = useMemo(() => {
+    const result: ReactNode[] = [];
+    let hadUnchangedBefore = false;
+
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+      if (section.type === 'unchanged') {
+        hadUnchangedBefore = true;
+        continue;
+      }
+
+      if (hadUnchangedBefore && result.length > 0) {
+        result.push(<DiffSectionSeparator key={`sep-${i}`} />);
+      }
+      hadUnchangedBefore = false;
+
+      result.push(
+        <PMBox key={i}>
           {section.oldValue && (
             <DiffBlock
               value={section.oldValue}
@@ -49,8 +58,16 @@ export function DiffView({
               />
             </PMBox>
           )}
-        </PMBox>
-      ))}
+        </PMBox>,
+      );
+    }
+
+    return result;
+  }, [sections, isMarkdownContent, filePath]);
+
+  return (
+    <PMVStack gap={3} alignItems="stretch">
+      {elements}
     </PMVStack>
   );
 }

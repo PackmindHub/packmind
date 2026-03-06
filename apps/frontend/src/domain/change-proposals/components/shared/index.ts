@@ -1,4 +1,5 @@
 export { DiffBlock } from './DiffBlock';
+export { DiffSectionSeparator } from './DiffSectionSeparator';
 export { StatusDot } from './StatusDot';
 export { ProposalLabel } from './ProposalLabel';
 export { ProposalMeta } from './ProposalMeta';
