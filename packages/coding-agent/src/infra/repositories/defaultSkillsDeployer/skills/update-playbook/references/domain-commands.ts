@@ -4,7 +4,11 @@ Scan existing commands, identify which are relevant to the user's validated inte
 
 ## What Commands Are
 
-Commands are reusable multi-step workflows distributed to AI coding agents. Each command has a name, summary, "when to use" list, context validation checkpoints, and numbered steps. Files live in \`.packmind/commands/<slug>.md\`.
+Commands are reusable multi-step workflows distributed to AI coding agents. Each command has a name, summary, "when to use" list, context validation checkpoints, and numbered steps. Source files live in \`**/.packmind/commands/<slug>.md\`. Installed copies also exist in agent directories:
+- Claude Code: \`**/.claude/commands/\`
+- Cursor: \`**/.cursor/commands/\`
+- GitHub Copilot: \`**/.github/prompt/\`
+Search the project root and all subdirectories.
 
 ## Instructions
 
@@ -22,7 +26,7 @@ Do NOT propose new commands — command creation is a deliberate, user-driven pr
 
 ### Step 3: Deep Analyze Flagged Commands
 
-For each relevant command, read \`.packmind/commands/<slug>.md\`. Evaluate the command against the user's requested changes:
+For each relevant command, read \`**/.packmind/commands/<slug>.md\`. Evaluate the command against the user's requested changes:
 - Intent requests adding steps → propose adding them at the specified location
 - Intent requests modifying steps → propose the specific modifications
 - Intent requests removing steps → propose removal with rationale

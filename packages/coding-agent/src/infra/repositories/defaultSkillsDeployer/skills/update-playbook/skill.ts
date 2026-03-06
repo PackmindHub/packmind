@@ -2,22 +2,27 @@ export function getSkillMd(): string {
   return `---
 name: packmind-update-playbook
 description: >-
-  Use when the user explicitly wants to update, add, fix, change, or deprecate
-  Packmind playbook artifacts (standards, commands, skills). Triggers on phrases
-  like "update packmind standard", "add a packmind skill", "fix packmind command",
-  "change packmind playbook", "deprecate a standard", or similar explicit references
-  to modifying Packmind artifacts. Do NOT auto-trigger on general coding sessions.
+  Use when updating, adding, fixing, changing, or deprecating Packmind playbook
+  artifacts (standards, commands, skills). Triggers on explicit phrases like
+  "update packmind standard", "add a packmind skill", "fix packmind command",
+  "change packmind playbook", "deprecate a standard". Also triggers when the
+  conversation reveals an opportunity to update the playbook — e.g., a convention
+  was established, a pattern emerged, a workflow changed, or an artifact is stale.
+  This skill defines a mandatory workflow: do NOT edit artifact files directly —
+  follow all phases (0→4) regardless of change size.
 ---
 
 # Update Playbook
 
-Evaluate the user's explicit intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating, updating, or deprecating. Produce a structured change report, then apply approved changes.
+Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating, updating, or deprecating. Produce a structured change report, then apply approved changes.
 
-## **MANDATORY GATE — Phase 0: Intent Validation**
+**⚠️ MANDATORY WORKFLOW — This skill defines a strict phase sequence (0→1→2→3→4). Do NOT skip phases or edit artifact files directly. Even for a single-line change, follow every phase. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
+
+## **Phase 0: Intent Validation**
 
 **STOP. This phase runs FIRST, before anything else. No file reads, no CLI commands, no subagents until this gate passes.**
 
-Analyze the user's input to determine their intent:
+Analyze the user's input and conversation context to determine intent:
 
 #### Case A: No prior conversation / empty input
 
@@ -27,26 +32,34 @@ The skill was invoked standalone with no context. Ask:
 
 **BLOCK** — do not proceed until the user responds.
 
-#### Case B: Prior conversation exists but no playbook-related intent
+#### Case B: Explicit intent found
 
-If the conversation contains no references to updating, adding, fixing, or changing Packmind artifacts, tell the user:
-
-"I didn't detect any intent to modify the Packmind playbook in our conversation. What artifact would you like to update — a standard, command, or skill? Please describe the change."
-
-**BLOCK** — do not proceed until the user responds.
-
-#### Case C: Clear intent found
-
-Extract an **intent summary**:
+The user explicitly asked to update, add, fix, change, or deprecate a Packmind artifact. Extract an **intent summary**:
 - **Target artifact(s)**: which standard(s), command(s), or skill(s) to modify (or "new")
 - **Kind of change**: create, update, deprecate, fix
 - **Specifics**: any details the user provided about the change
 
 Proceed to Phase 1 with this validated intent.
 
+#### Case C: Opportunity detected from conversation
+
+The conversation reveals a playbook update opportunity — e.g., a convention was established, a pattern emerged, a workflow was changed, or a known artifact is now stale — but the user did not explicitly ask for a playbook update. Summarize the opportunity and ask:
+
+"I noticed an opportunity to update the Packmind playbook: **<brief description>**. Would you like me to run the update workflow?"
+
+**BLOCK** — do not proceed until the user confirms.
+
+#### Case D: No intent and no opportunity
+
+If the conversation contains no references to modifying Packmind artifacts and no detectable update opportunity, tell the user:
+
+"I didn't detect any intent or opportunity to modify the Packmind playbook. What artifact would you like to update — a standard, command, or skill? Please describe the change."
+
+**BLOCK** — do not proceed until the user responds.
+
 ### Phase 1: Intent Summary
 
-> Only proceed after Phase 0 confirms explicit playbook update intent.
+> Only proceed after Phase 0 validates intent (explicit request or confirmed opportunity).
 
 Summarize the validated intent before launching any subagents. Extract:
 - Which artifact(s) the user wants to modify and what kind of change
@@ -125,11 +138,22 @@ Present this report and ask the user for approval:
 
 ### Phase 4: Apply Changes
 
-For each approved change, edit the local installed files directly:
+For each approved change, edit the local installed files directly. Search the project root **and all subdirectories** (e.g. \`src/backend/.cursor/skills/\`, \`packages/api/.packmind/standards/\`):
 
-- **Standards**: \`.packmind/standards/<slug>.md\`
-- **Commands**: \`.packmind/commands/<slug>.md\`
-- **Skills**: \`.claude/skills/<skill-name>/\` (SKILL.md, references/, etc.)
+- **Standards**: \`**/.packmind/standards/<slug>.md\` (source of truth). Installed copies also exist in:
+  - Claude Code: \`**/.claude/rules/packmind/\`
+  - Cursor: \`**/.cursor/rules/packmind/\`
+  - GitHub Copilot: \`**/.github/instructions/packmind-*\`
+- **Commands**: \`**/.packmind/commands/<slug>.md\` (source of truth). Installed copies also exist in:
+  - Claude Code: \`**/.claude/commands/\`
+  - Cursor: \`**/.cursor/commands/\`
+  - GitHub Copilot: \`**/.github/prompt/\`
+- **Skills**: no \`.packmind/\` source — skills live directly in agent directories:
+  - Claude Code: \`**/.claude/skills/<skill-name>/\`
+  - Cursor: \`**/.cursor/skills/<skill-name>/\`
+  - GitHub Copilot: \`**/.github/skills/<skill-name>/\`
+
+If a same artifact exists in multiple agent directories, pick one to edit.
 
 For **new** artifacts, delegate to the corresponding creation skill (\`packmind-create-standard\`, \`packmind-create-command\`, \`packmind-create-skill\`).
 
