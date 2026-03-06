@@ -85,10 +85,10 @@ export function CreateCommandReviewDetail({
           />
         )}
         <PMHeading size="md" mb={4}>
-          {displayedProposal.name}
+          {displayedProposal.payload.name}
         </PMHeading>
         <PMMarkdownViewer
-          content={stripFrontmatter(displayedProposal.content)}
+          content={stripFrontmatter(displayedProposal.payload.content)}
         />
       </PMVStack>
     </PMBox>

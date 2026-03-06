@@ -59,18 +59,18 @@ export function CreateSkillReviewDetail({
   const allFiles = useMemo(() => {
     const skillMdFile = {
       path: 'SKILL.md',
-      content: displayedProposal?.prompt ?? '',
+      content: displayedProposal?.payload?.prompt ?? '',
       isBase64: false,
     };
 
-    const otherFiles = displayedProposal?.files
-      ? [...displayedProposal.files]
+    const otherFiles = displayedProposal?.payload?.files
+      ? [...displayedProposal.payload.files]
           .filter((f) => f.path !== 'SKILL.md')
           .sort((a, b) => a.path.localeCompare(b.path))
       : [];
 
     return [skillMdFile, ...otherFiles];
-  }, [displayedProposal?.files, displayedProposal?.prompt]);
+  }, [displayedProposal?.payload?.files, displayedProposal?.payload?.prompt]);
 
   const filteredFiles = useMemo(() => {
     if (!fileFilter) return allFiles;
@@ -84,11 +84,11 @@ export function CreateSkillReviewDetail({
   const hasInfoFields = useMemo(
     () =>
       Boolean(
-        displayedProposal?.license ||
-        displayedProposal?.compatibility ||
-        displayedProposal?.allowedTools ||
-        (displayedProposal?.metadata &&
-          Object.keys(displayedProposal.metadata).length > 0),
+        displayedProposal?.payload?.license ||
+        displayedProposal?.payload?.compatibility ||
+        displayedProposal?.payload?.allowedTools ||
+        (displayedProposal?.payload?.metadata &&
+          Object.keys(displayedProposal.payload.metadata).length > 0),
       ),
     [displayedProposal],
   );
@@ -114,7 +114,7 @@ export function CreateSkillReviewDetail({
   return (
     <PMBox gridColumn="span 2" overflowY="auto">
       <CreationReviewHeader
-        artefactName={displayedProposal.name}
+        artefactName={displayedProposal.payload.name}
         latestAuthor={authorName}
         latestTime={new Date(displayedProposal.lastContributedAt)}
         onAccept={handleAccept}
@@ -152,47 +152,52 @@ export function CreateSkillReviewDetail({
               <PMText color="secondary" fontSize="sm">
                 Description:
               </PMText>
-              <PMMarkdownViewer content={displayedProposal.description} />
+              <PMMarkdownViewer
+                content={displayedProposal.payload.description}
+              />
             </PMVStack>
             {hasInfoFields && (
               <>
                 <PMSeparator my={2} borderColor="border.tertiary" />
-                {displayedProposal.license && (
+                {displayedProposal.payload.license && (
                   <PMHStack gap={2}>
                     <PMText color="secondary" fontSize="sm">
                       License:
                     </PMText>
-                    <PMText fontSize="sm">{displayedProposal.license}</PMText>
+                    <PMText fontSize="sm">
+                      {displayedProposal.payload.license}
+                    </PMText>
                   </PMHStack>
                 )}
-                {displayedProposal.compatibility && (
+                {displayedProposal.payload.compatibility && (
                   <PMHStack gap={2}>
                     <PMText color="secondary" fontSize="sm">
                       Compatibility:
                     </PMText>
                     <PMText fontSize="sm">
-                      {displayedProposal.compatibility}
+                      {displayedProposal.payload.compatibility}
                     </PMText>
                   </PMHStack>
                 )}
-                {displayedProposal.allowedTools && (
+                {displayedProposal.payload.allowedTools && (
                   <PMHStack gap={2}>
                     <PMText color="secondary" fontSize="sm">
                       Allowed Tools:
                     </PMText>
                     <PMText fontSize="sm">
-                      {displayedProposal.allowedTools}
+                      {displayedProposal.payload.allowedTools}
                     </PMText>
                   </PMHStack>
                 )}
-                {displayedProposal.metadata &&
-                  Object.keys(displayedProposal.metadata).length > 0 && (
+                {displayedProposal.payload.metadata &&
+                  Object.keys(displayedProposal.payload.metadata).length >
+                    0 && (
                     <PMVStack gap={1} align="stretch">
                       <PMText color="secondary" fontSize="sm">
                         Metadata:
                       </PMText>
                       <PMVStack gap={1} pl={4} align="flex-start">
-                        {Object.entries(displayedProposal.metadata).map(
+                        {Object.entries(displayedProposal.payload.metadata).map(
                           ([key, value]) => (
                             <PMHStack key={key} gap={2}>
                               <PMText color="secondary" fontSize="sm">

@@ -48,7 +48,7 @@ export function useCreationReviewDetail<T extends CreationProposalOverview>({
   });
 
   const proposal = groupedProposals?.creations.find(
-    (c): c is T => c.proposalId === proposalId && filter(c),
+    (c): c is T => c.id === proposalId && filter(c),
   );
 
   const { displayedProposal, submittedState, setSubmittedState } =

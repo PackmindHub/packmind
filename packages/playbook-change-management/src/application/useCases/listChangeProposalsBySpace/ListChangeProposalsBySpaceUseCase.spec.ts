@@ -390,6 +390,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             captureMode: ChangeProposalCaptureMode.commit,
             message: '',
             status: ChangeProposalStatus.pending,
+            decision: null,
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
@@ -404,15 +405,18 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.creations).toEqual([
-        {
-          proposalId,
+        expect.objectContaining({
+          id: proposalId,
           artefactType: 'commands',
           name: 'My Command',
-          content: 'Do something',
+          payload: {
+            name: 'My Command',
+            content: 'Do something',
+          },
           message: '',
           createdBy: userId,
           lastContributedAt: commandCreatedAt.toISOString(),
-        },
+        }),
       ]);
     });
 
@@ -456,6 +460,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             captureMode: ChangeProposalCaptureMode.commit,
             message: '',
             status: ChangeProposalStatus.pending,
+            decision: null,
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
@@ -470,17 +475,20 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.creations).toEqual([
-        {
-          proposalId,
+        expect.objectContaining({
+          id: proposalId,
           artefactType: 'standards',
           name: 'My Standard',
-          description: 'A description',
-          scope: 'TypeScript',
-          rules: [{ content: 'Rule one' }],
+          payload: {
+            name: 'My Standard',
+            description: 'A description',
+            scope: 'TypeScript',
+            rules: [{ content: 'Rule one' }],
+          },
           message: '',
           createdBy: userId,
           lastContributedAt: standardCreatedAt.toISOString(),
-        },
+        }),
       ]);
     });
 
@@ -505,6 +513,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             captureMode: ChangeProposalCaptureMode.commit,
             message: '',
             status: ChangeProposalStatus.pending,
+            decision: null,
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
@@ -516,7 +525,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result.creations[0]).toMatchObject({
+      expect(result.creations[0].payload).toMatchObject({
         scope: 'TypeScript, JavaScript',
       });
     });
@@ -542,6 +551,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             captureMode: ChangeProposalCaptureMode.commit,
             message: '',
             status: ChangeProposalStatus.pending,
+            decision: null,
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
@@ -553,10 +563,12 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result.creations[0]).toMatchObject({ scope: 'TypeScript' });
+      expect(result.creations[0].payload).toMatchObject({
+        scope: 'TypeScript',
+      });
     });
 
-    it('passes null scope through as null', async () => {
+    it('passes empty scope through as null', async () => {
       service.groupProposalsByArtefact.mockResolvedValue({
         standards: new Map(),
         commands: new Map(),
@@ -577,6 +589,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             captureMode: ChangeProposalCaptureMode.commit,
             message: '',
             status: ChangeProposalStatus.pending,
+            decision: null,
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
@@ -588,7 +601,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result.creations[0]).toMatchObject({ scope: null });
+      expect(result.creations[0].payload).toMatchObject({ scope: null });
     });
 
     it('preserves empty rules array', async () => {
@@ -612,6 +625,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
             captureMode: ChangeProposalCaptureMode.commit,
             message: '',
             status: ChangeProposalStatus.pending,
+            decision: null,
             createdBy: userId,
             resolvedBy: null,
             resolvedAt: null,
@@ -623,7 +637,7 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result.creations[0]).toMatchObject({ rules: [] });
+      expect(result.creations[0].payload).toMatchObject({ rules: [] });
     });
 
     describe('when createSkill proposals exist', () => {
@@ -648,10 +662,12 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
                 name: 'My Skill',
                 description: 'A skill description',
                 prompt: 'You are a helpful assistant.',
+                skillMdPermissions: '0755',
               },
               captureMode: ChangeProposalCaptureMode.commit,
               message: '',
               status: ChangeProposalStatus.pending,
+              decision: null,
               createdBy: userId,
               resolvedBy: null,
               resolvedAt: null,
@@ -666,16 +682,20 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
         const result = await useCase.execute(command);
 
         expect(result.creations).toEqual([
-          {
-            proposalId: skillProposalId,
+          expect.objectContaining({
+            id: skillProposalId,
             artefactType: 'skills',
             name: 'My Skill',
-            description: 'A skill description',
-            prompt: 'You are a helpful assistant.',
+            payload: {
+              name: 'My Skill',
+              description: 'A skill description',
+              prompt: 'You are a helpful assistant.',
+              skillMdPermissions: '0755',
+            },
             message: '',
             createdBy: userId,
             lastContributedAt: skillCreatedAt.toISOString(),
-          },
+          }),
         ]);
       });
 
@@ -737,32 +757,35 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
         const result = await useCase.execute(command);
 
         expect(result.creations).toEqual([
-          {
-            proposalId: skillProposalId,
+          expect.objectContaining({
+            id: skillProposalId,
             artefactType: 'skills',
             name: 'Full Skill',
-            description: 'A complete skill',
-            prompt: 'Do the thing.',
-            license: 'MIT',
-            compatibility: '>=2.0',
-            allowedTools: 'Read, Write',
-            files: [
-              {
-                path: 'scripts/init.sh',
-                content: '#!/bin/bash\necho hello',
-                permissions: '755',
-                isBase64: false,
-              },
-            ],
+            payload: {
+              name: 'Full Skill',
+              description: 'A complete skill',
+              prompt: 'Do the thing.',
+              license: 'MIT',
+              compatibility: '>=2.0',
+              allowedTools: 'Read, Write',
+              files: [
+                {
+                  path: 'scripts/init.sh',
+                  content: '#!/bin/bash\necho hello',
+                  permissions: '755',
+                  isBase64: false,
+                },
+              ],
+            },
             message: '',
             createdBy: userId,
             lastContributedAt: fullSkillCreatedAt.toISOString(),
-          },
+          }),
         ]);
       });
     });
 
-    it('falls through to command branch for unknown proposal types', async () => {
+    it('throw an error unknown proposal types', async () => {
       service.groupProposalsByArtefact.mockResolvedValue({
         standards: new Map(),
         commands: new Map(),
@@ -790,9 +813,9 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
         ],
       });
 
-      const result = await useCase.execute(command);
-
-      expect(result.creations[0]).toMatchObject({ artefactType: 'commands' });
+      await expect(() => useCase.execute(command)).rejects.toThrow(
+        new Error('Unsupported creation ChangeProposalType: unknownType'),
+      );
     });
   });
 

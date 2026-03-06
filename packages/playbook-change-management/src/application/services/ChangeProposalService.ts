@@ -10,6 +10,8 @@ import {
   CreateChangeProposalCommand,
   createChangeProposalId,
   createUserId,
+  CreationChangeProposalTypes,
+  PendingChangeProposal,
   RecipeId,
   SkillId,
   SpaceId,
@@ -33,7 +35,7 @@ export type GroupedProposalsByArtefact = {
   standards: Map<StandardId, ArtefactProposalStats>;
   commands: Map<RecipeId, ArtefactProposalStats>;
   skills: Map<SkillId, ArtefactProposalStats>;
-  creations: ChangeProposal<ChangeProposalType>[];
+  creations: PendingChangeProposal<CreationChangeProposalTypes>[];
 };
 
 type ArtefactCategory = 'standards' | 'commands' | 'skills';
@@ -220,7 +222,12 @@ export class ChangeProposalService {
       const artefactCategory = getArtefactCategory(proposal.type);
       switch (artefactCategory) {
         case 'standards': {
-          if (proposal.type === ChangeProposalType.createStandard) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createStandard,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as StandardId;
@@ -236,7 +243,12 @@ export class ChangeProposalService {
           break;
         }
         case 'commands': {
-          if (proposal.type === ChangeProposalType.createCommand) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createCommand,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as RecipeId;
@@ -252,7 +264,12 @@ export class ChangeProposalService {
           break;
         }
         case 'skills': {
-          if (proposal.type === ChangeProposalType.createSkill) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createSkill,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as SkillId;
