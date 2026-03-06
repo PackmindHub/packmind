@@ -33,6 +33,7 @@ import { ISetupMcpUseCase } from './domain/useCases/ISetupMcpUseCase';
 import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
 import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
+import { LockFileRepository } from './infra/repositories/LockFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
 import { IListStandardsUseCase } from './domain/useCases/IListStandardsUseCase';
 import { ListStandardsUseCase } from './application/useCases/ListStandardsUseCase';
@@ -80,6 +81,7 @@ export class PackmindCliHexaFactory {
     this.repositories = {
       packmindGateway: new PackmindGateway(loadApiKey()),
       configFileRepository: new ConfigFileRepository(),
+      lockFileRepository: new LockFileRepository(),
     };
 
     this.services = {
