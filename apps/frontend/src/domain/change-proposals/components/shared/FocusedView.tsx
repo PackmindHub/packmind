@@ -4,19 +4,19 @@ import { buildDiffSections } from '../../utils/buildDiffSections';
 import { DiffBlock } from './DiffBlock';
 import { DiffSectionSeparator } from './DiffSectionSeparator';
 
-interface DiffViewProps {
+interface FocusedViewProps {
   oldValue: string;
   newValue: string;
   isMarkdownContent: boolean;
   filePath?: string;
 }
 
-export function DiffView({
+export function FocusedView({
   oldValue,
   newValue,
   isMarkdownContent,
   filePath,
-}: Readonly<DiffViewProps>) {
+}: Readonly<FocusedViewProps>) {
   const sections = useMemo(
     () => buildDiffSections(oldValue, newValue),
     [oldValue, newValue],

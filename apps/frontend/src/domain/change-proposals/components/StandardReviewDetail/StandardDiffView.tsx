@@ -19,7 +19,7 @@ import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues
 import { buildDiffSections } from '../../utils/buildDiffSections';
 import { DiffBlock } from '../shared/DiffBlock';
 
-interface StandardFocusedViewProps {
+interface StandardDiffViewProps {
   proposal: ChangeProposalWithConflicts;
   standard: Standard;
   rules: Rule[];
@@ -49,11 +49,11 @@ function getTargetRuleId(
   return undefined;
 }
 
-export function StandardFocusedView({
+export function StandardDiffView({
   proposal,
   standard,
   rules,
-}: Readonly<StandardFocusedViewProps>) {
+}: Readonly<StandardDiffViewProps>) {
   const { oldValue, newValue } = extractProposalDiffValues(proposal);
 
   const isStandardProposal = standardProposalTypes.has(proposal.type);

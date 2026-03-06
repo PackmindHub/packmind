@@ -44,8 +44,8 @@ import {
 } from '../../utils/groupSkillProposalsByFile';
 import { isMarkdownPath } from './FileItems/FileContent';
 import { BinaryFilePlaceholder } from '../shared/BinaryFilePlaceholder';
-import { DiffView } from '../shared/DiffView';
-import { SkillFocusedView } from './SkillFocusedView';
+import { FocusedView } from '../shared/FocusedView';
+import { SkillDiffView } from './SkillDiffView';
 import { SkillInlineView } from './SkillInlineView';
 import { SkillOriginalTabContent } from './SkillOriginalTabContent';
 import { SkillResultTabContent } from './SkillResultTabContent';
@@ -229,7 +229,7 @@ export function SkillReviewDetail({
             ? SKILL_MD_MARKDOWN_TYPES.has(proposal.type)
             : isMarkdownPath(filePath);
         return (
-          <DiffView
+          <FocusedView
             oldValue={oldValue}
             newValue={newValue}
             isMarkdownContent={isMarkdownContent}
@@ -238,7 +238,7 @@ export function SkillReviewDetail({
         );
       }
       if (viewMode === 'diff')
-        return <SkillFocusedView proposal={proposal} files={files} />;
+        return <SkillDiffView proposal={proposal} files={files} />;
       if (viewMode === 'inline')
         return <SkillInlineView proposal={proposal} files={files} />;
       return null;

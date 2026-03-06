@@ -27,7 +27,7 @@ import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
 import { computeCommandOutdatedIds } from '../../utils/computeOutdatedProposalIds';
 import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { CommandReviewHeader } from './CommandReviewHeader';
-import { FocusedView } from './FocusedView';
+import { DiffView } from './DiffView';
 import { InlineView } from './InlineView';
 import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
@@ -168,7 +168,7 @@ export function CommandReviewDetail({
       if (!selectedRecipe) return null;
 
       if (viewMode === 'diff')
-        return <FocusedView recipe={selectedRecipe} proposal={proposal} />;
+        return <DiffView recipe={selectedRecipe} proposal={proposal} />;
       if (viewMode === 'inline')
         return <InlineView recipe={selectedRecipe} proposal={proposal} />;
       return null;
