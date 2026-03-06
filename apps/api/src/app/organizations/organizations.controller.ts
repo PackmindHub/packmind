@@ -358,13 +358,27 @@ export class OrganizationsController {
       },
     );
 
-    return await this.deploymentAdapter.getContentByVersions({
-      userId,
-      organizationId,
-      artifacts: body.artifacts,
-      agents,
-      source: request.clientSource,
-    });
+    try {
+      return await this.deploymentAdapter.getContentByVersions({
+        userId,
+        organizationId,
+        artifacts: body.artifacts,
+        agents,
+        source: request.clientSource,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/content-by-versions - Failed to get content by versions',
+        {
+          organizationId,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
   }
 
   /**
