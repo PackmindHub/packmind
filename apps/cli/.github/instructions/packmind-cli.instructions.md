@@ -1,9 +1,0 @@
----
-applyTo: '**'
----
-## Standard: [cli] Good practices
-
-Enforce using consoleLogger utilities instead of native console methods in CLI applications to ensure consistent logging behavior and centralized log management. :
-* Use `consoleLogger` utilities instead of built-in console utilities (console.log/warn/...)
-
-Full standard is available here for further request: [[cli] Good practices](../../.packmind/standards/cli.md)
