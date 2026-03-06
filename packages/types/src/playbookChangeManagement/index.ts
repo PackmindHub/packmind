@@ -11,5 +11,6 @@ export * from './ChangeProposalArtefactIdType';
 export * from './contracts';
 export * from './events';
 export * from './ports';
+export * from './applier';
 export * from './PendingChangeProposal';
 export * from './AcceptedChangeProposal';

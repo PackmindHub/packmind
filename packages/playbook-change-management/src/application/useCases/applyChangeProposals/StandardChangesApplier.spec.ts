@@ -7,14 +7,14 @@ import {
   createSpaceId,
   IStandardsPort,
   ChangeProposal,
+  DiffService,
+  ChangeProposalConflictError,
 } from '@packmind/types';
 import { changeProposalFactory } from '../../../../test';
-import { DiffService } from '../../services/DiffService';
-import { ChangeProposalConflictError } from '../../../domain/errors';
-import { StandardChangeProposalsApplier } from './StandardChangeProposalsApplier';
+import { StandardChangesApplier } from './StandardChangesApplier';
 
-describe('StandardChangeProposalsApplier', () => {
-  let applier: StandardChangeProposalsApplier;
+describe('StandardChangesApplier', () => {
+  let applier: StandardChangesApplier;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let diffService: DiffService;
 
@@ -22,7 +22,7 @@ describe('StandardChangeProposalsApplier', () => {
     diffService = new DiffService();
     standardsPort = {} as unknown as jest.Mocked<IStandardsPort>;
 
-    applier = new StandardChangeProposalsApplier(diffService, standardsPort);
+    applier = new StandardChangesApplier(diffService, standardsPort);
   });
 
   const rule1 = ruleFactory({

@@ -1,23 +1,14 @@
-import {
-  ChangeProposal,
-  ChangeProposalId,
-  ChangeProposalType,
-  OrganizationId,
-  ScalarUpdatePayload,
-  SpaceId,
-  UserId,
-} from '@packmind/types';
-import { DiffService } from '../../services';
-import { ChangeProposalConflictError } from '../../../domain/errors';
-import {
-  IChangesProposalApplier,
-  ObjectByVersion,
-  ObjectVersions,
-} from './IChangesProposalApplier';
+import { ChangeProposal } from '../ChangeProposal';
+import { ChangeProposalId } from '../ChangeProposalId';
+import { ChangeProposalType } from '../ChangeProposalType';
+import { ScalarUpdatePayload } from '../ChangeProposalPayload';
+import { DiffService } from './DiffService';
+import { ChangeProposalConflictError } from './ChangeProposalConflictError';
+import { ApplierObjectVersions } from './types';
 
-export abstract class AbstractChangeProposalsApplier<
-  Version extends ObjectVersions,
-> implements IChangesProposalApplier<Version> {
+export abstract class AbstractChangeProposalApplier<
+  Version extends ApplierObjectVersions,
+> {
   constructor(private readonly diffService: DiffService) {}
 
   applyChangeProposals(
@@ -43,17 +34,6 @@ export abstract class AbstractChangeProposalsApplier<
     }
     return true;
   }
-
-  abstract getVersion(
-    artefactId: ObjectByVersion<Version>['id'],
-  ): Promise<Version>;
-
-  abstract saveNewVersion(
-    version: Version,
-    userId: UserId,
-    spaceId: SpaceId,
-    organizationId: OrganizationId,
-  ): Promise<Version>;
 
   protected abstract applyChangeProposal(
     source: Version,

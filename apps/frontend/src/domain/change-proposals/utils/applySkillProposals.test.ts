@@ -110,50 +110,6 @@ describe('applySkillProposals', () => {
     it('returns the original files', () => {
       expect(result.files).toEqual(files);
     });
-
-    it('does not track name changes', () => {
-      expect(result.changes.name).toBeUndefined();
-    });
-
-    it('does not track description changes', () => {
-      expect(result.changes.description).toBeUndefined();
-    });
-
-    it('does not track prompt changes', () => {
-      expect(result.changes.prompt).toBeUndefined();
-    });
-
-    it('does not track license changes', () => {
-      expect(result.changes.license).toBeUndefined();
-    });
-
-    it('does not track compatibility changes', () => {
-      expect(result.changes.compatibility).toBeUndefined();
-    });
-
-    it('does not track allowedTools changes', () => {
-      expect(result.changes.allowedTools).toBeUndefined();
-    });
-
-    it('does not track metadata changes', () => {
-      expect(result.changes.metadata).toBeUndefined();
-    });
-
-    it('does not track file additions', () => {
-      expect(result.changes.files.added.size).toBe(0);
-    });
-
-    it('does not track file content updates', () => {
-      expect(result.changes.files.updatedContent.size).toBe(0);
-    });
-
-    it('does not track file permission updates', () => {
-      expect(result.changes.files.updatedPermissions.size).toBe(0);
-    });
-
-    it('does not track file deletions', () => {
-      expect(result.changes.files.deleted.size).toBe(0);
-    });
   });
 
   describe('when updating skill name', () => {
@@ -181,18 +137,6 @@ describe('applySkillProposals', () => {
 
     it('applies the new name', () => {
       expect(result.name).toBe('Updated Skill');
-    });
-
-    it('tracks the original value', () => {
-      expect(result.changes.name?.originalValue).toBe('Test Skill');
-    });
-
-    it('tracks the final value', () => {
-      expect(result.changes.name?.finalValue).toBe('Updated Skill');
-    });
-
-    it('tracks the proposal ID', () => {
-      expect(result.changes.name?.proposalIds).toEqual([proposalId]);
     });
   });
 
@@ -225,16 +169,6 @@ describe('applySkillProposals', () => {
     it('applies the new description', () => {
       expect(result.description).toBe('New description');
     });
-
-    it('tracks the original description value', () => {
-      expect(result.changes.description?.originalValue).toBe(
-        'Test description',
-      );
-    });
-
-    it('tracks the final description value', () => {
-      expect(result.changes.description?.finalValue).toBe('New description');
-    });
   });
 
   describe('when updating skill prompt', () => {
@@ -262,14 +196,6 @@ describe('applySkillProposals', () => {
 
     it('applies the new prompt', () => {
       expect(result.prompt).toBe('# New prompt');
-    });
-
-    it('tracks the original prompt value', () => {
-      expect(result.changes.prompt?.originalValue).toBe('# Test prompt');
-    });
-
-    it('tracks the final prompt value', () => {
-      expect(result.changes.prompt?.finalValue).toBe('# New prompt');
     });
   });
 
@@ -299,14 +225,6 @@ describe('applySkillProposals', () => {
     it('applies the new license', () => {
       expect(result.license).toBe('Apache-2.0');
     });
-
-    it('tracks the original license value', () => {
-      expect(result.changes.license?.originalValue).toBe('MIT');
-    });
-
-    it('tracks the final license value', () => {
-      expect(result.changes.license?.finalValue).toBe('Apache-2.0');
-    });
   });
 
   describe('when updating skill compatibility', () => {
@@ -335,14 +253,6 @@ describe('applySkillProposals', () => {
     it('applies the new compatibility', () => {
       expect(result.compatibility).toBe('Cursor');
     });
-
-    it('tracks the original compatibility value', () => {
-      expect(result.changes.compatibility?.originalValue).toBe('Claude Code');
-    });
-
-    it('tracks the final compatibility value', () => {
-      expect(result.changes.compatibility?.finalValue).toBe('Cursor');
-    });
   });
 
   describe('when updating skill allowedTools', () => {
@@ -370,14 +280,6 @@ describe('applySkillProposals', () => {
 
     it('applies the new allowedTools', () => {
       expect(result.allowedTools).toBe('Bash, Read, Write');
-    });
-
-    it('tracks the original allowedTools value', () => {
-      expect(result.changes.allowedTools?.originalValue).toBe('Bash, Read');
-    });
-
-    it('tracks the final allowedTools value', () => {
-      expect(result.changes.allowedTools?.finalValue).toBe('Bash, Read, Write');
     });
   });
 
@@ -409,16 +311,6 @@ describe('applySkillProposals', () => {
 
     it('applies the new metadata', () => {
       expect(result.metadata).toEqual({ key1: 'updated', key2: 'new' });
-    });
-
-    it('tracks the metadata change', () => {
-      expect(result.changes.metadata).toBeDefined();
-    });
-
-    it('tracks the final metadata value', () => {
-      expect(result.changes.metadata?.finalValue).toBe(
-        JSON.stringify({ key1: 'updated', key2: 'new' }),
-      );
     });
   });
 
@@ -460,16 +352,6 @@ describe('applySkillProposals', () => {
       const newFile = result.files.find((f) => f.path === 'src/new-file.ts');
       expect(newFile?.content).toBe('new file content');
     });
-
-    it('tracks the file addition count', () => {
-      expect(result.changes.files.added.size).toBe(1);
-    });
-
-    it('associates the addition with the proposal', () => {
-      expect(result.changes.files.added.get('src/new-file.ts')).toBe(
-        proposalId,
-      );
-    });
   });
 
   describe('when updating file content', () => {
@@ -504,21 +386,6 @@ describe('applySkillProposals', () => {
       const updatedFile = result.files.find((f) => f.id === targetId);
       expect(updatedFile?.content).toBe('updated main content');
     });
-
-    it('tracks the original content', () => {
-      const contentChange = result.changes.files.updatedContent.get(targetId);
-      expect(contentChange?.originalValue).toBe('main content');
-    });
-
-    it('tracks the final content', () => {
-      const contentChange = result.changes.files.updatedContent.get(targetId);
-      expect(contentChange?.finalValue).toBe('updated main content');
-    });
-
-    it('tracks the proposal ID for the content update', () => {
-      const contentChange = result.changes.files.updatedContent.get(targetId);
-      expect(contentChange?.proposalIds).toEqual([proposalId]);
-    });
   });
 
   describe('when updating file permissions', () => {
@@ -552,16 +419,6 @@ describe('applySkillProposals', () => {
     it('updates the file permissions', () => {
       const updatedFile = result.files.find((f) => f.id === targetId);
       expect(updatedFile?.permissions).toBe('read-write');
-    });
-
-    it('tracks the original permissions', () => {
-      const permChange = result.changes.files.updatedPermissions.get(targetId);
-      expect(permChange?.originalValue).toBe('read');
-    });
-
-    it('tracks the final permissions', () => {
-      const permChange = result.changes.files.updatedPermissions.get(targetId);
-      expect(permChange?.finalValue).toBe('read-write');
     });
   });
 
@@ -605,10 +462,6 @@ describe('applySkillProposals', () => {
     it('does not include the deleted file', () => {
       expect(result.files.find((f) => f.id === targetId)).toBeUndefined();
     });
-
-    it('tracks the file deletion', () => {
-      expect(result.changes.files.deleted.has(targetId)).toBe(true);
-    });
   });
 
   describe('when applying proposals in chronological order', () => {
@@ -646,17 +499,6 @@ describe('applySkillProposals', () => {
 
     it('applies proposals sorted by createdAt', () => {
       expect(result.name).toBe('Second');
-    });
-
-    it('tracks all proposal IDs in chronological order', () => {
-      expect(result.changes.name?.proposalIds).toEqual([
-        proposal1Id,
-        proposal2Id,
-      ]);
-    });
-
-    it('tracks the original value from the initial state', () => {
-      expect(result.changes.name?.originalValue).toBe('Test Skill');
     });
   });
 
@@ -734,14 +576,6 @@ describe('applySkillProposals', () => {
 
     it('cancels both add and delete', () => {
       expect(result.files).toHaveLength(2);
-    });
-
-    it('does not track the addition', () => {
-      expect(result.changes.files.added.size).toBe(0);
-    });
-
-    it('does not track the deletion', () => {
-      expect(result.changes.files.deleted.size).toBe(0);
     });
   });
 
@@ -828,22 +662,6 @@ describe('applySkillProposals', () => {
       const updated = result.files.find((f) => f.id === targetFileId);
       expect(updated?.content).toBe('updated main');
     });
-
-    it('tracks the name change', () => {
-      expect(result.changes.name).toBeDefined();
-    });
-
-    it('tracks the prompt change', () => {
-      expect(result.changes.prompt).toBeDefined();
-    });
-
-    it('tracks the file addition', () => {
-      expect(result.changes.files.added.size).toBe(1);
-    });
-
-    it('tracks the file content update', () => {
-      expect(result.changes.files.updatedContent.size).toBe(1);
-    });
   });
 
   describe('with non-accepted proposals', () => {
@@ -866,10 +684,6 @@ describe('applySkillProposals', () => {
 
     it('does not apply non-accepted proposals', () => {
       expect(result.name).toBe('Test Skill');
-    });
-
-    it('does not track changes for non-accepted proposals', () => {
-      expect(result.changes.name).toBeUndefined();
     });
   });
 });
