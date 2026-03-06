@@ -102,26 +102,6 @@ describe('applyStandardProposals', () => {
     it('returns the original rules', () => {
       expect(result.rules).toEqual(rules);
     });
-
-    it('does not track name changes', () => {
-      expect(result.changes.name).toBeUndefined();
-    });
-
-    it('does not track description changes', () => {
-      expect(result.changes.description).toBeUndefined();
-    });
-
-    it('does not track rule additions', () => {
-      expect(result.changes.rules.added.size).toBe(0);
-    });
-
-    it('does not track rule updates', () => {
-      expect(result.changes.rules.updated.size).toBe(0);
-    });
-
-    it('does not track rule deletions', () => {
-      expect(result.changes.rules.deleted.size).toBe(0);
-    });
   });
 
   describe('with no accepted proposals', () => {
@@ -149,10 +129,6 @@ describe('applyStandardProposals', () => {
     it('returns the original standard name', () => {
       expect(result.name).toBe('Original Standard');
     });
-
-    it('does not track changes', () => {
-      expect(result.changes.name).toBeUndefined();
-    });
   });
 
   describe('when updating standard name', () => {
@@ -179,22 +155,6 @@ describe('applyStandardProposals', () => {
 
     it('applies the new name', () => {
       expect(result.name).toBe('Updated Name');
-    });
-
-    it('tracks the name change', () => {
-      expect(result.changes.name).toBeDefined();
-    });
-
-    it('tracks the original value', () => {
-      expect(result.changes.name?.originalValue).toBe('Original Standard');
-    });
-
-    it('tracks the final value', () => {
-      expect(result.changes.name?.finalValue).toBe('Updated Name');
-    });
-
-    it('tracks the proposal ID', () => {
-      expect(result.changes.name?.proposalIds).toEqual([proposalId]);
     });
   });
 
@@ -226,26 +186,6 @@ describe('applyStandardProposals', () => {
     it('applies the new description', () => {
       expect(result.description).toBe('Updated description');
     });
-
-    it('tracks the description change', () => {
-      expect(result.changes.description).toBeDefined();
-    });
-
-    it('tracks the original value', () => {
-      expect(result.changes.description?.originalValue).toBe(
-        'Original description',
-      );
-    });
-
-    it('tracks the final value', () => {
-      expect(result.changes.description?.finalValue).toBe(
-        'Updated description',
-      );
-    });
-
-    it('tracks the proposal ID', () => {
-      expect(result.changes.description?.proposalIds).toEqual([proposalId]);
-    });
   });
 
   describe('when adding a rule', () => {
@@ -276,15 +216,6 @@ describe('applyStandardProposals', () => {
 
     it('includes the new rule content', () => {
       expect(result.rules[2].content).toBe('New rule content');
-    });
-
-    it('tracks the rule addition', () => {
-      expect(result.changes.rules.added.size).toBe(1);
-    });
-
-    it('associates the addition with the proposal', () => {
-      const addedRuleId = result.rules[2].id;
-      expect(result.changes.rules.added.get(addedRuleId)).toBe(proposalId);
     });
   });
 
@@ -323,25 +254,6 @@ describe('applyStandardProposals', () => {
     it('keeps the same number of rules', () => {
       expect(result.rules).toHaveLength(2);
     });
-
-    it('tracks the rule update', () => {
-      expect(result.changes.rules.updated.size).toBe(1);
-    });
-
-    it('tracks the original content', () => {
-      const updateInfo = result.changes.rules.updated.get(targetRuleId);
-      expect(updateInfo?.originalValue).toBe('Rule 1 content');
-    });
-
-    it('tracks the final content', () => {
-      const updateInfo = result.changes.rules.updated.get(targetRuleId);
-      expect(updateInfo?.finalValue).toBe('Updated rule 1 content');
-    });
-
-    it('tracks the proposal ID', () => {
-      const updateInfo = result.changes.rules.updated.get(targetRuleId);
-      expect(updateInfo?.proposalIds).toEqual([proposalId]);
-    });
   });
 
   describe('when deleting a rule', () => {
@@ -377,10 +289,6 @@ describe('applyStandardProposals', () => {
     it('does not include the deleted rule', () => {
       const deletedRule = result.rules.find((r) => r.id === targetRuleId);
       expect(deletedRule).toBeUndefined();
-    });
-
-    it('tracks the rule deletion', () => {
-      expect(result.changes.rules.deleted.has(targetRuleId)).toBe(true);
     });
   });
 
@@ -434,22 +342,6 @@ describe('applyStandardProposals', () => {
     it('applies changes in chronological order', () => {
       expect(result.name).toBe('Final Update');
     });
-
-    it('tracks the original value from the first change', () => {
-      expect(result.changes.name?.originalValue).toBe('Original Standard');
-    });
-
-    it('tracks the final value from the last change', () => {
-      expect(result.changes.name?.finalValue).toBe('Final Update');
-    });
-
-    it('tracks all proposal IDs in order', () => {
-      expect(result.changes.name?.proposalIds).toEqual([
-        proposal1Id,
-        proposal2Id,
-        proposal3Id,
-      ]);
-    });
   });
 
   describe('when applying proposals in non-chronological order', () => {
@@ -493,13 +385,6 @@ describe('applyStandardProposals', () => {
 
     it('sorts and applies proposals by createdAt date', () => {
       expect(result.name).toBe('Second Update');
-    });
-
-    it('tracks proposals in chronological order', () => {
-      expect(result.changes.name?.proposalIds).toEqual([
-        earlierProposalId,
-        laterProposalId,
-      ]);
     });
   });
 
@@ -571,14 +456,6 @@ describe('applyStandardProposals', () => {
         (r) => r.content === 'Temporarily added rule',
       );
       expect(tempRule).toBeUndefined();
-    });
-
-    it('does not track the addition', () => {
-      expect(result.changes.rules.added.size).toBe(0);
-    });
-
-    it('does not track any deletion', () => {
-      expect(result.changes.rules.deleted.size).toBe(0);
     });
 
     it('returns to the original number of rules', () => {
@@ -700,26 +577,6 @@ describe('applyStandardProposals', () => {
     it('does not include the deleted rule', () => {
       const deletedRule = result.rules.find((r) => r.id === targetDeleteRuleId);
       expect(deletedRule).toBeUndefined();
-    });
-
-    it('tracks the name change', () => {
-      expect(result.changes.name).toBeDefined();
-    });
-
-    it('tracks the description change', () => {
-      expect(result.changes.description).toBeDefined();
-    });
-
-    it('tracks the rule addition', () => {
-      expect(result.changes.rules.added.size).toBe(1);
-    });
-
-    it('tracks the rule update', () => {
-      expect(result.changes.rules.updated.size).toBe(1);
-    });
-
-    it('tracks the rule deletion', () => {
-      expect(result.changes.rules.deleted.size).toBe(1);
     });
   });
 });

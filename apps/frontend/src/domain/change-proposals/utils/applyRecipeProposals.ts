@@ -14,6 +14,7 @@ import {
 } from './changeProposalHelpers';
 
 export interface RecipeChangeTracker {
+  [key: string]: FieldChange | undefined;
   name?: FieldChange;
   content?: FieldChange;
 }
