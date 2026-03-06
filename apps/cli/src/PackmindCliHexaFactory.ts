@@ -107,6 +107,7 @@ export class PackmindCliHexaFactory {
       ),
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,
+        this.repositories.lockFileRepository,
       ),
       installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
       listPackages: new ListPackagesUseCase(this.repositories.packmindGateway),
