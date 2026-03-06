@@ -197,6 +197,35 @@ describe('parseSkillDirectory', () => {
     });
   });
 
+  describe('when SKILL.md has metadata', () => {
+    it('includes metadata in the payload', () => {
+      const content = [
+        '---',
+        'name: Skill With Meta',
+        'description: Has metadata',
+        'metadata:',
+        '  category: testing',
+        '  version: "1.0"',
+        '---',
+        'The prompt.',
+      ].join('\n');
+
+      const result = parseSkillDirectory([buildSkillMdFile(content)]);
+
+      expect(result).toEqual({
+        success: true,
+        payload: {
+          name: 'Skill With Meta',
+          description: 'Has metadata',
+          prompt: 'The prompt.',
+          skillMdPermissions: 'rw-r--r--',
+          metadata: { category: 'testing', version: '1.0' },
+          files: [],
+        },
+      });
+    });
+  });
+
   describe('when there are supporting files', () => {
     it('maps them to the files array', () => {
       const result = parseSkillDirectory([
