@@ -296,11 +296,13 @@ describe('GetDeployedContentUseCase', () => {
             path: '.packmind/standards/test-standard.md',
             artifactId: standardId as string,
             spaceId: spaceId as string,
+            artifactVersion: standardVersion.version,
           }),
           expect.objectContaining({
             path: '.packmind/commands/test-recipe.md',
             artifactId: recipeId as string,
             spaceId: spaceId as string,
+            artifactVersion: recipeVersion.version,
           }),
         ]),
       );
