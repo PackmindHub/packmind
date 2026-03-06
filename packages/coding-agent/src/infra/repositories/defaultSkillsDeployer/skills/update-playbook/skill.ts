@@ -1,7 +1,7 @@
 export function getSkillMd(): string {
   return `---
 name: packmind-update-playbook
-description: Use when evaluating and updating the Packmind playbook (standards, commands, skills) after a coding session. Triggers on "update the playbook", "sync standards", "check if we need new standards", or after sessions where patterns emerged.
+description: Use when evaluating and updating the Packmind playbook (standards, commands, skills) after a coding session. Analyzes conversation context to identify new patterns, propose additions or updates to standards, deprecate outdated rules, and update skills to reflect emerging best practices. Triggers on "update the playbook", "sync standards", "check if we need new standards", or after sessions where patterns emerged.
 ---
 
 # Update Playbook
