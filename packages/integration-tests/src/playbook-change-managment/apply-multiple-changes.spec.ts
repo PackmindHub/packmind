@@ -1,5 +1,6 @@
 import {
   ChangeProposal,
+  ChangeProposalDecision,
   ChangeProposalStatus,
   ChangeProposalType,
   Recipe,
@@ -127,7 +128,11 @@ describe(
             .applyChangeProposals({
               ...testContext.basePackmindCommand,
               artefactId: command.id,
-              accepted: changeProposals.map((cp) => cp.id),
+              accepted: changeProposals.map((cp) => ({
+                ...cp,
+                status: ChangeProposalStatus.applied,
+                decision: cp.payload as ChangeProposalDecision,
+              })),
               rejected: [],
             });
         });
@@ -219,7 +224,11 @@ describe(
               .applyChangeProposals({
                 ...testContext.basePackmindCommand,
                 artefactId: command.id,
-                accepted: changeProposals.map((cp) => cp.id),
+                accepted: changeProposals.map((cp) => ({
+                  ...cp,
+                  status: ChangeProposalStatus.applied,
+                  decision: cp.payload as ChangeProposalDecision,
+                })),
                 rejected: [],
               });
           } catch (error) {

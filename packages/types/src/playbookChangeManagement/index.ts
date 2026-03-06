@@ -12,3 +12,4 @@ export * from './contracts';
 export * from './events';
 export * from './ports';
 export * from './PendingChangeProposal';
+export * from './AcceptedChangeProposal';

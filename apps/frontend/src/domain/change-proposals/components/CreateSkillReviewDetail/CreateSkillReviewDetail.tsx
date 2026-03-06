@@ -11,7 +11,10 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { SkillCreationProposalOverview } from '@packmind/types';
+import {
+  ChangeProposalId,
+  SkillCreationProposalOverview,
+} from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { useUserLookup } from '../../hooks/useUserLookup';
@@ -25,7 +28,7 @@ import {
 import { FileContent } from '../SkillReviewDetail/FileItems/FileContent';
 
 interface CreateSkillReviewDetailProps {
-  proposalId: string;
+  proposalId: ChangeProposalId;
   orgSlug?: string;
   spaceSlug?: string;
 }
@@ -117,7 +120,7 @@ export function CreateSkillReviewDetail({
         artefactName={displayedProposal.payload.name}
         latestAuthor={authorName}
         latestTime={new Date(displayedProposal.lastContributedAt)}
-        onAccept={handleAccept}
+        onAccept={() => handleAccept(displayedProposal.payload)}
         onDismiss={handleReject}
         isPending={isPending}
         isSubmitted={!!submittedState}

@@ -1,5 +1,8 @@
 import { PMBox, PMHeading, PMMarkdownViewer, PMVStack } from '@packmind/ui';
-import { CommandCreationProposalOverview } from '@packmind/types';
+import {
+  ChangeProposalId,
+  CommandCreationProposalOverview,
+} from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { useUserLookup } from '../../hooks/useUserLookup';
@@ -13,7 +16,7 @@ import {
 } from '../ProposalDetailPlaceholder';
 
 interface CreateCommandReviewDetailProps {
-  proposalId: string;
+  proposalId: ChangeProposalId;
   orgSlug?: string;
   spaceSlug?: string;
 }
@@ -63,7 +66,7 @@ export function CreateCommandReviewDetail({
         artefactName={displayedProposal.name}
         latestAuthor={authorName}
         latestTime={new Date(displayedProposal.lastContributedAt)}
-        onAccept={handleAccept}
+        onAccept={() => handleAccept(displayedProposal.payload)}
         onDismiss={handleReject}
         isPending={isPending}
         isSubmitted={!!submittedState}

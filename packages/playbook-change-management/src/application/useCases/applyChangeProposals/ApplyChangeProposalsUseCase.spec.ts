@@ -1,6 +1,9 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  AcceptedChangeProposal,
+  ChangeProposal,
+  ChangeProposalDecision,
   createChangeProposalId,
   createOrganizationId,
   createRecipeId,
@@ -50,6 +53,17 @@ describe('ApplyChangeProposalsUseCase', () => {
   const organization = organizationFactory({ id: organizationId });
   const space = spaceFactory({ id: spaceId, organizationId });
   const recipe = recipeFactory({ id: recipeId, spaceId });
+
+  function toAcceptedProposal<T extends ChangeProposalType>(
+    baseProposal: ChangeProposal<T>,
+    decision?: ChangeProposalDecision<T>,
+  ): AcceptedChangeProposal<T> {
+    return {
+      ...baseProposal,
+      status: ChangeProposalStatus.applied,
+      decision: decision ?? (baseProposal.payload as ChangeProposalDecision<T>),
+    } as AcceptedChangeProposal<T>;
+  }
 
   let useCase: ApplyChangeProposalsUseCase<StandardId | RecipeId | SkillId>;
   let accountsPort: jest.Mocked<IAccountsPort>;
@@ -173,7 +187,10 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: recipeId,
-        accepted: [changeProposal1.id, changeProposal2.id],
+        accepted: [
+          toAcceptedProposal(changeProposal1),
+          toAcceptedProposal(changeProposal2),
+        ],
         rejected: [],
       });
 
@@ -186,7 +203,10 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: recipeId,
-        accepted: [changeProposal1.id, changeProposal2.id],
+        accepted: [
+          toAcceptedProposal(changeProposal1),
+          toAcceptedProposal(changeProposal2),
+        ],
         rejected: [],
       });
 
@@ -199,7 +219,10 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: recipeId,
-        accepted: [changeProposal1.id, changeProposal2.id],
+        accepted: [
+          toAcceptedProposal(changeProposal1),
+          toAcceptedProposal(changeProposal2),
+        ],
         rejected: [],
       });
 
@@ -209,12 +232,15 @@ describe('ApplyChangeProposalsUseCase', () => {
     });
 
     it('calls batchUpdateProposalsInTransaction with accepted proposals', async () => {
+      const acceptedProposal1 = toAcceptedProposal(changeProposal1);
+      const acceptedProposal2 = toAcceptedProposal(changeProposal2);
+
       await useCase.execute({
         userId,
         organizationId,
         spaceId,
         artefactId: recipeId,
-        accepted: [changeProposal1.id, changeProposal2.id],
+        accepted: [acceptedProposal1, acceptedProposal2],
         rejected: [],
       });
 
@@ -222,8 +248,8 @@ describe('ApplyChangeProposalsUseCase', () => {
         changeProposalService.batchUpdateProposalsInTransaction,
       ).toHaveBeenCalledWith({
         acceptedProposals: [
-          { proposal: changeProposal1, userId },
-          { proposal: changeProposal2, userId },
+          { proposal: acceptedProposal1, userId },
+          { proposal: acceptedProposal2, userId },
         ],
         rejectedProposals: [],
       });
@@ -235,7 +261,10 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: recipeId,
-        accepted: [changeProposal1.id, changeProposal2.id],
+        accepted: [
+          toAcceptedProposal(changeProposal1),
+          toAcceptedProposal(changeProposal2),
+        ],
         rejected: [],
       });
 
@@ -248,7 +277,10 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: recipeId,
-        accepted: [changeProposal1.id, changeProposal2.id],
+        accepted: [
+          toAcceptedProposal(changeProposal1),
+          toAcceptedProposal(changeProposal2),
+        ],
         rejected: [],
       });
 
@@ -446,7 +478,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: standardId,
-        accepted: [changeProposal.id],
+        accepted: [toAcceptedProposal(changeProposal)],
         rejected: [],
       });
 
@@ -459,7 +491,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: standardId,
-        accepted: [changeProposal.id],
+        accepted: [toAcceptedProposal(changeProposal)],
         rejected: [],
       });
 
@@ -472,7 +504,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: standardId,
-        accepted: [changeProposal.id],
+        accepted: [toAcceptedProposal(changeProposal)],
         rejected: [],
       });
 
@@ -516,7 +548,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         spaceId,
         artefactId: skillId,
-        accepted: [changeProposal.id],
+        accepted: [toAcceptedProposal(changeProposal)],
         rejected: [],
       });
       expect(skillsPort.saveSkillVersion).toHaveBeenCalledWith({
@@ -534,6 +566,14 @@ describe('ApplyChangeProposalsUseCase', () => {
 
   describe('when change proposal is not found', () => {
     const changeProposalId = createChangeProposalId('cp-not-found');
+    const changeProposal = changeProposalFactory({
+      id: changeProposalId,
+      type: ChangeProposalType.updateCommandName,
+      artefactId: recipeId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: { oldValue: 'Test', newValue: 'Updated' },
+    });
 
     beforeEach(() => {
       changeProposalService.findById.mockResolvedValue(null);
@@ -546,7 +586,7 @@ describe('ApplyChangeProposalsUseCase', () => {
           organizationId,
           spaceId,
           artefactId: recipeId,
-          accepted: [changeProposalId],
+          accepted: [toAcceptedProposal(changeProposal)],
           rejected: [],
         }),
       ).rejects.toThrow(`Change proposal ${changeProposalId} not found`);
@@ -574,7 +614,7 @@ describe('ApplyChangeProposalsUseCase', () => {
           organizationId,
           spaceId,
           artefactId: recipeId,
-          accepted: [changeProposal.id],
+          accepted: [toAcceptedProposal(changeProposal)],
           rejected: [],
         }),
       ).rejects.toThrow(
@@ -603,7 +643,7 @@ describe('ApplyChangeProposalsUseCase', () => {
           organizationId,
           spaceId,
           artefactId: recipeId,
-          accepted: [changeProposal.id],
+          accepted: [toAcceptedProposal(changeProposal)],
           rejected: [],
         }),
       ).rejects.toThrow(
@@ -693,7 +733,10 @@ describe('ApplyChangeProposalsUseCase', () => {
             organizationId,
             spaceId,
             artefactId: recipeId,
-            accepted: [changeProposal1.id, changeProposal2.id],
+            accepted: [
+              toAcceptedProposal(changeProposal1),
+              toAcceptedProposal(changeProposal2),
+            ],
             rejected: [],
           }),
         ).rejects.toThrow();
@@ -706,7 +749,10 @@ describe('ApplyChangeProposalsUseCase', () => {
             organizationId,
             spaceId,
             artefactId: recipeId,
-            accepted: [changeProposal1.id, changeProposal2.id],
+            accepted: [
+              toAcceptedProposal(changeProposal1),
+              toAcceptedProposal(changeProposal2),
+            ],
             rejected: [],
           })
           .catch(() => {
@@ -723,7 +769,10 @@ describe('ApplyChangeProposalsUseCase', () => {
             organizationId,
             spaceId,
             artefactId: recipeId,
-            accepted: [changeProposal1.id, changeProposal2.id],
+            accepted: [
+              toAcceptedProposal(changeProposal1),
+              toAcceptedProposal(changeProposal2),
+            ],
             rejected: [],
           })
           .catch(() => {

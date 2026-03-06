@@ -1,6 +1,8 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ChangeProposal,
+  ChangeProposalDecision,
   ChangeProposalStatus,
   ChangeProposalType,
   createChangeProposalId,
@@ -55,14 +57,26 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
     name: 'My Command',
     content: 'Do something',
   };
-  const proposal = changeProposalFactory({
-    id: proposalId,
-    type: ChangeProposalType.createCommand,
-    artefactId: null,
-    payload,
-    status: ChangeProposalStatus.pending,
-    spaceId,
-  });
+  const proposal: ChangeProposal<ChangeProposalType.createCommand> =
+    changeProposalFactory({
+      id: proposalId,
+      type: ChangeProposalType.createCommand,
+      artefactId: null,
+      payload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    }) as ChangeProposal<ChangeProposalType.createCommand>;
+
+  function toAcceptedProposal<T extends ChangeProposalType>(
+    baseProposal: ChangeProposal<T>,
+    decision?: ChangeProposalDecision<T>,
+  ): AcceptedChangeProposal<T> {
+    return {
+      ...baseProposal,
+      status: ChangeProposalStatus.applied,
+      decision: decision ?? (baseProposal.payload as ChangeProposalDecision<T>),
+    } as AcceptedChangeProposal<T>;
+  }
 
   let useCase: ApplyCreationChangeProposalsUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
@@ -126,7 +140,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId],
+        accepted: [toAcceptedProposal(proposal)],
         rejected: [],
       });
 
@@ -144,7 +158,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId],
+        accepted: [toAcceptedProposal(proposal)],
         rejected: [],
       });
 
@@ -160,7 +174,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId],
+        accepted: [toAcceptedProposal(proposal)],
         rejected: [],
       });
 
@@ -168,18 +182,19 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
     });
 
     it('calls batchUpdateProposalsInTransaction with accepted proposals', async () => {
+      const acceptedProposal = toAcceptedProposal(proposal);
       await useCase.execute({
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId],
+        accepted: [acceptedProposal],
         rejected: [],
       });
 
       expect(
         changeProposalService.batchUpdateProposalsInTransaction,
       ).toHaveBeenCalledWith({
-        acceptedProposals: [{ proposal, userId }],
+        acceptedProposals: [{ proposal: acceptedProposal, userId }],
         rejectedProposals: [],
       });
     });
@@ -189,7 +204,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId],
+        accepted: [toAcceptedProposal(proposal)],
         rejected: [],
       });
 
@@ -291,6 +306,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       changeProposalService.findById.mockResolvedValue({
         ...proposal,
         status: ChangeProposalStatus.applied,
+        decision: proposal.payload,
       });
 
       await expect(
@@ -298,7 +314,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalId],
+          accepted: [toAcceptedProposal(proposal)],
           rejected: [],
         }),
       ).rejects.toThrow(
@@ -319,7 +335,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalId],
+          accepted: [toAcceptedProposal(proposal)],
           rejected: [],
         }),
       ).rejects.toThrow(
@@ -337,10 +353,55 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalId],
+          accepted: [toAcceptedProposal(proposal)],
           rejected: [],
         }),
       ).rejects.toThrow(`Change proposal ${proposalId} not found`);
+    });
+  });
+
+  describe('when accepted proposal type does not match database', () => {
+    it('throws an error', async () => {
+      const acceptedProposal = toAcceptedProposal({
+        ...proposal,
+        type: ChangeProposalType.createStandard,
+        decision: proposal.payload,
+      } as unknown as ChangeProposal<ChangeProposalType.createStandard>);
+
+      changeProposalService.findById.mockResolvedValue(proposal);
+
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [acceptedProposal],
+          rejected: [],
+        }),
+      ).rejects.toThrow(
+        `Change proposal ${proposalId} type mismatch: expected createCommand, got createStandard`,
+      );
+    });
+  });
+
+  describe('when accepted proposal payload does not match database', () => {
+    it('throws an error', async () => {
+      const acceptedProposal = toAcceptedProposal({
+        ...proposal,
+        payload: { name: 'Different Name', content: 'Different content' },
+      });
+
+      changeProposalService.findById.mockResolvedValue(proposal);
+
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [acceptedProposal],
+          rejected: [],
+        }),
+      ).rejects.toThrow(`Change proposal ${proposalId} payload mismatch`);
     });
   });
 
@@ -356,7 +417,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalId],
+          accepted: [toAcceptedProposal(proposal)],
           rejected: [],
         }),
       ).rejects.toThrow();
@@ -435,7 +496,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId, proposalId2],
+        accepted: [toAcceptedProposal(proposal), toAcceptedProposal(proposal2)],
         rejected: [],
       });
 
@@ -466,7 +527,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId, proposalId2],
+        accepted: [toAcceptedProposal(proposal), toAcceptedProposal(proposal2)],
         rejected: [],
       });
 
@@ -495,7 +556,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId],
+        accepted: [toAcceptedProposal(proposal)],
         rejected: [proposalId2],
       });
 
@@ -522,7 +583,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId],
+        accepted: [toAcceptedProposal(proposal)],
         rejected: [proposalId2],
       });
 
@@ -543,7 +604,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalId],
+          accepted: [toAcceptedProposal(proposal)],
           rejected: [],
         }),
       ).rejects.toThrow('Recipe creation failed');
@@ -555,7 +616,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalId],
+          accepted: [toAcceptedProposal(proposal)],
           rejected: [],
         })
         .catch(() => undefined);
@@ -581,7 +642,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       payload: standardPayload,
       status: ChangeProposalStatus.pending,
       spaceId,
-    });
+    }) as ChangeProposal<ChangeProposalType.createStandard>;
     const standard = standardFactory({ id: standardId, spaceId });
 
     beforeEach(() => {
@@ -591,13 +652,15 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
 
     describe('when accepted', () => {
       let result: Awaited<ReturnType<typeof useCase.execute>>;
+      let acceptedStandardProposal: AcceptedChangeProposal<ChangeProposalType.createStandard>;
 
       beforeEach(async () => {
+        acceptedStandardProposal = toAcceptedProposal(standardProposal);
         result = await useCase.execute({
           userId,
           organizationId,
           spaceId,
-          accepted: [standardProposal.id],
+          accepted: [acceptedStandardProposal],
           rejected: [],
         });
       });
@@ -631,7 +694,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         expect(
           changeProposalService.batchUpdateProposalsInTransaction,
         ).toHaveBeenCalledWith({
-          acceptedProposals: [{ proposal: standardProposal, userId }],
+          acceptedProposals: [{ proposal: acceptedStandardProposal, userId }],
           rejectedProposals: [],
         });
       });
@@ -672,7 +735,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalWithArrayScope.id],
+          accepted: [toAcceptedProposal(proposalWithArrayScope)],
           rejected: [],
         });
 
@@ -704,7 +767,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalWithNullScope.id],
+          accepted: [toAcceptedProposal(proposalWithNullScope)],
           rejected: [],
         });
 
@@ -826,7 +889,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId, standardProposal.id],
+        accepted: [
+          toAcceptedProposal(proposal),
+          toAcceptedProposal(standardProposal),
+        ],
         rejected: [],
       });
 
@@ -842,7 +908,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId, standardProposal.id],
+        accepted: [
+          toAcceptedProposal(proposal),
+          toAcceptedProposal(standardProposal),
+        ],
         rejected: [],
       });
 
@@ -854,7 +923,10 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [proposalId, standardProposal.id],
+        accepted: [
+          toAcceptedProposal(proposal),
+          toAcceptedProposal(standardProposal),
+        ],
         rejected: [],
       });
 
@@ -891,7 +963,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [standardProposal.id],
+          accepted: [toAcceptedProposal(standardProposal)],
           rejected: [],
         }),
       ).rejects.toThrow('Standard creation failed');
@@ -903,7 +975,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [standardProposal.id],
+          accepted: [toAcceptedProposal(standardProposal)],
           rejected: [],
         })
         .catch(() => undefined);
@@ -947,7 +1019,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [skillProposal.id],
+        accepted: [toAcceptedProposal(skillProposal)],
         rejected: [],
       });
 
@@ -974,7 +1046,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [skillProposal.id],
+          accepted: [toAcceptedProposal(skillProposal)],
           rejected: [],
         });
 
@@ -1010,7 +1082,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [skillProposal.id],
+        accepted: [toAcceptedProposal(skillProposal)],
         rejected: [],
       });
 
@@ -1026,7 +1098,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [skillProposal.id],
+        accepted: [toAcceptedProposal(skillProposal)],
         rejected: [],
       });
 
@@ -1034,18 +1106,19 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
     });
 
     it('calls batchUpdateProposalsInTransaction with accepted proposals', async () => {
+      const acceptedSkillProposal = toAcceptedProposal(skillProposal);
       await useCase.execute({
         userId,
         organizationId,
         spaceId,
-        accepted: [skillProposal.id],
+        accepted: [acceptedSkillProposal],
         rejected: [],
       });
 
       expect(
         changeProposalService.batchUpdateProposalsInTransaction,
       ).toHaveBeenCalledWith({
-        acceptedProposals: [{ proposal: skillProposal, userId }],
+        acceptedProposals: [{ proposal: acceptedSkillProposal, userId }],
         rejectedProposals: [],
       });
     });
@@ -1055,7 +1128,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
         userId,
         organizationId,
         spaceId,
-        accepted: [skillProposal.id],
+        accepted: [toAcceptedProposal(skillProposal)],
         rejected: [],
       });
 
@@ -1098,7 +1171,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [proposalWithFiles.id],
+          accepted: [toAcceptedProposal(proposalWithFiles)],
           rejected: [],
         });
 
@@ -1242,7 +1315,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [skillProposal.id],
+          accepted: [toAcceptedProposal(skillProposal)],
           rejected: [],
         }),
       ).rejects.toThrow('Skill upload failed');
@@ -1254,7 +1327,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
           userId,
           organizationId,
           spaceId,
-          accepted: [skillProposal.id],
+          accepted: [toAcceptedProposal(skillProposal)],
           rejected: [],
         })
         .catch(() => undefined);

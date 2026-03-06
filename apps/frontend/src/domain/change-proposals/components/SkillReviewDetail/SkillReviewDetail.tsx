@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
+  AcceptedChangeProposal,
   ChangeProposalId,
+  ChangeProposalStatus,
   OrganizationId,
   SkillId,
   SpaceId,
@@ -51,6 +53,7 @@ import { SkillOriginalTabContent } from './SkillOriginalTabContent';
 import { SkillResultTabContent } from './SkillResultTabContent';
 import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
 import { SKILL_MD_MARKDOWN_TYPES } from '../../constants/skillProposalTypes';
+import { getDecision } from '../../utils/GetDecision';
 
 interface SkillReviewDetailProps {
   artefactId: string;
@@ -175,12 +178,23 @@ export function SkillReviewDetail({
     if (!organizationId || !spaceId) return;
     if (!pool.hasPooledDecisions) return;
 
+    const accepted = selectedSkillProposals.reduce((acc, changeProposal) => {
+      if (pool.acceptedProposalIds.has(changeProposal.id)) {
+        acc.push({
+          ...changeProposal,
+          status: ChangeProposalStatus.applied,
+          decision: getDecision(changeProposal),
+        });
+      }
+      return acc;
+    }, [] as AcceptedChangeProposal[]);
+
     try {
       await applySkillChangeProposalsMutation.mutateAsync({
         organizationId: organizationId as OrganizationId,
         spaceId: spaceId as SpaceId,
         artefactId: skillId,
-        accepted: Array.from(pool.acceptedProposalIds),
+        accepted,
         rejected: Array.from(pool.rejectedProposalIds),
       });
 
