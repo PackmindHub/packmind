@@ -55,7 +55,7 @@ export function CreateStandardReviewDetail({
   const sortedRules = useMemo(
     () =>
       displayedProposal
-        ? [...displayedProposal.rules].sort((a, b) =>
+        ? [...displayedProposal.payload.rules].sort((a, b) =>
             a.content.toLowerCase().localeCompare(b.content.toLowerCase()),
           )
         : [],
@@ -101,17 +101,17 @@ export function CreateStandardReviewDetail({
           />
         )}
         <PMHeading size="md" mb={4}>
-          {displayedProposal.name}
+          {displayedProposal.payload.name}
         </PMHeading>
-        <PMMarkdownViewer content={displayedProposal.description} />
+        <PMMarkdownViewer content={displayedProposal.payload.description} />
 
-        {displayedProposal.scope && (
+        {displayedProposal.payload.scope && (
           <PMBox mt={4}>
             <PMText as="p" fontSize="sm" fontWeight="semibold" mb={1}>
               Scope
             </PMText>
             <PMText fontSize="sm" color="faded">
-              {displayedProposal.scope}
+              {displayedProposal.payload.scope}
             </PMText>
           </PMBox>
         )}
