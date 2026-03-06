@@ -7,6 +7,7 @@ import {
 import {
   buildCurlInstallCommand,
   NPM_INSTALL_COMMAND,
+  HOMEBREW_INSTALL_COMMAND,
   buildCliLoginCommand,
 } from './LocalEnvironmentSetup/utils';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
@@ -57,6 +58,23 @@ export function OnboardingBuildCliSection() {
                   ),
                 },
                 {
+                  value: 'homebrew',
+                  triggerLabel: 'Homebrew (Mac/Linux)',
+                  content: (
+                    <CopiableTextarea
+                      value={HOMEBREW_INSTALL_COMMAND}
+                      readOnly
+                      rows={2}
+                      data-testid="OnboardingBuild.InstallHomebrewContent"
+                      onCopy={() =>
+                        analytics.track('post_signup_onboarding_field_copied', {
+                          field: 'installHomebrew',
+                        })
+                      }
+                    />
+                  ),
+                },
+                {
                   value: 'npm',
                   triggerLabel: 'NPM (all OS)',
                   content: (
@@ -65,9 +83,6 @@ export function OnboardingBuildCliSection() {
                       align="stretch"
                       data-testid="OnboardingBuild.InstallNPMContent"
                     >
-                      <PMText color="secondary" fontSize="xs" marginTop={4}>
-                        Requires Node.js v22 or higher
-                      </PMText>
                       <CopiableTextField
                         value={NPM_INSTALL_COMMAND}
                         readOnly
@@ -80,6 +95,9 @@ export function OnboardingBuildCliSection() {
                           )
                         }
                       />
+                      <PMText color="secondary" fontSize="xs">
+                        Requires Node.js v22 or higher
+                      </PMText>
                       <CopiableTextField value={loginCommand} readOnly />
                     </PMVStack>
                   ),

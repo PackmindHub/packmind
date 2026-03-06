@@ -31,6 +31,8 @@ import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/pr
 const CLI_INSTALL_SCRIPT_URL =
   'https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh';
 const NPM_INSTALL_COMMAND = 'npm install -g @packmind/cli';
+const HOMEBREW_INSTALL_COMMAND = `brew tap PackmindHub/cli
+brew install packmind-cli`;
 const DEFAULT_HOST = 'https://app.packmind.ai';
 
 const getCurrentHost = (): string => {
@@ -72,7 +74,7 @@ const detectOS = (): 'macos-linux' | 'windows' => {
 
 interface InstallSectionProps {
   title: string;
-  description: string;
+  description?: string;
   variant: 'primary' | 'secondary';
   children: React.ReactNode;
 }
@@ -87,6 +89,7 @@ const InstallSection: React.FC<InstallSectionProps> = ({
     align="flex-start"
     gap={4}
     width="full"
+    height="full"
     border="solid 1px"
     borderColor={variant === 'primary' ? 'blue.700' : 'border.tertiary'}
     padding={4}
@@ -94,9 +97,11 @@ const InstallSection: React.FC<InstallSectionProps> = ({
   >
     <PMVStack align="flex-start" gap={1}>
       <PMHeading level="h6">{title}</PMHeading>
-      <PMText as="p" color="tertiary" variant="small">
-        {description}
-      </PMText>
+      {description && (
+        <PMText as="p" color="tertiary" variant="small">
+          {description}
+        </PMText>
+      )}
     </PMVStack>
     {children}
   </PMVStack>
@@ -295,34 +300,48 @@ export const SkillsLearnMoreContent: React.FC = () => {
                     </PMBox>
                   </InstallSection>
 
-                  <InstallSection
-                    title="Alternative"
-                    description="Install via npm (most reliable across environments)."
-                    variant="secondary"
-                  >
-                    <PMAlert.Root status="info">
-                      <PMAlert.Indicator />
-                      <PMAlert.Content>
-                        <PMAlert.Description>
-                          Requires Node.js 22 or higher.
-                        </PMAlert.Description>
-                      </PMAlert.Content>
-                    </PMAlert.Root>
-                    <PMBox width="1/2">
-                      <CopiableTextField
-                        value={NPM_INSTALL_COMMAND}
-                        readOnly
-                        label="Terminal (NPM)"
-                      />
+                  <PMHStack gap={4} width="full" alignItems="stretch">
+                    <PMBox flex={1}>
+                      <InstallSection
+                        title="Alternative: Homebrew"
+                        variant="secondary"
+                      >
+                        <CopiableTextarea
+                          value={HOMEBREW_INSTALL_COMMAND}
+                          readOnly
+                          rows={2}
+                        />
+                      </InstallSection>
                     </PMBox>
-                  </InstallSection>
+                    <PMBox flex={1}>
+                      <InstallSection
+                        title="Alternative: NPM"
+                        variant="secondary"
+                      >
+                        <CopiableTextarea
+                          value={NPM_INSTALL_COMMAND}
+                          readOnly
+                          rows={1}
+                        />
+                        <PMAlert.Root status="info">
+                          <PMAlert.Indicator />
+                          <PMAlert.Content>
+                            <PMAlert.Description>
+                              Requires Node.js 22 or higher.
+                            </PMAlert.Description>
+                          </PMAlert.Content>
+                        </PMAlert.Root>
+                      </InstallSection>
+                    </PMBox>
+                  </PMHStack>
                 </>
               ) : (
-                <InstallSection
-                  title="Recommended"
-                  description="Install via npm (most reliable across environments)."
-                  variant="primary"
-                >
+                <InstallSection title="Recommended: NPM" variant="primary">
+                  <CopiableTextarea
+                    value={NPM_INSTALL_COMMAND}
+                    readOnly
+                    rows={1}
+                  />
                   <PMAlert.Root status="info">
                     <PMAlert.Indicator />
                     <PMAlert.Content>
@@ -331,13 +350,6 @@ export const SkillsLearnMoreContent: React.FC = () => {
                       </PMAlert.Description>
                     </PMAlert.Content>
                   </PMAlert.Root>
-                  <PMBox width="1/2">
-                    <CopiableTextField
-                      value={NPM_INSTALL_COMMAND}
-                      readOnly
-                      label="Terminal (NPM)"
-                    />
-                  </PMBox>
                 </InstallSection>
               )}
 

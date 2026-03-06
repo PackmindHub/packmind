@@ -9,6 +9,8 @@ const DEFAULT_HOST = 'https://app.packmind.ai';
 export const CLI_INSTALL_SCRIPT_URL =
   'https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh';
 export const NPM_INSTALL_COMMAND = 'npm install -g @packmind/cli';
+export const HOMEBREW_INSTALL_COMMAND = `brew tap PackmindHub/cli
+brew install packmind-cli`;
 // ⚠️ END CRITICAL SECTION ⚠️
 
 export const detectUserOs = (): OsType => {
@@ -26,6 +28,9 @@ const getCurrentHost = (): string => globalThis.location.origin;
 const isDefaultHost = (): boolean => getCurrentHost() === DEFAULT_HOST;
 
 export const buildNpmInstallCommand = (): string => NPM_INSTALL_COMMAND;
+
+export const buildHomebrewInstallCommand = (): string =>
+  HOMEBREW_INSTALL_COMMAND;
 
 export const buildCurlInstallCommand = (loginCode: string): string => {
   const hostExport = isDefaultHost()

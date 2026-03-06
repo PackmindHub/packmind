@@ -25,6 +25,7 @@ import {
   formatCodeExpiresAt,
   detectUserOs,
   NPM_INSTALL_COMMAND,
+  HOMEBREW_INSTALL_COMMAND,
 } from '../../../domain/accounts/components/LocalEnvironmentSetup/utils';
 import type { OsType } from '../../../domain/accounts/components/LocalEnvironmentSetup/types';
 
@@ -199,34 +200,45 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
                     </PMBox>
                   </SectionCard>
 
-                  <SectionCard
-                    title="Alternative"
-                    description="Install via npm (most reliable across environments)."
-                    variant="secondary"
-                  >
-                    <PMAlert.Root status="info">
-                      <PMAlert.Indicator />
-                      <PMAlert.Content>
-                        <PMAlert.Description>
-                          Requires Node.js 22 or higher.
-                        </PMAlert.Description>
-                      </PMAlert.Content>
-                    </PMAlert.Root>
-                    <PMBox width="1/2">
-                      <CopiableTextField
-                        value={NPM_INSTALL_COMMAND}
-                        readOnly
-                        label="Terminal (NPM)"
-                      />
+                  <PMHStack gap={4} width="full" alignItems="stretch">
+                    <PMBox flex={1}>
+                      <SectionCard
+                        title="Alternative: Homebrew"
+                        variant="secondary"
+                      >
+                        <CopiableTextarea
+                          value={HOMEBREW_INSTALL_COMMAND}
+                          readOnly
+                          rows={2}
+                        />
+                      </SectionCard>
                     </PMBox>
-                  </SectionCard>
+                    <PMBox flex={1}>
+                      <SectionCard title="Alternative: NPM" variant="secondary">
+                        <CopiableTextarea
+                          value={NPM_INSTALL_COMMAND}
+                          readOnly
+                          rows={1}
+                        />
+                        <PMAlert.Root status="info">
+                          <PMAlert.Indicator />
+                          <PMAlert.Content>
+                            <PMAlert.Description>
+                              Requires Node.js 22 or higher.
+                            </PMAlert.Description>
+                          </PMAlert.Content>
+                        </PMAlert.Root>
+                      </SectionCard>
+                    </PMBox>
+                  </PMHStack>
                 </>
               ) : (
-                <SectionCard
-                  title="Recommended"
-                  description="Install via npm (most reliable across environments)."
-                  variant="primary"
-                >
+                <SectionCard title="Recommended: NPM" variant="primary">
+                  <CopiableTextarea
+                    value={NPM_INSTALL_COMMAND}
+                    readOnly
+                    rows={1}
+                  />
                   <PMAlert.Root status="info">
                     <PMAlert.Indicator />
                     <PMAlert.Content>
@@ -235,13 +247,6 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
                       </PMAlert.Description>
                     </PMAlert.Content>
                   </PMAlert.Root>
-                  <PMBox width="1/2">
-                    <CopiableTextField
-                      value={NPM_INSTALL_COMMAND}
-                      readOnly
-                      label="Terminal (NPM)"
-                    />
-                  </PMBox>
                 </SectionCard>
               )}
 
