@@ -1,6 +1,7 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  ArtifactType,
   ArtifactVersionEntry,
   CodingAgent,
   GetContentByVersionsCommand,
@@ -65,9 +66,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     const standardEntries = command.artifacts.filter(
       (a) => a.type === 'standard',
     );
-    const recipeEntries = command.artifacts.filter(
-      (a) => a.type === 'command',
-    );
+    const recipeEntries = command.artifacts.filter((a) => a.type === 'command');
     const skillEntries = command.artifacts.filter((a) => a.type === 'skill');
 
     this.logger.info('Grouped artifacts by type', {
@@ -182,12 +181,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
           });
           return null;
         }
-        const rules =
-          await this.standardsPort.getRulesByStandardId(standardId);
+        const rules = await this.standardsPort.getRulesByStandardId(standardId);
         return { ...matchingVersion, rules };
       }),
     );
-    return results.filter((v): v is StandardVersion => v !== null);
+    return results.filter((v) => v !== null) as StandardVersion[];
   }
 
   private async fetchSkillVersionsWithFiles(
@@ -211,7 +209,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
         return { ...matchingVersion, files };
       }),
     );
-    return results.filter((v): v is SkillVersion => v !== null);
+    return results.filter((v) => v !== null) as SkillVersion[];
   }
 
   private buildArtifactMetadata(
@@ -222,11 +220,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     skillEntries: ArtifactVersionEntry[],
     skillVersions: SkillVersion[],
   ): Record<
-    string,
+    ArtifactType,
     Map<string, { artifactId: string; spaceId: string; version: number }>
   > {
     const metadata: Record<
-      string,
+      ArtifactType,
       Map<string, { artifactId: string; spaceId: string; version: number }>
     > = {
       command: new Map(),
@@ -235,15 +233,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     };
 
     // Build a map of artifact id -> spaceId from entries
-    const recipeSpaceMap = new Map(
-      recipeEntries.map((e) => [e.id, e.spaceId]),
-    );
+    const recipeSpaceMap = new Map(recipeEntries.map((e) => [e.id, e.spaceId]));
     const standardSpaceMap = new Map(
       standardEntries.map((e) => [e.id, e.spaceId]),
     );
-    const skillSpaceMap = new Map(
-      skillEntries.map((e) => [e.id, e.spaceId]),
-    );
+    const skillSpaceMap = new Map(skillEntries.map((e) => [e.id, e.spaceId]));
 
     for (const rv of recipeVersions) {
       const spaceId = recipeSpaceMap.get(rv.recipeId as string);
