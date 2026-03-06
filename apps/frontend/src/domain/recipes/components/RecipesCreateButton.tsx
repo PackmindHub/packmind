@@ -13,7 +13,7 @@ import {
   PMCloseButton,
 } from '@packmind/ui';
 import { LuBot, LuPencilLine } from 'react-icons/lu';
-import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
+import { GETTING_STARTED_CREATE_COMMAND_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
@@ -83,7 +83,7 @@ export const RecipesCreateButton = ({
       <PMDialog.Root
         open={isFromCodeDialogOpen}
         onOpenChange={(e) => setIsFromCodeDialogOpen(e.open)}
-        size="lg"
+        size="xl"
         placement="center"
         motionPreset="slide-in-bottom"
         scrollBehavior={'inside'}
@@ -95,7 +95,7 @@ export const RecipesCreateButton = ({
               <PMDialog.Header>
                 <PMDialog.Title asChild>
                   <PMHeading level="h3">
-                    {GETTING_STARTED_CREATE_DIALOG.title}
+                    {GETTING_STARTED_CREATE_COMMAND_DIALOG.title}
                   </PMHeading>
                 </PMDialog.Title>
                 <PMDialog.CloseTrigger asChild>
@@ -103,7 +103,7 @@ export const RecipesCreateButton = ({
                 </PMDialog.CloseTrigger>
               </PMDialog.Header>
               <PMDialog.Body>
-                {GETTING_STARTED_CREATE_DIALOG.body}
+                {GETTING_STARTED_CREATE_COMMAND_DIALOG.body}
               </PMDialog.Body>
               <PMDialog.Footer>
                 <PMButton

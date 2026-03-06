@@ -35,12 +35,12 @@ export const CODING_AGENT_ARTEFACT_PATHS: Record<
   Partial<Record<CodingAgent, CodingAgentArtefactPaths>> = {
   claude: {
     command: '.claude/commands/',
-    standard: '.claude/rules/packmind/',
+    standard: '.claude/rules/',
     skill: '.claude/skills/',
   },
   cursor: {
     command: '.cursor/commands/',
-    standard: '.cursor/rules/packmind/',
+    standard: '.cursor/rules/',
     skill: '.cursor/skills/',
   },
   copilot: {
@@ -50,7 +50,7 @@ export const CODING_AGENT_ARTEFACT_PATHS: Record<
   },
   continue: {
     command: '.continue/prompts/',
-    standard: '.continue/rules/packmind/',
+    standard: '.continue/rules/',
     skill: '',
   },
   packmind: {

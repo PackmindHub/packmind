@@ -19,6 +19,8 @@ export const pmButtonRecipe = defineRecipe({
         borderColor: '{colors.beige.900}',
         _hover: {
           bg: '{colors.beige.900}',
+          borderColor: '{colors.beige.1000}',
+          color: '{colors.beige.200}',
         },
         _disabled: {
           bg: '{colors.beige.900}',

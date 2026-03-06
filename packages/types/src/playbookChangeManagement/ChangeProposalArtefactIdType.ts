@@ -37,10 +37,17 @@ type CreationChangeProposalArtefactIdMap = {
   [ChangeProposalType.createSkill]: null;
 };
 
+type RemoveChangeProposalArtefactIdMap = {
+  [ChangeProposalType.removeStandard]: StandardId;
+  [ChangeProposalType.removeCommand]: RecipeId;
+  [ChangeProposalType.removeSkill]: SkillId;
+};
+
 type ChangeProposalArtefactIdMap = CommandChangeProposalArtefactIdMap &
   StandardChangeProposalArtefactIdMap &
   SkillChangeProposalArtefactIdMap &
-  CreationChangeProposalArtefactIdMap;
+  CreationChangeProposalArtefactIdMap &
+  RemoveChangeProposalArtefactIdMap;
 
 export type ChangeProposalArtefactId<
   T extends ChangeProposalType = ChangeProposalType,

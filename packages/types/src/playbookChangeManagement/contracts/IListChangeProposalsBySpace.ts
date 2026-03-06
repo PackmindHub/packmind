@@ -3,7 +3,8 @@ import { SkillId } from '../../skills/SkillId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { StandardId } from '../../standards/StandardId';
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { ChangeProposalId } from '../ChangeProposalId';
+import { PendingChangeProposal } from '../PendingChangeProposal';
+import { ChangeProposalType } from '../ChangeProposalType';
 
 export type ListChangeProposalsBySpaceCommand = PackmindCommand & {
   spaceId: SpaceId;
@@ -13,31 +14,29 @@ export type ListProposalsOverview<T extends StandardId | RecipeId | SkillId> = {
   artefactId: T;
   name: string;
   changeProposalCount: number;
+  lastContributedAt: string;
 };
 
-export type CommandCreationProposalOverview = {
-  proposalId: ChangeProposalId;
-  artefactType: 'commands';
-  name: string;
-  content: string;
-};
+export type CommandCreationProposalOverview =
+  PendingChangeProposal<ChangeProposalType.createCommand> & {
+    artefactType: 'commands';
+    name: string;
+    lastContributedAt: string;
+  };
 
-export type StandardCreationProposalOverview = {
-  proposalId: ChangeProposalId;
-  artefactType: 'standards';
-  name: string;
-  description: string;
-  scope: string | null;
-  rules: Array<{ content: string }>;
-};
+export type StandardCreationProposalOverview =
+  PendingChangeProposal<ChangeProposalType.createStandard> & {
+    artefactType: 'standards';
+    name: string;
+    lastContributedAt: string;
+  };
 
-export type SkillCreationProposalOverview = {
-  proposalId: ChangeProposalId;
-  artefactType: 'skills';
-  name: string;
-  description: string;
-  prompt: string;
-};
+export type SkillCreationProposalOverview =
+  PendingChangeProposal<ChangeProposalType.createSkill> & {
+    artefactType: 'skills';
+    name: string;
+    lastContributedAt: string;
+  };
 
 export type CreationProposalOverview =
   | CommandCreationProposalOverview

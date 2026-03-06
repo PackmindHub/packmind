@@ -1,115 +1,115 @@
-import { NavLink, useParams } from 'react-router';
+import React, { useMemo } from 'react';
+import { NavLink, useParams, useSearchParams } from 'react-router';
 import {
-  PMBadge,
   PMBox,
+  PMFlex,
   PMHStack,
   PMLink,
   PMText,
+  PMTooltip,
   PMVerticalNav,
   PMVerticalNavSection,
-  PMAlert,
+  PMVStack,
 } from '@packmind/ui';
 import {
-  CreationProposalOverview,
+  ChangeProposalType,
+  CollectionItemAddPayload,
   ListChangeProposalsBySpaceResponse,
+  SkillCreationProposalOverview,
+  SkillFile,
+  SkillId,
 } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
+import { useGetSkillWithFilesByIdQuery } from '../../skills/api/queries/SkillsQueries';
+import { useListChangeProposalsBySkillQuery } from '../api/queries/ChangeProposalsQueries';
+import { getFilePathsWithChanges } from '../utils/filterProposalsByFilePath';
+import { SkillFileFilterTree } from './SkillReviewDetail/SkillFileFilterTree';
 
-function ArtefactNavLink({
-  artefactId,
-  name,
-  changeProposalCount,
-  artefactType,
-  orgSlug,
-  spaceSlug,
+const artefactTypeLabels: Record<string, string> = {
+  commands: 'Command',
+  standards: 'Standard',
+  skills: 'Skill',
+};
+
+function NavBadge({
+  children,
+  minWidth,
+  px,
 }: {
-  artefactId: string;
-  name: string;
-  changeProposalCount: number;
-  artefactType: string;
-  orgSlug: string;
-  spaceSlug: string;
+  children: React.ReactNode;
+  minWidth?: string;
+  px?: number;
 }) {
-  const to = routes.space.toReviewChangesArtefact(
-    orgSlug,
-    spaceSlug,
-    artefactType,
-    artefactId,
-  );
-
   return (
-    <NavLink key={artefactId} to={to} prefetch="intent">
-      {({ isActive }) => (
-        <PMLink
-          variant="navbar"
-          data-active={isActive ? 'true' : undefined}
-          as="span"
-          display="flex"
-          alignItems="center"
-          width="full"
-        >
-          <PMHStack width="full" justifyContent="space-between" gap={2}>
-            <PMText
-              fontSize="sm"
-              fontWeight={isActive ? 'bold' : 'medium'}
-              overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
-            >
-              {name}
-            </PMText>
-            <PMBadge colorPalette="blue" size="sm">
-              {changeProposalCount}
-            </PMBadge>
-          </PMHStack>
-        </PMLink>
-      )}
-    </NavLink>
+    <PMFlex
+      alignItems="center"
+      justifyContent="center"
+      bg="yellow.800"
+      color="yellow.200"
+      borderRadius="full"
+      minWidth={minWidth}
+      px={px}
+      height="24px"
+      fontSize="xs"
+      fontWeight="bold"
+      flexShrink={0}
+    >
+      {children}
+    </PMFlex>
   );
 }
 
-function CreationNavLink({
-  proposal,
-  orgSlug,
-  spaceSlug,
+function SidebarNavLink({
+  to,
+  name,
+  artefactType,
+  badge,
 }: {
-  proposal: CreationProposalOverview;
-  orgSlug: string;
-  spaceSlug: string;
+  to: string;
+  name: string;
+  artefactType: string;
+  badge: React.ReactNode;
 }) {
-  const to = routes.space.toReviewChangesCreation(
-    orgSlug,
-    spaceSlug,
-    proposal.artefactType,
-    proposal.proposalId,
-  );
+  const typeLabel = artefactTypeLabels[artefactType] ?? artefactType;
 
   return (
-    <NavLink key={proposal.proposalId} to={to} prefetch="intent">
+    <NavLink to={to} prefetch="intent">
       {({ isActive }) => (
-        <PMLink
-          variant="navbar"
-          data-active={isActive ? 'true' : undefined}
-          as="span"
-          display="flex"
-          alignItems="center"
-          width="full"
-        >
-          <PMHStack width="full" justifyContent="space-between" gap={2}>
-            <PMText
-              fontSize="sm"
-              fontWeight={isActive ? 'bold' : 'medium'}
-              overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
+        <PMTooltip label={name} placement="bottom-start" openDelay={300}>
+          <PMLink
+            variant="navbar"
+            data-active={isActive ? 'true' : undefined}
+            as="span"
+            display="flex"
+            alignItems="center"
+            width="full"
+            py={2}
+          >
+            <PMHStack
+              width="full"
+              justifyContent="space-between"
+              gap={2}
+              minW={0}
             >
-              {proposal.name}
-            </PMText>
-            <PMBadge colorPalette="green" size="sm" fontSize="xs">
-              New
-            </PMBadge>
-          </PMHStack>
-        </PMLink>
+              <PMVStack gap={0} flex={1} minW={0} alignItems="flex-start">
+                <PMText
+                  fontSize="sm"
+                  fontWeight={isActive ? 'bold' : 'medium'}
+                  overflow="hidden"
+                  textOverflow="ellipsis"
+                  whiteSpace="nowrap"
+                  maxW="100%"
+                >
+                  {name}
+                </PMText>
+                <PMText fontSize="xs" opacity={0.5} fontWeight="normal">
+                  {typeLabel}
+                </PMText>
+              </PMVStack>
+              {badge}
+            </PMHStack>
+          </PMLink>
+        </PMTooltip>
       )}
     </NavLink>
   );
@@ -122,121 +122,213 @@ interface ReviewChangesSidebarProps {
 export function ReviewChangesSidebar({
   groupedProposals,
 }: ReviewChangesSidebarProps) {
-  const { orgSlug, spaceSlug } = useParams<{
-    orgSlug: string;
-    spaceSlug: string;
-  }>();
+  const { orgSlug, spaceSlug, artefactType, artefactId, proposalId } =
+    useParams<{
+      orgSlug: string;
+      spaceSlug: string;
+      artefactType: string;
+      artefactId: string;
+      proposalId: string;
+    }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const isSkillSelected = artefactType === 'skills' && !!artefactId;
+  const isSkillCreationSelected =
+    artefactType === 'skills' && !artefactId && !!proposalId;
+  const skillId = isSkillSelected ? (artefactId as SkillId) : undefined;
+
+  const { data: skillData } = useGetSkillWithFilesByIdQuery(skillId);
+  const { data: proposalsData } = useListChangeProposalsBySkillQuery(skillId);
+
+  const files = skillData?.files ?? [];
+  const proposals = proposalsData?.changeProposals ?? [];
+
+  const allFilePaths = useMemo(() => {
+    if (!isSkillSelected) return [];
+
+    const existingPaths = files
+      .filter((f) => f.path !== 'SKILL.md')
+      .map((f) => f.path);
+
+    const addFilePaths = proposals
+      .filter((p) => p.type === ChangeProposalType.addSkillFile)
+      .map((p) => {
+        const payload = p.payload as CollectionItemAddPayload<
+          Omit<SkillFile, 'id' | 'skillVersionId'>
+        >;
+        return payload.item.path;
+      })
+      .filter((path) => path !== 'SKILL.md');
+
+    const pathSet = new Set([...existingPaths, ...addFilePaths]);
+    return Array.from(pathSet).sort((a, b) => a.localeCompare(b));
+  }, [isSkillSelected, files, proposals]);
+
+  const filePathsWithChanges = useMemo(
+    () =>
+      isSkillSelected
+        ? getFilePathsWithChanges(proposals, files)
+        : new Set<string>(),
+    [isSkillSelected, proposals, files],
+  );
+
+  const skillCreation = useMemo(() => {
+    if (!isSkillCreationSelected) return undefined;
+    return groupedProposals.creations.find(
+      (c): c is SkillCreationProposalOverview =>
+        c.id === proposalId && c.artefactType === 'skills',
+    );
+  }, [isSkillCreationSelected, groupedProposals.creations, proposalId]);
+
+  const creationFilePaths = useMemo(() => {
+    if (!skillCreation?.payload.files) return [];
+    return skillCreation.payload.files
+      .map((f) => f.path)
+      .filter((p) => p !== 'SKILL.md')
+      .sort((a, b) => a.localeCompare(b));
+  }, [skillCreation]);
+
+  const creationFilePathsWithChanges = useMemo(
+    () => new Set(creationFilePaths),
+    [creationFilePaths],
+  );
+
+  const selectedFilter = searchParams.get('file') ?? '';
+  const handleFilterSelect = (filter: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (filter) {
+          next.set('file', filter);
+        } else {
+          next.delete('file');
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   if (!orgSlug || !spaceSlug) {
     return null;
   }
 
-  const commandCreations = groupedProposals.creations.filter(
-    (c) => c.artefactType === 'commands',
+  const allItems = [
+    ...groupedProposals.commands.map((item) => ({
+      ...item,
+      artefactType: 'commands' as const,
+    })),
+    ...groupedProposals.standards.map((item) => ({
+      ...item,
+      artefactType: 'standards' as const,
+    })),
+    ...groupedProposals.skills.map((item) => ({
+      ...item,
+      artefactType: 'skills' as const,
+    })),
+  ].sort((a, b) => b.lastContributedAt.localeCompare(a.lastContributedAt));
+
+  const sortedCreations = [...(groupedProposals.creations ?? [])].sort((a, b) =>
+    b.lastContributedAt.localeCompare(a.lastContributedAt),
   );
-  const standardCreations = groupedProposals.creations.filter(
-    (c) => c.artefactType === 'standards',
-  );
-  const skillCreations = groupedProposals.creations.filter(
-    (c) => c.artefactType === 'skills',
-  );
-
-  const hasCommands =
-    groupedProposals.commands.length > 0 || commandCreations.length > 0;
-
-  const commandNavEntries = [
-    ...commandCreations.map((proposal) => (
-      <CreationNavLink
-        key={proposal.proposalId}
-        proposal={proposal}
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
-      />
-    )),
-    ...groupedProposals.commands.map((item) => (
-      <ArtefactNavLink
-        key={item.artefactId}
-        artefactId={item.artefactId}
-        name={item.name}
-        changeProposalCount={item.changeProposalCount}
-        artefactType="commands"
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
-      />
-    )),
-  ];
-
-  const standardNavEntries = [
-    ...standardCreations.map((proposal) => (
-      <CreationNavLink
-        key={proposal.proposalId}
-        proposal={proposal}
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
-      />
-    )),
-    ...groupedProposals.standards.map((item) => (
-      <ArtefactNavLink
-        key={item.artefactId}
-        artefactId={item.artefactId}
-        name={item.name}
-        changeProposalCount={item.changeProposalCount}
-        artefactType="standards"
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
-      />
-    )),
-  ];
-
-  const hasStandards =
-    groupedProposals.standards.length > 0 || standardCreations.length > 0;
-
-  const skillNavEntries = [
-    ...skillCreations.map((proposal) => (
-      <CreationNavLink
-        key={proposal.proposalId}
-        proposal={proposal}
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
-      />
-    )),
-    ...groupedProposals.skills.map((item) => (
-      <ArtefactNavLink
-        key={item.artefactId}
-        artefactId={item.artefactId}
-        name={item.name}
-        changeProposalCount={item.changeProposalCount}
-        artefactType="skills"
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
-      />
-    )),
-  ];
 
   return (
     <PMVerticalNav logo={false} showLogoContainer={false} width="270px">
-      {hasCommands && (
-        <PMVerticalNavSection title="Commands" navEntries={commandNavEntries} />
-      )}
-      {hasStandards && (
+      <PMBox flex={1} minH={0} overflowY="auto">
         <PMVerticalNavSection
-          title="Standards"
-          navEntries={standardNavEntries}
+          title="CHANGES TO REVIEW"
+          navEntries={[
+            ...allItems.map((item) => (
+              <PMBox
+                key={`artefact-${item.artefactId}`}
+                borderBottom="1px solid"
+                borderColor="{colors.border.tertiary}"
+              >
+                <SidebarNavLink
+                  to={routes.space.toReviewChangesArtefact(
+                    orgSlug,
+                    spaceSlug,
+                    item.artefactType,
+                    item.artefactId,
+                  )}
+                  name={item.name}
+                  artefactType={item.artefactType}
+                  badge={
+                    <NavBadge minWidth="24px">
+                      {item.changeProposalCount}
+                    </NavBadge>
+                  }
+                />
+              </PMBox>
+            )),
+            ...sortedCreations.map((item) => (
+              <PMBox
+                key={`creation-${item.id}`}
+                borderBottom="1px solid"
+                borderColor="{colors.border.tertiary}"
+              >
+                <SidebarNavLink
+                  to={routes.space.toReviewChangesCreation(
+                    orgSlug,
+                    spaceSlug,
+                    item.artefactType,
+                    item.id,
+                  )}
+                  name={item.name}
+                  artefactType={item.artefactType}
+                  badge={<NavBadge px={2}>New</NavBadge>}
+                />
+              </PMBox>
+            )),
+          ]}
         />
-      )}
-      {skillNavEntries.length > 0 && (
-        <PMVerticalNavSection title="Skills" navEntries={skillNavEntries} />
-      )}
-      <PMBox p={4} mt="auto">
-        <PMAlert.Root status="info">
-          <PMAlert.Indicator />
-          <PMAlert.Content>
-            <PMAlert.Description>
-              Playbook update management will soon require an Enterprise plan.
-            </PMAlert.Description>
-          </PMAlert.Content>
-        </PMAlert.Root>
       </PMBox>
+
+      {isSkillSelected && allFilePaths.length > 0 && (
+        <PMBox flex={1} minH={0} overflowY="auto" px={4}>
+          <PMText
+            fontSize="xs"
+            color="faded"
+            fontWeight="bold"
+            textTransform="uppercase"
+            mb={2}
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+          >
+            {skillData?.skill?.name ?? 'Skill'}
+          </PMText>
+          <SkillFileFilterTree
+            allFilePaths={allFilePaths}
+            filePathsWithChanges={filePathsWithChanges}
+            selectedFilter={selectedFilter}
+            onFilterSelect={handleFilterSelect}
+          />
+        </PMBox>
+      )}
+
+      {isSkillCreationSelected && creationFilePaths.length > 0 && (
+        <PMBox flex={1} minH={0} overflowY="auto" px={4}>
+          <PMText
+            fontSize="xs"
+            color="faded"
+            fontWeight="bold"
+            textTransform="uppercase"
+            mb={2}
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+          >
+            {skillCreation?.name ?? 'Skill'}
+          </PMText>
+          <SkillFileFilterTree
+            allFilePaths={creationFilePaths}
+            filePathsWithChanges={creationFilePathsWithChanges}
+            selectedFilter={selectedFilter}
+            onFilterSelect={handleFilterSelect}
+          />
+        </PMBox>
+      )}
     </PMVerticalNav>
   );
 }

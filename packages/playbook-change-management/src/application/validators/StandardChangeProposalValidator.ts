@@ -1,9 +1,11 @@
 import {
   ChangeProposalType,
+  ChangeProposalViolation,
   CollectionItemDeletePayload,
   CollectionItemUpdatePayload,
   CreateChangeProposalCommand,
   IStandardsPort,
+  NewStandardPayload,
   Rule,
   RuleId,
   ScalarUpdatePayload,
@@ -15,6 +17,7 @@ import {
   ChangeProposalValidationResult,
   IChangeProposalValidator,
 } from './IChangeProposalValidator';
+import { ChangeProposalLimitExceededError } from '../errors/ChangeProposalLimitExceededError';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 
 type ScalarStandardType =
@@ -42,6 +45,10 @@ const STANDARD_FIELD_BY_TYPE: Record<
   [ChangeProposalType.updateStandardScope]: (standard) => standard.scope ?? '',
 };
 
+const STANDARD_NAME_MAX_LENGTH = 250;
+const RULE_CONTENT_MAX_LENGTH = 1000;
+const RULES_MAX_COUNT = 500;
+
 export class StandardChangeProposalValidator implements IChangeProposalValidator {
   constructor(private readonly standardsPort: IStandardsPort) {}
 
@@ -53,6 +60,35 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<{ artefactVersion: number }> {
     if (command.type === ChangeProposalType.createStandard) {
+      const payload = command.payload as NewStandardPayload;
+
+      if (payload.name.length > STANDARD_NAME_MAX_LENGTH) {
+        throw new ChangeProposalLimitExceededError(
+          ChangeProposalViolation.STANDARD_NAME_TOO_LONG,
+          STANDARD_NAME_MAX_LENGTH,
+          payload.name.length,
+        );
+      }
+
+      if (payload.rules.length > RULES_MAX_COUNT) {
+        throw new ChangeProposalLimitExceededError(
+          ChangeProposalViolation.TOO_MANY_RULES,
+          RULES_MAX_COUNT,
+          payload.rules.length,
+        );
+      }
+
+      const oversizedRule = payload.rules.find(
+        (rule) => rule.content.length > RULE_CONTENT_MAX_LENGTH,
+      );
+      if (oversizedRule) {
+        throw new ChangeProposalLimitExceededError(
+          ChangeProposalViolation.RULE_CONTENT_TOO_LONG,
+          RULE_CONTENT_MAX_LENGTH,
+          oversizedRule.content.length,
+        );
+      }
+
       return { artefactVersion: 0 };
     }
 
@@ -78,6 +114,17 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
     const payload = command.payload as ScalarUpdatePayload;
     const currentValue =
       STANDARD_FIELD_BY_TYPE[command.type as ScalarStandardType](standard);
+
+    if (command.type === ChangeProposalType.updateStandardScope) {
+      if (normalizeScope(payload.oldValue) !== normalizeScope(currentValue)) {
+        throw new ChangeProposalPayloadMismatchError(
+          command.type,
+          payload.oldValue,
+          currentValue,
+        );
+      }
+      return { artefactVersion: standard.version };
+    }
 
     if (payload.oldValue !== currentValue) {
       throw new ChangeProposalPayloadMismatchError(
@@ -146,4 +193,11 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
       },
     };
   }
+}
+
+function normalizeScope(scope: string): string {
+  return scope
+    .split(',')
+    .map((s) => s.trim())
+    .join(', ');
 }

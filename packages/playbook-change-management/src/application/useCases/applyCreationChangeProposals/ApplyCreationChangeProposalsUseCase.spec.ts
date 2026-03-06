@@ -920,6 +920,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       name: 'My Skill',
       description: 'A coding skill',
       prompt: 'This is the skill prompt with instructions',
+      skillMdPermissions: 'rw-r--r--',
       license: 'MIT',
       compatibility: '>=1.0.0',
     };
@@ -982,19 +983,19 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       });
 
       it('includes skill name', () => {
-        expect(skillMdFile?.content).toContain('name: My Skill');
+        expect(skillMdFile?.content).toContain('name: "My Skill"');
       });
 
       it('includes skill description', () => {
-        expect(skillMdFile?.content).toContain('description: A coding skill');
+        expect(skillMdFile?.content).toContain('description: "A coding skill"');
       });
 
       it('includes license', () => {
-        expect(skillMdFile?.content).toContain('license: MIT');
+        expect(skillMdFile?.content).toContain('license: "MIT"');
       });
 
       it('includes compatibility', () => {
-        expect(skillMdFile?.content).toContain('compatibility: >=1.0.0');
+        expect(skillMdFile?.content).toContain('compatibility: ">=1.0.0"');
       });
 
       it('includes prompt in body', () => {
@@ -1118,6 +1119,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       name: 'My Skill',
       description: 'A coding skill',
       prompt: 'This is the skill prompt',
+      skillMdPermissions: 'rw-r--r--',
     };
     const skillProposal = changeProposalFactory({
       id: createChangeProposalId('skill-proposal-1'),
@@ -1216,6 +1218,7 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
       name: 'My Skill',
       description: 'A coding skill',
       prompt: 'This is the skill prompt',
+      skillMdPermissions: 'rw-r--r--',
     };
     const skillProposal = changeProposalFactory({
       id: createChangeProposalId('skill-proposal-1'),

@@ -1,8 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  ChangeProposal,
   ChangeProposalType,
+  CreationChangeProposalTypes,
   CreationProposalOverview,
   IAccountsPort,
   IListChangeProposalsBySpace,
@@ -13,15 +13,17 @@ import {
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
   ListProposalsOverview,
-  NewCommandPayload,
-  NewSkillPayload,
-  NewStandardPayload,
+  PendingChangeProposal,
   RecipeId,
   SkillId,
   StandardId,
 } from '@packmind/types';
-import { ChangeProposalService } from '../../services/ChangeProposalService';
+import {
+  ArtefactProposalStats,
+  ChangeProposalService,
+} from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
+import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 
 const origin = 'ListChangeProposalsBySpaceUseCase';
 
@@ -71,17 +73,18 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private async enrichStandardsWithNames(
-    standardsMap: Map<StandardId, number>,
+    standardsMap: Map<StandardId, ArtefactProposalStats>,
   ): Promise<ListProposalsOverview<StandardId>[]> {
     const result: ListProposalsOverview<StandardId>[] = [];
 
-    for (const [artefactId, count] of standardsMap.entries()) {
+    for (const [artefactId, stats] of standardsMap.entries()) {
       const standard = await this.standardsPort.getStandard(artefactId);
       if (standard) {
         result.push({
           artefactId,
           name: standard.name,
-          changeProposalCount: count,
+          changeProposalCount: stats.count,
+          lastContributedAt: stats.lastContributedAt.toISOString(),
         });
       }
     }
@@ -90,17 +93,18 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private async enrichRecipesWithNames(
-    recipesMap: Map<RecipeId, number>,
+    recipesMap: Map<RecipeId, ArtefactProposalStats>,
   ): Promise<ListProposalsOverview<RecipeId>[]> {
     const result: ListProposalsOverview<RecipeId>[] = [];
 
-    for (const [artefactId, count] of recipesMap.entries()) {
+    for (const [artefactId, stats] of recipesMap.entries()) {
       const recipe = await this.recipesPort.getRecipeByIdInternal(artefactId);
       if (recipe) {
         result.push({
           artefactId,
           name: recipe.name,
-          changeProposalCount: count,
+          changeProposalCount: stats.count,
+          lastContributedAt: stats.lastContributedAt.toISOString(),
         });
       }
     }
@@ -109,54 +113,70 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private enrichCreations(
-    proposals: ChangeProposal<ChangeProposalType>[],
+    proposals: PendingChangeProposal<CreationChangeProposalTypes>[],
   ): CreationProposalOverview[] {
     return proposals.map((proposal) => {
-      if (proposal.type === ChangeProposalType.createStandard) {
-        const payload = proposal.payload as NewStandardPayload;
+      const lastContributedAt = proposal.createdAt.toISOString();
+      if (
+        isExpectedChangeProposalType(proposal, ChangeProposalType.createCommand)
+      ) {
         return {
-          proposalId: proposal.id,
+          ...proposal,
+          artefactType: 'commands' as const,
+          name: proposal.payload.name,
+          lastContributedAt,
+        };
+      }
+
+      if (
+        isExpectedChangeProposalType(
+          proposal,
+          ChangeProposalType.createStandard,
+        )
+      ) {
+        return {
+          ...proposal,
           artefactType: 'standards' as const,
-          name: payload.name,
-          description: payload.description,
-          scope: Array.isArray(payload.scope)
-            ? payload.scope.join(', ')
-            : payload.scope,
-          rules: payload.rules,
+          name: proposal.payload.name,
+          payload: {
+            ...proposal.payload,
+            scope: Array.isArray(proposal.payload.scope)
+              ? proposal.payload.scope.join(', ')
+              : proposal.payload.scope,
+          },
+          lastContributedAt,
         };
       }
-      if (proposal.type === ChangeProposalType.createSkill) {
-        const payload = proposal.payload as NewSkillPayload;
+      if (
+        isExpectedChangeProposalType(proposal, ChangeProposalType.createSkill)
+      ) {
         return {
-          proposalId: proposal.id,
+          ...proposal,
           artefactType: 'skills' as const,
-          name: payload.name,
-          description: payload.description,
-          prompt: payload.prompt,
+          name: proposal.payload.name,
+          lastContributedAt,
         };
       }
-      const payload = proposal.payload as NewCommandPayload;
-      return {
-        proposalId: proposal.id,
-        artefactType: 'commands' as const,
-        name: payload.name,
-        content: payload.content,
-      };
+
+      throw new Error(
+        `Unsupported creation ChangeProposalType: ${proposal.type}`,
+      );
     });
   }
 
   private async enrichSkillsWithNames(
-    skillsMap: Map<SkillId, number>,
+    skillsMap: Map<SkillId, ArtefactProposalStats>,
   ): Promise<ListProposalsOverview<SkillId>[]> {
     const result: ListProposalsOverview<SkillId>[] = [];
 
-    for (const [artefactId, count] of skillsMap.entries()) {
+    for (const [artefactId, stats] of skillsMap.entries()) {
       const skill = await this.skillsPort.getSkill(artefactId);
       if (skill) {
         result.push({
           artefactId,
           name: skill.name,
-          changeProposalCount: count,
+          changeProposalCount: stats.count,
+          lastContributedAt: stats.lastContributedAt.toISOString(),
         });
       }
     }

@@ -11,6 +11,8 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { diffArtefactsHandler } from './diffArtefactsHandler';
 import { diffAddHandler } from './diffAddHandler';
+import { diffRemoveHandler } from './diffRemoveHandler';
+import { readSkillDirectory } from '../utils/readSkillDirectory';
 
 export const diffCommand = command({
   name: 'diff',
@@ -35,7 +37,7 @@ export const diffCommand = command({
     positionals: restPositionals({
       type: string,
       displayName: 'args',
-      description: 'Subcommand and arguments (e.g., add <path>)',
+      description: 'Subcommand and arguments (e.g., add <path>, remove <path>)',
     }),
   },
   handler: async ({ submit, includeSubmitted, message, positionals }) => {
@@ -50,6 +52,18 @@ export const diffCommand = command({
         exit: process.exit,
         getCwd: () => process.cwd(),
         readFile: (p) => readFileSync(p, 'utf-8'),
+        readSkillDirectory,
+      });
+      return;
+    }
+
+    if (positionals[0] === 'remove') {
+      await diffRemoveHandler({
+        packmindCliHexa,
+        filePath: positionals[1],
+        message,
+        exit: process.exit,
+        getCwd: () => process.cwd(),
       });
       return;
     }

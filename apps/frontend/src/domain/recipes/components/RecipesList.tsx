@@ -30,6 +30,12 @@ import { routes } from '../../../shared/utils/routes';
 import { WithTimestamps } from '@packmind/types';
 import { RecipesBlankState } from './RecipesBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
+import {
+  PackageCountBadge,
+  formatPackageNames,
+} from '../../deployments/components/PackageCountBadge';
+import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -44,6 +50,10 @@ export const RecipesList = ({
   const { spaceSlug, spaceId } = useCurrentSpace();
   const { data: recipes, isLoading, isError } = useGetRecipesQuery();
   const deleteBatchMutation = useDeleteRecipesBatchMutation();
+  const { data: packagesResponse } = useListPackagesBySpaceQuery(
+    spaceId,
+    organization?.id,
+  );
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedRecipeIds, setSelectedRecipeIds] = React.useState<RecipeId[]>(
     [],
@@ -120,6 +130,18 @@ export const RecipesList = ({
       recipe.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
+    const packageNamesById =
+      sortKey === 'packages'
+        ? new Map(
+            filteredRecipes.map((r) => [
+              r.id,
+              formatPackageNames(
+                getArtifactPackages(packagesResponse?.packages, r.id, 'recipe'),
+              ),
+            ]),
+          )
+        : null;
+
     const sortedRecipes = [...filteredRecipes].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
@@ -141,6 +163,13 @@ export const RecipesList = ({
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'packages':
+          return (
+            direction *
+            (packageNamesById?.get(a.id) ?? '').localeCompare(
+              packageNamesById?.get(b.id) ?? '',
+            )
+          );
         default:
           return 0;
       }
@@ -189,6 +218,16 @@ export const RecipesList = ({
           </>
         ),
         version: recipe.version,
+        packages: (
+          <PackageCountBadge
+            artifactId={recipe.id}
+            artifactType="recipe"
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            spaceId={spaceId}
+            organizationId={organization?.id}
+          />
+        ),
       })),
     );
   }, [
@@ -196,9 +235,12 @@ export const RecipesList = ({
     selectedRecipeIds,
     orgSlug,
     spaceSlug,
+    spaceId,
+    organization?.id,
     sortKey,
     sortDirection,
     searchQuery,
+    packagesResponse,
   ]);
 
   const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
@@ -256,6 +298,14 @@ export const RecipesList = ({
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'packages',
+      header: 'Packages',
+      width: '220px',
+      align: 'left',
+      sortable: true,
+      sortDirection: getSortDirection('packages'),
     },
   ];
 

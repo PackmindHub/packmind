@@ -25,10 +25,15 @@ import { StandardId } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { StandardsBlankState } from './StandardsBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
+import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
+import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -39,13 +44,18 @@ export const StandardsList = ({
   orgSlug,
   onEmptyStateChange,
 }: StandardsListProps = {}) => {
-  const { spaceSlug } = useCurrentSpace();
+  const { spaceSlug, spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
   const {
     data: listStandardsResponse,
     isLoading,
     isError,
   } = useGetStandardsQuery();
   const deleteBatchMutation = useDeleteStandardsBatchMutation();
+  const { data: packagesResponse } = useListPackagesBySpaceQuery(
+    spaceId,
+    organization?.id,
+  );
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = React.useState<
     StandardId[]
@@ -130,6 +140,22 @@ export const StandardsList = ({
         standard.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
+    const packageNamesById =
+      sortKey === 'packages'
+        ? new Map(
+            filteredStandards.map((s) => [
+              s.id,
+              formatPackageNames(
+                getArtifactPackages(
+                  packagesResponse?.packages,
+                  s.id,
+                  'standard',
+                ),
+              ),
+            ]),
+          )
+        : null;
+
     const sortedStandards = [...filteredStandards].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
@@ -147,6 +173,13 @@ export const StandardsList = ({
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'packages':
+          return (
+            direction *
+            (packageNamesById?.get(a.id) ?? '').localeCompare(
+              packageNamesById?.get(b.id) ?? '',
+            )
+          );
         default:
           return 0;
       }
@@ -197,16 +230,29 @@ export const StandardsList = ({
           </>
         ),
         version: standard.version,
+        packages: (
+          <PackageCountBadge
+            artifactId={standard.id}
+            artifactType="standard"
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            spaceId={spaceId}
+            organizationId={organization?.id}
+          />
+        ),
       })),
     );
   }, [
     listStandardsResponse,
     selectedStandardIds,
     spaceSlug,
+    spaceId,
     orgSlug,
+    organization?.id,
     sortKey,
     sortDirection,
     searchQuery,
+    packagesResponse,
   ]);
 
   const isAllSelected =
@@ -263,6 +309,14 @@ export const StandardsList = ({
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'packages',
+      header: 'Packages',
+      width: '220px',
+      align: 'left',
+      sortable: true,
+      sortDirection: getSortDirection('packages'),
     },
   ];
 

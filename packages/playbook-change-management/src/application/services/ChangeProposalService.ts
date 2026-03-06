@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   ChangeProposal,
   ChangeProposalArtefactId,
+  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalPayload,
   ChangeProposalStatus,
@@ -9,6 +10,8 @@ import {
   CreateChangeProposalCommand,
   createChangeProposalId,
   createUserId,
+  CreationChangeProposalTypes,
+  PendingChangeProposal,
   RecipeId,
   SkillId,
   SpaceId,
@@ -19,14 +22,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataSource } from 'typeorm';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalSchema } from '../../infra/schemas/ChangeProposalSchema';
+import { isExpectedChangeProposalType } from '../utils/isExpectedChangeProposalType';
 
 const origin = 'ChangeProposalService';
 
+export type ArtefactProposalStats = {
+  count: number;
+  lastContributedAt: Date;
+};
+
 export type GroupedProposalsByArtefact = {
-  standards: Map<StandardId, number>;
-  commands: Map<RecipeId, number>;
-  skills: Map<SkillId, number>;
-  creations: ChangeProposal<ChangeProposalType>[];
+  standards: Map<StandardId, ArtefactProposalStats>;
+  commands: Map<RecipeId, ArtefactProposalStats>;
+  skills: Map<SkillId, ArtefactProposalStats>;
+  creations: PendingChangeProposal<CreationChangeProposalTypes>[];
 };
 
 type ArtefactCategory = 'standards' | 'commands' | 'skills';
@@ -78,6 +87,7 @@ export class ChangeProposalService {
       captureMode: command.captureMode,
       message: command.message ?? '',
       status: ChangeProposalStatus.pending,
+      decision: null,
       createdBy,
       resolvedBy: null,
       resolvedAt: null,
@@ -155,6 +165,7 @@ export class ChangeProposalService {
         const appliedProposal: ChangeProposal<ChangeProposalType> = {
           ...proposal,
           status: ChangeProposalStatus.applied,
+          decision: computeProposalDecision(proposal),
           resolvedBy: userId,
           resolvedAt: now,
           updatedAt: now,
@@ -173,6 +184,7 @@ export class ChangeProposalService {
         const rejectedProposal: ChangeProposal<ChangeProposalType> = {
           ...proposal,
           status: ChangeProposalStatus.rejected,
+          decision: null,
           resolvedBy: userId,
           resolvedAt: now,
           updatedAt: now,
@@ -200,9 +212,9 @@ export class ChangeProposalService {
     );
 
     const grouped: GroupedProposalsByArtefact = {
-      standards: new Map<StandardId, number>(),
-      commands: new Map<RecipeId, number>(),
-      skills: new Map<SkillId, number>(),
+      standards: new Map<StandardId, ArtefactProposalStats>(),
+      commands: new Map<RecipeId, ArtefactProposalStats>(),
+      skills: new Map<SkillId, ArtefactProposalStats>(),
       creations: [],
     };
 
@@ -210,34 +222,65 @@ export class ChangeProposalService {
       const artefactCategory = getArtefactCategory(proposal.type);
       switch (artefactCategory) {
         case 'standards': {
-          if (proposal.type === ChangeProposalType.createStandard) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createStandard,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
-            grouped.standards.set(
-              proposal.artefactId as StandardId,
-              (grouped.standards.get(proposal.artefactId as StandardId) ?? 0) +
-                1,
-            );
+            const key = proposal.artefactId as StandardId;
+            const existing = grouped.standards.get(key);
+            grouped.standards.set(key, {
+              count: (existing?.count ?? 0) + 1,
+              lastContributedAt:
+                existing && existing.lastContributedAt > proposal.createdAt
+                  ? existing.lastContributedAt
+                  : proposal.createdAt,
+            });
           }
           break;
         }
         case 'commands': {
-          if (proposal.type === ChangeProposalType.createCommand) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createCommand,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
             const key = proposal.artefactId as RecipeId;
-            grouped.commands.set(key, (grouped.commands.get(key) ?? 0) + 1);
+            const existing = grouped.commands.get(key);
+            grouped.commands.set(key, {
+              count: (existing?.count ?? 0) + 1,
+              lastContributedAt:
+                existing && existing.lastContributedAt > proposal.createdAt
+                  ? existing.lastContributedAt
+                  : proposal.createdAt,
+            });
           }
           break;
         }
         case 'skills': {
-          if (proposal.type === ChangeProposalType.createSkill) {
+          if (
+            isExpectedChangeProposalType(
+              proposal,
+              ChangeProposalType.createSkill,
+            )
+          ) {
             grouped.creations.push(proposal);
           } else {
-            grouped.skills.set(
-              proposal.artefactId as SkillId,
-              (grouped.skills.get(proposal.artefactId as SkillId) ?? 0) + 1,
-            );
+            const key = proposal.artefactId as SkillId;
+            const existing = grouped.skills.get(key);
+            grouped.skills.set(key, {
+              count: (existing?.count ?? 0) + 1,
+              lastContributedAt:
+                existing && existing.lastContributedAt > proposal.createdAt
+                  ? existing.lastContributedAt
+                  : proposal.createdAt,
+            });
           }
           break;
         }
@@ -271,4 +314,24 @@ export class ChangeProposalService {
 
     return proposals;
   }
+}
+
+/*
+ * Crappy solution until we send a correct payload when validating multiple change proposals.
+ * */
+function computeProposalDecision<T extends ChangeProposalType>(
+  proposal: ChangeProposal<T>,
+): ChangeProposalDecision<T> {
+  if (
+    isExpectedChangeProposalType(proposal, ChangeProposalType.removeStandard) ||
+    isExpectedChangeProposalType(proposal, ChangeProposalType.removeCommand) ||
+    isExpectedChangeProposalType(proposal, ChangeProposalType.removeSkill)
+  ) {
+    return {
+      delete: false,
+      packageIds: [],
+    } as unknown as ChangeProposalDecision<T>;
+  }
+
+  return proposal.payload as ChangeProposalDecision<T>;
 }

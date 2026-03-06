@@ -22,6 +22,9 @@ const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.cursor;
+  /** Packmind-managed subdirectory within the broader standard path */
+  private static readonly STANDARD_DEPLOY_DIR =
+    CODING_AGENT_ARTEFACT_PATHS.cursor.standard + 'packmind/';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_COMMANDS_PATH = '.cursor/commands/packmind';
   /** @deprecated Legacy path to clean up during migration */
@@ -374,7 +377,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Delete individual Cursor configuration files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
-        path: `${CursorDeployer.ARTEFACT_PATHS.standard}standard-${standardVersion.slug}.mdc`,
+        path: `${CursorDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.mdc`,
         type: DeleteItemType.File,
       });
     }
@@ -392,7 +395,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     const hasRemovedStandards = removed.standardVersions.length > 0;
     if (hasRemovedStandards && installed.standardVersions.length === 0) {
       fileUpdates.delete.push({
-        path: CursorDeployer.ARTEFACT_PATHS.standard,
+        path: CursorDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       });
     }
@@ -426,7 +429,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         type: DeleteItemType.Directory,
       },
       {
-        path: CursorDeployer.ARTEFACT_PATHS.standard,
+        path: CursorDeployer.STANDARD_DEPLOY_DIR,
         type: DeleteItemType.Directory,
       },
       {
@@ -529,7 +532,7 @@ alwaysApply: true
 ${instructionContent}`;
     }
 
-    const path = `${CursorDeployer.ARTEFACT_PATHS.standard}standard-${standardVersion.slug}.mdc`;
+    const path = `${CursorDeployer.STANDARD_DEPLOY_DIR}standard-${standardVersion.slug}.mdc`;
 
     return {
       path,

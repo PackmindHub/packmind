@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMSpinner } from '@packmind/ui';
+import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
   ChangeProposalId,
   OrganizationId,
@@ -20,10 +20,17 @@ import {
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
+import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
+import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
+import { ChangeProposalWithConflicts } from '../../types';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
 import { computeCommandOutdatedIds } from '../../utils/computeOutdatedProposalIds';
-import { ReviewDetailLayout } from '../ReviewDetailLayout';
-import { ProposalReviewPanel } from './ProposalReviewPanel';
+import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
+import { CommandReviewHeader } from './CommandReviewHeader';
+import { DiffView } from './DiffView';
+import { InlineView } from './InlineView';
+import { OriginalTabContent } from './OriginalTabContent';
+import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
 
 interface CommandReviewDetailProps {
@@ -46,7 +53,6 @@ export function CommandReviewDetail({
 
   const organizationId = organization?.id;
 
-  // Use props if provided, otherwise fall back to params/context
   const orgSlug = orgSlugProp ?? orgSlugParam;
   const spaceSlug = spaceSlugProp ?? space?.slug;
 
@@ -64,27 +70,37 @@ export function CommandReviewDetail({
   const { data: selectedRecipe } = useGetRecipeByIdQuery(recipeId);
 
   const pool = useChangeProposalPool(selectedRecipeProposals);
+  const navigateToNextArtifact = useNavigateAfterApply(artefactId);
 
-  const [showUnifiedView, setShowUnifiedView] = useState(false);
+  const reviewState = useCardReviewState();
 
-  const handleUnifiedViewChange = useCallback(
-    (checked: boolean) => {
-      setShowUnifiedView(checked);
-      if (checked && pool.reviewingProposalId) {
-        pool.handleSelectProposal(pool.reviewingProposalId);
-      }
+  const hasInitiallyExpanded = useRef(false);
+  useEffect(() => {
+    if (hasInitiallyExpanded.current) return;
+    if (selectedRecipeProposals.length === 0) return;
+
+    const sorted = [...selectedRecipeProposals].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+    reviewState.toggleCard([sorted[0].id]);
+    hasInitiallyExpanded.current = true;
+  }, [selectedRecipeProposals, reviewState.toggleCard]);
+
+  const handleAcceptAndCollapse = useCallback(
+    (proposalId: ChangeProposalId) => {
+      pool.handlePoolAccept(proposalId);
+      reviewState.collapseCard(proposalId);
     },
-    [pool],
+    [pool.handlePoolAccept, reviewState.collapseCard],
   );
 
-  const handleSelectProposal = useCallback(
+  const handleDismissAndCollapse = useCallback(
     (proposalId: ChangeProposalId) => {
-      if (showUnifiedView) {
-        setShowUnifiedView(false);
-      }
-      pool.handleSelectProposal(proposalId);
+      pool.handlePoolReject(proposalId);
+      reviewState.collapseCard(proposalId);
     },
-    [pool, showUnifiedView],
+    [pool.handlePoolReject, reviewState.collapseCard],
   );
 
   const outdatedProposalIds = useMemo(
@@ -131,6 +147,7 @@ export function CommandReviewDetail({
       ]);
 
       pool.resetPool();
+      navigateToNextArtifact();
     } catch {
       // Errors are handled by the mutation onError callbacks
     }
@@ -143,48 +160,106 @@ export function CommandReviewDetail({
     applyRecipeChangeProposalsMutation,
     queryClient,
     pool.resetPool,
+    navigateToNextArtifact,
   ]);
+
+  const renderExpandedView = useCallback(
+    (viewMode: ViewMode, proposal: ChangeProposalWithConflicts) => {
+      if (!selectedRecipe) return null;
+
+      if (viewMode === 'diff')
+        return <DiffView recipe={selectedRecipe} proposal={proposal} />;
+      if (viewMode === 'inline')
+        return <InlineView recipe={selectedRecipe} proposal={proposal} />;
+      return null;
+    },
+    [selectedRecipe],
+  );
+
+  const latestProposal = useMemo(() => {
+    if (selectedRecipeProposals.length === 0) return null;
+    return [...selectedRecipeProposals].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+  }, [selectedRecipeProposals]);
+
+  const latestAuthor = latestProposal
+    ? (userLookup.get(latestProposal.createdBy) ?? 'Unknown')
+    : '';
+  const latestTime = latestProposal?.createdAt ?? new Date();
+
+  if (isLoadingProposals) {
+    return (
+      <PMBox gridColumn="span 2" display="flex" justifyContent="center" p={8}>
+        <PMSpinner />
+      </PMBox>
+    );
+  }
+
+  if (!selectedRecipe) {
+    return null;
+  }
 
   return (
     <>
-      <ReviewDetailLayout
-        proposals={selectedRecipeProposals}
-        reviewingProposalId={pool.reviewingProposalId}
-        acceptedProposalIds={pool.acceptedProposalIds}
-        rejectedProposalIds={pool.rejectedProposalIds}
-        blockedByConflictIds={pool.blockedByConflictIds}
-        hasPooledDecisions={pool.hasPooledDecisions}
-        outdatedProposalIds={outdatedProposalIds}
-        userLookup={userLookup}
-        showUnifiedView={showUnifiedView}
-        onSelectProposal={handleSelectProposal}
-        onPoolAccept={pool.handlePoolAccept}
-        onPoolReject={pool.handlePoolReject}
-        onUndoPool={pool.handleUndoPool}
-        onUnifiedViewChange={handleUnifiedViewChange}
-        onSave={handleSave}
-        isSaving={applyRecipeChangeProposalsMutation.isPending}
+      <PMBox
+        gridColumn="span 2"
+        display="flex"
+        flexDirection="column"
+        height="full"
+        overflowY="auto"
       >
-        {isLoadingProposals ? (
-          <PMSpinner />
-        ) : (
-          <ProposalReviewPanel
-            selectedRecipe={selectedRecipe}
-            selectedRecipeProposals={selectedRecipeProposals}
-            reviewingProposalId={pool.reviewingProposalId}
-            outdatedProposalIds={outdatedProposalIds}
+        <CommandReviewHeader
+          artefactName={selectedRecipe.name}
+          artefactVersion={selectedRecipe.version}
+          latestAuthor={latestAuthor}
+          latestTime={latestTime}
+          activeTab={reviewState.activeTab}
+          onTabChange={reviewState.setActiveTab}
+          acceptedCount={pool.acceptedProposalIds.size}
+          hasPooledDecisions={pool.hasPooledDecisions}
+          isSaving={applyRecipeChangeProposalsMutation.isPending}
+          onSave={handleSave}
+        />
+
+        {reviewState.activeTab === 'changes' && (
+          <ChangeProposalAccordion
+            proposals={selectedRecipeProposals}
             acceptedProposalIds={pool.acceptedProposalIds}
             rejectedProposalIds={pool.rejectedProposalIds}
             blockedByConflictIds={pool.blockedByConflictIds}
+            outdatedProposalIds={outdatedProposalIds}
+            expandedCardIds={reviewState.expandedCardIds}
+            showEditButton={false}
             userLookup={userLookup}
-            showUnifiedView={showUnifiedView}
-            onSelectProposal={handleSelectProposal}
-            onPoolAccept={pool.handlePoolAccept}
-            onPoolReject={pool.handlePoolReject}
-            onUndoPool={pool.handleUndoPool}
+            onToggleCard={reviewState.toggleCard}
+            getViewMode={reviewState.getViewMode}
+            onViewModeChange={reviewState.setViewMode}
+            onEdit={() => {
+              /* Edit mode is not supported for commands */
+            }}
+            onAccept={handleAcceptAndCollapse}
+            onDismiss={handleDismissAndCollapse}
+            onUndo={pool.handleUndoPool}
+            onExpandCard={reviewState.expandCard}
+            renderExpandedView={renderExpandedView}
           />
         )}
-      </ReviewDetailLayout>
+
+        {reviewState.activeTab === 'original' && (
+          <OriginalTabContent recipe={selectedRecipe} />
+        )}
+
+        {reviewState.activeTab === 'result' && (
+          <ResultTabContent
+            recipe={selectedRecipe}
+            proposals={selectedRecipeProposals}
+            acceptedProposalIds={pool.acceptedProposalIds}
+          />
+        )}
+      </PMBox>
+
       <PMAlertDialog
         open={blocker.state === 'blocked'}
         onOpenChange={(details) => {

@@ -3,6 +3,7 @@ import { Rule } from '../standards/Rule';
 import { SkillFileId } from '../skills/SkillFileId';
 import { SkillFile } from '../skills/SkillFile';
 import { ChangeProposalType } from './ChangeProposalType';
+import { PackageId, TargetId } from '../deployments';
 
 export type ScalarUpdatePayload = {
   oldValue: string;
@@ -65,6 +66,14 @@ type SkillChangeProposalPayloadMap = {
   >;
 };
 
+/*
+ * Note: the `delete` and `removeFromPackages` fields are there to store the user decision when applying the changeProposal.
+ * */
+export type RemoveArtefactPayload = {
+  targetId: TargetId;
+  packageIds: PackageId[];
+};
+
 export type NewStandardPayload = {
   name: string;
   description: string;
@@ -81,6 +90,7 @@ export type NewSkillPayload = {
   name: string;
   description: string;
   prompt: string;
+  skillMdPermissions: string;
   license?: string;
   compatibility?: string;
   metadata?: Record<string, string>;
@@ -94,10 +104,17 @@ type CreationChangeProposalPayloadMap = {
   [ChangeProposalType.createSkill]: NewSkillPayload;
 };
 
-type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
+type RemovalChangeProposalPayloadMap = {
+  [ChangeProposalType.removeStandard]: RemoveArtefactPayload;
+  [ChangeProposalType.removeCommand]: RemoveArtefactPayload;
+  [ChangeProposalType.removeSkill]: RemoveArtefactPayload;
+};
+
+export type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
   StandardChangeProposalPayloadMap &
   SkillChangeProposalPayloadMap &
-  CreationChangeProposalPayloadMap;
+  CreationChangeProposalPayloadMap &
+  RemovalChangeProposalPayloadMap;
 
 export type ChangeProposalPayload<
   T extends ChangeProposalType = ChangeProposalType,

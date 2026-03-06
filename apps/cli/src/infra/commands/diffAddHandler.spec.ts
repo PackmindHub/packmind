@@ -23,6 +23,28 @@ jest.mock('../utils/editorMessage', () => ({
 const VALID_COMMAND_PATH = '/project/.claude/commands/my-command.md';
 const VALID_COMMAND_CONTENT = '---\nname: My Command\n---\nDo something useful';
 
+const VALID_STANDARD_CONTENT = [
+  '# My Standard',
+  '',
+  'A description of the standard.',
+  '',
+  '## Rules',
+  '',
+  '* Do not use var',
+  '* Always use const',
+].join('\n');
+
+const STANDARD_WITH_SCOPE_CONTENT = [
+  '---',
+  'globs: "**/*.ts"',
+  '---',
+  '## Standard: Scoped Standard',
+  '',
+  'Description with scope.',
+  '',
+  '* Rule one',
+].join('\n');
+
 describe('diffAddHandler', () => {
   let mockSubmitDiffs: jest.Mock;
   let mockGetGlobal: jest.Mock;
@@ -30,6 +52,7 @@ describe('diffAddHandler', () => {
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
   let mockReadFile: jest.Mock;
+  let mockReadSkillDirectory: jest.Mock;
 
   beforeEach(() => {
     mockSubmitDiffs = jest.fn().mockResolvedValue({
@@ -56,6 +79,7 @@ describe('diffAddHandler', () => {
     mockExit = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/project');
     mockReadFile = jest.fn().mockReturnValue(VALID_COMMAND_CONTENT);
+    mockReadSkillDirectory = jest.fn().mockResolvedValue([]);
 
     // Reset stdin.isTTY for each test
     Object.defineProperty(process.stdin, 'isTTY', {
@@ -79,6 +103,7 @@ describe('diffAddHandler', () => {
       exit: mockExit,
       getCwd: mockGetCwd,
       readFile: mockReadFile,
+      readSkillDirectory: mockReadSkillDirectory,
       ...overrides,
     };
   }
@@ -403,6 +428,254 @@ describe('diffAddHandler', () => {
     });
   });
 
+  describe('skill happy path', () => {
+    const VALID_SKILL_MD_CONTENT = [
+      '---',
+      'name: My Skill',
+      'description: A useful skill',
+      '---',
+      'This is the prompt body.',
+    ].join('\n');
+
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('calls submitDiffs with createSkill diff', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              filePath: '/project/.claude/skills/my-skill/SKILL.md',
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'My Skill',
+                description: 'A useful skill',
+                prompt: 'This is the prompt body.',
+                skillMdPermissions: 'rw-r--r--',
+                files: [],
+              },
+              artifactName: 'My Skill',
+              artifactType: 'skill',
+              spaceId: 'space-123',
+            }),
+          ],
+        ],
+        'Add skill',
+      );
+    });
+
+    it('exits with 0 on success', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    describe('when SKILL.md is given', () => {
+      it('calls readSkillDirectory with directory path', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/SKILL.md',
+            message: 'Add skill',
+          }),
+        );
+
+        expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+          '/project/.claude/skills/my-skill',
+        );
+      });
+    });
+
+    describe('when directory is given', () => {
+      it('calls readSkillDirectory with directory path', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/',
+            message: 'Add skill',
+          }),
+        );
+
+        expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+          '/project/.claude/skills/my-skill',
+        );
+      });
+    });
+
+    it('does not call readFile for skill paths', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          message: 'Add skill',
+        }),
+      );
+
+      expect(mockReadFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('skill with supporting files', () => {
+    const VALID_SKILL_MD_CONTENT = [
+      '---',
+      'name: Complex Skill',
+      'description: Skill with files',
+      'license: MIT',
+      '---',
+      'The prompt.',
+    ].join('\n');
+
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/complex/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+        {
+          path: '/project/.claude/skills/complex/helper.py',
+          relativePath: 'helper.py',
+          content: 'print("hello")',
+          size: 14,
+          permissions: '755',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('includes supporting files in the payload', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/complex/SKILL.md',
+          message: 'Add complex skill',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'Complex Skill',
+                description: 'Skill with files',
+                prompt: 'The prompt.',
+                skillMdPermissions: 'rw-r--r--',
+                license: 'MIT',
+                files: [
+                  {
+                    path: 'helper.py',
+                    content: 'print("hello")',
+                    permissions: '755',
+                    isBase64: false,
+                  },
+                ],
+              },
+            }),
+          ],
+        ],
+        'Add complex skill',
+      );
+    });
+  });
+
+  describe('skill directory read failure', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockRejectedValue(
+        new Error('ENOENT: no such file or directory'),
+      );
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/missing/SKILL.md',
+          message: 'Add missing skill',
+        }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to read skill directory'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/missing/SKILL.md',
+          message: 'Add missing skill',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('skill parse failure', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/bad/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: 'No frontmatter here',
+          size: 19,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/bad/SKILL.md',
+          message: 'Add bad skill',
+        }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to parse SKILL.md'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/bad/SKILL.md',
+          message: 'Add bad skill',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('file path without frontmatter', () => {
     it('uses filename as command name', async () => {
       mockReadFile.mockReturnValue('Just plain content');
@@ -420,6 +693,324 @@ describe('diffAddHandler', () => {
         ],
         'Add new command',
       );
+    });
+  });
+
+  describe('standard file happy path', () => {
+    it('calls submitDiffs with createStandard diff for .packmind/standards/', async () => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.packmind/standards/my-standard.md',
+          message: 'Add standard',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              filePath: '/project/.packmind/standards/my-standard.md',
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'My Standard',
+                description: 'A description of the standard.',
+                scope: null,
+                rules: [
+                  { content: 'Do not use var' },
+                  { content: 'Always use const' },
+                ],
+              },
+              artifactName: 'My Standard',
+              artifactType: 'standard',
+              spaceId: 'space-123',
+            }),
+          ],
+        ],
+        'Add standard',
+      );
+    });
+
+    it('calls submitDiffs with createStandard diff for .claude/rules/packmind/', async () => {
+      mockReadFile.mockReturnValue(STANDARD_WITH_SCOPE_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/rules/packmind/standard-scoped.md',
+          message: 'Add scoped standard',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'Scoped Standard',
+                description: 'Description with scope.',
+                scope: '**/*.ts',
+                rules: [{ content: 'Rule one' }],
+              },
+              artifactName: 'Scoped Standard',
+              artifactType: 'standard',
+            }),
+          ],
+        ],
+        'Add scoped standard',
+      );
+    });
+
+    it('maps empty scope to null', async () => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.packmind/standards/my-standard.md',
+          message: 'Add standard',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              payload: expect.objectContaining({ scope: null }),
+            }),
+          ],
+        ],
+        'Add standard',
+      );
+    });
+
+    describe('when packmind standard has no rules', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          '# Empty Standard\n\nJust a description.\n',
+        );
+      });
+
+      it('logs no-rules error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Standard has no rules'),
+        );
+      });
+
+      it('includes packmind format example in error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('## Rules'),
+        );
+      });
+
+      it('does not call submitDiffs', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(mockSubmitDiffs).not.toHaveBeenCalled();
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/empty.md',
+            message: 'Add empty standard',
+          }),
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
+  describe('standard file without standard- prefix', () => {
+    it('parses correctly using agent-based parser', async () => {
+      mockReadFile.mockReturnValue(STANDARD_WITH_SCOPE_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/rules/packmind/my-custom-rule.md',
+          message: 'Add custom rule',
+        }),
+      );
+
+      expect(mockSubmitDiffs).toHaveBeenCalledWith(
+        [
+          [
+            expect.objectContaining({
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'Scoped Standard',
+                description: 'Description with scope.',
+                scope: '**/*.ts',
+                rules: [{ content: 'Rule one' }],
+              },
+              artifactName: 'Scoped Standard',
+              artifactType: 'standard',
+            }),
+          ],
+        ],
+        'Add custom rule',
+      );
+    });
+
+    it('exits with 0 on success', async () => {
+      mockReadFile.mockReturnValue(STANDARD_WITH_SCOPE_CONTENT);
+
+      await diffAddHandler(
+        buildDeps({
+          filePath: '.claude/rules/packmind/my-custom-rule.md',
+          message: 'Add custom rule',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('standard file parse failure', () => {
+    describe('when content does not match any standard format', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue('Some random content without heading');
+      });
+
+      it('logs error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/bad.md',
+            message: 'Add bad standard',
+          }),
+        );
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('File format is invalid'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/bad.md',
+            message: 'Add bad standard',
+          }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when claude rules file lacks ## Standard: header', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          'Everything about our testing conventions\n- single assertion\n- does not start with should',
+        );
+      });
+
+      it('logs format error with expected format example', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/jest-conventions.md',
+            message: 'Add jest conventions',
+          }),
+        );
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('## Standard: <name>'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/jest-conventions.md',
+            message: 'Add jest conventions',
+          }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when claude standard has heading but no rules', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          '## Standard: Empty\n\nJust a description.\n',
+        );
+      });
+
+      it('logs no-rules error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/packmind/standard-empty.md',
+            message: 'Add empty',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Standard has no rules'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.claude/rules/packmind/standard-empty.md',
+            message: 'Add empty',
+          }),
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when standard contains only the fallback placeholder rule', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(
+          '# Template Standard\n\nDescription\n\n## Rules\n\n* No rules defined yet.\n',
+        );
+      });
+
+      it('logs no-rules error', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/template.md',
+            message: 'Add template',
+          }),
+        );
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Standard has no rules'),
+        );
+      });
+
+      it('does not call submitDiffs', async () => {
+        await diffAddHandler(
+          buildDeps({
+            filePath: '.packmind/standards/template.md',
+            message: 'Add template',
+          }),
+        );
+        expect(mockSubmitDiffs).not.toHaveBeenCalled();
+      });
     });
   });
 });
