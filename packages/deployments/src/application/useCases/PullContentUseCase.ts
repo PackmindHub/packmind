@@ -128,11 +128,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       > = [];
 
       // Build a lookup map from artifact type + name to artifactId and spaceId
-      type ArtifactMetadata = {
-        artifactId: string;
-        spaceId: string;
-        version: number;
-      };
+      type ArtifactMetadata = { artifactId: string; spaceId: string };
       const artifactMetadata: Record<
         ArtifactType,
         Map<string, ArtifactMetadata>
@@ -260,7 +256,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             artifactMetadata.command.set(rv.name, {
               artifactId: rv.recipeId as string,
               spaceId,
-              version: rv.version,
             });
           }
         }
@@ -270,7 +265,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             artifactMetadata.standard.set(sv.name, {
               artifactId: sv.standardId as string,
               spaceId,
-              version: sv.version,
             });
           }
         }
@@ -280,7 +274,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             artifactMetadata.skill.set(skv.name, {
               artifactId: skv.skillId as string,
               spaceId,
-              version: skv.version,
             });
           }
         }
@@ -614,7 +607,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         );
       mergedFileUpdates.createOrUpdate.push(configFile);
 
-      // Enrich file modifications with artifactId, spaceId, and artifactVersion from the metadata map
+      // Enrich file modifications with artifactId and spaceId from the metadata map
       for (const file of mergedFileUpdates.createOrUpdate) {
         if (file.artifactType && file.artifactName) {
           const metadata = artifactMetadata[file.artifactType].get(
@@ -623,7 +616,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           if (metadata) {
             file.artifactId = metadata.artifactId;
             file.spaceId = metadata.spaceId;
-            file.artifactVersion = metadata.version;
           }
         }
       }

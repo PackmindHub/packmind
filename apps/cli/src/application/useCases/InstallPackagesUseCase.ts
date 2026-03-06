@@ -4,13 +4,7 @@ import {
   IInstallPackagesUseCase,
 } from '../../domain/useCases/IInstallPackagesUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import {
-  PackmindLockFile,
-  PackmindLockFileEntry,
-} from '../../domain/repositories/PackmindLockFile';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
-import { FileModification } from '@packmind/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import {
@@ -19,10 +13,7 @@ import {
 } from '../../infra/utils/permissions';
 
 export class InstallPackagesUseCase implements IInstallPackagesUseCase {
-  constructor(
-    private readonly packmindGateway: IPackmindGateway,
-    private readonly lockFileRepository: ILockFileRepository,
-  ) {}
+  constructor(private readonly packmindGateway: IPackmindGateway) {}
 
   public async execute(
     command: IInstallPackagesCommand,
@@ -127,55 +118,12 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
           result.errors.push(`Failed to delete ${file.path}: ${errorMsg}`);
         }
       }
-
-      // Generate lock file from artifacts with metadata
-      const lockFile = this.buildLockFile(filteredCreateOrUpdate);
-      if (lockFile.artifacts.length > 0) {
-        try {
-          await this.lockFileRepository.write(baseDirectory, lockFile);
-        } catch (error) {
-          const errorMsg =
-            error instanceof Error ? error.message : String(error);
-          result.errors.push(`Failed to write lock file: ${errorMsg}`);
-        }
-      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       result.errors.push(`Failed to install packages: ${errorMsg}`);
     }
 
     return result;
-  }
-
-  private buildLockFile(files: FileModification[]): PackmindLockFile {
-    const artifactsMap = new Map<string, PackmindLockFileEntry>();
-
-    for (const file of files) {
-      if (
-        !file.artifactType ||
-        !file.artifactName ||
-        !file.artifactId ||
-        file.artifactVersion === undefined ||
-        !file.spaceId
-      ) {
-        continue;
-      }
-      if (artifactsMap.has(file.artifactId)) {
-        continue;
-      }
-      artifactsMap.set(file.artifactId, {
-        type: file.artifactType,
-        name: file.artifactName,
-        id: file.artifactId,
-        version: file.artifactVersion,
-        spaceId: file.spaceId,
-      });
-    }
-
-    return {
-      lockfileVersion: 1,
-      artifacts: Array.from(artifactsMap.values()),
-    };
   }
 
   private async createOrUpdateFile(

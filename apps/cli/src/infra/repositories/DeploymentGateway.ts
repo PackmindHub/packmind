@@ -1,7 +1,6 @@
 import {
   Gateway,
   GetRenderModeConfigurationResult,
-  IGetContentByVersionsUseCase,
   IGetDeployedContentUseCase,
   IGetRenderModeConfigurationUseCase,
   INotifyDistributionUseCase,
@@ -76,22 +75,6 @@ export class DeploymentGateway implements IDeploymentGateway {
       },
     );
   };
-
-  public getContentByVersions: Gateway<IGetContentByVersionsUseCase> =
-    async (command) => {
-      const { organizationId } = this.httpClient.getAuthContext();
-
-      return this.httpClient.request(
-        `/api/v0/organizations/${organizationId}/content-by-versions`,
-        {
-          method: 'POST',
-          body: {
-            artifacts: command.artifacts,
-            ...(command.agents !== undefined && { agents: command.agents }),
-          },
-        },
-      );
-    };
 
   public notifyDistribution: Gateway<INotifyDistributionUseCase> = async (
     command,
