@@ -1,7 +1,6 @@
 import * as fs from 'fs/promises';
 
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 import { DeleteItemType } from '@packmind/types';
 jest.mock('fs/promises');
@@ -9,7 +8,6 @@ jest.mock('fs/promises');
 describe('InstallPackagesUseCase', () => {
   let useCase: InstallPackagesUseCase;
   let mockGateway: jest.Mocked<IPackmindGateway>;
-  let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
 
   beforeEach(() => {
     mockGateway = {
@@ -24,11 +22,6 @@ describe('InstallPackagesUseCase', () => {
       },
     } as unknown as jest.Mocked<IPackmindGateway>;
 
-    mockLockFileRepository = {
-      read: jest.fn(),
-      write: jest.fn().mockResolvedValue(undefined),
-    };
-
     // Setup fs mocks using jest.Mock casting
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
     (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
@@ -42,7 +35,7 @@ describe('InstallPackagesUseCase', () => {
     (fs.rmdir as jest.Mock).mockResolvedValue(undefined);
     (fs.chmod as jest.Mock).mockResolvedValue(undefined);
 
-    useCase = new InstallPackagesUseCase(mockGateway, mockLockFileRepository);
+    useCase = new InstallPackagesUseCase(mockGateway);
   });
 
   afterEach(() => {
@@ -1453,297 +1446,6 @@ Old packmind content
         });
 
         expect(fs.chmod).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('lock file generation', () => {
-    describe('when artifacts have metadata', () => {
-      beforeEach(async () => {
-        mockGateway.deployment.pull.mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: '.packmind/standards/coding-style.md',
-                content: '# Coding Style',
-                artifactType: 'standard',
-                artifactName: 'Coding Style',
-                artifactId: 'artifact-1',
-                artifactVersion: 3,
-                spaceId: 'space-1',
-              },
-              {
-                path: '.packmind/recipes/setup-lint.md',
-                content: '# Setup Lint',
-                artifactType: 'command',
-                artifactName: 'Setup Lint',
-                artifactId: 'artifact-2',
-                artifactVersion: 1,
-                spaceId: 'space-1',
-              },
-            ],
-            delete: [],
-          },
-          skillFolders: [],
-        });
-
-        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
-
-        await useCase.execute({
-          packagesSlugs: ['test-package'],
-          baseDirectory: '/test',
-        });
-      });
-
-      it('writes lock file with correct metadata', () => {
-        expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
-          lockfileVersion: 1,
-          artifacts: [
-            {
-              type: 'standard',
-              name: 'Coding Style',
-              id: 'artifact-1',
-              version: 3,
-              spaceId: 'space-1',
-            },
-            {
-              type: 'command',
-              name: 'Setup Lint',
-              id: 'artifact-2',
-              version: 1,
-              spaceId: 'space-1',
-            },
-          ],
-        });
-      });
-    });
-
-    describe('when artifacts are duplicated across agents', () => {
-      beforeEach(async () => {
-        mockGateway.deployment.pull.mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: '.claude/standards/coding-style.md',
-                content: '# Coding Style for Claude',
-                artifactType: 'standard',
-                artifactName: 'Coding Style',
-                artifactId: 'artifact-1',
-                artifactVersion: 2,
-                spaceId: 'space-1',
-              },
-              {
-                path: '.cursor/standards/coding-style.md',
-                content: '# Coding Style for Cursor',
-                artifactType: 'standard',
-                artifactName: 'Coding Style',
-                artifactId: 'artifact-1',
-                artifactVersion: 2,
-                spaceId: 'space-1',
-              },
-            ],
-            delete: [],
-          },
-          skillFolders: [],
-        });
-
-        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
-
-        await useCase.execute({
-          packagesSlugs: ['test-package'],
-          baseDirectory: '/test',
-        });
-      });
-
-      it('deduplicates artifacts by artifactId', () => {
-        expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
-          lockfileVersion: 1,
-          artifacts: [
-            {
-              type: 'standard',
-              name: 'Coding Style',
-              id: 'artifact-1',
-              version: 2,
-              spaceId: 'space-1',
-            },
-          ],
-        });
-      });
-    });
-
-    describe('when no artifacts have metadata', () => {
-      beforeEach(async () => {
-        mockGateway.deployment.pull.mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: 'CLAUDE.md',
-                content: '# Project docs',
-              },
-              {
-                path: '.cursor/rules/config.mdc',
-                sections: [
-                  { key: 'test-section', content: 'content' },
-                ],
-              },
-            ],
-            delete: [],
-          },
-          skillFolders: [],
-        });
-
-        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
-
-        await useCase.execute({
-          packagesSlugs: ['test-package'],
-          baseDirectory: '/test',
-        });
-      });
-
-      it('does not write lock file', () => {
-        expect(mockLockFileRepository.write).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when some artifacts have partial metadata', () => {
-      beforeEach(async () => {
-        mockGateway.deployment.pull.mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: '.packmind/standards/complete.md',
-                content: '# Complete',
-                artifactType: 'standard',
-                artifactName: 'Complete Standard',
-                artifactId: 'artifact-1',
-                artifactVersion: 1,
-                spaceId: 'space-1',
-              },
-              {
-                path: '.packmind/standards/partial.md',
-                content: '# Partial',
-                artifactType: 'standard',
-                artifactName: 'Partial Standard',
-                // missing artifactId, artifactVersion, spaceId
-              },
-            ],
-            delete: [],
-          },
-          skillFolders: [],
-        });
-
-        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
-
-        await useCase.execute({
-          packagesSlugs: ['test-package'],
-          baseDirectory: '/test',
-        });
-      });
-
-      it('only includes artifacts with complete metadata', () => {
-        expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
-          lockfileVersion: 1,
-          artifacts: [
-            {
-              type: 'standard',
-              name: 'Complete Standard',
-              id: 'artifact-1',
-              version: 1,
-              spaceId: 'space-1',
-            },
-          ],
-        });
-      });
-    });
-
-    describe('when lock file write fails', () => {
-      let result: Awaited<ReturnType<typeof useCase.execute>>;
-
-      beforeEach(async () => {
-        mockGateway.deployment.pull.mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: '.packmind/standards/coding-style.md',
-                content: '# Coding Style',
-                artifactType: 'standard',
-                artifactName: 'Coding Style',
-                artifactId: 'artifact-1',
-                artifactVersion: 1,
-                spaceId: 'space-1',
-              },
-            ],
-            delete: [],
-          },
-          skillFolders: [],
-        });
-
-        (fs.access as jest.Mock).mockRejectedValue(
-          new Error('File not found'),
-        );
-
-        mockLockFileRepository.write.mockRejectedValue(
-          new Error('Permission denied'),
-        );
-
-        result = await useCase.execute({
-          packagesSlugs: ['test-package'],
-          baseDirectory: '/test',
-        });
-      });
-
-      it('pushes error to result errors', () => {
-        expect(result.errors).toContainEqual(
-          'Failed to write lock file: Permission denied',
-        );
-      });
-
-      it('still returns successful install result', () => {
-        expect(result.filesCreated).toBe(1);
-      });
-    });
-
-    describe('when install fails', () => {
-      let result: Awaited<ReturnType<typeof useCase.execute>>;
-
-      beforeEach(async () => {
-        mockGateway.deployment.pull.mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: '.packmind/standards/coding-style.md',
-                content: '# Coding Style',
-                artifactType: 'standard',
-                artifactName: 'Coding Style',
-                artifactId: 'artifact-1',
-                artifactVersion: 1,
-                spaceId: 'space-1',
-              },
-            ],
-            delete: [],
-          },
-          skillFolders: [],
-        });
-
-        // Make deleteSkillFolders throw to simulate install failure
-        jest
-          .spyOn(useCase as never, 'deleteSkillFolders' as never)
-          .mockRejectedValue(new Error('Critical failure'));
-
-        result = await useCase.execute({
-          packagesSlugs: ['test-package'],
-          baseDirectory: '/test',
-        });
-      });
-
-      it('does not write lock file', () => {
-        expect(mockLockFileRepository.write).not.toHaveBeenCalled();
-      });
-
-      it('reports the install failure error', () => {
-        expect(result.errors).toContainEqual(
-          'Failed to install packages: Critical failure',
-        );
       });
     });
   });

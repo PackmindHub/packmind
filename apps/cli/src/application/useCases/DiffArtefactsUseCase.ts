@@ -5,8 +5,7 @@ import {
   ArtefactDiff,
 } from '../../domain/useCases/IDiffArtefactsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { FileModification, IPullContentResponse } from '@packmind/types';
+import { FileModification } from '@packmind/types';
 import { DiffableFile } from './diffStrategies/DiffableFile';
 import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
 import { CommandDiffStrategy } from './diffStrategies/CommandDiffStrategy';
@@ -16,10 +15,7 @@ import { StandardDiffStrategy } from './diffStrategies/StandardDiffStrategy';
 export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
   private readonly strategies: IDiffStrategy[];
 
-  constructor(
-    private readonly packmindGateway: IPackmindGateway,
-    private readonly lockFileRepository: ILockFileRepository,
-  ) {
+  constructor(private readonly packmindGateway: IPackmindGateway) {
     this.strategies = [
       new CommandDiffStrategy(),
       new SkillDiffStrategy(),
@@ -32,7 +28,13 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
   ): Promise<IDiffArtefactsResult> {
     const baseDirectory = command.baseDirectory || process.cwd();
 
-    const response = await this.fetchContent(command, baseDirectory);
+    const response = await this.packmindGateway.deployment.getDeployed({
+      packagesSlugs: command.packagesSlugs,
+      gitRemoteUrl: command.gitRemoteUrl,
+      gitBranch: command.gitBranch,
+      relativePath: command.relativePath,
+      agents: command.agents,
+    });
 
     const filteredFiles = response.fileUpdates.createOrUpdate.filter(
       (file) => file.path !== 'packmind.json',
@@ -79,28 +81,6 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
     }
 
     return diffs;
-  }
-
-  private async fetchContent(
-    command: IDiffArtefactsCommand,
-    baseDirectory: string,
-  ): Promise<IPullContentResponse> {
-    const lockFile = await this.lockFileRepository.read(baseDirectory);
-
-    if (lockFile) {
-      return this.packmindGateway.deployment.getContentByVersions({
-        artifacts: lockFile.artifacts,
-        agents: command.agents,
-      });
-    }
-
-    return this.packmindGateway.deployment.getDeployed({
-      packagesSlugs: command.packagesSlugs,
-      gitRemoteUrl: command.gitRemoteUrl,
-      gitBranch: command.gitBranch,
-      relativePath: command.relativePath,
-      agents: command.agents,
-    });
   }
 
   private prefixSkillFolders(
