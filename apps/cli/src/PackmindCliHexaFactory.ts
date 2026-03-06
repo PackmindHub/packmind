@@ -131,6 +131,7 @@ export class PackmindCliHexaFactory {
       }),
       diffArtefacts: new DiffArtefactsUseCase(
         this.repositories.packmindGateway,
+        this.repositories.lockFileRepository,
       ),
       submitDiffs: new SubmitDiffsUseCase(this.repositories.packmindGateway),
       checkDiffs: new CheckDiffsUseCase(this.repositories.packmindGateway),
