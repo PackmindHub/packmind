@@ -6,7 +6,7 @@ import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues
 import { isMarkdownContent } from '../../utils/isMarkdownContent';
 import { ProposalMessage } from './ProposalMessage';
 import { CardToolbar } from './CardToolbar';
-import { DiffView } from './DiffView';
+import { FocusedView } from './FocusedView';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -84,7 +84,7 @@ export function ChangeProposalCardBody({
           ? renderExpandedView(viewMode, proposal)
           : viewMode === 'focused'
             ? (renderExpandedView?.(viewMode, proposal) ?? (
-                <DiffView
+                <FocusedView
                   oldValue={oldValue}
                   newValue={newValue}
                   isMarkdownContent={markdown}

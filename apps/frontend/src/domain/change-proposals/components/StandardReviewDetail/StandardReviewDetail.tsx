@@ -30,7 +30,7 @@ import { getStandardByIdKey } from '../../../standards/api/queryKeys';
 import { computeStandardOutdatedIds } from '../../utils/computeOutdatedProposalIds';
 import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { ReviewHeader } from '../shared/ReviewHeader';
-import { StandardFocusedView } from './StandardFocusedView';
+import { StandardDiffView } from './StandardDiffView';
 import { StandardInlineView } from './StandardInlineView';
 import { StandardOriginalTabContent } from './StandardOriginalTabContent';
 import { StandardResultTabContent } from './StandardResultTabContent';
@@ -180,7 +180,7 @@ export function StandardReviewDetail({
 
       if (viewMode === 'diff')
         return (
-          <StandardFocusedView
+          <StandardDiffView
             proposal={proposal}
             standard={selectedStandard}
             rules={rules}

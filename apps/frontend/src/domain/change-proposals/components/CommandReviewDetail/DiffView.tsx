@@ -6,12 +6,12 @@ import { buildDiffSections } from '../../utils/buildDiffSections';
 import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { DiffBlock } from '../shared/DiffBlock';
 
-interface FocusedViewProps {
+interface DiffViewProps {
   recipe: Recipe;
   proposal: ChangeProposalWithConflicts;
 }
 
-export function FocusedView({ recipe, proposal }: Readonly<FocusedViewProps>) {
+export function DiffView({ recipe, proposal }: Readonly<DiffViewProps>) {
   const isDescriptionChange =
     proposal.type === ChangeProposalType.updateCommandDescription;
   const isNameChange = proposal.type === ChangeProposalType.updateCommandName;

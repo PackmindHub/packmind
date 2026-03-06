@@ -16,15 +16,15 @@ import {
   isBinaryProposal,
 } from '../../utils/groupSkillProposalsByFile';
 
-interface SkillFocusedViewProps {
+interface SkillDiffViewProps {
   proposal: ChangeProposalWithConflicts;
   files: SkillFile[];
 }
 
-export function SkillFocusedView({
+export function SkillDiffView({
   proposal,
   files,
-}: Readonly<SkillFocusedViewProps>) {
+}: Readonly<SkillDiffViewProps>) {
   const { oldValue, newValue } = extractProposalDiffValues(proposal);
   const isScalar = SCALAR_SKILL_TYPES.has(proposal.type);
   const isMarkdownField = SKILL_MD_MARKDOWN_TYPES.has(proposal.type);
