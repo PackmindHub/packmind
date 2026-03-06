@@ -11,7 +11,7 @@
       }
     },
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/assets",

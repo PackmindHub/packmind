@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/swcrc",
+  "jsc": {
+    "target": "es2015",
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true
+    },
+    "keepClassNames": true,
+    "externalHelpers": true
+  },
+  "module": {
+    "type": "es6"
+  },
+  "sourceMaps": true,
+  "exclude": [
+    "jest.config.ts",
+    ".*\\.spec\\.tsx?$",
+    ".*\\.test\\.tsx?$",
+    ".*/jest\\.config\\.ts$"
+  ]
+}

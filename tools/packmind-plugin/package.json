@@ -7,7 +7,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "@nx/devkit": "22.5.3",
-    "tslib": "^2.3.0"
+    "@swc/helpers": "~0.5.19"
   },
   "generators": "./generators.json"
 }

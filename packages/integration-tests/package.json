@@ -8,7 +8,7 @@
   "dependencies": {
     "bullmq": "^5.58.2",
     "jsonwebtoken": "^9.0.2",
-    "tslib": "^2.3.0",
+    "@swc/helpers": "~0.5.19",
     "@packmind/accounts": "*",
     "@packmind/editions": "*",
     "@packmind/recipes": "*",
