@@ -1,33 +1,20 @@
 import {
   ChangeProposalId,
-  ChangeProposalType,
   Recipe,
   RecipeVersion,
   CommandChangeProposalApplier,
   DiffService,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
-import {
-  FieldChange,
-  PREVIEW_RECIPE_VERSION_ID,
-  trackScalarChange,
-} from './changeProposalHelpers';
-
-export interface RecipeChangeTracker {
-  [key: string]: FieldChange | undefined;
-  name?: FieldChange;
-  content?: FieldChange;
-}
+import { PREVIEW_RECIPE_VERSION_ID } from './changeProposalHelpers';
 
 export interface AppliedRecipe {
   name: string;
   content: string;
-  changes: RecipeChangeTracker;
 }
 
 /**
- * Applies all accepted change proposals sequentially to a recipe,
- * tracking all changes for highlighting in the unified view.
+ * Applies all accepted change proposals sequentially to a recipe.
  *
  * Uses the shared CommandChangeProposalApplier for computing the
  * final state, including diff-based merging for content changes.
@@ -44,7 +31,7 @@ export function applyRecipeProposals(
   );
 
   if (sortedProposals.length === 0) {
-    return { name: recipe.name, content: recipe.content, changes: {} };
+    return { name: recipe.name, content: recipe.content };
   }
 
   // Build a RecipeVersion for the shared applier
@@ -61,25 +48,5 @@ export function applyRecipeProposals(
   const applier = new CommandChangeProposalApplier(new DiffService());
   const result = applier.applyChangeProposals(sourceVersion, sortedProposals);
 
-  // Build change tracker from proposal classification
-  const changes: RecipeChangeTracker = {};
-
-  trackScalarChange(
-    changes,
-    'name',
-    recipe.name,
-    result.name,
-    sortedProposals,
-    ChangeProposalType.updateCommandName,
-  );
-  trackScalarChange(
-    changes,
-    'content',
-    recipe.content,
-    result.content,
-    sortedProposals,
-    ChangeProposalType.updateCommandDescription,
-  );
-
-  return { name: result.name, content: result.content, changes };
+  return { name: result.name, content: result.content };
 }
