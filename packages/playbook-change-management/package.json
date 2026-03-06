@@ -18,6 +18,5 @@
     "tslib": "^2.3.0",
     "typeorm": "0.3.28",
     "uuid": "^11.1.0"
-  },
-  "devDependencies": {}
+  }
 }

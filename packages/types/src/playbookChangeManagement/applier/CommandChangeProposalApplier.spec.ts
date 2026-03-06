@@ -1,55 +1,29 @@
 import { CommandChangeProposalApplier } from './CommandChangeProposalApplier';
 import { DiffService } from './DiffService';
 import { ChangeProposalConflictError } from './ChangeProposalConflictError';
+import { v4 as uuidv4 } from 'uuid';
+import { createChangeProposalFactory } from './testHelpers';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
-import { ChangeProposalStatus } from '../ChangeProposalStatus';
-import { ChangeProposalCaptureMode } from '../ChangeProposalCaptureMode';
-import { createChangeProposalId } from '../ChangeProposalId';
 import {
   RecipeVersion,
   createRecipeVersionId,
 } from '../../recipes/RecipeVersion';
 import { createRecipeId } from '../../recipes/RecipeId';
-import { createSpaceId } from '../../spaces/SpaceId';
 import { createUserId } from '../../accounts/User';
 
-let idCounter = 0;
-const nextId = () => `test-id-${++idCounter}`;
-
-const changeProposalFactory = <T extends ChangeProposalType>(
-  overrides: Partial<ChangeProposal<T>> & {
-    type: T;
-    payload: ChangeProposal<T>['payload'];
-  },
-): ChangeProposal<T> =>
-  ({
-    id: createChangeProposalId(nextId()),
-    artefactId: createRecipeId(nextId()),
-    artefactVersion: 1,
-    spaceId: createSpaceId(nextId()),
-    captureMode: ChangeProposalCaptureMode.commit,
-    message: '',
-    status: ChangeProposalStatus.pending,
-    decision: null,
-    createdBy: createUserId(nextId()),
-    resolvedBy: null,
-    resolvedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }) as ChangeProposal<T>;
+const changeProposalFactory = createChangeProposalFactory(createRecipeId);
 
 const recipeVersionFactory = (
   overrides?: Partial<RecipeVersion>,
 ): RecipeVersion => ({
-  id: createRecipeVersionId(nextId()),
-  recipeId: createRecipeId(nextId()),
+  id: createRecipeVersionId(uuidv4()),
+  recipeId: createRecipeId(uuidv4()),
   name: 'Test Command',
   slug: 'test-command',
   content: 'Test content',
   version: 1,
-  userId: createUserId(nextId()),
+  userId: createUserId(uuidv4()),
   ...overrides,
 });
 
@@ -162,6 +136,22 @@ describe('CommandChangeProposalApplier', () => {
         expect(() =>
           applier.applyChangeProposals(source, [proposal as ChangeProposal]),
         ).toThrow(ChangeProposalConflictError);
+      });
+    });
+
+    describe('unsupported type', () => {
+      it('throws an error for unsupported change proposal types', () => {
+        const source = recipeVersionFactory();
+        const proposal = changeProposalFactory({
+          type: ChangeProposalType.updateStandardName,
+          payload: { oldValue: 'Old', newValue: 'New' },
+        });
+
+        expect(() =>
+          applier.applyChangeProposals(source, [
+            proposal as unknown as ChangeProposal,
+          ]),
+        ).toThrow('Unsupported ChangeProposalType');
       });
     });
   });

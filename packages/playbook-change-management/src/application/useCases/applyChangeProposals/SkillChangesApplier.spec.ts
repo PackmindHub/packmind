@@ -8,10 +8,10 @@ import {
   ChangeProposalConflictError,
 } from '@packmind/types';
 import { changeProposalFactory } from '../../../../test';
-import { PersistableSkillChangeProposalApplier } from './PersistableSkillChangeProposalApplier';
+import { SkillChangesApplier } from './SkillChangesApplier';
 
-describe('PersistableSkillChangeProposalApplier', () => {
-  let applier: PersistableSkillChangeProposalApplier;
+describe('SkillChangesApplier', () => {
+  let applier: SkillChangesApplier;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let diffService: DiffService;
 
@@ -19,10 +19,7 @@ describe('PersistableSkillChangeProposalApplier', () => {
     diffService = new DiffService();
     skillsPort = {} as unknown as jest.Mocked<ISkillsPort>;
 
-    applier = new PersistableSkillChangeProposalApplier(
-      diffService,
-      skillsPort,
-    );
+    applier = new SkillChangesApplier(diffService, skillsPort);
   });
 
   const skillVersion = skillVersionFactory({

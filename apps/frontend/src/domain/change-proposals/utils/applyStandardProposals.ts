@@ -9,16 +9,16 @@ import {
   StandardVersion,
   StandardChangeProposalApplier,
   DiffService,
-  createStandardVersionId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
-import { buildProposalNumberMap } from './changeProposalHelpers';
+import {
+  buildProposalNumberMap,
+  FieldChange,
+  PREVIEW_STANDARD_VERSION_ID,
+  trackScalarChange,
+} from './changeProposalHelpers';
 
-export interface FieldChange {
-  originalValue: string;
-  finalValue: string;
-  proposalIds: ChangeProposalId[];
-}
+export type { FieldChange } from './changeProposalHelpers';
 
 export interface RuleChange {
   added: Map<RuleId, ChangeProposalId>;
@@ -45,9 +45,8 @@ export interface AppliedStandard {
  * Applies all accepted change proposals sequentially to a standard,
  * tracking all changes for highlighting in the unified view.
  *
- * Uses the shared StandardChangeProposalApplier for scalar field
- * computation (including diff-based description merging), while
- * handling rule operations manually for frontend-specific temp IDs.
+ * Uses the shared StandardChangeProposalApplier for all field computation
+ * (scalars + rules), then builds tracking maps in a pure second pass.
  */
 export function applyStandardProposals(
   standard: Standard,
@@ -65,7 +64,7 @@ export function applyStandardProposals(
 
   // Use shared applier for scalar field computation (name, scope, description)
   const sourceVersion: StandardVersion = {
-    id: rules[0]?.standardVersionId || createStandardVersionId(''),
+    id: rules[0]?.standardVersionId ?? PREVIEW_STANDARD_VERSION_ID,
     standardId: standard.id,
     name: standard.name,
     slug: standard.slug,
@@ -99,85 +98,58 @@ export function applyStandardProposals(
     },
   };
 
-  const nameProposalIds = sortedProposals
-    .filter((p) => p.type === ChangeProposalType.updateStandardName)
-    .map((p) => p.id);
-  if (nameProposalIds.length > 0) {
-    changes.name = {
-      originalValue: originalName,
-      finalValue: finalName,
-      proposalIds: nameProposalIds,
-    };
-  }
+  trackScalarChange(
+    changes,
+    'name',
+    originalName,
+    finalName,
+    sortedProposals,
+    ChangeProposalType.updateStandardName,
+  );
+  trackScalarChange(
+    changes,
+    'scope',
+    originalScope,
+    finalScope,
+    sortedProposals,
+    ChangeProposalType.updateStandardScope,
+  );
+  trackScalarChange(
+    changes,
+    'description',
+    originalDescription,
+    finalDescription,
+    sortedProposals,
+    ChangeProposalType.updateStandardDescription,
+  );
 
-  const scopeProposalIds = sortedProposals
-    .filter((p) => p.type === ChangeProposalType.updateStandardScope)
-    .map((p) => p.id);
-  if (scopeProposalIds.length > 0) {
-    changes.scope = {
-      originalValue: originalScope,
-      finalValue: finalScope,
-      proposalIds: scopeProposalIds,
-    };
-  }
-
-  const descriptionProposalIds = sortedProposals
-    .filter((p) => p.type === ChangeProposalType.updateStandardDescription)
-    .map((p) => p.id);
-  if (descriptionProposalIds.length > 0) {
-    changes.description = {
-      originalValue: originalDescription,
-      finalValue: finalDescription,
-      proposalIds: descriptionProposalIds,
-    };
-  }
-
-  // Handle rule operations manually for frontend-specific temp IDs
-  let currentRules = [...rules];
-
+  // Build rule change tracking in a second pass over proposals
+  // (the shared applier already computed appliedResult.rules)
   for (const proposal of sortedProposals) {
     if (isExpectedChangeProposalType(proposal, ChangeProposalType.addRule)) {
-      const newRuleId = createRuleId(`temp-rule-${proposal.id}`);
-      const newRule: Rule = {
-        id: newRuleId,
-        content: proposal.payload.item.content,
-        standardVersionId:
-          rules[0]?.standardVersionId || createStandardVersionId(''),
-      };
-
-      currentRules = [...currentRules, newRule];
-      changes.rules.added.set(newRuleId, proposal.id);
+      const ruleId = createRuleId(proposal.id);
+      changes.rules.added.set(ruleId, proposal.id);
     }
 
     if (isExpectedChangeProposalType(proposal, ChangeProposalType.updateRule)) {
       const targetId = proposal.payload.targetId;
-      const ruleIndex = currentRules.findIndex((r) => r.id === targetId);
 
-      if (ruleIndex !== -1) {
-        const originalContent = currentRules[ruleIndex].content;
-        const newContent = proposal.payload.newValue;
-
-        currentRules = currentRules.map((rule) =>
-          rule.id === targetId ? { ...rule, content: newContent } : rule,
-        );
-
-        const existingUpdate = changes.rules.updated.get(targetId);
-        if (!existingUpdate) {
-          changes.rules.updated.set(targetId, {
-            originalValue: originalContent,
-            finalValue: newContent,
-            proposalIds: [proposal.id],
-          });
-        } else {
-          existingUpdate.finalValue = newContent;
-          existingUpdate.proposalIds.push(proposal.id);
-        }
+      const existing = changes.rules.updated.get(targetId);
+      if (!existing) {
+        const originalRule = rules.find((r) => r.id === targetId);
+        const finalRule = appliedResult.rules.find((r) => r.id === targetId);
+        changes.rules.updated.set(targetId, {
+          originalValue: originalRule?.content ?? '',
+          finalValue: finalRule?.content ?? '',
+          proposalIds: [proposal.id],
+        });
+      } else {
+        existing.proposalIds.push(proposal.id);
       }
     }
 
     if (isExpectedChangeProposalType(proposal, ChangeProposalType.deleteRule)) {
       const targetId = proposal.payload.targetId;
-      currentRules = currentRules.filter((r) => r.id !== targetId);
       changes.rules.deleted.add(targetId);
 
       // If this rule was previously added in this session, cancel both out
@@ -192,7 +164,7 @@ export function applyStandardProposals(
     name: finalName,
     scope: finalScope,
     description: finalDescription,
-    rules: currentRules,
+    rules: appliedResult.rules,
     changes,
   };
 }

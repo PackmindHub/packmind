@@ -11,10 +11,10 @@ import {
   ChangeProposalConflictError,
 } from '@packmind/types';
 import { changeProposalFactory } from '../../../../test';
-import { PersistableStandardChangeProposalApplier } from './PersistableStandardChangeProposalApplier';
+import { StandardChangesApplier } from './StandardChangesApplier';
 
-describe('PersistableStandardChangeProposalApplier', () => {
-  let applier: PersistableStandardChangeProposalApplier;
+describe('StandardChangesApplier', () => {
+  let applier: StandardChangesApplier;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let diffService: DiffService;
 
@@ -22,10 +22,7 @@ describe('PersistableStandardChangeProposalApplier', () => {
     diffService = new DiffService();
     standardsPort = {} as unknown as jest.Mocked<IStandardsPort>;
 
-    applier = new PersistableStandardChangeProposalApplier(
-      diffService,
-      standardsPort,
-    );
+    applier = new StandardChangesApplier(diffService, standardsPort);
   });
 
   const rule1 = ruleFactory({

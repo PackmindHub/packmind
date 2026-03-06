@@ -2,51 +2,25 @@ import { SkillChangeProposalApplier } from './SkillChangeProposalApplier';
 import { DiffService } from './DiffService';
 import { ChangeProposalConflictError } from './ChangeProposalConflictError';
 import { SkillVersionWithFiles } from './types';
+import { v4 as uuidv4 } from 'uuid';
+import { createChangeProposalFactory } from './testHelpers';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
-import { ChangeProposalStatus } from '../ChangeProposalStatus';
-import { ChangeProposalCaptureMode } from '../ChangeProposalCaptureMode';
-import { createChangeProposalId } from '../ChangeProposalId';
 import { createSkillId } from '../../skills/SkillId';
 import { createSkillVersionId } from '../../skills/SkillVersionId';
 import { createSkillFileId } from '../../skills/SkillFileId';
 import { SkillFile } from '../../skills/SkillFile';
-import { createSpaceId } from '../../spaces/SpaceId';
 import { createUserId } from '../../accounts/User';
 
-let idCounter = 0;
-const nextId = () => `test-id-${++idCounter}`;
-
-const changeProposalFactory = <T extends ChangeProposalType>(
-  overrides: Partial<ChangeProposal<T>> & {
-    type: T;
-    payload: ChangeProposal<T>['payload'];
-  },
-): ChangeProposal<T> =>
-  ({
-    id: createChangeProposalId(nextId()),
-    artefactId: createSkillId(nextId()),
-    artefactVersion: 1,
-    spaceId: createSpaceId(nextId()),
-    captureMode: ChangeProposalCaptureMode.commit,
-    message: '',
-    status: ChangeProposalStatus.pending,
-    decision: null,
-    createdBy: createUserId(nextId()),
-    resolvedBy: null,
-    resolvedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }) as ChangeProposal<T>;
+const changeProposalFactory = createChangeProposalFactory(createSkillId);
 
 const skillVersionFactory = (
   overrides?: Partial<SkillVersionWithFiles>,
 ): SkillVersionWithFiles => ({
-  id: createSkillVersionId(nextId()),
-  skillId: createSkillId(nextId()),
+  id: createSkillVersionId(uuidv4()),
+  skillId: createSkillId(uuidv4()),
   version: 1,
-  userId: createUserId(nextId()),
+  userId: createUserId(uuidv4()),
   name: 'Test Skill',
   slug: 'test-skill',
   description: 'A test description',
@@ -56,8 +30,8 @@ const skillVersionFactory = (
 });
 
 const skillFileFactory = (overrides?: Partial<SkillFile>): SkillFile => ({
-  id: createSkillFileId(nextId()),
-  skillVersionId: createSkillVersionId(nextId()),
+  id: createSkillFileId(uuidv4()),
+  skillVersionId: createSkillVersionId(uuidv4()),
   path: 'test-file.txt',
   content: 'file content',
   permissions: 'read',

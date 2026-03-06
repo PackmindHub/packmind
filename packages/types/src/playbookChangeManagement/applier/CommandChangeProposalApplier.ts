@@ -41,6 +41,6 @@ export class CommandChangeProposalApplier extends AbstractChangeProposalApplier<
         ),
       };
     }
-    throw new Error('Method not implemented.');
+    throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
   }
 }

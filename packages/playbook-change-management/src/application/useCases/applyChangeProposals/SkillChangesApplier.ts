@@ -12,7 +12,7 @@ import {
 } from '@packmind/types';
 import { IChangesProposalApplier } from './IChangesProposalApplier';
 
-export class PersistableSkillChangeProposalApplier
+export class SkillChangesApplier
   extends SkillChangeProposalApplier
   implements IChangesProposalApplier<SkillVersionWithFiles>
 {

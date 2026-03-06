@@ -1,22 +1,20 @@
 import {
   ChangeProposalId,
   ChangeProposalType,
-  CollectionItemAddPayload,
-  CollectionItemDeletePayload,
-  CollectionItemUpdatePayload,
   isExpectedChangeProposalType,
   Skill,
   SkillFile,
   SkillFileId,
-  SkillFileContentUpdatePayload,
   SkillChangeProposalApplier,
   SkillVersionWithFiles,
   DiffService,
-  createSkillFileId,
-  createSkillVersionId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
-import { FieldChange } from './applyStandardProposals';
+import {
+  FieldChange,
+  PREVIEW_SKILL_VERSION_ID,
+  trackScalarChange,
+} from './changeProposalHelpers';
 
 export interface FileChange {
   added: Map<string, ChangeProposalId>;
@@ -52,9 +50,8 @@ export interface AppliedSkill {
  * Applies all accepted change proposals sequentially to a skill,
  * tracking all changes for highlighting in the unified view.
  *
- * Uses the shared SkillChangeProposalApplier for scalar field
- * computation (including diff-based description/prompt merging),
- * while handling file operations manually for frontend-specific tracking.
+ * Uses the shared SkillChangeProposalApplier for all field computation
+ * (scalars + files), then builds tracking maps in a pure second pass.
  */
 export function applySkillProposals(
   skill: Skill,
@@ -70,7 +67,7 @@ export function applySkillProposals(
 
   // Use shared applier for scalar field computation
   const sourceVersion: SkillVersionWithFiles = {
-    id: files[0]?.skillVersionId ?? createSkillVersionId(''),
+    id: files[0]?.skillVersionId ?? PREVIEW_SKILL_VERSION_ID,
     skillId: skill.id,
     version: skill.version,
     userId: skill.userId,
@@ -175,25 +172,13 @@ export function applySkillProposals(
     ChangeProposalType.updateSkillMetadata,
   );
 
-  // Handle file operations manually for frontend-specific tracking
-  let currentFiles = [...files];
-
+  // Build file change tracking in a second pass over proposals
+  // (the shared applier already computed appliedResult.files)
   for (const proposal of sortedProposals) {
     if (
       isExpectedChangeProposalType(proposal, ChangeProposalType.addSkillFile)
     ) {
-      const addedFile = (
-        proposal.payload as CollectionItemAddPayload<
-          Omit<SkillFile, 'id' | 'skillVersionId'>
-        >
-      ).item;
-      const newFile: SkillFile = {
-        ...addedFile,
-        id: createSkillFileId(''),
-        skillVersionId: files[0]?.skillVersionId ?? ('' as never),
-      };
-      currentFiles = [...currentFiles, newFile];
-      changes.files.added.set(addedFile.path, proposal.id);
+      changes.files.added.set(proposal.payload.item.path, proposal.id);
     }
 
     if (
@@ -202,27 +187,19 @@ export function applySkillProposals(
         ChangeProposalType.updateSkillFileContent,
       )
     ) {
-      const payload = proposal.payload as SkillFileContentUpdatePayload;
-      const targetId = payload.targetId;
-      const fileIndex = currentFiles.findIndex((f) => f.id === targetId);
+      const targetId = proposal.payload.targetId;
 
-      if (fileIndex !== -1) {
-        const originalContent = currentFiles[fileIndex].content;
-        currentFiles = currentFiles.map((f) =>
-          f.id === targetId ? { ...f, content: payload.newValue } : f,
-        );
-
-        const existing = changes.files.updatedContent.get(targetId);
-        if (!existing) {
-          changes.files.updatedContent.set(targetId, {
-            originalValue: originalContent,
-            finalValue: payload.newValue,
-            proposalIds: [proposal.id],
-          });
-        } else {
-          existing.finalValue = payload.newValue;
-          existing.proposalIds.push(proposal.id);
-        }
+      const existing = changes.files.updatedContent.get(targetId);
+      if (!existing) {
+        const originalFile = files.find((f) => f.id === targetId);
+        const finalFile = appliedResult.files.find((f) => f.id === targetId);
+        changes.files.updatedContent.set(targetId, {
+          originalValue: originalFile?.content ?? '',
+          finalValue: finalFile?.content ?? '',
+          proposalIds: [proposal.id],
+        });
+      } else {
+        existing.proposalIds.push(proposal.id);
       }
     }
 
@@ -232,60 +209,32 @@ export function applySkillProposals(
         ChangeProposalType.updateSkillFilePermissions,
       )
     ) {
-      const payload =
-        proposal.payload as CollectionItemUpdatePayload<SkillFileId>;
-      const targetId = payload.targetId;
-      const fileIndex = currentFiles.findIndex((f) => f.id === targetId);
+      const targetId = proposal.payload.targetId;
 
-      if (fileIndex !== -1) {
-        const originalPermissions = currentFiles[fileIndex].permissions;
-        currentFiles = currentFiles.map((f) =>
-          f.id === targetId ? { ...f, permissions: payload.newValue } : f,
-        );
-
-        const existing = changes.files.updatedPermissions.get(targetId);
-        if (!existing) {
-          changes.files.updatedPermissions.set(targetId, {
-            originalValue: originalPermissions,
-            finalValue: payload.newValue,
-            proposalIds: [proposal.id],
-          });
-        } else {
-          existing.finalValue = payload.newValue;
-          existing.proposalIds.push(proposal.id);
-        }
+      const existing = changes.files.updatedPermissions.get(targetId);
+      if (!existing) {
+        const originalFile = files.find((f) => f.id === targetId);
+        const finalFile = appliedResult.files.find((f) => f.id === targetId);
+        changes.files.updatedPermissions.set(targetId, {
+          originalValue: originalFile?.permissions ?? '',
+          finalValue: finalFile?.permissions ?? '',
+          proposalIds: [proposal.id],
+        });
+      } else {
+        existing.proposalIds.push(proposal.id);
       }
     }
 
     if (
       isExpectedChangeProposalType(proposal, ChangeProposalType.deleteSkillFile)
     ) {
-      const payload = proposal.payload as CollectionItemDeletePayload<
-        Omit<SkillFile, 'skillVersionId'>
-      >;
-      const targetId = payload.targetId;
-      currentFiles = currentFiles.filter((f) => f.id !== targetId);
+      const targetId = proposal.payload.targetId;
       changes.files.deleted.set(targetId, proposal.id);
 
       // If this file was previously added in this session, cancel both out
-      const addedPath = [...changes.files.added.entries()].find(([, pId]) => {
-        const addProposal = sortedProposals.find((p) => p.id === pId);
-        if (
-          addProposal &&
-          isExpectedChangeProposalType(
-            addProposal,
-            ChangeProposalType.addSkillFile,
-          )
-        ) {
-          const addPayload = addProposal.payload as CollectionItemAddPayload<
-            Omit<SkillFile, 'id' | 'skillVersionId'>
-          >;
-          return addPayload.item.path === payload.item.path;
-        }
-        return false;
-      });
-      if (addedPath) {
-        changes.files.added.delete(addedPath[0]);
+      const addedPath = proposal.payload.item.path;
+      if (changes.files.added.has(addedPath)) {
+        changes.files.added.delete(addedPath);
         changes.files.deleted.delete(targetId);
       }
     }
@@ -299,32 +248,7 @@ export function applySkillProposals(
     compatibility: finalCompatibility,
     allowedTools: finalAllowedTools,
     metadata: finalMetadata,
-    files: currentFiles,
+    files: appliedResult.files,
     changes,
   };
-}
-
-type ScalarField =
-  | 'name'
-  | 'description'
-  | 'prompt'
-  | 'license'
-  | 'compatibility'
-  | 'allowedTools'
-  | 'metadata';
-
-function trackScalarChange(
-  changes: SkillChangeTracker,
-  field: ScalarField,
-  originalValue: string,
-  finalValue: string,
-  proposals: ChangeProposalWithConflicts[],
-  proposalType: ChangeProposalType,
-): void {
-  const proposalIds = proposals
-    .filter((p) => p.type === proposalType)
-    .map((p) => p.id);
-  if (proposalIds.length > 0) {
-    changes[field] = { originalValue, finalValue, proposalIds };
-  }
 }

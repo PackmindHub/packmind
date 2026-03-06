@@ -5,10 +5,13 @@ import {
   RecipeVersion,
   CommandChangeProposalApplier,
   DiffService,
-  createRecipeVersionId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
-import { FieldChange } from './applyStandardProposals';
+import {
+  FieldChange,
+  PREVIEW_RECIPE_VERSION_ID,
+  trackScalarChange,
+} from './changeProposalHelpers';
 
 export interface RecipeChangeTracker {
   name?: FieldChange;
@@ -45,7 +48,7 @@ export function applyRecipeProposals(
 
   // Build a RecipeVersion for the shared applier
   const sourceVersion: RecipeVersion = {
-    id: createRecipeVersionId(''),
+    id: PREVIEW_RECIPE_VERSION_ID,
     recipeId: recipe.id,
     name: recipe.name,
     slug: recipe.slug,
@@ -60,27 +63,22 @@ export function applyRecipeProposals(
   // Build change tracker from proposal classification
   const changes: RecipeChangeTracker = {};
 
-  const nameProposalIds = sortedProposals
-    .filter((p) => p.type === ChangeProposalType.updateCommandName)
-    .map((p) => p.id);
-  if (nameProposalIds.length > 0) {
-    changes.name = {
-      originalValue: recipe.name,
-      finalValue: result.name,
-      proposalIds: nameProposalIds,
-    };
-  }
-
-  const contentProposalIds = sortedProposals
-    .filter((p) => p.type === ChangeProposalType.updateCommandDescription)
-    .map((p) => p.id);
-  if (contentProposalIds.length > 0) {
-    changes.content = {
-      originalValue: recipe.content,
-      finalValue: result.content,
-      proposalIds: contentProposalIds,
-    };
-  }
+  trackScalarChange(
+    changes,
+    'name',
+    recipe.name,
+    result.name,
+    sortedProposals,
+    ChangeProposalType.updateCommandName,
+  );
+  trackScalarChange(
+    changes,
+    'content',
+    recipe.content,
+    result.content,
+    sortedProposals,
+    ChangeProposalType.updateCommandDescription,
+  );
 
   return { name: result.name, content: result.content, changes };
 }

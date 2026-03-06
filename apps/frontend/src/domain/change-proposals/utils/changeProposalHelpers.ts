@@ -3,8 +3,21 @@ import {
   ChangeProposalId,
   ChangeProposalStatus,
   ChangeProposalType,
+  createRecipeVersionId,
+  createSkillVersionId,
+  createStandardVersionId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
+
+export interface FieldChange {
+  originalValue: string;
+  finalValue: string;
+  proposalIds: ChangeProposalId[];
+}
+
+export const PREVIEW_RECIPE_VERSION_ID = createRecipeVersionId('preview');
+export const PREVIEW_SKILL_VERSION_ID = createSkillVersionId('preview');
+export const PREVIEW_STANDARD_VERSION_ID = createStandardVersionId('preview');
 
 export function getChangeProposalFieldLabel(type: ChangeProposalType): string {
   return CHANGE_PROPOSAL_TYPE_LABELS[type];
@@ -47,5 +60,21 @@ export function getStatusBadgeProps(status: ChangeProposalStatus): {
       return { label: 'Accepted', colorPalette: 'green' };
     case ChangeProposalStatus.rejected:
       return { label: 'Dismissed', colorPalette: 'red' };
+  }
+}
+
+export function trackScalarChange(
+  changes: Record<string, FieldChange | undefined>,
+  field: string,
+  originalValue: string,
+  finalValue: string,
+  proposals: { id: ChangeProposalId; type: ChangeProposalType }[],
+  proposalType: ChangeProposalType,
+): void {
+  const proposalIds = proposals
+    .filter((p) => p.type === proposalType)
+    .map((p) => p.id);
+  if (proposalIds.length > 0) {
+    changes[field] = { originalValue, finalValue, proposalIds };
   }
 }

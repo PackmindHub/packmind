@@ -60,7 +60,7 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
     ) {
       const newRule = {
         ...changeProposal.payload.item,
-        id: createRuleId(''),
+        id: createRuleId(changeProposal.id),
         standardVersionId: source.id,
       };
 

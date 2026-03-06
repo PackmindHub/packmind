@@ -116,7 +116,7 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
     ) {
       const newFile = {
         ...changeProposal.payload.item,
-        id: createSkillFileId(''),
+        id: createSkillFileId(changeProposal.id),
         skillVersionId: source.id,
       };
 

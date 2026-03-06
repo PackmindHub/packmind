@@ -9,7 +9,7 @@ import {
 } from '@packmind/types';
 import { IChangesProposalApplier } from './IChangesProposalApplier';
 
-export class PersistableStandardChangeProposalApplier
+export class StandardChangesApplier
   extends StandardChangeProposalApplier
   implements IChangesProposalApplier<StandardVersion>
 {

@@ -1,50 +1,23 @@
 import { StandardChangeProposalApplier } from './StandardChangeProposalApplier';
 import { DiffService } from './DiffService';
 import { ChangeProposalConflictError } from './ChangeProposalConflictError';
+import { v4 as uuidv4 } from 'uuid';
+import { createChangeProposalFactory } from './testHelpers';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
-import { ChangeProposalStatus } from '../ChangeProposalStatus';
-import { ChangeProposalCaptureMode } from '../ChangeProposalCaptureMode';
-import { createChangeProposalId } from '../ChangeProposalId';
 import { StandardVersion } from '../../standards/StandardVersion';
 import { createStandardId } from '../../standards/StandardId';
 import { createStandardVersionId } from '../../standards/StandardVersionId';
 import { createRuleId } from '../../standards/RuleId';
-import { createSpaceId } from '../../spaces/SpaceId';
-import { createUserId } from '../../accounts/User';
 import { Rule } from '../../standards/Rule';
 
-let idCounter = 0;
-const nextId = () => `test-id-${++idCounter}`;
-
-const changeProposalFactory = <T extends ChangeProposalType>(
-  overrides: Partial<ChangeProposal<T>> & {
-    type: T;
-    payload: ChangeProposal<T>['payload'];
-  },
-): ChangeProposal<T> =>
-  ({
-    id: createChangeProposalId(nextId()),
-    artefactId: createStandardId(nextId()),
-    artefactVersion: 1,
-    spaceId: createSpaceId(nextId()),
-    captureMode: ChangeProposalCaptureMode.commit,
-    message: '',
-    status: ChangeProposalStatus.pending,
-    decision: null,
-    createdBy: createUserId(nextId()),
-    resolvedBy: null,
-    resolvedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }) as ChangeProposal<T>;
+const changeProposalFactory = createChangeProposalFactory(createStandardId);
 
 const standardVersionFactory = (
   overrides?: Partial<StandardVersion>,
 ): StandardVersion => ({
-  id: createStandardVersionId(nextId()),
-  standardId: createStandardId(nextId()),
+  id: createStandardVersionId(uuidv4()),
+  standardId: createStandardId(uuidv4()),
   name: 'Test Standard',
   slug: 'test-standard',
   description: 'A test description',
@@ -55,9 +28,9 @@ const standardVersionFactory = (
 });
 
 const ruleFactory = (overrides?: Partial<Rule>): Rule => ({
-  id: createRuleId(nextId()),
+  id: createRuleId(uuidv4()),
   content: 'Rule content',
-  standardVersionId: createStandardVersionId(nextId()),
+  standardVersionId: createStandardVersionId(uuidv4()),
   ...overrides,
 });
 
@@ -82,7 +55,7 @@ describe('StandardChangeProposalApplier', () => {
     });
 
     it('returns true for all standard change types combined', () => {
-      const ruleId = createRuleId(nextId());
+      const ruleId = createRuleId(uuidv4());
       const proposals = [
         changeProposalFactory({
           type: ChangeProposalType.updateStandardName,
