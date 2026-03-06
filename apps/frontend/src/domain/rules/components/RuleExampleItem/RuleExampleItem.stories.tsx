@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { RuleExampleItem } from './RuleExampleItem';
 import { ProgrammingLanguage } from '@packmind/types';
 import { RuleExample } from '@packmind/types';

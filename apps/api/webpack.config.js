@@ -34,7 +34,7 @@ module.exports = {
   },
 
   optimization: {
-    minimize: true,
+    minimize: process.env.NODE_ENV === 'production',
     minimizer: [
       new (require('terser-webpack-plugin'))({
         terserOptions: {
@@ -55,9 +55,19 @@ module.exports = {
       {
         test: /\.ts$/,
         use: {
-          loader: 'ts-loader',
+          loader: 'swc-loader',
           options: {
-            configFile: join(__dirname, 'tsconfig.app.json'),
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                decorators: true,
+              },
+              transform: {
+                legacyDecorator: true,
+                decoratorMetadata: true,
+              },
+              target: 'es2021',
+            },
           },
         },
         exclude: /node_modules/,
@@ -68,6 +78,9 @@ module.exports = {
       },
     ],
   },
+
+  // Suppress warnings for type-only exports (interfaces/types) that SWC erases at transpilation
+  ignoreWarnings: [/export .* was not found in/],
 
   experiments: {
     asyncWebAssembly: true,
