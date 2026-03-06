@@ -20,6 +20,7 @@ import {
   IDeploymentPort,
   CodingAgent,
   isValidCodingAgent,
+  ArtifactVersionEntry,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -308,6 +309,62 @@ export class OrganizationsController {
 
       throw error;
     }
+  }
+
+  /**
+   * Get rendered content for specific artifact versions from a lock file
+   * POST /organizations/:orgId/content-by-versions
+   */
+  @Post('content-by-versions')
+  async getContentByVersions(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: {
+      artifacts: ArtifactVersionEntry[];
+      agents?: string[];
+    },
+  ): Promise<IPullContentResponse> {
+    const userId = request.user.userId;
+
+    if (!body.artifacts || !Array.isArray(body.artifacts)) {
+      throw new BadRequestException('artifacts array is required');
+    }
+
+    // Validate agents to array of valid CodingAgents
+    let agents: CodingAgent[] | undefined;
+    if (body.agents !== undefined) {
+      const validAgents = body.agents.filter(isValidCodingAgent);
+
+      // Log warning for invalid agents
+      const invalidAgents = body.agents.filter((a) => !isValidCodingAgent(a));
+      if (invalidAgents.length > 0) {
+        this.logger.info('Invalid agent values provided, ignoring', {
+          invalidAgents,
+          validAgents,
+        });
+      }
+
+      agents = validAgents;
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/content-by-versions - Getting content by versions',
+      {
+        organizationId,
+        userId,
+        artifactCount: body.artifacts.length,
+        agents,
+      },
+    );
+
+    return await this.deploymentAdapter.getContentByVersions({
+      userId,
+      organizationId,
+      artifacts: body.artifacts,
+      agents,
+      source: request.clientSource,
+    });
   }
 
   /**

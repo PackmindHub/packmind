@@ -19,6 +19,7 @@ describe('OrganizationsController', () => {
     mockDeploymentAdapter = {
       pullAllContent: jest.fn(),
       getDeployedContent: jest.fn(),
+      getContentByVersions: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     controller = new OrganizationsController(
