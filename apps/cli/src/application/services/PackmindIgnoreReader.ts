@@ -10,15 +10,24 @@ export class PackmindIgnoreReader {
   ): Promise<string[]> {
     const patterns: string[] = [];
 
-    let currentDir = path.resolve(startDirectory);
+    const normalizedStart = path.resolve(startDirectory);
     const normalizedStop = stopDirectory ? path.resolve(stopDirectory) : null;
+
+    // When stopDirectory is null (non-git repo), only read from startDirectory
+    // to avoid collecting .packmindignore files from unrelated ancestor directories
+    if (normalizedStop === null) {
+      const ignoreFile = path.join(normalizedStart, IGNORE_FILENAME);
+      return this.parseIgnoreFile(ignoreFile);
+    }
+
+    let currentDir = normalizedStart;
 
     while (true) {
       const ignoreFile = path.join(currentDir, IGNORE_FILENAME);
       const filePatterns = await this.parseIgnoreFile(ignoreFile);
       patterns.push(...filePatterns);
 
-      if (normalizedStop !== null && currentDir === normalizedStop) {
+      if (currentDir === normalizedStop) {
         break;
       }
 

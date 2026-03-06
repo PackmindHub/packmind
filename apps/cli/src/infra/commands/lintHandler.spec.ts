@@ -801,10 +801,10 @@ describe('lintHandler', () => {
     });
 
     it('reads ignore patterns from the resolved path up to git root', async () => {
-      await lintHandler(createArgs({ path: '/project' }), deps);
+      await lintHandler(createArgs({ path: 'project' }), deps);
 
       expect(mockIgnoreReader.readIgnorePatterns).toHaveBeenCalledWith(
-        '/absolute//project',
+        '/absolute/project',
         '/project',
       );
     });

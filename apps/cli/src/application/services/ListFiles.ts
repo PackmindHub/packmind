@@ -3,6 +3,14 @@ import * as path from 'path';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
 import { FileResult, IListFiles } from '../../domain/services/IListFiles';
 
+export const DEFAULT_EXCLUDES = [
+  'node_modules',
+  'dist',
+  '.min.',
+  '.map.',
+  '.git',
+];
+
 export class ListFiles implements IListFiles {
   async listFilesInDirectory(
     directoryPath: string,

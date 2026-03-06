@@ -8,6 +8,7 @@ import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
 import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
+import { DEFAULT_EXCLUDES } from '../services/ListFiles';
 import {
   ConfigWithTarget,
   DetectionSeverity,
@@ -200,7 +201,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
       );
     }
 
-    const excludes = ['node_modules', 'dist', '.min.', '.map.', '.git'];
+    const excludes = [...DEFAULT_EXCLUDES];
     if (ignorePatterns?.length) {
       excludes.push(...ignorePatterns);
     }

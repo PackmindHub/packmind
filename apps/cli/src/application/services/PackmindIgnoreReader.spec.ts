@@ -79,14 +79,21 @@ describe('PackmindIgnoreReader', () => {
   });
 
   describe('when stopDirectory is null', () => {
-    it('walks up until filesystem root (stops at some point)', async () => {
+    it('only reads from startDirectory to avoid collecting unrelated ancestor patterns', async () => {
+      const childDir = path.join(tmpDir, 'child');
+      await fs.mkdir(childDir);
+
       await fs.writeFile(
         path.join(tmpDir, '.packmindignore'),
-        'some-pattern\n',
+        'root-pattern\n',
+      );
+      await fs.writeFile(
+        path.join(childDir, '.packmindignore'),
+        'child-pattern\n',
       );
 
-      const result = await reader.readIgnorePatterns(tmpDir, null);
-      expect(result).toContain('some-pattern');
+      const result = await reader.readIgnorePatterns(childDir, null);
+      expect(result).toEqual(['child-pattern']);
     });
   });
 
