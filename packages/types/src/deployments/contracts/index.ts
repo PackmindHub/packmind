@@ -33,3 +33,4 @@ export * from './IRemovePackageFromTargetsUseCase';
 export * from './IDeployDefaultSkillsUseCase';
 export * from './IDownloadDefaultSkillsZipForAgent';
 export * from './IGetDeployedContentUseCase';
+export * from './IGetContentByVersionsUseCase';

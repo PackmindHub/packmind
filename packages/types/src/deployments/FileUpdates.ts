@@ -14,6 +14,7 @@ export type FileModification =
       artifactType?: ArtifactType;
       artifactName?: string;
       artifactId?: string;
+      artifactVersion?: number;
       spaceId?: string;
       skillFileId?: string;
       skillFilePermissions?: string;
@@ -25,6 +26,7 @@ export type FileModification =
       artifactType?: ArtifactType;
       artifactName?: string;
       artifactId?: string;
+      artifactVersion?: number;
       spaceId?: string;
       skillFileId?: string;
       skillFilePermissions?: string;
