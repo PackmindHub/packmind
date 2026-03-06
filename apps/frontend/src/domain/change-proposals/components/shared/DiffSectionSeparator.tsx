@@ -5,7 +5,7 @@ export function DiffSectionSeparator() {
     <PMHStack justify="center" py={1}>
       <PMText
         fontSize="sm"
-        color="fg.muted"
+        color="faded"
         fontFamily="mono"
         letterSpacing="wider"
         userSelect="none"
