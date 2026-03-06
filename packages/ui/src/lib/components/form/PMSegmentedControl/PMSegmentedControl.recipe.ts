@@ -15,4 +15,13 @@ export const pmSegmentedControl = {
       bg: '{colors.branding.primary}',
     },
   },
+  variants: {
+    size: {
+      sm: {
+        item: {
+          height: '9',
+        },
+      },
+    },
+  },
 };
