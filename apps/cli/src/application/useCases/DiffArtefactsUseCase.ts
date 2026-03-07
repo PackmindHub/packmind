@@ -89,7 +89,7 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
 
     if (lockFile) {
       return this.packmindGateway.deployment.getContentByVersions({
-        artifacts: lockFile.artifacts,
+        artifacts: Object.values(lockFile.artifacts),
         agents: command.agents,
       });
     }

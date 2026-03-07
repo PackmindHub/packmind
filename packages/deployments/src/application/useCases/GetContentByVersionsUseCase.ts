@@ -115,6 +115,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
           file.artifactId = metadata.artifactId;
           file.spaceId = metadata.spaceId;
           file.artifactVersion = metadata.version;
+          file.artifactSlug = metadata.slug;
         }
       }
     }
@@ -221,11 +222,17 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     skillVersions: SkillVersion[],
   ): Record<
     ArtifactType,
-    Map<string, { artifactId: string; spaceId: string; version: number }>
+    Map<
+      string,
+      { artifactId: string; spaceId: string; version: number; slug: string }
+    >
   > {
     const metadata: Record<
       ArtifactType,
-      Map<string, { artifactId: string; spaceId: string; version: number }>
+      Map<
+        string,
+        { artifactId: string; spaceId: string; version: number; slug: string }
+      >
     > = {
       command: new Map(),
       standard: new Map(),
@@ -246,6 +253,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
           artifactId: rv.recipeId as string,
           spaceId,
           version: rv.version,
+          slug: rv.slug,
         });
       }
     }
@@ -257,6 +265,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
           artifactId: sv.standardId as string,
           spaceId,
           version: sv.version,
+          slug: sv.slug,
         });
       }
     }
@@ -268,6 +277,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
           artifactId: skv.skillId as string,
           spaceId,
           version: skv.version,
+          slug: skv.slug,
         });
       }
     }

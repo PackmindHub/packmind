@@ -132,6 +132,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         artifactId: string;
         spaceId: string;
         version: number;
+        slug: string;
       };
       const artifactMetadata: Record<
         ArtifactType,
@@ -261,6 +262,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
               artifactId: rv.recipeId as string,
               spaceId,
               version: rv.version,
+              slug: rv.slug,
             });
           }
         }
@@ -271,6 +273,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
               artifactId: sv.standardId as string,
               spaceId,
               version: sv.version,
+              slug: sv.slug,
             });
           }
         }
@@ -281,6 +284,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
               artifactId: skv.skillId as string,
               spaceId,
               version: skv.version,
+              slug: skv.slug,
             });
           }
         }
@@ -624,6 +628,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             file.artifactId = metadata.artifactId;
             file.spaceId = metadata.spaceId;
             file.artifactVersion = metadata.version;
+            file.artifactSlug = metadata.slug;
           }
         }
       }

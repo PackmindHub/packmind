@@ -21,29 +21,38 @@ describe('LockFileRepository', () => {
     describe('when lock file exists', () => {
       const lockFileContent: PackmindLockFile = {
         lockfileVersion: 1,
-        artifacts: [
-          {
-            name: 'my-standard',
+        artifacts: {
+          'my-standard': {
+            name: 'My Standard',
             type: 'standard',
             id: 'std-123',
             version: 3,
             spaceId: 'space-1',
+            files: [
+              { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+            ],
           },
-          {
-            name: 'my-command',
+          'my-command': {
+            name: 'My Command',
             type: 'command',
             id: 'cmd-456',
             version: 1,
             spaceId: 'space-1',
+            files: [
+              { path: '.packmind/commands/my-command.md', agent: 'packmind' },
+            ],
           },
-          {
-            name: 'my-skill',
+          'my-skill': {
+            name: 'My Skill',
             type: 'skill',
             id: 'skl-789',
             version: 2,
             spaceId: 'space-2',
+            files: [
+              { path: '.claude/skills/my-skill/main.md', agent: 'claude' },
+            ],
           },
-        ],
+        },
       };
 
       let result: PackmindLockFile | null;
@@ -96,15 +105,18 @@ describe('LockFileRepository', () => {
   describe('write', () => {
     const lockFile: PackmindLockFile = {
       lockfileVersion: 1,
-      artifacts: [
-        {
-          name: 'my-standard',
+      artifacts: {
+        'my-standard': {
+          name: 'My Standard',
           type: 'standard',
           id: 'std-123',
           version: 3,
           spaceId: 'space-1',
+          files: [
+            { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+          ],
         },
-      ],
+      },
     };
 
     beforeEach(async () => {
@@ -139,7 +151,7 @@ describe('LockFileRepository', () => {
   describe('write with empty artifacts', () => {
     const lockFile: PackmindLockFile = {
       lockfileVersion: 1,
-      artifacts: [],
+      artifacts: {},
     };
 
     beforeEach(async () => {
@@ -148,12 +160,12 @@ describe('LockFileRepository', () => {
       await repository.write('/project', lockFile);
     });
 
-    it('writes the lock file with empty artifacts array', () => {
+    it('writes the lock file with empty artifacts object', () => {
       const writtenContent = mockFs.writeFile.mock.calls[0][1] as string;
       const parsed = JSON.parse(writtenContent);
 
       expect(parsed.lockfileVersion).toBe(1);
-      expect(parsed.artifacts).toEqual([]);
+      expect(parsed.artifacts).toEqual({});
     });
   });
 });

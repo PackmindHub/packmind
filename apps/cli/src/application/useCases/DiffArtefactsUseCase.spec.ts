@@ -16,8 +16,8 @@ describe('DiffArtefactsUseCase', () => {
   let useCase: DiffArtefactsUseCase;
   const mockGateway = createMockPackmindGateway();
   const mockGetDeployed = mockGateway.deployment.getDeployed as jest.Mock;
-  const mockGetContentByVersions =
-    mockGateway.deployment.getContentByVersions as jest.Mock;
+  const mockGetContentByVersions = mockGateway.deployment
+    .getContentByVersions as jest.Mock;
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   const defaultGitInfo = {
     gitRemoteUrl: 'git@github.com:org/repo.git',
@@ -2290,22 +2290,36 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   describe('when lock file exists', () => {
-    const lockFileArtifacts = [
-      {
+    const lockFileArtifacts = {
+      'my-standard': {
         name: 'my-standard',
         type: 'standard' as const,
         id: 'artifact-lock-1',
         version: 3,
         spaceId: 'space-lock-1',
+        files: [
+          {
+            path: '.packmind/standards/my-standard.md',
+            agent: 'packmind' as const,
+          },
+        ],
       },
-      {
+      'my-command': {
         name: 'my-command',
         type: 'command' as const,
         id: 'artifact-lock-2',
         version: 1,
         spaceId: 'space-lock-2',
+        files: [
+          {
+            path: '.packmind/commands/my-command.md',
+            agent: 'packmind' as const,
+          },
+        ],
       },
-    ];
+    };
+
+    const lockFileArtifactValues = Object.values(lockFileArtifacts);
 
     beforeEach(() => {
       mockLockFileRepository.read.mockResolvedValue({
@@ -2327,7 +2341,7 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       expect(mockGetContentByVersions).toHaveBeenCalledWith({
-        artifacts: lockFileArtifacts,
+        artifacts: lockFileArtifactValues,
         agents: undefined,
       });
       expect(mockGetDeployed).not.toHaveBeenCalled();
@@ -2347,7 +2361,7 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       expect(mockGetContentByVersions).toHaveBeenCalledWith({
-        artifacts: lockFileArtifacts,
+        artifacts: lockFileArtifactValues,
         agents: ['claude-code', 'cursor'],
       });
     });

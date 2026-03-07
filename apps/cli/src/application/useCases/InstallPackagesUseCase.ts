@@ -11,6 +11,7 @@ import {
 } from '../../domain/repositories/PackmindLockFile';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import { FileModification } from '@packmind/types';
+import { resolveArtefactFromPath } from '../utils/resolveArtefactFromPath';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import {
@@ -130,7 +131,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
 
       // Generate lock file from artifacts with metadata
       const lockFile = this.buildLockFile(filteredCreateOrUpdate);
-      if (lockFile.artifacts.length > 0) {
+      if (Object.keys(lockFile.artifacts).length > 0) {
         try {
           await this.lockFileRepository.write(baseDirectory, lockFile);
         } catch (error) {
@@ -148,33 +149,43 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
   }
 
   private buildLockFile(files: FileModification[]): PackmindLockFile {
-    const artifactsMap = new Map<string, PackmindLockFileEntry>();
+    const artifacts: Record<string, PackmindLockFileEntry> = {};
 
     for (const file of files) {
       if (
         !file.artifactType ||
         !file.artifactName ||
+        !file.artifactSlug ||
         !file.artifactId ||
         file.artifactVersion === undefined ||
         !file.spaceId
       ) {
         continue;
       }
-      if (artifactsMap.has(file.artifactId)) {
-        continue;
+
+      if (!artifacts[file.artifactSlug]) {
+        artifacts[file.artifactSlug] = {
+          type: file.artifactType,
+          name: file.artifactName,
+          id: file.artifactId,
+          version: file.artifactVersion,
+          spaceId: file.spaceId,
+          files: [],
+        };
       }
-      artifactsMap.set(file.artifactId, {
-        type: file.artifactType,
-        name: file.artifactName,
-        id: file.artifactId,
-        version: file.artifactVersion,
-        spaceId: file.spaceId,
-      });
+
+      const resolved = resolveArtefactFromPath(file.path);
+      if (resolved) {
+        artifacts[file.artifactSlug].files.push({
+          path: file.path,
+          agent: resolved.codingAgent,
+        });
+      }
     }
 
     return {
       lockfileVersion: 1,
-      artifacts: Array.from(artifactsMap.values()),
+      artifacts,
     };
   }
 

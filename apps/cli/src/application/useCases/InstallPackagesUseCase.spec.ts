@@ -1468,15 +1468,17 @@ Old packmind content
                 content: '# Coding Style',
                 artifactType: 'standard',
                 artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
                 artifactId: 'artifact-1',
                 artifactVersion: 3,
                 spaceId: 'space-1',
               },
               {
-                path: '.packmind/recipes/setup-lint.md',
+                path: '.packmind/commands/setup-lint.md',
                 content: '# Setup Lint',
                 artifactType: 'command',
                 artifactName: 'Setup Lint',
+                artifactSlug: 'setup-lint',
                 artifactId: 'artifact-2',
                 artifactVersion: 1,
                 spaceId: 'space-1',
@@ -1495,25 +1497,37 @@ Old packmind content
         });
       });
 
-      it('writes lock file with correct metadata', () => {
+      it('writes lock file with correct metadata and file paths', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
-          artifacts: [
-            {
+          artifacts: {
+            'coding-style': {
               type: 'standard',
               name: 'Coding Style',
               id: 'artifact-1',
               version: 3,
               spaceId: 'space-1',
+              files: [
+                {
+                  path: '.packmind/standards/coding-style.md',
+                  agent: 'packmind',
+                },
+              ],
             },
-            {
+            'setup-lint': {
               type: 'command',
               name: 'Setup Lint',
               id: 'artifact-2',
               version: 1,
               spaceId: 'space-1',
+              files: [
+                {
+                  path: '.packmind/commands/setup-lint.md',
+                  agent: 'packmind',
+                },
+              ],
             },
-          ],
+          },
         });
       });
     });
@@ -1524,19 +1538,21 @@ Old packmind content
           fileUpdates: {
             createOrUpdate: [
               {
-                path: '.claude/standards/coding-style.md',
+                path: '.claude/rules/coding-style.md',
                 content: '# Coding Style for Claude',
                 artifactType: 'standard',
                 artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
                 artifactId: 'artifact-1',
                 artifactVersion: 2,
                 spaceId: 'space-1',
               },
               {
-                path: '.cursor/standards/coding-style.md',
+                path: '.cursor/rules/coding-style.md',
                 content: '# Coding Style for Cursor',
                 artifactType: 'standard',
                 artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
                 artifactId: 'artifact-1',
                 artifactVersion: 2,
                 spaceId: 'space-1',
@@ -1555,18 +1571,28 @@ Old packmind content
         });
       });
 
-      it('deduplicates artifacts by artifactId', () => {
+      it('groups files from multiple agents under a single artifact entry', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
-          artifacts: [
-            {
+          artifacts: {
+            'coding-style': {
               type: 'standard',
               name: 'Coding Style',
               id: 'artifact-1',
               version: 2,
               spaceId: 'space-1',
+              files: [
+                {
+                  path: '.claude/rules/coding-style.md',
+                  agent: 'claude',
+                },
+                {
+                  path: '.cursor/rules/coding-style.md',
+                  agent: 'cursor',
+                },
+              ],
             },
-          ],
+          },
         });
       });
     });
@@ -1582,9 +1608,7 @@ Old packmind content
               },
               {
                 path: '.cursor/rules/config.mdc',
-                sections: [
-                  { key: 'test-section', content: 'content' },
-                ],
+                sections: [{ key: 'test-section', content: 'content' }],
               },
             ],
             delete: [],
@@ -1615,6 +1639,7 @@ Old packmind content
                 content: '# Complete',
                 artifactType: 'standard',
                 artifactName: 'Complete Standard',
+                artifactSlug: 'complete',
                 artifactId: 'artifact-1',
                 artifactVersion: 1,
                 spaceId: 'space-1',
@@ -1624,7 +1649,7 @@ Old packmind content
                 content: '# Partial',
                 artifactType: 'standard',
                 artifactName: 'Partial Standard',
-                // missing artifactId, artifactVersion, spaceId
+                // missing artifactSlug, artifactId, artifactVersion, spaceId
               },
             ],
             delete: [],
@@ -1643,15 +1668,21 @@ Old packmind content
       it('only includes artifacts with complete metadata', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
-          artifacts: [
-            {
+          artifacts: {
+            complete: {
               type: 'standard',
               name: 'Complete Standard',
               id: 'artifact-1',
               version: 1,
               spaceId: 'space-1',
+              files: [
+                {
+                  path: '.packmind/standards/complete.md',
+                  agent: 'packmind',
+                },
+              ],
             },
-          ],
+          },
         });
       });
     });
@@ -1668,6 +1699,7 @@ Old packmind content
                 content: '# Coding Style',
                 artifactType: 'standard',
                 artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
                 artifactId: 'artifact-1',
                 artifactVersion: 1,
                 spaceId: 'space-1',
@@ -1678,9 +1710,7 @@ Old packmind content
           skillFolders: [],
         });
 
-        (fs.access as jest.Mock).mockRejectedValue(
-          new Error('File not found'),
-        );
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
 
         mockLockFileRepository.write.mockRejectedValue(
           new Error('Permission denied'),
@@ -1715,6 +1745,7 @@ Old packmind content
                 content: '# Coding Style',
                 artifactType: 'standard',
                 artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
                 artifactId: 'artifact-1',
                 artifactVersion: 1,
                 spaceId: 'space-1',
