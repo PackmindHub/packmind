@@ -1500,6 +1500,9 @@ Old packmind content
       it('writes lock file with correct metadata and file paths', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
+          packageSlugs: ['test-package'],
+          installedAt: expect.any(String),
+          cliVersion: 'unknown',
           artifacts: {
             'coding-style': {
               type: 'standard',
@@ -1574,6 +1577,9 @@ Old packmind content
       it('groups files from multiple agents under a single artifact entry', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
+          packageSlugs: ['test-package'],
+          installedAt: expect.any(String),
+          cliVersion: 'unknown',
           artifacts: {
             'coding-style': {
               type: 'standard',
@@ -1668,6 +1674,9 @@ Old packmind content
       it('only includes artifacts with complete metadata', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
+          packageSlugs: ['test-package'],
+          installedAt: expect.any(String),
+          cliVersion: 'unknown',
           artifacts: {
             complete: {
               type: 'standard',

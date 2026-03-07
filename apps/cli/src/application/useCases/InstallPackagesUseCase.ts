@@ -130,7 +130,11 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       }
 
       // Generate lock file from artifacts with metadata
-      const lockFile = this.buildLockFile(filteredCreateOrUpdate);
+      const lockFile = this.buildLockFile(
+        filteredCreateOrUpdate,
+        command.packagesSlugs,
+        command.cliVersion,
+      );
       if (Object.keys(lockFile.artifacts).length > 0) {
         try {
           await this.lockFileRepository.write(baseDirectory, lockFile);
@@ -148,7 +152,11 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     return result;
   }
 
-  private buildLockFile(files: FileModification[]): PackmindLockFile {
+  private buildLockFile(
+    files: FileModification[],
+    packageSlugs: string[],
+    cliVersion?: string,
+  ): PackmindLockFile {
     const artifacts: Record<string, PackmindLockFileEntry> = {};
 
     for (const file of files) {
@@ -185,6 +193,9 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
 
     return {
       lockfileVersion: 1,
+      packageSlugs: [...packageSlugs].sort(),
+      installedAt: new Date().toISOString(),
+      cliVersion: cliVersion ?? 'unknown',
       artifacts,
     };
   }

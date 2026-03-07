@@ -16,5 +16,8 @@ export type PackmindLockFileEntry = {
 
 export type PackmindLockFile = {
   lockfileVersion: 1;
+  packageSlugs: string[];
+  installedAt: string;
+  cliVersion: string;
   artifacts: Record<string, PackmindLockFileEntry>;
 };
