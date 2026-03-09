@@ -67,9 +67,4 @@ For each new standard that passes validation, follow the procedure in [create-st
 - **Rules to modify**: old → new
 - **Rules to remove**: rule text — reason
 
-### Standards to Deprecate
-(If none: "No deprecations needed.")
-
-#### Standard Name (`<slug>`)
-- **Reason**: why no longer relevant
 ```

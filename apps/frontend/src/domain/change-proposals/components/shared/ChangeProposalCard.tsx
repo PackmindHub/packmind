@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { PMAccordion } from '@packmind/ui';
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposalDecision, ChangeProposalType } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalCardHeader } from './ChangeProposalCardHeader';
@@ -21,7 +21,7 @@ interface ChangeProposalCardProps {
   filePath?: string;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
-  onAccept: () => void;
+  onAccept: (decision: ChangeProposalDecision) => void;
   onDismiss: () => void;
   onUndo: () => void;
   renderExpandedView?: (

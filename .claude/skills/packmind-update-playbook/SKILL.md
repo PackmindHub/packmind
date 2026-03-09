@@ -1,11 +1,11 @@
 ---
 name: packmind-update-playbook
-description: Use when updating, adding, fixing, changing, or deprecating Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook", "deprecate a standard". Also triggers when the conversation reveals an opportunity to update the playbook — e.g., a convention was established, a pattern emerged, a workflow changed, or an artifact is stale. This skill defines a mandatory workflow: do NOT edit artifact files directly — follow all phases regardless of change size.
+description: Use when updating, adding, fixing, or changing Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook". Also triggers when the conversation reveals an opportunity to update the playbook — e.g., a convention was established, a pattern emerged, a workflow changed, or an artifact is stale. This skill defines a mandatory workflow; do NOT edit artifact files directly — follow all phases regardless of change size.
 ---
 
 # Update Playbook
 
-Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating, updating, or deprecating. Produce a structured change report, then apply approved changes.
+Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating or updating. Produce a structured change report, then apply approved changes.
 
 **⚠️ MANDATORY WORKFLOW — This skill defines a strict sequence: Understanding Your Request → Summarizing Changes → Analyzing Playbook → Change Report → Applying Changes. Do NOT skip steps or edit artifact files directly. Even for a single-line change, follow every step. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
 
@@ -25,9 +25,9 @@ The skill was invoked standalone with no context. Ask:
 
 #### Case B: Explicit intent found
 
-The user explicitly asked to update, add, fix, change, or deprecate a Packmind artifact. Extract an **intent summary**:
+The user explicitly asked to update, add, fix, or change a Packmind artifact. Extract an **intent summary**:
 - **Target artifact(s)**: which standard(s), command(s), or skill(s) to modify (or "new")
-- **Kind of change**: create, update, deprecate, fix
+- **Kind of change**: create or update
 - **Specifics**: any details the user provided about the change
 
 Proceed to Summarizing Changes with this validated intent.
@@ -85,8 +85,7 @@ Construct each prompt as:
 
 For each domain, decide whether to launch or skip based on the validated intent's **target artifact type**:
 - **Launch** if the intent mentions or affects that artifact type (standard, command, or skill)
-- **Always launch skills** — skill accuracy must be checked against any behavioral change
-- **Skip** if the intent exclusively targets a different artifact type (e.g., "update standard X" → skip commands and skills)
+- **Skip** if the intent exclusively targets a different artifact type (e.g., "update standard X" → skip commands)
 
 ### Change Report
 
@@ -116,9 +115,6 @@ After all subagents complete, consolidate their reports. **Number every change s
 
 ### Command Updates
 6. [command] <name>: <what changed and why>
-
-### Deprecations
-6. [standard|skill] <name>: <reason>
 ```
 
 **Only include sections that have actual changes** — omit empty sections entirely. Order by priority: skills first, then standards, then commands.
@@ -165,16 +161,15 @@ For each approved **update** to an existing artifact, edit the local installed f
 
 If a same artifact exists in multiple agent directories, pick one to edit.
 
-Run `packmind-cli diff` and present the output. Verify the diff matches the intended changes — no unrelated modifications should be included. If unrelated changes appear, inform the user before proceeding.
+Run `packmind-cli diff` and present the output. List all artifacts included in the diff. Since it is not possible to select individual changes, **all detected modifications will be submitted together**.
+
+- If the diff contains only the intended changes, proceed to Step 3.
+- If the diff contains **additional or unrelated artifacts**, inform the user by listing them and clarifying that they will be included in the submission as well.
 
 #### Step 3: Submit updates
 
 Run `packmind-cli diff --submit -m "<concise summary of all changes>"` to submit the changes as proposals for human review on Packmind.
 
-#### Step 4: Propagate
+Once submitted, tell the user: **"✅ Successfully sent to Packmind for review!"**
+Then add in italics: *"Once accepted in Packmind, these changes will be propagated and will replace all local copies."*
 
-Ask the user whether they have validated the submitted changes in the **Review Changes** module in Packmind and wish to propagate them locally. If yes, run:
-
-```bash
-packmind-cli install --recursive
-```
