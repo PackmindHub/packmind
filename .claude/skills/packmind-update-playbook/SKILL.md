@@ -165,16 +165,15 @@ For each approved **update** to an existing artifact, edit the local installed f
 
 If a same artifact exists in multiple agent directories, pick one to edit.
 
-Run `packmind-cli diff` and present the output. Verify the diff matches the intended changes — no unrelated modifications should be included. If unrelated changes appear, inform the user before proceeding.
+Run `packmind-cli diff` and present the output. List all artifacts included in the diff. Since it is not possible to select individual changes, **all detected modifications will be submitted together**.
+
+- If the diff contains only the intended changes, proceed to Step 3.
+- If the diff contains **additional or unrelated artifacts**, inform the user by listing them and clarifying that they will be included in the submission as well.
 
 #### Step 3: Submit updates
 
 Run `packmind-cli diff --submit -m "<concise summary of all changes>"` to submit the changes as proposals for human review on Packmind.
 
-#### Step 4: Propagate
+Once submitted, tell the user: **"✅ Successfully sent to Packmind for review!"**
+Then add in italics: *"Once accepted in Packmind, these changes will be propagated and will replace all local copies."*
 
-Ask the user whether they have validated the submitted changes in the **Review Changes** module in Packmind and wish to propagate them locally. If yes, run:
-
-```bash
-packmind-cli install --recursive
-```
