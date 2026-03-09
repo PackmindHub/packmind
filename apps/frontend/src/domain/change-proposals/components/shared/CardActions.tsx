@@ -182,6 +182,7 @@ function ResolveButton({
             <PMMenu.Item value="dismiss" cursor="pointer" onClick={onDismiss}>
               Dismiss
             </PMMenu.Item>
+            <PMMenu.Separator borderColor={'border.tertiary'} />
             <PMMenu.Item
               value="remove-from-packages"
               cursor="pointer"
