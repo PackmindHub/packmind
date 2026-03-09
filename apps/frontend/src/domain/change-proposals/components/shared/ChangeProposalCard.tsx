@@ -60,6 +60,7 @@ export function ChangeProposalCard({
         proposalNumber={proposalNumber}
         proposalType={proposal.type as ChangeProposalType}
         poolStatus={poolStatus}
+        isOutdated={isOutdated}
         authorName={authorName}
         createdAt={proposal.createdAt}
         artefactVersion={proposal.artefactVersion}

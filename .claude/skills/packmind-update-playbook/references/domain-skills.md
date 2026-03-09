@@ -1,13 +1,13 @@
-export const DOMAIN_SKILLS = `# Skills Domain Analysis
+# Skills Domain Analysis
 
 Scan existing skills, identify which are relevant to the user's validated intent, then perform deep analysis on those in one pass.
 
 ## What Skills Are
 
-Skills are modular packages providing specialized knowledge and workflows. Each skill has a \`SKILL.md\` with YAML frontmatter (\`name\`, \`description\`) and markdown body, plus optional \`references/\`, \`scripts/\`, and \`assets/\`. The \`description\` field determines when the skill auto-loads. Skills live in a platform-specific agent directory, at the project root or in any subdirectory (e.g. \`src/backend/.cursor/skills/\`):
-- Claude Code: \`**/.claude/skills/<skill-name>/\`
-- Cursor: \`**/.cursor/skills/<skill-name>/\`
-- GitHub Copilot: \`**/.github/skills/<skill-name>/\`
+Skills are modular packages providing specialized knowledge and workflows. Each skill has a `SKILL.md` with YAML frontmatter (`name`, `description`) and markdown body, plus optional `references/`, `scripts/`, and `assets/`. The `description` field determines when the skill auto-loads. Skills live in a platform-specific agent directory, at the project root or in any subdirectory (e.g. `src/backend/.cursor/skills/`):
+- Claude Code: `**/.claude/skills/<skill-name>/`
+- Cursor: `**/.cursor/skills/<skill-name>/`
+- GitHub Copilot: `**/.github/skills/<skill-name>/`
 Search recursively for these directories. If multiple agent directories exist, pick one.
 
 For the complete format specification (frontmatter fields, naming rules, directory structure, progressive disclosure), see [agent-skills-specification.md](agent-skills-specification.md).
@@ -16,7 +16,7 @@ For the complete format specification (frontmatter fields, naming rules, directo
 
 ### Step 1: List Skills
 
-Run \`packmind-cli skills list\` to get slugs, names, and descriptions. Do NOT read SKILL.md bodies or reference files yet.
+Run `packmind-cli skills list` to get slugs, names, and descriptions. Do NOT read SKILL.md bodies or reference files yet.
 
 ### Step 2: Filter Relevant Skills
 
@@ -33,7 +33,7 @@ Also identify **new skill ideas** if the user's intent suggests creating one. A 
 
 ### Step 3: Deep Analyze Flagged Skills
 
-For each relevant skill, read the full \`SKILL.md\` and note its reference files. Keeping skills accurate is critical — stale skills actively mislead agents. Evaluate against the user's intent:
+For each relevant skill, read the full `SKILL.md` and note its reference files. Keeping skills accurate is critical — stale skills actively mislead agents. Evaluate against the user's intent:
 - Does the intent request changes to decision tables, patterns, or workflows?
 - Does the intent highlight APIs, paths, patterns, or versions that changed? (update immediately)
 - Does the intent describe domain knowledge the skill should provide but doesn't? (add content or reference)
@@ -48,9 +48,11 @@ For each new skill idea, verify:
 - It will be needed in future sessions (not a one-off)
 - SKILL.md would stay under 5k words (plan references for overflow)
 
+For each new skill that passes validation, follow the procedure in [create-skill-procedure.md](create-skill-procedure.md) to write the skill directory.
+
 ## Output Format
 
-\`\`\`markdown
+```markdown
 ## Skills Change Report
 
 ### New Skills
@@ -75,5 +77,4 @@ For each new skill idea, verify:
 
 #### skill-name
 - **Reason**: why no longer relevant
-\`\`\`
-`;
+```

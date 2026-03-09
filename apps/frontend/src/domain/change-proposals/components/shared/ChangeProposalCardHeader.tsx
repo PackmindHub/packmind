@@ -1,5 +1,12 @@
-import { PMAccordion, PMBadge, PMHStack } from '@packmind/ui';
+import {
+  PMAccordion,
+  PMBadge,
+  PMHStack,
+  PMIcon,
+  PMTooltip,
+} from '@packmind/ui';
 import { ChangeProposalType } from '@packmind/types';
+import { LuCircleAlert } from 'react-icons/lu';
 import { ProposalLabel } from './ProposalLabel';
 import { StatusDot } from './StatusDot';
 import { ProposalMeta } from './ProposalMeta';
@@ -10,6 +17,7 @@ interface ChangeProposalCardHeaderProps {
   proposalNumber: number;
   proposalType: ChangeProposalType;
   poolStatus: PoolStatus;
+  isOutdated: boolean;
   authorName: string;
   createdAt: Date;
   artefactVersion: number;
@@ -20,6 +28,7 @@ export function ChangeProposalCardHeader({
   proposalNumber,
   proposalType,
   poolStatus,
+  isOutdated,
   authorName,
   createdAt,
   artefactVersion,
@@ -34,6 +43,16 @@ export function ChangeProposalCardHeader({
           proposalType={proposalType}
         />
         <StatusDot status={poolStatus} />
+        {isOutdated && (
+          <PMTooltip label="This proposal was made on an outdated version">
+            <PMBadge colorPalette="orange" variant="subtle" size="sm">
+              <PMIcon>
+                <LuCircleAlert />
+              </PMIcon>
+              Outdated
+            </PMBadge>
+          </PMTooltip>
+        )}
         {filePath && (
           <PMBadge variant="outline" size="sm" fontFamily="mono">
             {filePath}

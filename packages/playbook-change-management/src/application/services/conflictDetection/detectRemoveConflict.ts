@@ -11,5 +11,9 @@ export const detectRemoveConflict: ConflictDetector<RemoveChangeProposals> = (
   cp1,
   cp2,
 ) => {
-  return !sameProposal(cp1, cp2) && sameArtefact(cp1, cp2);
+  return (
+    !sameProposal(cp1, cp2) &&
+    sameArtefact(cp1, cp2) &&
+    (cp1.decision?.delete ?? false)
+  );
 };
