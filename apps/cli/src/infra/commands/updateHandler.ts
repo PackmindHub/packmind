@@ -217,7 +217,7 @@ export async function updateHandler(
       'This CLI was installed via Homebrew.\n' +
         'To update, run: brew upgrade packmind-cli',
     );
-    process.exit(1);
+    process.exit(0);
     return;
   }
 
