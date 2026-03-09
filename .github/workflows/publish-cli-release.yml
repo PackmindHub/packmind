@@ -310,6 +310,7 @@ jobs:
           echo "🔗 [View Release](https://github.com/${REPOSITORY}/releases/tag/${REF})" >> $GITHUB_STEP_SUMMARY
 
       - name: Notify Homebrew tap
+        continue-on-error: true
         env:
           VERSION: ${{ needs.sign-macos-cli.outputs.version }}
         run: |

@@ -20,50 +20,13 @@ import {
   CopiableTextarea,
 } from '../../../shared/components/inputs';
 import { useCreateCliLoginCodeMutation } from '../../accounts/api/queries/AuthQueries';
-
-const CLI_INSTALL_SCRIPT_URL =
-  'https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh';
-const NPM_INSTALL_COMMAND = 'npm install -g @packmind/cli';
-const HOMEBREW_INSTALL_COMMAND = `brew tap PackmindHub/cli
-brew install packmind-cli`;
-const DEFAULT_HOST = 'https://app.packmind.ai';
-
-const getCurrentHost = (): string => {
-  if (globalThis.location !== undefined) {
-    return globalThis.location.origin;
-  }
-  return DEFAULT_HOST;
-};
-
-const isDefaultHost = (): boolean => getCurrentHost() === DEFAULT_HOST;
-
-const buildCurlInstallCommand = (loginCode: string): string => {
-  const hostExport = isDefaultHost()
-    ? ''
-    : `export PACKMIND_HOST=${getCurrentHost()}\n`;
-  return `export PACKMIND_LOGIN_CODE=${loginCode}\n${hostExport}curl --proto '=https' --tlsv1.2 -sSf ${CLI_INSTALL_SCRIPT_URL} | sh`;
-};
-
-const formatCodeExpiresAt = (expiresAt?: string | Date): string => {
-  if (!expiresAt) return '';
-  try {
-    const date = expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
-    const now = new Date();
-    const diffMs = date.getTime() - now.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins <= 0) return 'Code expired';
-    return `Code expires in ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
-  } catch {
-    return '';
-  }
-};
-
-const detectOS = (): 'macos-linux' | 'windows' => {
-  if (typeof navigator === 'undefined') return 'macos-linux';
-  return navigator.userAgent.toLowerCase().includes('win')
-    ? 'windows'
-    : 'macos-linux';
-};
+import {
+  HOMEBREW_INSTALL_COMMAND,
+  NPM_INSTALL_COMMAND,
+  buildCurlInstallCommand,
+  formatCodeExpiresAt,
+  detectUserOs,
+} from '../../accounts/components/LocalEnvironmentSetup/utils';
 
 interface InstallSectionProps {
   title: string;
@@ -130,7 +93,7 @@ const AccordionItemHeader: React.FC<AccordionItemHeaderProps> = ({
 export const SkillsImportContent: React.FC = () => {
   const loginCodeMutation = useCreateCliLoginCodeMutation();
   const [selectedOs, setSelectedOs] = useState<'macos-linux' | 'windows'>(
-    detectOS,
+    detectUserOs,
   );
 
   useEffect(() => {
