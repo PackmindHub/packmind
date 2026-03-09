@@ -72,9 +72,4 @@ For each new skill that passes validation, follow the procedure in [create-skill
 - **Reference file changes**: files to add/update/remove
 - **Description update**: new description if auto-load triggers need adjustment
 
-### Skills to Deprecate
-<!-- Omit this section if none -->
-
-#### skill-name
-- **Reason**: why no longer relevant
 ```

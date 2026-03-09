@@ -1,11 +1,11 @@
 ---
 name: packmind-update-playbook
-description: Use when updating, adding, fixing, changing, or deprecating Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook", "deprecate a standard". Also triggers when the conversation reveals an opportunity to update the playbook — e.g., a convention was established, a pattern emerged, a workflow changed, or an artifact is stale. This skill defines a mandatory workflow: do NOT edit artifact files directly — follow all phases regardless of change size.
+description: Use when updating, adding, fixing, or changing Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook". Also triggers when the conversation reveals an opportunity to update the playbook — e.g., a convention was established, a pattern emerged, a workflow changed, or an artifact is stale. This skill defines a mandatory workflow; do NOT edit artifact files directly — follow all phases regardless of change size.
 ---
 
 # Update Playbook
 
-Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating, updating, or deprecating. Produce a structured change report, then apply approved changes.
+Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating or updating. Produce a structured change report, then apply approved changes.
 
 **⚠️ MANDATORY WORKFLOW — This skill defines a strict sequence: Understanding Your Request → Summarizing Changes → Analyzing Playbook → Change Report → Applying Changes. Do NOT skip steps or edit artifact files directly. Even for a single-line change, follow every step. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
 
@@ -25,9 +25,9 @@ The skill was invoked standalone with no context. Ask:
 
 #### Case B: Explicit intent found
 
-The user explicitly asked to update, add, fix, change, or deprecate a Packmind artifact. Extract an **intent summary**:
+The user explicitly asked to update, add, fix, or change a Packmind artifact. Extract an **intent summary**:
 - **Target artifact(s)**: which standard(s), command(s), or skill(s) to modify (or "new")
-- **Kind of change**: create, update, deprecate, fix
+- **Kind of change**: create or update
 - **Specifics**: any details the user provided about the change
 
 Proceed to Summarizing Changes with this validated intent.
@@ -115,9 +115,6 @@ After all subagents complete, consolidate their reports. **Number every change s
 
 ### Command Updates
 6. [command] <name>: <what changed and why>
-
-### Deprecations
-6. [standard|skill] <name>: <reason>
 ```
 
 **Only include sections that have actual changes** — omit empty sections entirely. Order by priority: skills first, then standards, then commands.
