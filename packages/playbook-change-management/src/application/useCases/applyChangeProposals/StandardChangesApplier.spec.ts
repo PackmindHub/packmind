@@ -347,7 +347,7 @@ describe('StandardChangesApplier', () => {
     });
 
     describe('when encountering an unsupported change type', () => {
-      it('throws an error', () => {
+      it('returns source unchanged', () => {
         const changeProposal = changeProposalFactory({
           type: ChangeProposalType.updateSkillName,
           payload: {
@@ -356,9 +356,11 @@ describe('StandardChangesApplier', () => {
           },
         });
 
-        expect(() =>
-          applier.applyChangeProposals(standardVersion, [changeProposal]),
-        ).toThrow('Unsupported ChangeProposalType');
+        const result = applier.applyChangeProposals(standardVersion, [
+          changeProposal,
+        ]);
+
+        expect(result).toEqual(standardVersion);
       });
     });
   });

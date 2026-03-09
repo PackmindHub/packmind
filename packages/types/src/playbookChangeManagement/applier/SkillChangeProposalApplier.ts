@@ -200,6 +200,6 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
       };
     }
 
-    throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
+    return source;
   }
 }

@@ -442,18 +442,18 @@ describe('StandardChangeProposalApplier', () => {
     });
 
     describe('unsupported type', () => {
-      it('throws an error for unsupported change proposal types', () => {
+      it('returns source unchanged for unsupported change proposal types', () => {
         const source = standardVersionFactory();
         const proposal = changeProposalFactory({
           type: ChangeProposalType.updateCommandName,
           payload: { oldValue: 'Old', newValue: 'New' },
         });
 
-        expect(() =>
-          applier.applyChangeProposals(source, [
-            proposal as unknown as ChangeProposal,
-          ]),
-        ).toThrow('Unsupported ChangeProposalType');
+        const result = applier.applyChangeProposals(source, [
+          proposal as unknown as ChangeProposal,
+        ]);
+
+        expect(result).toEqual(source);
       });
     });
   });

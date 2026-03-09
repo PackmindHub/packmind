@@ -111,6 +111,6 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
       };
     }
 
-    throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
+    return source;
   }
 }
