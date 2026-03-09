@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
   AcceptedChangeProposal,
+  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalStatus,
   OrganizationId,
@@ -37,7 +38,6 @@ import { StandardInlineView } from './StandardInlineView';
 import { StandardOriginalTabContent } from './StandardOriginalTabContent';
 import { StandardResultTabContent } from './StandardResultTabContent';
 import { useBeforeUnload, useBlocker } from 'react-router';
-import { getDecision } from '../../utils/GetDecision';
 
 interface StandardReviewDetailProps {
   artefactId: string;
@@ -96,8 +96,8 @@ export function StandardReviewDetail({
   }, [selectedStandardProposals, reviewState.toggleCard]);
 
   const handleAcceptAndCollapse = useCallback(
-    (proposalId: ChangeProposalId) => {
-      pool.handlePoolAccept(proposalId);
+    (proposalId: ChangeProposalId, decision: ChangeProposalDecision) => {
+      pool.handlePoolAccept(proposalId, decision);
       reviewState.collapseCard(proposalId);
     },
     [pool.handlePoolAccept, reviewState.collapseCard],
@@ -143,7 +143,7 @@ export function StandardReviewDetail({
         acc.push({
           ...changeProposal,
           status: ChangeProposalStatus.applied,
-          decision: getDecision(changeProposal),
+          decision: pool.getDecisionForChangeProposal(changeProposal),
         });
       }
       return acc;

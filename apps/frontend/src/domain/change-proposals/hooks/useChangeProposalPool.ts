@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { ChangeProposalId } from '@packmind/types';
+import {
+  ChangeProposal,
+  ChangeProposalDecision,
+  ChangeProposalId,
+  ChangeProposalType,
+} from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
 
 export function useChangeProposalPool(
@@ -13,6 +18,9 @@ export function useChangeProposalPool(
   const [rejectedProposalIds, setRejectedProposalIds] = useState<
     Set<ChangeProposalId>
   >(new Set());
+  const [decisionsTaken, setDecisionsTaken] = useState<
+    Record<ChangeProposalId, ChangeProposalDecision>
+  >({});
 
   useEffect(() => {
     const currentIds = new Set(proposals.map((p) => p.id));
@@ -50,18 +58,22 @@ export function useChangeProposalPool(
     setReviewingProposalId((prev) => (prev === proposalId ? null : proposalId));
   }, []);
 
-  const handlePoolAccept = useCallback((proposalId: ChangeProposalId) => {
-    setAcceptedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.add(proposalId);
-      return next;
-    });
-    setRejectedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.delete(proposalId);
-      return next;
-    });
-  }, []);
+  const handlePoolAccept = useCallback(
+    (proposalId: ChangeProposalId, decision: ChangeProposalDecision) => {
+      setAcceptedProposalIds((prev) => {
+        const next = new Set(prev);
+        next.add(proposalId);
+        return next;
+      });
+      setRejectedProposalIds((prev) => {
+        const next = new Set(prev);
+        next.delete(proposalId);
+        return next;
+      });
+      setDecisionsTaken((prev) => ({ ...prev, [proposalId]: decision }));
+    },
+    [],
+  );
 
   const handlePoolReject = useCallback((proposalId: ChangeProposalId) => {
     setRejectedProposalIds((prev) => {
@@ -73,6 +85,10 @@ export function useChangeProposalPool(
       const next = new Set(prev);
       next.delete(proposalId);
       return next;
+    });
+    setDecisionsTaken((prev) => {
+      const { [proposalId]: _, ...rest } = prev;
+      return rest as Record<ChangeProposalId, ChangeProposalDecision>;
     });
   }, []);
 
@@ -87,13 +103,26 @@ export function useChangeProposalPool(
       next.delete(proposalId);
       return next;
     });
+    setDecisionsTaken((prev) => {
+      const { [proposalId]: _, ...rest } = prev;
+      return rest as Record<ChangeProposalId, ChangeProposalDecision>;
+    });
   }, []);
 
   const resetPool = useCallback(() => {
     setAcceptedProposalIds(new Set());
     setRejectedProposalIds(new Set());
     setReviewingProposalId(null);
+    setDecisionsTaken({});
   }, []);
+
+  const getDecisionForChangeProposal = <T extends ChangeProposalType>(
+    changeProposal: ChangeProposal<T>,
+  ) => {
+    return decisionsTaken[
+      changeProposal.id
+    ] as unknown as ChangeProposalDecision<T>;
+  };
 
   return {
     reviewingProposalId,
@@ -101,6 +130,7 @@ export function useChangeProposalPool(
     rejectedProposalIds,
     blockedByConflictIds,
     hasPooledDecisions,
+    getDecisionForChangeProposal,
     handleSelectProposal,
     handlePoolAccept,
     handlePoolReject,
