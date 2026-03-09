@@ -188,7 +188,7 @@ function ResolveButton({
               cursor="pointer"
               onClick={() => setIsModalOpen(true)}
             >
-              Remove from packages
+              Remove from packages...
             </PMMenu.Item>
           </PMMenu.Content>
         </PMMenu.Positioner>
