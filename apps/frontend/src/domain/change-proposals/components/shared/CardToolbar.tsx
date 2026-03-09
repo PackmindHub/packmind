@@ -1,5 +1,10 @@
 import { PMButton, PMHStack } from '@packmind/ui';
-import { ChangeProposalType, PackageId, SpaceId } from '@packmind/types';
+import {
+  ChangeProposalDecision,
+  ChangeProposalType,
+  PackageId,
+  SpaceId,
+} from '@packmind/types';
 import { LuArrowUpRight, LuMinimize2 } from 'react-icons/lu';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { CardActions } from './CardActions';
@@ -18,7 +23,7 @@ interface CardToolbarProps {
   showEditButton?: boolean;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
-  onAccept: () => void;
+  onAccept: (decision?: ChangeProposalDecision) => void;
   onDismiss: () => void;
   onUndo: () => void;
 }

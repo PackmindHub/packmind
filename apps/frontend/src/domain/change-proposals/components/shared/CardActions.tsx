@@ -13,9 +13,10 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import {
+  ChangeProposalDecision,
   ChangeProposalType,
   PackageId,
-  RemoveArtefactPayload,
+  RemoveArtefactDecision,
   SpaceId,
   getItemTypeFromChangeProposalType,
 } from '@packmind/types';
@@ -34,7 +35,7 @@ interface CardActionsProps {
   isBlockedByConflict: boolean;
   showEditButton?: boolean;
   onEdit: () => void;
-  onAccept: () => void;
+  onAccept: (decision?: ChangeProposalDecision) => void;
   onDismiss: () => void;
   onUndo: () => void;
 }
@@ -58,7 +59,7 @@ function RemoveFromPackagesModal({
   proposalType: ChangeProposalType;
   packageIds: PackageId[];
   spaceId: SpaceId;
-  onAccept: () => void;
+  onAccept: (decision: RemoveArtefactDecision) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -133,7 +134,12 @@ function RemoveFromPackagesModal({
                   size="sm"
                   colorPalette="blue"
                   disabled={selectedPackageIds.size === 0}
-                  onClick={onAccept}
+                  onClick={() =>
+                    onAccept({
+                      delete: false,
+                      removeFromPackages: [...selectedPackageIds],
+                    })
+                  }
                 >
                   Accept
                 </PMButton>
@@ -159,7 +165,7 @@ function ResolveButton({
   spaceId: SpaceId;
   isOutdated: boolean;
   onDismiss: () => void;
-  onAccept: () => void;
+  onAccept: (decision: RemoveArtefactDecision) => void;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -250,7 +256,7 @@ export function CardActions({
         spaceId={spaceId}
         isOutdated={isOutdated}
         onDismiss={onDismiss}
-        onAccept={onAccept}
+        onAccept={(decision) => onAccept(decision)}
       />
     );
   }
@@ -267,7 +273,7 @@ export function CardActions({
       size="xs"
       variant="outline"
       disabled={acceptDisabled}
-      onClick={onAccept}
+      onClick={() => onAccept()}
       color="green.300"
       borderColor="green.300"
     >

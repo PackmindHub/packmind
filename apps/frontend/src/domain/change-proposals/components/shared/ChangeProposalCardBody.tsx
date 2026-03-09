@@ -1,6 +1,10 @@
-import { ReactNode } from 'react';
+import { ReactNode, useCallback } from 'react';
 import { PMSeparator, PMVStack } from '@packmind/ui';
-import { RemoveArtefactPayload } from '@packmind/types';
+import {
+  ChangeProposalDecision,
+  ChangeProposalType,
+  RemoveArtefactPayload,
+} from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
@@ -21,7 +25,7 @@ interface ChangeProposalCardBodyProps {
   showEditButton?: boolean;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
-  onAccept: () => void;
+  onAccept: (decision: ChangeProposalDecision) => void;
   onDismiss: () => void;
   onUndo: () => void;
   renderExpandedView?: (
@@ -50,6 +54,25 @@ export function ChangeProposalCardBody({
   const removePayload = proposal.payload as RemoveArtefactPayload;
   const packageIds = removePayload?.packageIds ?? [];
 
+  const isRemoveType =
+    proposal.type === ChangeProposalType.removeStandard ||
+    proposal.type === ChangeProposalType.removeCommand ||
+    proposal.type === ChangeProposalType.removeSkill;
+
+  const handleAccept = useCallback(
+    (decision?: ChangeProposalDecision) => {
+      const finalDecision =
+        decision ??
+        (!isRemoveType
+          ? (proposal.payload as ChangeProposalDecision)
+          : undefined);
+      if (finalDecision !== undefined) {
+        onAccept(finalDecision);
+      }
+    },
+    [isRemoveType, proposal.payload, onAccept],
+  );
+
   return (
     <PMVStack gap={0} alignItems="stretch">
       {showToolbar && (
@@ -67,7 +90,7 @@ export function ChangeProposalCardBody({
               showEditButton={showEditButton}
               onViewModeChange={onViewModeChange}
               onEdit={onEdit}
-              onAccept={onAccept}
+              onAccept={handleAccept}
               onDismiss={onDismiss}
               onUndo={onUndo}
             />
