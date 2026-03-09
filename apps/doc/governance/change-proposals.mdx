@@ -41,6 +41,42 @@ To view all local changes, including those that have already been submitted:
 packmind-cli diff --include-submitted
 ```
 
+### Add new artifacts
+
+To submit a **new** artifact (standard, command, or skill) as a change proposal:
+
+```bash
+packmind-cli diff add <path> -m "Description of the new artifact"
+```
+
+The file must be located in a recognized artifact directory:
+
+| Artifact type | Recognized directories                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| **Commands**  | `.claude/commands/`, `.cursor/commands/`, `.github/prompts/`, `.continue/prompts/`, `.packmind/commands/` |
+| **Standards** | `.claude/rules/`, `.cursor/rules/`, `.github/instructions/`, `.continue/rules/`, `.packmind/standards/`   |
+| **Skills**    | `.claude/skills/`, `.cursor/skills/`, `.github/skills/`                                                   |
+
+#### File format requirements
+
+- **Commands**: File must not be empty. Frontmatter with `name:` is optional.
+- **Standards**: Must contain a heading and at least one rule (bullet point).
+- **Skills**: Path must point to a directory containing a `SKILL.md` with valid frontmatter (`name`, `description`) and a non-empty body.
+
+#### When it won't work
+
+The command will fail if:
+
+- The file is not inside a recognized artifact directory
+- The path points to a directory instead of a file (for commands and standards)
+- The file content is invalid (empty command, standard without rules, skill missing `SKILL.md`)
+
+#### Message flag
+
+The `-m "message"` flag is required in non-interactive or CI mode. If omitted in interactive mode, an editor will open. Maximum length is 1024 characters.
+
+On success, the artifact is submitted as a change proposal visible in the **Review changes** UI, with a summary logged to the console.
+
 ## Important: Pending Changes and the Install Command
 
 <Warning>

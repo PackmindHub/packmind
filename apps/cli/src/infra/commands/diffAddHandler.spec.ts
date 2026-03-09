@@ -373,7 +373,7 @@ describe('diffAddHandler', () => {
       await diffAddHandler(buildDeps());
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to submit "My Command"'),
+        expect.stringContaining('Failed to submit addition "My Command"'),
       );
     });
 

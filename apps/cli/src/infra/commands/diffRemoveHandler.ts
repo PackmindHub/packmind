@@ -1,10 +1,9 @@
 import * as path from 'path';
-import * as fs from 'fs';
 
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
 import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ArtifactType, ChangeProposalType } from '@packmind/types';
+import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
 import { normalizePath } from '../../application/utils/pathUtils';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 
@@ -14,6 +13,8 @@ export type DiffRemoveHandlerDependencies = {
   message: string | undefined;
   exit: (code: number) => void;
   getCwd: () => string;
+  existsSync: (path: string) => boolean;
+  unlinkSync: (path: string) => void;
 };
 
 const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
@@ -31,6 +32,8 @@ export async function diffRemoveHandler(
     message: messageFlag,
     exit,
     getCwd,
+    existsSync,
+    unlinkSync,
   } = deps;
 
   if (!filePath) {
@@ -54,7 +57,7 @@ export async function diffRemoveHandler(
   }
 
   // Check if the file or directory exists
-  if (!fs.existsSync(absolutePath)) {
+  if (!existsSync(absolutePath)) {
     logErrorConsole(`File or directory does not exist: ${filePath}`);
     exit(1);
     return;
@@ -62,7 +65,7 @@ export async function diffRemoveHandler(
 
   // Read config to get packages
   let configPackages: string[];
-  let configAgents;
+  let configAgents: CodingAgent[] | undefined;
   try {
     const fullConfig = await packmindCliHexa.readFullConfig(cwd);
     if (fullConfig) {
@@ -137,16 +140,10 @@ export async function diffRemoveHandler(
       agents: configAgents,
     });
 
-  // Get the file path relative to git root for comparison
-  // At this point gitRoot is guaranteed to be non-null because we checked above
-  if (!gitRoot) {
-    logErrorConsole('Git root is required but not available');
-    exit(1);
-    return;
-  }
-
-  const relativeToGitRoot = absolutePath.startsWith(gitRoot)
-    ? absolutePath.slice(gitRoot.length)
+  // gitRoot is guaranteed non-null: the early exit above checks gitRemoteUrl,
+  // which is only set inside the `if (gitRoot)` block.
+  const relativeToGitRoot = absolutePath.startsWith(gitRoot!)
+    ? absolutePath.slice(gitRoot!.length)
     : absolutePath;
 
   // Normalize by removing leading slash and converting backslashes
@@ -237,7 +234,7 @@ export async function diffRemoveHandler(
   const result = await packmindCliHexa.submitDiffs([[diff]], message);
 
   for (const err of result.errors) {
-    logErrorConsole(`Failed to submit removal: ${err.message}`);
+    logErrorConsole(`Failed to submit removal "${err.name}": ${err.message}`);
   }
 
   if (result.errors.length > 0) {
@@ -253,7 +250,7 @@ export async function diffRemoveHandler(
 
   // Delete the file after successful submission
   try {
-    fs.unlinkSync(absolutePath);
+    unlinkSync(absolutePath);
     logSuccessConsole(`File deleted: ${filePath}`);
   } catch (err) {
     logErrorConsole(
