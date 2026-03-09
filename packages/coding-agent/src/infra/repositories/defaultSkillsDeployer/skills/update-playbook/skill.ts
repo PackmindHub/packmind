@@ -1,15 +1,7 @@
 export function getSkillMd(): string {
   return `---
 name: packmind-update-playbook
-description: >-
-  Use when updating, adding, fixing, changing, or deprecating Packmind playbook
-  artifacts (standards, commands, skills). Triggers on explicit phrases like
-  "update packmind standard", "add a packmind skill", "fix packmind command",
-  "change packmind playbook", "deprecate a standard". Also triggers when the
-  conversation reveals an opportunity to update the playbook — e.g., a convention
-  was established, a pattern emerged, a workflow changed, or an artifact is stale.
-  This skill defines a mandatory workflow: do NOT edit artifact files directly —
-  follow all phases (0→4) regardless of change size.
+description: Use when updating, adding, fixing, changing, or deprecating Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "update packmind skill", "add a rule to a packmind standard", .... Also triggers when the conversation reveals an opportunity to update the playbook — e.g., a convention was established, a pattern emerged, a workflow changed, or an artifact is stale. This skill defines a mandatory workflow: do NOT edit artifact files directly — follow all phases (0→4) regardless of change size.
 ---
 
 # Update Playbook
