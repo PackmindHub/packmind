@@ -41,6 +41,10 @@ import {
   getStandardByIdKey,
   getStandardsBySpaceKey,
 } from '../../../standards/api/queryKeys';
+import {
+  GET_PACKAGE_BY_ID_KEY,
+  LIST_PACKAGES_BY_SPACE_KEY,
+} from '../../../deployments/api/queryKeys';
 import { routes } from '../../../../shared/utils/routes';
 
 export const getGroupedChangeProposalsOptions = (
@@ -214,7 +218,7 @@ export const useApplyRecipeChangeProposalsMutation = (params?: {
       return changeProposalsGateway.applyRecipeChangeProposals(command);
     },
     onSuccess: async (response, variables) => {
-      await Promise.all([
+      const invalidations: Promise<void>[] = [
         queryClient.invalidateQueries({
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
         }),
@@ -227,7 +231,20 @@ export const useApplyRecipeChangeProposalsMutation = (params?: {
         queryClient.invalidateQueries({
           queryKey: GET_RECIPE_BY_ID_KEY,
         }),
-      ]);
+      ];
+
+      if (response.updatedPackages && response.updatedPackages.length > 0) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: GET_PACKAGE_BY_ID_KEY,
+          }),
+        );
+      }
+
+      await Promise.all(invalidations);
 
       // Show success toast with link to the new recipe version
       if (params?.orgSlug && params?.spaceSlug) {
@@ -283,8 +300,8 @@ export const useApplyStandardChangeProposalsMutation = (params?: {
     ) => {
       return changeProposalsGateway.applyStandardChangeProposals(command);
     },
-    onSuccess: async (_response, variables) => {
-      await Promise.all([
+    onSuccess: async (response, variables) => {
+      const invalidations: Promise<void>[] = [
         queryClient.invalidateQueries({
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
         }),
@@ -303,7 +320,20 @@ export const useApplyStandardChangeProposalsMutation = (params?: {
         queryClient.invalidateQueries({
           queryKey: [ORGANIZATION_QUERY_SCOPE, SPACES_SCOPE, variables.spaceId],
         }),
-      ]);
+      ];
+
+      if (response.updatedPackages && response.updatedPackages.length > 0) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: GET_PACKAGE_BY_ID_KEY,
+          }),
+        );
+      }
+
+      await Promise.all(invalidations);
 
       // Show success toast with link to the standard
       if (params?.orgSlug && params?.spaceSlug) {
@@ -360,8 +390,8 @@ export const useApplySkillChangeProposalsMutation = (params?: {
     ) => {
       return changeProposalsGateway.applySkillChangeProposals(command);
     },
-    onSuccess: async (_response, variables) => {
-      await Promise.all([
+    onSuccess: async (response, variables) => {
+      const invalidations: Promise<void>[] = [
         queryClient.invalidateQueries({
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
         }),
@@ -379,7 +409,20 @@ export const useApplySkillChangeProposalsMutation = (params?: {
             SKILLS_QUERY_SCOPE,
           ],
         }),
-      ]);
+      ];
+
+      if (response.updatedPackages && response.updatedPackages.length > 0) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: GET_PACKAGE_BY_ID_KEY,
+          }),
+        );
+      }
+
+      await Promise.all(invalidations);
 
       // Show success toast with link to the skill
       if (params?.orgSlug && params?.spaceSlug && params?.skillSlug) {
