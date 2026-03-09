@@ -30,12 +30,12 @@ export type CollectionItemDeletePayload<T extends { id: string }> = {
   item: T;
 };
 
-type CommandChangeProposalPayloadMap = {
+export type CommandChangeProposalPayloadMap = {
   [ChangeProposalType.updateCommandName]: ScalarUpdatePayload;
   [ChangeProposalType.updateCommandDescription]: ScalarUpdatePayload;
 };
 
-type StandardChangeProposalPayloadMap = {
+export type StandardChangeProposalPayloadMap = {
   [ChangeProposalType.updateStandardName]: ScalarUpdatePayload;
   [ChangeProposalType.updateStandardDescription]: ScalarUpdatePayload;
   [ChangeProposalType.updateStandardScope]: ScalarUpdatePayload;
@@ -48,7 +48,7 @@ type StandardChangeProposalPayloadMap = {
   >;
 };
 
-type SkillChangeProposalPayloadMap = {
+export type SkillChangeProposalPayloadMap = {
   [ChangeProposalType.updateSkillName]: ScalarUpdatePayload;
   [ChangeProposalType.updateSkillDescription]: ScalarUpdatePayload;
   [ChangeProposalType.updateSkillPrompt]: ScalarUpdatePayload;
@@ -98,7 +98,7 @@ export type NewSkillPayload = {
   files?: Array<Omit<SkillFile, 'id' | 'skillVersionId'>>;
 };
 
-type CreationChangeProposalPayloadMap = {
+export type CreationChangeProposalPayloadMap = {
   [ChangeProposalType.createStandard]: NewStandardPayload;
   [ChangeProposalType.createCommand]: NewCommandPayload;
   [ChangeProposalType.createSkill]: NewSkillPayload;
@@ -110,7 +110,7 @@ type RemovalChangeProposalPayloadMap = {
   [ChangeProposalType.removeSkill]: RemoveArtefactPayload;
 };
 
-export type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
+type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
   StandardChangeProposalPayloadMap &
   SkillChangeProposalPayloadMap &
   CreationChangeProposalPayloadMap &

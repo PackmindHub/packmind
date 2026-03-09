@@ -232,7 +232,9 @@ It has a description.
       }) as ChangeProposal<ChangeProposalType.updateCommandDescription>;
 
       beforeEach(() => {
-        diffService.hasConflict.mockReturnValue(true);
+        diffService.hasConflict
+          .mockReturnValueOnce(false)
+          .mockReturnValueOnce(true);
       });
 
       it('marks first proposal as conflicting with second', () => {
