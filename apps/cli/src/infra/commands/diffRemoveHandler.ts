@@ -1,7 +1,11 @@
 import * as path from 'path';
 
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
-import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
+import {
+  logErrorConsole,
+  logSuccessConsole,
+  logWarningConsole,
+} from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
 import { normalizePath } from '../../application/utils/pathUtils';
@@ -245,7 +249,7 @@ export async function diffRemoveHandler(
   if (result.submitted > 0) {
     logSuccessConsole('Change proposal for removal submitted successfully');
   } else if (result.alreadySubmitted > 0) {
-    logSuccessConsole('Change proposal for removal already submitted');
+    logWarningConsole('Change proposal for removal already submitted');
   }
 
   // Delete the file after successful submission
