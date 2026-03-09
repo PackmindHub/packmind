@@ -1,49 +1,30 @@
 import {
-  ChangeProposal,
+  ChangeProposalConflictError,
   ChangeProposalId,
-  ChangeProposalType,
-  createRuleId,
   Rule,
-  RuleId,
   Standard,
-  StandardVersionId,
+  StandardVersion,
+  StandardChangeProposalApplier,
+  DiffService,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
-import { buildProposalNumberMap } from './changeProposalHelpers';
-
-export interface FieldChange {
-  originalValue: string;
-  finalValue: string;
-  proposalIds: ChangeProposalId[];
-}
-
-export interface RuleChange {
-  added: Map<RuleId, ChangeProposalId>;
-  updated: Map<RuleId, FieldChange>;
-  deleted: Set<RuleId>;
-}
-
-export interface ChangeTracker {
-  name?: FieldChange;
-  scope?: FieldChange;
-  description?: FieldChange;
-  rules: RuleChange;
-}
+import {
+  buildProposalNumberMap,
+  PREVIEW_STANDARD_VERSION_ID,
+} from './changeProposalHelpers';
 
 export interface AppliedStandard {
   name: string;
   scope: string;
   description: string;
   rules: Rule[];
-  changes: ChangeTracker;
 }
 
 /**
- * Applies all accepted change proposals sequentially to a standard,
- * tracking all changes for highlighting in the unified view.
+ * Applies all accepted change proposals sequentially to a standard.
  *
- * This replicates the backend StandardChangeProposalsApplier logic
- * for frontend preview purposes.
+ * Uses the shared StandardChangeProposalApplier for all field computation
+ * (scalars + rules).
  */
 export function applyStandardProposals(
   standard: Standard,
@@ -59,187 +40,43 @@ export function applyStandardProposals(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
-  // Initialize result with current standard state
-  let currentName = standard.name;
-  let currentScope = standard.scope ?? '';
-  let currentDescription = standard.description;
-  let currentRules = [...rules];
-
-  // Initialize change tracker
-  const changes: ChangeTracker = {
-    rules: {
-      added: new Map(),
-      updated: new Map(),
-      deleted: new Set(),
-    },
+  // Use shared applier for scalar field computation (name, scope, description)
+  const sourceVersion: StandardVersion = {
+    id: rules[0]?.standardVersionId ?? PREVIEW_STANDARD_VERSION_ID,
+    standardId: standard.id,
+    name: standard.name,
+    slug: standard.slug,
+    description: standard.description,
+    version: standard.version,
+    scope: standard.scope,
+    rules: [...rules],
   };
 
-  // Track original values for change detection
-  const originalName = standard.name;
-  const originalScope = standard.scope ?? '';
-  const originalDescription = standard.description;
+  const applier = new StandardChangeProposalApplier(new DiffService());
 
-  // Apply each proposal sequentially
-  for (const proposal of sortedProposals) {
-    switch (proposal.type) {
-      case ChangeProposalType.updateStandardName: {
-        if (
-          isExpectedChangeProposalType(
-            proposal,
-            ChangeProposalType.updateStandardName,
-          )
-        ) {
-          currentName = proposal.payload.newValue;
+  try {
+    const appliedResult = applier.applyChangeProposals(
+      sourceVersion,
+      sortedProposals,
+    );
 
-          // Track name change
-          if (!changes.name) {
-            changes.name = {
-              originalValue: originalName,
-              finalValue: currentName,
-              proposalIds: [proposal.id],
-            };
-          } else {
-            changes.name.finalValue = currentName;
-            changes.name.proposalIds.push(proposal.id);
-          }
-        }
-        break;
-      }
-
-      case ChangeProposalType.updateStandardScope: {
-        if (
-          isExpectedChangeProposalType(
-            proposal,
-            ChangeProposalType.updateStandardScope,
-          )
-        ) {
-          currentScope = proposal.payload.newValue;
-
-          // Track description change
-          if (!changes.scope) {
-            changes.scope = {
-              originalValue: originalScope,
-              finalValue: currentScope,
-              proposalIds: [proposal.id],
-            };
-          } else {
-            changes.scope.finalValue = currentScope;
-            changes.scope.proposalIds.push(proposal.id);
-          }
-        }
-        break;
-      }
-
-      case ChangeProposalType.updateStandardDescription: {
-        if (
-          isExpectedChangeProposalType(
-            proposal,
-            ChangeProposalType.updateStandardDescription,
-          )
-        ) {
-          currentDescription = proposal.payload.newValue;
-
-          // Track description change
-          if (!changes.description) {
-            changes.description = {
-              originalValue: originalDescription,
-              finalValue: currentDescription,
-              proposalIds: [proposal.id],
-            };
-          } else {
-            changes.description.finalValue = currentDescription;
-            changes.description.proposalIds.push(proposal.id);
-          }
-        }
-        break;
-      }
-
-      case ChangeProposalType.addRule: {
-        if (
-          isExpectedChangeProposalType(proposal, ChangeProposalType.addRule)
-        ) {
-          // Create a unique temporary rule ID based on the proposal ID for frontend display
-          const newRuleId = createRuleId(`temp-rule-${proposal.id}`);
-          const newRule: Rule = {
-            id: newRuleId,
-            content: proposal.payload.item.content,
-            standardVersionId:
-              rules[0]?.standardVersionId || ('' as StandardVersionId),
-          };
-
-          currentRules = [...currentRules, newRule];
-          changes.rules.added.set(newRuleId, proposal.id);
-        }
-        break;
-      }
-
-      case ChangeProposalType.updateRule: {
-        if (
-          isExpectedChangeProposalType(proposal, ChangeProposalType.updateRule)
-        ) {
-          const targetId = proposal.payload.targetId;
-          const ruleIndex = currentRules.findIndex((r) => r.id === targetId);
-
-          if (ruleIndex !== -1) {
-            const originalContent = currentRules[ruleIndex].content;
-            const newContent = proposal.payload.newValue;
-
-            // Update rule content
-            currentRules = currentRules.map((rule) =>
-              rule.id === targetId ? { ...rule, content: newContent } : rule,
-            );
-
-            // Track rule update
-            const existingUpdate = changes.rules.updated.get(targetId);
-            if (!existingUpdate) {
-              changes.rules.updated.set(targetId, {
-                originalValue: originalContent,
-                finalValue: newContent,
-                proposalIds: [proposal.id],
-              });
-            } else {
-              existingUpdate.finalValue = newContent;
-              existingUpdate.proposalIds.push(proposal.id);
-            }
-          }
-        }
-        break;
-      }
-
-      case ChangeProposalType.deleteRule: {
-        if (
-          isExpectedChangeProposalType(proposal, ChangeProposalType.deleteRule)
-        ) {
-          const targetId = proposal.payload.targetId;
-          currentRules = currentRules.filter((r) => r.id !== targetId);
-          changes.rules.deleted.add(targetId);
-
-          // If this rule was previously added in this session, remove it from added
-          // and don't mark as deleted
-          if (changes.rules.added.has(targetId)) {
-            changes.rules.added.delete(targetId);
-            changes.rules.deleted.delete(targetId);
-          }
-
-          // If this rule was previously updated, keep the update info for showing
-          // in the deleted state
-        }
-        break;
-      }
-
-      default:
-        // Ignore non-standard proposal types
-        break;
+    return {
+      name: appliedResult.name,
+      scope: appliedResult.scope ?? '',
+      description: appliedResult.description,
+      rules: appliedResult.rules ?? [],
+    };
+  } catch (error) {
+    if (error instanceof ChangeProposalConflictError) {
+      return {
+        name: standard.name,
+        scope: standard.scope ?? '',
+        description: standard.description,
+        rules: [...rules],
+      };
     }
+    throw error;
   }
-
-  return {
-    name: currentName,
-    scope: currentScope,
-    description: currentDescription,
-    rules: currentRules,
-    changes,
-  };
 }
 
 /**
@@ -253,11 +90,4 @@ export function getProposalNumbers(
   return proposalIds
     .map((id) => numberMap.get(id))
     .filter((num): num is number => num !== undefined);
-}
-
-function isExpectedChangeProposalType<T extends ChangeProposalType>(
-  changeProposal: ChangeProposal,
-  expectedType: T,
-): changeProposal is ChangeProposal<T> {
-  return changeProposal.type === expectedType;
 }

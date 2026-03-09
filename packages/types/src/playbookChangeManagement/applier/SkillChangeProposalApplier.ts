@@ -1,60 +1,13 @@
-import { AbstractChangeProposalsApplier } from './AbstractChangeProposalsApplier';
-import {
-  ChangeProposal,
-  ChangeProposalType,
-  ISkillsPort,
-  OrganizationId,
-  SkillId,
-  SpaceId,
-  UserId,
-  createSkillFileId,
-} from '@packmind/types';
-import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
-import { DiffService } from '../../services/DiffService';
-import { SkillVersionWithFiles } from './IChangesProposalApplier';
+import { AbstractChangeProposalApplier } from './AbstractChangeProposalApplier';
+import { ChangeProposal } from '../ChangeProposal';
+import { ChangeProposalType } from '../ChangeProposalType';
+import { createSkillFileId } from '../../skills/SkillFileId';
+import { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
+import { SkillVersionWithFiles, SKILL_CHANGE_TYPES } from './types';
 
-const SKILL_CHANGE_TYPES = [
-  ChangeProposalType.updateSkillName,
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-  ChangeProposalType.updateSkillMetadata,
-  ChangeProposalType.updateSkillLicense,
-  ChangeProposalType.updateSkillCompatibility,
-  ChangeProposalType.updateSkillAllowedTools,
-  ChangeProposalType.addSkillFile,
-  ChangeProposalType.updateSkillFileContent,
-  ChangeProposalType.updateSkillFilePermissions,
-  ChangeProposalType.deleteSkillFile,
-];
-
-export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<SkillVersionWithFiles> {
-  constructor(
-    diffService: DiffService,
-    private readonly skillsPort: ISkillsPort,
-  ) {
-    super(diffService);
-  }
-
+export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<SkillVersionWithFiles> {
   areChangesApplicable(changeProposals: ChangeProposal[]): boolean {
     return this.checkChangesApplicable(changeProposals, SKILL_CHANGE_TYPES);
-  }
-
-  async getVersion(artefactId: SkillId): Promise<SkillVersionWithFiles> {
-    const skillVersion =
-      await this.skillsPort.getLatestSkillVersion(artefactId);
-
-    if (!skillVersion) {
-      throw new Error(`Unable to find skillVersion with id ${artefactId}.`);
-    }
-
-    const skillVersionsFiles = await this.skillsPort.getSkillFiles(
-      skillVersion.id,
-    );
-
-    return {
-      ...skillVersion,
-      files: skillVersionsFiles,
-    };
   }
 
   protected applyChangeProposal(
@@ -163,7 +116,7 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
     ) {
       const newFile = {
         ...changeProposal.payload.item,
-        id: createSkillFileId(''),
+        id: createSkillFileId(changeProposal.id),
         skillVersionId: source.id,
       };
 
@@ -247,25 +200,6 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
       };
     }
 
-    throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
-  }
-
-  async saveNewVersion(
-    skillVersion: SkillVersionWithFiles,
-    userId: UserId,
-    spaceId: SpaceId,
-    organizationId: OrganizationId,
-  ): Promise<SkillVersionWithFiles> {
-    const newVersion = await this.skillsPort.saveSkillVersion({
-      skillVersion,
-      userId,
-      spaceId,
-      organizationId,
-    });
-
-    return {
-      ...newVersion,
-      files: await this.skillsPort.getSkillFiles(newVersion.id),
-    };
+    return source;
   }
 }

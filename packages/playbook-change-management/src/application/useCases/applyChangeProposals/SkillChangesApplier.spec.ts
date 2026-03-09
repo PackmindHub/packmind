@@ -4,14 +4,14 @@ import {
   createChangeProposalId,
   createSkillFileId,
   ISkillsPort,
+  DiffService,
+  ChangeProposalConflictError,
 } from '@packmind/types';
 import { changeProposalFactory } from '../../../../test';
-import { DiffService } from '../../services/DiffService';
-import { ChangeProposalConflictError } from '../../../domain/errors';
-import { SkillChangeProposalsApplier } from './SkillChangeProposalsApplier';
+import { SkillChangesApplier } from './SkillChangesApplier';
 
-describe('SkillChangeProposalsApplier', () => {
-  let applier: SkillChangeProposalsApplier;
+describe('SkillChangesApplier', () => {
+  let applier: SkillChangesApplier;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let diffService: DiffService;
 
@@ -19,7 +19,7 @@ describe('SkillChangeProposalsApplier', () => {
     diffService = new DiffService();
     skillsPort = {} as unknown as jest.Mocked<ISkillsPort>;
 
-    applier = new SkillChangeProposalsApplier(diffService, skillsPort);
+    applier = new SkillChangesApplier(diffService, skillsPort);
   });
 
   const skillVersion = skillVersionFactory({

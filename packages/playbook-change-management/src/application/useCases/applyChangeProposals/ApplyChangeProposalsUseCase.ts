@@ -32,14 +32,14 @@ import {
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
-import { DiffService } from '../../services/DiffService';
-import { CommandChangeProposalsApplier } from './CommandChangeProposalsApplier';
+import { DiffService } from '@packmind/types';
+import { CommandChangesApplier } from './CommandChangesApplier';
 import {
   IChangesProposalApplier,
   ObjectVersions,
 } from './IChangesProposalApplier';
-import { SkillChangeProposalsApplier } from './SkillChangeProposalsApplier';
-import { StandardChangeProposalsApplier } from './StandardChangeProposalsApplier';
+import { SkillChangesApplier } from './SkillChangesApplier';
+import { StandardChangesApplier } from './StandardChangesApplier';
 
 const origin = 'ApplyChangeProposalsUseCase';
 export class ApplyChangeProposalsUseCase<
@@ -283,9 +283,9 @@ export class ApplyChangeProposalsUseCase<
     changeProposals: ChangeProposal[],
   ): IChangesProposalApplier<V> {
     const appliers: IChangesProposalApplier<ObjectVersions>[] = [
-      new CommandChangeProposalsApplier(this.diffService, this.recipesPort),
-      new SkillChangeProposalsApplier(this.diffService, this.skillsPort),
-      new StandardChangeProposalsApplier(this.diffService, this.standardsPort),
+      new CommandChangesApplier(this.diffService, this.recipesPort),
+      new SkillChangesApplier(this.diffService, this.skillsPort),
+      new StandardChangesApplier(this.diffService, this.standardsPort),
     ];
 
     for (const applier of appliers) {

@@ -1,25 +1,18 @@
 import {
+  ApplierObjectVersions,
   ChangeProposal,
   OrganizationId,
   Recipe,
   RecipeVersion,
   Skill,
-  SkillFile,
-  SkillVersion,
+  SkillVersionWithFiles,
   SpaceId,
   Standard,
   StandardVersion,
   UserId,
 } from '@packmind/types';
 
-export type SkillVersionWithFiles = SkillVersion & {
-  files: SkillFile[];
-};
-
-export type ObjectVersions =
-  | RecipeVersion
-  | StandardVersion
-  | SkillVersionWithFiles;
+export type ObjectVersions = ApplierObjectVersions;
 
 export type ObjectByVersion<T extends ObjectVersions> = T extends RecipeVersion
   ? Recipe

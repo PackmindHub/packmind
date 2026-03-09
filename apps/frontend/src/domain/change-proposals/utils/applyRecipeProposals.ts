@@ -1,29 +1,24 @@
 import {
-  ChangeProposal,
+  ChangeProposalConflictError,
   ChangeProposalId,
-  ChangeProposalType,
   Recipe,
+  RecipeVersion,
+  CommandChangeProposalApplier,
+  DiffService,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
-import { FieldChange } from './applyStandardProposals';
-
-export interface RecipeChangeTracker {
-  name?: FieldChange;
-  content?: FieldChange;
-}
+import { PREVIEW_RECIPE_VERSION_ID } from './changeProposalHelpers';
 
 export interface AppliedRecipe {
   name: string;
   content: string;
-  changes: RecipeChangeTracker;
 }
 
 /**
- * Applies all accepted change proposals sequentially to a recipe,
- * tracking all changes for highlighting in the unified view.
+ * Applies all accepted change proposals sequentially to a recipe.
  *
- * This replicates the backend CommandChangeProposalsApplier logic
- * for frontend preview purposes.
+ * Uses the shared CommandChangeProposalApplier for computing the
+ * final state, including diff-based merging for content changes.
  */
 export function applyRecipeProposals(
   recipe: Recipe,
@@ -36,69 +31,30 @@ export function applyRecipeProposals(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
-  let currentName = recipe.name;
-  let currentContent = recipe.content;
-
-  const originalName = recipe.name;
-  const originalContent = recipe.content;
-
-  const changes: RecipeChangeTracker = {};
-
-  for (const proposal of sortedProposals) {
-    switch (proposal.type) {
-      case ChangeProposalType.updateCommandName: {
-        if (isExpectedType(proposal, ChangeProposalType.updateCommandName)) {
-          currentName = proposal.payload.newValue;
-
-          if (!changes.name) {
-            changes.name = {
-              originalValue: originalName,
-              finalValue: currentName,
-              proposalIds: [proposal.id],
-            };
-          } else {
-            changes.name.finalValue = currentName;
-            changes.name.proposalIds.push(proposal.id);
-          }
-        }
-        break;
-      }
-
-      case ChangeProposalType.updateCommandDescription: {
-        if (
-          isExpectedType(proposal, ChangeProposalType.updateCommandDescription)
-        ) {
-          currentContent = proposal.payload.newValue;
-
-          if (!changes.content) {
-            changes.content = {
-              originalValue: originalContent,
-              finalValue: currentContent,
-              proposalIds: [proposal.id],
-            };
-          } else {
-            changes.content.finalValue = currentContent;
-            changes.content.proposalIds.push(proposal.id);
-          }
-        }
-        break;
-      }
-
-      default:
-        break;
-    }
+  if (sortedProposals.length === 0) {
+    return { name: recipe.name, content: recipe.content };
   }
 
-  return {
-    name: currentName,
-    content: currentContent,
-    changes,
+  // Build a RecipeVersion for the shared applier
+  const sourceVersion: RecipeVersion = {
+    id: PREVIEW_RECIPE_VERSION_ID,
+    recipeId: recipe.id,
+    name: recipe.name,
+    slug: recipe.slug,
+    content: recipe.content,
+    version: recipe.version,
+    userId: recipe.userId,
   };
-}
 
-function isExpectedType<T extends ChangeProposalType>(
-  changeProposal: ChangeProposal,
-  expectedType: T,
-): changeProposal is ChangeProposal<T> {
-  return changeProposal.type === expectedType;
+  const applier = new CommandChangeProposalApplier(new DiffService());
+
+  try {
+    const result = applier.applyChangeProposals(sourceVersion, sortedProposals);
+    return { name: result.name, content: result.content };
+  } catch (error) {
+    if (error instanceof ChangeProposalConflictError) {
+      return { name: recipe.name, content: recipe.content };
+    }
+    throw error;
+  }
 }

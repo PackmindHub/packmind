@@ -6,18 +6,18 @@ import {
   createUserId,
   IRecipesPort,
   RecipeVersion,
+  DiffService,
+  ChangeProposalConflictError,
 } from '@packmind/types';
-import { CommandChangeProposalsApplier } from './CommandChangeProposalsApplier';
+import { CommandChangesApplier } from './CommandChangesApplier';
 import { recipeFactory, recipeVersionFactory } from '@packmind/recipes/test';
 import { changeProposalFactory } from '../../../../test';
-import { DiffService } from '../../services/DiffService';
-import { ChangeProposalConflictError } from '../../../domain/errors';
 
-describe('CommandChangeProposalsApplier', () => {
+describe('CommandChangesApplier', () => {
   let recipeVersion: RecipeVersion;
   let diffService: DiffService;
   let recipePort: jest.Mocked<IRecipesPort>;
-  let applier: CommandChangeProposalsApplier;
+  let applier: CommandChangesApplier;
 
   beforeEach(() => {
     recipeVersion = recipeVersionFactory({
@@ -30,7 +30,7 @@ describe('CommandChangeProposalsApplier', () => {
       getRecipeVersion: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
-    applier = new CommandChangeProposalsApplier(diffService, recipePort);
+    applier = new CommandChangesApplier(diffService, recipePort);
   });
 
   describe('applyChangeProposal', () => {
