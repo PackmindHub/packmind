@@ -188,23 +188,25 @@ describe('SkillChangeProposalApplier', () => {
         expect(result.metadata).toEqual({ key: 'new-value' });
       });
 
-      it('sets metadata to undefined when newValue is empty', () => {
-        const source = skillVersionFactory({
-          metadata: { key: 'value' },
-        });
-        const proposal = changeProposalFactory({
-          type: ChangeProposalType.updateSkillMetadata,
-          payload: {
-            oldValue: JSON.stringify({ key: 'value' }),
-            newValue: '',
-          },
-        });
+      describe('when newValue is empty', () => {
+        it('sets metadata to undefined', () => {
+          const source = skillVersionFactory({
+            metadata: { key: 'value' },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillMetadata,
+            payload: {
+              oldValue: JSON.stringify({ key: 'value' }),
+              newValue: '',
+            },
+          });
 
-        const result = applier.applyChangeProposals(source, [
-          proposal as ChangeProposal,
-        ]);
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
 
-        expect(result.metadata).toBeUndefined();
+          expect(result.metadata).toBeUndefined();
+        });
       });
     });
 
@@ -257,28 +259,44 @@ describe('SkillChangeProposalApplier', () => {
     });
 
     describe('addSkillFile', () => {
-      it('adds a new file to the skill version', () => {
-        const source = skillVersionFactory({ files: [] });
-        const proposal = changeProposalFactory({
-          type: ChangeProposalType.addSkillFile,
-          payload: {
-            item: {
-              path: 'new-file.txt',
-              content: 'new content',
-              permissions: 'read',
-              isBase64: false,
+      describe('when adding a file to an empty skill', () => {
+        let result: ReturnType<typeof applier.applyChangeProposals>;
+        let source: ReturnType<typeof skillVersionFactory>;
+
+        beforeEach(() => {
+          source = skillVersionFactory({ files: [] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.addSkillFile,
+            payload: {
+              item: {
+                path: 'new-file.txt',
+                content: 'new content',
+                permissions: 'read',
+                isBase64: false,
+              },
             },
-          },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
         });
 
-        const result = applier.applyChangeProposals(source, [
-          proposal as ChangeProposal,
-        ]);
+        it('creates one file', () => {
+          expect(result.files).toHaveLength(1);
+        });
 
-        expect(result.files).toHaveLength(1);
-        expect(result.files[0].path).toBe('new-file.txt');
-        expect(result.files[0].content).toBe('new content');
-        expect(result.files[0].skillVersionId).toBe(source.id);
+        it('sets the file path', () => {
+          expect(result.files[0].path).toBe('new-file.txt');
+        });
+
+        it('sets the file content', () => {
+          expect(result.files[0].content).toBe('new content');
+        });
+
+        it('sets the skillVersionId', () => {
+          expect(result.files[0].skillVersionId).toBe(source.id);
+        });
       });
 
       it('appends to existing files', () => {
@@ -349,29 +367,31 @@ describe('SkillChangeProposalApplier', () => {
         ).toThrow(ChangeProposalConflictError);
       });
 
-      it('updates isBase64 flag when provided in payload', () => {
-        const fileId = createSkillFileId('file-to-update');
-        const file = skillFileFactory({
-          id: fileId,
-          content: 'old-content',
-          isBase64: false,
-        });
-        const source = skillVersionFactory({ files: [file] });
-        const proposal = changeProposalFactory({
-          type: ChangeProposalType.updateSkillFileContent,
-          payload: {
-            targetId: fileId,
-            oldValue: 'old-content',
-            newValue: 'new-content',
-            isBase64: true,
-          },
-        });
+      describe('when isBase64 is provided in payload', () => {
+        it('updates the isBase64 flag', () => {
+          const fileId = createSkillFileId('file-to-update');
+          const file = skillFileFactory({
+            id: fileId,
+            content: 'old-content',
+            isBase64: false,
+          });
+          const source = skillVersionFactory({ files: [file] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillFileContent,
+            payload: {
+              targetId: fileId,
+              oldValue: 'old-content',
+              newValue: 'new-content',
+              isBase64: true,
+            },
+          });
 
-        const result = applier.applyChangeProposals(source, [
-          proposal as ChangeProposal,
-        ]);
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
 
-        expect(result.files[0].isBase64).toBe(true);
+          expect(result.files[0].isBase64).toBe(true);
+        });
       });
 
       it('does not modify other files', () => {
@@ -483,36 +503,46 @@ describe('SkillChangeProposalApplier', () => {
         expect(result.files).toEqual([]);
       });
 
-      it('preserves other files', () => {
-        const fileToDelete = skillFileFactory({
-          id: createSkillFileId('delete-me'),
-        });
-        const fileToKeep = skillFileFactory({
-          id: createSkillFileId('keep-me'),
-        });
-        const source = skillVersionFactory({
-          files: [fileToDelete, fileToKeep],
-        });
-        const proposal = changeProposalFactory({
-          type: ChangeProposalType.deleteSkillFile,
-          payload: {
-            targetId: fileToDelete.id,
-            item: {
-              id: fileToDelete.id,
-              path: fileToDelete.path,
-              content: fileToDelete.content,
-              permissions: fileToDelete.permissions,
-              isBase64: fileToDelete.isBase64,
+      describe('when deleting one of multiple files', () => {
+        let result: ReturnType<typeof applier.applyChangeProposals>;
+        let fileToKeep: ReturnType<typeof skillFileFactory>;
+
+        beforeEach(() => {
+          const fileToDelete = skillFileFactory({
+            id: createSkillFileId('delete-me'),
+          });
+          fileToKeep = skillFileFactory({
+            id: createSkillFileId('keep-me'),
+          });
+          const source = skillVersionFactory({
+            files: [fileToDelete, fileToKeep],
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.deleteSkillFile,
+            payload: {
+              targetId: fileToDelete.id,
+              item: {
+                id: fileToDelete.id,
+                path: fileToDelete.path,
+                content: fileToDelete.content,
+                permissions: fileToDelete.permissions,
+                isBase64: fileToDelete.isBase64,
+              },
             },
-          },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
         });
 
-        const result = applier.applyChangeProposals(source, [
-          proposal as ChangeProposal,
-        ]);
+        it('removes the deleted file', () => {
+          expect(result.files).toHaveLength(1);
+        });
 
-        expect(result.files).toHaveLength(1);
-        expect(result.files[0].id).toBe(fileToKeep.id);
+        it('keeps the other file', () => {
+          expect(result.files[0].id).toBe(fileToKeep.id);
+        });
       });
     });
 

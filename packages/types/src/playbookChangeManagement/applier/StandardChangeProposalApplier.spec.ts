@@ -104,21 +104,23 @@ describe('StandardChangeProposalApplier', () => {
       );
     });
 
-    it('returns false when mixing standard and non-standard types', () => {
-      const proposals = [
-        changeProposalFactory({
-          type: ChangeProposalType.updateStandardName,
-          payload: { oldValue: 'Old', newValue: 'New' },
-        }),
-        changeProposalFactory({
-          type: ChangeProposalType.updateSkillName,
-          payload: { oldValue: 'Old', newValue: 'New' },
-        }),
-      ];
+    describe('when mixing standard and non-standard types', () => {
+      it('returns false', () => {
+        const proposals = [
+          changeProposalFactory({
+            type: ChangeProposalType.updateStandardName,
+            payload: { oldValue: 'Old', newValue: 'New' },
+          }),
+          changeProposalFactory({
+            type: ChangeProposalType.updateSkillName,
+            payload: { oldValue: 'Old', newValue: 'New' },
+          }),
+        ];
 
-      expect(applier.areChangesApplicable(proposals as ChangeProposal[])).toBe(
-        false,
-      );
+        expect(
+          applier.areChangesApplicable(proposals as ChangeProposal[]),
+        ).toBe(false);
+      });
     });
   });
 
@@ -215,21 +217,33 @@ describe('StandardChangeProposalApplier', () => {
     });
 
     describe('addRule', () => {
-      it('adds a new rule to the standard version', () => {
-        const source = standardVersionFactory({ rules: [] });
-        const proposal = changeProposalFactory({
-          type: ChangeProposalType.addRule,
-          payload: { item: { content: 'New rule content' } },
+      describe('when adding a rule to an empty standard', () => {
+        let result: ReturnType<typeof applier.applyChangeProposals>;
+        let source: ReturnType<typeof standardVersionFactory>;
+
+        beforeEach(() => {
+          source = standardVersionFactory({ rules: [] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.addRule,
+            payload: { item: { content: 'New rule content' } },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
         });
 
-        const result = applier.applyChangeProposals(source, [
-          proposal as ChangeProposal,
-        ]);
+        it('creates one rule', () => {
+          expect(result.rules ?? []).toHaveLength(1);
+        });
 
-        const rules = result.rules ?? [];
-        expect(rules).toHaveLength(1);
-        expect(rules[0].content).toBe('New rule content');
-        expect(rules[0].standardVersionId).toBe(source.id);
+        it('sets the rule content', () => {
+          expect((result.rules ?? [])[0].content).toBe('New rule content');
+        });
+
+        it('sets the standardVersionId', () => {
+          expect((result.rules ?? [])[0].standardVersionId).toBe(source.id);
+        });
       });
 
       it('appends to existing rules', () => {
@@ -340,40 +354,52 @@ describe('StandardChangeProposalApplier', () => {
         expect(result.rules).toEqual([]);
       });
 
-      it('preserves other rules', () => {
-        const ruleToDelete = ruleFactory({
-          id: createRuleId('delete-me'),
-          content: 'Delete me',
-        });
-        const ruleToKeep = ruleFactory({
-          id: createRuleId('keep-me'),
-          content: 'Keep me',
-        });
-        const source = standardVersionFactory({
-          rules: [ruleToDelete, ruleToKeep],
-        });
-        const proposal = changeProposalFactory({
-          type: ChangeProposalType.deleteRule,
-          payload: {
-            targetId: ruleToDelete.id,
-            item: {
-              id: ruleToDelete.id,
-              content: 'Delete me',
+      describe('when deleting one of multiple rules', () => {
+        let result: ReturnType<typeof applier.applyChangeProposals>;
+        let ruleToKeep: ReturnType<typeof ruleFactory>;
+
+        beforeEach(() => {
+          const ruleToDelete = ruleFactory({
+            id: createRuleId('delete-me'),
+            content: 'Delete me',
+          });
+          ruleToKeep = ruleFactory({
+            id: createRuleId('keep-me'),
+            content: 'Keep me',
+          });
+          const source = standardVersionFactory({
+            rules: [ruleToDelete, ruleToKeep],
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.deleteRule,
+            payload: {
+              targetId: ruleToDelete.id,
+              item: {
+                id: ruleToDelete.id,
+                content: 'Delete me',
+              },
             },
-          },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
         });
 
-        const result = applier.applyChangeProposals(source, [
-          proposal as ChangeProposal,
-        ]);
+        it('removes the deleted rule', () => {
+          expect(result.rules).toHaveLength(1);
+        });
 
-        expect(result.rules).toHaveLength(1);
-        expect((result.rules ?? [])[0].id).toBe(ruleToKeep.id);
+        it('keeps the other rule', () => {
+          expect((result.rules ?? [])[0].id).toBe(ruleToKeep.id);
+        });
       });
     });
 
     describe('multiple changes', () => {
-      it('applies multiple different change types sequentially', () => {
+      let result: ReturnType<typeof applier.applyChangeProposals>;
+
+      beforeEach(() => {
         const existingRule = ruleFactory({ content: 'Existing rule' });
         const source = standardVersionFactory({
           name: 'Old Name',
@@ -396,13 +422,21 @@ describe('StandardChangeProposalApplier', () => {
           }),
         ];
 
-        const result = applier.applyChangeProposals(
+        result = applier.applyChangeProposals(
           source,
           proposals as ChangeProposal[],
         );
+      });
 
+      it('updates the name', () => {
         expect(result.name).toBe('New Name');
+      });
+
+      it('updates the scope', () => {
         expect(result.scope).toBe('new-scope');
+      });
+
+      it('adds the new rule', () => {
         expect(result.rules).toHaveLength(2);
       });
     });
