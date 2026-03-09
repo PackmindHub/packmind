@@ -4,14 +4,16 @@ describe('DiffService', () => {
   const diffService = new DiffService();
 
   describe('applyLineDiff', () => {
-    it('applies a simple change when current matches old', () => {
-      const result = diffService.applyLineDiff(
-        'hello world',
-        'hello universe',
-        'hello world',
-      );
+    describe('when current matches old', () => {
+      it('applies the change', () => {
+        const result = diffService.applyLineDiff(
+          'hello world',
+          'hello universe',
+          'hello world',
+        );
 
-      expect(result).toEqual({ success: true, value: 'hello universe' });
+        expect(result).toEqual({ success: true, value: 'hello universe' });
+      });
     });
 
     it('merges non-conflicting changes from distant lines', () => {
