@@ -4,7 +4,7 @@ Write a new skill directory locally in an agent skills directory. Do NOT call an
 
 ## Write Path Selection
 
-The `diff add` command recognizes skill paths in these agent directories (defined in `CODING_AGENT_ARTEFACT_PATHS`):
+The `diff add` command recognizes skill paths in these agent directories:
 - `.claude/skills/` (agent: claude)
 - `.cursor/skills/` (agent: cursor)
 - `.github/skills/` (agent: copilot)
