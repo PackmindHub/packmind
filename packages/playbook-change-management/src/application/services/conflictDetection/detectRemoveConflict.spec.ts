@@ -1,5 +1,6 @@
 import {
   ChangeProposal,
+  ChangeProposalStatus,
   ChangeProposalType,
   createStandardId,
 } from '@packmind/types';
@@ -41,13 +42,38 @@ describe('detectRemoveConflict', () => {
     ).toEqual(false);
   });
 
-  it('returns true if items target the same artifact', () => {
-    expect(
-      detectRemoveConflict(
-        changeProposal,
-        changeProposalFactory({ artefactId: changeProposal.artefactId }),
-        diffService,
-      ),
-    ).toEqual(true);
+  describe('when both item target the same artifact', () => {
+    it('returns false if the decision is to remove from package', () => {
+      expect(
+        detectRemoveConflict(
+          {
+            ...changeProposal,
+            status: ChangeProposalStatus.applied,
+            decision: {
+              delete: false,
+              removeFromPackages: [],
+            },
+          },
+          changeProposalFactory({ artefactId: changeProposal.artefactId }),
+          diffService,
+        ),
+      ).toEqual(false);
+    });
+
+    it('returns true if the decision is to delete the artefact', () => {
+      expect(
+        detectRemoveConflict(
+          {
+            ...changeProposal,
+            status: ChangeProposalStatus.applied,
+            decision: {
+              delete: true,
+            },
+          },
+          changeProposalFactory({ artefactId: changeProposal.artefactId }),
+          diffService,
+        ),
+      ).toEqual(true);
+    });
   });
 });
