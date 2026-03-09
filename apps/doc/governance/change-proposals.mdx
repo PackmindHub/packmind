@@ -77,6 +77,33 @@ The `-m "message"` flag is required in non-interactive or CI mode. If omitted in
 
 On success, the artifact is submitted as a change proposal visible in the **Review changes** UI, with a summary logged to the console.
 
+### Remove artifacts
+
+To suggest removing an artifact (standard, command, or skill) from packages:
+
+```bash
+packmind-cli diff remove <path> -m "Reason for removing the artifact"
+```
+
+The file must be located in a recognized artifact directory (same as for adding new artifacts). The `-m` flag follows the same rules as other diff commands.
+
+#### What happens on success
+
+- The file is deleted locally
+- A removal proposal is created and appears in the **Review changes** UI
+
+#### When it won't work
+
+The command will fail if the artifact was not deployed by Packmind (error: _"This {type} does not come from Packmind"_).
+
+#### Reviewing removal proposals
+
+Removal proposals appear alongside other change proposals in the **Review changes** UI. The reviewer can either dismiss the proposal or choose **Remove from packages**. When removing, a dialog lets the reviewer select which packages to remove the artifact from, showing which packages are affected before applying the change.
+
+#### Conflicts with removal proposals
+
+If someone submits a modification and someone else submits a removal for the same artifact, both proposals appear in the review UI. Accepted removal proposals block conflicting proposals on the same artifact.
+
 ## Important: Pending Changes and the Install Command
 
 <Warning>
