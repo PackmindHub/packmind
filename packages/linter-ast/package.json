@@ -9,7 +9,7 @@
     "parsers/*"
   ],
   "dependencies": {
-    "tslib": "^2.3.0",
+    "@swc/helpers": "~0.5.19",
     "web-tree-sitter": "^0.25.0"
   },
   "optionalDependencies": {

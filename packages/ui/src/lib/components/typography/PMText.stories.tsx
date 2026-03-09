@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PMText } from './PMText';
 
 const meta: Meta<typeof PMText> = {

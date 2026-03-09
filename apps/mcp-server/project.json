@@ -23,7 +23,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["^build"],
+      "dependsOn": [],
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/mcp-server",
@@ -49,7 +49,9 @@
         }
       },
       "configurations": {
-        "development": {},
+        "development": {
+          "watch": true
+        },
         "production": {
           "esbuildOptions": {
             "sourcemap": false,
@@ -62,20 +64,23 @@
       }
     },
     "serve": {
-      "continuous": true,
-      "executor": "@nx/js:node",
+      "executor": "nx:run-commands",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
       "options": {
-        "buildTarget": "mcp-server:build",
-        "runBuildTargetDependencies": false
+        "parallel": true,
+        "commands": [
+          "nx run mcp-server:build:development --skip-nx-cache",
+          "sh -lc 'rm -f dist/apps/mcp-server/main.js; mkdir -p dist/apps/mcp-server; while [ ! -f dist/apps/mcp-server/main.js ]; do sleep 0.2; done; npx nodemon --watch dist/apps/mcp-server --ext js,json --legacy-watch --polling-interval 500 dist/apps/mcp-server/main.js'"
+        ]
       },
       "configurations": {
-        "development": {
-          "buildTarget": "mcp-server:build:development"
-        },
+        "development": {},
         "production": {
-          "buildTarget": "mcp-server:build:production"
+          "parallel": false,
+          "commands": [
+            "nx run mcp-server:build:production --skip-nx-cache",
+            "node dist/apps/mcp-server/main.js"
+          ]
         }
       }
     }
