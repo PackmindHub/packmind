@@ -57,6 +57,7 @@ export type AnalyticsEventMap = {
     field:
       | 'installSh'
       | 'installNpm'
+      | 'installHomebrew'
       | 'cliInit'
       | 'cliStartAnalysis'
       | 'mcpStartAnalysis';
