@@ -85,8 +85,7 @@ Construct each prompt as:
 
 For each domain, decide whether to launch or skip based on the validated intent's **target artifact type**:
 - **Launch** if the intent mentions or affects that artifact type (standard, command, or skill)
-- **Always launch skills** — skill accuracy must be checked against any behavioral change
-- **Skip** if the intent exclusively targets a different artifact type (e.g., "update standard X" → skip commands and skills)
+- **Skip** if the intent exclusively targets a different artifact type (e.g., "update standard X" → skip commands)
 
 ### Change Report
 

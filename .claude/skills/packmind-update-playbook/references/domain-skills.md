@@ -56,7 +56,7 @@ For each new skill that passes validation, follow the procedure in [create-skill
 ## Skills Change Report
 
 ### New Skills
-(If none: "No new skills needed.")
+<!-- Omit this section if none -->
 
 #### skill-name
 - **Reason**: why this skill is needed
@@ -64,7 +64,7 @@ For each new skill that passes validation, follow the procedure in [create-skill
 - **Key contents**: decision tables, anti-patterns, references needed
 
 ### Skill Updates
-(If none: "No updates needed.")
+<!-- Omit this section if none -->
 
 #### skill-name
 - **Reason**: what changed or what's missing
@@ -73,7 +73,7 @@ For each new skill that passes validation, follow the procedure in [create-skill
 - **Description update**: new description if auto-load triggers need adjustment
 
 ### Skills to Deprecate
-(If none: "No deprecations needed.")
+<!-- Omit this section if none -->
 
 #### skill-name
 - **Reason**: why no longer relevant
