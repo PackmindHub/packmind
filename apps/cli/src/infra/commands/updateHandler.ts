@@ -6,6 +6,7 @@ import {
   renameSync,
   unlinkSync,
   statSync,
+  realpathSync,
 } from 'fs';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
@@ -181,6 +182,15 @@ export function isLocalNpmPackage(scriptPath?: string): boolean {
   return scriptPath.includes(path.join('node_modules', '@packmind', 'cli'));
 }
 
+export function isHomebrewInstall(executablePath: string): boolean {
+  try {
+    const realPath = realpathSync(executablePath);
+    return realPath.includes('/Cellar/');
+  } catch {
+    return false;
+  }
+}
+
 export async function updateHandler(
   deps: IUpdateHandlerDependencies,
 ): Promise<void> {
@@ -198,6 +208,15 @@ export async function updateHandler(
           'To update, use the standalone executable or run: npm install -g @packmind/cli@latest',
       );
     }
+    process.exit(1);
+    return;
+  }
+
+  if (isHomebrewInstall(deps.executablePath)) {
+    logInfoConsole(
+      'This CLI was installed via Homebrew.\n' +
+        'To update, run: brew upgrade packmind-cli',
+    );
     process.exit(1);
     return;
   }
