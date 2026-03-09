@@ -1,11 +1,11 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
-import { getSkillMd } from './skills/update-playbook/skill';
-import { AGENT_SKILLS_SPECIFICATION } from './skills/update-playbook/references/agent-skills-specification';
-import { DOMAIN_STANDARDS } from './skills/update-playbook/references/domain-standards';
-import { DOMAIN_SKILLS } from './skills/update-playbook/references/domain-skills';
-import { DOMAIN_COMMANDS } from './skills/update-playbook/references/domain-commands';
+import { getSkillMd } from './skills/packmind-update-playbook/skill';
+import { AGENT_SKILLS_SPECIFICATION } from './skills/packmind-update-playbook/references/agent-skills-specification';
+import { DOMAIN_STANDARDS } from './skills/packmind-update-playbook/references/domain-standards';
+import { DOMAIN_SKILLS } from './skills/packmind-update-playbook/references/domain-skills';
+import { DOMAIN_COMMANDS } from './skills/packmind-update-playbook/references/domain-commands';
 
 export class UpdatePlaybookDeployer implements ISkillDeployer {
   public readonly slug = 'packmind-update-playbook';
