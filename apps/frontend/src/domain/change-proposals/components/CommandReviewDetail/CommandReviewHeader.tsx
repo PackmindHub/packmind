@@ -9,6 +9,8 @@ interface CommandReviewHeaderProps {
   activeTab: ReviewTab;
   onTabChange: (tab: ReviewTab) => void;
   acceptedCount: number;
+  dismissedCount: number;
+  pendingCount: number;
   hasPooledDecisions: boolean;
   isSaving: boolean;
   onSave: () => void;

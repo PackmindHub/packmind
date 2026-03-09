@@ -255,6 +255,12 @@ export function StandardReviewDetail({
           activeTab={reviewState.activeTab}
           onTabChange={reviewState.setActiveTab}
           acceptedCount={pool.acceptedProposalIds.size}
+          dismissedCount={pool.rejectedProposalIds.size}
+          pendingCount={
+            selectedStandardProposals.length -
+            pool.acceptedProposalIds.size -
+            pool.rejectedProposalIds.size
+          }
           hasPooledDecisions={pool.hasPooledDecisions}
           isSaving={applyStandardChangeProposalsMutation.isPending}
           onSave={handleSave}

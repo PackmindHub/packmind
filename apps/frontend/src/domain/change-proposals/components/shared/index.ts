@@ -19,3 +19,4 @@ export { FocusedView } from './FocusedView';
 export { ChangeProposalCardBody } from './ChangeProposalCardBody';
 export { ChangeProposalCard } from './ChangeProposalCard';
 export { ChangeProposalAccordion } from './ChangeProposalAccordion';
+export { ApplyConfirmationPopover } from './ApplyConfirmationPopover';

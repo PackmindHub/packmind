@@ -17,6 +17,7 @@ export const SectionCard: React.FC<ISectionCardProps> = ({
     align="flex-start"
     gap={4}
     width="full"
+    height="full"
     border="solid 1px"
     borderColor={BORDER_COLORS[variant]}
     padding={4}
@@ -24,9 +25,11 @@ export const SectionCard: React.FC<ISectionCardProps> = ({
   >
     <PMVStack align="flex-start" gap={1}>
       <PMHeading level="h6">{title}</PMHeading>
-      <PMText as="p" color="tertiary" variant="small">
-        {description}
-      </PMText>
+      {description && (
+        <PMText as="p" color="tertiary" variant="small">
+          {description}
+        </PMText>
+      )}
     </PMVStack>
     {children}
   </PMVStack>
