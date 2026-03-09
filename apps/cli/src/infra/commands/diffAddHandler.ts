@@ -172,7 +172,7 @@ export async function diffAddHandler(
   const result = await packmindCliHexa.submitDiffs([[diff]], message);
 
   for (const err of result.errors) {
-    logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+    logErrorConsole(`Failed to submit addition "${err.name}": ${err.message}`);
   }
 
   const summaryParts: string[] = [];

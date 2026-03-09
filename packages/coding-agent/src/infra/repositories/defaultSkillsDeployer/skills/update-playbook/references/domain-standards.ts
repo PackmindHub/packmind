@@ -4,7 +4,11 @@ Scan existing standards, identify which are relevant to the user's validated int
 
 ## What Standards Are
 
-Standards are coding conventions distributed to AI coding agents. Each standard has a name (with \`[TAG]\` prefix), description, rules (imperative, ~25 words max each), and scope (file glob). Files live in \`.packmind/standards/<slug>.md\`.
+Standards are coding conventions distributed to AI coding agents. Each standard has a name (with \`[TAG]\` prefix), description, rules (imperative, ~25 words max each), and scope (file glob). Source files live in \`**/.packmind/standards/<slug>.md\`. Installed copies also exist in agent directories:
+- Claude Code: \`**/.claude/rules/packmind/\`
+- Cursor: \`**/.cursor/rules/packmind/\`
+- GitHub Copilot: \`**/.github/instructions/packmind-*\`
+Search the project root and all subdirectories.
 
 ## Instructions
 
@@ -27,7 +31,7 @@ Skip general best practices any competent developer already knows.
 
 ### Step 3: Deep Analyze Flagged Standards
 
-For each relevant existing standard, read \`.packmind/standards/<slug>.md\` and evaluate every rule against the user's intent:
+For each relevant existing standard, read \`**/.packmind/standards/<slug>.md\` and evaluate every rule against the user's intent:
 - Rule aligns with the requested change → apply the modification
 - Rule conflicts with the intent → update or remove as requested
 - Intent describes a pattern this standard should cover but doesn't → gap, propose adding a rule

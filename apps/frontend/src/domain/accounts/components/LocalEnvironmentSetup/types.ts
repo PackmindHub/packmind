@@ -10,7 +10,7 @@ export interface IInstallCliStepProps {
 
 export interface ISectionCardProps {
   title: string;
-  description: string;
+  description?: string;
   variant?: 'primary' | 'secondary';
   children: React.ReactNode;
 }

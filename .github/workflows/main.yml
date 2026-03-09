@@ -74,6 +74,7 @@ jobs:
       APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      HOMEBREW_TAP_PAT: ${{ secrets.HOMEBREW_TAP_PAT }}
 
   # Stage 5: Deploy and Update Helm Charts (after Docker images are built)
   # Note: The deploy workflow handles edition-specific logic internally

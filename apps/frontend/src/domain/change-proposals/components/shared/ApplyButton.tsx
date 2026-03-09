@@ -1,7 +1,9 @@
-import { PMButton } from '@packmind/ui';
+import { ApplyConfirmationPopover } from './ApplyConfirmationPopover';
 
 interface ApplyButtonProps {
   acceptedCount: number;
+  dismissedCount: number;
+  pendingCount: number;
   hasPooledDecisions: boolean;
   isSaving: boolean;
   onSave: () => void;
@@ -9,20 +11,20 @@ interface ApplyButtonProps {
 
 export function ApplyButton({
   acceptedCount,
+  dismissedCount,
+  pendingCount,
   hasPooledDecisions,
   isSaving,
   onSave,
 }: Readonly<ApplyButtonProps>) {
   return (
-    <PMButton
-      size="sm"
-      variant="primary"
-      disabled={!hasPooledDecisions || isSaving}
-      loading={isSaving}
-      loadingText="Applying..."
-      onClick={onSave}
-    >
-      Apply ({acceptedCount})
-    </PMButton>
+    <ApplyConfirmationPopover
+      acceptedCount={acceptedCount}
+      dismissedCount={dismissedCount}
+      pendingCount={pendingCount}
+      hasPooledDecisions={hasPooledDecisions}
+      isSaving={isSaving}
+      onSave={onSave}
+    />
   );
 }

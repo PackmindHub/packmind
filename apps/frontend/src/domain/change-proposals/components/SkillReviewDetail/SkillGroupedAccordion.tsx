@@ -1,6 +1,10 @@
 import { ReactNode, useMemo, useCallback } from 'react';
 import { PMAccordion, PMBox, PMVStack } from '@packmind/ui';
-import { ChangeProposalId, SkillFile } from '@packmind/types';
+import {
+  ChangeProposalDecision,
+  ChangeProposalId,
+  SkillFile,
+} from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
@@ -26,7 +30,10 @@ interface SkillGroupedAccordionProps {
   getViewMode: (proposalId: ChangeProposalId) => ViewMode;
   onViewModeChange: (proposalId: ChangeProposalId, mode: ViewMode) => void;
   onEdit: (proposalId: ChangeProposalId) => void;
-  onAccept: (proposalId: ChangeProposalId) => void;
+  onAccept: (
+    proposalId: ChangeProposalId,
+    decision: ChangeProposalDecision,
+  ) => void;
   onDismiss: (proposalId: ChangeProposalId) => void;
   onUndo: (proposalId: ChangeProposalId) => void;
   onExpandCard?: (id: string) => void;
@@ -169,8 +176,8 @@ export function SkillGroupedAccordion({
   );
 
   const handleAccept = useCallback(
-    (proposalId: ChangeProposalId) => {
-      onAccept(proposalId);
+    (proposalId: ChangeProposalId, decision: ChangeProposalDecision) => {
+      onAccept(proposalId, decision);
       expandNextPending(proposalId);
     },
     [onAccept, expandNextPending],
@@ -207,7 +214,7 @@ export function SkillGroupedAccordion({
         showEditButton={showEditButton}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
         onEdit={() => onEdit(proposal.id)}
-        onAccept={() => handleAccept(proposal.id)}
+        onAccept={(decision) => handleAccept(proposal.id, decision)}
         onDismiss={() => handleDismiss(proposal.id)}
         onUndo={() => onUndo(proposal.id)}
         renderExpandedView={renderExpandedView}

@@ -4,7 +4,11 @@ Scan existing skills, identify which are relevant to the user's validated intent
 
 ## What Skills Are
 
-Skills are modular packages providing specialized knowledge and workflows. Each skill has a \`SKILL.md\` with YAML frontmatter (\`name\`, \`description\`) and markdown body, plus optional \`references/\`, \`scripts/\`, and \`assets/\`. The \`description\` field determines when the skill auto-loads. Skills live in \`.claude/skills/<skill-name>/\`.
+Skills are modular packages providing specialized knowledge and workflows. Each skill has a \`SKILL.md\` with YAML frontmatter (\`name\`, \`description\`) and markdown body, plus optional \`references/\`, \`scripts/\`, and \`assets/\`. The \`description\` field determines when the skill auto-loads. Skills live in a platform-specific agent directory, at the project root or in any subdirectory (e.g. \`src/backend/.cursor/skills/\`):
+- Claude Code: \`**/.claude/skills/<skill-name>/\`
+- Cursor: \`**/.cursor/skills/<skill-name>/\`
+- GitHub Copilot: \`**/.github/skills/<skill-name>/\`
+Search recursively for these directories. If multiple agent directories exist, pick one.
 
 For the complete format specification (frontmatter fields, naming rules, directory structure, progressive disclosure), see [agent-skills-specification.md](agent-skills-specification.md).
 

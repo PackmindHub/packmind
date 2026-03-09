@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
   AcceptedChangeProposal,
+  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalStatus,
   OrganizationId,
@@ -34,7 +35,6 @@ import { InlineView } from './InlineView';
 import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
-import { getDecision } from '../../utils/GetDecision';
 
 interface CommandReviewDetailProps {
   artefactId: string;
@@ -91,8 +91,8 @@ export function CommandReviewDetail({
   }, [selectedRecipeProposals, reviewState.toggleCard]);
 
   const handleAcceptAndCollapse = useCallback(
-    (proposalId: ChangeProposalId) => {
-      pool.handlePoolAccept(proposalId);
+    (proposalId: ChangeProposalId, decision: ChangeProposalDecision) => {
+      pool.handlePoolAccept(proposalId, decision);
       reviewState.collapseCard(proposalId);
     },
     [pool.handlePoolAccept, reviewState.collapseCard],
@@ -133,7 +133,7 @@ export function CommandReviewDetail({
         acc.push({
           ...changeProposal,
           status: ChangeProposalStatus.applied,
-          decision: getDecision(changeProposal),
+          decision: pool.getDecisionForChangeProposal(changeProposal),
         });
       }
       return acc;
@@ -232,6 +232,12 @@ export function CommandReviewDetail({
           activeTab={reviewState.activeTab}
           onTabChange={reviewState.setActiveTab}
           acceptedCount={pool.acceptedProposalIds.size}
+          dismissedCount={pool.rejectedProposalIds.size}
+          pendingCount={
+            selectedRecipeProposals.length -
+            pool.acceptedProposalIds.size -
+            pool.rejectedProposalIds.size
+          }
           hasPooledDecisions={pool.hasPooledDecisions}
           isSaving={applyRecipeChangeProposalsMutation.isPending}
           onSave={handleSave}
