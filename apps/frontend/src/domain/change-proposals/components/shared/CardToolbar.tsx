@@ -1,4 +1,5 @@
 import { PMButton, PMHStack } from '@packmind/ui';
+import { ChangeProposalType, PackageId, SpaceId } from '@packmind/types';
 import { LuArrowUpRight, LuMinimize2 } from 'react-icons/lu';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { CardActions } from './CardActions';
@@ -8,6 +9,9 @@ type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
 interface CardToolbarProps {
   poolStatus: PoolStatus;
+  proposalType: ChangeProposalType;
+  packageIds: PackageId[];
+  spaceId: SpaceId;
   isOutdated: boolean;
   isBlockedByConflict: boolean;
   viewMode: ViewMode;
@@ -21,6 +25,9 @@ interface CardToolbarProps {
 
 export function CardToolbar({
   poolStatus,
+  proposalType,
+  packageIds,
+  spaceId,
   isOutdated,
   isBlockedByConflict,
   viewMode,
@@ -54,6 +61,9 @@ export function CardToolbar({
       </PMHStack>
       <CardActions
         poolStatus={poolStatus}
+        proposalType={proposalType}
+        packageIds={packageIds}
+        spaceId={spaceId}
         isOutdated={isOutdated}
         isBlockedByConflict={isBlockedByConflict}
         showEditButton={showEditButton}

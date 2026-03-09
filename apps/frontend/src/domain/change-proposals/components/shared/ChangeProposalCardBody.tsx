@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { PMSeparator, PMVStack } from '@packmind/ui';
+import { RemoveArtefactPayload } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
@@ -46,6 +47,8 @@ export function ChangeProposalCardBody({
 }: Readonly<ChangeProposalCardBodyProps>) {
   const { oldValue, newValue } = extractProposalDiffValues(proposal);
   const markdown = isMarkdownContent(proposal.type);
+  const removePayload = proposal.payload as RemoveArtefactPayload;
+  const packageIds = removePayload?.packageIds ?? [];
 
   return (
     <PMVStack gap={0} alignItems="stretch">
@@ -55,6 +58,9 @@ export function ChangeProposalCardBody({
           <PMVStack p={4} alignItems="stretch">
             <CardToolbar
               poolStatus={poolStatus}
+              proposalType={proposal.type}
+              packageIds={packageIds}
+              spaceId={proposal.spaceId}
               isOutdated={isOutdated}
               isBlockedByConflict={isBlockedByConflict}
               viewMode={viewMode}

@@ -32,9 +32,9 @@ export type CreationChangeProposalTypes =
   | ChangeProposalType.createSkill;
 
 export type RemoveChangeProposalTypes =
-  | ChangeProposalType.createCommand
-  | ChangeProposalType.createStandard
-  | ChangeProposalType.createSkill;
+  | ChangeProposalType.removeCommand
+  | ChangeProposalType.removeStandard
+  | ChangeProposalType.removeSkill;
 
 export type ChangeProposalItemType = 'standard' | 'command' | 'skill';
 
