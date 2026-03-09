@@ -1,6 +1,17 @@
 ---
 name: packmind-update-playbook
-description: Use when updating, adding, fixing, or changing Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook". Also triggers when the conversation reveals an opportunity to update the playbook — e.g., a convention was established, a pattern emerged, a workflow changed, or an artifact is stale. This skill defines a mandatory workflow; do NOT edit artifact files directly — follow all phases regardless of change size.
+description: >-
+  Use when updating, adding, fixing, changing, or deprecating Packmind playbook
+  artifacts (standards, commands, skills). Triggers on explicit phrases like
+  "update packmind standard", "add a packmind skill", "fix packmind command",
+  "change packmind playbook", "deprecate a standard". Also triggers — even
+  without an explicit request — whenever the conversation reveals an opportunity:
+  a new coding convention was just agreed on, a recurring pattern emerged, a
+  workflow changed, a rule was found outdated, or the user says things like
+  "we always do X", "let us remember to Y", "that is the pattern we use". If
+  there is any chance the conversation established a convention or exposed a gap,
+  invoke this skill proactively. This skill defines a mandatory workflow: do NOT
+  edit artifact files directly — follow all phases regardless of change size.
 ---
 
 # Update Playbook
@@ -61,6 +72,8 @@ This intent summary is passed as input to all subagents.
 
 ### Analyzing Playbook
 
+> **CLI health check**: Before launching subagents, run `packmind-cli --version`. If it fails, stop immediately and tell the user: "The Packmind CLI is not available or not working. Please check your installation before proceeding." Do not continue.
+
 > **No subagent support?** If the `Task` tool is unavailable, perform all three domain analyses sequentially in the current session — run each `references/domain-*.md` analysis one after another before proceeding to Change Report.
 
 Launch all three as `Task(general-purpose)` subagents **simultaneously** — do not wait for one before starting the others. Each subagent handles its own listing, filtering, and deep analysis in one pass.
@@ -85,11 +98,12 @@ Construct each prompt as:
 
 For each domain, decide whether to launch or skip based on the validated intent's **target artifact type**:
 - **Launch** if the intent mentions or affects that artifact type (standard, command, or skill)
-- **Skip** if the intent exclusively targets a different artifact type (e.g., "update standard X" → skip commands)
+- **Always launch skills** — skill accuracy must be checked against any behavioral change
+- **Limit scope** to the targeted artifact type when the intent is explicit and narrow (e.g., "update standard X" → standards only, no commands or unrelated skills)
 
 ### Change Report
 
-After all subagents complete, consolidate their reports. **Number every change sequentially** so the user can selectively approve:
+After all subagents complete, consolidate their reports. **Before numbering, deduplicate**: if multiple subagents propose modifying the same artifact, merge those into one entry combining both rationales — do not list the same artifact twice. **Number every change sequentially** so the user can selectively approve:
 
 ```
 ## Playbook Change Report
@@ -140,7 +154,7 @@ For each approved **new** artifact, read the corresponding creation procedure fr
 
 For skills: check which agent skills directory exists at the project root (`.claude/skills/`, `.cursor/skills/`, `.github/skills/`) — pick the first found in that priority order. If none exist, create `.claude/skills/`.
 
-After writing each new artifact, run `packmind-cli diff add <path> -m "<description>"` to submit it as a change proposal. This auto-submits the new artifact. The message must be non-empty and max 1024 characters.
+After writing each new artifact, run `packmind-cli diff add <path> -m "<description>"` to submit it as a change proposal. This auto-submits the new artifact. The message must be non-empty and max 1024 characters. If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
 
 #### Step 2: Preview updates
 
@@ -159,7 +173,7 @@ For each approved **update** to an existing artifact, edit the local installed f
   - Cursor: `**/.cursor/skills/<skill-name>/`
   - GitHub Copilot: `**/.github/skills/<skill-name>/`
 
-If a same artifact exists in multiple agent directories, pick one to edit.
+If the same artifact exists in multiple agent directories, edit the one matching the current session context: Claude Code → `.claude/`, Cursor → `.cursor/`, GitHub Copilot → `.github/`. If the context is unclear and multiple directories exist, list them and ask the user which agent directory to update.
 
 Run `packmind-cli diff` and present the output. List all artifacts included in the diff. Since it is not possible to select individual changes, **all detected modifications will be submitted together**.
 
@@ -168,8 +182,10 @@ Run `packmind-cli diff` and present the output. List all artifacts included in t
 
 #### Step 3: Submit updates
 
-Run `packmind-cli diff --submit -m "<concise summary of all changes>"` to submit the changes as proposals for human review on Packmind.
+Run `packmind-cli diff --submit -m "<concise summary of all changes>"` to submit the changes as proposals for human review on Packmind. If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
 
-Once submitted, tell the user: **"✅ Successfully sent to Packmind for review!"**
-Then add in italics: *"Once accepted in Packmind, these changes will be propagated and will replace all local copies."*
+Once submitted, run `packmind-cli whoami` and extract the `Organization:` field from the output. Construct the review URL as `https://app.packmind.ai/org/<organization>/space/global/review-changes/`.
+
+Tell the user: **"✅ Successfully sent to Packmind for review!"**
+Then add in italics: *"Review and accept your change proposals at <constructed-url> — once accepted, changes will be propagated and will replace all local copies."*
 

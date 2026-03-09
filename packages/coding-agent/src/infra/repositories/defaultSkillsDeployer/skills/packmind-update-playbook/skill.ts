@@ -1,16 +1,27 @@
 export function getSkillMd(): string {
   return `---
 name: packmind-update-playbook
-description: Use when updating, adding, fixing, changing, or deprecating Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "update packmind skill", "add a rule to a packmind standard", .... Also triggers when the conversation reveals an opportunity to update the playbook — e.g., a convention was established, a pattern emerged, a workflow changed, or an artifact is stale. This skill defines a mandatory workflow: do NOT edit artifact files directly — follow all phases (0→4) regardless of change size.
+description: >-
+  Use when updating, adding, fixing, changing, or deprecating Packmind playbook
+  artifacts (standards, commands, skills). Triggers on explicit phrases like
+  "update packmind standard", "add a packmind skill", "fix packmind command",
+  "change packmind playbook", "deprecate a standard". Also triggers — even
+  without an explicit request — whenever the conversation reveals an opportunity:
+  a new coding convention was just agreed on, a recurring pattern emerged, a
+  workflow changed, a rule was found outdated, or the user says things like
+  "we always do X", "let us remember to Y", "that is the pattern we use". If
+  there is any chance the conversation established a convention or exposed a gap,
+  invoke this skill proactively. This skill defines a mandatory workflow: do NOT
+  edit artifact files directly — follow all phases regardless of change size.
 ---
 
 # Update Playbook
 
-Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating, updating, or deprecating. Produce a structured change report, then apply approved changes.
+Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating or updating. Produce a structured change report, then apply approved changes.
 
-**⚠️ MANDATORY WORKFLOW — This skill defines a strict phase sequence (0→1→2→3→4). Do NOT skip phases or edit artifact files directly. Even for a single-line change, follow every phase. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
+**⚠️ MANDATORY WORKFLOW — This skill defines a strict sequence: Understanding Your Request → Summarizing Changes → Analyzing Playbook → Change Report → Applying Changes. Do NOT skip steps or edit artifact files directly. Even for a single-line change, follow every step. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
 
-## **Phase 0: Intent Validation**
+## **Understanding Your Request**
 
 **STOP. This phase runs FIRST, before anything else. No file reads, no CLI commands, no subagents until this gate passes.**
 
@@ -26,12 +37,12 @@ The skill was invoked standalone with no context. Ask:
 
 #### Case B: Explicit intent found
 
-The user explicitly asked to update, add, fix, change, or deprecate a Packmind artifact. Extract an **intent summary**:
+The user explicitly asked to update, add, fix, or change a Packmind artifact. Extract an **intent summary**:
 - **Target artifact(s)**: which standard(s), command(s), or skill(s) to modify (or "new")
-- **Kind of change**: create, update, deprecate, fix
+- **Kind of change**: create or update
 - **Specifics**: any details the user provided about the change
 
-Proceed to Phase 1 with this validated intent.
+Proceed to Summarizing Changes with this validated intent.
 
 #### Case C: Opportunity detected from conversation
 
@@ -49,9 +60,9 @@ If the conversation contains no references to modifying Packmind artifacts and n
 
 **BLOCK** — do not proceed until the user responds.
 
-### Phase 1: Intent Summary
+### Summarizing Changes
 
-> Only proceed after Phase 0 validates intent (explicit request or confirmed opportunity).
+> Only proceed after Understanding Your Request validates intent (explicit request or confirmed opportunity).
 
 Summarize the validated intent before launching any subagents. Extract:
 - Which artifact(s) the user wants to modify and what kind of change
@@ -60,9 +71,11 @@ Summarize the validated intent before launching any subagents. Extract:
 
 This intent summary is passed as input to all subagents.
 
-### Phase 2: Domain Analysis (parallel)
+### Analyzing Playbook
 
-> **No subagent support?** If the \`Task\` tool is unavailable, perform all three domain analyses sequentially in the current session — run each \`references/domain-*.md\` analysis one after another before proceeding to Phase 3.
+> **CLI health check**: Before launching subagents, run \`packmind-cli --version\`. If it fails, stop immediately and tell the user: "The Packmind CLI is not available or not working. Please check your installation before proceeding." Do not continue.
+
+> **No subagent support?** If the \`Task\` tool is unavailable, perform all three domain analyses sequentially in the current session — run each \`references/domain-*.md\` analysis one after another before proceeding to Change Report.
 
 Launch all three as \`Task(general-purpose)\` subagents **simultaneously** — do not wait for one before starting the others. Each subagent handles its own listing, filtering, and deep analysis in one pass.
 
@@ -71,7 +84,7 @@ Construct each prompt as:
 \`\`\`
 ## Validated Intent
 
-<the intent summary from Phase 1>
+<the intent summary from Summarizing Changes>
 
 ## Analysis Task
 
@@ -87,18 +100,18 @@ Construct each prompt as:
 For each domain, decide whether to launch or skip based on the validated intent's **target artifact type**:
 - **Launch** if the intent mentions or affects that artifact type (standard, command, or skill)
 - **Always launch skills** — skill accuracy must be checked against any behavioral change
-- **Skip** if the intent exclusively targets a different artifact type (e.g., "update standard X" → skip commands and skills)
+- **Limit scope** to the targeted artifact type when the intent is explicit and narrow (e.g., "update standard X" → standards only, no commands or unrelated skills)
 
-### Phase 3: Consolidated Report
+### Change Report
 
-After all subagents complete, consolidate their reports. **Number every change sequentially** so the user can selectively approve:
+After all subagents complete, consolidate their reports. **Before numbering, deduplicate**: if multiple subagents propose modifying the same artifact, merge those into one entry combining both rationales — do not list the same artifact twice. **Number every change sequentially** so the user can selectively approve:
 
 \`\`\`
 ## Playbook Change Report
 
 <!-- Only include sections that have changes. Omit empty sections entirely. -->
 <!-- Ordering reflects priority: skill accuracy first, then standards, then commands. -->
-<!-- New commands are never proposed — command creation is user-driven. -->
+<!-- New commands have a high bar — see domain-commands.md for criteria. -->
 
 ### Skill Updates
 1. [skill] <name>: <what changed and why>
@@ -112,11 +125,11 @@ After all subagents complete, consolidate their reports. **Number every change s
 ### New Standards
 4. [standard] <name>: <reason>
 
-### Command Updates
-5. [command] <name>: <what changed and why>
+### New Commands
+5. [command] <name>: <reason>
 
-### Deprecations
-6. [standard|skill] <name>: <reason>
+### Command Updates
+6. [command] <name>: <what changed and why>
 \`\`\`
 
 **Only include sections that have actual changes** — omit empty sections entirely. Order by priority: skills first, then standards, then commands.
@@ -128,9 +141,25 @@ Present this report and ask the user for approval:
   - **Inclusion list**: "1, 3, 5" or "only 2 and 6"
   - **Exclusion list**: "all but 4" or "everything except 2, 7"
 
-### Phase 4: Apply Changes
+### Applying Changes
 
-For each approved change, edit the local installed files directly. Search the project root **and all subdirectories** (e.g. \`src/backend/.cursor/skills/\`, \`packages/api/.packmind/standards/\`):
+#### Step 1: Write new artifacts
+
+For each approved **new** artifact, read the corresponding creation procedure from \`references/\`, then write the file(s) at the specified location:
+
+| Artifact Type | Creation Procedure | Write Path |
+|---|---|---|
+| Standard | [create-standard-procedure.md](references/create-standard-procedure.md) | \`.packmind/standards/<slug>.md\` |
+| Command | [create-command-procedure.md](references/create-command-procedure.md) | \`.packmind/commands/<slug>.md\` |
+| Skill | [create-skill-procedure.md](references/create-skill-procedure.md) | \`<agent-skills-dir>/<skill-name>/SKILL.md\` |
+
+For skills: check which agent skills directory exists at the project root (\`.claude/skills/\`, \`.cursor/skills/\`, \`.github/skills/\`) — pick the first found in that priority order. If none exist, create \`.claude/skills/\`.
+
+After writing each new artifact, run \`packmind-cli diff add <path> -m "<description>"\` to submit it as a change proposal. This auto-submits the new artifact. The message must be non-empty and max 1024 characters. If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
+
+#### Step 2: Preview updates
+
+For each approved **update** to an existing artifact, edit the local installed files directly. Search the project root **and all subdirectories** (e.g. \`src/backend/.cursor/skills/\`, \`packages/api/.packmind/standards/\`):
 
 - **Standards**: \`**/.packmind/standards/<slug>.md\` (source of truth). Installed copies also exist in:
   - Claude Code: \`**/.claude/rules/packmind/\`
@@ -139,30 +168,27 @@ For each approved change, edit the local installed files directly. Search the pr
 - **Commands**: \`**/.packmind/commands/<slug>.md\` (source of truth). Installed copies also exist in:
   - Claude Code: \`**/.claude/commands/\`
   - Cursor: \`**/.cursor/commands/\`
-  - GitHub Copilot: \`**/.github/prompt/\`
+  - GitHub Copilot: \`**/.github/prompts/\`
 - **Skills**: no \`.packmind/\` source — skills live directly in agent directories:
   - Claude Code: \`**/.claude/skills/<skill-name>/\`
   - Cursor: \`**/.cursor/skills/<skill-name>/\`
   - GitHub Copilot: \`**/.github/skills/<skill-name>/\`
 
-If a same artifact exists in multiple agent directories, pick one to edit.
+If the same artifact exists in multiple agent directories, edit the one matching the current session context: Claude Code → \`.claude/\`, Cursor → \`.cursor/\`, GitHub Copilot → \`.github/\`. If the context is unclear and multiple directories exist, list them and ask the user which agent directory to update.
 
-For **new** artifacts, delegate to the corresponding creation skill (\`packmind-create-standard\`, \`packmind-create-command\`, \`packmind-create-skill\`).
+Run \`packmind-cli diff\` and present the output. List all artifacts included in the diff. Since it is not possible to select individual changes, **all detected modifications will be submitted together**.
 
-#### Step 1: Preview
+- If the diff contains only the intended changes, proceed to Step 3.
+- If the diff contains **additional or unrelated artifacts**, inform the user by listing them and clarifying that they will be included in the submission as well.
 
-Run \`packmind-cli diff\` and present the output. Verify the diff matches the intended changes — no unrelated modifications should be included. If unrelated changes appear, inform the user before proceeding.
+#### Step 3: Submit updates
 
-#### Step 2: Submit
+Run \`packmind-cli diff --submit -m "<concise summary of all changes>"\` to submit the changes as proposals for human review on Packmind. If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
 
-Run \`packmind-cli diff --submit -m "<concise summary of all changes>"\` to submit the changes as proposals for human review on Packmind.
+Once submitted, run \`packmind-cli whoami\` and extract the \`Organization:\` field from the output. Construct the review URL as \`https://app.packmind.ai/org/<organization>/space/global/review-changes/\`.
 
-#### Step 3: Propagate
+Tell the user: **"✅ Successfully sent to Packmind for review!"**
+Then add in italics: *"Review and accept your change proposals at <constructed-url> — once accepted, changes will be propagated and will replace all local copies."*
 
-Ask the user whether they have validated the submitted changes in the **Review Changes** module in Packmind and wish to propagate them locally. If yes, run:
-
-\`\`\`bash
-packmind-cli install --recursive
-\`\`\`
 `;
 }
