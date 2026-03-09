@@ -2,7 +2,7 @@
 
 ## Added
 
-- Homebrew installation support: `packmind-cli` can now be installed via `brew install packmind/tap/packmind-cli` (#191) - thanks @davidaparicio
+- Homebrew installation support: `packmind-cli` can now be installed via `brew tap PackmindHub/cli && brew install packmind-cli` (#191) - thanks `@davidaparicio`
 
 ## Changed
 
