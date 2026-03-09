@@ -36,6 +36,20 @@ Standards are placed in specific folders that your AI assistant monitors. Once d
   code.
 </Tip>
 
+### How Single-File Rendering Works
+
+Some AI assistants (**AGENTS.md**, **GitLab Duo**, **Junie**) use a single shared file rather than a dedicated folder for standards. Because you may want to add your own instructions to these files, Packmind uses HTML comment markers to delineate its managed section:
+
+```
+<!-- start: Packmind standards -->
+... Packmind-managed content ...
+<!-- end: Packmind standards -->
+```
+
+Packmind only updates the content **between** these markers. You are free to add your own content before or after them — it will be preserved across distributions.
+
+If the markers don't exist yet (for example, in a brand-new file), Packmind appends the section at the end of the file.
+
 ### Standard Scopes and File Patterns
 
 When you define a standard, you can specify a **scope** using glob patterns (like `**/*.spec.ts` for test files or `src/components/**/*.tsx` for React components).
