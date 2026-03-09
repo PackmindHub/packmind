@@ -2494,6 +2494,33 @@ describe('PullContentUseCase', () => {
         );
         expect(skillFile?.spaceId).toBe(skill.spaceId as string);
       });
+
+      it('sets artifactVersion on recipe file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.artifactVersion).toBe(recipeVersion.version);
+      });
+
+      it('sets artifactVersion on standard file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const standardFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/standards/enriched-standard.md',
+        );
+        expect(standardFile?.artifactVersion).toBe(standardVersion.version);
+      });
+
+      it('sets artifactVersion on skill file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const skillFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.claude/skills/enriched-skill/SKILL.md',
+        );
+        expect(skillFile?.artifactVersion).toBe(skillVersion.version);
+      });
     });
 
     describe('when deployed files do not have artifactType', () => {
@@ -2525,6 +2552,15 @@ describe('PullContentUseCase', () => {
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
         expect(recipeFile?.spaceId).toBeUndefined();
+      });
+
+      it('does not set artifactVersion on files without artifactType', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.artifactVersion).toBeUndefined();
       });
     });
   });

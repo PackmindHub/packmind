@@ -135,7 +135,11 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     });
 
     // Step 8: Build artifact metadata from packages
-    type ArtifactMetadata = { artifactId: string; spaceId: string };
+    type ArtifactMetadata = {
+      artifactId: string;
+      spaceId: string;
+      version: number;
+    };
     const artifactMetadata: Record<
       ArtifactType,
       Map<string, ArtifactMetadata>
@@ -178,6 +182,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
           artifactMetadata.command.set(rv.name, {
             artifactId: rv.recipeId as string,
             spaceId,
+            version: rv.version,
           });
         }
       }
@@ -187,6 +192,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
           artifactMetadata.standard.set(sv.name, {
             artifactId: sv.standardId as string,
             spaceId,
+            version: sv.version,
           });
         }
       }
@@ -196,12 +202,13 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
           artifactMetadata.skill.set(skv.name, {
             artifactId: skv.skillId as string,
             spaceId,
+            version: skv.version,
           });
         }
       }
     }
 
-    // Step 9: Enrich file modifications with artifact metadata
+    // Step 9: Enrich file modifications with artifactId, spaceId, and artifactVersion from the metadata map
     for (const file of fileUpdates.createOrUpdate) {
       if (file.artifactType && file.artifactName) {
         const metadata = artifactMetadata[file.artifactType].get(
@@ -210,6 +217,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
         if (metadata) {
           file.artifactId = metadata.artifactId;
           file.spaceId = metadata.spaceId;
+          file.artifactVersion = metadata.version;
         }
       }
     }

@@ -1,6 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 import { OrganizationsController } from './organizations.controller';
-import { createOrganizationId, IPullContentResponse } from '@packmind/types';
+import {
+  ArtifactVersionEntry,
+  createOrganizationId,
+  IPullContentResponse,
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { IAccountsPort, IDeploymentPort } from '@packmind/types';
@@ -19,6 +23,7 @@ describe('OrganizationsController', () => {
     mockDeploymentAdapter = {
       pullAllContent: jest.fn(),
       getDeployedContent: jest.fn(),
+      getContentByVersions: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     controller = new OrganizationsController(
@@ -464,6 +469,162 @@ describe('OrganizationsController', () => {
         expect(mockDeploymentAdapter.getDeployedContent).toHaveBeenCalledWith(
           expect.objectContaining({
             packagesSlugs: [],
+          }),
+        );
+      });
+    });
+  });
+
+  describe('getContentByVersions', () => {
+    const orgId = createOrganizationId('org-123');
+    const mockRequest = {
+      organization: { id: orgId },
+      user: { userId: 'user-123' },
+      clientSource: 'cli',
+    } as AuthenticatedRequest;
+    const mockResponse: IPullContentResponse = {
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skillFolders: [],
+    };
+
+    const defaultArtifacts: ArtifactVersionEntry[] = [
+      {
+        name: 'test-standard',
+        type: 'standard',
+        id: 'std-1',
+        version: 1,
+        spaceId: 'space-1',
+      },
+      {
+        name: 'test-recipe',
+        type: 'command',
+        id: 'rec-1',
+        version: 2,
+        spaceId: 'space-1',
+      },
+    ];
+
+    beforeEach(() => {
+      mockDeploymentAdapter.getContentByVersions.mockResolvedValue(
+        mockResponse,
+      );
+    });
+
+    describe('when all required params are provided', () => {
+      it('calls the adapter with correct params', async () => {
+        await controller.getContentByVersions(orgId, mockRequest, {
+          artifacts: defaultArtifacts,
+          agents: ['claude'],
+        });
+
+        expect(mockDeploymentAdapter.getContentByVersions).toHaveBeenCalledWith(
+          {
+            userId: 'user-123',
+            organizationId: orgId,
+            artifacts: defaultArtifacts,
+            agents: ['claude'],
+            source: 'cli',
+          },
+        );
+      });
+
+      it('returns the adapter response', async () => {
+        const result = await controller.getContentByVersions(
+          orgId,
+          mockRequest,
+          { artifacts: defaultArtifacts },
+        );
+
+        expect(result).toEqual(mockResponse);
+      });
+    });
+
+    describe('when artifacts is missing', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.getContentByVersions(
+            orgId,
+            mockRequest,
+            {} as {
+              artifacts: ArtifactVersionEntry[];
+            },
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when artifacts is not an array', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.getContentByVersions(orgId, mockRequest, {
+            artifacts: 'not-an-array',
+          } as unknown as { artifacts: ArtifactVersionEntry[] }),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when agents is provided in body', () => {
+      describe('with valid agents', () => {
+        it('passes agents to the adapter', async () => {
+          await controller.getContentByVersions(orgId, mockRequest, {
+            artifacts: defaultArtifacts,
+            agents: ['claude'],
+          });
+
+          expect(
+            mockDeploymentAdapter.getContentByVersions,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude'],
+            }),
+          );
+        });
+      });
+
+      describe('with invalid agent values', () => {
+        it('filters out invalid agents', async () => {
+          await controller.getContentByVersions(orgId, mockRequest, {
+            artifacts: defaultArtifacts,
+            agents: ['claude', 'invalid-agent', 'cursor'],
+          });
+
+          expect(
+            mockDeploymentAdapter.getContentByVersions,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude', 'cursor'],
+            }),
+          );
+        });
+      });
+
+      describe('with only invalid agent values', () => {
+        it('passes empty agents array to the adapter', async () => {
+          await controller.getContentByVersions(orgId, mockRequest, {
+            artifacts: defaultArtifacts,
+            agents: ['invalid-agent'],
+          });
+
+          expect(
+            mockDeploymentAdapter.getContentByVersions,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: [],
+            }),
+          );
+        });
+      });
+    });
+
+    describe('when agents is not provided in body', () => {
+      it('does not pass agents to the adapter', async () => {
+        await controller.getContentByVersions(orgId, mockRequest, {
+          artifacts: defaultArtifacts,
+        });
+
+        expect(mockDeploymentAdapter.getContentByVersions).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: undefined,
           }),
         );
       });

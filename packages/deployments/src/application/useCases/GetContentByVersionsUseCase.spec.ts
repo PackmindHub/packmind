@@ -1,26 +1,22 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ArtifactVersionEntry,
   CodingAgents,
   FileUpdates,
-  GetDeployedContentCommand,
+  GetContentByVersionsCommand,
   IAccountsPort,
   ICodingAgentPort,
+  IRecipesPort,
   ISkillsPort,
   IStandardsPort,
   Organization,
   OrganizationId,
-  PackageWithArtefacts,
-  Recipe,
   RecipeVersion,
-  Skill,
   SkillVersion,
-  Standard,
   StandardVersion,
-  Target,
   User,
   UserOrganizationMembership,
   createOrganizationId,
-  createPackageId,
   createRecipeId,
   createRecipeVersionId,
   createSkillId,
@@ -28,15 +24,11 @@ import {
   createSpaceId,
   createStandardId,
   createStandardVersionId,
-  createTargetId,
   createUserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { PackageService } from '../services/PackageService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
-import { TargetResolutionService } from '../services/TargetResolutionService';
-import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
-import { GetDeployedContentUseCase } from './GetDeployedContentUseCase';
+import { GetContentByVersionsUseCase } from './GetContentByVersionsUseCase';
 
 const createUserWithMembership = (
   userId: string,
@@ -57,31 +49,19 @@ const createUserWithMembership = (
   trial: false,
 });
 
-describe('GetDeployedContentUseCase', () => {
-  let targetResolutionService: jest.Mocked<TargetResolutionService>;
-  let distributionRepository: jest.Mocked<IDistributionRepository>;
+describe('GetContentByVersionsUseCase', () => {
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
-  let packageService: jest.Mocked<PackageService>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
+  let recipesPort: jest.Mocked<IRecipesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
-  let useCase: GetDeployedContentUseCase;
-  let command: GetDeployedContentCommand;
+  let useCase: GetContentByVersionsUseCase;
+  let command: GetContentByVersionsCommand;
   let organizationId: OrganizationId;
   let organization: Organization;
 
   beforeEach(() => {
-    targetResolutionService = {
-      findTargetFromGitInfo: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<TargetResolutionService>;
-
-    distributionRepository = {
-      findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveRecipeVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IDistributionRepository>;
-
     codingAgentPort = {
       deployArtifactsForAgents: jest.fn().mockResolvedValue({
         createOrUpdate: [],
@@ -96,17 +76,19 @@ describe('GetDeployedContentUseCase', () => {
         .mockResolvedValue([CodingAgents.packmind, CodingAgents.claude]),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
-    packageService = {
-      getPackagesBySlugsWithArtefacts: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<PackageService>;
-
     skillsPort = {
+      listSkillVersions: jest.fn().mockResolvedValue([]),
       getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     standardsPort = {
+      listStandardVersions: jest.fn().mockResolvedValue([]),
       getRulesByStandardId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
+
+    recipesPort = {
+      getRecipeVersion: jest.fn().mockResolvedValue(null),
+    } as unknown as jest.Mocked<IRecipesPort>;
 
     accountsPort = {
       getUserById: jest.fn(),
@@ -123,10 +105,7 @@ describe('GetDeployedContentUseCase', () => {
     command = {
       organizationId: organizationId as unknown as string,
       userId: uuidv4(),
-      packagesSlugs: ['test-package'],
-      gitRemoteUrl: 'https://github.com/owner/repo.git',
-      gitBranch: 'main',
-      relativePath: '/',
+      artifacts: [],
     };
 
     const user = createUserWithMembership(
@@ -138,14 +117,12 @@ describe('GetDeployedContentUseCase', () => {
     accountsPort.getUserById.mockResolvedValue(user);
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    useCase = new GetDeployedContentUseCase(
-      targetResolutionService,
-      distributionRepository,
+    useCase = new GetContentByVersionsUseCase(
       codingAgentPort,
       renderModeConfigurationService,
-      packageService,
       skillsPort,
       standardsPort,
+      recipesPort,
       accountsPort,
       stubLogger(),
     );
@@ -155,18 +132,25 @@ describe('GetDeployedContentUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('when target exists with deployed versions', () => {
+  describe('when artifacts array is empty', () => {
+    it('returns empty file updates', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+
+    it('returns empty skill folders', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.skillFolders).toEqual([]);
+    });
+  });
+
+  describe('when artifacts contain mixed types', () => {
     const spaceId = createSpaceId(uuidv4());
-    const targetId = createTargetId(uuidv4());
     const recipeId = createRecipeId(uuidv4());
     const standardId = createStandardId(uuidv4());
     const skillId = createSkillId(uuidv4());
-
-    const target: Target = {
-      id: targetId,
-      name: 'Root',
-      path: '/',
-    };
 
     const recipeVersion: RecipeVersion = {
       id: createRecipeVersionId(uuidv4()),
@@ -174,7 +158,7 @@ describe('GetDeployedContentUseCase', () => {
       name: 'test-recipe',
       slug: 'test-recipe',
       content: 'recipe content',
-      version: 1,
+      version: 2,
       userId: createUserId(uuidv4()),
     };
 
@@ -184,7 +168,7 @@ describe('GetDeployedContentUseCase', () => {
       name: 'test-standard',
       slug: 'test-standard',
       description: 'test description',
-      version: 1,
+      version: 3,
       scope: null,
       rules: [],
     };
@@ -200,64 +184,36 @@ describe('GetDeployedContentUseCase', () => {
       userId: createUserId(uuidv4()),
     };
 
-    const recipe: Recipe = {
-      id: recipeId,
-      name: 'test-recipe',
-      slug: 'test-recipe',
-      content: 'recipe content',
-      version: 1,
-      userId: createUserId(uuidv4()),
-      spaceId,
-    };
-
-    const standard: Standard = {
-      id: standardId,
-      name: 'test-standard',
-      slug: 'test-standard',
-      description: 'test description',
-      version: 1,
-      userId: createUserId(uuidv4()),
-      spaceId,
-      scope: null,
-    };
-
-    const skill: Skill = {
-      id: skillId,
-      name: 'test-skill',
-      slug: 'test-skill',
-      description: 'test skill description',
-      prompt: 'test prompt',
-      version: 1,
-      userId: createUserId(uuidv4()),
-      spaceId,
-    };
-
-    const packageWithArtefacts: PackageWithArtefacts = {
-      id: createPackageId(uuidv4()),
-      name: 'test-package',
-      slug: 'test-package',
-      description: 'test package',
-      spaceId,
-      createdBy: createUserId(uuidv4()),
-      recipes: [recipe],
-      standards: [standard],
-      skills: [skill],
-    };
+    const artifacts: ArtifactVersionEntry[] = [
+      {
+        name: 'test-recipe',
+        type: 'command',
+        id: recipeId as string,
+        version: 2,
+        spaceId: spaceId as string,
+      },
+      {
+        name: 'test-standard',
+        type: 'standard',
+        id: standardId as string,
+        version: 3,
+        spaceId: spaceId as string,
+      },
+      {
+        name: 'test-skill',
+        type: 'skill',
+        id: skillId as string,
+        version: 1,
+        spaceId: spaceId as string,
+      },
+    ];
 
     beforeEach(() => {
-      targetResolutionService.findTargetFromGitInfo.mockResolvedValue(target);
-      distributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
-        [recipeVersion],
-      );
-      distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [standardVersion],
-      );
-      distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue([
-        skillVersion,
-      ]);
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-        packageWithArtefacts,
-      ]);
+      command.artifacts = artifacts;
+
+      recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+      standardsPort.listStandardVersions.mockResolvedValue([standardVersion]);
+      skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
 
       const fileUpdates: FileUpdates = {
         createOrUpdate: [
@@ -319,21 +275,35 @@ describe('GetDeployedContentUseCase', () => {
       );
     });
 
-    it('fetches skill files for each skill version', async () => {
+    it('fetches recipe version with correct id and version number', async () => {
+      await useCase.execute(command);
+
+      expect(recipesPort.getRecipeVersion).toHaveBeenCalledWith(recipeId, 2);
+    });
+
+    it('fetches standard versions for matching', async () => {
+      await useCase.execute(command);
+
+      expect(standardsPort.listStandardVersions).toHaveBeenCalledWith(
+        standardId,
+      );
+    });
+
+    it('fetches rules for each matched standard', async () => {
+      await useCase.execute(command);
+
+      expect(standardsPort.getRulesByStandardId).toHaveBeenCalledWith(
+        standardId,
+      );
+    });
+
+    it('fetches skill files for each matched skill version', async () => {
       await useCase.execute(command);
 
       expect(skillsPort.getSkillFiles).toHaveBeenCalledWith(skillVersion.id);
     });
 
-    it('fetches rules for each standard version', async () => {
-      await useCase.execute(command);
-
-      expect(standardsPort.getRulesByStandardId).toHaveBeenCalledWith(
-        standardVersion.standardId,
-      );
-    });
-
-    it('calls deployArtifactsForAgents with deployed versions including rules', async () => {
+    it('calls deployArtifactsForAgents with fetched versions', async () => {
       await useCase.execute(command);
 
       expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
@@ -345,93 +315,44 @@ describe('GetDeployedContentUseCase', () => {
               rules: [],
             }),
           ],
-          skillVersions: expect.arrayContaining([
-            expect.objectContaining({ id: skillVersion.id, files: [] }),
-          ]),
+          skillVersions: [
+            expect.objectContaining({
+              id: skillVersion.id,
+              files: [],
+            }),
+          ],
         }),
       );
     });
   });
 
-  describe('when target is not found', () => {
+  describe('when a version is not found for an artifact', () => {
+    const spaceId = createSpaceId(uuidv4());
+    const recipeId = createRecipeId(uuidv4());
+
     beforeEach(() => {
-      targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
+      command.artifacts = [
+        {
+          name: 'missing-recipe',
+          type: 'command',
+          id: recipeId as string,
+          version: 99,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      recipesPort.getRecipeVersion.mockResolvedValue(null);
     });
 
-    it('returns empty file updates', async () => {
+    it('skips the missing artifact and returns empty results', async () => {
       const result = await useCase.execute(command);
 
       expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
     });
-
-    it('returns empty skill folders', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.skillFolders).toEqual([]);
-    });
-
-    it('does not fetch deployed standard versions', async () => {
-      await useCase.execute(command);
-
-      expect(
-        distributionRepository.findActiveStandardVersionsByTarget,
-      ).not.toHaveBeenCalled();
-    });
-
-    it('does not fetch deployed recipe versions', async () => {
-      await useCase.execute(command);
-
-      expect(
-        distributionRepository.findActiveRecipeVersionsByTarget,
-      ).not.toHaveBeenCalled();
-    });
-
-    it('does not fetch deployed skill versions', async () => {
-      await useCase.execute(command);
-
-      expect(
-        distributionRepository.findActiveSkillVersionsByTarget,
-      ).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when target exists but has no deployed versions', () => {
-    const target: Target = {
-      id: createTargetId(uuidv4()),
-      name: 'Root',
-      path: '/',
-    };
-
-    beforeEach(() => {
-      targetResolutionService.findTargetFromGitInfo.mockResolvedValue(target);
-      distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      distributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      });
-    });
-
-    it('returns empty file updates', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.fileUpdates.createOrUpdate).toEqual([]);
-    });
   });
 
   describe('when agents are provided in command', () => {
-    beforeEach(() => {
-      targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
-    });
-
-    it('uses command agents normalized instead of org-level config', async () => {
+    it('uses command agents instead of org-level config', async () => {
       command.agents = [CodingAgents.cursor, CodingAgents.claude];
 
       await useCase.execute(command);
@@ -443,10 +364,6 @@ describe('GetDeployedContentUseCase', () => {
   });
 
   describe('when agents are not provided in command', () => {
-    beforeEach(() => {
-      targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
-    });
-
     it('uses organization-level render mode configuration', async () => {
       delete command.agents;
 
