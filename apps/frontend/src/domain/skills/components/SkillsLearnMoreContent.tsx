@@ -300,40 +300,51 @@ export const SkillsLearnMoreContent: React.FC = () => {
                     </PMBox>
                   </InstallSection>
 
-                  <PMHStack gap={4} width="full" alignItems="stretch">
-                    <PMBox flex={1}>
-                      <InstallSection
-                        title="Alternative: Homebrew"
-                        variant="secondary"
-                      >
-                        <CopiableTextarea
-                          value={HOMEBREW_INSTALL_COMMAND}
-                          readOnly
-                          rows={2}
-                        />
-                      </InstallSection>
-                    </PMBox>
-                    <PMBox flex={1}>
-                      <InstallSection
-                        title="Alternative: NPM"
-                        variant="secondary"
-                      >
-                        <CopiableTextarea
-                          value={NPM_INSTALL_COMMAND}
-                          readOnly
-                          rows={1}
-                        />
-                        <PMAlert.Root status="info">
-                          <PMAlert.Indicator />
-                          <PMAlert.Content>
-                            <PMAlert.Description>
-                              Requires Node.js 22 or higher.
-                            </PMAlert.Description>
-                          </PMAlert.Content>
-                        </PMAlert.Root>
-                      </InstallSection>
-                    </PMBox>
-                  </PMHStack>
+                  <InstallSection
+                    title="Alternative"
+                    description="Other installation methods."
+                    variant="secondary"
+                  >
+                    <PMText
+                      variant="small"
+                      color="primary"
+                      as="p"
+                      style={{
+                        fontWeight: 'medium',
+                        marginBottom: '4px',
+                        display: 'inline-block',
+                      }}
+                    >
+                      Terminal (Homebrew)
+                    </PMText>
+                    <CopiableTextarea
+                      value={HOMEBREW_INSTALL_COMMAND}
+                      readOnly
+                      rows={2}
+                    />
+                    <PMText
+                      variant="small"
+                      color="primary"
+                      as="p"
+                      style={{
+                        fontWeight: 'medium',
+                        marginBottom: '4px',
+                        marginTop: '12px',
+                        display: 'inline-block',
+                      }}
+                    >
+                      Terminal (NPM)
+                    </PMText>
+                    <CopiableTextField value={NPM_INSTALL_COMMAND} readOnly />
+                    <PMAlert.Root status="info">
+                      <PMAlert.Indicator />
+                      <PMAlert.Content>
+                        <PMAlert.Description>
+                          Requires Node.js 22 or higher.
+                        </PMAlert.Description>
+                      </PMAlert.Content>
+                    </PMAlert.Root>
+                  </InstallSection>
                 </>
               ) : (
                 <InstallSection title="Recommended: NPM" variant="primary">

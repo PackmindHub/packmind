@@ -90,42 +90,72 @@ export const InstallCliStep: React.FC<IInstallCliStepProps> = ({
           </SectionCard>
         )}
 
-        <PMHStack gap={4} width="full" alignItems="stretch">
-          {selectedOs === 'macos-linux' && (
-            <PMBox flex={1}>
-              <SectionCard title="Alternative: Homebrew">
-                <CopiableTextarea
-                  value={buildHomebrewInstallCommand()}
-                  readOnly
-                  rows={2}
-                />
-              </SectionCard>
-            </PMBox>
-          )}
-          <PMBox flex={1}>
-            <SectionCard
-              title={
-                selectedOs === 'macos-linux'
-                  ? 'Alternative: NPM'
-                  : 'Recommended: NPM'
-              }
+        {selectedOs === 'macos-linux' ? (
+          <SectionCard
+            title="Alternative"
+            description="Other installation methods."
+          >
+            <PMText
+              variant="small"
+              color="primary"
+              as="p"
+              style={{
+                fontWeight: 'medium',
+                marginBottom: '4px',
+                display: 'inline-block',
+              }}
             >
-              <CopiableTextarea
-                value={buildNpmInstallCommand()}
-                readOnly
-                rows={1}
-              />
-              <PMAlert.Root status="info">
-                <PMAlert.Indicator />
-                <PMAlert.Content>
-                  <PMAlert.Description>
-                    Requires Node.js 22 or higher.
-                  </PMAlert.Description>
-                </PMAlert.Content>
-              </PMAlert.Root>
-            </SectionCard>
-          </PMBox>
-        </PMHStack>
+              Terminal (Homebrew)
+            </PMText>
+            <CopiableTextarea
+              value={buildHomebrewInstallCommand()}
+              readOnly
+              rows={2}
+            />
+            <PMText
+              variant="small"
+              color="primary"
+              as="p"
+              style={{
+                fontWeight: 'medium',
+                marginBottom: '4px',
+                marginTop: '12px',
+                display: 'inline-block',
+              }}
+            >
+              Terminal (NPM)
+            </PMText>
+            <CopiableTextarea
+              value={buildNpmInstallCommand()}
+              readOnly
+              rows={1}
+            />
+            <PMAlert.Root status="info">
+              <PMAlert.Indicator />
+              <PMAlert.Content>
+                <PMAlert.Description>
+                  Requires Node.js 22 or higher.
+                </PMAlert.Description>
+              </PMAlert.Content>
+            </PMAlert.Root>
+          </SectionCard>
+        ) : (
+          <SectionCard title="Recommended: NPM" variant="primary">
+            <CopiableTextarea
+              value={buildNpmInstallCommand()}
+              readOnly
+              rows={1}
+            />
+            <PMAlert.Root status="info">
+              <PMAlert.Indicator />
+              <PMAlert.Content>
+                <PMAlert.Description>
+                  Requires Node.js 22 or higher.
+                </PMAlert.Description>
+              </PMAlert.Content>
+            </PMAlert.Root>
+          </SectionCard>
+        )}
       </PMVStack>
     </PMVStack>
   );
