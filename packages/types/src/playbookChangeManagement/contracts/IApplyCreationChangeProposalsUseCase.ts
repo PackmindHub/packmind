@@ -4,10 +4,11 @@ import { PackmindCommand } from '../../UseCase';
 import { ChangeProposalId } from '../ChangeProposalId';
 import { StandardId } from '../../standards';
 import { SkillId } from '../../skills';
+import { AcceptedChangeProposal } from '../AcceptedChangeProposal';
 
 export type ApplyCreationChangeProposalsCommand = PackmindCommand & {
   spaceId: SpaceId;
-  accepted: ChangeProposalId[];
+  accepted: AcceptedChangeProposal[];
   rejected: ChangeProposalId[];
 };
 

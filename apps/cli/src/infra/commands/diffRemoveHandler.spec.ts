@@ -9,11 +9,6 @@ jest.mock('../utils/consoleLogger', () => ({
   logSuccessConsole: jest.fn(),
 }));
 
-jest.mock('fs', () => ({
-  existsSync: jest.fn(),
-  unlinkSync: jest.fn(),
-}));
-
 describe('diffRemoveHandler', () => {
   let mockReadFullConfig: jest.Mock;
   let mockTryGetGitRepositoryRoot: jest.Mock;
@@ -28,11 +23,8 @@ describe('diffRemoveHandler', () => {
   let mockUnlinkSync: jest.Mock;
 
   beforeEach(() => {
-    const fs = jest.requireMock('fs');
-    mockExistsSync = fs.existsSync;
-    mockExistsSync.mockReturnValue(true); // Default to file exists
-    mockUnlinkSync = fs.unlinkSync;
-    mockUnlinkSync.mockReturnValue(undefined); // Default to successful deletion
+    mockExistsSync = jest.fn().mockReturnValue(true);
+    mockUnlinkSync = jest.fn().mockReturnValue(undefined);
     mockReadFullConfig = jest.fn().mockResolvedValue({
       packages: { 'test-package': '*' },
       agents: ['packmind'],
@@ -101,6 +93,8 @@ describe('diffRemoveHandler', () => {
       message: 'Remove standard from project',
       exit: mockExit,
       getCwd: mockGetCwd,
+      existsSync: mockExistsSync,
+      unlinkSync: mockUnlinkSync,
       ...overrides,
     };
   }

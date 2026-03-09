@@ -2,16 +2,18 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
 import {
+  AcceptedChangeProposal,
   ChangeProposalId,
+  ChangeProposalStatus,
   OrganizationId,
-  StandardId,
   SpaceId,
+  StandardId,
 } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
-  useGetStandardByIdQuery,
   useGetRulesByStandardIdQuery,
+  useGetStandardByIdQuery,
 } from '../../../standards/api/queries/StandardsQueries';
 import {
   useApplyStandardChangeProposalsMutation,
@@ -30,11 +32,12 @@ import { getStandardByIdKey } from '../../../standards/api/queryKeys';
 import { computeStandardOutdatedIds } from '../../utils/computeOutdatedProposalIds';
 import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { ReviewHeader } from '../shared/ReviewHeader';
-import { StandardFocusedView } from './StandardFocusedView';
+import { StandardDiffView } from './StandardDiffView';
 import { StandardInlineView } from './StandardInlineView';
 import { StandardOriginalTabContent } from './StandardOriginalTabContent';
 import { StandardResultTabContent } from './StandardResultTabContent';
-import { useBlocker, useBeforeUnload } from 'react-router';
+import { useBeforeUnload, useBlocker } from 'react-router';
+import { getDecision } from '../../utils/GetDecision';
 
 interface StandardReviewDetailProps {
   artefactId: string;
@@ -135,12 +138,23 @@ export function StandardReviewDetail({
     if (!organizationId || !spaceId) return;
     if (!pool.hasPooledDecisions) return;
 
+    const accepted = selectedStandardProposals.reduce((acc, changeProposal) => {
+      if (pool.acceptedProposalIds.has(changeProposal.id)) {
+        acc.push({
+          ...changeProposal,
+          status: ChangeProposalStatus.applied,
+          decision: getDecision(changeProposal),
+        });
+      }
+      return acc;
+    }, [] as AcceptedChangeProposal[]);
+
     try {
       await applyStandardChangeProposalsMutation.mutateAsync({
         organizationId: organizationId as OrganizationId,
         spaceId: spaceId as SpaceId,
         artefactId: standardId,
-        accepted: Array.from(pool.acceptedProposalIds),
+        accepted,
         rejected: Array.from(pool.rejectedProposalIds),
       });
 
@@ -180,7 +194,7 @@ export function StandardReviewDetail({
 
       if (viewMode === 'diff')
         return (
-          <StandardFocusedView
+          <StandardDiffView
             proposal={proposal}
             standard={selectedStandard}
             rules={rules}

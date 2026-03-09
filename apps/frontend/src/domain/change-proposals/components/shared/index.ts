@@ -1,4 +1,5 @@
 export { DiffBlock } from './DiffBlock';
+export { DiffSectionSeparator } from './DiffSectionSeparator';
 export { StatusDot } from './StatusDot';
 export { ProposalLabel } from './ProposalLabel';
 export { ProposalMeta } from './ProposalMeta';
@@ -14,7 +15,7 @@ export { ArtefactInfo } from './ArtefactInfo';
 export { ViewTabSelector } from './ViewTabSelector';
 export { ApplyButton } from './ApplyButton';
 export { ReviewHeader } from './ReviewHeader';
-export { DiffView } from './DiffView';
+export { FocusedView } from './FocusedView';
 export { ChangeProposalCardBody } from './ChangeProposalCardBody';
 export { ChangeProposalCard } from './ChangeProposalCard';
 export { ChangeProposalAccordion } from './ChangeProposalAccordion';

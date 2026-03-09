@@ -7,6 +7,7 @@ import { ChangeProposalId } from '../ChangeProposalId';
 import { StandardVersionId } from '../../standards';
 import { RecipeVersionId } from '../../recipes';
 import { SkillVersionId } from '../../skills';
+import { AcceptedChangeProposal } from '../AcceptedChangeProposal';
 
 /**
  * Maps artifact ID types to their corresponding version ID types.
@@ -31,7 +32,7 @@ export type ApplyChangeProposalsCommand<
 > = PackmindCommand & {
   artefactId: T;
   spaceId: SpaceId;
-  accepted: ChangeProposalId[];
+  accepted: AcceptedChangeProposal[];
   rejected: ChangeProposalId[];
 };
 

@@ -67,7 +67,7 @@ export function useNavigateAfterApply(currentArtefactId: string) {
           orgSlug,
           spaceSlug,
           first.artefactType,
-          first.proposalId,
+          first.id,
         ),
       );
     }

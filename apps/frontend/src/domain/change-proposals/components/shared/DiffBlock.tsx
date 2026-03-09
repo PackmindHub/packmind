@@ -61,6 +61,7 @@ export function DiffBlock({
         borderRadius="md"
         p={3}
         fontSize="sm"
+        css={{ '& p:last-child': { marginBottom: 0 } }}
       >
         {isMarkdown ? (
           <PMMarkdownViewer content={value} />

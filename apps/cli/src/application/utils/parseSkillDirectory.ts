@@ -96,6 +96,10 @@ export function parseSkillDirectory(
     payload.allowedTools = properties.allowedTools;
   }
 
+  if (properties.metadata != null && typeof properties.metadata === 'object') {
+    payload.metadata = properties.metadata as Record<string, string>;
+  }
+
   const supportingFiles = files.filter(
     (f) => f.relativePath !== SKILL_MD_FILENAME,
   );

@@ -1,8 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  ChangeProposal,
   ChangeProposalType,
+  CreationChangeProposalTypes,
   CreationProposalOverview,
   IAccountsPort,
   IListChangeProposalsBySpace,
@@ -13,9 +13,7 @@ import {
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
   ListProposalsOverview,
-  NewCommandPayload,
-  NewSkillPayload,
-  NewStandardPayload,
+  PendingChangeProposal,
   RecipeId,
   SkillId,
   StandardId,
@@ -25,6 +23,7 @@ import {
   ChangeProposalService,
 } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
+import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 
 const origin = 'ListChangeProposalsBySpaceUseCase';
 
@@ -114,54 +113,54 @@ export class ListChangeProposalsBySpaceUseCase
   }
 
   private enrichCreations(
-    proposals: ChangeProposal<ChangeProposalType>[],
+    proposals: PendingChangeProposal<CreationChangeProposalTypes>[],
   ): CreationProposalOverview[] {
     return proposals.map((proposal) => {
       const lastContributedAt = proposal.createdAt.toISOString();
-      if (proposal.type === ChangeProposalType.createStandard) {
-        const payload = proposal.payload as NewStandardPayload;
+      if (
+        isExpectedChangeProposalType(proposal, ChangeProposalType.createCommand)
+      ) {
         return {
-          proposalId: proposal.id,
+          ...proposal,
+          artefactType: 'commands' as const,
+          name: proposal.payload.name,
+          lastContributedAt,
+        };
+      }
+
+      if (
+        isExpectedChangeProposalType(
+          proposal,
+          ChangeProposalType.createStandard,
+        )
+      ) {
+        return {
+          ...proposal,
           artefactType: 'standards' as const,
-          name: payload.name,
-          description: payload.description,
-          scope: Array.isArray(payload.scope)
-            ? payload.scope.join(', ')
-            : payload.scope,
-          rules: payload.rules,
-          message: proposal.message,
-          createdBy: proposal.createdBy,
+          name: proposal.payload.name,
+          payload: {
+            ...proposal.payload,
+            scope: Array.isArray(proposal.payload.scope)
+              ? proposal.payload.scope.join(', ')
+              : proposal.payload.scope,
+          },
           lastContributedAt,
         };
       }
-      if (proposal.type === ChangeProposalType.createSkill) {
-        const payload = proposal.payload as NewSkillPayload;
+      if (
+        isExpectedChangeProposalType(proposal, ChangeProposalType.createSkill)
+      ) {
         return {
-          proposalId: proposal.id,
+          ...proposal,
           artefactType: 'skills' as const,
-          name: payload.name,
-          description: payload.description,
-          prompt: payload.prompt,
-          license: payload.license,
-          compatibility: payload.compatibility,
-          metadata: payload.metadata,
-          allowedTools: payload.allowedTools,
-          files: payload.files,
-          message: proposal.message,
-          createdBy: proposal.createdBy,
+          name: proposal.payload.name,
           lastContributedAt,
         };
       }
-      const payload = proposal.payload as NewCommandPayload;
-      return {
-        proposalId: proposal.id,
-        artefactType: 'commands' as const,
-        name: payload.name,
-        content: payload.content,
-        message: proposal.message,
-        createdBy: proposal.createdBy,
-        lastContributedAt,
-      };
+
+      throw new Error(
+        `Unsupported creation ChangeProposalType: ${proposal.type}`,
+      );
     });
   }
 

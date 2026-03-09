@@ -176,13 +176,13 @@ export function ReviewChangesSidebar({
     if (!isSkillCreationSelected) return undefined;
     return groupedProposals.creations.find(
       (c): c is SkillCreationProposalOverview =>
-        c.proposalId === proposalId && c.artefactType === 'skills',
+        c.id === proposalId && c.artefactType === 'skills',
     );
   }, [isSkillCreationSelected, groupedProposals.creations, proposalId]);
 
   const creationFilePaths = useMemo(() => {
-    if (!skillCreation?.files) return [];
-    return skillCreation.files
+    if (!skillCreation?.payload.files) return [];
+    return skillCreation.payload.files
       .map((f) => f.path)
       .filter((p) => p !== 'SKILL.md')
       .sort((a, b) => a.localeCompare(b));
@@ -263,7 +263,7 @@ export function ReviewChangesSidebar({
             )),
             ...sortedCreations.map((item) => (
               <PMBox
-                key={`creation-${item.proposalId}`}
+                key={`creation-${item.id}`}
                 borderBottom="1px solid"
                 borderColor="{colors.border.tertiary}"
               >
@@ -272,7 +272,7 @@ export function ReviewChangesSidebar({
                     orgSlug,
                     spaceSlug,
                     item.artefactType,
-                    item.proposalId,
+                    item.id,
                   )}
                   name={item.name}
                   artefactType={item.artefactType}

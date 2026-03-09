@@ -10,6 +10,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  AcceptedChangeProposal,
   ApplyChangeProposalsResponse,
   ChangeProposalId,
   ListChangeProposalsByArtefactResponse,
@@ -84,7 +85,7 @@ export class OrganizationsSpacesSkillsChangeProposalsController {
     @Param('spaceId') spaceId: SpaceId,
     @Param('skillId') skillId: SkillId,
     @Body()
-    body: { accepted: ChangeProposalId[]; rejected: ChangeProposalId[] },
+    body: { accepted: AcceptedChangeProposal[]; rejected: ChangeProposalId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<ApplyChangeProposalsResponse<SkillId>> {
     this.logger.info(
