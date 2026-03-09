@@ -84,9 +84,9 @@ export function OnboardingBuildCliSection() {
                     Terminal (Homebrew)
                   </PMText>
                   <CopiableTextarea
-                    value={HOMEBREW_INSTALL_COMMAND}
+                    value={`${HOMEBREW_INSTALL_COMMAND}\n${loginCommand}`}
                     readOnly
-                    rows={2}
+                    rows={3}
                     data-testid="OnboardingBuild.InstallHomebrewContent"
                     onCopy={() =>
                       analytics.track('post_signup_onboarding_field_copied', {
@@ -107,9 +107,10 @@ export function OnboardingBuildCliSection() {
                   >
                     Terminal (NPM)
                   </PMText>
-                  <CopiableTextField
-                    value={NPM_INSTALL_COMMAND}
+                  <CopiableTextarea
+                    value={`${NPM_INSTALL_COMMAND}\n${loginCommand}`}
                     readOnly
+                    rows={2}
                     onCopy={() =>
                       analytics.track('post_signup_onboarding_field_copied', {
                         field: 'installNpm',
