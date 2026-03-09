@@ -1,4 +1,5 @@
 import {
+  ChangeProposalConflictError,
   ChangeProposalId,
   Skill,
   SkillFile,
@@ -56,19 +57,36 @@ export function applySkillProposals(
   };
 
   const applier = new SkillChangeProposalApplier(new DiffService());
-  const appliedResult = applier.applyChangeProposals(
-    sourceVersion,
-    sortedProposals,
-  );
 
-  return {
-    name: appliedResult.name,
-    description: appliedResult.description,
-    prompt: appliedResult.prompt,
-    license: appliedResult.license,
-    compatibility: appliedResult.compatibility,
-    allowedTools: appliedResult.allowedTools,
-    metadata: appliedResult.metadata,
-    files: appliedResult.files,
-  };
+  try {
+    const appliedResult = applier.applyChangeProposals(
+      sourceVersion,
+      sortedProposals,
+    );
+
+    return {
+      name: appliedResult.name,
+      description: appliedResult.description,
+      prompt: appliedResult.prompt,
+      license: appliedResult.license,
+      compatibility: appliedResult.compatibility,
+      allowedTools: appliedResult.allowedTools,
+      metadata: appliedResult.metadata,
+      files: appliedResult.files,
+    };
+  } catch (error) {
+    if (error instanceof ChangeProposalConflictError) {
+      return {
+        name: skill.name,
+        description: skill.description,
+        prompt: skill.prompt,
+        license: skill.license,
+        compatibility: skill.compatibility,
+        allowedTools: skill.allowedTools,
+        metadata: skill.metadata,
+        files: [...files],
+      };
+    }
+    throw error;
+  }
 }

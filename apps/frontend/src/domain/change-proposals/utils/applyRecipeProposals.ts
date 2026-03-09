@@ -1,4 +1,5 @@
 import {
+  ChangeProposalConflictError,
   ChangeProposalId,
   Recipe,
   RecipeVersion,
@@ -46,7 +47,14 @@ export function applyRecipeProposals(
   };
 
   const applier = new CommandChangeProposalApplier(new DiffService());
-  const result = applier.applyChangeProposals(sourceVersion, sortedProposals);
 
-  return { name: result.name, content: result.content };
+  try {
+    const result = applier.applyChangeProposals(sourceVersion, sortedProposals);
+    return { name: result.name, content: result.content };
+  } catch (error) {
+    if (error instanceof ChangeProposalConflictError) {
+      return { name: recipe.name, content: recipe.content };
+    }
+    throw error;
+  }
 }

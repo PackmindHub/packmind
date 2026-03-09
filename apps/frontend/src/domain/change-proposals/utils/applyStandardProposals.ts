@@ -1,4 +1,5 @@
 import {
+  ChangeProposalConflictError,
   ChangeProposalId,
   Rule,
   Standard,
@@ -52,17 +53,30 @@ export function applyStandardProposals(
   };
 
   const applier = new StandardChangeProposalApplier(new DiffService());
-  const appliedResult = applier.applyChangeProposals(
-    sourceVersion,
-    sortedProposals,
-  );
 
-  return {
-    name: appliedResult.name,
-    scope: appliedResult.scope ?? '',
-    description: appliedResult.description,
-    rules: appliedResult.rules ?? [],
-  };
+  try {
+    const appliedResult = applier.applyChangeProposals(
+      sourceVersion,
+      sortedProposals,
+    );
+
+    return {
+      name: appliedResult.name,
+      scope: appliedResult.scope ?? '',
+      description: appliedResult.description,
+      rules: appliedResult.rules ?? [],
+    };
+  } catch (error) {
+    if (error instanceof ChangeProposalConflictError) {
+      return {
+        name: standard.name,
+        scope: standard.scope ?? '',
+        description: standard.description,
+        rules: [...rules],
+      };
+    }
+    throw error;
+  }
 }
 
 /**

@@ -252,6 +252,40 @@ describe('applyRecipeProposals', () => {
     });
   });
 
+  describe('when a content proposal conflicts with current value', () => {
+    const proposalId = createChangeProposalId(uuidv4());
+    const proposals: ChangeProposalWithConflicts[] = [
+      {
+        ...changeProposalFactory({
+          id: proposalId,
+          type: ChangeProposalType.updateCommandDescription,
+          artefactId: recipeId,
+          payload: {
+            oldValue: 'Value that does not match current content',
+            newValue: 'Updated content',
+          },
+          createdAt: new Date('2024-01-01'),
+        }),
+        conflictsWith: [],
+      },
+    ];
+    const acceptedIds = new Set([proposalId]);
+
+    let result: ReturnType<typeof applyRecipeProposals>;
+
+    beforeEach(() => {
+      result = applyRecipeProposals(recipe, proposals, acceptedIds);
+    });
+
+    it('returns the original recipe name', () => {
+      expect(result.name).toBe('Original Recipe');
+    });
+
+    it('returns the original recipe content', () => {
+      expect(result.content).toBe('Original content');
+    });
+  });
+
   describe('when applying mixed proposal types', () => {
     const nameProposalId = createChangeProposalId(uuidv4());
     const contentProposalId = createChangeProposalId(uuidv4());

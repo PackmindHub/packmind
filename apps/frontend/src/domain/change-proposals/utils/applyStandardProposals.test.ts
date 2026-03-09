@@ -463,6 +463,44 @@ describe('applyStandardProposals', () => {
     });
   });
 
+  describe('when a description proposal conflicts with current value', () => {
+    const proposalId = createChangeProposalId(uuidv4());
+    const proposals: ChangeProposalWithConflicts[] = [
+      {
+        ...changeProposalFactory({
+          id: proposalId,
+          type: ChangeProposalType.updateStandardDescription,
+          artefactId: standardId,
+          payload: {
+            oldValue: 'Value that does not match current description',
+            newValue: 'Updated description',
+          },
+          createdAt: new Date('2024-01-01'),
+        }),
+        conflictsWith: [],
+      },
+    ];
+    const acceptedIds = new Set([proposalId]);
+
+    let result: ReturnType<typeof applyStandardProposals>;
+
+    beforeEach(() => {
+      result = applyStandardProposals(standard, rules, proposals, acceptedIds);
+    });
+
+    it('returns the original standard name', () => {
+      expect(result.name).toBe('Original Standard');
+    });
+
+    it('returns the original standard description', () => {
+      expect(result.description).toBe('Original description');
+    });
+
+    it('returns the original rules', () => {
+      expect(result.rules).toEqual(rules);
+    });
+  });
+
   describe('when applying mixed proposal types', () => {
     const nameProposalId = createChangeProposalId(uuidv4());
     const descProposalId = createChangeProposalId(uuidv4());

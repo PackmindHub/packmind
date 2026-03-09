@@ -664,6 +664,45 @@ describe('applySkillProposals', () => {
     });
   });
 
+  describe('when a prompt proposal conflicts with current value', () => {
+    const proposalId = createChangeProposalId(uuidv4());
+    let result: ReturnType<typeof applySkillProposals>;
+
+    beforeEach(() => {
+      const proposals: ChangeProposalWithConflicts[] = [
+        withConflicts(
+          changeProposalFactory({
+            id: proposalId,
+            type: ChangeProposalType.updateSkillPrompt,
+            payload: {
+              oldValue: 'Value that does not match current prompt',
+              newValue: '# New prompt',
+            },
+            createdAt: new Date('2024-01-01'),
+          }),
+        ),
+      ];
+      result = applySkillProposals(
+        skill,
+        files,
+        proposals,
+        new Set([proposalId]),
+      );
+    });
+
+    it('returns the original skill name', () => {
+      expect(result.name).toBe('Test Skill');
+    });
+
+    it('returns the original skill prompt', () => {
+      expect(result.prompt).toBe('# Test prompt');
+    });
+
+    it('returns the original files', () => {
+      expect(result.files).toEqual(files);
+    });
+  });
+
   describe('with non-accepted proposals', () => {
     const proposalId = createChangeProposalId(uuidv4());
     let result: ReturnType<typeof applySkillProposals>;
