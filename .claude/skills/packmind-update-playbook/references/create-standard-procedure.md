@@ -14,7 +14,7 @@ Derive the slug from the standard title: lowercase, replace spaces with hyphens,
 
 ## File Format
 
-The parser (`parsePackmindStandard`) expects this exact structure:
+The parser expects this exact structure:
 
 ```markdown
 # Standard Name
