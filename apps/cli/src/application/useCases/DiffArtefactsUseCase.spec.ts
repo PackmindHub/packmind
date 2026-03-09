@@ -3,7 +3,9 @@ import * as fs from 'fs/promises';
 import { DiffArtefactsUseCase } from './DiffArtefactsUseCase';
 import { ChangeProposalType } from '@packmind/types';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { createMockLockFileRepository } from '../../mocks/createMockRepositories';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 
 jest.mock('fs/promises');
 jest.mock('../../infra/utils/binaryDetection', () => ({
@@ -14,6 +16,9 @@ describe('DiffArtefactsUseCase', () => {
   let useCase: DiffArtefactsUseCase;
   const mockGateway = createMockPackmindGateway();
   const mockGetDeployed = mockGateway.deployment.getDeployed as jest.Mock;
+  const mockGetContentByVersions = mockGateway.deployment
+    .getContentByVersions as jest.Mock;
+  let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   const defaultGitInfo = {
     gitRemoteUrl: 'git@github.com:org/repo.git',
     gitBranch: 'main',
@@ -21,7 +26,9 @@ describe('DiffArtefactsUseCase', () => {
   };
 
   beforeEach(() => {
-    useCase = new DiffArtefactsUseCase(mockGateway);
+    mockLockFileRepository = createMockLockFileRepository();
+    mockLockFileRepository.read.mockResolvedValue(null);
+    useCase = new DiffArtefactsUseCase(mockGateway, mockLockFileRepository);
   });
 
   afterEach(() => {
@@ -2279,6 +2286,173 @@ describe('DiffArtefactsUseCase', () => {
       gitBranch: 'main',
       relativePath: '/sub/',
       agents: undefined,
+    });
+  });
+
+  describe('when lock file exists', () => {
+    const lockFileArtifacts = {
+      'my-standard': {
+        name: 'my-standard',
+        type: 'standard' as const,
+        id: 'artifact-lock-1',
+        version: 3,
+        spaceId: 'space-lock-1',
+        files: [
+          {
+            path: '.packmind/standards/my-standard.md',
+            agent: 'packmind' as const,
+          },
+        ],
+      },
+      'my-command': {
+        name: 'my-command',
+        type: 'command' as const,
+        id: 'artifact-lock-2',
+        version: 1,
+        spaceId: 'space-lock-2',
+        files: [
+          {
+            path: '.packmind/commands/my-command.md',
+            agent: 'packmind' as const,
+          },
+        ],
+      },
+    };
+
+    const lockFileArtifactValues = Object.values(lockFileArtifacts);
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['test-package'],
+        agents: ['packmind'],
+        installedAt: '2026-01-01T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        artifacts: lockFileArtifacts,
+      });
+    });
+
+    it('calls getContentByVersions instead of getDeployed', async () => {
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skillFolders: [],
+      });
+
+      await useCase.execute({
+        ...defaultGitInfo,
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(mockGetContentByVersions).toHaveBeenCalledWith({
+        artifacts: lockFileArtifactValues,
+        agents: undefined,
+      });
+      expect(mockGetDeployed).not.toHaveBeenCalled();
+    });
+
+    it('forwards agents to getContentByVersions', async () => {
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skillFolders: [],
+      });
+
+      await useCase.execute({
+        ...defaultGitInfo,
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+        agents: ['claude-code', 'cursor'],
+      });
+
+      expect(mockGetContentByVersions).toHaveBeenCalledWith({
+        artifacts: lockFileArtifactValues,
+        agents: ['claude-code', 'cursor'],
+      });
+    });
+
+    it('computes diffs from lock file response', async () => {
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/my-command.md',
+              content: 'Server content from lock',
+              artifactType: 'command',
+              artifactName: 'My Command',
+              artifactId: 'artifact-lock-2',
+              spaceId: 'space-lock-2',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('Local content');
+
+      const result = await useCase.execute({
+        ...defaultGitInfo,
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([
+        {
+          filePath: '.packmind/commands/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: {
+            oldValue: 'Server content from lock',
+            newValue: 'Local content',
+          },
+          artifactName: 'My Command',
+          artifactType: 'command',
+          artifactId: 'artifact-lock-2',
+          spaceId: 'space-lock-2',
+        },
+      ]);
+    });
+
+    it('reads lock file from the base directory', async () => {
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skillFolders: [],
+      });
+
+      await useCase.execute({
+        ...defaultGitInfo,
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/my/project',
+      });
+
+      expect(mockLockFileRepository.read).toHaveBeenCalledWith('/my/project');
+    });
+  });
+
+  describe('when lock file does not exist', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(null);
+    });
+
+    it('falls back to getDeployed', async () => {
+      mockGetDeployed.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skillFolders: [],
+      });
+
+      await useCase.execute({
+        ...defaultGitInfo,
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(mockGetDeployed).toHaveBeenCalledWith({
+        packagesSlugs: ['test-package'],
+        gitRemoteUrl: 'git@github.com:org/repo.git',
+        gitBranch: 'main',
+        relativePath: '',
+        agents: undefined,
+      });
+      expect(mockGetContentByVersions).not.toHaveBeenCalled();
     });
   });
 });
