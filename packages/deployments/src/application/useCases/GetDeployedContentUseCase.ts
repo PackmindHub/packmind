@@ -136,9 +136,9 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
 
     // Step 8: Build artifact metadata from packages
     type ArtifactMetadata = {
-      artifactId: string;
       spaceId: string;
       version: number;
+      slug: string;
     };
     const artifactMetadata: Record<
       ArtifactType,
@@ -179,45 +179,45 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       for (const rv of recipeVersions) {
         const spaceId = recipeSpaceMap.get(rv.recipeId as string);
         if (spaceId) {
-          artifactMetadata.command.set(rv.name, {
-            artifactId: rv.recipeId as string,
+          artifactMetadata.command.set(rv.recipeId as string, {
             spaceId,
             version: rv.version,
+            slug: rv.slug,
           });
         }
       }
       for (const sv of standardVersions) {
         const spaceId = standardSpaceMap.get(sv.standardId as string);
         if (spaceId) {
-          artifactMetadata.standard.set(sv.name, {
-            artifactId: sv.standardId as string,
+          artifactMetadata.standard.set(sv.standardId as string, {
             spaceId,
             version: sv.version,
+            slug: sv.slug,
           });
         }
       }
       for (const skv of skillVersions) {
         const spaceId = skillSpaceMap.get(skv.skillId as string);
         if (spaceId) {
-          artifactMetadata.skill.set(skv.name, {
-            artifactId: skv.skillId as string,
+          artifactMetadata.skill.set(skv.skillId as string, {
             spaceId,
             version: skv.version,
+            slug: skv.slug,
           });
         }
       }
     }
 
-    // Step 9: Enrich file modifications with artifactId, spaceId, and artifactVersion from the metadata map
+    // Step 9: Enrich file modifications with spaceId, artifactVersion, and artifactSlug from the metadata map
     for (const file of fileUpdates.createOrUpdate) {
-      if (file.artifactType && file.artifactName) {
+      if (file.artifactType && file.artifactId) {
         const metadata = artifactMetadata[file.artifactType].get(
-          file.artifactName,
+          file.artifactId,
         );
         if (metadata) {
-          file.artifactId = metadata.artifactId;
           file.spaceId = metadata.spaceId;
           file.artifactVersion = metadata.version;
+          file.artifactSlug = metadata.slug;
         }
       }
     }

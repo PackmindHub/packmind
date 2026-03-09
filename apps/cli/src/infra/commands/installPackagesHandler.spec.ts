@@ -1089,6 +1089,7 @@ describe('installPackagesHandler', () => {
           baseDirectory: '/project',
           packagesSlugs: [],
           previousPackagesSlugs: ['backend'],
+          cliVersion: expect.any(String),
         });
       });
 

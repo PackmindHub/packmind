@@ -77,6 +77,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
         artifactType: 'command',
         artifactName: recipe.name,
+        artifactId: recipe.recipeId as string,
       });
     }
 
@@ -128,6 +129,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -154,6 +156,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
         artifactType: 'command',
         artifactName: recipe.name,
+        artifactId: recipe.recipeId as string,
       });
     }
 
@@ -193,6 +196,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -227,6 +231,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: file.skillFileId,
           skillFilePermissions: file.skillFilePermissions,
         });
@@ -258,6 +263,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: file.skillFileId,
           skillFilePermissions: file.skillFilePermissions,
         });
@@ -294,6 +300,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
         artifactType: 'command',
         artifactName: recipe.name,
+        artifactId: recipe.recipeId as string,
       });
     }
 
@@ -306,6 +313,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -319,6 +327,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: file.skillFileId,
           skillFilePermissions: file.skillFilePermissions,
         });

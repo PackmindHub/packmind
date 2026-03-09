@@ -2414,7 +2414,7 @@ describe('PullContentUseCase', () => {
       skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
     });
 
-    describe('when deployed files have artifactType and artifactName', () => {
+    describe('when deployed files have artifactType and artifactId', () => {
       beforeEach(() => {
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [
@@ -2423,18 +2423,21 @@ describe('PullContentUseCase', () => {
               content: 'recipe content',
               artifactType: 'command',
               artifactName: 'Enriched Recipe',
+              artifactId: recipe.id as string,
             },
             {
               path: '.packmind/standards/enriched-standard.md',
               content: 'standard content',
               artifactType: 'standard',
               artifactName: 'Enriched Standard',
+              artifactId: standard.id as string,
             },
             {
               path: '.claude/skills/enriched-skill/SKILL.md',
               content: 'skill content',
               artifactType: 'skill',
               artifactName: 'Enriched Skill',
+              artifactId: skill.id as string,
             },
           ],
           delete: [],

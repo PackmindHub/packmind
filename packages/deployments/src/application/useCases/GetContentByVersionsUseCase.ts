@@ -107,12 +107,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     );
 
     for (const file of fileUpdates.createOrUpdate) {
-      if (file.artifactType && file.artifactName) {
+      if (file.artifactType && file.artifactId) {
         const metadata = artifactMetadataByType[file.artifactType].get(
-          file.artifactName,
+          file.artifactId,
         );
         if (metadata) {
-          file.artifactId = metadata.artifactId;
           file.spaceId = metadata.spaceId;
           file.artifactVersion = metadata.version;
           file.artifactSlug = metadata.slug;
@@ -222,17 +221,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     skillVersions: SkillVersion[],
   ): Record<
     ArtifactType,
-    Map<
-      string,
-      { artifactId: string; spaceId: string; version: number; slug: string }
-    >
+    Map<string, { spaceId: string; version: number; slug: string }>
   > {
     const metadata: Record<
       ArtifactType,
-      Map<
-        string,
-        { artifactId: string; spaceId: string; version: number; slug: string }
-      >
+      Map<string, { spaceId: string; version: number; slug: string }>
     > = {
       command: new Map(),
       standard: new Map(),
@@ -249,8 +242,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     for (const rv of recipeVersions) {
       const spaceId = recipeSpaceMap.get(rv.recipeId as string);
       if (spaceId) {
-        metadata.command.set(rv.name, {
-          artifactId: rv.recipeId as string,
+        metadata.command.set(rv.recipeId as string, {
           spaceId,
           version: rv.version,
           slug: rv.slug,
@@ -261,8 +253,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     for (const sv of standardVersions) {
       const spaceId = standardSpaceMap.get(sv.standardId as string);
       if (spaceId) {
-        metadata.standard.set(sv.name, {
-          artifactId: sv.standardId as string,
+        metadata.standard.set(sv.standardId as string, {
           spaceId,
           version: sv.version,
           slug: sv.slug,
@@ -273,8 +264,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     for (const skv of skillVersions) {
       const spaceId = skillSpaceMap.get(skv.skillId as string);
       if (spaceId) {
-        metadata.skill.set(skv.name, {
-          artifactId: skv.skillId as string,
+        metadata.skill.set(skv.skillId as string, {
           spaceId,
           version: skv.version,
           slug: skv.slug,

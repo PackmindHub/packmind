@@ -127,9 +127,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         ReturnType<PackageService['getPackagesBySlugsWithArtefacts']>
       > = [];
 
-      // Build a lookup map from artifact type + name to artifactId and spaceId
+      // Build a lookup map from artifact type + ID to spaceId and metadata
       type ArtifactMetadata = {
-        artifactId: string;
         spaceId: string;
         version: number;
         slug: string;
@@ -254,12 +253,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           count: skillVersions.length,
         });
 
-        // Populate the artifact metadata map using fetched versions
+        // Populate the artifact metadata map using fetched versions (keyed by artifact ID)
         for (const rv of recipeVersions) {
           const spaceId = recipeSpaceMap.get(rv.recipeId as string);
           if (spaceId) {
-            artifactMetadata.command.set(rv.name, {
-              artifactId: rv.recipeId as string,
+            artifactMetadata.command.set(rv.recipeId as string, {
               spaceId,
               version: rv.version,
               slug: rv.slug,
@@ -269,8 +267,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         for (const sv of standardVersions) {
           const spaceId = standardSpaceMap.get(sv.standardId as string);
           if (spaceId) {
-            artifactMetadata.standard.set(sv.name, {
-              artifactId: sv.standardId as string,
+            artifactMetadata.standard.set(sv.standardId as string, {
               spaceId,
               version: sv.version,
               slug: sv.slug,
@@ -280,8 +277,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         for (const skv of skillVersions) {
           const spaceId = skillSpaceMap.get(skv.skillId as string);
           if (spaceId) {
-            artifactMetadata.skill.set(skv.name, {
-              artifactId: skv.skillId as string,
+            artifactMetadata.skill.set(skv.skillId as string, {
               spaceId,
               version: skv.version,
               slug: skv.slug,
@@ -618,14 +614,13 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         );
       mergedFileUpdates.createOrUpdate.push(configFile);
 
-      // Enrich file modifications with artifactId, spaceId, and artifactVersion from the metadata map
+      // Enrich file modifications with spaceId, artifactVersion, and artifactSlug from the metadata map
       for (const file of mergedFileUpdates.createOrUpdate) {
-        if (file.artifactType && file.artifactName) {
+        if (file.artifactType && file.artifactId) {
           const metadata = artifactMetadata[file.artifactType].get(
-            file.artifactName,
+            file.artifactId,
           );
           if (metadata) {
-            file.artifactId = metadata.artifactId;
             file.spaceId = metadata.spaceId;
             file.artifactVersion = metadata.version;
             file.artifactSlug = metadata.slug;
