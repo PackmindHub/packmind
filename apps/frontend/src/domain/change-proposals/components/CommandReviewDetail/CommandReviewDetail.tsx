@@ -232,6 +232,12 @@ export function CommandReviewDetail({
           activeTab={reviewState.activeTab}
           onTabChange={reviewState.setActiveTab}
           acceptedCount={pool.acceptedProposalIds.size}
+          dismissedCount={pool.rejectedProposalIds.size}
+          pendingCount={
+            selectedRecipeProposals.length -
+            pool.acceptedProposalIds.size -
+            pool.rejectedProposalIds.size
+          }
           hasPooledDecisions={pool.hasPooledDecisions}
           isSaving={applyRecipeChangeProposalsMutation.isPending}
           onSave={handleSave}

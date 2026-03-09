@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { PMBox, PMButton, PMHStack, PMSwitch, PMText } from '@packmind/ui';
+import { PMBox, PMHStack, PMSwitch, PMText } from '@packmind/ui';
+import { ApplyConfirmationPopover } from '../shared/ApplyConfirmationPopover';
 import { ChangeProposalId, UserId } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ChangeProposalsChangesList } from '../ChangeProposals/ChangeProposalsChangesList';
@@ -10,6 +11,9 @@ interface ReviewDetailLayoutProps {
   acceptedProposalIds: Set<ChangeProposalId>;
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
+  acceptedCount: number;
+  dismissedCount: number;
+  pendingCount: number;
   hasPooledDecisions: boolean;
   outdatedProposalIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
@@ -30,6 +34,9 @@ export function ReviewDetailLayout({
   acceptedProposalIds,
   rejectedProposalIds,
   blockedByConflictIds,
+  acceptedCount,
+  dismissedCount,
+  pendingCount,
   hasPooledDecisions,
   outdatedProposalIds,
   userLookup,
@@ -66,14 +73,14 @@ export function ReviewDetailLayout({
             <PMText fontSize="sm">Preview changes</PMText>
           </PMHStack>
         )}
-        <PMButton
-          size="sm"
-          colorPalette="blue"
-          disabled={isSaving || !hasPooledDecisions}
-          onClick={onSave}
-        >
-          {isSaving ? 'Applying...' : 'Apply changes'}
-        </PMButton>
+        <ApplyConfirmationPopover
+          acceptedCount={acceptedCount}
+          dismissedCount={dismissedCount}
+          pendingCount={pendingCount}
+          hasPooledDecisions={hasPooledDecisions}
+          isSaving={isSaving}
+          onSave={onSave}
+        />
       </PMBox>
       <PMBox minW={0} overflowY="auto">
         {children}
