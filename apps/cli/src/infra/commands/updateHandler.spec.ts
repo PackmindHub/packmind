@@ -232,8 +232,8 @@ describe('updateHandler', () => {
       await updateHandler(deps);
     });
 
-    it('exits with code 1', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(1);
+    it('exits with code 0', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 
     it('logs the brew upgrade message', () => {
