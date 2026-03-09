@@ -27,52 +27,17 @@ import { useCreateCliLoginCodeMutation } from '../../accounts/api/queries/AuthQu
 import { DownloadDefaultSkillsPopover } from './DownloadDefaultSkillsPopover';
 import { DownloadDefaultSkillsContent } from './DownloadDefaultSkillsContent';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
-
-const CLI_INSTALL_SCRIPT_URL =
-  'https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh';
-const NPM_INSTALL_COMMAND = 'npm install -g @packmind/cli';
-const DEFAULT_HOST = 'https://app.packmind.ai';
-
-const getCurrentHost = (): string => {
-  if (globalThis.location !== undefined) {
-    return globalThis.location.origin;
-  }
-  return DEFAULT_HOST;
-};
-
-const isDefaultHost = (): boolean => getCurrentHost() === DEFAULT_HOST;
-
-const buildCurlInstallCommand = (loginCode: string): string => {
-  const hostExport = isDefaultHost()
-    ? ''
-    : `export PACKMIND_HOST=${getCurrentHost()}\n`;
-  return `export PACKMIND_LOGIN_CODE=${loginCode}\n${hostExport}curl --proto '=https' --tlsv1.2 -sSf ${CLI_INSTALL_SCRIPT_URL} | sh`;
-};
-
-const formatCodeExpiresAt = (expiresAt?: string | Date): string => {
-  if (!expiresAt) return '';
-  try {
-    const date = expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
-    const now = new Date();
-    const diffMs = date.getTime() - now.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins <= 0) return 'Code expired';
-    return `Code expires in ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
-  } catch {
-    return '';
-  }
-};
-
-const detectOS = (): 'macos-linux' | 'windows' => {
-  if (typeof navigator === 'undefined') return 'macos-linux';
-  return navigator.userAgent.toLowerCase().includes('win')
-    ? 'windows'
-    : 'macos-linux';
-};
+import {
+  HOMEBREW_INSTALL_COMMAND,
+  NPM_INSTALL_COMMAND,
+  buildCurlInstallCommand,
+  formatCodeExpiresAt,
+  detectUserOs,
+} from '../../accounts/components/LocalEnvironmentSetup/utils';
 
 interface InstallSectionProps {
   title: string;
-  description: string;
+  description?: string;
   variant: 'primary' | 'secondary';
   children: React.ReactNode;
 }
@@ -87,6 +52,7 @@ const InstallSection: React.FC<InstallSectionProps> = ({
     align="flex-start"
     gap={4}
     width="full"
+    height="full"
     border="solid 1px"
     borderColor={variant === 'primary' ? 'blue.700' : 'border.tertiary'}
     padding={4}
@@ -94,9 +60,11 @@ const InstallSection: React.FC<InstallSectionProps> = ({
   >
     <PMVStack align="flex-start" gap={1}>
       <PMHeading level="h6">{title}</PMHeading>
-      <PMText as="p" color="tertiary" variant="small">
-        {description}
-      </PMText>
+      {description && (
+        <PMText as="p" color="tertiary" variant="small">
+          {description}
+        </PMText>
+      )}
     </PMVStack>
     {children}
   </PMVStack>
@@ -133,7 +101,7 @@ export const SkillsLearnMoreContent: React.FC = () => {
   const loginCodeMutation = useCreateCliLoginCodeMutation();
   const analytics = useAnalytics();
   const [selectedOs, setSelectedOs] = useState<'macos-linux' | 'windows'>(
-    detectOS,
+    detectUserOs,
   );
   const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
     null,
@@ -297,9 +265,40 @@ export const SkillsLearnMoreContent: React.FC = () => {
 
                   <InstallSection
                     title="Alternative"
-                    description="Install via npm (most reliable across environments)."
+                    description="Other installation methods."
                     variant="secondary"
                   >
+                    <PMText
+                      variant="small"
+                      color="primary"
+                      as="p"
+                      style={{
+                        fontWeight: 'medium',
+                        marginBottom: '4px',
+                        display: 'inline-block',
+                      }}
+                    >
+                      Terminal (Homebrew)
+                    </PMText>
+                    <CopiableTextarea
+                      value={HOMEBREW_INSTALL_COMMAND}
+                      readOnly
+                      rows={2}
+                    />
+                    <PMText
+                      variant="small"
+                      color="primary"
+                      as="p"
+                      style={{
+                        fontWeight: 'medium',
+                        marginBottom: '4px',
+                        marginTop: '12px',
+                        display: 'inline-block',
+                      }}
+                    >
+                      Terminal (NPM)
+                    </PMText>
+                    <CopiableTextField value={NPM_INSTALL_COMMAND} readOnly />
                     <PMAlert.Root status="info">
                       <PMAlert.Indicator />
                       <PMAlert.Content>
@@ -308,21 +307,15 @@ export const SkillsLearnMoreContent: React.FC = () => {
                         </PMAlert.Description>
                       </PMAlert.Content>
                     </PMAlert.Root>
-                    <PMBox width="1/2">
-                      <CopiableTextField
-                        value={NPM_INSTALL_COMMAND}
-                        readOnly
-                        label="Terminal (NPM)"
-                      />
-                    </PMBox>
                   </InstallSection>
                 </>
               ) : (
-                <InstallSection
-                  title="Recommended"
-                  description="Install via npm (most reliable across environments)."
-                  variant="primary"
-                >
+                <InstallSection title="Recommended: NPM" variant="primary">
+                  <CopiableTextarea
+                    value={NPM_INSTALL_COMMAND}
+                    readOnly
+                    rows={1}
+                  />
                   <PMAlert.Root status="info">
                     <PMAlert.Indicator />
                     <PMAlert.Content>
@@ -331,13 +324,6 @@ export const SkillsLearnMoreContent: React.FC = () => {
                       </PMAlert.Description>
                     </PMAlert.Content>
                   </PMAlert.Root>
-                  <PMBox width="1/2">
-                    <CopiableTextField
-                      value={NPM_INSTALL_COMMAND}
-                      readOnly
-                      label="Terminal (NPM)"
-                    />
-                  </PMBox>
                 </InstallSection>
               )}
 

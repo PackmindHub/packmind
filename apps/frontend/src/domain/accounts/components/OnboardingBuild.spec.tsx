@@ -81,11 +81,11 @@ describe('OnboardingBuild', () => {
   });
 
   describe('CLI section', () => {
-    it('renders the Install tabs', () => {
+    it('renders the install sections', () => {
       renderWithProviders(<OnboardingBuild />);
 
-      expect(screen.getByText('Script (Mac/Linux)')).toBeInTheDocument();
-      expect(screen.getByText('NPM (all OS)')).toBeInTheDocument();
+      expect(screen.getByText('Guided install')).toBeInTheDocument();
+      expect(screen.getByText('Alternative')).toBeInTheDocument();
     });
 
     it('renders the Initialize section', () => {

@@ -50,6 +50,17 @@ npx @packmind/cli install --list
 
 This runs the CLI directly without installing it, always using the latest version.
 
+### Alternative: Homebrew
+
+Available on macOS and Linux.
+
+```bash
+brew tap PackmindHub/cli
+brew install packmind-cli
+```
+
+After installation, the `packmind-cli` command will be available globally.
+
 ### Alternative: Standalone Executables
 
 Download the appropriate pre-built executable for your platform from the [GitHub Releases page](https://github.com/PackmindHub/packmind/releases?q=CLI&expanded=true).
@@ -80,9 +91,10 @@ sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
   **Choosing an Installation Method** — Use **one-click install** for the
   simplest experience with automatic authentication. Use **npm global** if you
   want `packmind-cli` always available system-wide. Use **npx** for
-  project-specific usage or testing without installation. Use **standalone
-  executables** if you don't have Node.js installed or need a specific binary
-  for your environment.
+  project-specific usage or testing without installation. Use **Homebrew** if
+  you prefer managing packages through your system package manager
+  (macOS/Linux). Use **standalone executables** if you don't have Node.js
+  installed or need a specific binary for your environment.
 </Tip>
 
 ## Authentication

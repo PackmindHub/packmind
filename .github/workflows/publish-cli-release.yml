@@ -22,6 +22,8 @@ on:
         required: true
       NPM_TOKEN:
         required: true
+      HOMEBREW_TAP_PAT:
+        required: true
 
 env:
   NODE_VERSION: '22.17.0'
@@ -306,3 +308,14 @@ jobs:
           echo "- packmind-cli-windows-x64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [View Release](https://github.com/${REPOSITORY}/releases/tag/${REF})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify Homebrew tap
+        continue-on-error: true
+        env:
+          VERSION: ${{ needs.sign-macos-cli.outputs.version }}
+        run: |
+          curl -fsS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.HOMEBREW_TAP_PAT }}" \
+            https://api.github.com/repos/PackmindHub/homebrew-cli/dispatches \
+            -d '{"event_type":"packmind-cli-release","client_payload":{"version":"'"$VERSION"'"}}'

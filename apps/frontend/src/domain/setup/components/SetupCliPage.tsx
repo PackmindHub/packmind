@@ -22,6 +22,7 @@ import {
   formatCodeExpiresAt,
   buildCliLoginCommand,
   formatExpirationDate,
+  HOMEBREW_INSTALL_COMMAND,
 } from '../../accounts/components/LocalEnvironmentSetup/utils';
 import {
   SectionCard,
@@ -186,7 +187,7 @@ export const SetupCliPage: React.FC = () => {
         <CopiableTextarea
           value={buildCurlInstallCommand(loginCode)}
           readOnly
-          rows={3}
+          rows={4}
         />
         <PMHStack gap={2} marginTop={2}>
           <PMText variant="small" color="tertiary">
@@ -229,32 +230,46 @@ export const SetupCliPage: React.FC = () => {
                   description="One-line install script (installs the CLI and continues automatically)."
                   variant="primary"
                 >
-                  <PMBox width="1/2">{renderGuidedInstallContent()}</PMBox>
+                  <PMBox width="full">{renderGuidedInstallContent()}</PMBox>
                 </SectionCard>
               )}
 
-              <SectionCard
-                title={
-                  selectedOs === 'macos-linux' ? 'Alternative' : 'Recommended'
-                }
-                description="Install via npm (most reliable across environments)."
-              >
-                <PMAlert.Root status="info">
-                  <PMAlert.Indicator />
-                  <PMAlert.Content>
-                    <PMAlert.Description>
-                      Requires Node.js 22 or higher.
-                    </PMAlert.Description>
-                  </PMAlert.Content>
-                </PMAlert.Root>
-                <PMBox width="1/2">
-                  <CopiableTextField
-                    value={buildNpmInstallCommand()}
-                    readOnly
-                    label="Terminal (NPM)"
-                  />
+              <PMHStack gap={4} width="full" alignItems="stretch">
+                {selectedOs === 'macos-linux' && (
+                  <PMBox flex={1}>
+                    <SectionCard title="Alternative: Homebrew">
+                      <CopiableTextarea
+                        value={HOMEBREW_INSTALL_COMMAND}
+                        readOnly
+                        rows={2}
+                      />
+                    </SectionCard>
+                  </PMBox>
+                )}
+                <PMBox flex={1}>
+                  <SectionCard
+                    title={
+                      selectedOs === 'macos-linux'
+                        ? 'Alternative: NPM'
+                        : 'Recommended: NPM'
+                    }
+                  >
+                    <CopiableTextarea
+                      value={buildNpmInstallCommand()}
+                      readOnly
+                      rows={1}
+                    />
+                    <PMAlert.Root status="info">
+                      <PMAlert.Indicator />
+                      <PMAlert.Content>
+                        <PMAlert.Description>
+                          Requires Node.js 22 or higher.
+                        </PMAlert.Description>
+                      </PMAlert.Content>
+                    </PMAlert.Root>
+                  </SectionCard>
                 </PMBox>
-              </SectionCard>
+              </PMHStack>
             </PMVStack>
           </PMVStack>
         </PMPageSection>

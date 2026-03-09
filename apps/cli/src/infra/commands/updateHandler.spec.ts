@@ -5,14 +5,21 @@ import {
   fetchLatestVersionFromNpm,
   fetchLatestVersionFromGitHub,
   isLocalNpmPackage,
+  isHomebrewInstall,
 } from './updateHandler';
 import * as consoleLogger from '../utils/consoleLogger';
+import * as fs from 'fs';
 
 jest.mock('../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logConsole: jest.fn(),
+}));
+
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  realpathSync: jest.fn((p: string) => p),
 }));
 
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
@@ -26,6 +33,7 @@ describe('updateHandler', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (fs.realpathSync as jest.Mock).mockImplementation((p: string) => p);
 
     mockFetch = jest.fn();
     deps = {
@@ -171,6 +179,72 @@ describe('updateHandler', () => {
       it('returns false', () => {
         expect(isLocalNpmPackage(undefined)).toBe(false);
       });
+    });
+  });
+
+  describe('isHomebrewInstall', () => {
+    it('returns true for macOS ARM Homebrew Cellar path', () => {
+      (fs.realpathSync as jest.Mock).mockReturnValue(
+        '/opt/homebrew/Cellar/packmind-cli/0.19.0/bin/packmind-cli',
+      );
+      expect(isHomebrewInstall('/opt/homebrew/bin/packmind-cli')).toBe(true);
+    });
+
+    it('returns true for macOS Intel Homebrew Cellar path', () => {
+      (fs.realpathSync as jest.Mock).mockReturnValue(
+        '/usr/local/Cellar/packmind-cli/0.19.0/bin/packmind-cli',
+      );
+      expect(isHomebrewInstall('/usr/local/bin/packmind-cli')).toBe(true);
+    });
+
+    it('returns false for standalone executable', () => {
+      (fs.realpathSync as jest.Mock).mockReturnValue(
+        '/usr/local/bin/packmind-cli',
+      );
+      expect(isHomebrewInstall('/usr/local/bin/packmind-cli')).toBe(false);
+    });
+
+    it('returns false for user-local executable', () => {
+      (fs.realpathSync as jest.Mock).mockReturnValue(
+        '/home/user/.local/bin/packmind-cli',
+      );
+      expect(isHomebrewInstall('/home/user/.local/bin/packmind-cli')).toBe(
+        false,
+      );
+    });
+
+    describe('when realpathSync throws', () => {
+      it('returns false', () => {
+        (fs.realpathSync as jest.Mock).mockImplementation(() => {
+          throw new Error('ENOENT');
+        });
+        expect(isHomebrewInstall('/nonexistent/path')).toBe(false);
+      });
+    });
+  });
+
+  describe('Homebrew guard', () => {
+    beforeEach(async () => {
+      (fs.realpathSync as jest.Mock).mockReturnValue(
+        '/opt/homebrew/Cellar/packmind-cli/0.19.0/bin/packmind-cli',
+      );
+      deps.executablePath = '/opt/homebrew/bin/packmind-cli';
+      await updateHandler(deps);
+    });
+
+    it('exits with code 0', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(0);
+    });
+
+    it('logs the brew upgrade message', () => {
+      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+        'This CLI was installed via Homebrew.\n' +
+          'To update, run: brew upgrade packmind-cli',
+      );
+    });
+
+    it('does not fetch', () => {
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 
