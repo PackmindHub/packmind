@@ -21,6 +21,10 @@ describe('LockFileRepository', () => {
     describe('when lock file exists', () => {
       const lockFileContent: PackmindLockFile = {
         lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude', 'packmind'],
+        installedAt: '2026-01-01T00:00:00.000Z',
+        cliVersion: '1.0.0',
         artifacts: {
           'my-standard': {
             name: 'My Standard',
@@ -105,6 +109,10 @@ describe('LockFileRepository', () => {
   describe('write', () => {
     const lockFile: PackmindLockFile = {
       lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['packmind'],
+      installedAt: '2026-01-01T00:00:00.000Z',
+      cliVersion: '1.0.0',
       artifacts: {
         'my-standard': {
           name: 'My Standard',
@@ -151,6 +159,10 @@ describe('LockFileRepository', () => {
   describe('write with empty artifacts', () => {
     const lockFile: PackmindLockFile = {
       lockfileVersion: 1,
+      packageSlugs: [],
+      agents: [],
+      installedAt: '2026-01-01T00:00:00.000Z',
+      cliVersion: '1.0.0',
       artifacts: {},
     };
 

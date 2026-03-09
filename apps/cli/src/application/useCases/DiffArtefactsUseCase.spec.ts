@@ -2324,6 +2324,10 @@ describe('DiffArtefactsUseCase', () => {
     beforeEach(() => {
       mockLockFileRepository.read.mockResolvedValue({
         lockfileVersion: 1,
+        packageSlugs: ['test-package'],
+        agents: ['packmind'],
+        installedAt: '2026-01-01T00:00:00.000Z',
+        cliVersion: '1.0.0',
         artifacts: lockFileArtifacts,
       });
     });

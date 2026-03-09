@@ -1501,6 +1501,7 @@ Old packmind content
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
           packageSlugs: ['test-package'],
+          agents: ['packmind'],
           installedAt: expect.any(String),
           cliVersion: 'unknown',
           artifacts: {
@@ -1578,6 +1579,7 @@ Old packmind content
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
           packageSlugs: ['test-package'],
+          agents: ['claude', 'cursor'],
           installedAt: expect.any(String),
           cliVersion: 'unknown',
           artifacts: {
@@ -1675,6 +1677,7 @@ Old packmind content
         expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
           lockfileVersion: 1,
           packageSlugs: ['test-package'],
+          agents: ['packmind'],
           installedAt: expect.any(String),
           cliVersion: 'unknown',
           artifacts: {
@@ -1693,6 +1696,110 @@ Old packmind content
             },
           },
         });
+      });
+    });
+
+    describe('when command provides agents', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/coding-style.md',
+                content: '# Coding Style',
+                artifactType: 'standard',
+                artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+          agents: ['claude', 'cursor', 'packmind'],
+        });
+      });
+
+      it('uses command agents instead of derived agents', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            agents: ['claude', 'cursor', 'packmind'],
+          }),
+        );
+      });
+    });
+
+    describe('when skill files have isSkillDefinition flag', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                content: '# My Skill',
+                artifactType: 'skill',
+                artifactName: 'My Skill',
+                artifactSlug: 'my-skill',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+              {
+                path: '.claude/skills/my-skill/LICENSE.txt',
+                content: 'MIT',
+                artifactType: 'skill',
+                artifactName: 'My Skill',
+                artifactSlug: 'my-skill',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+                skillFileId: 'file-123',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+      });
+
+      it('marks SKILL.md as isSkillDefinition and not additional files', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            artifacts: {
+              'my-skill': expect.objectContaining({
+                files: [
+                  {
+                    path: '.claude/skills/my-skill/SKILL.md',
+                    agent: 'claude',
+                    isSkillDefinition: true,
+                  },
+                  {
+                    path: '.claude/skills/my-skill/LICENSE.txt',
+                    agent: 'claude',
+                  },
+                ],
+              }),
+            },
+          }),
+        );
       });
     });
 
