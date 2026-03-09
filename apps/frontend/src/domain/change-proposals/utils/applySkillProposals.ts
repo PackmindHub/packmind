@@ -65,14 +65,11 @@ export function applySkillProposals(
     );
 
     return {
-      name: appliedResult.name,
-      description: appliedResult.description,
-      prompt: appliedResult.prompt,
-      license: appliedResult.license,
-      compatibility: appliedResult.compatibility,
-      allowedTools: appliedResult.allowedTools,
-      metadata: appliedResult.metadata,
-      files: appliedResult.files,
+      ...appliedResult.version,
+      license: appliedResult.version.license,
+      compatibility: appliedResult.version.compatibility,
+      allowedTools: appliedResult.version.allowedTools,
+      metadata: appliedResult.version.metadata,
     };
   } catch (error) {
     if (error instanceof ChangeProposalConflictError) {

@@ -50,7 +50,7 @@ export function applyRecipeProposals(
 
   try {
     const result = applier.applyChangeProposals(sourceVersion, sortedProposals);
-    return { name: result.name, content: result.content };
+    return result.version;
   } catch (error) {
     if (error instanceof ChangeProposalConflictError) {
       return { name: recipe.name, content: recipe.content };

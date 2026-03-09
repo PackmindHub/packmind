@@ -96,7 +96,7 @@ describe('StandardChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newStandardVersion).toEqual({
+        expect(newStandardVersion.version).toEqual({
           ...standardVersion,
           name: `${standardVersion.name}--after`,
         });
@@ -127,7 +127,7 @@ describe('StandardChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newStandardVersion).toEqual({
+        expect(newStandardVersion.version).toEqual({
           ...standardVersion,
           scope: `**/*.test.ts`,
         });
@@ -158,7 +158,7 @@ describe('StandardChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newVersion).toEqual({
+        expect(newVersion.version).toEqual({
           ...standardVersion,
           description: `A line before:\n${standardVersion.description}\nA line after`,
         });
@@ -206,7 +206,7 @@ describe('StandardChangesApplier', () => {
           changeProposal,
         ]);
 
-        expect(newVersion.rules).toEqual([
+        expect(newVersion.version.rules).toEqual([
           expect.objectContaining({ content: rule1.content }),
           expect.objectContaining({ content: rule2.content }),
           expect.objectContaining({
@@ -221,7 +221,7 @@ describe('StandardChangesApplier', () => {
           changeProposal,
         ]);
 
-        expect(newVersion.rules).toEqual([
+        expect(newVersion.version.rules).toEqual([
           expect.objectContaining({ id: rule1.id }),
           expect.objectContaining({ id: rule2.id }),
           expect.objectContaining({
@@ -247,7 +247,7 @@ describe('StandardChangesApplier', () => {
           changeProposal,
         ]);
 
-        expect(newVersion.rules).toEqual([
+        expect(newVersion.version.rules).toEqual([
           expect.objectContaining({ content: updatedContent }),
           expect.objectContaining({ content: rule2.content }),
         ]);
@@ -258,7 +258,7 @@ describe('StandardChangesApplier', () => {
           changeProposal,
         ]);
 
-        expect(newVersion.rules).toEqual([
+        expect(newVersion.version.rules).toEqual([
           expect.objectContaining({ id: rule1.id }),
           expect.objectContaining({ id: rule2.id }),
         ]);
@@ -279,7 +279,7 @@ describe('StandardChangesApplier', () => {
           changeProposal,
         ]);
 
-        expect(newVersion.rules).toEqual([
+        expect(newVersion.version.rules).toEqual([
           expect.objectContaining({
             id: rule2.id,
             content: rule2.content,
@@ -324,7 +324,9 @@ describe('StandardChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newVersion.name).toBe('Updated TypeScript Best Practices');
+        expect(newVersion.version.name).toBe(
+          'Updated TypeScript Best Practices',
+        );
       });
 
       it('applies all rule changes correctly', () => {
@@ -333,7 +335,7 @@ describe('StandardChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newVersion.rules).toEqual([
+        expect(newVersion.version.rules).toEqual([
           expect.objectContaining({
             id: rule2.id,
             content: rule2.content,
@@ -360,7 +362,7 @@ describe('StandardChangesApplier', () => {
           changeProposal,
         ]);
 
-        expect(result).toEqual(standardVersion);
+        expect(result.version).toEqual(standardVersion);
       });
     });
   });

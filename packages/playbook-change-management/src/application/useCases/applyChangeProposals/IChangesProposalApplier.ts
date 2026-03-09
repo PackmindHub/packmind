@@ -1,5 +1,6 @@
 import {
   ApplierObjectVersions,
+  ApplyChangeProposalsResult,
   ChangeProposal,
   OrganizationId,
   Recipe,
@@ -22,7 +23,9 @@ export type ObjectByVersion<T extends ObjectVersions> = T extends RecipeVersion
       ? Standard
       : never;
 
-export interface IChangesProposalApplier<Version extends ObjectVersions> {
+export interface IChangesProposalApplier<
+  Version extends ApplierObjectVersions,
+> {
   areChangesApplicable(changeProposals: ChangeProposal[]): boolean;
 
   getVersion(artefactId: ObjectByVersion<Version>['id']): Promise<Version>;
@@ -30,7 +33,7 @@ export interface IChangesProposalApplier<Version extends ObjectVersions> {
   applyChangeProposals(
     source: Version,
     changeProposals: ChangeProposal[],
-  ): Version;
+  ): ApplyChangeProposalsResult<Version>;
 
   saveNewVersion(
     version: Version,

@@ -88,7 +88,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.name).toBe('Updated Name');
+        expect(result.version.name).toBe('Updated Name');
       });
     });
 
@@ -109,7 +109,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.description).toBe('line1\nmodified\nline3');
+        expect(result.version.description).toBe('line1\nmodified\nline3');
       });
 
       it('throws ChangeProposalConflictError on conflict', () => {
@@ -147,7 +147,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.prompt).toBe('line1\nupdated-prompt\nline3');
+        expect(result.version.prompt).toBe('line1\nupdated-prompt\nline3');
       });
 
       it('throws ChangeProposalConflictError on conflict', () => {
@@ -185,7 +185,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.metadata).toEqual({ key: 'new-value' });
+        expect(result.version.metadata).toEqual({ key: 'new-value' });
       });
 
       describe('when newValue is empty', () => {
@@ -205,7 +205,7 @@ describe('SkillChangeProposalApplier', () => {
             proposal as ChangeProposal,
           ]);
 
-          expect(result.metadata).toBeUndefined();
+          expect(result.version.metadata).toBeUndefined();
         });
       });
     });
@@ -222,7 +222,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.license).toBe('Apache-2.0');
+        expect(result.version.license).toBe('Apache-2.0');
       });
     });
 
@@ -238,7 +238,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.compatibility).toBe('v2');
+        expect(result.version.compatibility).toBe('v2');
       });
     });
 
@@ -254,7 +254,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.allowedTools).toBe('tool1,tool2');
+        expect(result.version.allowedTools).toBe('tool1,tool2');
       });
     });
 
@@ -283,19 +283,19 @@ describe('SkillChangeProposalApplier', () => {
         });
 
         it('creates one file', () => {
-          expect(result.files).toHaveLength(1);
+          expect(result.version.files).toHaveLength(1);
         });
 
         it('sets the file path', () => {
-          expect(result.files[0].path).toBe('new-file.txt');
+          expect(result.version.files[0].path).toBe('new-file.txt');
         });
 
         it('sets the file content', () => {
-          expect(result.files[0].content).toBe('new content');
+          expect(result.version.files[0].content).toBe('new content');
         });
 
         it('sets the skillVersionId', () => {
-          expect(result.files[0].skillVersionId).toBe(source.id);
+          expect(result.version.files[0].skillVersionId).toBe(source.id);
         });
       });
 
@@ -318,7 +318,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.files).toHaveLength(2);
+        expect(result.version.files).toHaveLength(2);
       });
     });
 
@@ -343,7 +343,9 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.files[0].content).toBe('line1\nupdated-content\nline3');
+        expect(result.version.files[0].content).toBe(
+          'line1\nupdated-content\nline3',
+        );
       });
 
       it('throws ChangeProposalConflictError on conflict', () => {
@@ -390,7 +392,7 @@ describe('SkillChangeProposalApplier', () => {
             proposal as ChangeProposal,
           ]);
 
-          expect(result.files[0].isBase64).toBe(true);
+          expect(result.version.files[0].isBase64).toBe(true);
         });
       });
 
@@ -421,7 +423,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.files[1].content).toBe('other content');
+        expect(result.version.files[1].content).toBe('other content');
       });
     });
 
@@ -443,7 +445,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.files[0].permissions).toBe('read-write');
+        expect(result.version.files[0].permissions).toBe('read-write');
       });
 
       it('does not modify other files', () => {
@@ -473,7 +475,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.files[1].permissions).toBe('execute');
+        expect(result.version.files[1].permissions).toBe('execute');
       });
     });
 
@@ -500,7 +502,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.files).toEqual([]);
+        expect(result.version.files).toEqual([]);
       });
 
       describe('when deleting one of multiple files', () => {
@@ -537,11 +539,11 @@ describe('SkillChangeProposalApplier', () => {
         });
 
         it('removes the deleted file', () => {
-          expect(result.files).toHaveLength(1);
+          expect(result.version.files).toHaveLength(1);
         });
 
         it('keeps the other file', () => {
-          expect(result.files[0].id).toBe(fileToKeep.id);
+          expect(result.version.files[0].id).toBe(fileToKeep.id);
         });
       });
     });
@@ -558,7 +560,7 @@ describe('SkillChangeProposalApplier', () => {
           proposal as unknown as ChangeProposal,
         ]);
 
-        expect(result).toEqual(source);
+        expect(result.version).toEqual(source);
       });
     });
   });

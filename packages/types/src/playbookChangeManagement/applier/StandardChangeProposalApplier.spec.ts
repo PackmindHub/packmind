@@ -137,7 +137,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.name).toBe('Updated Name');
+        expect(result.version.name).toBe('Updated Name');
       });
 
       it('applies multiple name changes sequentially', () => {
@@ -158,7 +158,7 @@ describe('StandardChangeProposalApplier', () => {
           proposals as ChangeProposal[],
         );
 
-        expect(result.name).toBe('Third');
+        expect(result.version.name).toBe('Third');
       });
     });
 
@@ -174,7 +174,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.scope).toBe('new-scope');
+        expect(result.version.scope).toBe('new-scope');
       });
     });
 
@@ -195,7 +195,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.description).toBe('line1\nmodified\nline3');
+        expect(result.version.description).toBe('line1\nmodified\nline3');
       });
 
       it('throws ChangeProposalConflictError on conflict', () => {
@@ -234,15 +234,19 @@ describe('StandardChangeProposalApplier', () => {
         });
 
         it('creates one rule', () => {
-          expect(result.rules ?? []).toHaveLength(1);
+          expect(result.version.rules ?? []).toHaveLength(1);
         });
 
         it('sets the rule content', () => {
-          expect((result.rules ?? [])[0].content).toBe('New rule content');
+          expect((result.version.rules ?? [])[0].content).toBe(
+            'New rule content',
+          );
         });
 
         it('sets the standardVersionId', () => {
-          expect((result.rules ?? [])[0].standardVersionId).toBe(source.id);
+          expect((result.version.rules ?? [])[0].standardVersionId).toBe(
+            source.id,
+          );
         });
       });
 
@@ -258,7 +262,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.rules).toHaveLength(2);
+        expect(result.version.rules).toHaveLength(2);
       });
     });
 
@@ -280,7 +284,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect((result.rules ?? [])[0].content).toBe('New content');
+        expect((result.version.rules ?? [])[0].content).toBe('New content');
       });
 
       it('preserves the rule ID', () => {
@@ -300,7 +304,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect((result.rules ?? [])[0].id).toBe(ruleId);
+        expect((result.version.rules ?? [])[0].id).toBe(ruleId);
       });
 
       it('does not modify other rules', () => {
@@ -330,7 +334,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect((result.rules ?? [])[1].content).toBe('Other content');
+        expect((result.version.rules ?? [])[1].content).toBe('Other content');
       });
     });
 
@@ -351,7 +355,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.rules).toEqual([]);
+        expect(result.version.rules).toEqual([]);
       });
 
       describe('when deleting one of multiple rules', () => {
@@ -387,11 +391,11 @@ describe('StandardChangeProposalApplier', () => {
         });
 
         it('removes the deleted rule', () => {
-          expect(result.rules).toHaveLength(1);
+          expect(result.version.rules).toHaveLength(1);
         });
 
         it('keeps the other rule', () => {
-          expect((result.rules ?? [])[0].id).toBe(ruleToKeep.id);
+          expect((result.version.rules ?? [])[0].id).toBe(ruleToKeep.id);
         });
       });
     });
@@ -429,15 +433,15 @@ describe('StandardChangeProposalApplier', () => {
       });
 
       it('updates the name', () => {
-        expect(result.name).toBe('New Name');
+        expect(result.version.name).toBe('New Name');
       });
 
       it('updates the scope', () => {
-        expect(result.scope).toBe('new-scope');
+        expect(result.version.scope).toBe('new-scope');
       });
 
       it('adds the new rule', () => {
-        expect(result.rules).toHaveLength(2);
+        expect(result.version.rules).toHaveLength(2);
       });
     });
 
@@ -453,7 +457,7 @@ describe('StandardChangeProposalApplier', () => {
           proposal as unknown as ChangeProposal,
         ]);
 
-        expect(result).toEqual(source);
+        expect(result.version).toEqual(source);
       });
     });
   });

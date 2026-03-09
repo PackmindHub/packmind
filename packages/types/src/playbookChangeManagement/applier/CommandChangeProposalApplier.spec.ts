@@ -76,7 +76,7 @@ describe('CommandChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.name).toBe('Updated Name');
+        expect(result.version.name).toBe('Updated Name');
       });
 
       it('applies multiple name changes sequentially', () => {
@@ -97,7 +97,7 @@ describe('CommandChangeProposalApplier', () => {
           proposals as ChangeProposal[],
         );
 
-        expect(result.name).toBe('Third');
+        expect(result.version.name).toBe('Third');
       });
     });
 
@@ -118,7 +118,7 @@ describe('CommandChangeProposalApplier', () => {
           proposal as ChangeProposal,
         ]);
 
-        expect(result.content).toBe('line1\nmodified\nline3');
+        expect(result.version.content).toBe('line1\nmodified\nline3');
       });
 
       it('throws ChangeProposalConflictError on conflict', () => {
@@ -151,7 +151,7 @@ describe('CommandChangeProposalApplier', () => {
           proposal as unknown as ChangeProposal,
         ]);
 
-        expect(result).toEqual(source);
+        expect(result.version).toEqual(source);
       });
     });
   });

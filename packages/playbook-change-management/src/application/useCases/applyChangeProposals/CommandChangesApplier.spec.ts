@@ -57,7 +57,7 @@ describe('CommandChangesApplier', () => {
           }),
         ]);
 
-        expect(newVersion).toEqual(
+        expect(newVersion.version).toEqual(
           expect.objectContaining({
             name: `${recipeVersion.name} - after`,
             content: recipeVersion.content,
@@ -89,7 +89,7 @@ describe('CommandChangesApplier', () => {
           }),
         ]);
 
-        expect(newVersion).toEqual(
+        expect(newVersion.version).toEqual(
           expect.objectContaining({
             name: recipeVersion.name,
             content: `Some content before\n${recipeVersion.content}\nSome content after`,

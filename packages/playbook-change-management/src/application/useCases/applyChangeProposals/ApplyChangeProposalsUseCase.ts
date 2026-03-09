@@ -148,12 +148,14 @@ export class ApplyChangeProposalsUseCase<
       }
     }
 
+    const appliedChangesProposalsResponse = changesApplier.applyChangeProposals(
+      currentVersion,
+      changeProposalsToApply,
+    );
+
     const newVersion = changeProposalsToApply.length
       ? await changesApplier.saveNewVersion(
-          changesApplier.applyChangeProposals(
-            currentVersion,
-            changeProposalsToApply,
-          ),
+          appliedChangesProposalsResponse.version,
           createUserId(command.userId),
           command.spaceId,
           createOrganizationId(command.organizationId),

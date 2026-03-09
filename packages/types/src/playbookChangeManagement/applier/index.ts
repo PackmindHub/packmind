@@ -1,7 +1,7 @@
 export { DiffService } from './DiffService';
 export { ChangeProposalConflictError } from './ChangeProposalConflictError';
 export { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
-export { AbstractChangeProposalApplier } from './AbstractChangeProposalApplier';
+export * from './AbstractChangeProposalApplier';
 export { StandardChangeProposalApplier } from './StandardChangeProposalApplier';
 export { CommandChangeProposalApplier } from './CommandChangeProposalApplier';
 export { SkillChangeProposalApplier } from './SkillChangeProposalApplier';

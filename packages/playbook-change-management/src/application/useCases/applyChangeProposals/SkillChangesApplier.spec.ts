@@ -53,7 +53,7 @@ describe('SkillChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newSkillVersion).toEqual({
+        expect(newSkillVersion.version).toEqual({
           ...skillVersion,
           name: `${skillVersion.name}--after`,
         });
@@ -84,7 +84,7 @@ describe('SkillChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newVersion).toEqual({
+        expect(newVersion.version).toEqual({
           ...skillVersion,
           description: `A line before:\n${skillVersion.description}\nA line after`,
         });
@@ -140,7 +140,7 @@ describe('SkillChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newVersion).toEqual({
+        expect(newVersion.version).toEqual({
           ...skillVersion,
           prompt: `Before:\n${skillVersion.prompt}\nAfter`,
         });
@@ -196,7 +196,7 @@ describe('SkillChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newSkillVersion).toEqual({
+        expect(newSkillVersion.version).toEqual({
           ...skillVersion,
           metadata: { key3: 'value3' },
         });
@@ -227,7 +227,7 @@ describe('SkillChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newSkillVersion).toEqual({
+        expect(newSkillVersion.version).toEqual({
           ...skillVersion,
           license: 'GPL-3.0',
         });
@@ -258,7 +258,7 @@ describe('SkillChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newSkillVersion).toEqual({
+        expect(newSkillVersion.version).toEqual({
           ...skillVersion,
           compatibility: '^3.0.0',
         });
@@ -289,7 +289,7 @@ describe('SkillChangesApplier', () => {
           changeProposals,
         );
 
-        expect(newSkillVersion).toEqual({
+        expect(newSkillVersion.version).toEqual({
           ...skillVersion,
           allowedTools: 'tool3,tool4,tool5',
         });
@@ -320,7 +320,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files).toEqual([
+          expect(newSkillVersion.version.files).toEqual([
             expect.objectContaining({
               id: expect.any(String),
               path: 'new-file.md',
@@ -360,7 +360,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files).toEqual([
+          expect(newSkillVersion.version.files).toEqual([
             existingFile,
             expect.objectContaining({
               id: expect.any(String),
@@ -406,7 +406,7 @@ describe('SkillChangesApplier', () => {
             changeProposals,
           );
 
-          expect(newSkillVersion.files).toEqual([
+          expect(newSkillVersion.version.files).toEqual([
             expect.objectContaining({ path: 'file1.md' }),
             expect.objectContaining({ path: 'file2.md' }),
           ]);
@@ -441,7 +441,7 @@ describe('SkillChangesApplier', () => {
           [changeProposal],
         );
 
-        expect(newSkillVersion.files?.[0]).toMatchObject({
+        expect(newSkillVersion.version.files?.[0]).toMatchObject({
           id: fileId,
           content: 'Original content\nAdded line',
           isBase64: false,
@@ -465,7 +465,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files?.[0]).toMatchObject({
+          expect(newSkillVersion.version.files?.[0]).toMatchObject({
             id: fileId,
             content: 'Base64EncodedContent',
             isBase64: true,
@@ -498,7 +498,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files).toEqual([
+          expect(newSkillVersion.version.files).toEqual([
             expect.objectContaining({
               id: fileId,
               content: 'Updated content',
@@ -562,7 +562,9 @@ describe('SkillChangesApplier', () => {
           [changeProposal],
         );
 
-        expect(newSkillVersion.files?.[0].permissions).toBe('rwxr-xr-x');
+        expect(newSkillVersion.version.files?.[0].permissions).toBe(
+          'rwxr-xr-x',
+        );
       });
 
       describe('when multiple files exist', () => {
@@ -590,7 +592,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files).toEqual([
+          expect(newSkillVersion.version.files).toEqual([
             expect.objectContaining({
               id: fileId,
               permissions: 'rwxr-xr-x',
@@ -627,7 +629,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files).toEqual([]);
+          expect(newSkillVersion.version.files).toEqual([]);
         });
       });
 
@@ -654,7 +656,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files).toEqual([otherFile]);
+          expect(newSkillVersion.version.files).toEqual([otherFile]);
         });
       });
 
@@ -694,7 +696,7 @@ describe('SkillChangesApplier', () => {
             changeProposals,
           );
 
-          expect(newSkillVersion.files).toEqual([file3]);
+          expect(newSkillVersion.version.files).toEqual([file3]);
         });
       });
 
@@ -717,7 +719,7 @@ describe('SkillChangesApplier', () => {
             [changeProposal],
           );
 
-          expect(newSkillVersion.files).toEqual([]);
+          expect(newSkillVersion.version.files).toEqual([]);
         });
       });
     });

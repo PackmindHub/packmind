@@ -61,10 +61,9 @@ export function applyStandardProposals(
     );
 
     return {
-      name: appliedResult.name,
-      scope: appliedResult.scope ?? '',
-      description: appliedResult.description,
-      rules: appliedResult.rules ?? [],
+      ...appliedResult.version,
+      scope: appliedResult.version.scope ?? '',
+      rules: appliedResult.version.rules ?? [],
     };
   } catch (error) {
     if (error instanceof ChangeProposalConflictError) {
