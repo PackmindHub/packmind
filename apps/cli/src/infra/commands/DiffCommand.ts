@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, rmSync, unlinkSync } from 'fs';
 import {
   command,
   flag,
@@ -66,6 +66,7 @@ export const diffCommand = command({
         getCwd: () => process.cwd(),
         existsSync: (p) => existsSync(p),
         unlinkSync: (p) => unlinkSync(p),
+        rmSync: (p, opts) => rmSync(p, opts),
       });
       return;
     }

@@ -21,10 +21,12 @@ describe('diffRemoveHandler', () => {
   let mockGetCwd: jest.Mock;
   let mockExistsSync: jest.Mock;
   let mockUnlinkSync: jest.Mock;
+  let mockRmSync: jest.Mock;
 
   beforeEach(() => {
     mockExistsSync = jest.fn().mockReturnValue(true);
     mockUnlinkSync = jest.fn().mockReturnValue(undefined);
+    mockRmSync = jest.fn().mockReturnValue(undefined);
     mockReadFullConfig = jest.fn().mockResolvedValue({
       packages: { 'test-package': '*' },
       agents: ['packmind'],
@@ -95,6 +97,7 @@ describe('diffRemoveHandler', () => {
       getCwd: mockGetCwd,
       existsSync: mockExistsSync,
       unlinkSync: mockUnlinkSync,
+      rmSync: mockRmSync,
       ...overrides,
     };
   }
@@ -458,6 +461,165 @@ describe('diffRemoveHandler', () => {
         gitBranch: 'main',
         relativePath: '/',
         agents: ['packmind'],
+      });
+    });
+  });
+
+  describe('when removing a skill', () => {
+    beforeEach(() => {
+      mockGetDeployed.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: '# My Skill',
+              artifactType: 'skill',
+              artifactName: 'my-skill',
+              artifactId: 'skill-123',
+              spaceId: 'space-456',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-789',
+        packageIds: ['package-001'],
+      });
+    });
+
+    describe('when given directory path', () => {
+      it('matches deployed SKILL.md and submits removal', async () => {
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(mockSubmitDiffs).toHaveBeenCalledWith(
+          [
+            [
+              expect.objectContaining({
+                type: 'removeSkill',
+                artifactId: 'skill-123',
+                spaceId: 'space-456',
+              }),
+            ],
+          ],
+          'Remove skill',
+        );
+      });
+
+      it('calls rmSync with recursive option', async () => {
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(mockRmSync).toHaveBeenCalledWith(
+          '/project/git-root/.claude/skills/my-skill',
+          { recursive: true },
+        );
+      });
+
+      it('does not call unlinkSync', async () => {
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(mockUnlinkSync).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when given SKILL.md file path', () => {
+      it('matches deployed SKILL.md and submits removal', async () => {
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/SKILL.md',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(mockSubmitDiffs).toHaveBeenCalledWith(
+          [
+            [
+              expect.objectContaining({
+                type: 'removeSkill',
+                artifactId: 'skill-123',
+                spaceId: 'space-456',
+              }),
+            ],
+          ],
+          'Remove skill',
+        );
+      });
+
+      it('calls rmSync with recursive option', async () => {
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/SKILL.md',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(mockRmSync).toHaveBeenCalledWith(
+          '/project/git-root/.claude/skills/my-skill',
+          { recursive: true },
+        );
+      });
+
+      it('does not call unlinkSync', async () => {
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/SKILL.md',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(mockUnlinkSync).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when directory path does not match deployed skill', () => {
+      beforeEach(() => {
+        mockGetDeployed.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+      });
+
+      it('logs error message', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/unknown-skill',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          'This skill does not come from Packmind',
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await diffRemoveHandler(
+          buildDeps({
+            filePath: '.claude/skills/unknown-skill',
+            message: 'Remove skill',
+          }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(1);
       });
     });
   });

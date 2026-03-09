@@ -19,6 +19,7 @@ export type DiffRemoveHandlerDependencies = {
   getCwd: () => string;
   existsSync: (path: string) => boolean;
   unlinkSync: (path: string) => void;
+  rmSync: (path: string, options?: { recursive?: boolean }) => void;
 };
 
 const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
@@ -38,6 +39,7 @@ export async function diffRemoveHandler(
     getCwd,
     existsSync,
     unlinkSync,
+    rmSync,
   } = deps;
 
   if (!filePath) {
@@ -60,8 +62,23 @@ export async function diffRemoveHandler(
     return;
   }
 
+  // Same detection as diffAddHandler (line 75), inverse normalization
+  const matchPath =
+    artefactResult.artifactType === 'skill'
+      ? absolutePath.endsWith('SKILL.md')
+        ? absolutePath
+        : path.join(absolutePath, 'SKILL.md')
+      : absolutePath;
+  const skillDirPath =
+    artefactResult.artifactType === 'skill'
+      ? absolutePath.endsWith('SKILL.md')
+        ? path.dirname(absolutePath)
+        : absolutePath
+      : undefined;
+
   // Check if the file or directory exists
-  if (!existsSync(absolutePath)) {
+  const existsCheckPath = skillDirPath ?? absolutePath;
+  if (!existsSync(existsCheckPath)) {
     logErrorConsole(`File or directory does not exist: ${filePath}`);
     exit(1);
     return;
@@ -146,9 +163,9 @@ export async function diffRemoveHandler(
 
   // gitRoot is guaranteed non-null: the early exit above checks gitRemoteUrl,
   // which is only set inside the `if (gitRoot)` block.
-  const relativeToGitRoot = absolutePath.startsWith(gitRoot!)
-    ? absolutePath.slice(gitRoot!.length)
-    : absolutePath;
+  const relativeToGitRoot = matchPath.startsWith(gitRoot!)
+    ? matchPath.slice(gitRoot!.length)
+    : matchPath;
 
   // Normalize by removing leading slash and converting backslashes
   let normalizedFilePath = normalizePath(relativeToGitRoot);
@@ -252,10 +269,15 @@ export async function diffRemoveHandler(
     logWarningConsole('Change proposal for removal already submitted');
   }
 
-  // Delete the file after successful submission
+  // Delete the file/directory after successful submission
   try {
-    unlinkSync(absolutePath);
-    logSuccessConsole(`File deleted: ${filePath}`);
+    if (skillDirPath) {
+      rmSync(skillDirPath, { recursive: true });
+      logSuccessConsole(`Directory deleted: ${skillDirPath}`);
+    } else {
+      unlinkSync(absolutePath);
+      logSuccessConsole(`File deleted: ${filePath}`);
+    }
   } catch (err) {
     logErrorConsole(
       `Failed to delete file: ${err instanceof Error ? err.message : String(err)}`,
