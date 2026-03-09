@@ -89,10 +89,17 @@ export async function lintHandler(
     );
   }
 
-  const ignorePatterns = await packmindIgnoreReader.readIgnorePatterns(
-    absolutePath,
-    gitRoot,
-  );
+  let ignorePatterns: string[] = [];
+  try {
+    ignorePatterns = await packmindIgnoreReader.readIgnorePatterns(
+      absolutePath,
+      gitRoot,
+    );
+  } catch (err) {
+    logWarningConsole(
+      `Failed to read .packmindignore: ${(err as Error).message}`,
+    );
+  }
 
   let violations: LintViolation[] = [];
 

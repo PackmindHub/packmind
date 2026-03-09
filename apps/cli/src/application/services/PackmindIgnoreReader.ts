@@ -46,8 +46,11 @@ export class PackmindIgnoreReader {
     let content: string;
     try {
       content = await fs.readFile(filePath, 'utf-8');
-    } catch {
-      return [];
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return [];
+      }
+      throw err;
     }
 
     return content

@@ -842,6 +842,34 @@ describe('lintHandler', () => {
       );
     });
 
+    describe('when packmindIgnoreReader throws a non-ENOENT error', () => {
+      beforeEach(async () => {
+        mockIgnoreReader.readIgnorePatterns.mockRejectedValue(
+          new Error('EACCES: permission denied'),
+        );
+
+        await lintHandler(createArgs({ path: '/project' }), deps);
+      });
+
+      it('logs a warning', () => {
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'Failed to read .packmindignore: EACCES: permission denied',
+        );
+      });
+
+      it('continues with empty patterns', () => {
+        expect(mockPackmindCliHexa.lintFilesFromConfig).toHaveBeenCalledWith(
+          expect.objectContaining({
+            ignorePatterns: [],
+          }),
+        );
+      });
+
+      it('exits with code 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
     describe('when no .packmindignore files exist', () => {
       it('passes empty ignore patterns', async () => {
         mockIgnoreReader.readIgnorePatterns.mockResolvedValue([]);

@@ -97,6 +97,19 @@ describe('PackmindIgnoreReader', () => {
     });
   });
 
+  describe('when .packmindignore exists but is unreadable', () => {
+    it('throws the underlying error', async () => {
+      const ignoreFile = path.join(tmpDir, '.packmindignore');
+      await fs.writeFile(ignoreFile, 'some-pattern\n');
+      await fs.chmod(ignoreFile, 0o000);
+
+      await expect(reader.readIgnorePatterns(tmpDir, tmpDir)).rejects.toThrow();
+
+      // Restore permissions for cleanup
+      await fs.chmod(ignoreFile, 0o644);
+    });
+  });
+
   describe('when start and stop are the same directory', () => {
     it('only reads from that directory', async () => {
       const childDir = path.join(tmpDir, 'child');
