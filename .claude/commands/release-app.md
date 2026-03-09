@@ -1,5 +1,5 @@
 ---
-description: 'Automate creating a Packmind release by enforcing a clean git state, updating versions and changelog, tagging and pushing the release, and preparing the next development cycle to ensure consistent, verifiable release workflows whenever you cut a new version.'
+description: 'Create a Packmind release by verifying a clean git state, bumping versions and updating the changelog, tagging and pushing the release, then reopening an Unreleased section to ensure consistent, traceable release workflows when publishing a new version.'
 ---
 
 Create a Packmind release with version {{version}}. Follow these steps:
@@ -9,6 +9,7 @@ Create a Packmind release with version {{version}}. Follow these steps:
 2. **Update package.json files and CHANGELOG.MD for release (First commit)**:
    * Update the version in `package.json` to `{{version}}`
    * Update the version in `apps/api/docker-package.json` to `{{version}}`
+   * Run `npm install` to update `package-lock.json` with the new version
    * In CHANGELOG.md:
      * drop the empty sections under \[Unreleased]
      * Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
@@ -17,7 +18,7 @@ Create a Packmind release with version {{version}}. Follow these steps:
        [{{version}}]: https://github.com/PackmindHub/packmind/compare/release/{{previous_version}}...release/{{version}}
        ```
      * Extract the previous version from the existing comparison links inCHANGELOG.MD
-   * Commit with message: `chore: release {{version}}`
+   * Commit with message: `chore: release {{version}}` (this commit will include package.json, apps/api/docker-package.json, package-lock.json, and CHANGELOG.md)
 
 3. **Create and push release tag**:
    * Create tag: `release/{{version}}`
