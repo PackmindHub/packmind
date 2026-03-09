@@ -2,7 +2,11 @@ import {
   ChangeProposalType,
   createChangeProposalId,
   createOrganizationId,
+  createPackageId,
+  createRecipeId,
+  createSkillId,
   createSpaceId,
+  createStandardId,
   createUserId,
   IRecipesPort,
   RecipeVersion,
@@ -177,6 +181,62 @@ describe('CommandChangesApplier', () => {
         recipeVersion.recipeId,
         newVersion.version,
       );
+    });
+  });
+
+  describe('deleteArtefact', () => {
+    const userId = createUserId('user-id');
+    const spaceId = createSpaceId('space-id');
+    const organizationId = createOrganizationId('organization-id');
+
+    beforeEach(() => {
+      recipePort.deleteRecipe = jest.fn().mockResolvedValue({});
+    });
+
+    it('calls deleteRecipe with the recipe ID and auth context from source version', async () => {
+      await applier.deleteArtefact(
+        recipeVersion,
+        userId,
+        spaceId,
+        organizationId,
+      );
+
+      expect(recipePort.deleteRecipe).toHaveBeenCalledWith({
+        recipeId: recipeVersion.recipeId,
+        spaceId,
+        userId,
+        organizationId,
+      });
+    });
+  });
+
+  describe('getUpdatePackageCommandWithoutArtefact', () => {
+    it('removes the recipe from the package recipe list', () => {
+      const otherRecipeId = createRecipeId('other-recipe');
+      const standardId = createStandardId('std-1');
+      const skillId = createSkillId('skill-1');
+      const pkg = {
+        id: createPackageId('pkg-1'),
+        name: 'My Package',
+        slug: 'my-package',
+        description: 'desc',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [recipeVersion.recipeId, otherRecipeId],
+        standards: [standardId],
+        skills: [skillId],
+      };
+
+      const result = applier.getUpdatePackageCommandWithoutArtefact(
+        recipeVersion,
+        pkg,
+      );
+
+      expect(result).toEqual({
+        recipeIds: [otherRecipeId],
+        standardIds: [standardId],
+        skillsIds: [skillId],
+      });
     });
   });
 });

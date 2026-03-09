@@ -2,9 +2,13 @@ import { standardVersionFactory, ruleFactory } from '@packmind/standards/test';
 import {
   ChangeProposalType,
   createChangeProposalId,
-  createUserId,
   createOrganizationId,
+  createPackageId,
+  createRecipeId,
+  createSkillId,
   createSpaceId,
+  createStandardId,
+  createUserId,
   IStandardsPort,
   ChangeProposal,
   DiffService,
@@ -513,6 +517,61 @@ describe('StandardChangesApplier', () => {
         ).rejects.toThrow(
           `Failed to retrieve latest version for standard ${updatedStandard.id}`,
         );
+      });
+    });
+  });
+
+  describe('deleteArtefact', () => {
+    const userId = createUserId('user-id');
+    const spaceId = createSpaceId('space-id');
+    const organizationId = createOrganizationId('organization-id');
+
+    beforeEach(() => {
+      standardsPort.deleteStandard = jest.fn().mockResolvedValue(undefined);
+    });
+
+    it('calls deleteStandard with the standard ID and auth context', async () => {
+      await applier.deleteArtefact(
+        standardVersion,
+        userId,
+        spaceId,
+        organizationId,
+      );
+
+      expect(standardsPort.deleteStandard).toHaveBeenCalledWith({
+        standardId: standardVersion.standardId,
+        userId,
+        organizationId,
+      });
+    });
+  });
+
+  describe('getUpdatePackageCommandWithoutArtefact', () => {
+    it('removes the standard from the package standard list', () => {
+      const otherStandardId = createStandardId('other-standard');
+      const recipeId = createRecipeId('recipe-1');
+      const skillId = createSkillId('skill-1');
+      const pkg = {
+        id: createPackageId('pkg-1'),
+        name: 'My Package',
+        slug: 'my-package',
+        description: 'desc',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [recipeId],
+        standards: [standardVersion.standardId, otherStandardId],
+        skills: [skillId],
+      };
+
+      const result = applier.getUpdatePackageCommandWithoutArtefact(
+        standardVersion,
+        pkg,
+      );
+
+      expect(result).toEqual({
+        recipeIds: [recipeId],
+        standardIds: [otherStandardId],
+        skillsIds: [skillId],
       });
     });
   });

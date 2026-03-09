@@ -3,6 +3,7 @@ import {
   ApplyChangeProposalsResult,
   ChangeProposal,
   OrganizationId,
+  Package,
   Recipe,
   RecipeVersion,
   Skill,
@@ -10,6 +11,7 @@ import {
   SpaceId,
   Standard,
   StandardVersion,
+  UpdatePackageCommand,
   UserId,
 } from '@packmind/types';
 
@@ -34,6 +36,18 @@ export interface IChangesProposalApplier<
     source: Version,
     changeProposals: ChangeProposal[],
   ): ApplyChangeProposalsResult<Version>;
+
+  deleteArtefact(
+    source: Version,
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<void>;
+
+  getUpdatePackageCommandWithoutArtefact(
+    source: Version,
+    pkg: Package,
+  ): Pick<UpdatePackageCommand, 'recipeIds' | 'standardIds' | 'skillsIds'>;
 
   saveNewVersion(
     version: Version,

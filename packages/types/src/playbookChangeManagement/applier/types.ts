@@ -20,11 +20,13 @@ export const STANDARD_CHANGE_TYPES = [
   ChangeProposalType.addRule,
   ChangeProposalType.updateRule,
   ChangeProposalType.deleteRule,
+  ChangeProposalType.removeStandard,
 ];
 
 export const RECIPE_CHANGE_TYPES = [
   ChangeProposalType.updateCommandName,
   ChangeProposalType.updateCommandDescription,
+  ChangeProposalType.removeCommand,
 ];
 
 export const SKILL_CHANGE_TYPES = [
@@ -39,4 +41,5 @@ export const SKILL_CHANGE_TYPES = [
   ChangeProposalType.updateSkillFileContent,
   ChangeProposalType.updateSkillFilePermissions,
   ChangeProposalType.deleteSkillFile,
+  ChangeProposalType.removeSkill,
 ];

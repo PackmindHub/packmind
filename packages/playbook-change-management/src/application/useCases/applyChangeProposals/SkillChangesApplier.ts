@@ -2,6 +2,8 @@ import {
   SkillChangeProposalApplier,
   SkillVersionWithFiles,
   DiffService,
+  Package,
+  UpdatePackageCommand,
 } from '@packmind/types';
 import {
   ISkillsPort,
@@ -38,6 +40,30 @@ export class SkillChangesApplier
     return {
       ...skillVersion,
       files: skillVersionsFiles,
+    };
+  }
+
+  async deleteArtefact(
+    source: SkillVersionWithFiles,
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    await this.skillsPort.deleteSkill({
+      userId,
+      organizationId,
+      skillId: source.skillId,
+    });
+  }
+
+  getUpdatePackageCommandWithoutArtefact(
+    source: SkillVersionWithFiles,
+    pkg: Package,
+  ): Pick<UpdatePackageCommand, 'recipeIds' | 'standardIds' | 'skillsIds'> {
+    return {
+      recipeIds: pkg.recipes,
+      standardIds: pkg.standards,
+      skillsIds: pkg.skills.filter((skillId) => skillId !== source.skillId),
     };
   }
 

@@ -17,6 +17,8 @@ import {
   CreateChangeProposalResponse,
   IAccountsPort,
   IAccountsPortName,
+  IDeploymentPort,
+  IDeploymentPortName,
   IPlaybookChangeManagementPort,
   IRecipesPort,
   IRecipesPortName,
@@ -124,6 +126,7 @@ export class PlaybookChangeManagementAdapter
     [ISpacesPortName]: ISpacesPort;
     [ISkillsPortName]: ISkillsPort;
     [IStandardsPortName]: IStandardsPort;
+    [IDeploymentPortName]: IDeploymentPort;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     this.logger.info('Initializing PlaybookChangeManagementAdapter with ports');
@@ -168,6 +171,14 @@ export class PlaybookChangeManagementAdapter
       );
     }
 
+    const deploymentPort = ports[IDeploymentPortName];
+
+    if (!deploymentPort) {
+      throw new Error(
+        'PlaybookChangeManagementAdapter: IDeploymentPort not provided',
+      );
+    }
+
     const { eventEmitterService } = ports;
 
     if (!eventEmitterService) {
@@ -197,6 +208,7 @@ export class PlaybookChangeManagementAdapter
       standardsPort,
       recipesPort,
       skillsPort,
+      deploymentPort,
       changeProposalService,
       eventEmitterService,
     );

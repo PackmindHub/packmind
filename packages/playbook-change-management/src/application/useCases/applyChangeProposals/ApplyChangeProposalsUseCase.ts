@@ -20,10 +20,12 @@ import {
   getItemTypeFromChangeProposalType,
   IAccountsPort,
   IApplyChangeProposalsUseCase,
+  IDeploymentPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
+  PackageId,
   RecipeId,
   SkillId,
   StandardId,
@@ -59,6 +61,7 @@ export class ApplyChangeProposalsUseCase<
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly deploymentPort: IDeploymentPort,
     private readonly changeProposalService: ChangeProposalService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -124,7 +127,7 @@ export class ApplyChangeProposalsUseCase<
           `Change proposal ${acceptedProposal.id} not found in database`,
         );
       }
-      return proposal;
+      return acceptedProposal;
     });
 
     // Re-validate that all proposals are still pending (fresh from DB)
@@ -153,14 +156,54 @@ export class ApplyChangeProposalsUseCase<
       changeProposalsToApply,
     );
 
-    const newVersion = changeProposalsToApply.length
-      ? await changesApplier.saveNewVersion(
+    const userId = createUserId(command.userId);
+    const organizationId = createOrganizationId(command.organizationId);
+    let newVersion = currentVersion;
+    let artefactDeleted = false;
+    const updatedPackages: PackageId[] = [];
+
+    if (appliedChangesProposalsResponse.delete) {
+      await changesApplier.deleteArtefact(
+        currentVersion,
+        userId,
+        command.spaceId,
+        organizationId,
+      );
+      artefactDeleted = true;
+    } else {
+      if (changeProposalsToApply.length) {
+        newVersion = await changesApplier.saveNewVersion(
           appliedChangesProposalsResponse.version,
-          createUserId(command.userId),
+          userId,
           command.spaceId,
-          createOrganizationId(command.organizationId),
-        )
-      : currentVersion;
+          organizationId,
+        );
+      }
+
+      for (const packageId of appliedChangesProposalsResponse.removeFromPackages) {
+        const { package: pkg } = await this.deploymentPort.getPackageById({
+          packageId,
+          organizationId: command.organization.id,
+          spaceId: command.spaceId,
+          userId: command.userId,
+        });
+        const artefactIds =
+          changesApplier.getUpdatePackageCommandWithoutArtefact(
+            currentVersion,
+            pkg,
+          );
+        await this.deploymentPort.updatePackage({
+          packageId,
+          spaceId: pkg.spaceId,
+          name: pkg.name,
+          description: pkg.description,
+          ...artefactIds,
+          userId: command.userId,
+          organizationId: command.organizationId,
+        });
+        updatedPackages.push(packageId);
+      }
+    }
 
     // 3. Mark all proposals as applied/rejected in a single transaction
     // This ensures atomicity - if any proposal update fails, all are rolled back
@@ -207,7 +250,8 @@ export class ApplyChangeProposalsUseCase<
       spaceId: command.spaceId,
       accepted: command.accepted.length,
       rejected: command.rejected.length,
-      newVersion: newVersion.id,
+      artefactDeleted,
+      newVersion: artefactDeleted ? undefined : newVersion.id,
     });
 
     SSEEventPublisher.publishChangeProposalUpdateEvent(
@@ -251,6 +295,8 @@ export class ApplyChangeProposalsUseCase<
 
     return {
       newArtefactVersion: newVersion.id as ArtefactVersionId<T>,
+      updatedPackages: updatedPackages.length ? updatedPackages : undefined,
+      artefactDeleted: artefactDeleted || undefined,
     };
   }
 

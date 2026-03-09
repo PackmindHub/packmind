@@ -7,7 +7,11 @@ import { SkillId } from '../SkillId';
 import { SkillVersion } from '../SkillVersion';
 import { SkillVersionId } from '../SkillVersionId';
 import { SaveSkillVersionCommand } from '../contracts/SaveSkillVersionUseCase';
-import { UploadSkillCommand, UploadSkillResponse } from '../contracts';
+import {
+  DeleteSkillCommand,
+  UploadSkillCommand,
+  UploadSkillResponse,
+} from '../contracts';
 
 export const ISkillsPortName = 'ISkillsPort' as const;
 
@@ -29,4 +33,5 @@ export interface ISkillsPort {
   getSkillFiles(skillVersionId: SkillVersionId): Promise<SkillFile[]>;
   saveSkillVersion(command: SaveSkillVersionCommand): Promise<SkillVersion>;
   uploadSkill(command: UploadSkillCommand): Promise<UploadSkillResponse>;
+  deleteSkill(command: DeleteSkillCommand): Promise<{ success: boolean }>;
 }

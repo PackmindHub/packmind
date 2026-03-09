@@ -1,4 +1,9 @@
-import { CommandChangeProposalApplier, DiffService } from '@packmind/types';
+import {
+  CommandChangeProposalApplier,
+  DiffService,
+  Package,
+  UpdatePackageCommand,
+} from '@packmind/types';
 import {
   IRecipesPort,
   OrganizationId,
@@ -18,6 +23,31 @@ export class CommandChangesApplier
     private readonly recipesPort: IRecipesPort,
   ) {
     super(diffService);
+  }
+
+  async deleteArtefact(
+    source: RecipeVersion,
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    await this.recipesPort.deleteRecipe({
+      userId,
+      spaceId,
+      organizationId,
+      recipeId: source.recipeId,
+    });
+  }
+
+  getUpdatePackageCommandWithoutArtefact(
+    source: RecipeVersion,
+    pkg: Package,
+  ): Pick<UpdatePackageCommand, 'recipeIds' | 'standardIds' | 'skillsIds'> {
+    return {
+      recipeIds: pkg.recipes.filter((recipeId) => recipeId !== source.recipeId),
+      standardIds: pkg.standards,
+      skillsIds: pkg.skills,
+    };
   }
 
   async getVersion(artefactId: RecipeId): Promise<RecipeVersion> {

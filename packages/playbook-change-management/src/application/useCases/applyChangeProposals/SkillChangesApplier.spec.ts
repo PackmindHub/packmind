@@ -2,7 +2,14 @@ import { skillVersionFactory, skillFileFactory } from '@packmind/skills/test';
 import {
   ChangeProposalType,
   createChangeProposalId,
+  createOrganizationId,
+  createPackageId,
+  createRecipeId,
   createSkillFileId,
+  createSkillId,
+  createSpaceId,
+  createStandardId,
+  createUserId,
   ISkillsPort,
   DiffService,
   ChangeProposalConflictError,
@@ -721,6 +728,61 @@ describe('SkillChangesApplier', () => {
 
           expect(newSkillVersion.version.files).toEqual([]);
         });
+      });
+    });
+  });
+
+  describe('deleteArtefact', () => {
+    const userId = createUserId('user-id');
+    const spaceId = createSpaceId('space-id');
+    const organizationId = createOrganizationId('organization-id');
+
+    beforeEach(() => {
+      skillsPort.deleteSkill = jest.fn().mockResolvedValue({ success: true });
+    });
+
+    it('calls deleteSkill with the skill ID and auth context', async () => {
+      await applier.deleteArtefact(
+        skillVersion,
+        userId,
+        spaceId,
+        organizationId,
+      );
+
+      expect(skillsPort.deleteSkill).toHaveBeenCalledWith({
+        skillId: skillVersion.skillId,
+        userId,
+        organizationId,
+      });
+    });
+  });
+
+  describe('getUpdatePackageCommandWithoutArtefact', () => {
+    it('removes the skill from the package skill list', () => {
+      const otherSkillId = createSkillId('other-skill');
+      const recipeId = createRecipeId('recipe-1');
+      const standardId = createStandardId('std-1');
+      const pkg = {
+        id: createPackageId('pkg-1'),
+        name: 'My Package',
+        slug: 'my-package',
+        description: 'desc',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [recipeId],
+        standards: [standardId],
+        skills: [skillVersion.skillId, otherSkillId],
+      };
+
+      const result = applier.getUpdatePackageCommandWithoutArtefact(
+        skillVersion,
+        pkg,
+      );
+
+      expect(result).toEqual({
+        recipeIds: [recipeId],
+        standardIds: [standardId],
+        skillsIds: [otherSkillId],
       });
     });
   });

@@ -1,4 +1,9 @@
-import { StandardChangeProposalApplier, DiffService } from '@packmind/types';
+import {
+  StandardChangeProposalApplier,
+  DiffService,
+  Package,
+  UpdatePackageCommand,
+} from '@packmind/types';
 import {
   IStandardsPort,
   OrganizationId,
@@ -33,6 +38,32 @@ export class StandardChangesApplier
     return {
       ...standardVersion,
       rules,
+    };
+  }
+
+  async deleteArtefact(
+    source: StandardVersion,
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    await this.standardsPort.deleteStandard({
+      userId,
+      organizationId,
+      standardId: source.standardId,
+    });
+  }
+
+  getUpdatePackageCommandWithoutArtefact(
+    source: StandardVersion,
+    pkg: Package,
+  ): Pick<UpdatePackageCommand, 'recipeIds' | 'standardIds' | 'skillsIds'> {
+    return {
+      recipeIds: pkg.recipes,
+      standardIds: pkg.standards.filter(
+        (standardId) => standardId !== source.standardId,
+      ),
+      skillsIds: pkg.skills,
     };
   }
 

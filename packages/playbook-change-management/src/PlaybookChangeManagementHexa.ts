@@ -9,6 +9,8 @@ import {
 import {
   IAccountsPort,
   IAccountsPortName,
+  IDeploymentPort,
+  IDeploymentPortName,
   IPlaybookChangeManagementPort,
   IPlaybookChangeManagementPortName,
   IRecipesPort,
@@ -85,6 +87,8 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
       const skillsPort = registry.getAdapter<ISkillsPort>(ISkillsPortName);
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const deploymentPort =
+        registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
@@ -99,6 +103,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
         [ISpacesPortName]: spacesPort,
         [ISkillsPortName]: skillsPort,
         [IStandardsPortName]: standardsPort,
+        [IDeploymentPortName]: deploymentPort,
         eventEmitterService,
       });
 
