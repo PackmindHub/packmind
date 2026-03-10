@@ -1,9 +1,13 @@
 import { ReactNode, useCallback } from 'react';
-import { PMSeparator, PMVStack } from '@packmind/ui';
+import { PMSeparator, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalDecision,
   ChangeProposalType,
+  PackageId,
+  RemoveArtefactDecision,
   RemoveArtefactPayload,
+  SpaceId,
+  getItemTypeFromChangeProposalType,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
@@ -12,6 +16,8 @@ import { isMarkdownContent } from '../../utils/isMarkdownContent';
 import { ProposalMessage } from './ProposalMessage';
 import { CardToolbar } from './CardToolbar';
 import { FocusedView } from './FocusedView';
+import { useAuthContext } from '../../../accounts/hooks';
+import { useListPackagesBySpaceQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -23,6 +29,7 @@ interface ChangeProposalCardBodyProps {
   isBlockedByConflict: boolean;
   showToolbar?: boolean;
   showEditButton?: boolean;
+  decision?: ChangeProposalDecision | null;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
   onAccept: (decision: ChangeProposalDecision) => void;
@@ -34,6 +41,52 @@ interface ChangeProposalCardBodyProps {
   ) => ReactNode;
 }
 
+function RemoveProposalContent({
+  proposalType,
+  spaceId,
+  poolStatus,
+  decision,
+}: {
+  proposalType: ChangeProposalType;
+  spaceId: SpaceId;
+  poolStatus: PoolStatus;
+  decision: RemoveArtefactDecision | null;
+}) {
+  const { organization } = useAuthContext();
+  const { data: packagesResponse } = useListPackagesBySpaceQuery(
+    spaceId,
+    organization?.id,
+  );
+
+  const itemType = getItemTypeFromChangeProposalType(proposalType);
+  const artefactLabel = itemType.charAt(0).toUpperCase() + itemType.slice(1);
+
+  const packageMap = new Map<PackageId, string>(
+    packagesResponse?.packages?.map((pkg) => [pkg.id, pkg.name]) ?? [],
+  );
+
+  const removedPackageIds =
+    poolStatus === 'accepted' && decision && !decision.delete
+      ? decision.removeFromPackages
+      : [];
+
+  return (
+    <PMVStack align="flex-start" gap={3}>
+      <PMText fontSize="sm" color="secondary">
+        {artefactLabel} has been removed from repository
+      </PMText>
+      {removedPackageIds.length > 0 && (
+        <PMText fontSize="sm" color="secondary">
+          {artefactLabel} will be removed from the following packages:{' '}
+          {removedPackageIds
+            .map((packageId) => packageMap.get(packageId) ?? packageId)
+            .join(', ')}
+        </PMText>
+      )}
+    </PMVStack>
+  );
+}
+
 export function ChangeProposalCardBody({
   proposal,
   viewMode,
@@ -42,6 +95,7 @@ export function ChangeProposalCardBody({
   isBlockedByConflict,
   showToolbar = true,
   showEditButton,
+  decision,
   onViewModeChange,
   onEdit,
   onAccept,
@@ -53,6 +107,7 @@ export function ChangeProposalCardBody({
   const markdown = isMarkdownContent(proposal.type);
   const removePayload = proposal.payload as RemoveArtefactPayload;
   const packageIds = removePayload?.packageIds ?? [];
+  const removeDecision = (decision ?? null) as RemoveArtefactDecision | null;
 
   const isRemoveType =
     proposal.type === ChangeProposalType.removeStandard ||
@@ -109,19 +164,26 @@ export function ChangeProposalCardBody({
 
       <PMSeparator borderColor="border.tertiary" />
       <PMVStack p={4} alignItems="stretch">
-        {!showToolbar && renderExpandedView
-          ? renderExpandedView(viewMode, proposal)
-          : viewMode === 'focused'
-            ? (renderExpandedView?.(viewMode, proposal) ?? (
-                <FocusedView
-                  oldValue={oldValue}
-                  newValue={newValue}
-                  isMarkdownContent={markdown}
-                />
-              ))
-            : renderExpandedView
-              ? renderExpandedView(viewMode, proposal)
-              : null}
+        {isRemoveType ? (
+          <RemoveProposalContent
+            proposalType={proposal.type}
+            spaceId={proposal.spaceId}
+            poolStatus={poolStatus}
+            decision={removeDecision}
+          />
+        ) : !showToolbar && renderExpandedView ? (
+          renderExpandedView(viewMode, proposal)
+        ) : viewMode === 'focused' ? (
+          (renderExpandedView?.(viewMode, proposal) ?? (
+            <FocusedView
+              oldValue={oldValue}
+              newValue={newValue}
+              isMarkdownContent={markdown}
+            />
+          ))
+        ) : renderExpandedView ? (
+          renderExpandedView(viewMode, proposal)
+        ) : null}
       </PMVStack>
     </PMVStack>
   );

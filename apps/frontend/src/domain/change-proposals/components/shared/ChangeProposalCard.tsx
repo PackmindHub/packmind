@@ -19,6 +19,7 @@ interface ChangeProposalCardProps {
   showToolbar?: boolean;
   showEditButton?: boolean;
   filePath?: string;
+  decision?: ChangeProposalDecision | null;
   onViewModeChange: (mode: ViewMode) => void;
   onEdit: () => void;
   onAccept: (decision: ChangeProposalDecision) => void;
@@ -41,6 +42,7 @@ export function ChangeProposalCard({
   showToolbar,
   showEditButton,
   filePath,
+  decision,
   onViewModeChange,
   onEdit,
   onAccept,
@@ -75,6 +77,7 @@ export function ChangeProposalCard({
           isBlockedByConflict={isBlockedByConflict}
           showToolbar={showToolbar}
           showEditButton={showEditButton}
+          decision={decision}
           onViewModeChange={onViewModeChange}
           onEdit={onEdit}
           onAccept={onAccept}

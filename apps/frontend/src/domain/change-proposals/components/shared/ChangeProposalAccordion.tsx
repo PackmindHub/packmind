@@ -30,6 +30,9 @@ interface ChangeProposalAccordionProps {
   ) => void;
   onDismiss: (proposalId: ChangeProposalId) => void;
   onUndo: (proposalId: ChangeProposalId) => void;
+  getDecisionForProposal?: (
+    proposal: ChangeProposalWithConflicts,
+  ) => ChangeProposalDecision | undefined;
   onExpandCard?: (id: string) => void;
   renderExpandedView?: (
     viewMode: ViewMode,
@@ -64,6 +67,7 @@ export function ChangeProposalAccordion({
   onAccept,
   onDismiss,
   onUndo,
+  getDecisionForProposal,
   onExpandCard,
   renderExpandedView,
 }: Readonly<ChangeProposalAccordionProps>) {
@@ -166,6 +170,7 @@ export function ChangeProposalAccordion({
         isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
         showToolbar={!isEditing}
         showEditButton={showEditButton}
+        decision={getDecisionForProposal?.(proposal)}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
         onEdit={() => onEdit(proposal.id)}
         onAccept={(decision) => handleAccept(proposal.id, decision)}
