@@ -1,8 +1,10 @@
 import * as fs from 'fs/promises';
 import { LockFileRepository } from './LockFileRepository';
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
+import * as consoleLogger from '../utils/consoleLogger';
 
 jest.mock('fs/promises');
+jest.mock('../utils/consoleLogger');
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 
@@ -102,6 +104,56 @@ describe('LockFileRepository', () => {
         await expect(repository.read('/project')).rejects.toThrow(
           'Permission denied',
         );
+      });
+    });
+
+    describe('when lock file has invalid content', () => {
+      it.each([
+        [
+          'missing artifacts',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0"}',
+        ],
+        [
+          'artifacts is an array',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":[]}',
+        ],
+        [
+          'artifacts is a string',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":"bad"}',
+        ],
+        [
+          'missing packageSlugs',
+          '{"lockfileVersion":1,"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":{}}',
+        ],
+        [
+          'missing cliVersion',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+        ],
+        [
+          'missing installedAt',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"cliVersion":"1.0.0","artifacts":{}}',
+        ],
+        [
+          'missing agents',
+          '{"lockfileVersion":1,"packageSlugs":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":{}}',
+        ],
+        ['completely wrong shape', '{}'],
+      ])('returns null when %s', async (_label, content) => {
+        mockFs.readFile.mockResolvedValue(content);
+
+        const result = await repository.read('/project');
+
+        expect(result).toBeNull();
+        expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
+      });
+
+      it('returns null when JSON is malformed', async () => {
+        mockFs.readFile.mockResolvedValue('not valid json {{{');
+
+        const result = await repository.read('/project');
+
+        expect(result).toBeNull();
+        expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
       });
     });
   });
