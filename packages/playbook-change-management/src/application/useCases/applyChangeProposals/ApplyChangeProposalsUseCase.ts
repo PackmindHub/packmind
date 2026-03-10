@@ -169,6 +169,11 @@ export class ApplyChangeProposalsUseCase<
         command.spaceId,
         organizationId,
       );
+      await this.changeProposalService.cancelPendingByArtefactId(
+        command.spaceId,
+        command.artefactId,
+        userId,
+      );
       artefactDeleted = true;
     } else {
       const REMOVAL_PROPOSAL_TYPES = [

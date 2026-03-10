@@ -92,12 +92,14 @@ describe('ApplyChangeProposalsUseCase', () => {
       getLatestStandardVersion: jest.fn(),
       getRulesByStandardId: jest.fn(),
       updateStandard: jest.fn(),
+      deleteStandard: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     recipesPort = {
       getRecipeByIdInternal: jest.fn(),
       updateRecipeFromUI: jest.fn(),
       getRecipeVersion: jest.fn(),
+      deleteRecipe: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
     skillsPort = {
@@ -105,6 +107,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       getLatestSkillVersion: jest.fn(),
       getSkillFiles: jest.fn(),
       saveSkillVersion: jest.fn(),
+      deleteSkill: jest.fn(),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     deploymentPort = {
@@ -878,7 +881,10 @@ describe('ApplyChangeProposalsUseCase', () => {
         .mockResolvedValueOnce(removeProposal)
         .mockResolvedValueOnce(removeProposal);
       recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
-      recipesPort.deleteRecipe = jest.fn().mockResolvedValue({});
+      recipesPort.deleteRecipe.mockResolvedValue({});
+      changeProposalService.cancelPendingByArtefactId.mockResolvedValue(
+        undefined,
+      );
       changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
         undefined,
       );
@@ -923,6 +929,21 @@ describe('ApplyChangeProposalsUseCase', () => {
       });
 
       expect(result.artefactDeleted).toBe(true);
+    });
+
+    it('cancels all other pending proposals for the artefact after deleting', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(
+        changeProposalService.cancelPendingByArtefactId,
+      ).toHaveBeenCalledWith(spaceId, recipeId, userId);
     });
   });
 
