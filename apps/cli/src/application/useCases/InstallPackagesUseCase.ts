@@ -157,10 +157,9 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     files: FileModification[],
     packageSlugs: string[],
     cliVersion?: string,
-    commandAgents?: CodingAgent[],
+    commandAgents: CodingAgent[] = [],
   ): PackmindLockFile {
     const artifacts: Record<string, PackmindLockFileEntry> = {};
-    const derivedAgents = new Set<CodingAgent>();
 
     for (const file of files) {
       if (
@@ -187,7 +186,6 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
 
       const resolved = resolveArtefactFromPath(file.path);
       if (resolved) {
-        derivedAgents.add(resolved.codingAgent);
         const isSkillDefinition =
           resolved.artifactType === 'skill' && !file.skillFileId;
         artifacts[file.artifactSlug].files.push({
@@ -198,9 +196,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       }
     }
 
-    const agents = commandAgents
-      ? [...commandAgents].sort()
-      : [...derivedAgents].sort();
+    const agents = [...commandAgents].sort();
 
     return {
       lockfileVersion: 1,

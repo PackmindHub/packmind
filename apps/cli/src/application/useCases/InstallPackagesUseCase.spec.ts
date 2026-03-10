@@ -1494,6 +1494,7 @@ Old packmind content
         await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
+          agents: ['packmind'],
         });
       });
 
@@ -1572,6 +1573,7 @@ Old packmind content
         await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
+          agents: ['claude', 'cursor'],
         });
       });
 
@@ -1670,6 +1672,7 @@ Old packmind content
         await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
+          agents: ['packmind'],
         });
       });
 
@@ -1699,7 +1702,7 @@ Old packmind content
       });
     });
 
-    describe('when command provides agents', () => {
+    describe('when agents are provided', () => {
       beforeEach(async () => {
         mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
@@ -1729,7 +1732,7 @@ Old packmind content
         });
       });
 
-      it('uses command agents instead of derived agents', () => {
+      it('uses provided agents in lock file', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith(
           '/test',
           expect.objectContaining({
@@ -1776,6 +1779,7 @@ Old packmind content
         await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
+          agents: ['claude'],
         });
       });
 
@@ -1835,6 +1839,7 @@ Old packmind content
         result = await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
+          agents: ['packmind'],
         });
       });
 
@@ -1880,6 +1885,7 @@ Old packmind content
         result = await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
+          agents: ['packmind'],
         });
       });
 

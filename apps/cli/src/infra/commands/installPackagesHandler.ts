@@ -836,13 +836,19 @@ export async function uninstallPackagesHandler(
     };
   }
 
-  // Read existing config
+  // Read existing config (including agents if present)
   let configPackages: PackmindFileConfig['packages'];
+  let configAgents: CodingAgent[] | undefined;
   let configFileExists = false;
   try {
     configFileExists = await packmindCliHexa.configExists(cwd);
-    const config = await packmindCliHexa.readConfig(cwd);
-    configPackages = config.packages;
+    const fullConfig = await packmindCliHexa.readFullConfig(cwd);
+    if (fullConfig) {
+      configPackages = fullConfig.packages;
+      configAgents = fullConfig.agents;
+    } else {
+      configPackages = {};
+    }
   } catch (err) {
     error('❌ Failed to read packmind.json');
     if (err instanceof Error) {
@@ -931,6 +937,7 @@ export async function uninstallPackagesHandler(
         baseDirectory: cwd,
         packagesSlugs: [],
         previousPackagesSlugs: Object.keys(configPackages),
+        agents: configAgents,
         cliVersion: CLI_VERSION,
       });
 
@@ -958,6 +965,7 @@ export async function uninstallPackagesHandler(
         baseDirectory: cwd,
         packagesSlugs: remainingPackages,
         previousPackagesSlugs: Object.keys(configPackages),
+        agents: configAgents,
         cliVersion: CLI_VERSION,
       });
 
