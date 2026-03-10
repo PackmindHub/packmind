@@ -297,6 +297,22 @@ export class ChangeProposalService {
     return grouped;
   }
 
+  async cancelPendingByArtefactId(
+    spaceId: SpaceId,
+    artefactId: string,
+    cancelledBy: UserId,
+  ): Promise<void> {
+    await this.repository.cancelPendingByArtefactId(
+      spaceId,
+      artefactId,
+      cancelledBy,
+    );
+    this.logger.info('Cancelled pending proposals for deleted artefact', {
+      spaceId,
+      artefactId,
+    });
+  }
+
   async findProposalsByArtefact(
     spaceId: SpaceId,
     artefactId: StandardId | RecipeId | SkillId,
