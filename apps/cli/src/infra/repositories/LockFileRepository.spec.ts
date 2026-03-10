@@ -208,6 +208,40 @@ describe('LockFileRepository', () => {
     });
   });
 
+  describe('delete', () => {
+    describe('when lock file exists', () => {
+      beforeEach(async () => {
+        mockFs.unlink.mockResolvedValue();
+
+        await repository.delete('/project');
+      });
+
+      it('deletes packmind-lock.json in the base directory', () => {
+        expect(mockFs.unlink).toHaveBeenCalledWith(
+          '/project/packmind-lock.json',
+        );
+      });
+    });
+
+    describe('when lock file does not exist', () => {
+      it('does not throw', async () => {
+        mockFs.unlink.mockRejectedValue({ code: 'ENOENT' });
+
+        await expect(repository.delete('/project')).resolves.not.toThrow();
+      });
+    });
+
+    describe('when a non-ENOENT error occurs', () => {
+      it('propagates the error', async () => {
+        mockFs.unlink.mockRejectedValue(new Error('Permission denied'));
+
+        await expect(repository.delete('/project')).rejects.toThrow(
+          'Permission denied',
+        );
+      });
+    });
+  });
+
   describe('write with empty artifacts', () => {
     const lockFile: PackmindLockFile = {
       lockfileVersion: 1,

@@ -41,6 +41,17 @@ export class LockFileRepository implements ILockFileRepository {
     await fs.writeFile(lockFilePath, content, 'utf-8');
   }
 
+  async delete(baseDirectory: string): Promise<void> {
+    const lockFilePath = this.getLockFilePath(baseDirectory);
+    try {
+      await fs.unlink(lockFilePath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error;
+      }
+    }
+  }
+
   private isValidLockFile(data: unknown): data is PackmindLockFile {
     if (typeof data !== 'object' || data === null || Array.isArray(data)) {
       return false;

@@ -27,6 +27,7 @@ describe('InstallPackagesUseCase', () => {
     mockLockFileRepository = {
       read: jest.fn(),
       write: jest.fn().mockResolvedValue(undefined),
+      delete: jest.fn().mockResolvedValue(undefined),
     };
 
     // Setup fs mocks using jest.Mock casting
@@ -1636,6 +1637,10 @@ Old packmind content
 
       it('does not write lock file', () => {
         expect(mockLockFileRepository.write).not.toHaveBeenCalled();
+      });
+
+      it('deletes stale lock file', () => {
+        expect(mockLockFileRepository.delete).toHaveBeenCalledWith('/test');
       });
     });
 

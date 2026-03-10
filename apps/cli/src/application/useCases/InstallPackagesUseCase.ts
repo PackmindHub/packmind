@@ -144,6 +144,14 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
             error instanceof Error ? error.message : String(error);
           result.errors.push(`Failed to write lock file: ${errorMsg}`);
         }
+      } else {
+        try {
+          await this.lockFileRepository.delete(baseDirectory);
+        } catch (error) {
+          const errorMsg =
+            error instanceof Error ? error.message : String(error);
+          result.errors.push(`Failed to delete lock file: ${errorMsg}`);
+        }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
