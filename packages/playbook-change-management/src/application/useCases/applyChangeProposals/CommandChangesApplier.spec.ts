@@ -32,9 +32,14 @@ describe('CommandChangesApplier', () => {
     recipePort = {
       updateRecipeFromUI: jest.fn(),
       getRecipeVersion: jest.fn(),
+      deleteRecipe: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
     applier = new CommandChangesApplier(diffService, recipePort);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('applyChangeProposal', () => {
@@ -130,6 +135,35 @@ describe('CommandChangesApplier', () => {
         );
       });
     });
+
+    describe('when one proposal has delete: true and another has removeFromPackages', () => {
+      const packageId = createPackageId('pkg-1');
+      let result: ReturnType<typeof applier.applyChangeProposals>;
+
+      beforeEach(() => {
+        const removeProposal = changeProposalFactory({
+          type: ChangeProposalType.removeCommand,
+          decision: { delete: false, removeFromPackages: [packageId] },
+        });
+        const deleteProposal = changeProposalFactory({
+          type: ChangeProposalType.removeCommand,
+          decision: { delete: true },
+        });
+
+        result = applier.applyChangeProposals(recipeVersion, [
+          removeProposal,
+          deleteProposal,
+        ]);
+      });
+
+      it('marks as delete', () => {
+        expect(result.delete).toBe(true);
+      });
+
+      it('clears removeFromPackages', () => {
+        expect(result.removeFromPackages).toEqual([]);
+      });
+    });
   });
 
   describe('saveNewVersion', () => {
@@ -190,7 +224,7 @@ describe('CommandChangesApplier', () => {
     const organizationId = createOrganizationId('organization-id');
 
     beforeEach(() => {
-      recipePort.deleteRecipe = jest.fn().mockResolvedValue({});
+      recipePort.deleteRecipe.mockResolvedValue({});
     });
 
     it('calls deleteRecipe with the recipe ID and auth context from source version', async () => {

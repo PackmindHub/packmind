@@ -63,14 +63,17 @@ describe('ArtifactMetadataUtils', () => {
       const result = buildArtifactMetadataMap({
         recipes: {
           spaceIdMap: new Map([[recipeId as string, 'space-A']]),
+          packageIdMap: new Map([[recipeId as string, ['pkg-1', 'pkg-2']]]),
           versions: recipeVersions,
         },
         standards: {
           spaceIdMap: new Map([[standardId as string, 'space-B']]),
+          packageIdMap: new Map([[standardId as string, ['pkg-1']]]),
           versions: standardVersions,
         },
         skills: {
           spaceIdMap: new Map([[skillId as string, 'space-C']]),
+          packageIdMap: new Map([[skillId as string, ['pkg-3']]]),
           versions: skillVersions,
         },
       });
@@ -79,16 +82,19 @@ describe('ArtifactMetadataUtils', () => {
         spaceId: 'space-A',
         version: 3,
         slug: 'my-recipe',
+        packageIds: ['pkg-1', 'pkg-2'],
       });
       expect(result.standard.get(standardId as string)).toEqual({
         spaceId: 'space-B',
         version: 2,
         slug: 'my-standard',
+        packageIds: ['pkg-1'],
       });
       expect(result.skill.get(skillId as string)).toEqual({
         spaceId: 'space-C',
         version: 1,
         slug: 'my-skill',
+        packageIds: ['pkg-3'],
       });
     });
 
@@ -155,6 +161,7 @@ describe('ArtifactMetadataUtils', () => {
       const metadata = buildArtifactMetadataMap({
         recipes: {
           spaceIdMap: new Map([[recipeId as string, 'space-A']]),
+          packageIdMap: new Map([[recipeId as string, ['pkg-1']]]),
           versions: [
             {
               id: createRecipeVersionId('rv-1'),
@@ -169,6 +176,7 @@ describe('ArtifactMetadataUtils', () => {
         },
         standards: {
           spaceIdMap: new Map([[standardId as string, 'space-B']]),
+          packageIdMap: new Map([[standardId as string, ['pkg-2', 'pkg-3']]]),
           versions: [
             {
               id: createStandardVersionId('sv-1'),
@@ -189,10 +197,12 @@ describe('ArtifactMetadataUtils', () => {
       expect(files[0].spaceId).toBe('space-A');
       expect(files[0].artifactVersion).toBe(5);
       expect(files[0].artifactSlug).toBe('r-slug');
+      expect(files[0].packageIds).toEqual(['pkg-1']);
 
       expect(files[1].spaceId).toBe('space-B');
       expect(files[1].artifactVersion).toBe(2);
       expect(files[1].artifactSlug).toBe('s-slug');
+      expect(files[1].packageIds).toEqual(['pkg-2', 'pkg-3']);
     });
 
     it('should skip files without artifactType or artifactId', () => {

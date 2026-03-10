@@ -2,13 +2,21 @@
 
 ## Added
 
-- Homebrew installation support: `packmind-cli` can now be installed via `brew tap PackmindHub/cli && brew install packmind-cli` (#191) - thanks `@davidaparicio`
-
 ## Changed
 
 ## Fixed
 
+- Fix incorrect `packageIds` payload when removing an artifact with `diff remove <path-to-artifact>
+- Fix wrong lookup when trying to remove an artefact with `diff remove` inside a repository.
+
 ## Removed
+
+# [0.21.0] - 2026-03-10
+
+## Added
+
+- Homebrew installation support: `packmind-cli` can now be installed via `brew tap PackmindHub/cli && brew install packmind-cli` (#191) - thanks `@davidaparicio`
+- added `diff remove` command to propose artefact removal.
 
 # [0.20.0] - 2026-03-04
 
@@ -234,7 +242,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.20.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.0...HEAD
+[0.21.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.20.0...release-cli/0.21.0
 [0.20.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.19.0...release-cli/0.20.0
 [0.19.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.18.0...release-cli/0.19.0
 [0.18.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.17.0...release-cli/0.18.0

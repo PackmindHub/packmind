@@ -11,8 +11,18 @@ export interface IPMVerticalNavProps {
   headerNav?: React.ReactNode;
   footerNav?: React.ReactNode;
   logo?: boolean;
+  logoAction?: React.ReactNode;
   width?: string | number;
   showLogoContainer?: boolean;
+}
+
+function getLogoContainerJustify(
+  logo?: boolean,
+  logoAction?: React.ReactNode,
+): string {
+  if (logo && logoAction) return 'space-between';
+  if (logo) return 'left';
+  return 'center';
 }
 
 export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
@@ -20,6 +30,7 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
   headerNav,
   footerNav,
   logo = true,
+  logoAction,
   width = '220px',
   showLogoContainer = true,
 }) => {
@@ -27,24 +38,28 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
     <PMVStack
       height="100%"
       width={width}
+      minWidth={width}
       bg="{colors.background.primary}"
       as="nav"
       borderRight={'1px solid'}
       borderColor={'{colors.border.tertiary}'}
       alignItems={'flex-start'}
       paddingBottom={4}
+      transition="width 0.2s ease, min-width 0.2s ease"
+      overflow="hidden"
     >
       {showLogoContainer && (
         <PMBox
           height="44px"
           display="flex"
-          justifyContent="left"
+          justifyContent={getLogoContainerJustify(logo, logoAction)}
           alignItems="center"
           padding={4}
           mb={4}
           width="100%"
         >
           {logo && <PMImage src={logoPackmind} maxHeight={'20px'} />}
+          {logoAction}
         </PMBox>
       )}
       {headerNav && (
@@ -67,14 +82,24 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
 
 export const PMVerticalNavSection: React.FC<{
   title?: string;
+  titleExtra?: React.ReactNode;
   navEntries: React.ReactNode[];
-}> = ({ title, navEntries }) => {
+}> = ({ title, titleExtra, navEntries }) => {
   return (
     <PMBox>
       {title && (
-        <PMHeading level="h6" color="faded" marginBottom={2} paddingX={4}>
-          {title}
-        </PMHeading>
+        <PMBox
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          marginBottom={2}
+          paddingX={4}
+        >
+          <PMHeading level="h6" color="faded">
+            {title}
+          </PMHeading>
+          {titleExtra}
+        </PMBox>
       )}
       <List.Root listStyleType="none">
         {navEntries.map((entry, index) => (

@@ -43,11 +43,14 @@ export abstract class AbstractChangeProposalApplier<
         ) {
           if (change.decision?.delete) {
             acc.delete = true;
+            acc.removeFromPackages = [];
           } else if (hasRemoveFromPackages(change.decision)) {
-            acc.removeFromPackages = this.handleRemoveFromPackages(
-              acc.removeFromPackages,
-              change.decision.removeFromPackages,
-            );
+            if (!acc.delete) {
+              acc.removeFromPackages = this.handleRemoveFromPackages(
+                acc.removeFromPackages,
+                change.decision.removeFromPackages,
+              );
+            }
           }
         }
         acc.version = this.applyChangeProposal(acc.version, change);

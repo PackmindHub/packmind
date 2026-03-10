@@ -1,0 +1,45 @@
+---
+title: 'Updating Your Playbook'
+---
+
+Your playbook evolves alongside your codebase. Packmind supports two workflows for updating artifacts (standards, commands, and skills):
+
+- **Direct updates** — create a new artifact version immediately, without team review.
+- **[Change proposals](/playbook-maintenance/change-proposals)** — submit changes for team review before they are applied, via the CLI or the `packmind-update-playbook` skill.
+
+## Direct Updates
+
+Direct updates create a new artifact version immediately, without requiring team review.
+
+### Using the UI
+
+Standards and commands can be updated directly in the Packmind web interface. Open the artifact you want to edit, make your changes, and save to create a new version immediately.
+
+<Info>Skills cannot yet be updated via the UI.</Info>
+
+### Using the CLI
+
+Skills can be directly imported or updated using the CLI:
+
+```bash
+packmind-cli skills add <path>
+```
+
+This creates a new version of the skill immediately without going through a change proposal. See the [CLI reference](/tools/cli) and [Skills Management](/concepts/skills-management) for details.
+
+<Info>
+  Direct updates via CLI for standards and commands are coming in Q1 2026.
+</Info>
+
+## Change Proposals
+
+For changes that should be reviewed by the team before being applied, use [Change Proposals](/playbook-maintenance/change-proposals). This workflow lets you submit modifications from your local environment — either manually with `packmind-cli diff` commands, or automatically with the `packmind-update-playbook` skill.
+
+## Choosing the Right Workflow
+
+|                         | Direct updates                                                             | Change proposals                                                 |
+| ----------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Best for**            | You own the artifact and want immediate effect                             | Changes that should be reviewed by the team                      |
+| **Review**              | None — new version is created immediately                                  | Team reviews and approves in the Packmind UI                     |
+| **How**                 | Web interface (standards & commands) or `packmind-cli skills add` (skills) | `packmind-update-playbook` skill or `packmind-cli diff` commands |
+| **Supported artifacts** | All artifact types                                                         | All artifact types                                               |

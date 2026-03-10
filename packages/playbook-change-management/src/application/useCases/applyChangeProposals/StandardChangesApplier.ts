@@ -50,6 +50,7 @@ export class StandardChangesApplier
     await this.standardsPort.deleteStandard({
       userId,
       organizationId,
+      spaceId,
       standardId: source.standardId,
     });
   }

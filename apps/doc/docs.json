@@ -44,7 +44,6 @@
           "getting-started/gs-create-standard",
           "getting-started/gs-create-command",
           "getting-started/gs-create-skill",
-          "getting-started/gs-update-playbook",
           "getting-started/gs-distribute"
         ]
       },
@@ -61,6 +60,14 @@
         ]
       },
       {
+        "group": "Playbook Maintenance",
+        "icon": "arrows-rotate",
+        "pages": [
+          "playbook-maintenance/updating-your-playbook",
+          "playbook-maintenance/change-proposals"
+        ]
+      },
+      {
         "group": "Tools & Integrations",
         "icon": "wrench",
         "pages": ["tools/cli"]
@@ -71,8 +78,7 @@
         "pages": [
           "governance/distribution",
           "governance/git-repository-connection",
-          "governance/overview",
-          "governance/change-proposals"
+          "governance/overview"
         ]
       },
       {
@@ -192,6 +198,14 @@
     {
       "source": "/docs/security-privacy-self-hosted",
       "destination": "/security/security-privacy-self-hosted"
+    },
+    {
+      "source": "/getting-started/gs-update-playbook",
+      "destination": "/playbook-maintenance/updating-your-playbook"
+    },
+    {
+      "source": "/governance/change-proposals",
+      "destination": "/playbook-maintenance/change-proposals"
     }
   ],
   "footerSocials": {

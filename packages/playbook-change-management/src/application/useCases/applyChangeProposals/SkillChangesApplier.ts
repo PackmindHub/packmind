@@ -52,6 +52,7 @@ export class SkillChangesApplier
     await this.skillsPort.deleteSkill({
       userId,
       organizationId,
+      spaceId,
       skillId: source.skillId,
     });
   }

@@ -17,6 +17,7 @@ export type FileModification =
       artifactId?: string;
       artifactVersion?: number;
       spaceId?: string;
+      packageIds?: string[];
       skillFileId?: string;
       skillFilePermissions?: string;
     }
@@ -30,6 +31,7 @@ export type FileModification =
       artifactId?: string;
       artifactVersion?: number;
       spaceId?: string;
+      packageIds?: string[];
       skillFileId?: string;
       skillFilePermissions?: string;
     };

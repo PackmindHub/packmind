@@ -12,6 +12,7 @@ import {
   GetTargetsByOrganizationCommand,
   ListChangeProposalsByArtefactResponse,
   Package,
+  PackageId,
   Recipe,
   SpaceId,
   TargetWithRepository,
@@ -220,6 +221,134 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
           ],
         });
       });
+    });
+  });
+
+  describe('when running from a sub-target directory', () => {
+    let returnCode: number;
+    let stdout: string;
+    let stderr: string;
+    let subTargetDir: string;
+
+    beforeEach(async () => {
+      subTargetDir = path.join(testDir, 'apps', 'frontend');
+      fs.mkdirSync(subTargetDir, { recursive: true });
+
+      // Install the package from the subdirectory to create a sub-target
+      const installResult = await runCli(`install ${pkg.slug}`, {
+        apiKey,
+        cwd: subTargetDir,
+      });
+
+      if (installResult.returnCode !== 0) {
+        throw new Error(
+          `Failed to install package in subdirectory: ${installResult.stderr || installResult.stdout}`,
+        );
+      }
+
+      const result = await runCli(
+        `diff remove .packmind/commands/${command.slug}.md -m "Remove command from sub-target"`,
+        {
+          apiKey,
+          cwd: subTargetDir,
+        },
+      );
+
+      returnCode = result.returnCode;
+      stdout = result.stdout;
+      stderr = result.stderr;
+    });
+
+    it('succeeds', () => {
+      if (returnCode !== 0) {
+        console.log('stderr:', stderr);
+        console.log('stdout:', stdout);
+      }
+      expect(returnCode).toEqual(0);
+    });
+
+    it('notifies the user that the change proposal was submitted', () => {
+      expect(stdout).toContain('Change proposal for removal submitted');
+    });
+
+    it('deletes the file', () => {
+      const filePath = path.join(
+        subTargetDir,
+        `.packmind/commands/${command.slug}.md`,
+      );
+      expect(fs.existsSync(filePath)).toBe(false);
+    });
+  });
+
+  describe('when multiple packages are installed', () => {
+    let secondPackageId: PackageId;
+
+    beforeEach(async () => {
+      const secondPackageResponse = await gateway.packages.create({
+        spaceId,
+        name: 'Second package',
+        description: 'A second package with the same command',
+        recipeIds: [command.id],
+        standardIds: [],
+      });
+      if (!secondPackageResponse.package) {
+        throw new Error(
+          `Unable to create package, got response: ${JSON.stringify(secondPackageResponse)}`,
+        );
+      }
+      secondPackageId = secondPackageResponse.package.id;
+
+      const thirdPackageResponse = await gateway.packages.create({
+        spaceId,
+        name: 'Third package',
+        description: 'A third package without the command',
+        recipeIds: [],
+        standardIds: [],
+      });
+      if (!thirdPackageResponse.package) {
+        throw new Error(
+          `Unable to create package, got response: ${JSON.stringify(thirdPackageResponse)}`,
+        );
+      }
+
+      const installResult = await runCli(
+        `install ${secondPackageResponse.package.slug} ${thirdPackageResponse.package.slug}`,
+        {
+          apiKey,
+          cwd: testDir,
+        },
+      );
+
+      if (installResult.returnCode !== 0) {
+        throw new Error(
+          `Failed to install package: ${installResult.stderr || installResult.stdout}`,
+        );
+      }
+    });
+
+    it('only sends the package IDs from which the artifact was installed', async () => {
+      await runCli(
+        `diff remove .packmind/commands/${command.slug}.md -m "Remove command from project"`,
+        {
+          apiKey,
+          cwd: testDir,
+        },
+      );
+
+      const { changeProposals } =
+        await gateway.deployments.listChangeProposalsByRecipe({
+          spaceId,
+          artefactId: command.id,
+        });
+
+      expect(changeProposals).toEqual([
+        expect.objectContaining({
+          payload: {
+            targetId: expect.any(String),
+            packageIds: [pkg.id, secondPackageId],
+          },
+        }),
+      ]);
     });
   });
 });

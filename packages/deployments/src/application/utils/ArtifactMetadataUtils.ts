@@ -10,6 +10,7 @@ export type ArtifactMetadata = {
   spaceId: string;
   version: number;
   slug: string;
+  packageIds: string[];
 };
 
 export type ArtifactMetadataMap = Record<
@@ -17,10 +18,16 @@ export type ArtifactMetadataMap = Record<
   Map<string, ArtifactMetadata>
 >;
 
+type ArtifactConfig<V> = {
+  spaceIdMap: Map<string, string>;
+  packageIdMap?: Map<string, string[]>;
+  versions: V[];
+};
+
 export function buildArtifactMetadataMap(params: {
-  recipes: { spaceIdMap: Map<string, string>; versions: RecipeVersion[] };
-  standards: { spaceIdMap: Map<string, string>; versions: StandardVersion[] };
-  skills: { spaceIdMap: Map<string, string>; versions: SkillVersion[] };
+  recipes: ArtifactConfig<RecipeVersion>;
+  standards: ArtifactConfig<StandardVersion>;
+  skills: ArtifactConfig<SkillVersion>;
 }): ArtifactMetadataMap {
   const metadata: ArtifactMetadataMap = {
     command: new Map(),
@@ -35,6 +42,8 @@ export function buildArtifactMetadataMap(params: {
         spaceId,
         version: rv.version,
         slug: rv.slug,
+        packageIds:
+          params.recipes.packageIdMap?.get(rv.recipeId as string) ?? [],
       });
     }
   }
@@ -46,6 +55,8 @@ export function buildArtifactMetadataMap(params: {
         spaceId,
         version: sv.version,
         slug: sv.slug,
+        packageIds:
+          params.standards.packageIdMap?.get(sv.standardId as string) ?? [],
       });
     }
   }
@@ -57,6 +68,8 @@ export function buildArtifactMetadataMap(params: {
         spaceId,
         version: skv.version,
         slug: skv.slug,
+        packageIds:
+          params.skills.packageIdMap?.get(skv.skillId as string) ?? [],
       });
     }
   }
@@ -75,6 +88,7 @@ export function enrichFileModificationsWithMetadata(
         file.spaceId = entry.spaceId;
         file.artifactVersion = entry.version;
         file.artifactSlug = entry.slug;
+        file.packageIds = entry.packageIds;
       }
     }
   }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   PMButton,
   PMButtonGroup,
@@ -79,6 +79,10 @@ function RemoveFromPackagesModal({
     new Set(),
   );
 
+  useEffect(() => {
+    if (open) setSelectedPackageIds(new Set());
+  }, [open]);
+
   const handleCheckedChange = (packageId: PackageId, checked: boolean) => {
     setSelectedPackageIds((prev) => {
       const next = new Set(prev);
@@ -105,22 +109,27 @@ function RemoveFromPackagesModal({
               </PMDialog.CloseTrigger>
             </PMDialog.Header>
             <PMDialog.Body>
-              <PMText fontWeight="semibold">
-                Select from which packages the {artefactType} will be removed:
-              </PMText>
+              <PMVStack align="flex-start" gap={4}>
+                <PMText fontWeight="semibold">
+                  Select from which packages the {artefactType} will be removed:
+                </PMText>
 
-              <PMVStack align="flex-start" gap={2}>
-                {packageIds.map((packageId) => (
-                  <PMCheckbox
-                    key={packageId}
-                    checked={selectedPackageIds.has(packageId)}
-                    onCheckedChange={(e) =>
-                      handleCheckedChange(packageId, !!e.checked)
-                    }
-                  >
-                    {packageMap.get(packageId) ?? packageId}
-                  </PMCheckbox>
-                ))}
+                <PMVStack align="flex-start" gap={2}>
+                  {packageIds.map((packageId) => (
+                    <PMCheckbox
+                      key={packageId}
+                      checked={selectedPackageIds.has(packageId)}
+                      onChange={(e) =>
+                        handleCheckedChange(
+                          packageId,
+                          (e.target as HTMLInputElement).checked,
+                        )
+                      }
+                    >
+                      {packageMap.get(packageId) ?? packageId}
+                    </PMCheckbox>
+                  ))}
+                </PMVStack>
               </PMVStack>
             </PMDialog.Body>
             <PMDialog.Footer>
@@ -188,7 +197,7 @@ function ResolveButton({
               cursor="pointer"
               onClick={() => setIsModalOpen(true)}
             >
-              Remove from packages
+              Remove from packages...
             </PMMenu.Item>
           </PMMenu.Content>
         </PMMenu.Positioner>

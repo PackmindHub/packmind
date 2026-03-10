@@ -1,0 +1,11 @@
+# Testing good practices
+
+Standardize unit test structure and naming in TypeScript/TSX test files using verb-first descriptions, Arrange-Act-Assert flow without comments, nested describe('when...') context blocks, and single-expect test cases to improve readability, maintainability, and debugging.
+
+## Rules
+
+* Follow  'Arrange, Act, Assert' pattern
+* Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
+* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
+* Use assertive, verb-first unit test names instead of starting with 'should'
+* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach

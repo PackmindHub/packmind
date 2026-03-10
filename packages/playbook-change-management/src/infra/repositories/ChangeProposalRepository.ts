@@ -98,4 +98,26 @@ export class ChangeProposalRepository
   async update(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
     await this.add(proposal);
   }
+
+  async cancelPendingByArtefactId(
+    spaceId: SpaceId,
+    artefactId: string,
+    cancelledBy: UserId,
+  ): Promise<void> {
+    await this.repository
+      .createQueryBuilder()
+      .update()
+      .set({
+        status: ChangeProposalStatus.rejected,
+        decision: null,
+        resolvedBy: cancelledBy,
+        resolvedAt: new Date(),
+      } as Partial<ChangeProposal<ChangeProposalType>>)
+      .where('space_id = :spaceId', { spaceId })
+      .andWhere('artefact_id = :artefactId', { artefactId })
+      .andWhere('status = :status', {
+        status: ChangeProposalStatus.pending,
+      })
+      .execute();
+  }
 }

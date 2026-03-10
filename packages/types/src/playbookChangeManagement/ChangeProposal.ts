@@ -7,6 +7,8 @@ import { ChangeProposalCaptureMode } from './ChangeProposalCaptureMode';
 import { ChangeProposalArtefactId } from './ChangeProposalArtefactIdType';
 import { SpaceId } from '../spaces';
 import { ChangeProposalDecision } from './ChangeProposalDecision';
+import { GitRepoId } from '../git';
+import { TargetId } from '../deployments';
 
 export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
   {
@@ -15,6 +17,8 @@ export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
     artefactId: ChangeProposalArtefactId<T>;
     artefactVersion: number;
     spaceId: SpaceId;
+    gitRepoId?: GitRepoId;
+    targetId?: TargetId;
     payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
     message: string;

@@ -9,6 +9,7 @@ import {
 } from 'react-router';
 import {
   createSkillFileId,
+  ChangeProposalStatus,
   Skill,
   SkillFile,
   SkillVersion,
@@ -32,6 +33,7 @@ import { SkillVersionHistoryHeader } from '../../src/domain/skills/components/Sk
 import { useSkillSectionNavigation } from '../../src/domain/skills/hooks/useSkillSectionNavigation';
 import { SkillActions } from '../../src/domain/skills/components/SkillActions';
 import { SKILL_MESSAGES } from '../../src/domain/skills/constants/messages';
+import { useListChangeProposalsBySkillQuery } from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
 
@@ -112,6 +114,13 @@ export default function SkillDetailLayoutRouteModule() {
   const { data: skillsFromQuery, isLoading: skillsLoading } =
     useGetSkillsQuery();
   const deleteSkillMutation = useDeleteSkillMutation();
+  const { data: changeProposals } = useListChangeProposalsBySkillQuery(
+    skillWithFilesFromQuery?.skill.id ?? loaderData?.skill.skill.id,
+  );
+  const pendingCount =
+    changeProposals?.changeProposals?.filter(
+      (p) => p.status === ChangeProposalStatus.pending,
+    ).length ?? 0;
 
   const skillWithFiles = skillWithFilesFromQuery ?? loaderData?.skill;
   const skills = skillsFromQuery ?? loaderData?.skills ?? [];
@@ -281,6 +290,10 @@ export default function SkillDetailLayoutRouteModule() {
             deleteDialogMessage={SKILL_MESSAGES.confirmation.deleteSkill(
               skillWithFiles.skill.name,
             )}
+            pendingCount={pendingCount}
+            skillId={skillWithFiles.skill.id}
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
           />
         }
       >

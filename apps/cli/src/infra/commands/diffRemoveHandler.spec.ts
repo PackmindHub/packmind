@@ -57,13 +57,13 @@ describe('diffRemoveHandler', () => {
             artifactName: 'my-standard',
             artifactId: 'standard-123',
             spaceId: 'space-456',
+            packageIds: ['package-001'],
           },
         ],
         delete: [],
       },
       skillFolders: [],
       targetId: 'target-789',
-      packageIds: ['package-001'],
     });
 
     mockPackmindCliHexa = {
@@ -477,13 +477,13 @@ describe('diffRemoveHandler', () => {
               artifactName: 'my-skill',
               artifactId: 'skill-123',
               spaceId: 'space-456',
+              packageIds: ['package-001'],
             },
           ],
           delete: [],
         },
         skillFolders: [],
         targetId: 'target-789',
-        packageIds: ['package-001'],
       });
     });
 
@@ -632,19 +632,19 @@ describe('diffRemoveHandler', () => {
         fileUpdates: {
           createOrUpdate: [
             {
-              path: 'apps/frontend/.packmind/standards/my-standard.md',
+              path: '.packmind/standards/my-standard.md',
               content: '# My Standard\n\n* Rule 1',
               artifactType: 'standard',
               artifactName: 'my-standard',
               artifactId: 'standard-123',
               spaceId: 'space-456',
+              packageIds: ['package-001'],
             },
           ],
           delete: [],
         },
         skillFolders: [],
         targetId: 'target-789',
-        packageIds: ['package-001'],
       });
     });
 

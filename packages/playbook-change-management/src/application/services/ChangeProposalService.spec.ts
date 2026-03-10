@@ -31,6 +31,7 @@ describe('ChangeProposalService', () => {
       findBySpaceId: jest.fn(),
       findExistingPending: jest.fn(),
       update: jest.fn(),
+      cancelPendingByArtefactId: jest.fn(),
     } as unknown as jest.Mocked<IChangeProposalRepository>;
 
     dataSource = {
@@ -577,6 +578,34 @@ describe('ChangeProposalService', () => {
       });
     });
 
+    describe('when proposals include removeCommand type', () => {
+      it('groups removeCommand proposals under commands', async () => {
+        const proposal = createProposal(
+          ChangeProposalType.removeCommand,
+          recipeId1,
+        );
+        repository.findBySpaceId.mockResolvedValue([proposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.has(recipeId1)).toBe(true);
+      });
+    });
+
+    describe('when proposals include removeStandard type', () => {
+      it('groups removeStandard proposals under standards', async () => {
+        const proposal = createProposal(
+          ChangeProposalType.removeStandard,
+          standardId1,
+        );
+        repository.findBySpaceId.mockResolvedValue([proposal]);
+
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.has(standardId1)).toBe(true);
+      });
+    });
+
     describe('when space has a mix of pending and non-pending proposals', () => {
       const proposals = [
         createProposal(ChangeProposalType.updateStandardName, standardId1),
@@ -616,6 +645,23 @@ describe('ChangeProposalService', () => {
 
         expect(result.skills.size).toBe(0);
       });
+    });
+  });
+
+  describe('cancelPendingByArtefactId', () => {
+    const userId = createUserId('user-id');
+    const artefactId = createStandardId('standard-id');
+
+    it('delegates to repository', async () => {
+      repository.cancelPendingByArtefactId.mockResolvedValue(undefined);
+
+      await service.cancelPendingByArtefactId(spaceId, artefactId, userId);
+
+      expect(repository.cancelPendingByArtefactId).toHaveBeenCalledWith(
+        spaceId,
+        artefactId,
+        userId,
+      );
     });
   });
 

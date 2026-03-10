@@ -52,6 +52,13 @@ const defaultSkills: DefaultSkill[] = [
     minimumVersion: '1.0.0',
   },
   {
+    name: 'Update Playbook',
+    description:
+      'Submit playbook updates (standards, commands, skills) as change proposals for team review.',
+    slug: 'packmind-update-playbook',
+    minimumVersion: '0.21.0',
+  },
+  {
     name: 'CLI List Commands',
     description:
       'Discover available standards, commands, and skills in your organization.',

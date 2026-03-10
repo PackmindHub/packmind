@@ -7,7 +7,12 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
+import {
+  ArtifactType,
+  ChangeProposalType,
+  CodingAgent,
+  createPackageId,
+} from '@packmind/types';
 import { normalizePath } from '../../application/utils/pathUtils';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 
@@ -173,9 +178,21 @@ export async function diffRemoveHandler(
     normalizedFilePath = normalizedFilePath.slice(1);
   }
 
+  // Deployed file paths are relative to the target (relativePath), not the git root.
+  // Strip the relativePath prefix (e.g. "apps/frontend/") so the comparison works
+  // both when running from the repo root and from a sub-target directory.
+  const relativePathPrefix = relativePath.startsWith('/')
+    ? relativePath.slice(1)
+    : relativePath;
+  const filePathForComparison =
+    relativePathPrefix.length > 0 &&
+    normalizedFilePath.startsWith(relativePathPrefix)
+      ? normalizedFilePath.slice(relativePathPrefix.length)
+      : normalizedFilePath;
+
   // Check if the file exists in deployed content and extract metadata
   const deployedFile = deployedContent.fileUpdates.createOrUpdate.find(
-    (file) => normalizePath(file.path) === normalizedFilePath,
+    (file) => normalizePath(file.path) === filePathForComparison,
   );
 
   if (!deployedFile) {
@@ -194,7 +211,7 @@ export async function diffRemoveHandler(
     return;
   }
 
-  if (!deployedContent.targetId || !deployedContent.packageIds) {
+  if (!deployedContent.targetId || !deployedFile.packageIds) {
     logErrorConsole(
       'Missing target or package information. Cannot create change proposal for removal.',
     );
@@ -244,7 +261,7 @@ export async function diffRemoveHandler(
     type: changeProposalType,
     payload: {
       targetId: deployedContent.targetId,
-      packageIds: deployedContent.packageIds,
+      packageIds: deployedFile.packageIds.map(createPackageId),
     },
     artifactName: deployedFile.artifactName || artefactResult.artifactType,
     artifactType: artefactResult.artifactType,

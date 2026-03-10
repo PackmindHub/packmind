@@ -57,7 +57,7 @@ export const diffCommand = command({
       return;
     }
 
-    if (positionals[0] === 'remove') {
+    if (positionals[0] === 'remove' || positionals[0] === 'rm') {
       await diffRemoveHandler({
         packmindCliHexa,
         filePath: positionals[1],
