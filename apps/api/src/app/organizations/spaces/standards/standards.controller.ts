@@ -599,6 +599,7 @@ export class OrganizationsSpacesStandardsController {
         standardIds: body.standardIds,
         userId: userId.toString(),
         organizationId: organizationId.toString(),
+        spaceId,
         source: request.clientSource,
       });
 

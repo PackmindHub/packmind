@@ -102,6 +102,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [skill1.id, skill2.id],
         };
 
@@ -168,6 +169,7 @@ describe('DeleteSkillsBatchUsecase', () => {
     describe('with empty skill list', () => {
       let userId: string;
       let organizationId: string;
+      let spaceId: string;
       let user: User;
       let organization: Organization;
       let command: DeleteSkillsBatchCommand;
@@ -175,6 +177,7 @@ describe('DeleteSkillsBatchUsecase', () => {
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
 
         user = {
           id: userId,
@@ -192,6 +195,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [],
         };
 
@@ -229,6 +233,7 @@ describe('DeleteSkillsBatchUsecase', () => {
     describe('when skill not found', () => {
       let userId: string;
       let organizationId: string;
+      let spaceId: string;
       let skillId: string;
       let user: User;
       let organization: Organization;
@@ -237,6 +242,7 @@ describe('DeleteSkillsBatchUsecase', () => {
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
         user = {
@@ -255,6 +261,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [skillId],
         };
 
@@ -312,6 +319,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [skill.id],
         };
 
@@ -379,6 +387,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [skill.id],
         };
 
@@ -408,17 +417,20 @@ describe('DeleteSkillsBatchUsecase', () => {
     describe('when user not found', () => {
       let userId: string;
       let organizationId: string;
+      let spaceId: string;
       let skillId: string;
       let command: DeleteSkillsBatchCommand;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [skillId],
         };
 
@@ -455,6 +467,7 @@ describe('DeleteSkillsBatchUsecase', () => {
     describe('when organization not found', () => {
       let userId: string;
       let organizationId: string;
+      let spaceId: string;
       let skillId: string;
       let user: User;
       let command: DeleteSkillsBatchCommand;
@@ -462,6 +475,7 @@ describe('DeleteSkillsBatchUsecase', () => {
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
         user = {
@@ -475,6 +489,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [skillId],
         };
 
@@ -513,6 +528,7 @@ describe('DeleteSkillsBatchUsecase', () => {
       let userId: string;
       let organizationId: string;
       let otherOrganizationId: string;
+      let spaceId: string;
       let skillId: string;
       let user: User;
       let organization: Organization;
@@ -522,6 +538,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
         otherOrganizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
         skillId = createSkillId(uuidv4());
 
         user = {
@@ -542,6 +559,7 @@ describe('DeleteSkillsBatchUsecase', () => {
         command = {
           userId,
           organizationId,
+          spaceId,
           skillIds: [skillId],
         };
 
