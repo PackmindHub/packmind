@@ -36,6 +36,9 @@ interface SkillGroupedAccordionProps {
   ) => void;
   onDismiss: (proposalId: ChangeProposalId) => void;
   onUndo: (proposalId: ChangeProposalId) => void;
+  getDecisionForProposal?: (
+    proposal: ChangeProposalWithConflicts,
+  ) => ChangeProposalDecision | undefined;
   onExpandCard?: (id: string) => void;
   renderExpandedView?: (
     viewMode: ViewMode,
@@ -70,6 +73,7 @@ export function SkillGroupedAccordion({
   onAccept,
   onDismiss,
   onUndo,
+  getDecisionForProposal,
   onExpandCard,
   renderExpandedView,
 }: Readonly<SkillGroupedAccordionProps>) {
@@ -212,6 +216,7 @@ export function SkillGroupedAccordion({
         isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
         showToolbar={true}
         showEditButton={showEditButton}
+        decision={getDecisionForProposal?.(proposal)}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
         onEdit={() => onEdit(proposal.id)}
         onAccept={(decision) => handleAccept(proposal.id, decision)}

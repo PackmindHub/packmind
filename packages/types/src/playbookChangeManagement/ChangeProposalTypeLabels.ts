@@ -23,7 +23,7 @@ export const CHANGE_PROPOSAL_TYPE_LABELS: Record<ChangeProposalType, string> = {
   [ChangeProposalType.createStandard]: 'New standard',
   [ChangeProposalType.createCommand]: 'New command',
   [ChangeProposalType.createSkill]: 'New skill',
-  [ChangeProposalType.removeStandard]: 'Remove standard',
-  [ChangeProposalType.removeCommand]: 'Remove command',
-  [ChangeProposalType.removeSkill]: 'Remove skill',
+  [ChangeProposalType.removeStandard]: 'Removed',
+  [ChangeProposalType.removeCommand]: 'Removed',
+  [ChangeProposalType.removeSkill]: 'Removed',
 };

@@ -1,9 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { NavLink, useParams, useSearchParams } from 'react-router';
 import {
   PMBox,
+  PMCloseButton,
+  PMDialog,
   PMFlex,
   PMHStack,
+  PMIcon,
   PMLink,
   PMText,
   PMTooltip,
@@ -11,6 +14,8 @@ import {
   PMVerticalNavSection,
   PMVStack,
 } from '@packmind/ui';
+import { LuInfo } from 'react-icons/lu';
+import { ReviewChangesBlankState } from './ReviewChangesBlankState';
 import {
   ChangeProposalType,
   CollectionItemAddPayload,
@@ -122,6 +127,7 @@ interface ReviewChangesSidebarProps {
 export function ReviewChangesSidebar({
   groupedProposals,
 }: ReviewChangesSidebarProps) {
+  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const { orgSlug, spaceSlug, artefactType, artefactId, proposalId } =
     useParams<{
       orgSlug: string;
@@ -237,6 +243,40 @@ export function ReviewChangesSidebar({
       <PMBox flex={1} minH={0} overflowY="auto">
         <PMVerticalNavSection
           title="CHANGES TO REVIEW"
+          titleExtra={
+            <>
+              <PMBox
+                display="inline-flex"
+                cursor="pointer"
+                onClick={() => setIsInfoDialogOpen(true)}
+              >
+                <PMIcon as={LuInfo} color="faded" />
+              </PMBox>
+              <PMDialog.Root
+                open={isInfoDialogOpen}
+                onOpenChange={(details) => setIsInfoDialogOpen(details.open)}
+                size="xl"
+                scrollBehavior="inside"
+              >
+                <PMDialog.Backdrop />
+                <PMDialog.Positioner>
+                  <PMDialog.Content>
+                    <PMDialog.Header>
+                      <PMDialog.Title>
+                        How to submit playbook changes
+                      </PMDialog.Title>
+                      <PMDialog.CloseTrigger asChild>
+                        <PMCloseButton />
+                      </PMDialog.CloseTrigger>
+                    </PMDialog.Header>
+                    <PMDialog.Body>
+                      <ReviewChangesBlankState />
+                    </PMDialog.Body>
+                  </PMDialog.Content>
+                </PMDialog.Positioner>
+              </PMDialog.Root>
+            </>
+          }
           navEntries={[
             ...allItems.map((item) => (
               <PMBox

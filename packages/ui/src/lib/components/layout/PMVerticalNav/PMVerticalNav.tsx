@@ -82,14 +82,24 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
 
 export const PMVerticalNavSection: React.FC<{
   title?: string;
+  titleExtra?: React.ReactNode;
   navEntries: React.ReactNode[];
-}> = ({ title, navEntries }) => {
+}> = ({ title, titleExtra, navEntries }) => {
   return (
     <PMBox>
       {title && (
-        <PMHeading level="h6" color="faded" marginBottom={2} paddingX={4}>
-          {title}
-        </PMHeading>
+        <PMBox
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          marginBottom={2}
+          paddingX={4}
+        >
+          <PMHeading level="h6" color="faded">
+            {title}
+          </PMHeading>
+          {titleExtra}
+        </PMBox>
       )}
       <List.Root listStyleType="none">
         {navEntries.map((entry, index) => (

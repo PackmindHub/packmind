@@ -269,6 +269,7 @@ export function CommandReviewDetail({
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
+            getDecisionForProposal={pool.getDecisionForChangeProposal}
             onExpandCard={reviewState.expandCard}
             renderExpandedView={renderExpandedView}
           />

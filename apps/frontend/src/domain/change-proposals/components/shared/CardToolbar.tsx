@@ -28,6 +28,14 @@ interface CardToolbarProps {
   onUndo: () => void;
 }
 
+function isRemoveProposal(type: ChangeProposalType): boolean {
+  return (
+    type === ChangeProposalType.removeStandard ||
+    type === ChangeProposalType.removeCommand ||
+    type === ChangeProposalType.removeSkill
+  );
+}
+
 export function CardToolbar({
   poolStatus,
   proposalType,
@@ -45,25 +53,30 @@ export function CardToolbar({
 }: Readonly<CardToolbarProps>) {
   const isFocused = viewMode === 'focused';
   const isExpanded = !isFocused;
+  const isRemove = isRemoveProposal(proposalType);
 
   return (
     <PMHStack justifyContent="space-between" alignItems="center">
-      <PMHStack gap={2} alignItems="center">
-        <PMButton
-          size="sm"
-          variant={'secondary'}
-          onClick={() => onViewModeChange(isFocused ? 'diff' : 'focused')}
-        >
-          {isFocused ? <LuArrowUpRight /> : <LuMinimize2 />}
-          {isFocused ? 'Show in file' : 'Focused'}
-        </PMButton>
-        {isExpanded && (
-          <ViewModeSelector
-            viewMode={viewMode}
-            onViewModeChange={onViewModeChange}
-          />
-        )}
-      </PMHStack>
+      {isRemove ? (
+        <div />
+      ) : (
+        <PMHStack gap={2} alignItems="center">
+          <PMButton
+            size="sm"
+            variant={'secondary'}
+            onClick={() => onViewModeChange(isFocused ? 'diff' : 'focused')}
+          >
+            {isFocused ? <LuArrowUpRight /> : <LuMinimize2 />}
+            {isFocused ? 'Show in file' : 'Focused'}
+          </PMButton>
+          {isExpanded && (
+            <ViewModeSelector
+              viewMode={viewMode}
+              onViewModeChange={onViewModeChange}
+            />
+          )}
+        </PMHStack>
+      )}
       <CardActions
         poolStatus={poolStatus}
         proposalType={proposalType}
