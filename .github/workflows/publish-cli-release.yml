@@ -314,8 +314,23 @@ jobs:
         env:
           VERSION: ${{ needs.sign-macos-cli.outputs.version }}
         run: |
-          curl -fsS -X POST \
+          echo "📢 Notifying Homebrew tap for version ${VERSION}..."
+
+          HTTP_CODE=$(curl -sS -o response.txt -w "%{http_code}" -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${{ secrets.HOMEBREW_TAP_PAT }}" \
             https://api.github.com/repos/PackmindHub/homebrew-cli/dispatches \
-            -d '{"event_type":"packmind-cli-release","client_payload":{"version":"'"$VERSION"'"}}'
+            -d '{"event_type":"packmind-cli-release","client_payload":{"version":"'"$VERSION"'"}}')
+
+          echo "HTTP status: ${HTTP_CODE}"
+          if [ -s response.txt ]; then
+            echo "Response body:"
+            cat response.txt
+          fi
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Homebrew tap notified successfully"
+          else
+            echo "❌ Failed to notify Homebrew tap (HTTP ${HTTP_CODE})"
+            exit 1
+          fi
