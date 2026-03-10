@@ -361,6 +361,33 @@ describe('ChangeProposalRepository', () => {
       });
     });
 
+    describe('when a pending proposal exists for the same artefact in a different space', () => {
+      beforeEach(async () => {
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceBId,
+            artefactId,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+
+        await repository.cancelPendingByArtefactId(
+          spaceAId,
+          artefactId,
+          cancelledBy,
+        );
+      });
+
+      it('does not affect proposals in other spaces', async () => {
+        const proposals = await repository.findByArtefactId(
+          spaceBId,
+          artefactId,
+        );
+
+        expect(proposals[0].status).toBe(ChangeProposalStatus.pending);
+      });
+    });
+
     describe('when an already-applied proposal exists for the same artefact', () => {
       beforeEach(async () => {
         await repository.save(
