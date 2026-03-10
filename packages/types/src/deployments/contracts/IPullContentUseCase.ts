@@ -5,6 +5,7 @@ import { CodingAgent } from '../../coding-agent/CodingAgent';
 export type IPullContentResponse = {
   fileUpdates: FileUpdates;
   skillFolders: string[]; // Full paths for rendered skill folders, e.g., [".claude/skills/my-skill", ".github/skills/my-skill"]
+  targetId?: string;
 };
 
 export type PullContentCommand = PackmindCommand & {

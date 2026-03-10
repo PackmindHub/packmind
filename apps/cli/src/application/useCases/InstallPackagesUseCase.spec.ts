@@ -1812,6 +1812,84 @@ Old packmind content
       });
     });
 
+    describe('when pull response includes targetId', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/coding-style.md',
+                content: '# Coding Style',
+                artifactType: 'standard',
+                artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-abc',
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+          agents: ['packmind'],
+        });
+      });
+
+      it('includes targetId in the lock file', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            targetId: 'target-abc',
+          }),
+        );
+      });
+    });
+
+    describe('when pull response omits targetId', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/coding-style.md',
+                content: '# Coding Style',
+                artifactType: 'standard',
+                artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+          agents: ['packmind'],
+        });
+      });
+
+      it('does not include targetId in the lock file', () => {
+        const writtenLockFile = mockLockFileRepository.write.mock.calls[0][1];
+
+        expect(writtenLockFile).not.toHaveProperty('targetId');
+      });
+    });
+
     describe('when lock file write fails', () => {
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 

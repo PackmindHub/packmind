@@ -135,6 +135,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         command.packagesSlugs,
         command.cliVersion,
         command.agents,
+        response.targetId,
       );
       if (Object.keys(lockFile.artifacts).length > 0) {
         try {
@@ -166,6 +167,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     packageSlugs: string[],
     cliVersion?: string,
     commandAgents: CodingAgent[] = [],
+    targetId?: string,
   ): PackmindLockFile {
     const artifacts: Record<string, PackmindLockFileEntry> = {};
 
@@ -212,6 +214,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       agents,
       installedAt: new Date().toISOString(),
       cliVersion: cliVersion ?? 'unknown',
+      ...(targetId ? { targetId } : {}),
       artifacts,
     };
   }

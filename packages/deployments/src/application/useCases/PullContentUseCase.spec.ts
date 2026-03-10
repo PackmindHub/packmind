@@ -2662,6 +2662,23 @@ describe('PullContentUseCase', () => {
       });
     });
 
+    describe('when target is found', () => {
+      beforeEach(() => {
+        distributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
+          [],
+        );
+        renderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+          [],
+        );
+      });
+
+      it('returns targetId in the response', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.targetId).toBe(targetId as string);
+      });
+    });
+
     describe('when target is not found', () => {
       beforeEach(() => {
         targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
@@ -2673,6 +2690,12 @@ describe('PullContentUseCase', () => {
         expect(
           codingAgentPort.generateAgentCleanupUpdatesForAgents,
         ).not.toHaveBeenCalled();
+      });
+
+      it('returns undefined targetId', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.targetId).toBeUndefined();
       });
     });
 

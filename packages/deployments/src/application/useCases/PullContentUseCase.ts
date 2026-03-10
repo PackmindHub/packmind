@@ -101,6 +101,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     }
 
     try {
+      let resolvedTargetId: string | undefined;
+
       // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
       const codingAgents =
         await this.renderModeConfigurationService.resolveCodingAgents(
@@ -483,6 +485,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             );
 
           if (target) {
+            resolvedTargetId = target.id as string;
+
             const previousRenderModes =
               await this.distributionRepository.findActiveRenderModesByTarget(
                 command.organization.id,
@@ -639,6 +643,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       return {
         fileUpdates: mergedFileUpdates,
         skillFolders: mergedSkillFolders,
+        targetId: resolvedTargetId,
       };
     } catch (error) {
       this.logger.error('Failed to pull content', {

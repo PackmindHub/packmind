@@ -25,5 +25,6 @@ export type PackmindLockFile = {
   agents: CodingAgent[];
   installedAt: string;
   cliVersion: string;
+  targetId?: string;
   artifacts: Record<string, PackmindLockFileEntry>;
 };

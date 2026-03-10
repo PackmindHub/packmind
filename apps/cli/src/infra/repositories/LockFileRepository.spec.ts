@@ -147,6 +147,28 @@ describe('LockFileRepository', () => {
         expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
       });
 
+      it('returns null when targetId is not a string', async () => {
+        mockFs.readFile.mockResolvedValue(
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":123,"artifacts":{}}',
+        );
+
+        const result = await repository.read('/project');
+
+        expect(result).toBeNull();
+        expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
+      });
+
+      it('accepts lock file with targetId string', async () => {
+        mockFs.readFile.mockResolvedValue(
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":"target-abc","artifacts":{}}',
+        );
+
+        const result = await repository.read('/project');
+
+        expect(result).not.toBeNull();
+        expect(result?.targetId).toBe('target-abc');
+      });
+
       it('returns null when JSON is malformed', async () => {
         mockFs.readFile.mockResolvedValue('not valid json {{{');
 
