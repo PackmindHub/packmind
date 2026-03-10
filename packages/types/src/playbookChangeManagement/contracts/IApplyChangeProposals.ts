@@ -40,7 +40,7 @@ export type ApplyChangeProposalsCommand<
 export type ApplyChangeProposalsResponse<
   T extends StandardId | RecipeId | SkillId,
 > = {
-  newArtefactVersion: ArtefactVersionId<T>;
+  newArtefactVersion?: ArtefactVersionId<T>;
   updatedPackages?: PackageId[];
   artefactDeleted?: boolean;
 };

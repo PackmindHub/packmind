@@ -183,9 +183,9 @@ export class ApplyChangeProposalsUseCase<
       for (const packageId of appliedChangesProposalsResponse.removeFromPackages) {
         const { package: pkg } = await this.deploymentPort.getPackageById({
           packageId,
-          organizationId: command.organization.id,
+          organizationId,
           spaceId: command.spaceId,
-          userId: command.userId,
+          userId,
         });
         const artefactIds =
           changesApplier.getUpdatePackageCommandWithoutArtefact(
@@ -198,8 +198,8 @@ export class ApplyChangeProposalsUseCase<
           name: pkg.name,
           description: pkg.description,
           ...artefactIds,
-          userId: command.userId,
-          organizationId: command.organizationId,
+          userId,
+          organizationId,
         });
         updatedPackages.push(packageId);
       }
@@ -233,15 +233,19 @@ export class ApplyChangeProposalsUseCase<
       });
     } catch (error) {
       this.logger.error(
-        'Failed to mark change proposals - object was updated but proposals remain pending',
+        'Failed to mark change proposals - artefact was modified but proposals remain pending',
         {
-          newVersionId: newVersion.id,
-          newVersion: newVersion.version,
+          artefactDeleted,
+          ...(artefactDeleted
+            ? {}
+            : { newVersionId: newVersion.id, newVersion: newVersion.version }),
           error: error instanceof Error ? error.message : String(error),
         },
       );
       throw new Error(
-        'Failed to mark change proposals. The artefact was updated successfully, but the proposal statuses could not be changed. Please try again.',
+        artefactDeleted
+          ? 'Failed to mark change proposals. The artefact was deleted but proposal statuses could not be updated. Please contact support.'
+          : 'Failed to mark change proposals. The artefact was updated successfully, but the proposal statuses could not be changed. Please try again.',
       );
     }
 
@@ -294,7 +298,9 @@ export class ApplyChangeProposalsUseCase<
     }
 
     return {
-      newArtefactVersion: newVersion.id as ArtefactVersionId<T>,
+      newArtefactVersion: artefactDeleted
+        ? undefined
+        : (newVersion.id as ArtefactVersionId<T>),
       updatedPackages: updatedPackages.length ? updatedPackages : undefined,
       artefactDeleted: artefactDeleted || undefined,
     };
