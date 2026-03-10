@@ -4,6 +4,7 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 import { DeleteItemType } from '@packmind/types';
+import { createMockLockFileRepository } from '../../mocks/createMockRepositories';
 jest.mock('fs/promises');
 
 describe('InstallPackagesUseCase', () => {
@@ -24,11 +25,7 @@ describe('InstallPackagesUseCase', () => {
       },
     } as unknown as jest.Mocked<IPackmindGateway>;
 
-    mockLockFileRepository = {
-      read: jest.fn(),
-      write: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(undefined),
-    };
+    mockLockFileRepository = createMockLockFileRepository();
 
     // Setup fs mocks using jest.Mock casting
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);

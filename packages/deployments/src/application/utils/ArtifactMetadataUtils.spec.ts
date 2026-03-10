@@ -17,6 +17,10 @@ import {
 } from './ArtifactMetadataUtils';
 
 describe('ArtifactMetadataUtils', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('buildArtifactMetadataMap', () => {
     describe('with all three artifact types', () => {
       const recipeId = createRecipeId('recipe-1');
