@@ -32,9 +32,14 @@ describe('CommandChangesApplier', () => {
     recipePort = {
       updateRecipeFromUI: jest.fn(),
       getRecipeVersion: jest.fn(),
+      deleteRecipe: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
     applier = new CommandChangesApplier(diffService, recipePort);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('applyChangeProposal', () => {
@@ -219,7 +224,7 @@ describe('CommandChangesApplier', () => {
     const organizationId = createOrganizationId('organization-id');
 
     beforeEach(() => {
-      recipePort.deleteRecipe = jest.fn().mockResolvedValue({});
+      recipePort.deleteRecipe.mockResolvedValue({});
     });
 
     it('calls deleteRecipe with the recipe ID and auth context from source version', async () => {

@@ -24,9 +24,18 @@ describe('StandardChangesApplier', () => {
 
   beforeEach(() => {
     diffService = new DiffService();
-    standardsPort = {} as unknown as jest.Mocked<IStandardsPort>;
+    standardsPort = {
+      getLatestStandardVersion: jest.fn(),
+      getRulesByStandardId: jest.fn(),
+      updateStandard: jest.fn(),
+      deleteStandard: jest.fn(),
+    } as unknown as jest.Mocked<IStandardsPort>;
 
     applier = new StandardChangesApplier(diffService, standardsPort);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   const rule1 = ruleFactory({
@@ -375,12 +384,10 @@ describe('StandardChangesApplier', () => {
     const standardId = standardVersion.standardId;
 
     beforeEach(() => {
-      standardsPort.getLatestStandardVersion = jest
-        .fn()
-        .mockResolvedValue(standardVersion);
-      standardsPort.getRulesByStandardId = jest
-        .fn()
-        .mockResolvedValue([rule1, rule2]);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(
+        standardVersion as never,
+      );
+      standardsPort.getRulesByStandardId.mockResolvedValue([rule1, rule2]);
     });
 
     it('returns the standard version with rules', async () => {
@@ -411,9 +418,7 @@ describe('StandardChangesApplier', () => {
     describe('when standard version is not found', () => {
       it('throws an error', async () => {
         const standardId = standardVersion.standardId;
-        standardsPort.getLatestStandardVersion = jest
-          .fn()
-          .mockResolvedValue(null);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null as never);
 
         await expect(applier.getVersion(standardId)).rejects.toThrow(
           `Unable to find standard version with id ${standardId}`,
@@ -439,15 +444,11 @@ describe('StandardChangesApplier', () => {
         version: 2,
       };
 
-      standardsPort.updateStandard = jest
-        .fn()
-        .mockResolvedValue(updatedStandard);
-      standardsPort.getLatestStandardVersion = jest
-        .fn()
-        .mockResolvedValue(newVersion);
-      standardsPort.getRulesByStandardId = jest
-        .fn()
-        .mockResolvedValue([rule1, rule2]);
+      standardsPort.updateStandard.mockResolvedValue(updatedStandard as never);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(
+        newVersion as never,
+      );
+      standardsPort.getRulesByStandardId.mockResolvedValue([rule1, rule2]);
     });
 
     it('calls updateStandard with correct parameters', async () => {
@@ -500,12 +501,10 @@ describe('StandardChangesApplier', () => {
           version: 2,
         };
 
-        standardsPort.updateStandard = jest
-          .fn()
-          .mockResolvedValue(updatedStandard);
-        standardsPort.getLatestStandardVersion = jest
-          .fn()
-          .mockResolvedValue(null);
+        standardsPort.updateStandard.mockResolvedValue(
+          updatedStandard as never,
+        );
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null as never);
 
         await expect(
           applier.saveNewVersion(
@@ -527,7 +526,7 @@ describe('StandardChangesApplier', () => {
     const organizationId = createOrganizationId('organization-id');
 
     beforeEach(() => {
-      standardsPort.deleteStandard = jest.fn().mockResolvedValue(undefined);
+      standardsPort.deleteStandard.mockResolvedValue(undefined as never);
     });
 
     it('calls deleteStandard with the standard ID and auth context', async () => {

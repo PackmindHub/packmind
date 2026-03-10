@@ -24,9 +24,15 @@ describe('SkillChangesApplier', () => {
 
   beforeEach(() => {
     diffService = new DiffService();
-    skillsPort = {} as unknown as jest.Mocked<ISkillsPort>;
+    skillsPort = {
+      deleteSkill: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
 
     applier = new SkillChangesApplier(diffService, skillsPort);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   const skillVersion = skillVersionFactory({
@@ -738,7 +744,7 @@ describe('SkillChangesApplier', () => {
     const organizationId = createOrganizationId('organization-id');
 
     beforeEach(() => {
-      skillsPort.deleteSkill = jest.fn().mockResolvedValue({ success: true });
+      skillsPort.deleteSkill.mockResolvedValue({ success: true } as never);
     });
 
     it('calls deleteSkill with the skill ID and auth context', async () => {
