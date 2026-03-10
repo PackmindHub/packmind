@@ -414,6 +414,7 @@ describe('Package deployment integration', () => {
         standardId: standard1.id,
         userId: dataFactory.user.id.toString(),
         organizationId: dataFactory.organization.id.toString(),
+        spaceId: dataFactory.space.id,
       });
 
       await new Promise((resolve) => setTimeout(resolve, 50));
