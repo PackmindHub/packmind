@@ -2,6 +2,7 @@ import {
   BatchCreateChangeProposalsResponse,
   ChangeProposalCaptureMode,
   ChangeProposalType,
+  TargetId,
 } from '@packmind/types';
 
 import { SubmitDiffsUseCase } from './SubmitDiffsUseCase';
@@ -798,6 +799,41 @@ describe('SubmitDiffsUseCase', () => {
       });
 
       expect(result.submitted).toBe(1);
+    });
+  });
+
+  describe('when diff has a targetId', () => {
+    const targetId = 'target-789' as TargetId;
+    const diffWithTarget: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/my-command.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old', newValue: 'new' },
+        artifactName: 'My Command',
+        artifactType: 'command',
+        artifactId: 'art-123',
+        spaceId: 'spc-456',
+        targetId,
+      },
+    ];
+
+    beforeEach(() => {
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1));
+    });
+
+    it('passes targetId to batchCreate', async () => {
+      await useCase.execute({
+        groupedDiffs: [diffWithTarget],
+        message: 'test message',
+      });
+
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposals: expect.arrayContaining([
+            expect.objectContaining({ targetId }),
+          ]),
+        }),
+      );
     });
   });
 });

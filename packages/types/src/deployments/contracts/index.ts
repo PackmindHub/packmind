@@ -2,6 +2,7 @@ export * from './IAddTargetUseCase';
 export * from './IUpdateTargetUseCase';
 export * from './IDeleteTargetUseCase';
 export * from './IGetTargetsByGitRepoUseCase';
+export * from './IGetTargetByIdUseCase';
 export * from './IGetTargetsByRepositoryUseCase';
 export * from './IGetTargetsByOrganizationUseCase';
 export * from './IFindActiveStandardVersionsByTargetUseCase';

@@ -37,6 +37,8 @@ import {
   GetStandardDeploymentOverviewCommand,
   GetSkillDeploymentOverviewCommand,
   GetTargetsByGitRepoCommand,
+  GetTargetByIdCommand,
+  GetTargetByIdResponse,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
   IAccountsPort,
@@ -101,6 +103,7 @@ import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
 import { GetSkillsDeploymentOverviewUseCase } from '../useCases/GetSkillsDeploymentOverviewUseCase';
+import { GetTargetByIdUseCase } from '../useCases/GetTargetByIdUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
 import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
@@ -146,6 +149,7 @@ export class DeploymentsAdapter
   private _getStandardDeploymentOverviewUseCase!: GetStandardDeploymentOverviewUseCase;
   private _getSkillsDeploymentOverviewUseCase!: GetSkillsDeploymentOverviewUseCase;
   private _addTargetUseCase!: AddTargetUseCase;
+  private _getTargetByIdUseCase!: GetTargetByIdUseCase;
   private _getTargetsByGitRepoUseCase!: GetTargetsByGitRepoUseCase;
   private _getTargetsByRepositoryUseCase!: GetTargetsByRepositoryUseCase;
   private _getTargetsByOrganizationUseCase!: GetTargetsByOrganizationUseCase;
@@ -304,6 +308,10 @@ export class DeploymentsAdapter
     this._addTargetUseCase = new AddTargetUseCase(
       this.deploymentsServices.getTargetService(),
       this.gitPort,
+    );
+
+    this._getTargetByIdUseCase = new GetTargetByIdUseCase(
+      this.deploymentsServices.getTargetService(),
     );
 
     this._getTargetsByGitRepoUseCase = new GetTargetsByGitRepoUseCase(
@@ -565,6 +573,12 @@ export class DeploymentsAdapter
 
   async addTarget(command: AddTargetCommand): Promise<Target> {
     return this._addTargetUseCase.execute(command);
+  }
+
+  async getTargetById(
+    command: GetTargetByIdCommand,
+  ): Promise<GetTargetByIdResponse> {
+    return this._getTargetByIdUseCase.execute(command);
   }
 
   async getTargetsByGitRepo(

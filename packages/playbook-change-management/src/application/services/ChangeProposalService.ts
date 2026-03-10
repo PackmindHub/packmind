@@ -85,6 +85,8 @@ export class ChangeProposalService {
       artefactId: command.artefactId,
       artefactVersion,
       spaceId: command.spaceId,
+      gitRepoId: command.gitRepoId,
+      targetId: command.targetId,
       payload: command.payload,
       captureMode: command.captureMode,
       message: command.message ?? '',

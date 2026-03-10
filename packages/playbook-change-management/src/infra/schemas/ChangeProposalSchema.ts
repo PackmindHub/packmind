@@ -18,6 +18,8 @@ export const ChangeProposalSchema = new EntitySchema<
     artefactId: { name: 'artefact_id', type: 'varchar', nullable: true },
     artefactVersion: { name: 'artefact_version', type: 'int' },
     spaceId: { name: 'space_id', type: 'uuid' },
+    gitRepoId: { name: 'git_repo_id', type: 'uuid', nullable: true },
+    targetId: { name: 'target_id', type: 'uuid', nullable: true },
     payload: { type: 'jsonb' },
     captureMode: { name: 'capture_mode', type: 'varchar' },
     message: { type: 'varchar', length: 1024, default: "''" },

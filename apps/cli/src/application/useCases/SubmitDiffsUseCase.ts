@@ -3,6 +3,7 @@ import {
   ChangeProposalCaptureMode,
   ChangeProposalType,
   SpaceId,
+  TargetId,
 } from '@packmind/types';
 
 import {
@@ -91,6 +92,7 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
           payload: diff.payload,
           captureMode: ChangeProposalCaptureMode.commit,
           message,
+          targetId: diff.targetId as TargetId,
         })),
       });
       submitted += response.created;

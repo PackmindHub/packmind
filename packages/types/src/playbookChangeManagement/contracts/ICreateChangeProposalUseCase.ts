@@ -6,6 +6,8 @@ import { ChangeProposalType } from '../ChangeProposalType';
 import { ChangeProposalArtefactId } from '../ChangeProposalArtefactIdType';
 import { ChangeProposalViolation } from '../ChangeProposalViolation';
 import { SpaceId } from '../../spaces';
+import { GitRepoId } from '../../git';
+import { TargetId } from '../../deployments';
 
 export type CreateChangeProposalCommand<T extends ChangeProposalType> =
   PackmindCommand & {
@@ -15,6 +17,8 @@ export type CreateChangeProposalCommand<T extends ChangeProposalType> =
     payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
     message?: string;
+    gitRepoId?: GitRepoId;
+    targetId?: TargetId;
   };
 
 export type CreateChangeProposalResponse<T extends ChangeProposalType> =

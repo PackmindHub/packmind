@@ -286,6 +286,61 @@ describe('diffAddHandler', () => {
       );
     });
 
+    describe('when git context is available', () => {
+      let mockReadFullConfig: jest.Mock;
+      let mockTryGetGitRepositoryRoot: jest.Mock;
+      let mockGetGitRemoteUrlFromPath: jest.Mock;
+      let mockGetCurrentBranch: jest.Mock;
+      let mockGetDeployed: jest.Mock;
+
+      beforeEach(() => {
+        mockReadFullConfig = jest
+          .fn()
+          .mockResolvedValue({ packages: { 'my-package': '*' }, agents: [] });
+        mockTryGetGitRepositoryRoot = jest
+          .fn()
+          .mockResolvedValue('/project/git-root');
+        mockGetGitRemoteUrlFromPath = jest
+          .fn()
+          .mockReturnValue('git@github.com:org/repo.git');
+        mockGetCurrentBranch = jest.fn().mockReturnValue('main');
+        mockGetDeployed = jest.fn().mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skillFolders: [],
+          targetId: 'target-456',
+        });
+
+        mockPackmindCliHexa = {
+          submitDiffs: mockSubmitDiffs,
+          readFullConfig: mockReadFullConfig,
+          tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
+          getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
+          getCurrentBranch: mockGetCurrentBranch,
+          getPackmindGateway: () => ({
+            spaces: { getGlobal: mockGetGlobal },
+            deployment: { getDeployed: mockGetDeployed },
+          }),
+        } as unknown as PackmindCliHexa;
+      });
+
+      it('includes targetId in the submitted diff', async () => {
+        await diffAddHandler(
+          buildDeps({ packmindCliHexa: mockPackmindCliHexa }),
+        );
+
+        expect(mockSubmitDiffs).toHaveBeenCalledWith(
+          [
+            [
+              expect.objectContaining({
+                targetId: 'target-456',
+              }),
+            ],
+          ],
+          'Add new command',
+        );
+      });
+    });
+
     it('fetches the global space', async () => {
       await diffAddHandler(buildDeps());
 
