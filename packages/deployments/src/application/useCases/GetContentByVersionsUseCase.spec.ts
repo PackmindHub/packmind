@@ -77,12 +77,12 @@ describe('GetContentByVersionsUseCase', () => {
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
     skillsPort = {
-      listSkillVersions: jest.fn().mockResolvedValue([]),
+      getSkillVersionByNumber: jest.fn().mockResolvedValue(null),
       getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     standardsPort = {
-      listStandardVersions: jest.fn().mockResolvedValue([]),
+      getStandardVersionByNumber: jest.fn().mockResolvedValue(null),
       getRulesByStandardId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
@@ -212,8 +212,10 @@ describe('GetContentByVersionsUseCase', () => {
       command.artifacts = artifacts;
 
       recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
-      standardsPort.listStandardVersions.mockResolvedValue([standardVersion]);
-      skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+      standardsPort.getStandardVersionByNumber.mockResolvedValue(
+        standardVersion,
+      );
+      skillsPort.getSkillVersionByNumber.mockResolvedValue(skillVersion);
 
       const fileUpdates: FileUpdates = {
         createOrUpdate: [
@@ -285,11 +287,12 @@ describe('GetContentByVersionsUseCase', () => {
       expect(recipesPort.getRecipeVersion).toHaveBeenCalledWith(recipeId, 2);
     });
 
-    it('fetches standard versions for matching', async () => {
+    it('fetches standard version by number', async () => {
       await useCase.execute(command);
 
-      expect(standardsPort.listStandardVersions).toHaveBeenCalledWith(
+      expect(standardsPort.getStandardVersionByNumber).toHaveBeenCalledWith(
         standardId,
+        3,
       );
     });
 

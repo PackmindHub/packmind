@@ -170,11 +170,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     const results = await Promise.all(
       entries.map(async (entry) => {
         const standardId = createStandardId(entry.id);
-        const versions =
-          await this.standardsPort.listStandardVersions(standardId);
-        const matchingVersion = versions.find(
-          (v) => v.version === entry.version,
-        );
+        const matchingVersion =
+          await this.standardsPort.getStandardVersionByNumber(
+            standardId,
+            entry.version,
+          );
         if (!matchingVersion) {
           this.logger.warn('Standard version not found', {
             standardId: entry.id,
@@ -195,9 +195,9 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     const results = await Promise.all(
       entries.map(async (entry) => {
         const skillId = createSkillId(entry.id);
-        const versions = await this.skillsPort.listSkillVersions(skillId);
-        const matchingVersion = versions.find(
-          (v) => v.version === entry.version,
+        const matchingVersion = await this.skillsPort.getSkillVersionByNumber(
+          skillId,
+          entry.version,
         );
         if (!matchingVersion) {
           this.logger.warn('Skill version not found', {

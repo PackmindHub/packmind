@@ -242,6 +242,19 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       .getLatestSkillVersion(skillId);
   }
 
+  async getSkillVersionByNumber(
+    skillId: SkillId,
+    version: number,
+  ): Promise<SkillVersion | null> {
+    this.logger.info('getSkillVersionByNumber called via port', {
+      skillId,
+      version,
+    });
+    return this.services
+      .getSkillVersionService()
+      .getSkillVersion(skillId, version);
+  }
+
   async listSkillVersions(skillId: SkillId): Promise<SkillVersion[]> {
     this.logger.info('listSkillVersions called via port', { skillId });
     return this.services.getSkillVersionService().listSkillVersions(skillId);

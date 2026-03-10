@@ -87,11 +87,11 @@ describe('PullContentUseCase', () => {
     } as unknown as jest.Mocked<IRecipesPort>;
 
     standardsPort = {
-      listStandardVersions: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     skillsPort = {
-      listSkillVersions: jest.fn(),
+      getLatestSkillVersion: jest.fn(),
       getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
@@ -294,7 +294,7 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [{ path: 'test.md', content: 'test content' }],
@@ -342,7 +342,7 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [
@@ -383,8 +383,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -429,7 +429,7 @@ describe('PullContentUseCase', () => {
       ]);
 
       recipesPort.listRecipeVersions.mockResolvedValue([]);
-      standardsPort.listStandardVersions.mockResolvedValue([]);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
       codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
         createOrUpdate: [],
@@ -494,8 +494,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -506,7 +506,7 @@ describe('PullContentUseCase', () => {
       it('fetches skill versions from skillsPort', async () => {
         await useCase.execute(command);
 
-        expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+        expect(skillsPort.getLatestSkillVersion).toHaveBeenCalledWith(skill.id);
       });
 
       it('passes skill versions to deployArtifactsForAgents', async () => {
@@ -557,31 +557,24 @@ describe('PullContentUseCase', () => {
         });
 
         it('fetches skill versions only once', () => {
-          expect(skillsPort.listSkillVersions).toHaveBeenCalledTimes(1);
+          expect(skillsPort.getLatestSkillVersion).toHaveBeenCalledTimes(1);
         });
 
         it('fetches skill versions with the skill id', () => {
-          expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+          expect(skillsPort.getLatestSkillVersion).toHaveBeenCalledWith(
+            skill.id,
+          );
         });
       });
 
       it('fetches latest version from multiple versions', async () => {
-        const olderVersion: SkillVersion = {
-          ...skillVersion,
-          id: createSkillVersionId('skill-version-0'),
-          version: 1,
-        };
-
         const newerVersion: SkillVersion = {
           ...skillVersion,
           id: createSkillVersionId('skill-version-2'),
           version: 2,
         };
 
-        skillsPort.listSkillVersions.mockResolvedValue([
-          newerVersion,
-          olderVersion,
-        ]);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(newerVersion);
 
         await useCase.execute(command);
 
@@ -706,8 +699,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -785,8 +778,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -891,8 +884,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -923,7 +916,7 @@ describe('PullContentUseCase', () => {
           packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
             testPackage,
           ]);
-          skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+          skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
           renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
             [CodingAgents.claude],
@@ -946,7 +939,7 @@ describe('PullContentUseCase', () => {
           packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
             testPackage,
           ]);
-          skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+          skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([
@@ -1018,9 +1011,9 @@ describe('PullContentUseCase', () => {
           packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
             testPackage,
           ]);
-          skillsPort.listSkillVersions
-            .mockResolvedValueOnce([skillVersionA])
-            .mockResolvedValueOnce([skillVersionB]);
+          skillsPort.getLatestSkillVersion
+            .mockResolvedValueOnce(skillVersionA)
+            .mockResolvedValueOnce(skillVersionB);
 
           renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
             [CodingAgents.claude, CodingAgents.copilot],
@@ -1133,11 +1126,11 @@ describe('PullContentUseCase', () => {
             .mockResolvedValueOnce([previousPackage]);
 
           recipesPort.listRecipeVersions.mockResolvedValue([]);
-          standardsPort.listStandardVersions.mockResolvedValue([]);
-          skillsPort.listSkillVersions
-            .mockResolvedValueOnce([installedSkillVersion])
-            .mockResolvedValueOnce([installedSkillVersion])
-            .mockResolvedValueOnce([removedSkillVersion]);
+          standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+          skillsPort.getLatestSkillVersion
+            .mockResolvedValueOnce(installedSkillVersion)
+            .mockResolvedValueOnce(installedSkillVersion)
+            .mockResolvedValueOnce(removedSkillVersion);
 
           renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
             [CodingAgents.claude],
@@ -1244,8 +1237,10 @@ describe('PullContentUseCase', () => {
           ]);
 
           recipesPort.listRecipeVersions.mockResolvedValue([]);
-          standardsPort.listStandardVersions.mockResolvedValue([]);
-          skillsPort.listSkillVersions.mockResolvedValue([currentSkillVersion]);
+          standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+          skillsPort.getLatestSkillVersion.mockResolvedValue(
+            currentSkillVersion,
+          );
 
           renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
             [CodingAgents.claude],
@@ -1424,10 +1419,10 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([
+        standardsPort.getLatestStandardVersion.mockResolvedValue(
           currentStandardVersion,
-        ]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        );
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
           [CodingAgents.packmind],
@@ -1573,8 +1568,8 @@ describe('PullContentUseCase', () => {
         recipesPort.listRecipeVersions.mockResolvedValue([
           currentRecipeVersion,
         ]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
           [CodingAgents.packmind],
@@ -1870,19 +1865,19 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedRecipeVersion])
           .mockResolvedValueOnce([uniqueRecipeVersion]);
 
-        standardsPort.listStandardVersions
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([uniqueStandardVersion])
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([uniqueStandardVersion]);
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(uniqueStandardVersion)
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(uniqueStandardVersion);
 
-        skillsPort.listSkillVersions
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([uniqueSkillVersion])
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([uniqueSkillVersion]);
+        skillsPort.getLatestSkillVersion
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(uniqueSkillVersion)
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(uniqueSkillVersion);
 
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -1964,10 +1959,10 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([packageAOnlyShared]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([sharedRecipeVersion]);
-        standardsPort.listStandardVersions.mockResolvedValue([
+        standardsPort.getLatestStandardVersion.mockResolvedValue(
           sharedStandardVersion,
-        ]);
-        skillsPort.listSkillVersions.mockResolvedValue([sharedSkillVersion]);
+        );
+        skillsPort.getLatestSkillVersion.mockResolvedValue(sharedSkillVersion);
       });
 
       it('does not generate any deletion paths', async () => {
@@ -2013,10 +2008,10 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([packageAUniqueOnly]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([uniqueRecipeVersion]);
-        standardsPort.listStandardVersions.mockResolvedValue([
+        standardsPort.getLatestStandardVersion.mockResolvedValue(
           uniqueStandardVersion,
-        ]);
-        skillsPort.listSkillVersions.mockResolvedValue([uniqueSkillVersion]);
+        );
+        skillsPort.getLatestSkillVersion.mockResolvedValue(uniqueSkillVersion);
 
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -2068,13 +2063,13 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedRecipeVersion])
           .mockResolvedValueOnce([uniqueRecipeVersion]);
 
-        standardsPort.listStandardVersions
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([uniqueStandardVersion]);
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(uniqueStandardVersion);
 
-        skillsPort.listSkillVersions
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([uniqueSkillVersion]);
+        skillsPort.getLatestSkillVersion
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(uniqueSkillVersion);
 
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -2410,8 +2405,8 @@ describe('PullContentUseCase', () => {
       ]);
 
       recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
-      standardsPort.listStandardVersions.mockResolvedValue([standardVersion]);
-      skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(standardVersion);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
     });
 
     describe('when deployed files have artifactType and artifactId', () => {

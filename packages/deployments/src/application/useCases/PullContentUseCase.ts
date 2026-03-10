@@ -195,16 +195,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
 
         // Get standard versions for standards
-        const standardVersionsPromises = standards.map(async (standard) => {
-          const versions = await this.standardsPort.listStandardVersions(
-            standard.id,
-          );
-          versions.sort((a, b) => b.version - a.version);
-          return versions[0];
-        });
+        const standardVersionsPromises = standards.map((standard) =>
+          this.standardsPort.getLatestStandardVersion(standard.id),
+        );
 
         standardVersions = (await Promise.all(standardVersionsPromises)).filter(
-          (sv) => sv !== undefined,
+          (sv) => sv !== null,
         );
 
         this.logger.info('Retrieved standard versions', {
@@ -213,20 +209,20 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
         // Get skill versions for skills
         const skillVersionsPromises = skills.map(async (skill) => {
-          const versions = await this.skillsPort.listSkillVersions(skill.id);
-          versions.sort((a, b) => b.version - a.version);
-          const latestVersion = versions[0];
+          const latestVersion = await this.skillsPort.getLatestSkillVersion(
+            skill.id,
+          );
 
           // Fetch skill files for this version
           if (latestVersion) {
             const files = await this.skillsPort.getSkillFiles(latestVersion.id);
             return { ...latestVersion, files };
           }
-          return latestVersion;
+          return null;
         });
 
         skillVersions = (await Promise.all(skillVersionsPromises)).filter(
-          (skv) => skv !== undefined,
+          (skv) => skv !== null,
         );
 
         this.logger.info('Retrieved skill versions', {
@@ -796,27 +792,21 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     );
 
     // Get standard versions for removed standards
-    const standardVersionsPromises = standards.map(async (standard) => {
-      const versions = await this.standardsPort.listStandardVersions(
-        standard.id,
-      );
-      versions.sort((a, b) => b.version - a.version);
-      return versions[0];
-    });
+    const standardVersionsPromises = standards.map((standard) =>
+      this.standardsPort.getLatestStandardVersion(standard.id),
+    );
 
     const standardVersions = (
       await Promise.all(standardVersionsPromises)
-    ).filter((sv) => sv !== undefined);
+    ).filter((sv) => sv !== null);
 
     // Get skill versions for removed skills
-    const skillVersionsPromises = skills.map(async (skill) => {
-      const versions = await this.skillsPort.listSkillVersions(skill.id);
-      versions.sort((a, b) => b.version - a.version);
-      return versions[0];
-    });
+    const skillVersionsPromises = skills.map((skill) =>
+      this.skillsPort.getLatestSkillVersion(skill.id),
+    );
 
     const skillVersions = (await Promise.all(skillVersionsPromises)).filter(
-      (skv) => skv !== undefined,
+      (skv) => skv !== null,
     );
 
     return { recipeVersions, standardVersions, skillVersions };

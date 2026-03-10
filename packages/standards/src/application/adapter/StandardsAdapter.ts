@@ -390,6 +390,13 @@ export class StandardsAdapter
     return this._getLatestStandardVersion.getLatestStandardVersion(standardId);
   }
 
+  getStandardVersionByNumber(
+    standardId: StandardId,
+    version: number,
+  ): Promise<StandardVersion | null> {
+    return this._getStandardVersion.getStandardVersion(standardId, version);
+  }
+
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]> {
     return this._listStandardVersions.listStandardVersions(standardId);
   }
