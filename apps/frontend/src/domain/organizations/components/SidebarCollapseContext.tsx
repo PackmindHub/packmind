@@ -7,6 +7,7 @@ interface SidebarCollapseContextValue {
 
 const SidebarCollapseContext = createContext<SidebarCollapseContextValue>({
   isCollapsed: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   onToggleCollapse: () => {},
 });
 
