@@ -187,13 +187,22 @@ describe('LockFileRepository', () => {
         });
       });
 
-      it('returns null when JSON is malformed', async () => {
-        mockFs.readFile.mockResolvedValue('not valid json {{{');
+      describe('when JSON is malformed', () => {
+        let result: PackmindLockFile | null;
 
-        const result = await repository.read('/project');
+        beforeEach(async () => {
+          mockFs.readFile.mockResolvedValue('not valid json {{{');
 
-        expect(result).toBeNull();
-        expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
+          result = await repository.read('/project');
+        });
+
+        it('returns null', () => {
+          expect(result).toBeNull();
+        });
+
+        it('logs a warning', () => {
+          expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
+        });
       });
     });
   });
