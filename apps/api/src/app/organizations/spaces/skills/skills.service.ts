@@ -90,6 +90,7 @@ export class SkillsService {
   ): Promise<DeleteSkillResponse> {
     return this.skillsHexa.getAdapter().deleteSkill({
       skillId,
+      spaceId,
       organizationId,
       userId,
       source,
@@ -138,12 +139,14 @@ export class SkillsService {
 
   async deleteSkillsBatch(
     skillIds: SkillId[],
+    spaceId: SpaceId,
     organizationId: OrganizationId,
     userId: UserId,
     source: ClientSource,
   ): Promise<DeleteSkillsBatchResponse> {
     return this.skillsHexa.getAdapter().deleteSkillsBatch({
       skillIds,
+      spaceId,
       organizationId,
       userId,
       source,

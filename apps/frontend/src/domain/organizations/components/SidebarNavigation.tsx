@@ -4,6 +4,7 @@ import {
   PMVerticalNavSection,
   PMLink,
   PMIcon,
+  PMIconButton,
   PMSeparator,
   PMBadge,
   PMTooltip,
@@ -19,11 +20,26 @@ import {
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
-import { LuHouse, LuSettings, LuWrench } from 'react-icons/lu';
+import {
+  LuBookCheck,
+  LuEye,
+  LuHouse,
+  LuPackage,
+  LuPanelLeftClose,
+  LuPanelLeftOpen,
+  LuSettings,
+  LuTerminal,
+  LuWandSparkles,
+  LuWrench,
+} from 'react-icons/lu';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
 import { ReviewChangesNavLink } from '../../change-proposals/components/ReviewChangesNavLink';
+import { useSidebarCollapse } from './SidebarCollapseContext';
+
+const SIDEBAR_WIDTH_EXPANDED = '220px';
+const SIDEBAR_WIDTH_COLLAPSED = '48px';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
@@ -46,7 +62,9 @@ export function SidebarNavigationLink(
   props: Readonly<SidebarNavigationLinkProps>,
 ): React.ReactElement {
   const { url, label, exact = false, icon, badge } = props;
-  return (
+  const { isCollapsed } = useSidebarCollapse();
+
+  const linkContent = (
     <NavLink to={url} end={exact} prefetch="intent">
       {({ isActive }) => (
         <PMLink
@@ -56,38 +74,66 @@ export function SidebarNavigationLink(
           data-testid={props['data-testid']}
           display="flex"
           alignItems="center"
-          justifyContent="space-between"
+          justifyContent={isCollapsed ? 'center' : 'space-between'}
+          {...(isCollapsed && { paddingY: 2 })}
           width="100%"
         >
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            {icon && <PMIcon mr={2}>{icon}</PMIcon>}
-            {label}
-          </span>
-          {badge &&
-            (badge.tooltipLabel ? (
-              <PMTooltip label={badge.tooltipLabel}>
-                <PMBadge
-                  size="sm"
-                  colorScheme={badge.colorScheme || 'purple'}
-                  ml={2}
-                  fontSize="xs"
-                >
-                  {badge.text}
-                </PMBadge>
-              </PMTooltip>
-            ) : (
-              <PMBadge
-                size="sm"
-                colorScheme={badge.colorScheme || 'purple'}
-                ml={2}
-                fontSize="xs"
-              >
-                {badge.text}
-              </PMBadge>
-            ))}
+          {isCollapsed ? (
+            icon && <PMIcon fontSize="md">{icon}</PMIcon>
+          ) : (
+            <>
+              <span style={{ display: 'flex', alignItems: 'center' }}>
+                {icon && <PMIcon mr={2}>{icon}</PMIcon>}
+                {label}
+              </span>
+              {badge &&
+                (badge.tooltipLabel ? (
+                  <PMTooltip label={badge.tooltipLabel}>
+                    <PMBadge
+                      size="sm"
+                      colorScheme={badge.colorScheme || 'purple'}
+                      ml={2}
+                      fontSize="xs"
+                    >
+                      {badge.text}
+                    </PMBadge>
+                  </PMTooltip>
+                ) : (
+                  <PMBadge
+                    size="sm"
+                    colorScheme={badge.colorScheme || 'purple'}
+                    ml={2}
+                    fontSize="xs"
+                  >
+                    {badge.text}
+                  </PMBadge>
+                ))}
+            </>
+          )}
         </PMLink>
       )}
     </NavLink>
+  );
+
+  if (isCollapsed) {
+    return <PMTooltip label={label}>{linkContent}</PMTooltip>;
+  }
+
+  return linkContent;
+}
+
+function SidebarCollapseToggle() {
+  const { isCollapsed, onToggleCollapse } = useSidebarCollapse();
+
+  return (
+    <PMIconButton
+      aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      size="xs"
+      variant="ghost"
+      onClick={onToggleCollapse}
+    >
+      {isCollapsed ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
+    </PMIconButton>
   );
 }
 
@@ -97,10 +143,15 @@ export const SidebarNavigation: React.FunctionComponent<
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
   const { user } = useAuthContext();
   const { data: spaces } = useGetSpacesQuery();
+  const { isCollapsed } = useSidebarCollapse();
 
   // Use spaceSlug from URL if available, otherwise use first space from query
   const currentSpaceSlug =
     spaceSlug || (spaces && spaces.length > 0 ? spaces[0].slug : undefined);
+
+  const sidebarWidth = isCollapsed
+    ? SIDEBAR_WIDTH_COLLAPSED
+    : SIDEBAR_WIDTH_EXPANDED;
 
   if (!organization) {
     return;
@@ -112,8 +163,15 @@ export const SidebarNavigation: React.FunctionComponent<
   if (!currentSpaceSlug) {
     return (
       <PMVerticalNav
-        headerNav={<SidebarOrgaSelector currentOrganization={organization} />}
-        footerNav={<SidebarAccountMenu />}
+        headerNav={
+          isCollapsed ? undefined : (
+            <SidebarOrgaSelector currentOrganization={organization} />
+          )
+        }
+        footerNav={isCollapsed ? undefined : <SidebarAccountMenu />}
+        width={sidebarWidth}
+        logo={!isCollapsed}
+        logoAction={<SidebarCollapseToggle />}
       >
         <PMVerticalNavSection navEntries={[]} />
       </PMVerticalNav>
@@ -121,8 +179,15 @@ export const SidebarNavigation: React.FunctionComponent<
   }
   return (
     <PMVerticalNav
-      headerNav={<SidebarOrgaSelector currentOrganization={organization} />}
-      footerNav={<SidebarAccountMenu />}
+      headerNav={
+        isCollapsed ? undefined : (
+          <SidebarOrgaSelector currentOrganization={organization} />
+        )
+      }
+      footerNav={isCollapsed ? undefined : <SidebarAccountMenu />}
+      width={sidebarWidth}
+      logo={!isCollapsed}
+      logoAction={<SidebarCollapseToggle />}
     >
       <PMVerticalNavSection
         navEntries={[
@@ -136,22 +201,25 @@ export const SidebarNavigation: React.FunctionComponent<
         ]}
       />
       <PMVerticalNavSection
-        title="Playbook"
+        title={isCollapsed ? undefined : 'Playbook'}
         navEntries={[
           <SidebarNavigationLink
             key="standards"
             url={routes.space.toStandards(orgSlug, currentSpaceSlug)}
             label="Standards"
+            icon={<LuBookCheck />}
           />,
           <SidebarNavigationLink
             key="recipes"
             url={routes.space.toCommands(orgSlug, currentSpaceSlug)}
             label="Commands"
+            icon={<LuTerminal />}
           />,
           <SidebarNavigationLink
             key="skills"
             url={routes.space.toSkills(orgSlug, currentSpaceSlug)}
             label="Skills"
+            icon={<LuWandSparkles />}
             data-testid={SidebarNavigationDataTestId.SkillsLink}
           />,
           <PMFeatureFlag
@@ -168,18 +236,20 @@ export const SidebarNavigation: React.FunctionComponent<
         ]}
       />
       <PMVerticalNavSection
-        title="Distribution"
+        title={isCollapsed ? undefined : 'Distribution'}
         navEntries={[
           <SidebarNavigationLink
             key="packages"
             url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
             label="Packages"
+            icon={<LuPackage />}
             data-testid={SidebarNavigationDataTestId.PackagesLink}
           />,
           <SidebarNavigationLink
             key="overview"
             url={routes.org.toDeployments(orgSlug)}
             label="Overview"
+            icon={<LuEye />}
             badge={{
               text: 'Enterprise',
               colorScheme: 'purple',
@@ -214,7 +284,9 @@ export const SidebarNavigation: React.FunctionComponent<
             />,
           );
         }
-        lastEntries.push(<SidebarHelpMenu key="help" />);
+        if (!isCollapsed) {
+          lastEntries.push(<SidebarHelpMenu key="help" />);
+        }
         return <PMVerticalNavSection navEntries={lastEntries} />;
       })()}
     </PMVerticalNav>

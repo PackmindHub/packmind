@@ -1,7 +1,8 @@
 import { Outlet, useNavigate, useParams } from 'react-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PMBox, PMHStack } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
+import { SidebarCollapseProvider } from '../../src/domain/organizations/components/SidebarCollapseContext';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries/UserQueries';
 import { useAuthErrorHandler } from '../../src/domain/accounts/hooks/useAuthErrorHandler';
 import {
@@ -26,6 +27,19 @@ export default function AuthenticatedLayout() {
   const params = useParams();
   const authService = AuthService.getInstance();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => !prev);
+  }, []);
+
+  const sidebarCollapseValue = useMemo(
+    () => ({
+      isCollapsed: isSidebarCollapsed,
+      onToggleCollapse: handleToggleSidebar,
+    }),
+    [isSidebarCollapsed, handleToggleSidebar],
+  );
 
   useAuthErrorHandler();
 
@@ -97,7 +111,7 @@ export default function AuthenticatedLayout() {
   }
 
   return (
-    <>
+    <SidebarCollapseProvider value={sidebarCollapseValue}>
       <PMHStack
         h="100%"
         w="100%"
@@ -118,6 +132,6 @@ export default function AuthenticatedLayout() {
           onboardingStatus?.stepsToShow ?? ['welcome', 'playbook', 'build']
         }
       />
-    </>
+    </SidebarCollapseProvider>
   );
 }

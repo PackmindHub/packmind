@@ -3,6 +3,7 @@ import { useGetGroupedChangeProposalsQuery } from '../api/queries/ChangeProposal
 import { SidebarNavigationLink } from '../../organizations/components/SidebarNavigation';
 import { useGetSpaceBySlugQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
+import { LuGitPullRequestArrow } from 'react-icons/lu';
 
 interface ReviewChangesNavLinkProps {
   orgSlug: string;
@@ -29,6 +30,7 @@ export function ReviewChangesNavLink({
     <SidebarNavigationLink
       url={routes.space.toReviewChanges(orgSlug, spaceSlug)}
       label="Review changes"
+      icon={<LuGitPullRequestArrow />}
       badge={
         totalArtefacts > 0
           ? { text: String(totalArtefacts), colorScheme: 'blue' }

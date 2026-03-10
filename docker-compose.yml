@@ -310,7 +310,7 @@ services:
         condition: service_completed_successfully
 
   run-e2e-tests:
-    image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    image: mcr.microsoft.com/playwright:v1.58.2-jammy
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-run-e2e-tests-${PACKMIND_EDITION:-oss}
     profiles:
       - e2e

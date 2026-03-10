@@ -9,6 +9,8 @@ import {
 import {
   IAccountsPort,
   IAccountsPortName,
+  IDeploymentPort,
+  IDeploymentPortName,
   IPlaybookChangeManagementPort,
   IPlaybookChangeManagementPortName,
   IRecipesPort,
@@ -21,6 +23,7 @@ import {
   IStandardsPortName,
 } from '@packmind/types';
 import { PlaybookChangeManagementAdapter } from './application/adapters/PlaybookChangeManagementAdapter';
+import { ChangeManagementListener } from './application/listeners/ChangeManagementListener';
 import { PlaybookChangeManagementRepositories } from './infra/repositories/PlaybookChangeManagementRepositories';
 import { PlaybookChangeManagementServices } from './application/services/PlaybookChangeManagementServices';
 
@@ -42,6 +45,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
   private readonly playbookChangeManagementRepositories: PlaybookChangeManagementRepositories;
   private readonly playbookChangeManagementServices: PlaybookChangeManagementServices;
   private readonly playbookChangeManagementAdapter: PlaybookChangeManagementAdapter;
+  private readonly changeManagementListener: ChangeManagementListener;
 
   constructor(
     dataSource: DataSource,
@@ -62,6 +66,10 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
         new PlaybookChangeManagementAdapter(
           this.playbookChangeManagementServices,
         );
+
+      this.changeManagementListener = new ChangeManagementListener(
+        this.playbookChangeManagementServices.getChangeProposalService(),
+      );
 
       this.logger.info('PlaybookChangeManagementHexa construction completed');
     } catch (error) {
@@ -85,6 +93,8 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
       const skillsPort = registry.getAdapter<ISkillsPort>(ISkillsPortName);
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const deploymentPort =
+        registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
@@ -99,8 +109,11 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
         [ISpacesPortName]: spacesPort,
         [ISkillsPortName]: skillsPort,
         [IStandardsPortName]: standardsPort,
+        [IDeploymentPortName]: deploymentPort,
         eventEmitterService,
       });
+
+      this.changeManagementListener.initialize(eventEmitterService);
 
       this.logger.info('PlaybookChangeManagementHexa initialized successfully');
     } catch (error) {

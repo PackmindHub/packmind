@@ -1,19 +1,17 @@
 ---
-globs: apps/frontend/**/*.tsx,apps/frontend/**/*.ts
-alwaysApply: false
+alwaysApply: true
 ---
 ## Standard: Frontend Error Management
 
-Define explicit error boundary usage in React applications with TypeScript by implementing page-level and component-level error boundaries only when necessary, while ensuring proper error handling for async operations and event handlers, to enhance user experience and maintain clear error flows. :
+Use error boundaries selectively for custom error UI and isolated critical features, handle TanStack Query mutation errors with onError callbacks, wrap async operations in try-catch blocks, and display validation errors inline to ensure proper error management in React applications. :
 * Avoid overusing error boundaries as they increase code complexity and make error flows harder to trace
 * Display validation errors inline near the relevant form fields for better user experience
-* Do NOT use error boundaries for errors that should be handled explicitly (form validation, expected API errors, user input errors)
+* Do NOT use error boundaries for errors that should be handled explicitly such as form validation, expected API errors, and user input errors
 * Handle TanStack Query mutation errors using onError callbacks to display contextual error messages
-* Only add a page-level error boundary when you need custom error UI for a specific route (different from the default error page)
-* Only add component-level error boundaries for isolated critical features where partial failure is acceptable (e.g., independent dashboard widgets that can fail without affecting the rest of the page)
+* Only add a page-level error boundary when you need custom error UI for a specific route that differs from the default error page
+* Only add component-level error boundaries for isolated critical features where partial failure is acceptable, such as independent dashboard widgets that can fail without affecting the rest of the page. Use this mainly when using components we do not manage internally (eg: CodeMirror).
 * Prevent double submissions by checking mutation pending state before triggering operations
-* Use the key prop to reset error boundaries by forcing React to remount the component with fresh state
-* Use typed error guards (e.g., isPackmindError) to safely extract error details from API responses before displaying to users
+* Use typed error guards such as isPackmindError to safely extract error details from API responses before displaying to users
 * Wrap async operations in try-catch blocks since error boundaries do NOT catch errors in event handlers or async code
 
 Full standard is available here for further request: [Frontend Error Management](../../../.packmind/standards/frontend-error-management.md)

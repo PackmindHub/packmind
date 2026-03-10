@@ -20,10 +20,12 @@ import {
   getItemTypeFromChangeProposalType,
   IAccountsPort,
   IApplyChangeProposalsUseCase,
+  IDeploymentPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
+  PackageId,
   RecipeId,
   SkillId,
   StandardId,
@@ -32,14 +34,14 @@ import {
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
-import { DiffService } from '../../services/DiffService';
-import { CommandChangeProposalsApplier } from './CommandChangeProposalsApplier';
+import { DiffService } from '@packmind/types';
+import { CommandChangesApplier } from './CommandChangesApplier';
 import {
   IChangesProposalApplier,
   ObjectVersions,
 } from './IChangesProposalApplier';
-import { SkillChangeProposalsApplier } from './SkillChangeProposalsApplier';
-import { StandardChangeProposalsApplier } from './StandardChangeProposalsApplier';
+import { SkillChangesApplier } from './SkillChangesApplier';
+import { StandardChangesApplier } from './StandardChangesApplier';
 
 const origin = 'ApplyChangeProposalsUseCase';
 export class ApplyChangeProposalsUseCase<
@@ -59,6 +61,7 @@ export class ApplyChangeProposalsUseCase<
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly deploymentPort: IDeploymentPort,
     private readonly changeProposalService: ChangeProposalService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -124,7 +127,7 @@ export class ApplyChangeProposalsUseCase<
           `Change proposal ${acceptedProposal.id} not found in database`,
         );
       }
-      return proposal;
+      return acceptedProposal;
     });
 
     // Re-validate that all proposals are still pending (fresh from DB)
@@ -148,17 +151,88 @@ export class ApplyChangeProposalsUseCase<
       }
     }
 
-    const newVersion = changeProposalsToApply.length
-      ? await changesApplier.saveNewVersion(
-          changesApplier.applyChangeProposals(
-            currentVersion,
-            changeProposalsToApply,
-          ),
-          createUserId(command.userId),
+    const appliedChangesProposalsResponse = changesApplier.applyChangeProposals(
+      currentVersion,
+      changeProposalsToApply,
+    );
+
+    const userId = createUserId(command.userId);
+    const organizationId = createOrganizationId(command.organizationId);
+    let newVersion = currentVersion;
+    let artefactDeleted = false;
+    const updatedPackages: PackageId[] = [];
+
+    if (appliedChangesProposalsResponse.delete) {
+      await changesApplier.deleteArtefact(
+        currentVersion,
+        userId,
+        command.spaceId,
+        organizationId,
+      );
+      try {
+        await this.changeProposalService.cancelPendingByArtefactId(
           command.spaceId,
-          createOrganizationId(command.organizationId),
-        )
-      : currentVersion;
+          command.artefactId,
+          userId,
+        );
+      } catch (error) {
+        this.logger.warn(
+          'Failed to cancel pending proposals after artefact deletion — orphaned proposals may remain',
+          {
+            artefactId: command.artefactId,
+            spaceId: command.spaceId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
+      artefactDeleted = true;
+    } else {
+      const REMOVAL_PROPOSAL_TYPES = [
+        ChangeProposalType.removeCommand,
+        ChangeProposalType.removeStandard,
+        ChangeProposalType.removeSkill,
+      ] as const;
+
+      const hasContentChanges = changeProposalsToApply.some(
+        (p) =>
+          !REMOVAL_PROPOSAL_TYPES.includes(
+            p.type as (typeof REMOVAL_PROPOSAL_TYPES)[number],
+          ),
+      );
+
+      if (hasContentChanges) {
+        newVersion = await changesApplier.saveNewVersion(
+          appliedChangesProposalsResponse.version,
+          userId,
+          command.spaceId,
+          organizationId,
+        );
+      }
+
+      for (const packageId of appliedChangesProposalsResponse.removeFromPackages) {
+        const { package: pkg } = await this.deploymentPort.getPackageById({
+          packageId,
+          organizationId,
+          spaceId: command.spaceId,
+          userId,
+        });
+        const artefactIds =
+          changesApplier.getUpdatePackageCommandWithoutArtefact(
+            currentVersion,
+            pkg,
+          );
+        await this.deploymentPort.updatePackage({
+          packageId,
+          spaceId: pkg.spaceId,
+          name: pkg.name,
+          description: pkg.description,
+          ...artefactIds,
+          userId,
+          organizationId,
+        });
+        updatedPackages.push(packageId);
+      }
+    }
 
     // 3. Mark all proposals as applied/rejected in a single transaction
     // This ensures atomicity - if any proposal update fails, all are rolled back
@@ -188,15 +262,19 @@ export class ApplyChangeProposalsUseCase<
       });
     } catch (error) {
       this.logger.error(
-        'Failed to mark change proposals - object was updated but proposals remain pending',
+        'Failed to mark change proposals - artefact was modified but proposals remain pending',
         {
-          newVersionId: newVersion.id,
-          newVersion: newVersion.version,
+          artefactDeleted,
+          ...(artefactDeleted
+            ? {}
+            : { newVersionId: newVersion.id, newVersion: newVersion.version }),
           error: error instanceof Error ? error.message : String(error),
         },
       );
       throw new Error(
-        'Failed to mark change proposals. The artefact was updated successfully, but the proposal statuses could not be changed. Please try again.',
+        artefactDeleted
+          ? 'Failed to mark change proposals. The artefact was deleted but proposal statuses could not be updated. Please contact support.'
+          : 'Failed to mark change proposals. The artefact was updated successfully, but the proposal statuses could not be changed. Please try again.',
       );
     }
 
@@ -205,7 +283,8 @@ export class ApplyChangeProposalsUseCase<
       spaceId: command.spaceId,
       accepted: command.accepted.length,
       rejected: command.rejected.length,
-      newVersion: newVersion.id,
+      artefactDeleted,
+      newVersion: artefactDeleted ? undefined : newVersion.id,
     });
 
     SSEEventPublisher.publishChangeProposalUpdateEvent(
@@ -248,7 +327,11 @@ export class ApplyChangeProposalsUseCase<
     }
 
     return {
-      newArtefactVersion: newVersion.id as ArtefactVersionId<T>,
+      newArtefactVersion: artefactDeleted
+        ? undefined
+        : (newVersion.id as ArtefactVersionId<T>),
+      updatedPackages: updatedPackages.length ? updatedPackages : undefined,
+      artefactDeleted: artefactDeleted || undefined,
     };
   }
 
@@ -283,9 +366,9 @@ export class ApplyChangeProposalsUseCase<
     changeProposals: ChangeProposal[],
   ): IChangesProposalApplier<V> {
     const appliers: IChangesProposalApplier<ObjectVersions>[] = [
-      new CommandChangeProposalsApplier(this.diffService, this.recipesPort),
-      new SkillChangeProposalsApplier(this.diffService, this.skillsPort),
-      new StandardChangeProposalsApplier(this.diffService, this.standardsPort),
+      new CommandChangesApplier(this.diffService, this.recipesPort),
+      new SkillChangesApplier(this.diffService, this.skillsPort),
+      new StandardChangesApplier(this.diffService, this.standardsPort),
     ];
 
     for (const applier of appliers) {

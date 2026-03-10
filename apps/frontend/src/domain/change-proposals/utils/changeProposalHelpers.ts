@@ -3,8 +3,15 @@ import {
   ChangeProposalId,
   ChangeProposalStatus,
   ChangeProposalType,
+  createRecipeVersionId,
+  createSkillVersionId,
+  createStandardVersionId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
+
+export const PREVIEW_RECIPE_VERSION_ID = createRecipeVersionId('preview');
+export const PREVIEW_SKILL_VERSION_ID = createSkillVersionId('preview');
+export const PREVIEW_STANDARD_VERSION_ID = createStandardVersionId('preview');
 
 export function getChangeProposalFieldLabel(type: ChangeProposalType): string {
   return CHANGE_PROPOSAL_TYPE_LABELS[type];

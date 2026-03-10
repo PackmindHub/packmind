@@ -1,25 +1,21 @@
 import {
+  ApplierObjectVersions,
+  ApplyChangeProposalsResult,
   ChangeProposal,
   OrganizationId,
+  Package,
   Recipe,
   RecipeVersion,
   Skill,
-  SkillFile,
-  SkillVersion,
+  SkillVersionWithFiles,
   SpaceId,
   Standard,
   StandardVersion,
+  UpdatePackageCommand,
   UserId,
 } from '@packmind/types';
 
-export type SkillVersionWithFiles = SkillVersion & {
-  files: SkillFile[];
-};
-
-export type ObjectVersions =
-  | RecipeVersion
-  | StandardVersion
-  | SkillVersionWithFiles;
+export type ObjectVersions = ApplierObjectVersions;
 
 export type ObjectByVersion<T extends ObjectVersions> = T extends RecipeVersion
   ? Recipe
@@ -29,7 +25,9 @@ export type ObjectByVersion<T extends ObjectVersions> = T extends RecipeVersion
       ? Standard
       : never;
 
-export interface IChangesProposalApplier<Version extends ObjectVersions> {
+export interface IChangesProposalApplier<
+  Version extends ApplierObjectVersions,
+> {
   areChangesApplicable(changeProposals: ChangeProposal[]): boolean;
 
   getVersion(artefactId: ObjectByVersion<Version>['id']): Promise<Version>;
@@ -37,7 +35,19 @@ export interface IChangesProposalApplier<Version extends ObjectVersions> {
   applyChangeProposals(
     source: Version,
     changeProposals: ChangeProposal[],
-  ): Version;
+  ): ApplyChangeProposalsResult<Version>;
+
+  deleteArtefact(
+    source: Version,
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<void>;
+
+  getUpdatePackageCommandWithoutArtefact(
+    source: Version,
+    pkg: Package,
+  ): Pick<UpdatePackageCommand, 'recipeIds' | 'standardIds' | 'skillsIds'>;
 
   saveNewVersion(
     version: Version,

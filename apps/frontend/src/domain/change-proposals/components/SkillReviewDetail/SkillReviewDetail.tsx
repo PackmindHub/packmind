@@ -53,6 +53,7 @@ import { SkillInlineView } from './SkillInlineView';
 import { SkillOriginalTabContent } from './SkillOriginalTabContent';
 import { SkillResultTabContent } from './SkillResultTabContent';
 import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
+import { routes } from '../../../../shared/utils/routes';
 import { SKILL_MD_MARKDOWN_TYPES } from '../../constants/skillProposalTypes';
 
 interface SkillReviewDetailProps {
@@ -285,6 +286,11 @@ export function SkillReviewDetail({
     return null;
   }
 
+  const artefactLink =
+    orgSlug && spaceSlug && skillSlug
+      ? routes.space.toSkill(orgSlug, spaceSlug, skillSlug)
+      : undefined;
+
   return (
     <>
       <PMBox
@@ -312,6 +318,7 @@ export function SkillReviewDetail({
           isSaving={applySkillChangeProposalsMutation.isPending}
           onSave={handleSave}
           disabledTabs={disabledTabs}
+          artefactLink={artefactLink}
         />
 
         {reviewState.activeTab === 'changes' && (

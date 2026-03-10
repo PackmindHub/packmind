@@ -19,6 +19,7 @@ export default function App() {
         paddingY="3"
         borderBottomWidth="1px"
         borderColor="border.tertiary"
+        backgroundColor={'blue.1000'}
       >
         <PMHStack gap="4" align="center">
           <PMHeading size="md">Playground</PMHeading>
@@ -32,7 +33,7 @@ export default function App() {
         </PMHStack>
       </PMBox>
 
-      <PMBox flex="1" overflow="auto" padding="6">
+      <PMBox flex="1" overflow="hidden">
         <ActivePrototype />
       </PMBox>
     </PMBox>

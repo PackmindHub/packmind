@@ -6,6 +6,7 @@ import { SpaceId } from '../../spaces/SpaceId';
 import {
   CreateStandardSamplesCommand,
   CreateStandardSamplesResponse,
+  DeleteStandardCommand,
   UpdateStandardCommand,
 } from '../contracts';
 import { StandardCreationMethod } from '../events/StandardCreatedEvent';
@@ -61,4 +62,5 @@ export interface IStandardsPort {
     command: CreateStandardSamplesCommand,
   ): Promise<CreateStandardSamplesResponse>;
   updateStandard(command: UpdateStandardCommand): Promise<Standard>;
+  deleteStandard(command: DeleteStandardCommand): Promise<void>;
 }

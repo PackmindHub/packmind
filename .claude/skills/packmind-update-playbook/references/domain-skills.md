@@ -24,7 +24,7 @@ For each skill in the list, ask: **Does the user's intent relate to this skill?*
 
 Relevant means: the intent explicitly targets this skill, describes changes to its domain or behavior, or highlights issues with its current content.
 
-Be GENEROUS in flagging existing skills for review — it's cheap to check and expensive to let skills go stale.
+Be GENEROUS in flagging existing skills for review — it's cheap to check and expensive to let skills go stale. (This intentionally differs from the HIGH BAR applied to standards: a stale skill actively misleads agents at runtime, so the cost of a false negative is high. Standards are noise-sensitive; skills are accuracy-sensitive.)
 
 Also identify **new skill ideas** if the user's intent suggests creating one. A new skill is warranted if:
 - The intent describes specialized knowledge that no existing skill covers

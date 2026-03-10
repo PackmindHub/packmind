@@ -8,6 +8,7 @@ import { StandardVersionId } from '../../standards';
 import { RecipeVersionId } from '../../recipes';
 import { SkillVersionId } from '../../skills';
 import { AcceptedChangeProposal } from '../AcceptedChangeProposal';
+import { PackageId } from '../../deployments';
 
 /**
  * Maps artifact ID types to their corresponding version ID types.
@@ -39,7 +40,9 @@ export type ApplyChangeProposalsCommand<
 export type ApplyChangeProposalsResponse<
   T extends StandardId | RecipeId | SkillId,
 > = {
-  newArtefactVersion: ArtefactVersionId<T>;
+  newArtefactVersion?: ArtefactVersionId<T>;
+  updatedPackages?: PackageId[];
+  artefactDeleted?: boolean;
 };
 
 export interface IApplyChangeProposalsUseCase<

@@ -157,6 +157,7 @@ describe('Packmind Deployment Spec', () => {
           standardId: standard1.id,
           userId: dataFactory.user.id.toString(),
           organizationId: dataFactory.organization.id.toString(),
+          spaceId: dataFactory.space.id,
         });
         await distributePackage(standardsPackage1);
         const standardsPackage2 = await createPackage(

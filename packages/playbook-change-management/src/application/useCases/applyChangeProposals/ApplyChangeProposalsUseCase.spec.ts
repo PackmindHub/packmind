@@ -6,6 +6,7 @@ import {
   ChangeProposalDecision,
   createChangeProposalId,
   createOrganizationId,
+  createPackageId,
   createRecipeId,
   createRecipeVersionId,
   createSkillId,
@@ -13,6 +14,7 @@ import {
   createStandardId,
   createUserId,
   IAccountsPort,
+  IDeploymentPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -32,6 +34,7 @@ import { changeProposalFactory } from '@packmind/playbook-change-management/test
 import { ApplyChangeProposalsUseCase } from './ApplyChangeProposalsUseCase';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { standardVersionFactory } from '@packmind/standards/test';
 
 jest.mock('@packmind/node-utils', () => ({
   ...jest.requireActual('@packmind/node-utils'),
@@ -71,6 +74,7 @@ describe('ApplyChangeProposalsUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
+  let deploymentPort: jest.Mocked<IDeploymentPort>;
   let changeProposalService: jest.Mocked<ChangeProposalService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
@@ -89,12 +93,14 @@ describe('ApplyChangeProposalsUseCase', () => {
       getLatestStandardVersion: jest.fn(),
       getRulesByStandardId: jest.fn(),
       updateStandard: jest.fn(),
+      deleteStandard: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     recipesPort = {
       getRecipeByIdInternal: jest.fn(),
       updateRecipeFromUI: jest.fn(),
       getRecipeVersion: jest.fn(),
+      deleteRecipe: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
     skillsPort = {
@@ -102,11 +108,18 @@ describe('ApplyChangeProposalsUseCase', () => {
       getLatestSkillVersion: jest.fn(),
       getSkillFiles: jest.fn(),
       saveSkillVersion: jest.fn(),
+      deleteSkill: jest.fn(),
     } as unknown as jest.Mocked<ISkillsPort>;
+
+    deploymentPort = {
+      getPackageById: jest.fn(),
+      updatePackage: jest.fn(),
+    } as unknown as jest.Mocked<IDeploymentPort>;
 
     changeProposalService = {
       findById: jest.fn(),
       batchUpdateProposalsInTransaction: jest.fn(),
+      cancelPendingByArtefactId: jest.fn(),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
     eventEmitterService = {
@@ -119,6 +132,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       standardsPort,
       recipesPort,
       skillsPort,
+      deploymentPort,
       changeProposalService,
       eventEmitterService,
       stubLogger(),
@@ -843,6 +857,591 @@ describe('ApplyChangeProposalsUseCase', () => {
         acceptedProposals: [],
         rejectedProposals: [],
       });
+    });
+  });
+
+  describe('when accepting a removeCommand proposal with delete decision', () => {
+    const removeProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-remove'),
+      type: ChangeProposalType.removeCommand,
+      artefactId: recipeId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: {},
+    });
+
+    const recipeVersionId = createRecipeVersionId('recipe-version-1');
+    const recipeVersion = recipeVersionFactory({
+      id: recipeVersionId,
+      recipeId,
+      version: 1,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(removeProposal)
+        .mockResolvedValueOnce(removeProposal);
+      recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+      recipesPort.deleteRecipe.mockResolvedValue({});
+      changeProposalService.cancelPendingByArtefactId.mockResolvedValue(
+        undefined,
+      );
+      changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it('calls deleteRecipe on the recipes port', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(recipesPort.deleteRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({ recipeId }),
+      );
+    });
+
+    it('does not call updateRecipeFromUI', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(recipesPort.updateRecipeFromUI).not.toHaveBeenCalled();
+    });
+
+    it('returns artefactDeleted true', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(result.artefactDeleted).toBe(true);
+    });
+
+    it('cancels all other pending proposals for the artefact after deleting', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(
+        changeProposalService.cancelPendingByArtefactId,
+      ).toHaveBeenCalledWith(spaceId, recipeId, userId);
+    });
+  });
+
+  describe('when accepting a removeCommand proposal with removeFromPackages decision', () => {
+    const packageId = createPackageId('pkg-1');
+    const removeProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-remove'),
+      type: ChangeProposalType.removeCommand,
+      artefactId: recipeId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: {},
+    });
+
+    const recipeVersionId = createRecipeVersionId('recipe-version-1');
+    const recipeVersion = recipeVersionFactory({
+      id: recipeVersionId,
+      recipeId,
+      version: 1,
+    });
+
+    const pkg = {
+      id: packageId,
+      name: 'My Package',
+      slug: 'my-package',
+      description: 'desc',
+      spaceId,
+      createdBy: userId,
+      recipes: [recipeId],
+      standards: [],
+      skills: [],
+    };
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(removeProposal)
+        .mockResolvedValueOnce(removeProposal);
+      recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+      deploymentPort.getPackageById.mockResolvedValue({ package: pkg });
+      deploymentPort.updatePackage.mockResolvedValue({ package: pkg });
+      changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it('does not call updateRecipeFromUI for a removal-only proposal', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [packageId],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(recipesPort.updateRecipeFromUI).not.toHaveBeenCalled();
+    });
+
+    it('calls getPackageById for each package to remove from', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [packageId],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(deploymentPort.getPackageById).toHaveBeenCalledWith(
+        expect.objectContaining({ packageId }),
+      );
+    });
+
+    it('calls updatePackage without the recipe ID', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [packageId],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(deploymentPort.updatePackage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packageId,
+          recipeIds: [],
+        }),
+      );
+    });
+
+    it('returns the updated package IDs', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [packageId],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(result.updatedPackages).toEqual([packageId]);
+    });
+  });
+
+  describe('when accepting a removeStandard proposal with delete decision', () => {
+    const standardId = createStandardId('standard-to-delete');
+    const removeProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-remove-std'),
+      type: ChangeProposalType.removeStandard,
+      artefactId: standardId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: {},
+    });
+
+    const standardVersion = standardVersionFactory({
+      standardId,
+      version: 1,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(removeProposal)
+        .mockResolvedValueOnce(removeProposal);
+      standardsPort.getStandard.mockResolvedValue({
+        id: standardId,
+        spaceId,
+      } as never);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(
+        standardVersion as never,
+      );
+      standardsPort.getRulesByStandardId.mockResolvedValue([]);
+      standardsPort.deleteStandard.mockResolvedValue(undefined);
+      recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+      changeProposalService.cancelPendingByArtefactId.mockResolvedValue(
+        undefined,
+      );
+      changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it('calls deleteStandard on the standards port', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(standardsPort.deleteStandard).toHaveBeenCalledWith(
+        expect.objectContaining({ standardId }),
+      );
+    });
+
+    it('does not call updateStandard', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(standardsPort.updateStandard).not.toHaveBeenCalled();
+    });
+
+    it('returns artefactDeleted true', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(result.artefactDeleted).toBe(true);
+    });
+  });
+
+  describe('when accepting a removeSkill proposal with delete decision', () => {
+    const skillId = createSkillId('skill-to-delete');
+    const removeProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-remove-skill'),
+      type: ChangeProposalType.removeSkill,
+      artefactId: skillId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: {},
+    });
+
+    const skillVersion = skillVersionFactory({
+      skillId,
+      version: 1,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(removeProposal)
+        .mockResolvedValueOnce(removeProposal);
+      skillsPort.getSkill.mockResolvedValue({
+        id: skillId,
+        spaceId,
+      } as never);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+      skillsPort.deleteSkill.mockResolvedValue(undefined);
+      recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+      changeProposalService.cancelPendingByArtefactId.mockResolvedValue(
+        undefined,
+      );
+      changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it('calls deleteSkill on the skills port', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: skillId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(skillsPort.deleteSkill).toHaveBeenCalledWith(
+        expect.objectContaining({ skillId }),
+      );
+    });
+
+    it('does not call saveSkillVersion', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: skillId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(skillsPort.saveSkillVersion).not.toHaveBeenCalled();
+    });
+
+    it('returns artefactDeleted true', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: skillId,
+        accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+        rejected: [],
+      });
+
+      expect(result.artefactDeleted).toBe(true);
+    });
+  });
+
+  describe('when batchUpdateProposalsInTransaction fails after deleteArtefact', () => {
+    const removeProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-remove-fail'),
+      type: ChangeProposalType.removeCommand,
+      artefactId: recipeId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: {},
+    });
+
+    const recipeVersionId = createRecipeVersionId('recipe-version-fail');
+    const recipeVersion = recipeVersionFactory({
+      id: recipeVersionId,
+      recipeId,
+      version: 1,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(removeProposal)
+        .mockResolvedValueOnce(removeProposal);
+      recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+      recipesPort.deleteRecipe.mockResolvedValue({});
+      changeProposalService.cancelPendingByArtefactId.mockResolvedValue(
+        undefined,
+      );
+      changeProposalService.batchUpdateProposalsInTransaction.mockRejectedValue(
+        new Error('DB connection lost'),
+      );
+    });
+
+    it('rejects with failed to mark change proposals', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          artefactId: recipeId,
+          accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+          rejected: [],
+        }),
+      ).rejects.toThrow('Failed to mark change proposals');
+    });
+
+    it('still calls deleteRecipe before the batch update fails', async () => {
+      await useCase
+        .execute({
+          userId,
+          organizationId,
+          spaceId,
+          artefactId: recipeId,
+          accepted: [toAcceptedProposal(removeProposal, { delete: true })],
+          rejected: [],
+        })
+        .catch(() => {
+          /* expected error */
+        });
+
+      expect(recipesPort.deleteRecipe).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when accepting a removeCommand proposal with empty removeFromPackages', () => {
+    const removeProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-remove-empty-pkg'),
+      type: ChangeProposalType.removeCommand,
+      artefactId: recipeId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: {},
+    });
+
+    const recipeVersionId = createRecipeVersionId('recipe-version-empty-pkg');
+    const recipeVersion = recipeVersionFactory({
+      id: recipeVersionId,
+      recipeId,
+      version: 1,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(removeProposal)
+        .mockResolvedValueOnce(removeProposal);
+      recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+      changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it('does not call getPackageById', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(deploymentPort.getPackageById).not.toHaveBeenCalled();
+    });
+
+    it('returns updatedPackages as undefined', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(result.updatedPackages).toBeUndefined();
+    });
+  });
+
+  describe('when accepting a removeStandard proposal with removeFromPackages decision', () => {
+    const standardId = createStandardId('standard-remove-pkg');
+    const stdPackageId = createPackageId('std-pkg-1');
+    const removeProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-remove-std-pkg'),
+      type: ChangeProposalType.removeStandard,
+      artefactId: standardId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+      payload: {},
+    });
+
+    const standardVersion = standardVersionFactory({
+      standardId,
+      version: 1,
+    });
+
+    const pkg = {
+      id: stdPackageId,
+      name: 'Std Package',
+      slug: 'std-package',
+      description: 'desc',
+      spaceId,
+      createdBy: userId,
+      recipes: [],
+      standards: [standardId],
+      skills: [],
+    };
+
+    beforeEach(() => {
+      changeProposalService.findById
+        .mockResolvedValueOnce(removeProposal)
+        .mockResolvedValueOnce(removeProposal);
+      standardsPort.getStandard.mockResolvedValue({
+        id: standardId,
+        spaceId,
+      } as never);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(
+        standardVersion as never,
+      );
+      standardsPort.getRulesByStandardId.mockResolvedValue([]);
+      recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+      deploymentPort.getPackageById.mockResolvedValue({ package: pkg });
+      deploymentPort.updatePackage.mockResolvedValue({ package: pkg });
+      changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it('calls updatePackage with the standard removed', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [stdPackageId],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(deploymentPort.updatePackage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packageId: stdPackageId,
+          standardIds: [],
+        }),
+      );
+    });
+
+    it('returns the updated package IDs', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [stdPackageId],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(result.updatedPackages).toEqual([stdPackageId]);
     });
   });
 });

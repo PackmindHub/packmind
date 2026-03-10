@@ -1,0 +1,10 @@
+{
+  "name": "My Standard",
+  "description": "Describe what this standard enforces",
+  "scope": "TypeScript",
+  "rules": [
+    {
+      "content": "Describe the rule here"
+    }
+  ]
+}

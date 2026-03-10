@@ -350,6 +350,7 @@ export class OrganizationsSpacesSkillsController {
     try {
       return await this.skillsService.deleteSkillsBatch(
         body.skillIds,
+        spaceId,
         organizationId,
         userId,
         request.clientSource,

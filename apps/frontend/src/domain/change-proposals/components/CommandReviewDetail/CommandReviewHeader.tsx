@@ -14,6 +14,7 @@ interface CommandReviewHeaderProps {
   hasPooledDecisions: boolean;
   isSaving: boolean;
   onSave: () => void;
+  artefactLink?: string;
 }
 
 export function CommandReviewHeader(props: Readonly<CommandReviewHeaderProps>) {

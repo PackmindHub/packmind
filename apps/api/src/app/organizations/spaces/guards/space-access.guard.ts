@@ -33,7 +33,7 @@ export class SpaceAccessGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const spaceIdParam = request.params['spaceId'];
+    const spaceIdParam = request.params['spaceId'] as string;
 
     if (!spaceIdParam) {
       this.logger.warn('Space ID is missing from URL parameters');

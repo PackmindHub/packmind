@@ -9,7 +9,7 @@ import {
 
 export default function ButtonsPrototype() {
   return (
-    <PMVStack gap="8" align="stretch">
+    <PMVStack gap="8" align="stretch" padding="6" overflow="auto" height="100%">
       <PMText color="secondary">
         Use this space to ideate and prototype UI components.
       </PMText>

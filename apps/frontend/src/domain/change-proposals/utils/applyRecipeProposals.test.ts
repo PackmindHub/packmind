@@ -70,14 +70,6 @@ describe('applyRecipeProposals', () => {
     it('returns the original recipe content', () => {
       expect(result.content).toBe('Original content');
     });
-
-    it('does not track name changes', () => {
-      expect(result.changes.name).toBeUndefined();
-    });
-
-    it('does not track content changes', () => {
-      expect(result.changes.content).toBeUndefined();
-    });
   });
 
   describe('with no accepted proposals', () => {
@@ -105,10 +97,6 @@ describe('applyRecipeProposals', () => {
     it('returns the original recipe name', () => {
       expect(result.name).toBe('Original Recipe');
     });
-
-    it('does not track changes', () => {
-      expect(result.changes.name).toBeUndefined();
-    });
   });
 
   describe('when updating recipe name', () => {
@@ -135,22 +123,6 @@ describe('applyRecipeProposals', () => {
 
     it('applies the new name', () => {
       expect(result.name).toBe('Updated Name');
-    });
-
-    it('tracks the name change', () => {
-      expect(result.changes.name).toBeDefined();
-    });
-
-    it('tracks the original value', () => {
-      expect(result.changes.name?.originalValue).toBe('Original Recipe');
-    });
-
-    it('tracks the final value', () => {
-      expect(result.changes.name?.finalValue).toBe('Updated Name');
-    });
-
-    it('tracks the proposal ID', () => {
-      expect(result.changes.name?.proposalIds).toEqual([proposalId]);
     });
   });
 
@@ -181,22 +153,6 @@ describe('applyRecipeProposals', () => {
 
     it('applies the new content', () => {
       expect(result.content).toBe('Updated content');
-    });
-
-    it('tracks the content change', () => {
-      expect(result.changes.content).toBeDefined();
-    });
-
-    it('tracks the original value', () => {
-      expect(result.changes.content?.originalValue).toBe('Original content');
-    });
-
-    it('tracks the final value', () => {
-      expect(result.changes.content?.finalValue).toBe('Updated content');
-    });
-
-    it('tracks the proposal ID', () => {
-      expect(result.changes.content?.proposalIds).toEqual([proposalId]);
     });
   });
 
@@ -250,22 +206,6 @@ describe('applyRecipeProposals', () => {
     it('applies changes in chronological order', () => {
       expect(result.name).toBe('Final Update');
     });
-
-    it('tracks the original value from the first change', () => {
-      expect(result.changes.name?.originalValue).toBe('Original Recipe');
-    });
-
-    it('tracks the final value from the last change', () => {
-      expect(result.changes.name?.finalValue).toBe('Final Update');
-    });
-
-    it('tracks all proposal IDs in order', () => {
-      expect(result.changes.name?.proposalIds).toEqual([
-        proposal1Id,
-        proposal2Id,
-        proposal3Id,
-      ]);
-    });
   });
 
   describe('when applying proposals in non-chronological order', () => {
@@ -310,12 +250,39 @@ describe('applyRecipeProposals', () => {
     it('sorts and applies proposals by createdAt date', () => {
       expect(result.name).toBe('Second Update');
     });
+  });
 
-    it('tracks proposals in chronological order', () => {
-      expect(result.changes.name?.proposalIds).toEqual([
-        earlierProposalId,
-        laterProposalId,
-      ]);
+  describe('when a content proposal conflicts with current value', () => {
+    const proposalId = createChangeProposalId(uuidv4());
+    const proposals: ChangeProposalWithConflicts[] = [
+      {
+        ...changeProposalFactory({
+          id: proposalId,
+          type: ChangeProposalType.updateCommandDescription,
+          artefactId: recipeId,
+          payload: {
+            oldValue: 'Value that does not match current content',
+            newValue: 'Updated content',
+          },
+          createdAt: new Date('2024-01-01'),
+        }),
+        conflictsWith: [],
+      },
+    ];
+    const acceptedIds = new Set([proposalId]);
+
+    let result: ReturnType<typeof applyRecipeProposals>;
+
+    beforeEach(() => {
+      result = applyRecipeProposals(recipe, proposals, acceptedIds);
+    });
+
+    it('returns the original recipe name', () => {
+      expect(result.name).toBe('Original Recipe');
+    });
+
+    it('returns the original recipe content', () => {
+      expect(result.content).toBe('Original content');
     });
   });
 
@@ -364,14 +331,6 @@ describe('applyRecipeProposals', () => {
 
     it('applies the content change', () => {
       expect(result.content).toBe('Updated content');
-    });
-
-    it('tracks the name change', () => {
-      expect(result.changes.name).toBeDefined();
-    });
-
-    it('tracks the content change', () => {
-      expect(result.changes.content).toBeDefined();
     });
   });
 });

@@ -24,7 +24,7 @@ For each skill in the list, ask: **Does the user's intent relate to this skill?*
 
 Relevant means: the intent explicitly targets this skill, describes changes to its domain or behavior, or highlights issues with its current content.
 
-Be GENEROUS in flagging existing skills for review — it's cheap to check and expensive to let skills go stale.
+Be GENEROUS in flagging existing skills for review — it's cheap to check and expensive to let skills go stale. (This intentionally differs from the HIGH BAR applied to standards: a stale skill actively misleads agents at runtime, so the cost of a false negative is high. Standards are noise-sensitive; skills are accuracy-sensitive.)
 
 Also identify **new skill ideas** if the user's intent suggests creating one. A new skill is warranted if:
 - The intent describes specialized knowledge that no existing skill covers
@@ -48,13 +48,15 @@ For each new skill idea, verify:
 - It will be needed in future sessions (not a one-off)
 - SKILL.md would stay under 5k words (plan references for overflow)
 
+For each new skill that passes validation, follow the procedure in [create-skill-procedure.md](create-skill-procedure.md) to write the skill directory.
+
 ## Output Format
 
 \`\`\`markdown
 ## Skills Change Report
 
 ### New Skills
-(If none: "No new skills needed.")
+<!-- Omit this section if none -->
 
 #### skill-name
 - **Reason**: why this skill is needed
@@ -62,7 +64,7 @@ For each new skill idea, verify:
 - **Key contents**: decision tables, anti-patterns, references needed
 
 ### Skill Updates
-(If none: "No updates needed.")
+<!-- Omit this section if none -->
 
 #### skill-name
 - **Reason**: what changed or what's missing
@@ -70,10 +72,5 @@ For each new skill idea, verify:
 - **Reference file changes**: files to add/update/remove
 - **Description update**: new description if auto-load triggers need adjustment
 
-### Skills to Deprecate
-(If none: "No deprecations needed.")
-
-#### skill-name
-- **Reason**: why no longer relevant
 \`\`\`
 `;

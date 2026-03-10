@@ -1,9 +1,18 @@
 import * as path from 'path';
 
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
-import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
+import {
+  logErrorConsole,
+  logSuccessConsole,
+  logWarningConsole,
+} from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
+import {
+  ArtifactType,
+  ChangeProposalType,
+  CodingAgent,
+  createPackageId,
+} from '@packmind/types';
 import { normalizePath } from '../../application/utils/pathUtils';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 
@@ -15,6 +24,7 @@ export type DiffRemoveHandlerDependencies = {
   getCwd: () => string;
   existsSync: (path: string) => boolean;
   unlinkSync: (path: string) => void;
+  rmSync: (path: string, options?: { recursive?: boolean }) => void;
 };
 
 const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
@@ -34,6 +44,7 @@ export async function diffRemoveHandler(
     getCwd,
     existsSync,
     unlinkSync,
+    rmSync,
   } = deps;
 
   if (!filePath) {
@@ -56,8 +67,23 @@ export async function diffRemoveHandler(
     return;
   }
 
+  // Same detection as diffAddHandler (line 75), inverse normalization
+  const matchPath =
+    artefactResult.artifactType === 'skill'
+      ? absolutePath.endsWith('SKILL.md')
+        ? absolutePath
+        : path.join(absolutePath, 'SKILL.md')
+      : absolutePath;
+  const skillDirPath =
+    artefactResult.artifactType === 'skill'
+      ? absolutePath.endsWith('SKILL.md')
+        ? path.dirname(absolutePath)
+        : absolutePath
+      : undefined;
+
   // Check if the file or directory exists
-  if (!existsSync(absolutePath)) {
+  const existsCheckPath = skillDirPath ?? absolutePath;
+  if (!existsSync(existsCheckPath)) {
     logErrorConsole(`File or directory does not exist: ${filePath}`);
     exit(1);
     return;
@@ -142,9 +168,9 @@ export async function diffRemoveHandler(
 
   // gitRoot is guaranteed non-null: the early exit above checks gitRemoteUrl,
   // which is only set inside the `if (gitRoot)` block.
-  const relativeToGitRoot = absolutePath.startsWith(gitRoot!)
-    ? absolutePath.slice(gitRoot!.length)
-    : absolutePath;
+  const relativeToGitRoot = matchPath.startsWith(gitRoot!)
+    ? matchPath.slice(gitRoot!.length)
+    : matchPath;
 
   // Normalize by removing leading slash and converting backslashes
   let normalizedFilePath = normalizePath(relativeToGitRoot);
@@ -173,7 +199,7 @@ export async function diffRemoveHandler(
     return;
   }
 
-  if (!deployedContent.targetId || !deployedContent.packageIds) {
+  if (!deployedContent.targetId || !deployedFile.packageIds) {
     logErrorConsole(
       'Missing target or package information. Cannot create change proposal for removal.',
     );
@@ -223,7 +249,7 @@ export async function diffRemoveHandler(
     type: changeProposalType,
     payload: {
       targetId: deployedContent.targetId,
-      packageIds: deployedContent.packageIds,
+      packageIds: deployedFile.packageIds.map(createPackageId),
     },
     artifactName: deployedFile.artifactName || artefactResult.artifactType,
     artifactType: artefactResult.artifactType,
@@ -245,13 +271,18 @@ export async function diffRemoveHandler(
   if (result.submitted > 0) {
     logSuccessConsole('Change proposal for removal submitted successfully');
   } else if (result.alreadySubmitted > 0) {
-    logSuccessConsole('Change proposal for removal already submitted');
+    logWarningConsole('Change proposal for removal already submitted');
   }
 
-  // Delete the file after successful submission
+  // Delete the file/directory after successful submission
   try {
-    unlinkSync(absolutePath);
-    logSuccessConsole(`File deleted: ${filePath}`);
+    if (skillDirPath) {
+      rmSync(skillDirPath, { recursive: true });
+      logSuccessConsole(`Directory deleted: ${skillDirPath}`);
+    } else {
+      unlinkSync(absolutePath);
+      logSuccessConsole(`File deleted: ${filePath}`);
+    }
   } catch (err) {
     logErrorConsole(
       `Failed to delete file: ${err instanceof Error ? err.message : String(err)}`,

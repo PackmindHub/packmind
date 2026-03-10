@@ -306,6 +306,23 @@ describe('GetDeployedContentUseCase', () => {
       );
     });
 
+    it('returns packageIds on each file modification scoped to packages containing the artifact', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.fileUpdates.createOrUpdate).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: '.packmind/standards/test-standard.md',
+            packageIds: [packageWithArtefacts.id as string],
+          }),
+          expect.objectContaining({
+            path: '.packmind/commands/test-recipe.md',
+            packageIds: [packageWithArtefacts.id as string],
+          }),
+        ]),
+      );
+    });
+
     it('returns skill folders for all agents', async () => {
       const result = await useCase.execute(command);
 
