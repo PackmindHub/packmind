@@ -331,9 +331,12 @@ describe('ChangeProposalRepository', () => {
           artefactId,
         );
 
-        expect(
-          proposals.every((p) => p.status === ChangeProposalStatus.rejected),
-        ).toBe(true);
+        expect(proposals).toHaveLength(2);
+        proposals.forEach((p) => {
+          expect(p.status).toBe(ChangeProposalStatus.rejected);
+          expect(p.resolvedBy).toBe(cancelledBy);
+          expect(p.resolvedAt).toBeDefined();
+        });
       });
 
       it('does not affect pending proposals for other artefacts', async () => {
@@ -343,6 +346,18 @@ describe('ChangeProposalRepository', () => {
         );
 
         expect(proposals[0].status).toBe(ChangeProposalStatus.pending);
+      });
+    });
+
+    describe('when no proposals exist for the artefact', () => {
+      it('completes without error', async () => {
+        await expect(
+          repository.cancelPendingByArtefactId(
+            spaceAId,
+            createStandardId('nonexistent-id'),
+            cancelledBy,
+          ),
+        ).resolves.not.toThrow();
       });
     });
 

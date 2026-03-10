@@ -104,20 +104,20 @@ export class ChangeProposalRepository
     artefactId: string,
     cancelledBy: UserId,
   ): Promise<void> {
-    const proposals = await this.findByArtefactId(spaceId, artefactId);
-    const pending = proposals.filter(
-      (p) => p.status === ChangeProposalStatus.pending,
-    );
-
-    await Promise.all(
-      pending.map((p) =>
-        this.update({
-          ...p,
-          status: ChangeProposalStatus.rejected,
-          resolvedBy: cancelledBy,
-          resolvedAt: new Date(),
-        }),
-      ),
-    );
+    await this.repository
+      .createQueryBuilder()
+      .update()
+      .set({
+        status: ChangeProposalStatus.rejected,
+        decision: null,
+        resolvedBy: cancelledBy,
+        resolvedAt: new Date(),
+      } as Partial<ChangeProposal<ChangeProposalType>>)
+      .where('space_id = :spaceId', { spaceId })
+      .andWhere('artefact_id = :artefactId', { artefactId })
+      .andWhere('status = :status', {
+        status: ChangeProposalStatus.pending,
+      })
+      .execute();
   }
 }
