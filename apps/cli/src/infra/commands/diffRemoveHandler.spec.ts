@@ -632,7 +632,7 @@ describe('diffRemoveHandler', () => {
         fileUpdates: {
           createOrUpdate: [
             {
-              path: 'apps/frontend/.packmind/standards/my-standard.md',
+              path: '.packmind/standards/my-standard.md',
               content: '# My Standard\n\n* Rule 1',
               artifactType: 'standard',
               artifactName: 'my-standard',

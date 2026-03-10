@@ -7,6 +7,7 @@ import {
   RemoveArtefactDecision,
   RemoveArtefactPayload,
   SpaceId,
+  TargetId,
   getItemTypeFromChangeProposalType,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
@@ -17,7 +18,10 @@ import { ProposalMessage } from './ProposalMessage';
 import { CardToolbar } from './CardToolbar';
 import { FocusedView } from './FocusedView';
 import { useAuthContext } from '../../../accounts/hooks';
-import { useListPackagesBySpaceQuery } from '../../../deployments/api/queries/DeploymentsQueries';
+import {
+  useGetTargetsByOrganizationQuery,
+  useListPackagesBySpaceQuery,
+} from '../../../deployments/api/queries/DeploymentsQueries';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -44,11 +48,13 @@ interface ChangeProposalCardBodyProps {
 function RemoveProposalContent({
   proposalType,
   spaceId,
+  targetId,
   poolStatus,
   decision,
 }: {
   proposalType: ChangeProposalType;
   spaceId: SpaceId;
+  targetId: TargetId;
   poolStatus: PoolStatus;
   decision: RemoveArtefactDecision | null;
 }) {
@@ -57,6 +63,7 @@ function RemoveProposalContent({
     spaceId,
     organization?.id,
   );
+  const { data: targets } = useGetTargetsByOrganizationQuery();
 
   const itemType = getItemTypeFromChangeProposalType(proposalType);
   const artefactLabel = itemType.charAt(0).toUpperCase() + itemType.slice(1);
@@ -64,6 +71,13 @@ function RemoveProposalContent({
   const packageMap = new Map<PackageId, string>(
     packagesResponse?.packages?.map((pkg) => [pkg.id, pkg.name]) ?? [],
   );
+
+  const target = targets?.find((t) => t.id === targetId);
+  const targetPathLabel =
+    target && target.path !== '/' ? ` in folder ${target.path}` : '';
+  const repoLabel = target
+    ? `${target.repository.owner}/${target.repository.repo}${targetPathLabel}`
+    : null;
 
   const removedPackageIds =
     poolStatus === 'accepted' && decision && !decision.delete
@@ -74,6 +88,7 @@ function RemoveProposalContent({
     <PMVStack align="flex-start" gap={3}>
       <PMText fontSize="sm" color="secondary">
         {artefactLabel} has been removed from repository
+        {repoLabel ? ` ${repoLabel}` : ''}
       </PMText>
       {removedPackageIds.length > 0 && (
         <PMText fontSize="sm" color="secondary">
@@ -168,6 +183,7 @@ export function ChangeProposalCardBody({
           <RemoveProposalContent
             proposalType={proposal.type}
             spaceId={proposal.spaceId}
+            targetId={removePayload.targetId}
             poolStatus={poolStatus}
             decision={removeDecision}
           />

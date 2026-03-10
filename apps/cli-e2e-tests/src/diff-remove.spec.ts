@@ -224,6 +224,62 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
     });
   });
 
+  describe('when running from a sub-target directory', () => {
+    let returnCode: number;
+    let stdout: string;
+    let stderr: string;
+    let subTargetDir: string;
+
+    beforeEach(async () => {
+      subTargetDir = path.join(testDir, 'apps', 'frontend');
+      fs.mkdirSync(subTargetDir, { recursive: true });
+
+      // Install the package from the subdirectory to create a sub-target
+      const installResult = await runCli(`install ${pkg.slug}`, {
+        apiKey,
+        cwd: subTargetDir,
+      });
+
+      if (installResult.returnCode !== 0) {
+        throw new Error(
+          `Failed to install package in subdirectory: ${installResult.stderr || installResult.stdout}`,
+        );
+      }
+
+      const result = await runCli(
+        `diff remove .packmind/commands/${command.slug}.md -m "Remove command from sub-target"`,
+        {
+          apiKey,
+          cwd: subTargetDir,
+        },
+      );
+
+      returnCode = result.returnCode;
+      stdout = result.stdout;
+      stderr = result.stderr;
+    });
+
+    it('succeeds', () => {
+      if (returnCode !== 0) {
+        console.log('stderr:', stderr);
+        console.log('stdout:', stdout);
+      }
+      expect(returnCode).toEqual(0);
+    });
+
+    it('notifies the user that the change proposal was submitted', () => {
+      expect(stdout).toContain('Change proposal for removal submitted');
+    });
+
+    it('deletes the file', () => {
+      const filePath = path.join(
+        subTargetDir,
+        `.packmind/commands/${command.slug}.md`,
+      );
+      expect(fs.existsSync(filePath)).toBe(false);
+    });
+  });
+
   describe('when multiple packages are installed', () => {
     let secondPackageId: PackageId;
 
