@@ -158,66 +158,6 @@ function RemoveFromPackagesModal({
   );
 }
 
-function DeleteArtefactDialog({
-  proposalType,
-  onAccept,
-  open,
-  onOpenChange,
-}: {
-  proposalType: ChangeProposalType;
-  onAccept: (decision: RemoveArtefactDecision) => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const artefactType = getItemTypeFromChangeProposalType(proposalType);
-
-  return (
-    <PMDialog.Root
-      open={open}
-      onOpenChange={(details) => onOpenChange(details.open)}
-      placement="center"
-    >
-      <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Delete {artefactType}</PMDialog.Title>
-              <PMDialog.CloseTrigger asChild>
-                <PMCloseButton />
-              </PMDialog.CloseTrigger>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                This {artefactType} will be permanently deleted from the system
-                and removed from all packages. This action cannot be undone.
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMButtonGroup size={'sm'}>
-                <PMButton
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onOpenChange(false)}
-                >
-                  Cancel
-                </PMButton>
-                <PMButton
-                  size="sm"
-                  colorPalette="red"
-                  onClick={() => onAccept({ delete: true })}
-                >
-                  Confirm
-                </PMButton>
-              </PMButtonGroup>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMPortal>
-    </PMDialog.Root>
-  );
-}
-
 function ResolveButton({
   proposalType,
   packageIds,
@@ -233,8 +173,7 @@ function ResolveButton({
   onDismiss: () => void;
   onAccept: (decision: RemoveArtefactDecision) => void;
 }) {
-  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const menu = (
     <PMMenu.Root>
@@ -253,16 +192,9 @@ function ResolveButton({
             <PMMenu.Item
               value="remove-from-packages"
               cursor="pointer"
-              onClick={() => setIsRemoveModalOpen(true)}
+              onClick={() => setIsModalOpen(true)}
             >
               Remove from packages...
-            </PMMenu.Item>
-            <PMMenu.Item
-              value="delete-artefact"
-              cursor="pointer"
-              onClick={() => setIsDeleteDialogOpen(true)}
-            >
-              Delete artefact
             </PMMenu.Item>
           </PMMenu.Content>
         </PMMenu.Positioner>
@@ -294,14 +226,8 @@ function ResolveButton({
         packageIds={packageIds}
         spaceId={spaceId}
         onAccept={onAccept}
-        open={isRemoveModalOpen}
-        onOpenChange={setIsRemoveModalOpen}
-      />
-      <DeleteArtefactDialog
-        proposalType={proposalType}
-        onAccept={onAccept}
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
       />
     </PMHStack>
   );
