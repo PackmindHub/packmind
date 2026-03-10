@@ -171,7 +171,20 @@ export class ApplyChangeProposalsUseCase<
       );
       artefactDeleted = true;
     } else {
-      if (changeProposalsToApply.length) {
+      const REMOVAL_PROPOSAL_TYPES = [
+        ChangeProposalType.removeCommand,
+        ChangeProposalType.removeStandard,
+        ChangeProposalType.removeSkill,
+      ] as const;
+
+      const hasContentChanges = changeProposalsToApply.some(
+        (p) =>
+          !REMOVAL_PROPOSAL_TYPES.includes(
+            p.type as (typeof REMOVAL_PROPOSAL_TYPES)[number],
+          ),
+      );
+
+      if (hasContentChanges) {
         newVersion = await changesApplier.saveNewVersion(
           appliedChangesProposalsResponse.version,
           userId,

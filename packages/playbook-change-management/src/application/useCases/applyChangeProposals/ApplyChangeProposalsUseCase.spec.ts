@@ -115,6 +115,7 @@ describe('ApplyChangeProposalsUseCase', () => {
     changeProposalService = {
       findById: jest.fn(),
       batchUpdateProposalsInTransaction: jest.fn(),
+      cancelPendingByArtefactId: jest.fn(),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
     eventEmitterService = {
@@ -960,14 +961,29 @@ describe('ApplyChangeProposalsUseCase', () => {
         .mockResolvedValueOnce(removeProposal)
         .mockResolvedValueOnce(removeProposal);
       recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
-      recipesPort.updateRecipeFromUI.mockResolvedValue({
-        recipe: { ...recipe, version: 1 },
-      });
       deploymentPort.getPackageById.mockResolvedValue({ package: pkg });
       deploymentPort.updatePackage.mockResolvedValue({ package: pkg });
       changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue(
         undefined,
       );
+    });
+
+    it('does not call updateRecipeFromUI for a removal-only proposal', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: recipeId,
+        accepted: [
+          toAcceptedProposal(removeProposal, {
+            delete: false,
+            removeFromPackages: [packageId],
+          }),
+        ],
+        rejected: [],
+      });
+
+      expect(recipesPort.updateRecipeFromUI).not.toHaveBeenCalled();
     });
 
     it('calls getPackageById for each package to remove from', async () => {
