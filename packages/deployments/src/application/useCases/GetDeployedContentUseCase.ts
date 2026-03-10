@@ -10,6 +10,7 @@ import {
   IStandardsPort,
   normalizeCodingAgents,
   PackageId,
+  PackageWithArtefacts,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { PackageService } from '../services/PackageService';
@@ -138,12 +139,12 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     });
 
     // Step 8: Build artifact metadata from packages and enrich file modifications
+    let packages: PackageWithArtefacts[] = [];
     if (command.packagesSlugs.length > 0) {
-      const packages =
-        await this.packageService.getPackagesBySlugsWithArtefacts(
-          command.packagesSlugs,
-          command.organization.id,
-        );
+      packages = await this.packageService.getPackagesBySlugsWithArtefacts(
+        command.packagesSlugs,
+        command.organization.id,
+      );
 
       const allRecipes = packages.flatMap((pkg) => pkg.recipes);
       const allStandards = packages.flatMap((pkg) => pkg.standards);
@@ -182,7 +183,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       );
     }
 
-    // Step 10: Generate skill folders
+    // Step 9: Generate skill folders
     const skillFolderPaths =
       this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
 
@@ -198,18 +199,13 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillFolderCount: skillFolders.length,
     });
 
-    // Step 11: Extract package IDs
-    let packageIds: PackageId[] | undefined;
-    if (command.packagesSlugs.length > 0 && target) {
-      const packages =
-        await this.packageService.getPackagesBySlugsWithArtefacts(
-          command.packagesSlugs,
-          command.organization.id,
-        );
+    // Step 10: Extract package IDs
+    let packageIds: PackageId[] = [];
+    if (target) {
       packageIds = packages.map((pkg) => pkg.id);
     }
 
-    // Step 12: Return response
+    // Step 11: Return response
     return {
       fileUpdates,
       skillFolders,
