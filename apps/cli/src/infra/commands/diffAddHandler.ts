@@ -4,6 +4,7 @@ import {
   ArtifactType,
   ChangeProposalType,
   MultiFileCodingAgent,
+  TargetId,
 } from '@packmind/types';
 
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
@@ -163,10 +164,41 @@ export async function diffAddHandler(
 
   const space = await packmindCliHexa.getPackmindGateway().spaces.getGlobal();
 
+  // Try to resolve targetId from git context (best-effort, non-blocking)
+  let targetId: TargetId | undefined;
+  try {
+    const cwd = getCwd();
+    const fullConfig = await packmindCliHexa.readFullConfig(cwd);
+    const configPackages = fullConfig ? Object.keys(fullConfig.packages) : [];
+    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+    if (gitRoot && configPackages.length > 0) {
+      const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+      const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+      let relativePath = cwd.startsWith(gitRoot)
+        ? cwd.slice(gitRoot.length)
+        : '/';
+      if (!relativePath.startsWith('/')) relativePath = '/' + relativePath;
+      if (!relativePath.endsWith('/')) relativePath = relativePath + '/';
+      const deployedContent = await packmindCliHexa
+        .getPackmindGateway()
+        .deployment.getDeployed({
+          packagesSlugs: configPackages,
+          gitRemoteUrl,
+          gitBranch,
+          relativePath,
+          agents: fullConfig?.agents,
+        });
+      targetId = deployedContent.targetId as TargetId | undefined;
+    }
+  } catch {
+    // Proceed without targetId if git context is unavailable
+  }
+
   const diff: ArtefactDiff = {
     ...diffResult.diff,
     filePath: absolutePath,
     spaceId: space.id,
+    targetId,
   };
 
   const result = await packmindCliHexa.submitDiffs([[diff]], message);

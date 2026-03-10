@@ -267,6 +267,7 @@ export async function diffRemoveHandler(
     artifactType: artefactResult.artifactType,
     artifactId: deployedFile.artifactId,
     spaceId: deployedFile.spaceId,
+    targetId: deployedContent.targetId,
   };
 
   const result = await packmindCliHexa.submitDiffs([[diff]], message);
