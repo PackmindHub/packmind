@@ -2433,6 +2433,73 @@ describe('DiffArtefactsUseCase', () => {
 
       expect(mockLockFileRepository.read).toHaveBeenCalledWith('/my/project');
     });
+
+    describe('when getContentByVersions returns 404', () => {
+      beforeEach(() => {
+        const error: Error & { statusCode?: number } = new Error('Not Found');
+        error.statusCode = 404;
+        mockGetContentByVersions.mockRejectedValue(error);
+      });
+
+      it('falls back to getDeployed', async () => {
+        mockGetDeployed.mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skillFolders: [],
+        });
+
+        await useCase.execute({
+          ...defaultGitInfo,
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(mockGetDeployed).toHaveBeenCalledWith({
+          packagesSlugs: ['test-package'],
+          gitRemoteUrl: 'git@github.com:org/repo.git',
+          gitBranch: 'main',
+          relativePath: '',
+          agents: undefined,
+        });
+      });
+    });
+
+    describe('when getContentByVersions returns 500', () => {
+      it('propagates the error', async () => {
+        const error: Error & { statusCode?: number } = new Error(
+          'Internal Server Error',
+        );
+        error.statusCode = 500;
+        mockGetContentByVersions.mockRejectedValue(error);
+
+        await expect(
+          useCase.execute({
+            ...defaultGitInfo,
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          }),
+        ).rejects.toThrow('Internal Server Error');
+
+        expect(mockGetDeployed).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when getContentByVersions throws without statusCode', () => {
+      it('propagates the error', async () => {
+        mockGetContentByVersions.mockRejectedValue(
+          new Error('Network failure'),
+        );
+
+        await expect(
+          useCase.execute({
+            ...defaultGitInfo,
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          }),
+        ).rejects.toThrow('Network failure');
+
+        expect(mockGetDeployed).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('when lock file does not exist', () => {

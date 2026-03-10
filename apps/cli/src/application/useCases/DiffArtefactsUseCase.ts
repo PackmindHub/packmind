@@ -88,10 +88,18 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
     const lockFile = await this.lockFileRepository.read(baseDirectory);
 
     if (lockFile) {
-      return this.packmindGateway.deployment.getContentByVersions({
-        artifacts: Object.values(lockFile.artifacts),
-        agents: lockFile.agents,
-      });
+      try {
+        return await this.packmindGateway.deployment.getContentByVersions({
+          artifacts: Object.values(lockFile.artifacts),
+          agents: lockFile.agents,
+        });
+      } catch (error) {
+        const statusCode = (error as Error & { statusCode?: number })
+          .statusCode;
+        if (statusCode !== 404) {
+          throw error;
+        }
+      }
     }
 
     return this.packmindGateway.deployment.getDeployed({
