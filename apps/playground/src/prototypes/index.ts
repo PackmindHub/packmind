@@ -1,6 +1,6 @@
 import { ComponentType } from 'react';
 import ButtonsPrototype from './ButtonsPrototype';
-import ReviewChangesGroupViewPrototype from './ReviewChangesGroupViewPrototype';
+import ReviewChangesGroupViewPrototype from './review-changes-group-view/ReviewChangesGroupViewPrototype';
 
 export interface Prototype {
   name: string;
