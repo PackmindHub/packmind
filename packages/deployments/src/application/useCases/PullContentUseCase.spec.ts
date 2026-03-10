@@ -139,7 +139,7 @@ describe('PullContentUseCase', () => {
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     renderModeConfigurationService = {
-      resolveActiveCodingAgents: jest.fn(),
+      resolveCodingAgents: jest.fn(),
       mapRenderModesToCodingAgents: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
@@ -153,7 +153,7 @@ describe('PullContentUseCase', () => {
       content: '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
     });
 
-    renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue([
+    renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
       CodingAgents.packmind,
       CodingAgents.agents_md,
     ]);
@@ -918,9 +918,9 @@ describe('PullContentUseCase', () => {
           ]);
           skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude],
-          );
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([['claude', '.claude/skills/']]),
           );
@@ -1015,9 +1015,10 @@ describe('PullContentUseCase', () => {
             .mockResolvedValueOnce(skillVersionA)
             .mockResolvedValueOnce(skillVersionB);
 
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude, CodingAgents.copilot],
-          );
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+            CodingAgents.copilot,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([
               ['claude', '.claude/skills/'],
@@ -1132,9 +1133,9 @@ describe('PullContentUseCase', () => {
             .mockResolvedValueOnce(installedSkillVersion)
             .mockResolvedValueOnce(removedSkillVersion);
 
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude],
-          );
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([['claude', '.claude/skills/']]),
           );
@@ -1242,9 +1243,9 @@ describe('PullContentUseCase', () => {
             currentSkillVersion,
           );
 
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude],
-          );
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([['claude', '.claude/skills/']]),
           );
@@ -1424,9 +1425,9 @@ describe('PullContentUseCase', () => {
         );
         skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
-        renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-          [CodingAgents.packmind],
-        );
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+        ]);
         codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
       });
 
@@ -1571,9 +1572,9 @@ describe('PullContentUseCase', () => {
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
         skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
-        renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-          [CodingAgents.packmind],
-        );
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+        ]);
         codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
       });
 
@@ -2224,14 +2225,19 @@ describe('PullContentUseCase', () => {
           ...command,
           agents: [CodingAgents.claude, CodingAgents.cursor],
         };
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+          CodingAgents.claude,
+          CodingAgents.cursor,
+        ]);
       });
 
-      it('uses agents from command instead of org-level config', async () => {
+      it('delegates agent resolution to resolveCodingAgents', async () => {
         await useCase.execute(command);
 
         expect(
-          renderModeConfigurationService.resolveActiveCodingAgents,
-        ).not.toHaveBeenCalled();
+          renderModeConfigurationService.resolveCodingAgents,
+        ).toHaveBeenCalledWith(command.agents, organization.id);
       });
 
       it('passes normalized agents with packmind to deployArtifactsForAgents', async () => {
@@ -2255,14 +2261,17 @@ describe('PullContentUseCase', () => {
           ...command,
           agents: [],
         };
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+        ]);
       });
 
-      it('uses agents from command instead of org-level config', async () => {
+      it('delegates agent resolution to resolveCodingAgents', async () => {
         await useCase.execute(command);
 
         expect(
-          renderModeConfigurationService.resolveActiveCodingAgents,
-        ).not.toHaveBeenCalled();
+          renderModeConfigurationService.resolveCodingAgents,
+        ).toHaveBeenCalledWith(command.agents, organization.id);
       });
 
       it('passes packmind agent to deployArtifactsForAgents', async () => {
@@ -2282,6 +2291,10 @@ describe('PullContentUseCase', () => {
           ...command,
           agents: [CodingAgents.cursor],
         };
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+          CodingAgents.cursor,
+        ]);
       });
 
       it('automatically includes packmind agent', async () => {
@@ -2307,8 +2320,8 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          renderModeConfigurationService.resolveActiveCodingAgents,
-        ).toHaveBeenCalledWith(organization.id);
+          renderModeConfigurationService.resolveCodingAgents,
+        ).toHaveBeenCalledWith(undefined, organization.id);
       });
     });
   });

@@ -22,7 +22,6 @@ import {
   StandardVersion,
   createOrganizationId,
   createUserId,
-  normalizeCodingAgents,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
@@ -103,24 +102,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
     try {
       // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
-      // Always normalize to ensure 'packmind' is included
-      let codingAgents;
-      if (command.agents !== undefined) {
-        codingAgents = normalizeCodingAgents(command.agents);
-        this.logger.info('Using agents from command (packmind.json override)', {
-          codingAgents,
-          organizationId: command.organizationId,
-        });
-      } else {
-        codingAgents =
-          await this.renderModeConfigurationService.resolveActiveCodingAgents(
-            command.organization.id,
-          );
-        this.logger.info('Using organization-level render modes', {
-          codingAgents,
-          organizationId: command.organizationId,
-        });
-      }
+      const codingAgents =
+        await this.renderModeConfigurationService.resolveCodingAgents(
+          command.agents,
+          command.organization.id,
+        );
 
       // Fetch packages and their artifacts (skip if removal-only operation)
       let recipeVersions: RecipeVersion[] = [];

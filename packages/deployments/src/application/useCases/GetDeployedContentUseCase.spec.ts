@@ -91,7 +91,7 @@ describe('GetDeployedContentUseCase', () => {
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
     renderModeConfigurationService = {
-      resolveActiveCodingAgents: jest
+      resolveCodingAgents: jest
         .fn()
         .mockResolvedValue([CodingAgents.packmind, CodingAgents.claude]),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
@@ -441,8 +441,8 @@ describe('GetDeployedContentUseCase', () => {
       await useCase.execute(command);
 
       expect(
-        renderModeConfigurationService.resolveActiveCodingAgents,
-      ).not.toHaveBeenCalled();
+        renderModeConfigurationService.resolveCodingAgents,
+      ).toHaveBeenCalledWith(command.agents, organization.id);
     });
   });
 
@@ -457,8 +457,8 @@ describe('GetDeployedContentUseCase', () => {
       await useCase.execute(command);
 
       expect(
-        renderModeConfigurationService.resolveActiveCodingAgents,
-      ).toHaveBeenCalledWith(organization.id);
+        renderModeConfigurationService.resolveCodingAgents,
+      ).toHaveBeenCalledWith(undefined, organization.id);
     });
   });
 });

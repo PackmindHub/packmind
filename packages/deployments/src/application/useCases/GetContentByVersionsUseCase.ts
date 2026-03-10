@@ -2,7 +2,6 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   ArtifactVersionEntry,
-  CodingAgent,
   GetContentByVersionsCommand,
   GetContentByVersionsResponse,
   IAccountsPort,
@@ -16,7 +15,6 @@ import {
   createRecipeId,
   createSkillId,
   createStandardId,
-  normalizeCodingAgents,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
@@ -51,19 +49,11 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     });
 
     // Step 1: Resolve coding agents
-    let codingAgents: CodingAgent[];
-    if (command.agents !== undefined) {
-      codingAgents = normalizeCodingAgents(command.agents);
-      this.logger.info('Using agents from command', { codingAgents });
-    } else {
-      codingAgents =
-        await this.renderModeConfigurationService.resolveActiveCodingAgents(
-          command.organization.id,
-        );
-      this.logger.info('Using organization-level render modes', {
-        codingAgents,
-      });
-    }
+    const codingAgents =
+      await this.renderModeConfigurationService.resolveCodingAgents(
+        command.agents,
+        command.organization.id,
+      );
 
     // Step 2: Group artifacts by type
     const standardEntries = command.artifacts.filter(

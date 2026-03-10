@@ -1,14 +1,12 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  CodingAgent,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   IAccountsPort,
   ICodingAgentPort,
   ISkillsPort,
   IStandardsPort,
-  normalizeCodingAgents,
   PackageId,
   PackageWithArtefacts,
 } from '@packmind/types';
@@ -52,19 +50,11 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     });
 
     // Step 1: Resolve coding agents
-    let codingAgents: CodingAgent[];
-    if (command.agents !== undefined) {
-      codingAgents = normalizeCodingAgents(command.agents);
-      this.logger.info('Using agents from command', { codingAgents });
-    } else {
-      codingAgents =
-        await this.renderModeConfigurationService.resolveActiveCodingAgents(
-          command.organization.id,
-        );
-      this.logger.info('Using organization-level render modes', {
-        codingAgents,
-      });
-    }
+    const codingAgents =
+      await this.renderModeConfigurationService.resolveCodingAgents(
+        command.agents,
+        command.organization.id,
+      );
 
     // Step 2: Resolve target from git info
     const target = await this.targetResolutionService.findTargetFromGitInfo(
