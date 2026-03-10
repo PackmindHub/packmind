@@ -18,6 +18,7 @@ interface ReviewHeaderProps {
   isSaving: boolean;
   onSave: () => void;
   disabledTabs?: ReviewTab[];
+  artefactLink?: string;
 }
 
 export function ReviewHeader({
@@ -34,6 +35,7 @@ export function ReviewHeader({
   isSaving,
   onSave,
   disabledTabs,
+  artefactLink,
 }: Readonly<ReviewHeaderProps>) {
   return (
     <PMBox
@@ -52,6 +54,7 @@ export function ReviewHeader({
           artefactVersion={artefactVersion}
           latestAuthor={latestAuthor}
           latestTime={latestTime}
+          artefactLink={artefactLink}
         />
         <PMHStack gap={4} alignItems="center">
           <ViewTabSelector
