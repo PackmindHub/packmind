@@ -8,9 +8,6 @@ import {
   PMSeparator,
   PMBadge,
   PMTooltip,
-  PMFeatureFlag,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  CHANGE_PROPOSALS_FEATURE_KEY,
 } from '@packmind/ui';
 import { NavLink, useParams } from 'react-router';
 import {
@@ -222,17 +219,11 @@ export const SidebarNavigation: React.FunctionComponent<
             icon={<LuWandSparkles />}
             data-testid={SidebarNavigationDataTestId.SkillsLink}
           />,
-          <PMFeatureFlag
+          <ReviewChangesNavLink
             key="change-proposals"
-            featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={user?.email}
-          >
-            <ReviewChangesNavLink
-              orgSlug={orgSlug}
-              spaceSlug={currentSpaceSlug}
-            />
-          </PMFeatureFlag>,
+            orgSlug={orgSlug}
+            spaceSlug={currentSpaceSlug}
+          />,
         ]}
       />
       <PMVerticalNavSection
