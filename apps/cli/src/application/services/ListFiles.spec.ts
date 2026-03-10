@@ -440,6 +440,44 @@ describe('ListFiles', () => {
     });
   });
 
+  describe('when minified and source map files are excluded', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
+
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'src'));
+      await fs.writeFile(path.join(tempDir, 'src', 'app.js'), 'normal file');
+      await fs.writeFile(
+        path.join(tempDir, 'src', 'bundle.min.js'),
+        'minified file',
+      );
+      await fs.writeFile(
+        path.join(tempDir, 'src', 'styles.min.css'),
+        'minified css',
+      );
+      await fs.writeFile(path.join(tempDir, 'src', 'app.js.map'), 'source map');
+      await fs.writeFile(
+        path.join(tempDir, 'src', 'styles.css.map'),
+        'css source map',
+      );
+
+      result = await listFiles.listFilesInDirectory(
+        tempDir,
+        [],
+        ['*.min.*', '*.map'],
+      );
+    });
+
+    it('returns only the non-minified, non-map file', () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('includes app.js', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'src', 'app.js'),
+      });
+    });
+  });
+
   describe('readFileContent', () => {
     it('reads and returns file content', async () => {
       const filePath = path.join(tempDir, 'test.txt');

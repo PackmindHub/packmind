@@ -6,8 +6,8 @@ import { FileResult, IListFiles } from '../../domain/services/IListFiles';
 export const DEFAULT_EXCLUDES = [
   'node_modules',
   'dist',
-  '.min.',
-  '.map.',
+  '*.min.*',
+  '*.map',
   '.git',
 ];
 

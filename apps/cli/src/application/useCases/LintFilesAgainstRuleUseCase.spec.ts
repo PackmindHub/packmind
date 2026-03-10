@@ -136,7 +136,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
       expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
         '/project',
         [],
-        ['node_modules', 'dist', '.min.', '.map.', '.git'],
+        ['node_modules', 'dist', '*.min.*', '*.map', '.git'],
       );
     });
 
