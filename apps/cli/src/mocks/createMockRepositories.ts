@@ -44,6 +44,7 @@ export function createMockLockFileRepository(
   return {
     read: jest.fn(),
     write: jest.fn(),
+    delete: jest.fn(),
     ...overrides,
   };
 }
