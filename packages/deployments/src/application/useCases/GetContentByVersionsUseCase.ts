@@ -1,7 +1,6 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  ArtifactType,
   ArtifactVersionEntry,
   CodingAgent,
   GetContentByVersionsCommand,
@@ -20,6 +19,10 @@ import {
   normalizeCodingAgents,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import {
+  buildArtifactMetadataMap,
+  enrichFileModificationsWithMetadata,
+} from '../utils/ArtifactMetadataUtils';
 
 const origin = 'GetContentByVersionsUseCase';
 
@@ -97,27 +100,25 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     });
 
     // Step 5: Enrich file modifications with artifact metadata
-    const artifactMetadataByType = this.buildArtifactMetadata(
-      recipeEntries,
-      recipeVersions,
-      standardEntries,
-      standardVersionsWithRules,
-      skillEntries,
-      skillVersions,
+    const recipeSpaceMap = new Map(recipeEntries.map((e) => [e.id, e.spaceId]));
+    const standardSpaceMap = new Map(
+      standardEntries.map((e) => [e.id, e.spaceId]),
     );
+    const skillSpaceMap = new Map(skillEntries.map((e) => [e.id, e.spaceId]));
 
-    for (const file of fileUpdates.createOrUpdate) {
-      if (file.artifactType && file.artifactId) {
-        const metadata = artifactMetadataByType[file.artifactType].get(
-          file.artifactId,
-        );
-        if (metadata) {
-          file.spaceId = metadata.spaceId;
-          file.artifactVersion = metadata.version;
-          file.artifactSlug = metadata.slug;
-        }
-      }
-    }
+    const artifactMetadata = buildArtifactMetadataMap({
+      recipes: { spaceIdMap: recipeSpaceMap, versions: recipeVersions },
+      standards: {
+        spaceIdMap: standardSpaceMap,
+        versions: standardVersionsWithRules,
+      },
+      skills: { spaceIdMap: skillSpaceMap, versions: skillVersions },
+    });
+
+    enrichFileModificationsWithMetadata(
+      fileUpdates.createOrUpdate,
+      artifactMetadata,
+    );
 
     // Step 6: Generate skill folders
     const skillFolderPaths =
@@ -210,68 +211,5 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       }),
     );
     return results.filter((v) => v !== null) as SkillVersion[];
-  }
-
-  private buildArtifactMetadata(
-    recipeEntries: ArtifactVersionEntry[],
-    recipeVersions: RecipeVersion[],
-    standardEntries: ArtifactVersionEntry[],
-    standardVersions: StandardVersion[],
-    skillEntries: ArtifactVersionEntry[],
-    skillVersions: SkillVersion[],
-  ): Record<
-    ArtifactType,
-    Map<string, { spaceId: string; version: number; slug: string }>
-  > {
-    const metadata: Record<
-      ArtifactType,
-      Map<string, { spaceId: string; version: number; slug: string }>
-    > = {
-      command: new Map(),
-      standard: new Map(),
-      skill: new Map(),
-    };
-
-    // Build a map of artifact id -> spaceId from entries
-    const recipeSpaceMap = new Map(recipeEntries.map((e) => [e.id, e.spaceId]));
-    const standardSpaceMap = new Map(
-      standardEntries.map((e) => [e.id, e.spaceId]),
-    );
-    const skillSpaceMap = new Map(skillEntries.map((e) => [e.id, e.spaceId]));
-
-    for (const rv of recipeVersions) {
-      const spaceId = recipeSpaceMap.get(rv.recipeId as string);
-      if (spaceId) {
-        metadata.command.set(rv.recipeId as string, {
-          spaceId,
-          version: rv.version,
-          slug: rv.slug,
-        });
-      }
-    }
-
-    for (const sv of standardVersions) {
-      const spaceId = standardSpaceMap.get(sv.standardId as string);
-      if (spaceId) {
-        metadata.standard.set(sv.standardId as string, {
-          spaceId,
-          version: sv.version,
-          slug: sv.slug,
-        });
-      }
-    }
-
-    for (const skv of skillVersions) {
-      const spaceId = skillSpaceMap.get(skv.skillId as string);
-      if (spaceId) {
-        metadata.skill.set(skv.skillId as string, {
-          spaceId,
-          version: skv.version,
-          slug: skv.slug,
-        });
-      }
-    }
-
-    return metadata;
   }
 }

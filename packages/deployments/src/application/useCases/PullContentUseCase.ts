@@ -6,7 +6,6 @@ import {
 } from '@packmind/node-utils';
 import {
   ArtifactsPulledEvent,
-  ArtifactType,
   FileUpdates,
   CodingAgent,
   IAccountsPort,
@@ -32,6 +31,10 @@ import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetResolutionService } from '../services/TargetResolutionService';
+import {
+  buildArtifactMetadataMap,
+  enrichFileModificationsWithMetadata,
+} from '../utils/ArtifactMetadataUtils';
 
 const origin = 'PullContentUseCase';
 
@@ -126,21 +129,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       let packages: Awaited<
         ReturnType<PackageService['getPackagesBySlugsWithArtefacts']>
       > = [];
-
-      // Build a lookup map from artifact type + ID to spaceId and metadata
-      type ArtifactMetadata = {
-        spaceId: string;
-        version: number;
-        slug: string;
-      };
-      const artifactMetadata: Record<
-        ArtifactType,
-        Map<string, ArtifactMetadata>
-      > = {
-        command: new Map(),
-        standard: new Map(),
-        skill: new Map(),
-      };
+      let artifactMetadata: ReturnType<typeof buildArtifactMetadataMap> | null =
+        null;
 
       if (!isRemovalOnlyOperation && command.packagesSlugs) {
         packages = await this.packageService.getPackagesBySlugsWithArtefacts(
@@ -180,16 +170,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           ...new Map(allStandards.map((s) => [s.id, s])).values(),
         ];
         const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
-
-        const recipeSpaceMap = new Map(
-          recipes.map((r) => [r.id as string, r.spaceId as string]),
-        );
-        const standardSpaceMap = new Map(
-          standards.map((s) => [s.id as string, s.spaceId as string]),
-        );
-        const skillSpaceMap = new Map(
-          skills.map((s) => [s.id as string, s.spaceId as string]),
-        );
 
         this.logger.info('Extracted content from packages', {
           recipeCount: recipes.length,
@@ -253,37 +233,27 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           count: skillVersions.length,
         });
 
-        // Populate the artifact metadata map using fetched versions (keyed by artifact ID)
-        for (const rv of recipeVersions) {
-          const spaceId = recipeSpaceMap.get(rv.recipeId as string);
-          if (spaceId) {
-            artifactMetadata.command.set(rv.recipeId as string, {
-              spaceId,
-              version: rv.version,
-              slug: rv.slug,
-            });
-          }
-        }
-        for (const sv of standardVersions) {
-          const spaceId = standardSpaceMap.get(sv.standardId as string);
-          if (spaceId) {
-            artifactMetadata.standard.set(sv.standardId as string, {
-              spaceId,
-              version: sv.version,
-              slug: sv.slug,
-            });
-          }
-        }
-        for (const skv of skillVersions) {
-          const spaceId = skillSpaceMap.get(skv.skillId as string);
-          if (spaceId) {
-            artifactMetadata.skill.set(skv.skillId as string, {
-              spaceId,
-              version: skv.version,
-              slug: skv.slug,
-            });
-          }
-        }
+        // Build artifact metadata map from package artifacts and fetched versions
+        artifactMetadata = buildArtifactMetadataMap({
+          recipes: {
+            spaceIdMap: new Map(
+              recipes.map((r) => [r.id as string, r.spaceId as string]),
+            ),
+            versions: recipeVersions,
+          },
+          standards: {
+            spaceIdMap: new Map(
+              standards.map((s) => [s.id as string, s.spaceId as string]),
+            ),
+            versions: standardVersions,
+          },
+          skills: {
+            spaceIdMap: new Map(
+              skills.map((s) => [s.id as string, s.spaceId as string]),
+            ),
+            versions: skillVersions,
+          },
+        });
       } else {
         this.logger.info(
           'Removal-only operation: skipping package fetching, will delete all artifacts from previous packages',
@@ -615,17 +585,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       mergedFileUpdates.createOrUpdate.push(configFile);
 
       // Enrich file modifications with spaceId, artifactVersion, and artifactSlug from the metadata map
-      for (const file of mergedFileUpdates.createOrUpdate) {
-        if (file.artifactType && file.artifactId) {
-          const metadata = artifactMetadata[file.artifactType].get(
-            file.artifactId,
-          );
-          if (metadata) {
-            file.spaceId = metadata.spaceId;
-            file.artifactVersion = metadata.version;
-            file.artifactSlug = metadata.slug;
-          }
-        }
+      if (artifactMetadata) {
+        enrichFileModificationsWithMetadata(
+          mergedFileUpdates.createOrUpdate,
+          artifactMetadata,
+        );
       }
 
       this.logger.info('Successfully pulled content', {

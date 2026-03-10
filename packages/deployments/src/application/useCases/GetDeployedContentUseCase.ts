@@ -1,7 +1,6 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  ArtifactType,
   CodingAgent,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
@@ -16,6 +15,10 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 import { PackageService } from '../services/PackageService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { TargetResolutionService } from '../services/TargetResolutionService';
+import {
+  buildArtifactMetadataMap,
+  enrichFileModificationsWithMetadata,
+} from '../utils/ArtifactMetadataUtils';
 
 const origin = 'GetDeployedContentUseCase';
 
@@ -134,21 +137,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       deleteCount: fileUpdates.delete.length,
     });
 
-    // Step 8: Build artifact metadata from packages
-    type ArtifactMetadata = {
-      spaceId: string;
-      version: number;
-      slug: string;
-    };
-    const artifactMetadata: Record<
-      ArtifactType,
-      Map<string, ArtifactMetadata>
-    > = {
-      command: new Map(),
-      standard: new Map(),
-      skill: new Map(),
-    };
-
+    // Step 8: Build artifact metadata from packages and enrich file modifications
     if (command.packagesSlugs.length > 0) {
       const packages =
         await this.packageService.getPackagesBySlugsWithArtefacts(
@@ -166,60 +155,31 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       ];
       const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
-      const recipeSpaceMap = new Map(
-        recipes.map((r) => [r.id as string, r.spaceId as string]),
-      );
-      const standardSpaceMap = new Map(
-        standards.map((s) => [s.id as string, s.spaceId as string]),
-      );
-      const skillSpaceMap = new Map(
-        skills.map((s) => [s.id as string, s.spaceId as string]),
-      );
+      const artifactMetadata = buildArtifactMetadataMap({
+        recipes: {
+          spaceIdMap: new Map(
+            recipes.map((r) => [r.id as string, r.spaceId as string]),
+          ),
+          versions: recipeVersions,
+        },
+        standards: {
+          spaceIdMap: new Map(
+            standards.map((s) => [s.id as string, s.spaceId as string]),
+          ),
+          versions: standardVersions,
+        },
+        skills: {
+          spaceIdMap: new Map(
+            skills.map((s) => [s.id as string, s.spaceId as string]),
+          ),
+          versions: skillVersions,
+        },
+      });
 
-      for (const rv of recipeVersions) {
-        const spaceId = recipeSpaceMap.get(rv.recipeId as string);
-        if (spaceId) {
-          artifactMetadata.command.set(rv.recipeId as string, {
-            spaceId,
-            version: rv.version,
-            slug: rv.slug,
-          });
-        }
-      }
-      for (const sv of standardVersions) {
-        const spaceId = standardSpaceMap.get(sv.standardId as string);
-        if (spaceId) {
-          artifactMetadata.standard.set(sv.standardId as string, {
-            spaceId,
-            version: sv.version,
-            slug: sv.slug,
-          });
-        }
-      }
-      for (const skv of skillVersions) {
-        const spaceId = skillSpaceMap.get(skv.skillId as string);
-        if (spaceId) {
-          artifactMetadata.skill.set(skv.skillId as string, {
-            spaceId,
-            version: skv.version,
-            slug: skv.slug,
-          });
-        }
-      }
-    }
-
-    // Step 9: Enrich file modifications with spaceId, artifactVersion, and artifactSlug from the metadata map
-    for (const file of fileUpdates.createOrUpdate) {
-      if (file.artifactType && file.artifactId) {
-        const metadata = artifactMetadata[file.artifactType].get(
-          file.artifactId,
-        );
-        if (metadata) {
-          file.spaceId = metadata.spaceId;
-          file.artifactVersion = metadata.version;
-          file.artifactSlug = metadata.slug;
-        }
-      }
+      enrichFileModificationsWithMetadata(
+        fileUpdates.createOrUpdate,
+        artifactMetadata,
+      );
     }
 
     // Step 10: Generate skill folders
