@@ -19,7 +19,16 @@ import {
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
-import { LuHouse, LuSettings, LuWrench } from 'react-icons/lu';
+import {
+  LuBookCheck,
+  LuEye,
+  LuHouse,
+  LuPackage,
+  LuSettings,
+  LuTerminal,
+  LuWandSparkles,
+  LuWrench,
+} from 'react-icons/lu';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
@@ -142,16 +151,19 @@ export const SidebarNavigation: React.FunctionComponent<
             key="standards"
             url={routes.space.toStandards(orgSlug, currentSpaceSlug)}
             label="Standards"
+            icon={<LuBookCheck />}
           />,
           <SidebarNavigationLink
             key="recipes"
             url={routes.space.toCommands(orgSlug, currentSpaceSlug)}
             label="Commands"
+            icon={<LuTerminal />}
           />,
           <SidebarNavigationLink
             key="skills"
             url={routes.space.toSkills(orgSlug, currentSpaceSlug)}
             label="Skills"
+            icon={<LuWandSparkles />}
             data-testid={SidebarNavigationDataTestId.SkillsLink}
           />,
           <PMFeatureFlag
@@ -174,12 +186,14 @@ export const SidebarNavigation: React.FunctionComponent<
             key="packages"
             url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
             label="Packages"
+            icon={<LuPackage />}
             data-testid={SidebarNavigationDataTestId.PackagesLink}
           />,
           <SidebarNavigationLink
             key="overview"
             url={routes.org.toDeployments(orgSlug)}
             label="Overview"
+            icon={<LuEye />}
             badge={{
               text: 'Enterprise',
               colorScheme: 'purple',
