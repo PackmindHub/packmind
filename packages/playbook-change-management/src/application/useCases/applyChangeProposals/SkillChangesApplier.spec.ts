@@ -7,6 +7,7 @@ import {
   createRecipeId,
   createSkillFileId,
   createSkillId,
+  createSkillVersionId,
   createSpaceId,
   createStandardId,
   createUserId,
@@ -26,6 +27,9 @@ describe('SkillChangesApplier', () => {
     diffService = new DiffService();
     skillsPort = {
       deleteSkill: jest.fn(),
+      getLatestSkillVersion: jest.fn(),
+      getSkillFiles: jest.fn(),
+      saveSkillVersion: jest.fn(),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     applier = new SkillChangesApplier(diffService, skillsPort);
@@ -735,6 +739,123 @@ describe('SkillChangesApplier', () => {
           expect(newSkillVersion.version.files).toEqual([]);
         });
       });
+    });
+  });
+
+  describe('areChangesApplicable', () => {
+    it('returns true for skill change types', () => {
+      const changeProposals = [
+        changeProposalFactory({ type: ChangeProposalType.updateSkillName }),
+        changeProposalFactory({
+          type: ChangeProposalType.updateSkillDescription,
+        }),
+      ];
+
+      expect(applier.areChangesApplicable(changeProposals)).toBe(true);
+    });
+
+    it('returns false for non-skill change types', () => {
+      const changeProposals = [
+        changeProposalFactory({ type: ChangeProposalType.updateStandardName }),
+      ];
+
+      expect(applier.areChangesApplicable(changeProposals)).toBe(false);
+    });
+  });
+
+  describe('getVersion', () => {
+    const skillId = skillVersion.skillId;
+
+    beforeEach(() => {
+      skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion as never);
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+    });
+
+    it('returns the skill version with files', async () => {
+      const result = await applier.getVersion(skillId);
+
+      expect(result).toEqual({ ...skillVersion, files: [] });
+    });
+
+    it('calls getLatestSkillVersion with the skill ID', async () => {
+      await applier.getVersion(skillId);
+
+      expect(skillsPort.getLatestSkillVersion).toHaveBeenCalledWith(skillId);
+    });
+
+    it('calls getSkillFiles with the skill version ID', async () => {
+      await applier.getVersion(skillId);
+
+      expect(skillsPort.getSkillFiles).toHaveBeenCalledWith(skillVersion.id);
+    });
+
+    describe('when skill version is not found', () => {
+      it('throws an error', async () => {
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null as never);
+
+        await expect(applier.getVersion(skillId)).rejects.toThrow(
+          `Unable to find skillVersion with id ${skillId}.`,
+        );
+      });
+    });
+  });
+
+  describe('saveNewVersion', () => {
+    const userId = createUserId('test-user-id');
+    const organizationId = createOrganizationId('test-org-id');
+    const spaceId = createSpaceId('test-space-id');
+
+    beforeEach(() => {
+      const savedVersion = {
+        ...skillVersion,
+        id: createSkillVersionId('new-version-id'),
+      };
+      skillsPort.saveSkillVersion.mockResolvedValue(savedVersion as never);
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+    });
+
+    it('calls saveSkillVersion with correct parameters', async () => {
+      await applier.saveNewVersion(
+        skillVersion,
+        userId,
+        spaceId,
+        organizationId,
+      );
+
+      expect(skillsPort.saveSkillVersion).toHaveBeenCalledWith({
+        skillVersion,
+        userId,
+        spaceId,
+        organizationId,
+      });
+    });
+
+    it('returns the new version with files', async () => {
+      const result = await applier.saveNewVersion(
+        skillVersion,
+        userId,
+        spaceId,
+        organizationId,
+      );
+
+      expect(result).toEqual(expect.objectContaining({ files: [] }));
+    });
+
+    it('fetches files for the new version ID', async () => {
+      const savedVersion = {
+        ...skillVersion,
+        id: createSkillVersionId('new-version-id'),
+      };
+      skillsPort.saveSkillVersion.mockResolvedValue(savedVersion as never);
+
+      await applier.saveNewVersion(
+        skillVersion,
+        userId,
+        spaceId,
+        organizationId,
+      );
+
+      expect(skillsPort.getSkillFiles).toHaveBeenCalledWith(savedVersion.id);
     });
   });
 
