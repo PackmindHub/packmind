@@ -206,11 +206,11 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       }
     }
 
-    const agents = [...commandAgents].sort();
+    const agents = [...commandAgents].sort((a, b) => a.localeCompare(b));
 
     return {
       lockfileVersion: 1,
-      packageSlugs: [...packageSlugs].sort(),
+      packageSlugs: [...packageSlugs].sort((a, b) => a.localeCompare(b)),
       agents,
       installedAt: new Date().toISOString(),
       cliVersion: cliVersion ?? 'unknown',
