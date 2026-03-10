@@ -147,26 +147,44 @@ describe('LockFileRepository', () => {
         expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
       });
 
-      it('returns null when targetId is not a string', async () => {
-        mockFs.readFile.mockResolvedValue(
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":123,"artifacts":{}}',
-        );
+      describe('when targetId is not a string', () => {
+        let result: PackmindLockFile | null;
 
-        const result = await repository.read('/project');
+        beforeEach(async () => {
+          mockFs.readFile.mockResolvedValue(
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":123,"artifacts":{}}',
+          );
 
-        expect(result).toBeNull();
-        expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
+          result = await repository.read('/project');
+        });
+
+        it('returns null', () => {
+          expect(result).toBeNull();
+        });
+
+        it('logs a warning', () => {
+          expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
+        });
       });
 
-      it('accepts lock file with targetId string', async () => {
-        mockFs.readFile.mockResolvedValue(
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":"target-abc","artifacts":{}}',
-        );
+      describe('when targetId is a valid string', () => {
+        let result: PackmindLockFile | null;
 
-        const result = await repository.read('/project');
+        beforeEach(async () => {
+          mockFs.readFile.mockResolvedValue(
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":"target-abc","artifacts":{}}',
+          );
 
-        expect(result).not.toBeNull();
-        expect(result?.targetId).toBe('target-abc');
+          result = await repository.read('/project');
+        });
+
+        it('returns a non-null lock file', () => {
+          expect(result).not.toBeNull();
+        });
+
+        it('includes the targetId', () => {
+          expect(result?.targetId).toBe('target-abc');
+        });
       });
 
       it('returns null when JSON is malformed', async () => {
@@ -280,11 +298,17 @@ describe('LockFileRepository', () => {
       await repository.write('/project', lockFile);
     });
 
-    it('writes the lock file with empty artifacts object', () => {
+    it('preserves lockfileVersion', () => {
       const writtenContent = mockFs.writeFile.mock.calls[0][1] as string;
       const parsed = JSON.parse(writtenContent);
 
       expect(parsed.lockfileVersion).toBe(1);
+    });
+
+    it('preserves empty artifacts object', () => {
+      const writtenContent = mockFs.writeFile.mock.calls[0][1] as string;
+      const parsed = JSON.parse(writtenContent);
+
       expect(parsed.artifacts).toEqual({});
     });
   });

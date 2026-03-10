@@ -2332,23 +2332,30 @@ describe('DiffArtefactsUseCase', () => {
       });
     });
 
-    it('calls getContentByVersions instead of getDeployed', async () => {
-      mockGetContentByVersions.mockResolvedValue({
-        fileUpdates: { createOrUpdate: [], delete: [] },
-        skillFolders: [],
+    describe('when executing with lock file', () => {
+      beforeEach(async () => {
+        mockGetContentByVersions.mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skillFolders: [],
+        });
+
+        await useCase.execute({
+          ...defaultGitInfo,
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
       });
 
-      await useCase.execute({
-        ...defaultGitInfo,
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
+      it('calls getContentByVersions with lock file artifacts', () => {
+        expect(mockGetContentByVersions).toHaveBeenCalledWith({
+          artifacts: lockFileArtifactValues,
+          agents: ['packmind'],
+        });
       });
 
-      expect(mockGetContentByVersions).toHaveBeenCalledWith({
-        artifacts: lockFileArtifactValues,
-        agents: ['packmind'],
+      it('does not call getDeployed', () => {
+        expect(mockGetDeployed).not.toHaveBeenCalled();
       });
-      expect(mockGetDeployed).not.toHaveBeenCalled();
     });
 
     it('forwards agents to getContentByVersions', async () => {
@@ -2433,7 +2440,7 @@ describe('DiffArtefactsUseCase', () => {
       mockLockFileRepository.read.mockResolvedValue(null);
     });
 
-    it('falls back to getDeployed', async () => {
+    beforeEach(async () => {
       mockGetDeployed.mockResolvedValue({
         fileUpdates: { createOrUpdate: [], delete: [] },
         skillFolders: [],
@@ -2444,7 +2451,9 @@ describe('DiffArtefactsUseCase', () => {
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('falls back to getDeployed', () => {
       expect(mockGetDeployed).toHaveBeenCalledWith({
         packagesSlugs: ['test-package'],
         gitRemoteUrl: 'git@github.com:org/repo.git',
@@ -2452,6 +2461,9 @@ describe('DiffArtefactsUseCase', () => {
         relativePath: '',
         agents: undefined,
       });
+    });
+
+    it('does not call getContentByVersions', () => {
       expect(mockGetContentByVersions).not.toHaveBeenCalled();
     });
   });
