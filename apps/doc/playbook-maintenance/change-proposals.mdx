@@ -2,14 +2,45 @@
 title: 'Change Proposals'
 ---
 
+Change proposals are one of two ways to update your playbook. Unlike [direct updates](/playbook-maintenance/updating-your-playbook#direct-updates), change proposals require team review before changes are applied.
+
 <Info>
   **Private Beta** — Change Proposals is currently in private beta. Contact
   Packmind to get access to this feature.
 </Info>
 
+<Note>
+  Change Proposals require **CLI version 0.21.0 or later**. Run `packmind-cli
+  --version` to check your version, and see [CLI
+  Installation](/tools/cli#installation) to upgrade.
+</Note>
+
 ## What are Change Proposals?
 
 Change Proposals enable users to propose modifications to distributed artifacts (standards, commands, skills) directly from their local environment. Once submitted, proposals are reviewed and approved through the Packmind UI, ensuring that changes go through a controlled review process before being applied.
+
+There are two ways to submit change proposals:
+
+1. **Use the `packmind-update-playbook` skill** — the skill analyzes your coding session, identifies relevant changes, and submits proposals on your behalf automatically. This is the recommended approach.
+2. **Edit local files manually and use the CLI** — modify distributed artifact files directly, then use `packmind-cli diff` commands to preview and submit your changes.
+
+## Submitting Changes with the `packmind-update-playbook` Skill
+
+The `packmind-update-playbook` skill automates the entire process. It analyzes your coding session, identifies what changed, and submits change proposals on your behalf.
+
+It follows a four-phase workflow:
+
+1. **Summarize the session** — extracts what was built, what patterns emerged, and what decisions were made.
+2. **Analyze existing artifacts** — evaluates your current standards, commands, and skills against the session context.
+3. **Propose a change report** — presents a numbered list of proposed updates, new artifacts, or deprecations for you to approve.
+4. **Apply approved changes** — edits local files and submits proposals for review on Packmind.
+
+The skill activates automatically when you use phrases like "update the playbook", "sync standards", or "check if we need new standards". It can also be triggered after coding sessions where new patterns or conventions emerged.
+
+<Info>
+  Learn more about how skills work in the [Skills
+  Management](/concepts/skills-management) section.
+</Info>
 
 ## Submitting Changes with the CLI
 
