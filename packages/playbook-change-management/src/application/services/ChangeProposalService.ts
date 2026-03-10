@@ -44,7 +44,8 @@ function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
   if (
     type === ChangeProposalType.updateCommandName ||
     type === ChangeProposalType.updateCommandDescription ||
-    type === ChangeProposalType.createCommand
+    type === ChangeProposalType.createCommand ||
+    type === ChangeProposalType.removeCommand
   ) {
     return 'commands';
   }
@@ -56,7 +57,8 @@ function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
     type === ChangeProposalType.addRule ||
     type === ChangeProposalType.updateRule ||
     type === ChangeProposalType.deleteRule ||
-    type === ChangeProposalType.createStandard
+    type === ChangeProposalType.createStandard ||
+    type === ChangeProposalType.removeStandard
   ) {
     return 'standards';
   }
