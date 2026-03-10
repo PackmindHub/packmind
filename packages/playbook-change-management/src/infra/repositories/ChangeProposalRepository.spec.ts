@@ -295,6 +295,8 @@ describe('ChangeProposalRepository', () => {
     const cancelledBy = createUserId('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
 
     describe('when pending proposals exist for the artefact', () => {
+      let proposals: ChangeProposal<ChangeProposalType>[];
+
       beforeEach(async () => {
         await repository.save(
           changeProposalFactory({
@@ -323,34 +325,51 @@ describe('ChangeProposalRepository', () => {
           artefactId,
           cancelledBy,
         );
+
+        proposals = await repository.findByArtefactId(spaceAId, artefactId);
       });
 
-      it('marks all pending proposals as rejected', async () => {
-        const proposals = await repository.findByArtefactId(
-          spaceAId,
-          artefactId,
-        );
-
+      it('cancels exactly the matching proposals', () => {
         expect(proposals).toHaveLength(2);
-        proposals.forEach((p) => {
-          expect(p.status).toBe(ChangeProposalStatus.rejected);
-          expect(p.resolvedBy).toBe(cancelledBy);
-          expect(p.resolvedAt).toBeDefined();
-        });
+      });
+
+      it('sets status to rejected for all matching proposals', () => {
+        expect(proposals.map((p) => p.status)).toEqual([
+          ChangeProposalStatus.rejected,
+          ChangeProposalStatus.rejected,
+        ]);
+      });
+
+      it('sets resolvedBy to the cancelling user for all matching proposals', () => {
+        expect(proposals.map((p) => p.resolvedBy)).toEqual([
+          cancelledBy,
+          cancelledBy,
+        ]);
+      });
+
+      it('sets resolvedAt to a Date for all matching proposals', () => {
+        expect(proposals.map((p) => p.resolvedAt)).toEqual([
+          expect.any(Date),
+          expect.any(Date),
+        ]);
+      });
+
+      it('sets decision to null for all matching proposals', () => {
+        expect(proposals.map((p) => p.decision)).toEqual([null, null]);
       });
 
       it('does not affect pending proposals for other artefacts', async () => {
-        const proposals = await repository.findByArtefactId(
+        const otherProposals = await repository.findByArtefactId(
           spaceAId,
           otherArtefactId,
         );
 
-        expect(proposals[0].status).toBe(ChangeProposalStatus.pending);
+        expect(otherProposals[0].status).toBe(ChangeProposalStatus.pending);
       });
     });
 
     describe('when no proposals exist for the artefact', () => {
-      it('completes without error', async () => {
+      it('resolves without throwing', async () => {
         await expect(
           repository.cancelPendingByArtefactId(
             spaceAId,
