@@ -169,11 +169,22 @@ export class ApplyChangeProposalsUseCase<
         command.spaceId,
         organizationId,
       );
-      await this.changeProposalService.cancelPendingByArtefactId(
-        command.spaceId,
-        command.artefactId,
-        userId,
-      );
+      try {
+        await this.changeProposalService.cancelPendingByArtefactId(
+          command.spaceId,
+          command.artefactId,
+          userId,
+        );
+      } catch (error) {
+        this.logger.warn(
+          'Failed to cancel pending proposals after artefact deletion — orphaned proposals may remain',
+          {
+            artefactId: command.artefactId,
+            spaceId: command.spaceId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
       artefactDeleted = true;
     } else {
       const REMOVAL_PROPOSAL_TYPES = [
