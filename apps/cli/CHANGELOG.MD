@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- Fix incorrect `packageIds` payload when removing an artifact with `diff remove <path-to-artifact>
+
 ## Removed
 
 # [0.21.0] - 2026-03-10
