@@ -35,6 +35,7 @@ import { InlineView } from './InlineView';
 import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
+import { routes } from '../../../../shared/utils/routes';
 
 interface CommandReviewDetailProps {
   artefactId: string;
@@ -215,6 +216,11 @@ export function CommandReviewDetail({
     return null;
   }
 
+  const artefactLink =
+    orgSlug && spaceSlug
+      ? routes.space.toCommand(orgSlug, spaceSlug, artefactId)
+      : undefined;
+
   return (
     <>
       <PMBox
@@ -241,6 +247,7 @@ export function CommandReviewDetail({
           hasPooledDecisions={pool.hasPooledDecisions}
           isSaving={applyRecipeChangeProposalsMutation.isPending}
           onSave={handleSave}
+          artefactLink={artefactLink}
         />
 
         {reviewState.activeTab === 'changes' && (

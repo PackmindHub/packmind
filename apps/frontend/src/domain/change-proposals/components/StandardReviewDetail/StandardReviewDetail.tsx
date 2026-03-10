@@ -38,6 +38,7 @@ import { StandardInlineView } from './StandardInlineView';
 import { StandardOriginalTabContent } from './StandardOriginalTabContent';
 import { StandardResultTabContent } from './StandardResultTabContent';
 import { useBeforeUnload, useBlocker } from 'react-router';
+import { routes } from '../../../../shared/utils/routes';
 
 interface StandardReviewDetailProps {
   artefactId: string;
@@ -238,6 +239,11 @@ export function StandardReviewDetail({
     return null;
   }
 
+  const artefactLink =
+    orgSlug && spaceSlug
+      ? routes.space.toStandard(orgSlug, spaceSlug, artefactId)
+      : undefined;
+
   return (
     <>
       <PMBox
@@ -264,6 +270,7 @@ export function StandardReviewDetail({
           hasPooledDecisions={pool.hasPooledDecisions}
           isSaving={applyStandardChangeProposalsMutation.isPending}
           onSave={handleSave}
+          artefactLink={artefactLink}
         />
 
         {reviewState.activeTab === 'changes' && (
