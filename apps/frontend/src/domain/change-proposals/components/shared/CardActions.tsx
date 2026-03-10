@@ -105,22 +105,24 @@ function RemoveFromPackagesModal({
               </PMDialog.CloseTrigger>
             </PMDialog.Header>
             <PMDialog.Body>
-              <PMText fontWeight="semibold">
-                Select from which packages the {artefactType} will be removed:
-              </PMText>
+              <PMVStack align="flex-start" gap={4}>
+                <PMText fontWeight="semibold">
+                  Select from which packages the {artefactType} will be removed:
+                </PMText>
 
-              <PMVStack align="flex-start" gap={2}>
-                {packageIds.map((packageId) => (
-                  <PMCheckbox
-                    key={packageId}
-                    checked={selectedPackageIds.has(packageId)}
-                    onCheckedChange={(e) =>
-                      handleCheckedChange(packageId, !!e.checked)
-                    }
-                  >
-                    {packageMap.get(packageId) ?? packageId}
-                  </PMCheckbox>
-                ))}
+                <PMVStack align="flex-start" gap={2}>
+                  {packageIds.map((packageId) => (
+                    <PMCheckbox
+                      key={packageId}
+                      checked={selectedPackageIds.has(packageId)}
+                      onCheckedChange={(e) =>
+                        handleCheckedChange(packageId, !!e.checked)
+                      }
+                    >
+                      {packageMap.get(packageId) ?? packageId}
+                    </PMCheckbox>
+                  ))}
+                </PMVStack>
               </PMVStack>
             </PMDialog.Body>
             <PMDialog.Footer>
