@@ -90,6 +90,7 @@ export class SkillsService {
   ): Promise<DeleteSkillResponse> {
     return this.skillsHexa.getAdapter().deleteSkill({
       skillId,
+      spaceId,
       organizationId,
       userId,
       source,

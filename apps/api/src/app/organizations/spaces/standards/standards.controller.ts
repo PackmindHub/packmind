@@ -507,6 +507,7 @@ export class OrganizationsSpacesStandardsController {
         standardId,
         userId,
         organizationId,
+        spaceId,
         source: request.clientSource,
       });
 
