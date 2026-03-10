@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   PMButton,
   PMButtonGroup,
@@ -78,6 +78,10 @@ function RemoveFromPackagesModal({
   const [selectedPackageIds, setSelectedPackageIds] = useState<Set<PackageId>>(
     new Set(),
   );
+
+  useEffect(() => {
+    if (open) setSelectedPackageIds(new Set());
+  }, [open]);
 
   const handleCheckedChange = (packageId: PackageId, checked: boolean) => {
     setSelectedPackageIds((prev) => {
