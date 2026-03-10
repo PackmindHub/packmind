@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   PMVerticalNav,
   PMVerticalNavSection,
@@ -8,18 +8,23 @@ import {
 } from '@packmind/ui';
 import { Grid } from '@chakra-ui/react';
 import { LuHouse, LuWrench, LuSettings } from 'react-icons/lu';
-import { ReviewMode, ProposalStatus } from './types';
-import { STUB_GROUPS } from './data';
-import { ReviewChangesSidebarPanel } from './components/change-proposals/ReviewChangesSidebarPanel';
-import { ArtefactDetailPanel } from './components/change-proposals/ArtefactDetailPanel';
-import { AppSidebarNavLink } from './components/app-shell/AppSidebarNavLink';
-import { StubOrgSelector } from './components/app-shell/StubOrgSelector';
-import { StubAccountMenu } from './components/app-shell/StubAccountMenu';
-import { StubHelpMenu } from './components/app-shell/StubHelpMenu';
+import { ProposalStatus } from '../review-changes-group-view/types';
+import { STUB_GROUPS } from '../review-changes-group-view/data';
+import { ArtefactDetailPanel } from '../review-changes-group-view/components/change-proposals/ArtefactDetailPanel';
+import { AppSidebarNavLink } from '../review-changes-group-view/components/app-shell/AppSidebarNavLink';
+import { StubOrgSelector } from '../review-changes-group-view/components/app-shell/StubOrgSelector';
+import { StubAccountMenu } from '../review-changes-group-view/components/app-shell/StubAccountMenu';
+import { StubHelpMenu } from '../review-changes-group-view/components/app-shell/StubHelpMenu';
+import {
+  DrillDownSidebarPanel,
+  SidebarView,
+} from './components/change-proposals/DrillDownSidebarPanel';
 
-export default function ReviewChangesGroupViewPrototype() {
-  const [reviewMode, setReviewMode] = useState<ReviewMode>('group');
-  const [selectedGroupId, setSelectedGroupId] = useState(STUB_GROUPS[0].id);
+export default function ReviewChangesDrillDownViewPrototype() {
+  const [sidebarView, setSidebarView] = useState<SidebarView>({
+    level: 'artifacts',
+    groupId: STUB_GROUPS[0].id,
+  });
   const [selectedArtefactId, setSelectedArtefactId] = useState<string | null>(
     STUB_GROUPS[0].artefacts[0].id,
   );
@@ -28,17 +33,31 @@ export default function ReviewChangesGroupViewPrototype() {
     Record<string, ProposalStatus>
   >({});
 
-  const selectedGroup = STUB_GROUPS.find((g) => g.id === selectedGroupId);
   const allArtefacts = STUB_GROUPS.flatMap((g) => g.artefacts);
   const selectedArtefact = allArtefacts.find(
     (a) => a.id === selectedArtefactId,
   );
 
-  const handleSelectGroup = (groupId: string) => {
-    setSelectedGroupId(groupId);
-    const group = STUB_GROUPS.find((g) => g.id === groupId);
-    setSelectedArtefactId(group?.artefacts[0]?.id ?? null);
-  };
+  const selectedGroup =
+    sidebarView.level === 'artifacts'
+      ? STUB_GROUPS.find((g) => g.id === sidebarView.groupId)
+      : null;
+
+  const handleNavigate = useCallback((view: SidebarView) => {
+    setSidebarView(view);
+    if (view.level === 'artifacts') {
+      const group = STUB_GROUPS.find((g) => g.id === view.groupId);
+      setSelectedArtefactId(group?.artefacts[0]?.id ?? null);
+      setSelectedFilePath(null);
+    } else if (view.level === 'all-artifacts') {
+      const allArt = STUB_GROUPS.flatMap((g) => g.artefacts);
+      setSelectedArtefactId(allArt[0]?.id ?? null);
+      setSelectedFilePath(null);
+    } else {
+      setSelectedArtefactId(null);
+      setSelectedFilePath(null);
+    }
+  }, []);
 
   const handleUpdateProposalStatus = (
     proposalId: string,
@@ -112,14 +131,12 @@ export default function ReviewChangesGroupViewPrototype() {
         gridTemplateColumns="minmax(240px, 270px) 1fr minmax(280px, 320px)"
         overflowX="auto"
       >
-        {/* Column 1: Review changes sidebar with toggle */}
+        {/* Column 1: Drill-down sidebar */}
         <PMBox gridColumn="1" overflowY="auto">
-          <ReviewChangesSidebarPanel
-            mode={reviewMode}
-            onModeChange={setReviewMode}
+          <DrillDownSidebarPanel
             groups={STUB_GROUPS}
-            selectedGroupId={selectedGroupId}
-            onSelectGroup={handleSelectGroup}
+            view={sidebarView}
+            onNavigate={handleNavigate}
             selectedArtefactId={selectedArtefactId}
             onSelectArtefact={setSelectedArtefactId}
             selectedFilePath={selectedFilePath}
@@ -136,7 +153,7 @@ export default function ReviewChangesGroupViewPrototype() {
             onUpdateStatus={handleUpdateProposalStatus}
             fileFilter={selectedFilePath}
             groupContext={
-              reviewMode === 'group' && selectedGroup
+              selectedGroup
                 ? {
                     message: selectedGroup.message,
                     author: selectedGroup.author,

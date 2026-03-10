@@ -14,16 +14,24 @@ import {
 import { ProposalAccordionList } from './ProposalAccordionList';
 import { SkillGroupedAccordionList } from './SkillGroupedAccordionList';
 
+interface GroupContext {
+  message: string;
+  author: string;
+  createdAt: string;
+}
+
 export function ArtefactDetailPanel({
   artefact,
   proposalStatuses,
   onUpdateStatus,
   fileFilter,
+  groupContext,
 }: {
   artefact: StubGroupArtefact;
   proposalStatuses: Record<string, ProposalStatus>;
   onUpdateStatus: (proposalId: string, status: ProposalStatus) => void;
   fileFilter: string | null;
+  groupContext?: GroupContext;
 }) {
   const withStatus = artefact.proposals.map((p) => ({
     ...p,
@@ -64,6 +72,12 @@ export function ArtefactDetailPanel({
                 {withStatus.length} change
                 {withStatus.length !== 1 ? 's' : ''}
               </PMText>
+              {groupContext && (
+                <PMText fontSize="xs" color="tertiary">
+                  Group: {groupContext.message} &middot; {groupContext.author}{' '}
+                  &middot; {groupContext.createdAt}
+                </PMText>
+              )}
             </PMVStack>
           </PMHStack>
           <PMButton variant="primary" size="sm" disabled={!hasPooledDecisions}>

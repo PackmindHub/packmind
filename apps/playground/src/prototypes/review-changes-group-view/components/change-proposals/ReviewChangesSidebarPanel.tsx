@@ -7,7 +7,9 @@ import {
   PMText,
   PMVStack,
   PMSegmentGroup,
+  PMIcon,
 } from '@packmind/ui';
+import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
 import {
   StubGroup,
   StubGroupArtefact,
@@ -104,17 +106,48 @@ export function ReviewChangesSidebarPanel({
             )}
           </>
         ) : (
-          <PMVerticalNavSection
-            title="GROUPS TO REVIEW"
-            navEntries={groups.map((group) => (
-              <GroupNavEntry
-                key={group.id}
-                group={group}
-                isSelected={selectedGroupId === group.id}
-                onSelect={() => onSelectGroup(group.id)}
+          <PMBox>
+            {groups.map((group) => {
+              const isGroupExpanded = selectedGroupId === group.id;
+              return (
+                <PMBox key={group.id}>
+                  {/* Group header — click to expand/collapse */}
+                  <GroupNavHeader
+                    group={group}
+                    isExpanded={isGroupExpanded}
+                    onToggle={() => onSelectGroup(group.id)}
+                  />
+
+                  {/* Artifacts under this group */}
+                  {isGroupExpanded && (
+                    <PMBox>
+                      {group.artefacts.map((artefact) => (
+                        <ArtefactNavEntry
+                          key={artefact.id}
+                          artefact={artefact}
+                          isSelected={selectedArtefactId === artefact.id}
+                          onSelect={() => {
+                            onSelectArtefact(artefact.id);
+                            onSelectFilePath(null);
+                          }}
+                          indented
+                        />
+                      ))}
+                    </PMBox>
+                  )}
+                </PMBox>
+              );
+            })}
+
+            {/* Skill file filter — shown below groups when a skill is selected */}
+            {isSkillSelected && (
+              <SkillFileFilterTree
+                filePaths={skillFilePaths}
+                selectedFilePath={selectedFilePath}
+                onFileSelect={onSelectFilePath}
               />
-            ))}
-          />
+            )}
+          </PMBox>
         )}
       </PMBox>
     </PMVerticalNav>
@@ -125,10 +158,12 @@ function ArtefactNavEntry({
   artefact,
   isSelected,
   onSelect,
+  indented = false,
 }: {
   artefact: StubGroupArtefact;
   isSelected: boolean;
   onSelect: () => void;
+  indented?: boolean;
 }) {
   return (
     <PMBox
@@ -136,6 +171,7 @@ function ArtefactNavEntry({
       borderColor="{colors.border.tertiary}"
       cursor="pointer"
       onClick={onSelect}
+      pl={indented ? 6 : 0}
     >
       <PMLink
         variant="navbar"
@@ -169,35 +205,36 @@ function ArtefactNavEntry({
   );
 }
 
-function GroupNavEntry({
+function GroupNavHeader({
   group,
-  isSelected,
-  onSelect,
+  isExpanded,
+  onToggle,
 }: {
   group: StubGroup;
-  isSelected: boolean;
-  onSelect: () => void;
+  isExpanded: boolean;
+  onToggle: () => void;
 }) {
   return (
     <PMBox
+      cursor="pointer"
+      onClick={onToggle}
+      px={3}
+      py={2}
+      bg={isExpanded ? '{colors.background.secondary}' : undefined}
+      _hover={{ bg: '{colors.background.secondary}' }}
+      transition="background 0.1s"
       borderBottom="1px solid"
       borderColor="{colors.border.tertiary}"
-      cursor="pointer"
-      onClick={onSelect}
     >
-      <PMLink
-        variant="navbar"
-        data-active={isSelected ? 'true' : undefined}
-        as="span"
-        display="block"
-        width="full"
-        py={2}
-      >
-        <PMHStack width="full" justifyContent="space-between" gap={2} minW={0}>
+      <PMHStack gap={2} alignItems="center" justifyContent="space-between">
+        <PMHStack gap={2} flex={1} minW={0} alignItems="center">
+          <PMIcon color="text.faded" fontSize="xs" flexShrink={0}>
+            {isExpanded ? <LuChevronDown /> : <LuChevronRight />}
+          </PMIcon>
           <PMVStack gap={0} flex={1} minW={0} alignItems="flex-start">
             <PMText
               fontSize="sm"
-              fontWeight={isSelected ? 'bold' : 'medium'}
+              fontWeight="semibold"
               overflow="hidden"
               textOverflow="ellipsis"
               whiteSpace="nowrap"
@@ -209,9 +246,9 @@ function GroupNavEntry({
               {group.author} &middot; {group.createdAt}
             </PMText>
           </PMVStack>
-          <NavBadge>{proposalCountForGroup(group)}</NavBadge>
         </PMHStack>
-      </PMLink>
+        <NavBadge>{proposalCountForGroup(group)}</NavBadge>
+      </PMHStack>
     </PMBox>
   );
 }
