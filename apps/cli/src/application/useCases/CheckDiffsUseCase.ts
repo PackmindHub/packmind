@@ -3,6 +3,7 @@ import {
   ChangeProposalCaptureMode,
   ChangeProposalType,
   SpaceId,
+  TargetId,
 } from '@packmind/types';
 
 import {
@@ -62,6 +63,7 @@ export class CheckDiffsUseCase implements ICheckDiffsUseCase {
           payload: diff.payload,
           captureMode: ChangeProposalCaptureMode.commit,
           message: '',
+          targetId: diff.targetId as TargetId,
         })),
       });
 

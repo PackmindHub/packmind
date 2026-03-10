@@ -4,6 +4,7 @@ import {
   ChangeProposalType,
   ChangeProposalPayload,
   IPublicUseCase,
+  TargetId,
 } from '@packmind/types';
 
 export type IDiffArtefactsCommand = {
@@ -23,6 +24,7 @@ export type ArtefactDiff<T extends ChangeProposalType = ChangeProposalType> = {
   artifactType: ArtifactType;
   artifactId?: string;
   spaceId?: string;
+  targetId?: TargetId;
 };
 
 export type IDiffArtefactsResult = ArtefactDiff[];
