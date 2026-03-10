@@ -753,6 +753,7 @@ describe('SkillChangesApplier', () => {
         skillId: skillVersion.skillId,
         userId,
         organizationId,
+        spaceId,
       });
     });
   });

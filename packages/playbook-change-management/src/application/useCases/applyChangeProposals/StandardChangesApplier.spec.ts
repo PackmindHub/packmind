@@ -542,6 +542,7 @@ describe('StandardChangesApplier', () => {
         standardId: standardVersion.standardId,
         userId,
         organizationId,
+        spaceId,
       });
     });
   });
