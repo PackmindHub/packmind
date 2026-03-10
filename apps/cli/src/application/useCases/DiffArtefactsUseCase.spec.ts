@@ -2346,7 +2346,7 @@ describe('DiffArtefactsUseCase', () => {
 
       expect(mockGetContentByVersions).toHaveBeenCalledWith({
         artifacts: lockFileArtifactValues,
-        agents: undefined,
+        agents: ['packmind'],
       });
       expect(mockGetDeployed).not.toHaveBeenCalled();
     });
@@ -2366,7 +2366,7 @@ describe('DiffArtefactsUseCase', () => {
 
       expect(mockGetContentByVersions).toHaveBeenCalledWith({
         artifacts: lockFileArtifactValues,
-        agents: ['claude-code', 'cursor'],
+        agents: ['packmind'],
       });
     });
 
