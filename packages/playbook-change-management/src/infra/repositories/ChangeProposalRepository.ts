@@ -98,4 +98,26 @@ export class ChangeProposalRepository
   async update(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
     await this.add(proposal);
   }
+
+  async cancelPendingByArtefactId(
+    spaceId: SpaceId,
+    artefactId: string,
+    cancelledBy: UserId,
+  ): Promise<void> {
+    const proposals = await this.findByArtefactId(spaceId, artefactId);
+    const pending = proposals.filter(
+      (p) => p.status === ChangeProposalStatus.pending,
+    );
+
+    await Promise.all(
+      pending.map((p) =>
+        this.update({
+          ...p,
+          status: ChangeProposalStatus.rejected,
+          resolvedBy: cancelledBy,
+          resolvedAt: new Date(),
+        }),
+      ),
+    );
+  }
 }

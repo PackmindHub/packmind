@@ -287,6 +287,93 @@ describe('ChangeProposalRepository', () => {
     });
   });
 
+  describe('cancelPendingByArtefactId', () => {
+    const artefactId = createStandardId('cccccccc-cccc-cccc-cccc-cccccccccccc');
+    const otherArtefactId = createStandardId(
+      'dddddddd-dddd-dddd-dddd-dddddddddddd',
+    );
+    const cancelledBy = createUserId('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee');
+
+    describe('when pending proposals exist for the artefact', () => {
+      beforeEach(async () => {
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            artefactId,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            artefactId,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            artefactId: otherArtefactId,
+            status: ChangeProposalStatus.pending,
+          }),
+        );
+
+        await repository.cancelPendingByArtefactId(
+          spaceAId,
+          artefactId,
+          cancelledBy,
+        );
+      });
+
+      it('marks all pending proposals as rejected', async () => {
+        const proposals = await repository.findByArtefactId(
+          spaceAId,
+          artefactId,
+        );
+
+        expect(
+          proposals.every((p) => p.status === ChangeProposalStatus.rejected),
+        ).toBe(true);
+      });
+
+      it('does not affect pending proposals for other artefacts', async () => {
+        const proposals = await repository.findByArtefactId(
+          spaceAId,
+          otherArtefactId,
+        );
+
+        expect(proposals[0].status).toBe(ChangeProposalStatus.pending);
+      });
+    });
+
+    describe('when an already-applied proposal exists for the same artefact', () => {
+      beforeEach(async () => {
+        await repository.save(
+          changeProposalFactory({
+            spaceId: spaceAId,
+            artefactId,
+            status: ChangeProposalStatus.applied,
+          }),
+        );
+
+        await repository.cancelPendingByArtefactId(
+          spaceAId,
+          artefactId,
+          cancelledBy,
+        );
+      });
+
+      it('does not affect already-applied proposals', async () => {
+        const proposals = await repository.findByArtefactId(
+          spaceAId,
+          artefactId,
+        );
+
+        expect(proposals[0].status).toBe(ChangeProposalStatus.applied);
+      });
+    });
+  });
+
   describe('update', () => {
     it('persists updated fields', async () => {
       const proposal = changeProposalFactory({ spaceId: spaceAId });

@@ -28,4 +28,9 @@ export interface IChangeProposalRepository {
     payload: ChangeProposalPayload<T>;
   }): Promise<ChangeProposal<T> | null>;
   update(proposal: ChangeProposal<ChangeProposalType>): Promise<void>;
+  cancelPendingByArtefactId(
+    spaceId: SpaceId,
+    artefactId: string,
+    cancelledBy: UserId,
+  ): Promise<void>;
 }
