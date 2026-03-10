@@ -227,6 +227,7 @@ export class PlaybookChangeManagementAdapter
     this._batchCreateChangeProposals = new BatchCreateChangeProposalsUseCase(
       accountsPort,
       this,
+      deploymentPort,
     );
 
     this._checkChangeProposals = new CheckChangeProposalsUseCase(
