@@ -1510,6 +1510,7 @@ Old packmind content
               id: 'artifact-1',
               version: 3,
               spaceId: 'space-1',
+              packageIds: [],
               files: [
                 {
                   path: '.packmind/standards/coding-style.md',
@@ -1523,6 +1524,7 @@ Old packmind content
               id: 'artifact-2',
               version: 1,
               spaceId: 'space-1',
+              packageIds: [],
               files: [
                 {
                   path: '.packmind/commands/setup-lint.md',
@@ -1532,6 +1534,51 @@ Old packmind content
             },
           },
         });
+      });
+    });
+
+    describe('when artifacts have packageIds', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/coding-style.md',
+                content: '# Coding Style',
+                artifactType: 'standard',
+                artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
+                artifactId: 'artifact-1',
+                artifactVersion: 3,
+                spaceId: 'space-1',
+                packageIds: ['pkg-aaa', 'pkg-bbb'],
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+          agents: ['packmind'],
+        });
+      });
+
+      it('stores packageIds in the lock file entry', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            artifacts: {
+              'coding-style': expect.objectContaining({
+                packageIds: ['pkg-aaa', 'pkg-bbb'],
+              }),
+            },
+          }),
+        );
       });
     });
 
@@ -1589,6 +1636,7 @@ Old packmind content
               id: 'artifact-1',
               version: 2,
               spaceId: 'space-1',
+              packageIds: [],
               files: [
                 {
                   path: '.claude/rules/coding-style.md',
@@ -1692,6 +1740,7 @@ Old packmind content
               id: 'artifact-1',
               version: 1,
               spaceId: 'space-1',
+              packageIds: [],
               files: [
                 {
                   path: '.packmind/standards/complete.md',

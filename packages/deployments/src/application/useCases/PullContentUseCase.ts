@@ -22,6 +22,7 @@ import {
   StandardVersion,
   createOrganizationId,
   createUserId,
+  PackageWithArtefacts,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
@@ -159,6 +160,28 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         ];
         const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
+        // Build packageIdMap per artifact type (artifact can belong to multiple packages)
+        const buildPackageIdMap = (
+          accessor: (pkg: PackageWithArtefacts) => { id: string }[],
+        ): Map<string, string[]> => {
+          const map = new Map<string, string[]>();
+          for (const pkg of packages) {
+            for (const artifact of accessor(pkg)) {
+              const existing = map.get(artifact.id as string);
+              if (existing) {
+                existing.push(pkg.id as string);
+              } else {
+                map.set(artifact.id as string, [pkg.id as string]);
+              }
+            }
+          }
+          return map;
+        };
+
+        const recipePackageIdMap = buildPackageIdMap((pkg) => pkg.recipes);
+        const standardPackageIdMap = buildPackageIdMap((pkg) => pkg.standards);
+        const skillPackageIdMap = buildPackageIdMap((pkg) => pkg.skills);
+
         this.logger.info('Extracted content from packages', {
           recipeCount: recipes.length,
           standardCount: standards.length,
@@ -223,18 +246,21 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             spaceIdMap: new Map(
               recipes.map((r) => [r.id as string, r.spaceId as string]),
             ),
+            packageIdMap: recipePackageIdMap,
             versions: recipeVersions,
           },
           standards: {
             spaceIdMap: new Map(
               standards.map((s) => [s.id as string, s.spaceId as string]),
             ),
+            packageIdMap: standardPackageIdMap,
             versions: standardVersions,
           },
           skills: {
             spaceIdMap: new Map(
               skills.map((s) => [s.id as string, s.spaceId as string]),
             ),
+            packageIdMap: skillPackageIdMap,
             versions: skillVersions,
           },
         });

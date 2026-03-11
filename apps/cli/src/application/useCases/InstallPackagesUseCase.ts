@@ -192,6 +192,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
           id: file.artifactId,
           version: file.artifactVersion,
           spaceId: file.spaceId,
+          packageIds: file.packageIds ?? [],
           files: [],
         };
       }

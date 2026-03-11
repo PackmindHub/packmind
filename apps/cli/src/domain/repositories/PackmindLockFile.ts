@@ -16,6 +16,7 @@ export type PackmindLockFileEntry = {
   id: string;
   version: number;
   spaceId: string;
+  packageIds: string[];
   files: PackmindLockFileFile[];
 };
 

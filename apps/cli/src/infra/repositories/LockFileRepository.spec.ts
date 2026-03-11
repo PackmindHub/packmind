@@ -34,6 +34,7 @@ describe('LockFileRepository', () => {
             id: 'std-123',
             version: 3,
             spaceId: 'space-1',
+            packageIds: ['pkg-1'],
             files: [
               { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
             ],
@@ -44,6 +45,7 @@ describe('LockFileRepository', () => {
             id: 'cmd-456',
             version: 1,
             spaceId: 'space-1',
+            packageIds: ['pkg-1', 'pkg-2'],
             files: [
               { path: '.packmind/commands/my-command.md', agent: 'packmind' },
             ],
@@ -54,6 +56,7 @@ describe('LockFileRepository', () => {
             id: 'skl-789',
             version: 2,
             spaceId: 'space-2',
+            packageIds: [],
             files: [
               { path: '.claude/skills/my-skill/main.md', agent: 'claude' },
             ],
@@ -221,6 +224,7 @@ describe('LockFileRepository', () => {
           id: 'std-123',
           version: 3,
           spaceId: 'space-1',
+          packageIds: ['pkg-1'],
           files: [
             { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
           ],

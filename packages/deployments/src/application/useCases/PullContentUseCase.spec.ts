@@ -2539,6 +2539,33 @@ describe('PullContentUseCase', () => {
         );
         expect(skillFile?.artifactVersion).toBe(skillVersion.version);
       });
+
+      it('sets packageIds on recipe file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.packageIds).toEqual(['package-enrich']);
+      });
+
+      it('sets packageIds on standard file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const standardFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/standards/enriched-standard.md',
+        );
+        expect(standardFile?.packageIds).toEqual(['package-enrich']);
+      });
+
+      it('sets packageIds on skill file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const skillFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.claude/skills/enriched-skill/SKILL.md',
+        );
+        expect(skillFile?.packageIds).toEqual(['package-enrich']);
+      });
     });
 
     describe('when deployed files do not have artifactType', () => {
