@@ -115,7 +115,7 @@ export class GitService implements IGitService {
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(
-          `Failed to get Git branches. packmind-cli lint must be run in a Git repository.\n${error.message}`,
+          `Failed to get Git branches. packmind lint must be run in a Git repository.\n${error.message}`,
         );
       }
       throw new Error('Failed to get Git branches: Unknown error');
@@ -163,7 +163,7 @@ export class GitService implements IGitService {
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(
-          `Failed to get Git remote URL. packmind-cli lint must be run in a Git repository.\n${error.message}`,
+          `Failed to get Git remote URL. packmind lint must be run in a Git repository.\n${error.message}`,
         );
       }
       throw new Error('Failed to get Git remote URL: Unknown error');
