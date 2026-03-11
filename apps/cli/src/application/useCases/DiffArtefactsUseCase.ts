@@ -6,7 +6,11 @@ import {
 } from '../../domain/useCases/IDiffArtefactsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { FileModification, IPullContentResponse } from '@packmind/types';
+import {
+  createTargetId,
+  FileModification,
+  IPullContentResponse,
+} from '@packmind/types';
 import { DiffableFile } from './diffStrategies/DiffableFile';
 import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
 import { CommandDiffStrategy } from './diffStrategies/CommandDiffStrategy';
@@ -78,7 +82,12 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
       }
     }
 
-    return diffs.map((diff) => ({ ...diff, targetId: response.targetId }));
+    return diffs.map((diff) => ({
+      ...diff,
+      targetId: response.targetId
+        ? createTargetId(response.targetId)
+        : undefined,
+    }));
   }
 
   private async fetchContent(
