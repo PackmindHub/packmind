@@ -21,7 +21,7 @@ export function ProposalLabel({
     <PMText fontWeight="medium" fontSize="sm">
       #{proposalNumber} &mdash;{' '}
       {isRemoval ? (
-        <PMText as="span" color="red.300">
+        <PMText as="span" color="error">
           {fieldLabel}
         </PMText>
       ) : (
