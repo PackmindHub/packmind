@@ -7,12 +7,14 @@ import {
   CommandDeletedEvent,
   StandardDeletedEvent,
   SkillDeletedEvent,
+  ArtefactRemovedFromPackageEvent,
   createSpaceId,
   createOrganizationId,
   createUserId,
   createRecipeId,
   createStandardId,
   createSkillId,
+  createPackageId,
 } from '@packmind/types';
 
 describe('ChangeManagementListener', () => {
@@ -133,6 +135,78 @@ describe('ChangeManagementListener', () => {
       expect(
         mockChangeProposalService.cancelPendingByArtefactId,
       ).toHaveBeenCalledWith(spaceId, skillId, userId);
+    });
+  });
+
+  describe('when ArtefactRemovedFromPackageEvent is emitted', () => {
+    const packageId = createPackageId('pkg-1');
+    const artefactId = 'some-artefact-id';
+
+    describe('when remainingPackagesCount is 0', () => {
+      it('calls cancelPendingByArtefactId', async () => {
+        const event = new ArtefactRemovedFromPackageEvent({
+          artefactId,
+          spaceId,
+          packageId,
+          remainingPackagesCount: 0,
+          userId,
+          organizationId,
+          source: 'api',
+        });
+
+        eventService.emit(event);
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        expect(
+          mockChangeProposalService.cancelPendingByArtefactId,
+        ).toHaveBeenCalledWith(spaceId, artefactId, userId);
+      });
+    });
+
+    describe('when remainingPackagesCount is greater than 0', () => {
+      it('does NOT call cancelPendingByArtefactId', async () => {
+        const event = new ArtefactRemovedFromPackageEvent({
+          artefactId,
+          spaceId,
+          packageId,
+          remainingPackagesCount: 2,
+          userId,
+          organizationId,
+          source: 'api',
+        });
+
+        eventService.emit(event);
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        expect(
+          mockChangeProposalService.cancelPendingByArtefactId,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when cancelPendingByArtefactId throws', () => {
+      it('does not propagate the error', async () => {
+        mockChangeProposalService.cancelPendingByArtefactId.mockRejectedValueOnce(
+          new Error('DB error'),
+        );
+
+        const event = new ArtefactRemovedFromPackageEvent({
+          artefactId,
+          spaceId,
+          packageId,
+          remainingPackagesCount: 0,
+          userId,
+          organizationId,
+          source: 'api',
+        });
+
+        await expect(async () => {
+          eventService.emit(event);
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }).not.toThrow();
+      });
     });
   });
 });

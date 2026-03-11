@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindListener } from '@packmind/node-utils';
 import {
+  ArtefactRemovedFromPackageEvent,
   CommandDeletedEvent,
   SkillDeletedEvent,
   StandardDeletedEvent,
@@ -21,6 +22,10 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
     this.subscribe(CommandDeletedEvent, this.handleCommandDeleted);
     this.subscribe(StandardDeletedEvent, this.handleStandardDeleted);
     this.subscribe(SkillDeletedEvent, this.handleSkillDeleted);
+    this.subscribe(
+      ArtefactRemovedFromPackageEvent,
+      this.handleArtefactRemovedFromPackage,
+    );
   }
 
   private handleCommandDeleted = async (
@@ -97,6 +102,37 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
         'Failed to cancel pending proposals for deleted skill',
         {
           skillId,
+          spaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+  };
+
+  private handleArtefactRemovedFromPackage = async (
+    event: ArtefactRemovedFromPackageEvent,
+  ): Promise<void> => {
+    const { artefactId, spaceId, userId, remainingPackagesCount } =
+      event.payload;
+
+    if (remainingPackagesCount > 0) {
+      return;
+    }
+
+    try {
+      await this.adapter.cancelPendingByArtefactId(spaceId, artefactId, userId);
+      this.logger.info(
+        'Cancelled pending proposals for artefact removed from last package',
+        {
+          artefactId,
+          spaceId,
+        },
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to cancel pending proposals for artefact removed from last package',
+        {
+          artefactId,
           spaceId,
           error: error instanceof Error ? error.message : String(error),
         },
