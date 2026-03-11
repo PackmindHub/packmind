@@ -292,4 +292,41 @@ describe('RenderModeConfigurationService', () => {
       });
     });
   });
+
+  describe('resolveCodingAgents', () => {
+    describe('when commandAgents are provided', () => {
+      it('returns normalized coding agents', async () => {
+        const agents = await service.resolveCodingAgents(
+          ['claude', 'cursor'],
+          organizationId,
+        );
+
+        expect(agents).toEqual(['packmind', 'claude', 'cursor']);
+      });
+
+      it('does not query repository', async () => {
+        await service.resolveCodingAgents(['claude'], organizationId);
+
+        expect(repository.findByOrganizationId).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when commandAgents are undefined', () => {
+      it('resolves agents from organization configuration', async () => {
+        const configuration = renderModeConfigurationFactory({
+          organizationId,
+          activeRenderModes: [RenderMode.PACKMIND, RenderMode.CLAUDE],
+        });
+
+        repository.findByOrganizationId.mockResolvedValue(configuration);
+
+        const agents = await service.resolveCodingAgents(
+          undefined,
+          organizationId,
+        );
+
+        expect(agents).toEqual(['packmind', 'claude']);
+      });
+    });
+  });
 });

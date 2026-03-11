@@ -68,6 +68,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: promptFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -107,6 +108,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -133,6 +135,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: promptFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -166,6 +169,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -203,6 +207,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: skillFile.skillFileId,
           skillFilePermissions: skillFile.skillFilePermissions,
         });
@@ -234,6 +239,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: skillFile.skillFileId,
           skillFilePermissions: skillFile.skillFilePermissions,
         });
@@ -270,6 +276,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: promptFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -282,6 +289,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -295,6 +303,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: skillFile.skillFileId,
           skillFilePermissions: skillFile.skillFilePermissions,
         });

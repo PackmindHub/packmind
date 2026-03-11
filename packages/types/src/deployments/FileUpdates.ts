@@ -13,7 +13,9 @@ export type FileModification =
       sections?: never;
       artifactType?: ArtifactType;
       artifactName?: string;
+      artifactSlug?: string;
       artifactId?: string;
+      artifactVersion?: number;
       spaceId?: string;
       packageIds?: string[];
       skillFileId?: string;
@@ -25,7 +27,9 @@ export type FileModification =
       sections: FileSection[];
       artifactType?: ArtifactType;
       artifactName?: string;
+      artifactSlug?: string;
       artifactId?: string;
+      artifactVersion?: number;
       spaceId?: string;
       packageIds?: string[];
       skillFileId?: string;

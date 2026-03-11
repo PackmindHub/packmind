@@ -5,7 +5,12 @@ import {
   ArtefactDiff,
 } from '../../domain/useCases/IDiffArtefactsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { FileModification } from '@packmind/types';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+import {
+  createTargetId,
+  FileModification,
+  IPullContentResponse,
+} from '@packmind/types';
 import { DiffableFile } from './diffStrategies/DiffableFile';
 import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
 import { CommandDiffStrategy } from './diffStrategies/CommandDiffStrategy';
@@ -15,7 +20,10 @@ import { StandardDiffStrategy } from './diffStrategies/StandardDiffStrategy';
 export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
   private readonly strategies: IDiffStrategy[];
 
-  constructor(private readonly packmindGateway: IPackmindGateway) {
+  constructor(
+    private readonly packmindGateway: IPackmindGateway,
+    private readonly lockFileRepository: ILockFileRepository,
+  ) {
     this.strategies = [
       new CommandDiffStrategy(),
       new SkillDiffStrategy(),
@@ -28,13 +36,7 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
   ): Promise<IDiffArtefactsResult> {
     const baseDirectory = command.baseDirectory || process.cwd();
 
-    const response = await this.packmindGateway.deployment.getDeployed({
-      packagesSlugs: command.packagesSlugs,
-      gitRemoteUrl: command.gitRemoteUrl,
-      gitBranch: command.gitBranch,
-      relativePath: command.relativePath,
-      agents: command.agents,
-    });
+    const response = await this.fetchContent(command, baseDirectory);
 
     const filteredFiles = response.fileUpdates.createOrUpdate.filter(
       (file) => file.path !== 'packmind.json',
@@ -80,7 +82,47 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
       }
     }
 
-    return diffs.map((diff) => ({ ...diff, targetId: response.targetId }));
+    return diffs.map((diff) => ({
+      ...diff,
+      targetId: response.targetId
+        ? createTargetId(response.targetId)
+        : undefined,
+    }));
+  }
+
+  private async fetchContent(
+    command: IDiffArtefactsCommand,
+    baseDirectory: string,
+  ): Promise<IPullContentResponse> {
+    const lockFile = await this.lockFileRepository.read(baseDirectory);
+
+    if (lockFile) {
+      try {
+        const response =
+          await this.packmindGateway.deployment.getContentByVersions({
+            artifacts: Object.values(lockFile.artifacts),
+            agents: lockFile.agents,
+          });
+        return {
+          ...response,
+          targetId: lockFile.targetId,
+        };
+      } catch (error) {
+        const statusCode = (error as Error & { statusCode?: number })
+          .statusCode;
+        if (statusCode !== 404) {
+          throw error;
+        }
+      }
+    }
+
+    return this.packmindGateway.deployment.getDeployed({
+      packagesSlugs: command.packagesSlugs,
+      gitRemoteUrl: command.gitRemoteUrl,
+      gitBranch: command.gitBranch,
+      relativePath: command.relativePath,
+      agents: command.agents,
+    });
   }
 
   private prefixSkillFolders(

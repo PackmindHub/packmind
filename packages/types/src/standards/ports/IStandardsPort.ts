@@ -30,10 +30,15 @@ export interface IStandardsPort {
   getLatestStandardVersion(
     standardId: StandardId,
   ): Promise<StandardVersion | null>;
+  getStandardVersionByNumber(
+    standardId: StandardId,
+    version: number,
+  ): Promise<StandardVersion | null>;
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]>;
   getRule(id: RuleId): Promise<Rule | null>;
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]>;
   getRulesByStandardId(id: StandardId): Promise<Rule[]>;
+  getRulesByVersionId(versionId: StandardVersionId): Promise<Rule[]>;
   listStandardsBySpace(
     spaceId: SpaceId,
     organizationId: OrganizationId,

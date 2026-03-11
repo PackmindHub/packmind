@@ -10,6 +10,8 @@ export type IInstallPackagesCommand = {
   relativePath?: string;
   // Optional agents to generate artifacts for (overrides org-level config)
   agents?: CodingAgent[];
+  // CLI version for lock file metadata
+  cliVersion?: string;
 };
 
 export type IInstallPackagesResult = {

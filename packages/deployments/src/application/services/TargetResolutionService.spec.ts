@@ -6,6 +6,7 @@ import {
   StandardVersion,
   SkillVersion,
   createGitRepoId,
+  createGitProviderId,
   createOrganizationId,
   createTargetId,
   createRecipeVersionId,
@@ -47,10 +48,14 @@ describe('TargetResolutionService', () => {
     gitPort = {
       listProviders: jest.fn(),
       listRepos: jest.fn(),
+      addGitProvider: jest.fn(),
+      addGitRepo: jest.fn(),
+      listAvailableRepos: jest.fn(),
     } as unknown as jest.Mocked<IGitPort>;
 
     targetService = {
       getTargetsByGitRepoId: jest.fn(),
+      addTarget: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
     distributionRepository = {
@@ -249,6 +254,343 @@ describe('TargetResolutionService', () => {
         );
 
         expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('findOrCreateTargetFromGitInfo', () => {
+    describe('when target already exists', () => {
+      beforeEach(() => {
+        gitPort.listProviders.mockResolvedValue({
+          providers: [{ id: providerId, name: 'github', type: 'github' }],
+        });
+        gitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+          },
+        ]);
+        targetService.getTargetsByGitRepoId.mockResolvedValue([target]);
+      });
+
+      it('returns the existing target', async () => {
+        const result = await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(result).toEqual(target);
+      });
+
+      it('does not create a provider', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(gitPort.addGitProvider).not.toHaveBeenCalled();
+      });
+
+      it('does not create a repo', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(gitPort.addGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('does not create a target', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(targetService.addTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no provider exists', () => {
+      const newProviderId = createGitProviderId(uuidv4());
+      const newRepoId = createGitRepoId(uuidv4());
+      const newTarget: Target = {
+        id: createTargetId(uuidv4()),
+        name: 'Default',
+        path: '/',
+        gitRepoId: newRepoId,
+      };
+
+      beforeEach(() => {
+        // First call (findTargetFromGitInfo) - no providers
+        // Second call (findOrCreateProviderAndRepo) - no providers
+        gitPort.listProviders.mockResolvedValue({ providers: [] });
+        gitPort.addGitProvider.mockResolvedValue({
+          id: newProviderId,
+          source: 'github',
+          organizationId,
+          url: 'https://github.com',
+          token: null,
+        });
+        gitPort.listRepos.mockResolvedValue([]);
+        gitPort.addGitRepo.mockResolvedValue({
+          id: newRepoId as unknown as string,
+          owner: 'test-owner',
+          repo: 'test-repo',
+          branch: 'main',
+          providerId: newProviderId,
+        });
+        targetService.getTargetsByGitRepoId.mockResolvedValue([]);
+        targetService.addTarget.mockResolvedValue(newTarget);
+      });
+
+      it('creates a tokenless provider', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(gitPort.addGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({
+            gitProvider: {
+              source: 'github',
+              url: 'https://github.com',
+              token: null,
+            },
+            allowTokenlessProvider: true,
+          }),
+        );
+      });
+
+      it('creates a repo under the tokenless provider', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(gitPort.addGitRepo).toHaveBeenCalledWith(
+          expect.objectContaining({
+            gitProviderId: newProviderId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            allowTokenlessProvider: true,
+          }),
+        );
+      });
+
+      it('creates a target', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(targetService.addTarget).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Default',
+            path: '/',
+            gitRepoId: newRepoId,
+          }),
+        );
+      });
+
+      it('returns the newly created target', async () => {
+        const result = await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(result).toEqual(newTarget);
+      });
+    });
+
+    describe('when provider exists but no repo', () => {
+      const existingProviderId = createGitProviderId(uuidv4());
+      const newRepoId = createGitRepoId(uuidv4());
+      const newTarget: Target = {
+        id: createTargetId(uuidv4()),
+        name: 'Default',
+        path: '/',
+        gitRepoId: newRepoId,
+      };
+
+      beforeEach(() => {
+        gitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: existingProviderId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+        gitPort.listRepos.mockResolvedValue([]);
+        gitPort.addGitRepo.mockResolvedValue({
+          id: newRepoId as unknown as string,
+          owner: 'test-owner',
+          repo: 'test-repo',
+          branch: 'main',
+          providerId: existingProviderId,
+        });
+        targetService.getTargetsByGitRepoId.mockResolvedValue([]);
+        targetService.addTarget.mockResolvedValue(newTarget);
+      });
+
+      it('does not create a new provider', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(gitPort.addGitProvider).not.toHaveBeenCalled();
+      });
+
+      it('creates a repo under the existing provider', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(gitPort.addGitRepo).toHaveBeenCalledWith(
+          expect.objectContaining({
+            gitProviderId: existingProviderId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+          }),
+        );
+      });
+
+      it('creates a target', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(targetService.addTarget).toHaveBeenCalled();
+      });
+    });
+
+    describe('when provider and repo exist but no target', () => {
+      const newTarget: Target = {
+        id: createTargetId(uuidv4()),
+        name: 'src-packages',
+        path: '/src/packages/',
+        gitRepoId,
+      };
+
+      beforeEach(() => {
+        gitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: providerId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+        gitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+          },
+        ]);
+        // findTargetFromGitInfo returns null (target not found for this path)
+        targetService.getTargetsByGitRepoId.mockResolvedValue([target]); // Only root target exists
+        targetService.addTarget.mockResolvedValue(newTarget);
+      });
+
+      it('does not create a new provider', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/src/packages/',
+        );
+
+        expect(gitPort.addGitProvider).not.toHaveBeenCalled();
+      });
+
+      it('does not create a new repo', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/src/packages/',
+        );
+
+        expect(gitPort.addGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('creates a target with slugified name', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/src/packages/',
+        );
+
+        expect(targetService.addTarget).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'src-packages',
+            path: '/src/packages/',
+          }),
+        );
+      });
+
+      it('returns the newly created target', async () => {
+        const result = await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/src/packages/',
+        );
+
+        expect(result).toEqual(newTarget);
       });
     });
   });

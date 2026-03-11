@@ -1,21 +1,23 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  ArtifactType,
-  CodingAgent,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   IAccountsPort,
   ICodingAgentPort,
   ISkillsPort,
   IStandardsPort,
-  normalizeCodingAgents,
   PackageId,
+  PackageWithArtefacts,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { PackageService } from '../services/PackageService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { TargetResolutionService } from '../services/TargetResolutionService';
+import {
+  buildArtifactMetadataMap,
+  enrichFileModificationsWithMetadata,
+} from '../utils/ArtifactMetadataUtils';
 
 const origin = 'GetDeployedContentUseCase';
 
@@ -48,19 +50,11 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     });
 
     // Step 1: Resolve coding agents
-    let codingAgents: CodingAgent[];
-    if (command.agents !== undefined) {
-      codingAgents = normalizeCodingAgents(command.agents);
-      this.logger.info('Using agents from command', { codingAgents });
-    } else {
-      codingAgents =
-        await this.renderModeConfigurationService.resolveActiveCodingAgents(
-          command.organization.id,
-        );
-      this.logger.info('Using organization-level render modes', {
-        codingAgents,
-      });
-    }
+    const codingAgents =
+      await this.renderModeConfigurationService.resolveCodingAgents(
+        command.agents,
+        command.organization.id,
+      );
 
     // Step 2: Resolve target from git info
     const target = await this.targetResolutionService.findTargetFromGitInfo(
@@ -77,6 +71,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       return {
         fileUpdates: { createOrUpdate: [], delete: [] },
         skillFolders: [],
+        resolvedAgents: codingAgents,
       };
     }
 
@@ -106,9 +101,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     // Step 5: Fetch rules for each standard version
     const standardVersionsWithRules = await Promise.all(
       standardVersions.map(async (sv) => {
-        const rules = await this.standardsPort.getRulesByStandardId(
-          sv.standardId,
-        );
+        const rules = await this.standardsPort.getRulesByVersionId(sv.id);
         return { ...sv, rules };
       }),
     );
@@ -134,128 +127,87 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       deleteCount: fileUpdates.delete.length,
     });
 
-    // Step 8: Build artifact metadata from packages
-    type ArtifactMetadata = {
-      artifactId: string;
-      spaceId: string;
-      packageIds: string[];
-    };
-    const artifactMetadata: Record<
-      ArtifactType,
-      Map<string, ArtifactMetadata>
-    > = {
-      command: new Map(),
-      standard: new Map(),
-      skill: new Map(),
-    };
-
-    let allPackages: Awaited<
-      ReturnType<PackageService['getPackagesBySlugsWithArtefacts']>
-    > = [];
-
+    // Step 8: Build artifact metadata from packages and enrich file modifications
+    let packages: PackageWithArtefacts[] = [];
     if (command.packagesSlugs.length > 0) {
-      allPackages = await this.packageService.getPackagesBySlugsWithArtefacts(
+      packages = await this.packageService.getPackagesBySlugsWithArtefacts(
         command.packagesSlugs,
         command.organization.id,
       );
 
-      // Build per-artifact maps: artifactId -> { spaceId, packageIds[] }
-      const recipePackageMap = new Map<
-        string,
-        { spaceId: string; packageIds: string[] }
-      >();
-      const standardPackageMap = new Map<
-        string,
-        { spaceId: string; packageIds: string[] }
-      >();
-      const skillPackageMap = new Map<
-        string,
-        { spaceId: string; packageIds: string[] }
-      >();
+      const allRecipes = packages.flatMap((pkg) => pkg.recipes);
+      const allStandards = packages.flatMap((pkg) => pkg.standards);
+      const allSkills = packages.flatMap((pkg) => pkg.skills);
 
-      for (const pkg of allPackages) {
+      const recipes = [...new Map(allRecipes.map((r) => [r.id, r])).values()];
+      const standards = [
+        ...new Map(allStandards.map((s) => [s.id, s])).values(),
+      ];
+      const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
+
+      // Build packageIdMap per artifact type (artifact can belong to multiple packages)
+      const recipePackageIdMap = new Map<string, string[]>();
+      const standardPackageIdMap = new Map<string, string[]>();
+      const skillPackageIdMap = new Map<string, string[]>();
+
+      for (const pkg of packages) {
         for (const recipe of pkg.recipes) {
-          const existing = recipePackageMap.get(recipe.id as string);
+          const existing = recipePackageIdMap.get(recipe.id as string);
           if (existing) {
-            existing.packageIds.push(pkg.id as string);
+            existing.push(pkg.id as string);
           } else {
-            recipePackageMap.set(recipe.id as string, {
-              spaceId: recipe.spaceId as string,
-              packageIds: [pkg.id as string],
-            });
+            recipePackageIdMap.set(recipe.id as string, [pkg.id as string]);
           }
         }
         for (const standard of pkg.standards) {
-          const existing = standardPackageMap.get(standard.id as string);
+          const existing = standardPackageIdMap.get(standard.id as string);
           if (existing) {
-            existing.packageIds.push(pkg.id as string);
+            existing.push(pkg.id as string);
           } else {
-            standardPackageMap.set(standard.id as string, {
-              spaceId: standard.spaceId as string,
-              packageIds: [pkg.id as string],
-            });
+            standardPackageIdMap.set(standard.id as string, [pkg.id as string]);
           }
         }
         for (const skill of pkg.skills) {
-          const existing = skillPackageMap.get(skill.id as string);
+          const existing = skillPackageIdMap.get(skill.id as string);
           if (existing) {
-            existing.packageIds.push(pkg.id as string);
+            existing.push(pkg.id as string);
           } else {
-            skillPackageMap.set(skill.id as string, {
-              spaceId: skill.spaceId as string,
-              packageIds: [pkg.id as string],
-            });
+            skillPackageIdMap.set(skill.id as string, [pkg.id as string]);
           }
         }
       }
 
-      for (const rv of recipeVersions) {
-        const info = recipePackageMap.get(rv.recipeId as string);
-        if (info) {
-          artifactMetadata.command.set(rv.name, {
-            artifactId: rv.recipeId as string,
-            spaceId: info.spaceId,
-            packageIds: info.packageIds,
-          });
-        }
-      }
-      for (const sv of standardVersions) {
-        const info = standardPackageMap.get(sv.standardId as string);
-        if (info) {
-          artifactMetadata.standard.set(sv.name, {
-            artifactId: sv.standardId as string,
-            spaceId: info.spaceId,
-            packageIds: info.packageIds,
-          });
-        }
-      }
-      for (const skv of skillVersions) {
-        const info = skillPackageMap.get(skv.skillId as string);
-        if (info) {
-          artifactMetadata.skill.set(skv.name, {
-            artifactId: skv.skillId as string,
-            spaceId: info.spaceId,
-            packageIds: info.packageIds,
-          });
-        }
-      }
+      const artifactMetadata = buildArtifactMetadataMap({
+        recipes: {
+          spaceIdMap: new Map(
+            recipes.map((r) => [r.id as string, r.spaceId as string]),
+          ),
+          packageIdMap: recipePackageIdMap,
+          versions: recipeVersions,
+        },
+        standards: {
+          spaceIdMap: new Map(
+            standards.map((s) => [s.id as string, s.spaceId as string]),
+          ),
+          packageIdMap: standardPackageIdMap,
+          versions: standardVersions,
+        },
+        skills: {
+          spaceIdMap: new Map(
+            skills.map((s) => [s.id as string, s.spaceId as string]),
+          ),
+          packageIdMap: skillPackageIdMap,
+          versions: skillVersions,
+        },
+      });
+
+      enrichFileModificationsWithMetadata(
+        fileUpdates.createOrUpdate,
+        artifactMetadata,
+      );
     }
 
-    // Step 9: Enrich file modifications with artifact metadata
-    for (const file of fileUpdates.createOrUpdate) {
-      if (file.artifactType && file.artifactName) {
-        const metadata = artifactMetadata[file.artifactType].get(
-          file.artifactName,
-        );
-        if (metadata) {
-          file.artifactId = metadata.artifactId;
-          file.spaceId = metadata.spaceId;
-          file.packageIds = metadata.packageIds;
-        }
-      }
-    }
-
-    // Step 10: Generate skill folders
+    // Step 9: Generate skill folders
     const skillFolderPaths =
       this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
 
@@ -271,16 +223,19 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillFolderCount: skillFolders.length,
     });
 
-    // Step 11: Extract package IDs from already-fetched packages
-    const packageIds: PackageId[] | undefined =
-      allPackages.length > 0 ? allPackages.map((pkg) => pkg.id) : undefined;
+    // Step 10: Extract package IDs
+    let packageIds: PackageId[] = [];
+    if (target) {
+      packageIds = packages.map((pkg) => pkg.id);
+    }
 
-    // Step 12: Return response
+    // Step 11: Return response
     return {
       fileUpdates,
       skillFolders,
       targetId: target?.id,
       packageIds,
+      resolvedAgents: codingAgents,
     };
   }
 }

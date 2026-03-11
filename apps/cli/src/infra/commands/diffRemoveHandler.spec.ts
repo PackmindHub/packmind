@@ -3,6 +3,7 @@ import {
   DiffRemoveHandlerDependencies,
 } from './diffRemoveHandler';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
 jest.mock('../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
@@ -16,6 +17,7 @@ describe('diffRemoveHandler', () => {
   let mockGetCurrentBranch: jest.Mock;
   let mockGetDeployed: jest.Mock;
   let mockSubmitDiffs: jest.Mock;
+  let mockReadLockFile: jest.Mock;
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
@@ -66,6 +68,8 @@ describe('diffRemoveHandler', () => {
       targetId: 'target-789',
     });
 
+    mockReadLockFile = jest.fn().mockResolvedValue(null);
+
     mockPackmindCliHexa = {
       readFullConfig: mockReadFullConfig,
       tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
@@ -75,6 +79,7 @@ describe('diffRemoveHandler', () => {
         deployment: { getDeployed: mockGetDeployed },
       }),
       submitDiffs: mockSubmitDiffs,
+      readLockFile: mockReadLockFile,
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -409,6 +414,9 @@ describe('diffRemoveHandler', () => {
                 packageIds: ['package-001'],
               },
               artifactId: 'standard-123',
+              artifactName: 'my-standard',
+              artifactType: 'standard',
+              filePath: '/project/git-root/.packmind/standards/my-standard.md',
               spaceId: 'space-456',
               targetId: 'target-789',
             }),
@@ -727,6 +735,174 @@ describe('diffRemoveHandler', () => {
       await diffRemoveHandler(buildDeps());
 
       expect(mockSubmitDiffs).toHaveBeenCalled();
+    });
+  });
+
+  describe('lock file integration', () => {
+    const lockFileWithPackageIds: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['test-package'],
+      agents: ['packmind'],
+      installedAt: '2026-01-01T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-lock-123',
+      artifacts: {
+        'standard:my-standard': {
+          name: 'My Standard',
+          type: 'standard',
+          id: 'standard-lock-456',
+          version: 3,
+          spaceId: 'space-lock-789',
+          packageIds: ['pkg-aaa', 'pkg-bbb'],
+          files: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              agent: 'packmind',
+            },
+          ],
+        },
+      },
+    };
+
+    describe('when lock file has packageIds and targetId', () => {
+      beforeEach(() => {
+        mockReadLockFile.mockResolvedValue(lockFileWithPackageIds);
+      });
+
+      it('uses lock file metadata instead of calling getDeployed', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockGetDeployed).not.toHaveBeenCalled();
+      });
+
+      it('submits change proposal with lock file metadata', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockSubmitDiffs).toHaveBeenCalledWith(
+          [
+            [
+              expect.objectContaining({
+                type: 'removeStandard',
+                payload: {
+                  packageIds: ['pkg-aaa', 'pkg-bbb'],
+                },
+                artifactId: 'standard-lock-456',
+                spaceId: 'space-lock-789',
+                artifactName: 'My Standard',
+                targetId: 'target-lock-123',
+              }),
+            ],
+          ],
+          'Remove standard from project',
+        );
+      });
+
+      it('exits with code 0', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when lock file has empty packageIds', () => {
+      beforeEach(() => {
+        const lockFileEmptyPackageIds: PackmindLockFile = {
+          ...lockFileWithPackageIds,
+          artifacts: {
+            'standard:my-standard': {
+              ...lockFileWithPackageIds.artifacts['standard:my-standard'],
+              packageIds: [],
+            },
+          },
+        };
+        mockReadLockFile.mockResolvedValue(lockFileEmptyPackageIds);
+      });
+
+      it('falls back to getDeployed API', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockGetDeployed).toHaveBeenCalled();
+      });
+    });
+
+    describe('when lock file has no targetId', () => {
+      beforeEach(() => {
+        const lockFileNoTarget: PackmindLockFile = {
+          ...lockFileWithPackageIds,
+          targetId: undefined,
+        };
+        mockReadLockFile.mockResolvedValue(lockFileNoTarget);
+      });
+
+      it('falls back to getDeployed API', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockGetDeployed).toHaveBeenCalled();
+      });
+    });
+
+    describe('when lock file does not contain the artifact', () => {
+      beforeEach(() => {
+        const lockFileDifferentArtifact: PackmindLockFile = {
+          ...lockFileWithPackageIds,
+          artifacts: {
+            'standard:other-standard': {
+              name: 'Other Standard',
+              type: 'standard',
+              id: 'std-other',
+              version: 1,
+              spaceId: 'space-other',
+              packageIds: ['pkg-other'],
+              files: [
+                {
+                  path: '.packmind/standards/other-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        };
+        mockReadLockFile.mockResolvedValue(lockFileDifferentArtifact);
+      });
+
+      it('falls back to getDeployed API', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockGetDeployed).toHaveBeenCalled();
+      });
+    });
+
+    describe('when lock file is absent', () => {
+      beforeEach(() => {
+        mockReadLockFile.mockResolvedValue(null);
+      });
+
+      it('falls back to getDeployed API', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockGetDeployed).toHaveBeenCalled();
+      });
+    });
+
+    describe('when lock file has artifact with wrong type', () => {
+      beforeEach(() => {
+        const lockFileWrongType: PackmindLockFile = {
+          ...lockFileWithPackageIds,
+          artifacts: {
+            'command:my-standard': {
+              ...lockFileWithPackageIds.artifacts['standard:my-standard'],
+              type: 'command',
+            },
+          },
+        };
+        mockReadLockFile.mockResolvedValue(lockFileWrongType);
+      });
+
+      it('falls back to getDeployed API', async () => {
+        await diffRemoveHandler(buildDeps());
+
+        expect(mockGetDeployed).toHaveBeenCalled();
+      });
     });
   });
 });

@@ -73,6 +73,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -150,6 +151,7 @@ ${recipeVersion.content}`;
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -186,6 +188,7 @@ ${recipeVersion.content}`;
         content: configFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -225,6 +228,7 @@ ${recipeVersion.content}`;
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -265,6 +269,7 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: file.skillFileId,
           skillFilePermissions: file.skillFilePermissions,
         });
@@ -296,6 +301,7 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: file.skillFileId,
           skillFilePermissions: file.skillFilePermissions,
         });
@@ -332,6 +338,7 @@ ${recipeVersion.content}`;
         content: configFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -344,6 +351,7 @@ ${recipeVersion.content}`;
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -357,6 +365,7 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
           skillFileId: file.skillFileId,
           skillFilePermissions: file.skillFilePermissions,
         });

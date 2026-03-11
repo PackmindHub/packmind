@@ -4,7 +4,14 @@ import {
   IInstallPackagesUseCase,
 } from '../../domain/useCases/IInstallPackagesUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+import {
+  PackmindLockFile,
+  PackmindLockFileEntry,
+} from '../../domain/repositories/PackmindLockFile';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
+import { CodingAgent, FileModification } from '@packmind/types';
+import { resolveArtefactFromPath } from '../utils/resolveArtefactFromPath';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import {
@@ -13,7 +20,10 @@ import {
 } from '../../infra/utils/permissions';
 
 export class InstallPackagesUseCase implements IInstallPackagesUseCase {
-  constructor(private readonly packmindGateway: IPackmindGateway) {}
+  constructor(
+    private readonly packmindGateway: IPackmindGateway,
+    private readonly lockFileRepository: ILockFileRepository,
+  ) {}
 
   public async execute(
     command: IInstallPackagesCommand,
@@ -118,12 +128,102 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
           result.errors.push(`Failed to delete ${file.path}: ${errorMsg}`);
         }
       }
+
+      // Generate lock file from artifacts with metadata
+      const lockFile = this.buildLockFile(
+        filteredCreateOrUpdate,
+        command.packagesSlugs,
+        command.cliVersion,
+        command.agents,
+        response.targetId,
+        response.resolvedAgents,
+      );
+      if (Object.keys(lockFile.artifacts).length > 0) {
+        try {
+          await this.lockFileRepository.write(baseDirectory, lockFile);
+        } catch (error) {
+          const errorMsg =
+            error instanceof Error ? error.message : String(error);
+          result.errors.push(`Failed to write lock file: ${errorMsg}`);
+        }
+      } else {
+        try {
+          await this.lockFileRepository.delete(baseDirectory);
+        } catch (error) {
+          const errorMsg =
+            error instanceof Error ? error.message : String(error);
+          result.errors.push(`Failed to delete lock file: ${errorMsg}`);
+        }
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       result.errors.push(`Failed to install packages: ${errorMsg}`);
     }
 
     return result;
+  }
+
+  private buildLockFile(
+    files: FileModification[],
+    packageSlugs: string[],
+    cliVersion?: string,
+    commandAgents?: CodingAgent[],
+    targetId?: string,
+    resolvedAgents?: CodingAgent[],
+  ): PackmindLockFile {
+    const artifacts: Record<string, PackmindLockFileEntry> = {};
+
+    for (const file of files) {
+      if (
+        !file.artifactType ||
+        !file.artifactName ||
+        !file.artifactSlug ||
+        !file.artifactId ||
+        file.artifactVersion === undefined ||
+        !file.spaceId
+      ) {
+        continue;
+      }
+
+      const artifactKey = `${file.artifactType}:${file.artifactSlug}`;
+
+      if (!artifacts[artifactKey]) {
+        artifacts[artifactKey] = {
+          type: file.artifactType,
+          name: file.artifactName,
+          id: file.artifactId,
+          version: file.artifactVersion,
+          spaceId: file.spaceId,
+          packageIds: file.packageIds ?? [],
+          files: [],
+        };
+      }
+
+      const resolved = resolveArtefactFromPath(file.path);
+      if (resolved) {
+        const isSkillDefinition =
+          resolved.artifactType === 'skill' && !file.skillFileId;
+        artifacts[artifactKey].files.push({
+          path: file.path,
+          agent: resolved.codingAgent,
+          ...(isSkillDefinition ? { isSkillDefinition: true } : {}),
+        });
+      }
+    }
+
+    const agents = [
+      ...(commandAgents?.length ? commandAgents : (resolvedAgents ?? [])),
+    ].sort((a, b) => a.localeCompare(b));
+
+    return {
+      lockfileVersion: 1,
+      packageSlugs: [...packageSlugs].sort((a, b) => a.localeCompare(b)),
+      agents,
+      installedAt: new Date().toISOString(),
+      cliVersion: cliVersion ?? 'unknown',
+      ...(targetId ? { targetId } : {}),
+      artifacts,
+    };
   }
 
   private async createOrUpdateFile(

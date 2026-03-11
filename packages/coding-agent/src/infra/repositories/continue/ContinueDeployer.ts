@@ -60,6 +60,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -102,6 +103,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -128,6 +130,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -161,6 +164,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -211,6 +215,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -223,6 +228,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
         content: configFile.content,
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 

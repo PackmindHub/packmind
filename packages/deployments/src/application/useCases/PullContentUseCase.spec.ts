@@ -87,11 +87,11 @@ describe('PullContentUseCase', () => {
     } as unknown as jest.Mocked<IRecipesPort>;
 
     standardsPort = {
-      listStandardVersions: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     skillsPort = {
-      listSkillVersions: jest.fn(),
+      getLatestSkillVersion: jest.fn(),
       getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
@@ -139,7 +139,7 @@ describe('PullContentUseCase', () => {
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     renderModeConfigurationService = {
-      resolveActiveCodingAgents: jest.fn(),
+      resolveCodingAgents: jest.fn(),
       mapRenderModesToCodingAgents: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
@@ -153,7 +153,7 @@ describe('PullContentUseCase', () => {
       content: '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
     });
 
-    renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue([
+    renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
       CodingAgents.packmind,
       CodingAgents.agents_md,
     ]);
@@ -178,7 +178,7 @@ describe('PullContentUseCase', () => {
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     targetResolutionService = {
-      findTargetFromGitInfo: jest.fn().mockResolvedValue(null),
+      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(null),
       findPreviouslyDeployedVersions: jest.fn().mockResolvedValue({
         standardVersions: [],
         recipeVersions: [],
@@ -294,7 +294,7 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [{ path: 'test.md', content: 'test content' }],
@@ -319,6 +319,13 @@ describe('PullContentUseCase', () => {
       it('returns delete as an array', () => {
         expect(result.fileUpdates.delete).toBeInstanceOf(Array);
       });
+
+      it('returns resolvedAgents from server resolution', () => {
+        expect(result.resolvedAgents).toEqual([
+          CodingAgents.packmind,
+          CodingAgents.agents_md,
+        ]);
+      });
     });
 
     describe('when merging file updates from recipes and standards', () => {
@@ -342,7 +349,7 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [
@@ -383,8 +390,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -429,7 +436,7 @@ describe('PullContentUseCase', () => {
       ]);
 
       recipesPort.listRecipeVersions.mockResolvedValue([]);
-      standardsPort.listStandardVersions.mockResolvedValue([]);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
       codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
         createOrUpdate: [],
@@ -494,8 +501,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -506,7 +513,7 @@ describe('PullContentUseCase', () => {
       it('fetches skill versions from skillsPort', async () => {
         await useCase.execute(command);
 
-        expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+        expect(skillsPort.getLatestSkillVersion).toHaveBeenCalledWith(skill.id);
       });
 
       it('passes skill versions to deployArtifactsForAgents', async () => {
@@ -557,31 +564,24 @@ describe('PullContentUseCase', () => {
         });
 
         it('fetches skill versions only once', () => {
-          expect(skillsPort.listSkillVersions).toHaveBeenCalledTimes(1);
+          expect(skillsPort.getLatestSkillVersion).toHaveBeenCalledTimes(1);
         });
 
         it('fetches skill versions with the skill id', () => {
-          expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+          expect(skillsPort.getLatestSkillVersion).toHaveBeenCalledWith(
+            skill.id,
+          );
         });
       });
 
       it('fetches latest version from multiple versions', async () => {
-        const olderVersion: SkillVersion = {
-          ...skillVersion,
-          id: createSkillVersionId('skill-version-0'),
-          version: 1,
-        };
-
         const newerVersion: SkillVersion = {
           ...skillVersion,
           id: createSkillVersionId('skill-version-2'),
           version: 2,
         };
 
-        skillsPort.listSkillVersions.mockResolvedValue([
-          newerVersion,
-          olderVersion,
-        ]);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(newerVersion);
 
         await useCase.execute(command);
 
@@ -706,8 +706,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -785,8 +785,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -891,8 +891,8 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -923,11 +923,11 @@ describe('PullContentUseCase', () => {
           packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
             testPackage,
           ]);
-          skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+          skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude],
-          );
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([['claude', '.claude/skills/']]),
           );
@@ -946,7 +946,7 @@ describe('PullContentUseCase', () => {
           packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
             testPackage,
           ]);
-          skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+          skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([
@@ -1018,13 +1018,14 @@ describe('PullContentUseCase', () => {
           packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
             testPackage,
           ]);
-          skillsPort.listSkillVersions
-            .mockResolvedValueOnce([skillVersionA])
-            .mockResolvedValueOnce([skillVersionB]);
+          skillsPort.getLatestSkillVersion
+            .mockResolvedValueOnce(skillVersionA)
+            .mockResolvedValueOnce(skillVersionB);
 
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude, CodingAgents.copilot],
-          );
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+            CodingAgents.copilot,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([
               ['claude', '.claude/skills/'],
@@ -1133,15 +1134,15 @@ describe('PullContentUseCase', () => {
             .mockResolvedValueOnce([previousPackage]);
 
           recipesPort.listRecipeVersions.mockResolvedValue([]);
-          standardsPort.listStandardVersions.mockResolvedValue([]);
-          skillsPort.listSkillVersions
-            .mockResolvedValueOnce([installedSkillVersion])
-            .mockResolvedValueOnce([installedSkillVersion])
-            .mockResolvedValueOnce([removedSkillVersion]);
+          standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+          skillsPort.getLatestSkillVersion
+            .mockResolvedValueOnce(installedSkillVersion)
+            .mockResolvedValueOnce(installedSkillVersion)
+            .mockResolvedValueOnce(removedSkillVersion);
 
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude],
-          );
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([['claude', '.claude/skills/']]),
           );
@@ -1244,12 +1245,14 @@ describe('PullContentUseCase', () => {
           ]);
 
           recipesPort.listRecipeVersions.mockResolvedValue([]);
-          standardsPort.listStandardVersions.mockResolvedValue([]);
-          skillsPort.listSkillVersions.mockResolvedValue([currentSkillVersion]);
-
-          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-            [CodingAgents.claude],
+          standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+          skillsPort.getLatestSkillVersion.mockResolvedValue(
+            currentSkillVersion,
           );
+
+          renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+            CodingAgents.claude,
+          ]);
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([['claude', '.claude/skills/']]),
           );
@@ -1424,14 +1427,14 @@ describe('PullContentUseCase', () => {
         ]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
-        standardsPort.listStandardVersions.mockResolvedValue([
+        standardsPort.getLatestStandardVersion.mockResolvedValue(
           currentStandardVersion,
-        ]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
-
-        renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-          [CodingAgents.packmind],
         );
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+        ]);
         codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
       });
 
@@ -1573,12 +1576,12 @@ describe('PullContentUseCase', () => {
         recipesPort.listRecipeVersions.mockResolvedValue([
           currentRecipeVersion,
         ]);
-        standardsPort.listStandardVersions.mockResolvedValue([]);
-        skillsPort.listSkillVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
-        renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
-          [CodingAgents.packmind],
-        );
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+        ]);
         codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
       });
 
@@ -1870,19 +1873,19 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedRecipeVersion])
           .mockResolvedValueOnce([uniqueRecipeVersion]);
 
-        standardsPort.listStandardVersions
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([uniqueStandardVersion])
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([uniqueStandardVersion]);
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(uniqueStandardVersion)
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(uniqueStandardVersion);
 
-        skillsPort.listSkillVersions
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([uniqueSkillVersion])
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([uniqueSkillVersion]);
+        skillsPort.getLatestSkillVersion
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(uniqueSkillVersion)
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(uniqueSkillVersion);
 
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -1964,10 +1967,10 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([packageAOnlyShared]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([sharedRecipeVersion]);
-        standardsPort.listStandardVersions.mockResolvedValue([
+        standardsPort.getLatestStandardVersion.mockResolvedValue(
           sharedStandardVersion,
-        ]);
-        skillsPort.listSkillVersions.mockResolvedValue([sharedSkillVersion]);
+        );
+        skillsPort.getLatestSkillVersion.mockResolvedValue(sharedSkillVersion);
       });
 
       it('does not generate any deletion paths', async () => {
@@ -2013,10 +2016,10 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([packageAUniqueOnly]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([uniqueRecipeVersion]);
-        standardsPort.listStandardVersions.mockResolvedValue([
+        standardsPort.getLatestStandardVersion.mockResolvedValue(
           uniqueStandardVersion,
-        ]);
-        skillsPort.listSkillVersions.mockResolvedValue([uniqueSkillVersion]);
+        );
+        skillsPort.getLatestSkillVersion.mockResolvedValue(uniqueSkillVersion);
 
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -2068,13 +2071,13 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedRecipeVersion])
           .mockResolvedValueOnce([uniqueRecipeVersion]);
 
-        standardsPort.listStandardVersions
-          .mockResolvedValueOnce([sharedStandardVersion])
-          .mockResolvedValueOnce([uniqueStandardVersion]);
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(sharedStandardVersion)
+          .mockResolvedValueOnce(uniqueStandardVersion);
 
-        skillsPort.listSkillVersions
-          .mockResolvedValueOnce([sharedSkillVersion])
-          .mockResolvedValueOnce([uniqueSkillVersion]);
+        skillsPort.getLatestSkillVersion
+          .mockResolvedValueOnce(sharedSkillVersion)
+          .mockResolvedValueOnce(uniqueSkillVersion);
 
         codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
@@ -2229,14 +2232,19 @@ describe('PullContentUseCase', () => {
           ...command,
           agents: [CodingAgents.claude, CodingAgents.cursor],
         };
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+          CodingAgents.claude,
+          CodingAgents.cursor,
+        ]);
       });
 
-      it('uses agents from command instead of org-level config', async () => {
+      it('delegates agent resolution to resolveCodingAgents', async () => {
         await useCase.execute(command);
 
         expect(
-          renderModeConfigurationService.resolveActiveCodingAgents,
-        ).not.toHaveBeenCalled();
+          renderModeConfigurationService.resolveCodingAgents,
+        ).toHaveBeenCalledWith(command.agents, organization.id);
       });
 
       it('passes normalized agents with packmind to deployArtifactsForAgents', async () => {
@@ -2260,14 +2268,17 @@ describe('PullContentUseCase', () => {
           ...command,
           agents: [],
         };
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+        ]);
       });
 
-      it('uses agents from command instead of org-level config', async () => {
+      it('delegates agent resolution to resolveCodingAgents', async () => {
         await useCase.execute(command);
 
         expect(
-          renderModeConfigurationService.resolveActiveCodingAgents,
-        ).not.toHaveBeenCalled();
+          renderModeConfigurationService.resolveCodingAgents,
+        ).toHaveBeenCalledWith(command.agents, organization.id);
       });
 
       it('passes packmind agent to deployArtifactsForAgents', async () => {
@@ -2287,6 +2298,10 @@ describe('PullContentUseCase', () => {
           ...command,
           agents: [CodingAgents.cursor],
         };
+        renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
+          CodingAgents.packmind,
+          CodingAgents.cursor,
+        ]);
       });
 
       it('automatically includes packmind agent', async () => {
@@ -2312,8 +2327,8 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          renderModeConfigurationService.resolveActiveCodingAgents,
-        ).toHaveBeenCalledWith(organization.id);
+          renderModeConfigurationService.resolveCodingAgents,
+        ).toHaveBeenCalledWith(undefined, organization.id);
       });
     });
   });
@@ -2410,11 +2425,11 @@ describe('PullContentUseCase', () => {
       ]);
 
       recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
-      standardsPort.listStandardVersions.mockResolvedValue([standardVersion]);
-      skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(standardVersion);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
     });
 
-    describe('when deployed files have artifactType and artifactName', () => {
+    describe('when deployed files have artifactType and artifactId', () => {
       beforeEach(() => {
         codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [
@@ -2423,18 +2438,21 @@ describe('PullContentUseCase', () => {
               content: 'recipe content',
               artifactType: 'command',
               artifactName: 'Enriched Recipe',
+              artifactId: recipe.id as string,
             },
             {
               path: '.packmind/standards/enriched-standard.md',
               content: 'standard content',
               artifactType: 'standard',
               artifactName: 'Enriched Standard',
+              artifactId: standard.id as string,
             },
             {
               path: '.claude/skills/enriched-skill/SKILL.md',
               content: 'skill content',
               artifactType: 'skill',
               artifactName: 'Enriched Skill',
+              artifactId: skill.id as string,
             },
           ],
           delete: [],
@@ -2494,6 +2512,60 @@ describe('PullContentUseCase', () => {
         );
         expect(skillFile?.spaceId).toBe(skill.spaceId as string);
       });
+
+      it('sets artifactVersion on recipe file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.artifactVersion).toBe(recipeVersion.version);
+      });
+
+      it('sets artifactVersion on standard file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const standardFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/standards/enriched-standard.md',
+        );
+        expect(standardFile?.artifactVersion).toBe(standardVersion.version);
+      });
+
+      it('sets artifactVersion on skill file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const skillFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.claude/skills/enriched-skill/SKILL.md',
+        );
+        expect(skillFile?.artifactVersion).toBe(skillVersion.version);
+      });
+
+      it('sets packageIds on recipe file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.packageIds).toEqual(['package-enrich']);
+      });
+
+      it('sets packageIds on standard file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const standardFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/standards/enriched-standard.md',
+        );
+        expect(standardFile?.packageIds).toEqual(['package-enrich']);
+      });
+
+      it('sets packageIds on skill file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const skillFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.claude/skills/enriched-skill/SKILL.md',
+        );
+        expect(skillFile?.packageIds).toEqual(['package-enrich']);
+      });
     });
 
     describe('when deployed files do not have artifactType', () => {
@@ -2526,6 +2598,15 @@ describe('PullContentUseCase', () => {
         );
         expect(recipeFile?.spaceId).toBeUndefined();
       });
+
+      it('does not set artifactVersion on files without artifactType', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.artifactVersion).toBeUndefined();
+      });
     });
   });
 
@@ -2557,7 +2638,7 @@ describe('PullContentUseCase', () => {
         },
       ]);
 
-      targetResolutionService.findTargetFromGitInfo.mockResolvedValue({
+      targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue({
         id: targetId,
         name: 'default',
         path: '/',
@@ -2615,9 +2696,28 @@ describe('PullContentUseCase', () => {
       });
     });
 
+    describe('when target is found', () => {
+      beforeEach(() => {
+        distributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
+          [],
+        );
+        renderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+          [],
+        );
+      });
+
+      it('returns targetId in the response', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.targetId).toBe(targetId as string);
+      });
+    });
+
     describe('when target is not found', () => {
       beforeEach(() => {
-        targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
+        targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+          null,
+        );
       });
 
       it('skips agent cleanup', async () => {
@@ -2626,6 +2726,12 @@ describe('PullContentUseCase', () => {
         expect(
           codingAgentPort.generateAgentCleanupUpdatesForAgents,
         ).not.toHaveBeenCalled();
+      });
+
+      it('returns undefined targetId', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.targetId).toBeUndefined();
       });
     });
 

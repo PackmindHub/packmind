@@ -7,6 +7,7 @@ import {
   RenderModeConfiguration,
   createRenderModeConfigurationId,
   normalizeRenderModes,
+  normalizeCodingAgents,
   RENDER_MODE_TO_CODING_AGENT,
   CODING_AGENT_TO_RENDER_MODE,
 } from '@packmind/types';
@@ -63,6 +64,21 @@ export class RenderModeConfigurationService {
       .filter((mode): mode is RenderMode => mode !== undefined);
 
     return Array.from(new Set(mappedRenderModes));
+  }
+
+  async resolveCodingAgents(
+    commandAgents: CodingAgent[] | undefined,
+    organizationId: OrganizationId,
+  ): Promise<CodingAgent[]> {
+    if (commandAgents !== undefined) {
+      const codingAgents = normalizeCodingAgents(commandAgents);
+      this.logger.info('Using agents from command', { codingAgents });
+      return codingAgents;
+    }
+
+    const codingAgents = await this.resolveActiveCodingAgents(organizationId);
+    this.logger.info('Using organization-level render modes', { codingAgents });
+    return codingAgents;
   }
 
   async resolveActiveCodingAgents(

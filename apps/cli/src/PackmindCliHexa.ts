@@ -68,6 +68,7 @@ import {
   INotifyDistributionUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
+import { PackmindLockFile } from './domain/repositories/PackmindLockFile';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 
 import {
@@ -361,6 +362,12 @@ export class PackmindCliHexa {
     command: IInstallDefaultSkillsCommand,
   ): Promise<IInstallDefaultSkillsResult> {
     return this.hexa.useCases.installDefaultSkills.execute(command);
+  }
+
+  public async readLockFile(
+    baseDirectory: string,
+  ): Promise<PackmindLockFile | null> {
+    return this.hexa.repositories.lockFileRepository.read(baseDirectory);
   }
 
   public getPackmindGateway() {
