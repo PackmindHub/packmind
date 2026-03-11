@@ -53,7 +53,7 @@ function RemoveProposalContent({
   decision,
 }: {
   spaceId: SpaceId;
-  targetId: TargetId;
+  targetId: TargetId | undefined;
   packageIds: PackageId[];
   poolStatus: PoolStatus;
   decision: RemoveArtefactDecision | null;
@@ -69,7 +69,7 @@ function RemoveProposalContent({
     packagesResponse?.packages?.map((pkg) => [pkg.id, pkg.name]) ?? [],
   );
 
-  const target = targets?.find((t) => t.id === targetId);
+  const target = targetId ? targets?.find((t) => t.id === targetId) : undefined;
   const repoLabel = target
     ? `${target.repository.owner}/${target.repository.repo}`
     : null;
@@ -218,7 +218,7 @@ export function ChangeProposalCardBody({
         {isRemoveType ? (
           <RemoveProposalContent
             spaceId={proposal.spaceId}
-            targetId={removePayload.targetId}
+            targetId={proposal.targetId}
             packageIds={packageIds}
             poolStatus={poolStatus}
             decision={removeDecision}
