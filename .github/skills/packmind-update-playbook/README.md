@@ -17,7 +17,7 @@ The agent will:
 
 ## Prerequisites
 
-- \`packmind-cli\` installed and logged in
+- \`packmind\` installed and logged in
 - Packmind organization with existing artifacts
 
 ## License

@@ -29,8 +29,8 @@ The AI agent will:
 
 Before using this skill, ensure you have:
 
-- **packmind-cli**: Required for command creation
-- **Packmind account**: Login via `packmind-cli login`
+- **packmind**: Required for command creation
+- **Packmind account**: Login via `packmind login`
 
 ## License
 

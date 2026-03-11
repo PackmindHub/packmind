@@ -15,7 +15,7 @@ Search the project root and all subdirectories.
 
 ### Step 1: List Standards
 
-Run `packmind-cli standards list` to get slugs, names, and descriptions. Do NOT read individual standard files yet.
+Run `packmind standards list` to get slugs, names, and descriptions. Do NOT read individual standard files yet.
 
 ### Step 2: Filter Relevant Standards
 

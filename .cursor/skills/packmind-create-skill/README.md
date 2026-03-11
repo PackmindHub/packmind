@@ -23,14 +23,14 @@ The AI agent will:
 2. Initialize the skill structure using the bundled scripts
 3. Guide you through editing the SKILL.md content
 4. Validate the skill before distribution
-5. Help you distribute it via packmind-cli
+5. Help you distribute it via packmind
 
 ## Prerequisites
 
 Before using this skill, ensure you have:
 
 - **Python 3**: Required for skill initialization and validation
-- **packmind-cli**: Required for skill distribution
+- **packmind**: Required for skill distribution
 
 ## Directory Structure
 
