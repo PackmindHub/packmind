@@ -1,16 +1,10 @@
-# [Unreleased]
-
-## Added
-
-## Changed
+# [0.21.1] - 2026-03-11
 
 ## Fixed
 
 - Fix incorrect `packageIds` payload when removing an artifact with `diff remove <path-to-artifact>
 - Fix wrong lookup when trying to remove an artefact with `diff remove` inside a repository.
 - Track information related to the repo and target when submitting new change proposals.
-
-## Removed
 
 # [0.21.0] - 2026-03-10
 
@@ -243,7 +237,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.0...HEAD
+[0.21.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.0...release-cli/0.21.1
 [0.21.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.20.0...release-cli/0.21.0
 [0.20.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.19.0...release-cli/0.20.0
 [0.19.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.18.0...release-cli/0.19.0
