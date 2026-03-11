@@ -1,4 +1,3 @@
-import { Text } from '@chakra-ui/react';
 import { PMText } from '@packmind/ui';
 import { ChangeProposalType } from '@packmind/types';
 import { getChangeProposalFieldLabel } from '../../utils/changeProposalHelpers';
@@ -22,9 +21,9 @@ export function ProposalLabel({
     <PMText fontWeight="medium" fontSize="sm">
       #{proposalNumber} &mdash;{' '}
       {isRemoval ? (
-        <Text as="span" color="red.300">
+        <PMText as="span" color="red.300">
           {fieldLabel}
-        </Text>
+        </PMText>
       ) : (
         fieldLabel
       )}
