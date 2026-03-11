@@ -12,7 +12,9 @@ set -eu
 
 # Configuration
 REPO="PackmindHub/packmind"
-BINARY_NAME="packmind-cli"
+BINARY_NAME="packmind"
+# Temporary: release assets still use the old name until the release workflow is updated
+DOWNLOAD_BINARY_NAME="packmind-cli"
 DEFAULT_INSTALL_DIR="$HOME/.packmind/bin"
 DEFAULT_HOST="https://app.packmind.ai"
 
@@ -173,13 +175,13 @@ download_binary() {
     TEMP_DIR=$(mktemp -d)
     trap 'rm -rf "$TEMP_DIR"' EXIT
 
-    # Construct filename based on platform
+    # Construct filename based on platform (uses DOWNLOAD_BINARY_NAME for release asset compatibility)
     case "$PLATFORM" in
         windows-*)
-            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}.exe"
+            filename="${DOWNLOAD_BINARY_NAME}-${PLATFORM}-${VERSION}.exe"
             ;;
         *)
-            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}"
+            filename="${DOWNLOAD_BINARY_NAME}-${PLATFORM}-${VERSION}"
             ;;
     esac
 
@@ -243,6 +245,19 @@ install_binary() {
     esac
 
     success "Installed to: $target_path"
+
+    # Create deprecated symlink: packmind-cli -> packmind (backward compatibility)
+    case "$PLATFORM" in
+        windows-*)
+            deprecated_name="packmind-cli.exe"
+            ;;
+        *)
+            deprecated_name="packmind-cli"
+            ;;
+    esac
+    deprecated_path="${INSTALL_DIR}/${deprecated_name}"
+    ln -sf "$target_name" "$deprecated_path"
+    info "Created backward-compatible symlink: $deprecated_path -> $target_name"
 }
 
 # Auto-login if credentials provided
@@ -270,7 +285,7 @@ auto_login() {
 
     if "$cli_path" login --code "$PACKMIND_LOGIN_CODE" --host "$HOST"; then
         success "Login successful!"
-        info "Run 'packmind-cli init' in your repository to start using Packmind."
+        info "Run 'packmind init' in your repository to start using Packmind."
         LOGIN_SUCCESS=0
     else
         warn "Login failed. You can try again later with: $BINARY_NAME login"
