@@ -37,19 +37,19 @@ Use the Packmind CLI to install packages locally:
 **List available packages:**
 
 ```bash
-packmind-cli install --list
+packmind install --list
 ```
 
 **View package details:**
 
 ```bash
-packmind-cli install --show <package-slug>
+packmind install --show <package-slug>
 ```
 
 **Install one or more packages:**
 
 ```bash
-packmind-cli install <package-slug> [additional-package-slugs...]
+packmind install <package-slug> [additional-package-slugs...]
 ```
 
 This downloads all commands, standards, and skills from the specified packages and creates the appropriate files for your AI coding assistant.
@@ -57,15 +57,15 @@ This downloads all commands, standards, and skills from the specified packages a
 **Example - First installation:**
 
 ```bash
-packmind-cli install backend frontend
+packmind install backend frontend
 ```
 
-When you run `install` for the first time, it creates a `packmind.json` file in the current directory that tracks which packages are installed. Subsequent runs of `packmind-cli install` (without arguments) will automatically install all packages listed in this file.
+When you run `install` for the first time, it creates a `packmind.json` file in the current directory that tracks which packages are installed. Subsequent runs of `packmind install` (without arguments) will automatically install all packages listed in this file.
 
 **Example - Update from packmind.json:**
 
 ```bash
-packmind-cli install
+packmind install
 ```
 
 This installs all packages defined in your `packmind.json` file.
@@ -74,7 +74,7 @@ For detailed CLI usage, see the [CLI documentation](/tools/cli).
 
 ## Understanding packmind.json
 
-The `packmind.json` file is automatically created in your directory when you first run `packmind-cli install` with package names. This file tracks which packages are installed locally, making it easy to keep your standards and commands up to date.
+The `packmind.json` file is automatically created in your directory when you first run `packmind install` with package names. This file tracks which packages are installed locally, making it easy to keep your standards and commands up to date.
 
 ### File Structure
 
@@ -96,7 +96,7 @@ Each package slug maps to a version number. Currently, all packages use `"*"` wh
 
 **First Installation:**
 
-When you run `packmind-cli install <package-slug>` for the first time, the CLI:
+When you run `packmind install <package-slug>` for the first time, the CLI:
 
 1. Downloads the specified packages
 2. Creates a `packmind.json` file in the current directory
@@ -104,7 +104,7 @@ When you run `packmind-cli install <package-slug>` for the first time, the CLI:
 
 **Subsequent Installations:**
 
-When you run `packmind-cli install` (without package names), the CLI:
+When you run `packmind install` (without package names), the CLI:
 
 1. Reads the `packmind.json` file
 2. Installs all packages listed in the file
@@ -115,7 +115,7 @@ When you run `packmind-cli install` (without package names), the CLI:
 You can add more packages to an existing installation:
 
 ```bash
-packmind-cli install additional-package
+packmind install additional-package
 ```
 
 This merges the new package with your existing `packmind.json` configuration.
@@ -139,13 +139,13 @@ You can edit the `packmind.json` file directly to add or remove packages.
 }
 ```
 
-3. Run `packmind-cli install` to download the new package
+3. Run `packmind install` to download the new package
 
 **To remove a package manually:**
 
 1. Open `packmind.json`
 2. Remove the package slug from the `packages` object
-3. Run `packmind-cli install` to update your local files
+3. Run `packmind install` to update your local files
 
 <Warning>
   **Removal Limitations** — Currently, when you remove a package from
@@ -158,7 +158,7 @@ You can edit the `packmind.json` file directly to add or remove packages.
 
 ### Using Multiple packmind.json Files
 
-You can run `packmind-cli install` in different directories within your project, and each directory will have its own `packmind.json` file with its own set of packages.
+You can run `packmind install` in different directories within your project, and each directory will have its own `packmind.json` file with its own set of packages.
 
 This is useful for:
 
@@ -177,7 +177,7 @@ my-project/
     └── packmind.json      # Backend-specific packages
 ```
 
-Each `packmind.json` file operates independently. When you run `packmind-cli install` in a directory, it only affects that directory's configuration.
+Each `packmind.json` file operates independently. When you run `packmind install` in a directory, it only affects that directory's configuration.
 
 ## Alternative: Distribute to Git repositories
 

@@ -32,7 +32,7 @@ These are alternative distribution methods—you can choose the approach that fi
 Create an empty package from the command line:
 
 ```bash
-packmind-cli packages create "My Package" -d "Package description"
+packmind packages create "My Package" -d "Package description"
 ```
 
 See the [CLI documentation](/tools/cli#packages-command) for details.
@@ -41,11 +41,11 @@ See the [CLI documentation](/tools/cli#packages-command) for details.
 
 There are two ways to add items to packages:
 
-- **Via CLI** — Use `packmind-cli packages add` to add existing standards, commands, or skills to a package:
+- **Via CLI** — Use `packmind packages add` to add existing standards, commands, or skills to a package:
   ```bash
-  packmind-cli packages add --to backend --standard error-handling
-  packmind-cli packages add --to backend --command create-api-endpoint
-  packmind-cli packages add --to backend --skill debugging-workflow
+  packmind packages add --to backend --standard error-handling
+  packmind packages add --to backend --command create-api-endpoint
+  packmind packages add --to backend --skill debugging-workflow
   ```
 - **Via Web Interface** — Add items to packages through the Packmind UI
 
@@ -58,11 +58,11 @@ Once you've created packages, you can distribute them using either of these meth
 Download package content directly to your machine using the CLI:
 
 ```bash
-packmind-cli install --list
+packmind install --list
 ```
 
 ```bash
-packmind-cli install backend-api frontend-web
+packmind install backend-api frontend-web
 ```
 
 This creates the appropriate files for your AI coding assistant on your local machine without requiring Git.
