@@ -10,5 +10,5 @@ export interface ArtefactRemovedFromPackagePayload {
 }
 
 export class ArtefactRemovedFromPackageEvent extends UserEvent<ArtefactRemovedFromPackagePayload> {
-  static override readonly eventName = 'deployments.package.artefact_removed';
+  static override readonly eventName = 'deployments.artefact.removed';
 }
