@@ -1,6 +1,16 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { formatSlug, formatLabel, formatHeader } from '../utils/consoleLogger';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+import {
+  formatSlug,
+  formatLabel,
+  formatHeader,
+  logWarningConsole,
+} from '../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
+import {
+  renderArtifactFiles,
+  formatAgentsHeader,
+} from '../utils/renderArtifactFiles';
 
 function buildStandardUrl(
   host: string,
@@ -15,12 +25,23 @@ export type ListStandardsHandlerDependencies = {
   exit: (code: number) => void;
   log: typeof console.log;
   error: typeof console.error;
+  files?: boolean;
+  lockFileRepository?: ILockFileRepository;
+  getCwd?: () => string;
 };
 
 export async function listStandardsHandler(
   deps: ListStandardsHandlerDependencies,
 ): Promise<void> {
-  const { packmindCliHexa, exit, log, error } = deps;
+  const {
+    packmindCliHexa,
+    exit,
+    log,
+    error,
+    files,
+    lockFileRepository,
+    getCwd,
+  } = deps;
 
   try {
     log('Fetching standards...\n');
@@ -36,6 +57,18 @@ export async function listStandardsHandler(
       a.slug.localeCompare(b.slug),
     );
 
+    // Read lock files if --files flag is passed
+    const lockFiles =
+      files && lockFileRepository && getCwd
+        ? await lockFileRepository.readAll(getCwd())
+        : [];
+
+    if (files && lockFiles.length === 0) {
+      logWarningConsole(
+        "No packmind-lock.json found. Run 'packmind install' first.",
+      );
+    }
+
     // Try to build webapp URL from credentials
     let urlBuilder: ((id: string) => string) | null = null;
     const apiKey = loadApiKey();
@@ -48,10 +81,16 @@ export async function listStandardsHandler(
       }
     }
 
-    log(formatHeader(`📋 Standards (${sortedStandards.length})\n`));
+    const agentsHeader =
+      files && lockFiles.length > 0 ? formatAgentsHeader(lockFiles) : '';
+    log(
+      formatHeader(`📐 Standards (${sortedStandards.length})${agentsHeader}\n`),
+    );
+
     sortedStandards.forEach((standard, index) => {
-      log(`  ${formatSlug(standard.slug)}`);
-      log(`  ${formatLabel('Name:')}  ${standard.name}`);
+      log(
+        `  ${formatSlug(standard.slug)}  ${formatLabel(`"${standard.name}"`)}`,
+      );
       if (urlBuilder) {
         const url = urlBuilder(standard.id);
         log(`  ${formatLabel('Link:')}  ${url}`);
@@ -68,6 +107,9 @@ export async function listStandardsHandler(
             firstLine.length > 80 ? firstLine.slice(0, 77) + '...' : firstLine;
           log(`  ${formatLabel('Desc:')}  ${truncated}`);
         }
+      }
+      if (files && lockFiles.length > 0) {
+        renderArtifactFiles(lockFiles, 'standard', standard.slug, log);
       }
       if (index < sortedStandards.length - 1) {
         log('');
