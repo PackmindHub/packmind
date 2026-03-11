@@ -71,6 +71,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       return {
         fileUpdates: { createOrUpdate: [], delete: [] },
         skillFolders: [],
+        resolvedAgents: codingAgents,
       };
     }
 
@@ -236,6 +237,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillFolders,
       targetId: target?.id,
       packageIds,
+      resolvedAgents: codingAgents,
     };
   }
 }

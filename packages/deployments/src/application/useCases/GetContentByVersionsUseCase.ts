@@ -129,6 +129,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     return {
       fileUpdates,
       skillFolders,
+      resolvedAgents: codingAgents,
     };
   }
 

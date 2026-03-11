@@ -144,6 +144,15 @@ describe('GetContentByVersionsUseCase', () => {
 
       expect(result.skillFolders).toEqual([]);
     });
+
+    it('returns resolvedAgents from server resolution', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.resolvedAgents).toEqual([
+        CodingAgents.packmind,
+        CodingAgents.claude,
+      ]);
+    });
   });
 
   describe('when artifacts contain mixed types', () => {

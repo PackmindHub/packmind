@@ -136,6 +136,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         command.cliVersion,
         command.agents,
         response.targetId,
+        response.resolvedAgents,
       );
       if (Object.keys(lockFile.artifacts).length > 0) {
         try {
@@ -166,8 +167,9 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     files: FileModification[],
     packageSlugs: string[],
     cliVersion?: string,
-    commandAgents: CodingAgent[] = [],
+    commandAgents?: CodingAgent[],
     targetId?: string,
+    resolvedAgents?: CodingAgent[],
   ): PackmindLockFile {
     const artifacts: Record<string, PackmindLockFileEntry> = {};
 
@@ -206,7 +208,9 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       }
     }
 
-    const agents = [...commandAgents].sort((a, b) => a.localeCompare(b));
+    const agents = [
+      ...(commandAgents?.length ? commandAgents : (resolvedAgents ?? [])),
+    ].sort((a, b) => a.localeCompare(b));
 
     return {
       lockfileVersion: 1,

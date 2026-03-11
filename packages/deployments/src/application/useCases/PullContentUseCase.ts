@@ -644,6 +644,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         fileUpdates: mergedFileUpdates,
         skillFolders: mergedSkillFolders,
         targetId: resolvedTargetId,
+        resolvedAgents: codingAgents,
       };
     } catch (error) {
       this.logger.error('Failed to pull content', {

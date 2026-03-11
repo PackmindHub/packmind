@@ -104,6 +104,7 @@ describe('OrganizationsController', () => {
     const mockResponse: IPullContentResponse = {
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
+      resolvedAgents: [],
     };
 
     beforeEach(() => {
@@ -275,6 +276,7 @@ describe('OrganizationsController', () => {
     const mockResponse: IPullContentResponse = {
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
+      resolvedAgents: [],
     };
 
     const defaultBody = {
@@ -485,6 +487,7 @@ describe('OrganizationsController', () => {
     const mockResponse: IPullContentResponse = {
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
+      resolvedAgents: [],
     };
 
     const defaultArtifacts: ArtifactVersionEntry[] = [

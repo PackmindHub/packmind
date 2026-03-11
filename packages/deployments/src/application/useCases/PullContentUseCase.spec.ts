@@ -319,6 +319,13 @@ describe('PullContentUseCase', () => {
       it('returns delete as an array', () => {
         expect(result.fileUpdates.delete).toBeInstanceOf(Array);
       });
+
+      it('returns resolvedAgents from server resolution', () => {
+        expect(result.resolvedAgents).toEqual([
+          CodingAgents.packmind,
+          CodingAgents.agents_md,
+        ]);
+      });
     });
 
     describe('when merging file updates from recipes and standards', () => {

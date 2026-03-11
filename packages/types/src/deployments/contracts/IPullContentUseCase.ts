@@ -6,6 +6,7 @@ export type IPullContentResponse = {
   fileUpdates: FileUpdates;
   skillFolders: string[]; // Full paths for rendered skill folders, e.g., [".claude/skills/my-skill", ".github/skills/my-skill"]
   targetId?: string;
+  resolvedAgents: CodingAgent[]; // Agents resolved by the server (from command.agents or org-level config)
 };
 
 export type PullContentCommand = PackmindCommand & {

@@ -1723,6 +1723,7 @@ Old packmind content
             delete: [],
           },
           skillFolders: [],
+          resolvedAgents: ['claude', 'cursor', 'packmind'],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -1735,6 +1736,128 @@ Old packmind content
       });
 
       it('uses provided agents in lock file', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            agents: ['claude', 'cursor', 'packmind'],
+          }),
+        );
+      });
+    });
+
+    describe('when command.agents is undefined and server returns resolvedAgents', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/coding-style.md',
+                content: '# Coding Style',
+                artifactType: 'standard',
+                artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          resolvedAgents: ['claude', 'cursor', 'packmind'],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+      });
+
+      it('uses server-resolved agents in lock file', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            agents: ['claude', 'cursor', 'packmind'],
+          }),
+        );
+      });
+    });
+
+    describe('when command.agents is defined and server returns resolvedAgents', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/coding-style.md',
+                content: '# Coding Style',
+                artifactType: 'standard',
+                artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          resolvedAgents: ['claude', 'cursor', 'packmind'],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+          agents: ['claude'],
+        });
+      });
+
+      it('uses command agents regardless of resolvedAgents', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            agents: ['claude'],
+          }),
+        );
+      });
+    });
+
+    describe('when command.agents is empty array and server returns resolvedAgents', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/coding-style.md',
+                content: '# Coding Style',
+                artifactType: 'standard',
+                artifactName: 'Coding Style',
+                artifactSlug: 'coding-style',
+                artifactId: 'artifact-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          resolvedAgents: ['claude', 'cursor', 'packmind'],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+          agents: [],
+        });
+      });
+
+      it('uses resolvedAgents when command.agents is empty', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith(
           '/test',
           expect.objectContaining({
