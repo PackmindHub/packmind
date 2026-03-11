@@ -239,7 +239,7 @@ describe('updateHandler', () => {
     it('logs the brew upgrade message', () => {
       expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
         'This CLI was installed via Homebrew.\n' +
-          'To update, run: brew upgrade packmind-cli',
+          'To update, run: brew upgrade packmind',
       );
     });
 
