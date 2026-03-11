@@ -18,9 +18,9 @@ export function useSidebarCollapse(): SidebarCollapseContextValue {
   return useContext(SidebarCollapseContext);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
 const STATIC_COLLAPSE_VALUE: SidebarCollapseContextValue = {
   isCollapsed: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   onToggleCollapse: () => {},
 };
 
