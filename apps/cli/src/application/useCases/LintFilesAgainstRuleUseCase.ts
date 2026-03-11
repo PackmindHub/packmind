@@ -238,6 +238,31 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
       excludes.push(...ignorePatterns);
     }
 
+    if (isFile) {
+      const matchedPattern = this.services.listFiles.findMatchingExcludePattern(
+        absoluteLintPath,
+        excludes,
+      );
+      if (matchedPattern) {
+        this.logger.debug(
+          `File "${absoluteLintPath}" is excluded by pattern "${matchedPattern}"`,
+        );
+        return {
+          violations: [],
+          summary: {
+            totalFiles: 0,
+            violatedFiles: 0,
+            totalViolations: 0,
+            standardsChecked: [],
+            ignoredFile: {
+              filePath: absoluteLintPath,
+              matchedPattern,
+            },
+          },
+        };
+      }
+    }
+
     let files = isFile
       ? [{ path: absoluteLintPath }]
       : await this.services.listFiles.listFilesInDirectory(

@@ -15,6 +15,7 @@ export type LintFilesFromConfigResult = {
     violatedFiles: number;
     totalViolations: number;
     standardsChecked: string[];
+    ignoredFile?: { filePath: string; matchedPattern: string };
   };
 };
 

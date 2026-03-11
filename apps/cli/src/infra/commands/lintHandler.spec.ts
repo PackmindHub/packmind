@@ -12,6 +12,7 @@ import {
   Loggers,
 } from './lintHandler';
 import { PackmindIgnoreReader } from '../../application/services/PackmindIgnoreReader';
+import * as fs from 'fs';
 
 import {
   logErrorConsole,
@@ -23,6 +24,12 @@ jest.mock('../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logWarningConsole: jest.fn(),
+}));
+
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn().mockReturnValue(true),
+  statSync: jest.fn().mockReturnValue({ isFile: () => false }),
 }));
 
 describe('lintHandler', () => {
@@ -809,6 +816,26 @@ describe('lintHandler', () => {
       );
     });
 
+    describe('when path is a file', () => {
+      it('uses parent directory for ignore patterns', async () => {
+        (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
+
+        await lintHandler(
+          createArgs({
+            rule: { standardSlug: 'test', ruleId: 'rule-1' as never },
+            draft: true,
+            path: '/project/src/file.ts',
+          }),
+          deps,
+        );
+
+        expect(mockIgnoreReader.readIgnorePatterns).toHaveBeenCalledWith(
+          '/absolute//project/src',
+          '/project',
+        );
+      });
+    });
+
     it('passes ignore patterns to lintFilesFromConfig', async () => {
       mockIgnoreReader.readIgnorePatterns.mockResolvedValue([
         'generated',
@@ -881,6 +908,88 @@ describe('lintHandler', () => {
             ignorePatterns: [],
           }),
         );
+      });
+    });
+  });
+
+  describe('ignored file warning', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
+    });
+
+    describe('when lintFilesAgainstRule returns an ignored file', () => {
+      beforeEach(async () => {
+        (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
+        mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
+          violations: [],
+          summary: {
+            totalFiles: 0,
+            violatedFiles: 0,
+            totalViolations: 0,
+            standardsChecked: [],
+            ignoredFile: {
+              filePath: '/project/src/bundle.min.js',
+              matchedPattern: '*.min.*',
+            },
+          },
+        });
+
+        await lintHandler(
+          createArgs({
+            rule: { standardSlug: 'test', ruleId: 'rule-1' as never },
+            draft: true,
+          }),
+          deps,
+        );
+      });
+
+      it('logs a warning about the ignored file', () => {
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'File "/project/src/bundle.min.js" was ignored (matched pattern "*.min.*"). Skipping lint.',
+        );
+      });
+
+      it('exits with code 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+
+      it('does not log violations', () => {
+        expect(mockHumanLogger.logViolations).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when lintFilesFromConfig returns an ignored file', () => {
+      beforeEach(async () => {
+        (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
+        mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+          hasConfigs: true,
+          configs: [{ path: '/project/packmind.json' }],
+        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations: [],
+          summary: {
+            totalFiles: 0,
+            violatedFiles: 0,
+            totalViolations: 0,
+            standardsChecked: [],
+            ignoredFile: {
+              filePath: '/project/dist/output.map',
+              matchedPattern: '*.map',
+            },
+          },
+        });
+
+        await lintHandler(createArgs({ path: '/project' }), deps);
+      });
+
+      it('logs a warning about the ignored file', () => {
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'File "/project/dist/output.map" was ignored (matched pattern "*.map"). Skipping lint.',
+        );
+      });
+
+      it('exits with code 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
       });
     });
   });

@@ -11,4 +11,9 @@ export interface IListFiles {
   ): Promise<FileResult[]>;
 
   readFileContent(filePath: string): Promise<string>;
+
+  findMatchingExcludePattern(
+    filePath: string,
+    excludes: string[],
+  ): string | null;
 }

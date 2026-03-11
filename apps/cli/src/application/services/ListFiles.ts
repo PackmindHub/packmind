@@ -94,21 +94,27 @@ export class ListFiles implements IListFiles {
     }
   }
 
-  private shouldExcludePath(filePath: string, excludes: string[]): boolean {
+  findMatchingExcludePattern(
+    filePath: string,
+    excludes: string[],
+  ): string | null {
     if (excludes.length === 0) {
-      return false;
+      return null;
     }
 
-    // Normalize the path for consistent comparison
     const normalizedPath = path.normalize(filePath).replace(/\\/g, '/');
 
     for (const exclude of excludes) {
       if (this.matchesGlobPattern(normalizedPath, exclude)) {
-        return true;
+        return exclude;
       }
     }
 
-    return false;
+    return null;
+  }
+
+  private shouldExcludePath(filePath: string, excludes: string[]): boolean {
+    return this.findMatchingExcludePattern(filePath, excludes) !== null;
   }
 
   private matchesGlobPattern(filePath: string, pattern: string): boolean {
@@ -119,9 +125,10 @@ export class ListFiles implements IListFiles {
     }
 
     // Convert glob pattern to regex
-    // Replace ** with a placeholder, then * with [^/]*, then ** placeholder with .*
+    // Replace ** with a placeholder, escape regex special chars, then * with [^/]*, then ** placeholder with .*
     let regexPattern = pattern
       .replace(/\*\*/g, '__DOUBLE_STAR__')
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
       .replace(/\*/g, '[^/]*')
       .replace(/__DOUBLE_STAR__/g, '.*')
       .replace(/\//g, '\\/');

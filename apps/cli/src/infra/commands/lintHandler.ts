@@ -12,6 +12,8 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { PackmindIgnoreReader } from '../../application/services/PackmindIgnoreReader';
+import * as fs from 'fs';
+import * as nodePath from 'path';
 
 const SEVERITY_LEVELS: Record<DetectionSeverity, number> = {
   [DetectionSeverity.WARNING]: 0,
@@ -81,7 +83,12 @@ export async function lintHandler(
   const targetPath = path ?? '.';
   const absolutePath = resolvePath(targetPath);
 
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
+  // When path is a file, use its parent directory for git root, ignore patterns, and config resolution
+  const isFile =
+    fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile();
+  const directoryPath = isFile ? nodePath.dirname(absolutePath) : absolutePath;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(directoryPath);
 
   if (diff && !gitRoot) {
     throw new Error(
@@ -92,7 +99,7 @@ export async function lintHandler(
   let ignorePatterns: string[] = [];
   try {
     ignorePatterns = await packmindIgnoreReader.readIgnorePatterns(
-      absolutePath,
+      directoryPath,
       gitRoot,
     );
   } catch (err) {
@@ -102,6 +109,7 @@ export async function lintHandler(
   }
 
   let violations: LintViolation[] = [];
+  let ignoredFile: { filePath: string; matchedPattern: string } | undefined;
 
   try {
     if (rule) {
@@ -115,9 +123,10 @@ export async function lintHandler(
         ignorePatterns,
       });
       violations = result.violations;
+      ignoredFile = result.summary?.ignoredFile;
     } else {
       const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
-        absolutePath,
+        directoryPath,
         gitRoot,
       );
 
@@ -133,6 +142,7 @@ export async function lintHandler(
         ignorePatterns,
       });
       violations = result.violations;
+      ignoredFile = result.summary?.ignoredFile;
     }
   } catch (error) {
     if (isNotLoggedInError(error) && continueOnMissingKey) {
@@ -149,6 +159,14 @@ export async function lintHandler(
       return;
     }
     throw error;
+  }
+
+  if (ignoredFile) {
+    logWarningConsole(
+      `File "${ignoredFile.filePath}" was ignored (matched pattern "${ignoredFile.matchedPattern}"). Skipping lint.`,
+    );
+    exit(0);
+    return;
   }
 
   const effectiveSeverity = (s: DetectionSeverity | undefined) =>
