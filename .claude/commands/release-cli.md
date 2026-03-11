@@ -1,5 +1,5 @@
 ---
-description: 'Automate a clean, versioned CLI release by validating git status, promoting any unreleased default skills, updating package.json and CHANGELOG, tagging and pushing the release, and preparing the next Unreleased section to ensure consistent, traceable releases when publishing version {{version}}.'
+description: 'Automate creating a clean, tagged CLI release by validating git status, optionally promoting unreleased default skills, updating version and changelog with ISO dates in two commits, and pushing tags/commits to ensure consistent, traceable releases when publishing a new CLI version.'
 ---
 
 Create a CLI release with version {{version}}. Follow these steps:
@@ -26,6 +26,8 @@ Create a CLI release with version {{version}}. Follow these steps:
 
    * Update the version in apps/cli/package.json to `{{version}}`
 
+   * Run `npm install` to update `package-lock.json` with the new version
+
    * in apps/cli/CHANGELOG.MD:
 
      * drop the empty sections under \[Unreleased]
@@ -40,7 +42,7 @@ Create a CLI release with version {{version}}. Follow these steps:
 
      * Extract the previous version from the existing comparison links in apps/cli/CHANGELOG.MD
 
-   * Commit with message: `chore(cli): release {{version}}`
+   * Commit with message: `chore(cli): release {{version}}` (this commit will include apps/cli/package.json, package-lock.json, and apps/cli/CHANGELOG.MD)
 
 4. **Create and push release tag**:
 
