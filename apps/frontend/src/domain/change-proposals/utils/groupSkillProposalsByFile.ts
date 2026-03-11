@@ -11,6 +11,7 @@ import {
 import { ChangeProposalWithConflicts } from '../types';
 import { SCALAR_SKILL_TYPES } from '../constants/skillProposalTypes';
 
+export const REMOVAL_GROUP_PATH = '__removal__';
 export const SKILL_MD_PATH = '/SKILL.md';
 export const UNKNOWN_FILE_PATH = '/unknown.md';
 
@@ -25,6 +26,10 @@ export function getProposalFilePath(
   proposal: ChangeProposalWithConflicts,
   files: SkillFile[],
 ): string {
+  if (proposal.type === ChangeProposalType.removeSkill) {
+    return REMOVAL_GROUP_PATH;
+  }
+
   if (SCALAR_SKILL_TYPES.has(proposal.type)) {
     return SKILL_MD_PATH;
   }
@@ -120,6 +125,8 @@ export function groupSkillProposalsByFile(
   }
 
   groups.sort((a, b) => {
+    if (a.filePath === REMOVAL_GROUP_PATH) return -1;
+    if (b.filePath === REMOVAL_GROUP_PATH) return 1;
     if (a.filePath === SKILL_MD_PATH) return -1;
     if (b.filePath === SKILL_MD_PATH) return 1;
     return a.filePath.localeCompare(b.filePath);
