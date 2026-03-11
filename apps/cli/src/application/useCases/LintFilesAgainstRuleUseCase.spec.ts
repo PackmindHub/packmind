@@ -193,6 +193,63 @@ describe('LintFilesAgainstRuleUseCase', () => {
     });
   });
 
+  describe('when ignorePatterns are provided', () => {
+    const mockFiles = [
+      { path: '/project/src/file1.ts' },
+      { path: '/project/src/file2.ts' },
+    ];
+    const standardSlug = 'interface-naming';
+    const ruleId = 'rule-1' as RuleId;
+
+    beforeEach(async () => {
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+        '/project',
+      );
+      mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+      mockListFiles.readFileContent.mockImplementation(async (filePath) => {
+        if (filePath === '/project/src/file1.ts') return 'interface User {}';
+        if (filePath === '/project/src/file2.ts') return 'interface IAdmin {}';
+        return '';
+      });
+      mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+        scope: [],
+        ruleContent: 'Interface names should start with I',
+        programs: [
+          {
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return [1]; }',
+            sourceCodeState: 'AST' as const,
+            severity: DetectionSeverity.ERROR,
+          },
+        ],
+      });
+
+      await useCase.execute({
+        path: '/project',
+        standardSlug,
+        ruleId,
+        ignorePatterns: ['generated', '*.test.ts'],
+      });
+    });
+
+    it('calls listFilesInDirectory with DEFAULT_EXCLUDES merged with ignorePatterns', () => {
+      expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
+        '/project',
+        [],
+        [
+          'node_modules',
+          'dist',
+          '*.min.*',
+          '*.map',
+          '.git',
+          'generated',
+          '*.test.ts',
+        ],
+      );
+    });
+  });
+
   describe('when no files found', () => {
     let result: Awaited<ReturnType<typeof useCase.execute>>;
 
