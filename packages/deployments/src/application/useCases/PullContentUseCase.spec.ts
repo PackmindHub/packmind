@@ -178,7 +178,7 @@ describe('PullContentUseCase', () => {
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     targetResolutionService = {
-      findTargetFromGitInfo: jest.fn().mockResolvedValue(null),
+      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(null),
       findPreviouslyDeployedVersions: jest.fn().mockResolvedValue({
         standardVersions: [],
         recipeVersions: [],
@@ -2638,7 +2638,7 @@ describe('PullContentUseCase', () => {
         },
       ]);
 
-      targetResolutionService.findTargetFromGitInfo.mockResolvedValue({
+      targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue({
         id: targetId,
         name: 'default',
         path: '/',
@@ -2715,7 +2715,9 @@ describe('PullContentUseCase', () => {
 
     describe('when target is not found', () => {
       beforeEach(() => {
-        targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
+        targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+          null,
+        );
       });
 
       it('skips agent cleanup', async () => {

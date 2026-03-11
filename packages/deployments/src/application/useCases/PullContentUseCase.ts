@@ -502,7 +502,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       if (command.gitRemoteUrl && command.gitBranch && command.relativePath) {
         try {
           const target =
-            await this.targetResolutionService.findTargetFromGitInfo(
+            await this.targetResolutionService.findOrCreateTargetFromGitInfo(
               command.organization.id,
               command.userId,
               command.gitRemoteUrl,

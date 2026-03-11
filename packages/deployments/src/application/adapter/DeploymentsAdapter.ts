@@ -453,15 +453,14 @@ export class DeploymentsAdapter
 
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(
       this.accountsPort,
-      this.gitPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
       this.deploymentsServices.getRepositories().getPackageRepository(),
-      this.deploymentsServices.getRepositories().getTargetRepository(),
       this.distributionRepository,
       this.distributedPackageRepository,
       this.deploymentsServices.getRenderModeConfigurationService(),
+      targetResolutionService,
     );
 
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
