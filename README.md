@@ -55,7 +55,7 @@ You can find them at anytime in the **Settings** menu.
 Once authenticated, run in your project:
 
 ```bash
-$> packmind-cli init
+$> packmind init
 ```
 
 Then, in your favorite ai coding agent, run:
