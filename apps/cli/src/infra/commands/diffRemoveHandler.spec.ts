@@ -411,7 +411,6 @@ describe('diffRemoveHandler', () => {
             expect.objectContaining({
               type: 'removeStandard',
               payload: {
-                targetId: 'target-789',
                 packageIds: ['package-001'],
               },
               artifactId: 'standard-123',
@@ -785,7 +784,6 @@ describe('diffRemoveHandler', () => {
               expect.objectContaining({
                 type: 'removeStandard',
                 payload: {
-                  targetId: 'target-lock-123',
                   packageIds: ['pkg-aaa', 'pkg-bbb'],
                 },
                 artifactId: 'standard-lock-456',

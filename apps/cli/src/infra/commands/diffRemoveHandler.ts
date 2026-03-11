@@ -351,7 +351,6 @@ export async function diffRemoveHandler(
     filePath: absolutePath,
     type: changeProposalType,
     payload: {
-      targetId: createTargetId(metadata.targetId),
       packageIds: metadata.packageIds.map(createPackageId),
     },
     artifactName: metadata.artifactName,
