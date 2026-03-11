@@ -260,7 +260,6 @@ export async function diffRemoveHandler(
     filePath: absolutePath,
     type: changeProposalType,
     payload: {
-      targetId: deployedContent.targetId,
       packageIds: deployedFile.packageIds.map(createPackageId),
     },
     artifactName: deployedFile.artifactName || artefactResult.artifactType,
