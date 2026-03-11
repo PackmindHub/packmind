@@ -1987,7 +1987,7 @@ Old packmind content
         });
       });
 
-      it('uses resolvedAgents when command.agents is empty', () => {
+      it('uses resolvedAgents in lock file', () => {
         expect(mockLockFileRepository.write).toHaveBeenCalledWith(
           '/test',
           expect.objectContaining({

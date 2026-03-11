@@ -2507,13 +2507,15 @@ describe('DiffArtefactsUseCase', () => {
     });
 
     describe('when getContentByVersions returns 500', () => {
-      it('propagates the error', async () => {
+      beforeEach(() => {
         const error: Error & { statusCode?: number } = new Error(
           'Internal Server Error',
         );
         error.statusCode = 500;
         mockGetContentByVersions.mockRejectedValue(error);
+      });
 
+      it('propagates the error', async () => {
         await expect(
           useCase.execute({
             ...defaultGitInfo,
@@ -2521,17 +2523,31 @@ describe('DiffArtefactsUseCase', () => {
             baseDirectory: '/test',
           }),
         ).rejects.toThrow('Internal Server Error');
+      });
+
+      it('does not call getDeployed', async () => {
+        try {
+          await useCase.execute({
+            ...defaultGitInfo,
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          });
+        } catch {
+          // expected to throw
+        }
 
         expect(mockGetDeployed).not.toHaveBeenCalled();
       });
     });
 
     describe('when getContentByVersions throws without statusCode', () => {
-      it('propagates the error', async () => {
+      beforeEach(() => {
         mockGetContentByVersions.mockRejectedValue(
           new Error('Network failure'),
         );
+      });
 
+      it('propagates the error', async () => {
         await expect(
           useCase.execute({
             ...defaultGitInfo,
@@ -2539,6 +2555,18 @@ describe('DiffArtefactsUseCase', () => {
             baseDirectory: '/test',
           }),
         ).rejects.toThrow('Network failure');
+      });
+
+      it('does not call getDeployed', async () => {
+        try {
+          await useCase.execute({
+            ...defaultGitInfo,
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          });
+        } catch {
+          // expected to throw
+        }
 
         expect(mockGetDeployed).not.toHaveBeenCalled();
       });

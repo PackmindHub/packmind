@@ -540,7 +540,7 @@ describe('TargetResolutionService', () => {
         targetService.addTarget.mockResolvedValue(newTarget);
       });
 
-      it('does not create a new provider or repo', async () => {
+      it('does not create a new provider', async () => {
         await service.findOrCreateTargetFromGitInfo(
           organizationId,
           userId,
@@ -550,6 +550,17 @@ describe('TargetResolutionService', () => {
         );
 
         expect(gitPort.addGitProvider).not.toHaveBeenCalled();
+      });
+
+      it('does not create a new repo', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/src/packages/',
+        );
+
         expect(gitPort.addGitRepo).not.toHaveBeenCalled();
       });
 
