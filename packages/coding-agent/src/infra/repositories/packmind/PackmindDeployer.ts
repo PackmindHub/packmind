@@ -59,6 +59,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         content: recipeVersion.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -123,6 +124,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -168,6 +170,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         content: recipeVersion.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -216,6 +219,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
@@ -285,6 +289,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         content: recipeVersion.content,
         artifactType: 'command',
         artifactName: recipeVersion.name,
+        artifactId: recipeVersion.recipeId as string,
       });
     }
 
@@ -319,6 +324,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
         artifactType: 'standard',
         artifactName: standardVersion.name,
+        artifactId: standardVersion.standardId as string,
       });
     }
 
