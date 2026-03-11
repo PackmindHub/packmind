@@ -95,7 +95,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
                 }
               />
             ) : (
-              <PMTooltip label="Targets are automatically managed by packmind-cli install commands">
+              <PMTooltip label="Targets are automatically managed by packmind install commands">
                 <PMFlex align="center" gap={1} color="faded">
                   <PMIcon as={LuCircleHelp} boxSize={4} />
                   <PMText fontSize="sm">Auto-managed</PMText>
@@ -147,7 +147,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
               description={
                 hasToken
                   ? "Click 'Manage Targets' to create your first deployment target"
-                  : 'Run packmind-cli install to create targets for this repository'
+                  : 'Run packmind install to create targets for this repository'
               }
               icon={<PMIcon as={LuTarget} boxSize="8" color="gray.400" />}
             />

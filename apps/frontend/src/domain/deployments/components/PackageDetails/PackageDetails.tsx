@@ -253,7 +253,7 @@ export const PackageDetails = ({
   const isPackageEmpty =
     recipeCount === 0 && standardCount === 0 && skillCount === 0;
 
-  const installCommand = `packmind-cli install ${pkg.slug}`;
+  const installCommand = `packmind install ${pkg.slug}`;
 
   return (
     <PMPage

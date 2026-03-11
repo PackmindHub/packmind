@@ -40,7 +40,7 @@ export const DownloadDefaultSkillsContent = ({
         </PMText>
         <PMBox w="full">
           <CopiableTextField
-            value="packmind-cli skills init"
+            value="packmind skills init"
             readOnly
             fontFamily="mono"
             fontSize="sm"

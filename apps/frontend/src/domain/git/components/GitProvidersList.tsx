@@ -126,7 +126,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
           ]}
         />
       ) : (
-        <PMTooltip label="This provider was automatically created after a deployment from packmind-cli">
+        <PMTooltip label="This provider was automatically created after a deployment from packmind">
           <PMIcon color="secondary">
             <LuInfo />
           </PMIcon>

@@ -329,7 +329,7 @@ export const SkillsImportContent: React.FC = () => {
             <PMVStack align="flex-start" gap={4} width="full">
               <PMBox width="1/2">
                 <CopiableTextField
-                  value="packmind-cli skills add <skill-directory>"
+                  value="packmind skills add <skill-directory>"
                   readOnly
                   label="Terminal"
                 />

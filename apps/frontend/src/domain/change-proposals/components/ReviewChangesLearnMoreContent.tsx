@@ -28,7 +28,7 @@ import {
   detectUserOs,
 } from '../../accounts/components/LocalEnvironmentSetup/utils';
 
-const DIFF_SUBMIT_COMMAND = 'packmind-cli diff --submit';
+const DIFF_SUBMIT_COMMAND = 'packmind diff --submit';
 
 interface InstallSectionProps {
   title: string;
@@ -349,7 +349,7 @@ export const ReviewChangesLearnMoreContent: React.FC = () => {
                 <PMAlert.Indicator />
                 <PMAlert.Content>
                   <PMAlert.Description>
-                    You can also run <strong>packmind-cli diff</strong> without{' '}
+                    You can also run <strong>packmind diff</strong> without{' '}
                     <strong>--submit</strong> to preview changes before
                     submitting.
                   </PMAlert.Description>
