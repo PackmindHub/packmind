@@ -6,6 +6,14 @@ import { ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalCardHeader } from './ChangeProposalCardHeader';
 import { ChangeProposalCardBody } from './ChangeProposalCardBody';
 
+function isRemoveProposal(type: ChangeProposalType): boolean {
+  return (
+    type === ChangeProposalType.removeStandard ||
+    type === ChangeProposalType.removeCommand ||
+    type === ChangeProposalType.removeSkill
+  );
+}
+
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
 interface ChangeProposalCardProps {
@@ -50,11 +58,13 @@ export function ChangeProposalCard({
   onUndo,
   renderExpandedView,
 }: Readonly<ChangeProposalCardProps>) {
+  const isRemoval = isRemoveProposal(proposal.type as ChangeProposalType);
+
   return (
     <PMAccordion.Item
       value={proposal.id}
       border="1px solid"
-      borderColor="border.tertiary"
+      borderColor={isRemoval ? 'red.800' : 'border.tertiary'}
       borderRadius="md"
       width="full"
     >

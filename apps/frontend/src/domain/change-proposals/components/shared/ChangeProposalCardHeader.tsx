@@ -3,13 +3,26 @@ import {
   PMBadge,
   PMHStack,
   PMIcon,
+  PMText,
   PMTooltip,
 } from '@packmind/ui';
-import { ChangeProposalType } from '@packmind/types';
-import { LuCircleAlert } from 'react-icons/lu';
+import {
+  ChangeProposalType,
+  getItemTypeFromChangeProposalType,
+} from '@packmind/types';
+import { LuCircleAlert, LuTrash2 } from 'react-icons/lu';
 import { ProposalLabel } from './ProposalLabel';
 import { StatusDot } from './StatusDot';
 import { ProposalMeta } from './ProposalMeta';
+import { RelativeTime } from './RelativeTime';
+
+function isRemoveProposal(type: ChangeProposalType): boolean {
+  return (
+    type === ChangeProposalType.removeStandard ||
+    type === ChangeProposalType.removeCommand ||
+    type === ChangeProposalType.removeSkill
+  );
+}
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -34,10 +47,28 @@ export function ChangeProposalCardHeader({
   artefactVersion,
   filePath,
 }: Readonly<ChangeProposalCardHeaderProps>) {
+  const isRemoval = isRemoveProposal(proposalType);
+  const artefactTypeLabel = isRemoval
+    ? (() => {
+        const itemType = getItemTypeFromChangeProposalType(proposalType);
+        return itemType.charAt(0).toUpperCase() + itemType.slice(1);
+      })()
+    : undefined;
+
   return (
-    <PMAccordion.ItemTrigger px={4} py={3} _hover={{ cursor: 'pointer' }}>
+    <PMAccordion.ItemTrigger
+      px={4}
+      py={3}
+      _hover={{ cursor: 'pointer' }}
+      {...(isRemoval && { bg: 'red.950/30' })}
+    >
       <PMHStack flex={1} gap={3} alignItems="center">
         <PMAccordion.ItemIndicator />
+        {isRemoval && (
+          <PMIcon color="red.400" fontSize="md">
+            <LuTrash2 />
+          </PMIcon>
+        )}
         <ProposalLabel
           proposalNumber={proposalNumber}
           proposalType={proposalType}
@@ -59,11 +90,22 @@ export function ChangeProposalCardHeader({
           </PMBadge>
         )}
         <PMHStack flex={1} justifyContent="flex-end">
-          <ProposalMeta
-            authorName={authorName}
-            createdAt={createdAt}
-            artefactVersion={artefactVersion}
-          />
+          {isRemoval ? (
+            <PMHStack gap={2} alignItems="center">
+              <PMText fontSize="xs" color="secondary">
+                {authorName} &middot; <RelativeTime date={createdAt} /> &middot;
+              </PMText>
+              <PMBadge size="sm" colorPalette="red" variant="subtle">
+                {artefactTypeLabel}
+              </PMBadge>
+            </PMHStack>
+          ) : (
+            <ProposalMeta
+              authorName={authorName}
+              createdAt={createdAt}
+              artefactVersion={artefactVersion}
+            />
+          )}
         </PMHStack>
       </PMHStack>
     </PMAccordion.ItemTrigger>
