@@ -21,6 +21,7 @@ import {
 import { useEffect } from 'react';
 import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 import { SidebarNavigationLink } from '../../src/domain/organizations/components/SidebarNavigation';
+import { StaticSidebarCollapseProvider } from '../../src/domain/organizations/components/SidebarCollapseContext';
 import { routes } from '../../src/shared/utils/routes';
 import { SettingsRouteDataTestIds } from '@packmind/frontend';
 
@@ -76,67 +77,69 @@ export default function SettingsIndexRouteModule() {
 
   return (
     <PMGrid height={'full'} gridTemplateColumns={'fit-content(200px) 1fr'}>
-      <PMVerticalNav
-        logo={false}
-        headerNav={
-          <PMFlex height={'50px'} alignItems={'center'}>
-            <PMHeading level="h4" fontWeight={'bold'} color={'secondary'}>
-              Settings
-            </PMHeading>
-          </PMFlex>
-        }
-      >
-        <PMVerticalNavSection
-          navEntries={[
-            <SidebarNavigationLink
-              key="users"
-              url={orgSlug ? routes.org.toSettingsUsers(orgSlug) : '#'}
-              label="Users"
-              exact
-              data-testid={SettingsRouteDataTestIds.UsersLink}
-            />,
-          ]}
-        />
+      <StaticSidebarCollapseProvider>
+        <PMVerticalNav
+          logo={false}
+          headerNav={
+            <PMFlex height={'50px'} alignItems={'center'}>
+              <PMHeading level="h4" fontWeight={'bold'} color={'secondary'}>
+                Settings
+              </PMHeading>
+            </PMFlex>
+          }
+        >
+          <PMVerticalNavSection
+            navEntries={[
+              <SidebarNavigationLink
+                key="users"
+                url={orgSlug ? routes.org.toSettingsUsers(orgSlug) : '#'}
+                label="Users"
+                exact
+                data-testid={SettingsRouteDataTestIds.UsersLink}
+              />,
+            ]}
+          />
 
-        <PMVerticalNavSection
-          title="Distribution"
-          navEntries={[
-            <SidebarNavigationLink
-              key="git"
-              url={orgSlug ? routes.org.toSettingsGit(orgSlug) : '#'}
-              label="Git"
-              exact
-              data-testid={SettingsRouteDataTestIds.GitLink}
-            />,
+          <PMVerticalNavSection
+            title="Distribution"
+            navEntries={[
+              <SidebarNavigationLink
+                key="git"
+                url={orgSlug ? routes.org.toSettingsGit(orgSlug) : '#'}
+                label="Git"
+                exact
+                data-testid={SettingsRouteDataTestIds.GitLink}
+              />,
 
-            <SidebarNavigationLink
-              key="rendering"
-              url={orgSlug ? routes.org.toSettingsDistribution(orgSlug) : '#'}
-              label="Rendering"
-              exact
-            />,
+              <SidebarNavigationLink
+                key="rendering"
+                url={orgSlug ? routes.org.toSettingsDistribution(orgSlug) : '#'}
+                label="Rendering"
+                exact
+              />,
 
-            <SidebarNavigationLink
-              key="targets"
-              url={orgSlug ? routes.org.toSettingsTargets(orgSlug) : '#'}
-              label="Targets"
-              exact
-            />,
-          ]}
-        />
+              <SidebarNavigationLink
+                key="targets"
+                url={orgSlug ? routes.org.toSettingsTargets(orgSlug) : '#'}
+                label="Targets"
+                exact
+              />,
+            ]}
+          />
 
-        <PMVerticalNavSection
-          title="AI"
-          navEntries={[
-            <SidebarNavigationLink
-              key="llm"
-              url={orgSlug ? routes.org.toSettingsLLM(orgSlug) : '#'}
-              label="Provider"
-              exact
-            />,
-          ]}
-        />
-      </PMVerticalNav>
+          <PMVerticalNavSection
+            title="AI"
+            navEntries={[
+              <SidebarNavigationLink
+                key="llm"
+                url={orgSlug ? routes.org.toSettingsLLM(orgSlug) : '#'}
+                label="Provider"
+                exact
+              />,
+            ]}
+          />
+        </PMVerticalNav>
+      </StaticSidebarCollapseProvider>
 
       <Outlet />
     </PMGrid>

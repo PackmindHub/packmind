@@ -21,6 +21,7 @@ import {
 import { useEffect } from 'react';
 import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 import { SidebarNavigationLink } from '../../src/domain/organizations/components/SidebarNavigation';
+import { StaticSidebarCollapseProvider } from '../../src/domain/organizations/components/SidebarCollapseContext';
 import { routes } from '../../src/shared/utils/routes';
 
 type HasAccessResponse =
@@ -65,46 +66,48 @@ export default function SetupIndexRouteModule() {
 
   return (
     <PMGrid height={'full'} gridTemplateColumns={'fit-content(200px) 1fr'}>
-      <PMVerticalNav
-        logo={false}
-        headerNav={
-          <PMFlex height={'50px'} alignItems={'center'}>
-            <PMHeading level="h4" fontWeight={'bold'} color={'secondary'}>
-              Setup
-            </PMHeading>
-          </PMFlex>
-        }
-      >
-        <PMVerticalNavSection
-          title="Dev tooling"
-          navEntries={[
-            <SidebarNavigationLink
-              key="cli"
-              url={orgSlug ? routes.org.toSetupCLI(orgSlug) : '#'}
-              label="CLI"
-              exact
-            />,
-            <SidebarNavigationLink
-              key="mcp"
-              url={orgSlug ? routes.org.toSetupMCP(orgSlug) : '#'}
-              label="MCP Servers"
-              exact
-            />,
-          ]}
-        />
+      <StaticSidebarCollapseProvider>
+        <PMVerticalNav
+          logo={false}
+          headerNav={
+            <PMFlex height={'50px'} alignItems={'center'}>
+              <PMHeading level="h4" fontWeight={'bold'} color={'secondary'}>
+                Setup
+              </PMHeading>
+            </PMFlex>
+          }
+        >
+          <PMVerticalNavSection
+            title="Dev tooling"
+            navEntries={[
+              <SidebarNavigationLink
+                key="cli"
+                url={orgSlug ? routes.org.toSetupCLI(orgSlug) : '#'}
+                label="CLI"
+                exact
+              />,
+              <SidebarNavigationLink
+                key="mcp"
+                url={orgSlug ? routes.org.toSetupMCP(orgSlug) : '#'}
+                label="MCP Servers"
+                exact
+              />,
+            ]}
+          />
 
-        <PMVerticalNavSection
-          title="Skills"
-          navEntries={[
-            <SidebarNavigationLink
-              key="skills"
-              url={orgSlug ? routes.org.toSetupSkills(orgSlug) : '#'}
-              label="Playbook management"
-              exact
-            />,
-          ]}
-        />
-      </PMVerticalNav>
+          <PMVerticalNavSection
+            title="Skills"
+            navEntries={[
+              <SidebarNavigationLink
+                key="skills"
+                url={orgSlug ? routes.org.toSetupSkills(orgSlug) : '#'}
+                label="Playbook management"
+                exact
+              />,
+            ]}
+          />
+        </PMVerticalNav>
+      </StaticSidebarCollapseProvider>
 
       <Outlet />
     </PMGrid>
