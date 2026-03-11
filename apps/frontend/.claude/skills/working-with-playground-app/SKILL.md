@@ -1,6 +1,6 @@
 ---
-name: working-with-playground-app
-description: This skill provides guidance for building UI/UX prototypes in the Packmind playground app. It should be used when creating a new prototype, iterating on an existing prototype, or working with files in apps/playground/. Triggers on mentions of "playground", "prototype", or direct work within the apps/playground/ directory.
+name: 'working-with-playground-app'
+description: 'This skill provides guidance for building UI/UX prototypes in the Packmind playground app. It should be used when creating a new prototype, iterating on an existing prototype, or working with files in apps/playground/. Triggers on mentions of "playground", "prototype", or direct work within the apps/playground/ directory.'
 ---
 
 # Working With the Playground App
