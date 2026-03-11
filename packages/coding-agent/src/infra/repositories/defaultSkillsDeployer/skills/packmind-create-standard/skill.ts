@@ -70,11 +70,11 @@ The \`# Title\` heading is the **display name** shown in indexes and dashboards.
 - ❌ \`"good-practices"\` (slug format and too vague)
 - ❌ \`"Standards for Code"\` (describes meta-concept, not the actual domain)
 
-**Note**: The \`summary\` field is used in other workflows (like MCP) but not yet supported by the CLI.
+**Note**: The \`summary\` field is used in other workflows (like MCP) but not yet supported by the Packmind CLI.
 
 #### Understanding \`scope\` vs \`summary\`
 
-- **\`scope\`** (required by CLI): **WHERE** the standard applies — comma-separated glob patterns.
+- **\`scope\`** (required by Packmind CLI): **WHERE** the standard applies — comma-separated glob patterns.
   - Must be **glob patterns only** — never natural language descriptions.
   - Examples: \`"**/*.spec.ts,**/*.test.ts"\`, \`"**/*.tsx,**/*.jsx"\`, \`"src/domain/**/*.ts"\`
   - **Common patterns:**
@@ -84,17 +84,17 @@ The \`# Title\` heading is the **display name** shown in indexes and dashboards.
     - \`src/domain/**/*.ts\` — domain TypeScript files under src
     - \`packages/**/src/**/*.ts\` — all package source files
   - ⚠️ **Never write natural language** like "TypeScript files" or "React components" — the value is used as literal glob patterns for file matching, so natural language will match nothing.
-- **\`summary\`** (optional, not yet CLI-supported): **WHEN/WHY** to apply - high-level purpose and trigger condition
+- **\`summary\`** (optional, not yet supported by Packmind CLI): **WHEN/WHY** to apply - high-level purpose and trigger condition
   - Examples: \`"Apply when writing tests to ensure consistency"\`, \`"Use when handling user data for privacy compliance"\`
 
 ## Prerequisites
 
-Before creating a standard, verify that packmind-cli is available:
+Before creating a standard, verify that packmind is available:
 
-Check if packmind-cli is installed:
+Check if packmind is installed:
 
 \`\`\`bash
-packmind-cli --version
+packmind --version
 \`\`\`
 
 If not available, install it:
@@ -106,7 +106,7 @@ npm install -g @packmind/cli
 Then login to Packmind:
 
 \`\`\`bash
-packmind-cli login
+packmind login
 \`\`\`
 
 ## Standard Creation Process
@@ -329,21 +329,21 @@ Rules:
 6. Pipe the JSON directly to the CLI via stdin using a heredoc (no intermediate file needed):
 
 \`\`\`bash
-packmind-cli standards create --origin-skill packmind-create-standard <<'EOF'
+packmind standards create --origin-skill packmind-create-standard <<'EOF'
 {"name":"...","description":"...","scope":"...","rules":[...]}
 EOF
 \`\`\`
 
 Expected output on success:
 \`\`\`
-packmind-cli Standard "Your Standard Name" created successfully (ID: <uuid>)
+packmind Standard "Your Standard Name" created successfully (ID: <uuid>)
 \`\`\`
 
 #### Troubleshooting
 
 **"Not logged in" error:**
 \`\`\`bash
-packmind-cli login
+packmind login
 \`\`\`
 
 **"Failed to resolve global space" error:**
@@ -369,7 +369,7 @@ After the standard is **successfully created**, delete the draft markdown file i
 
 After successful creation, check if the standard fits an existing package:
 
-1. Run \`packmind-cli install --list\` to get available packages
+1. Run \`packmind install --list\` to get available packages
 2. If no packages exist, skip this step silently and end the workflow
 3. Analyze the created standard's name, description, and scope against each package's name and description
 4. If a package is a clear semantic fit (the standard's domain/technology aligns with the package's purpose):
@@ -380,9 +380,9 @@ After successful creation, check if the standard fits an existing package:
      - Skip
 5. If no clear fit is found, skip silently (do not mention packages)
 6. If user chooses to add:
-   - Run: \`packmind-cli packages add --to <package-slug> --standard <standard-slug>\`
-   - Ask: "Would you like me to run \`packmind-cli install\` to sync the changes?"
-   - If yes, run: \`packmind-cli install\`
+   - Run: \`packmind packages add --to <package-slug> --standard <standard-slug>\`
+   - Ask: "Would you like me to run \`packmind install\` to sync the changes?"
+   - If yes, run: \`packmind install\`
 
 ## Complete Example
 
@@ -452,7 +452,7 @@ it('validates user', () => { expect(result.name).toBe('test'); expect(result.age
 
 **Creating the standard (piped via stdin):**
 \`\`\`bash
-packmind-cli standards create --origin-skill packmind-create-standard <<'EOF'
+packmind standards create --origin-skill packmind-create-standard <<'EOF'
 {"name":"TypeScript Testing Conventions","description":"Enforce consistent testing patterns...","scope":"**/*.spec.ts,**/*.test.ts","rules":[...]}
 EOF
 \`\`\`
@@ -463,7 +463,7 @@ EOF
 |---|---|---|
 | \`# Title\` | Yes | Title Case, descriptive, 2–5 words |
 | \`## Description\` | Yes | What and why |
-| \`## Scope\` | Yes (CLI) | Comma-separated glob patterns |
+| \`## Scope\` | Yes | Comma-separated glob patterns |
 | \`## Rules\` | Yes | Contains rule subsections |
 | \`### Rule text\` | Yes (≥1) | Rule text (verb-first, max ~25 words) |
 | \`#### Positive Example\` | No | Valid code in fenced block |

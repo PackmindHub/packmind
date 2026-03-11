@@ -17,17 +17,17 @@ Examples: \`frontend\`, \`backend-api\`, \`nestjs\`, \`e2e\`
 
 ## Prerequisites
 
-Verify packmind-cli is available:
+Verify packmind is available:
 
 \`\`\`bash
-packmind-cli --version
+packmind --version
 \`\`\`
 
 If not installed:
 
 \`\`\`bash
 npm install -g @packmind/cli
-packmind-cli login
+packmind login
 \`\`\`
 
 ## Workflow
@@ -37,7 +37,7 @@ packmind-cli login
 List existing packages to identify naming conventions:
 
 \`\`\`bash
-packmind-cli install --list
+packmind install --list
 \`\`\`
 
 Review the output to:
@@ -63,13 +63,13 @@ Wait for explicit user approval.
 Run the CLI command:
 
 \`\`\`bash
-packmind-cli packages create "<name>" --description="<description>"
+packmind packages create "<name>" --description="<description>"
 \`\`\`
 
 Or without description:
 
 \`\`\`bash
-packmind-cli packages create "<name>"
+packmind packages create "<name>"
 \`\`\`
 
 ### Expected Output
@@ -79,7 +79,7 @@ On success:
 \`\`\`
 Created: <slug>
 You can see it at: https://<host>/packages/<slug>
-You can install it with: packmind-cli packages install <slug>
+You can install it with: packmind packages install <slug>
 \`\`\`
 
 ## Naming Guidelines
@@ -92,7 +92,7 @@ You can install it with: packmind-cli packages install <slug>
 
 | Error | Solution |
 |-------|----------|
-| "Not authenticated" | Run \`packmind-cli login\` |
+| "Not authenticated" | Run \`packmind login\` |
 | "Network error" | Check connection, retry |
 | "Name must be at least 3 characters" | Use a longer name |
 
