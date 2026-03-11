@@ -210,6 +210,135 @@ describe('LockFileRepository', () => {
     });
   });
 
+  describe('readAll', () => {
+    const validLockFileContent = JSON.stringify({
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-01-01T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      artifacts: {},
+    });
+
+    describe('when lock files exist in subdirectories', () => {
+      let result: Awaited<ReturnType<typeof repository.readAll>>;
+
+      beforeEach(async () => {
+        mockFs.readdir.mockResolvedValue([
+          {
+            name: 'packmind-lock.json',
+            isFile: () => true,
+            isDirectory: () => false,
+            parentPath: '/project',
+          },
+          {
+            name: 'packmind-lock.json',
+            isFile: () => true,
+            isDirectory: () => false,
+            parentPath: '/project/packages/frontend',
+          },
+          {
+            name: 'other-file.json',
+            isFile: () => true,
+            isDirectory: () => false,
+            parentPath: '/project',
+          },
+          {
+            name: 'src',
+            isFile: () => false,
+            isDirectory: () => true,
+            parentPath: '/project',
+          },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>);
+
+        mockFs.readFile.mockResolvedValue(validLockFileContent);
+
+        result = await repository.readAll('/project');
+      });
+
+      it('calls readdir with recursive option', () => {
+        expect(mockFs.readdir).toHaveBeenCalledWith('/project', {
+          withFileTypes: true,
+          recursive: true,
+        });
+      });
+
+      it('returns lock files from all matching locations', () => {
+        expect(result).toHaveLength(2);
+      });
+
+      it('reads each lock file from its parent directory', () => {
+        expect(mockFs.readFile).toHaveBeenCalledWith(
+          '/project/packmind-lock.json',
+          'utf-8',
+        );
+        expect(mockFs.readFile).toHaveBeenCalledWith(
+          '/project/packages/frontend/packmind-lock.json',
+          'utf-8',
+        );
+      });
+    });
+
+    describe('when no lock files exist', () => {
+      it('returns an empty array', async () => {
+        mockFs.readdir.mockResolvedValue(
+          [] as unknown as Awaited<ReturnType<typeof fs.readdir>>,
+        );
+
+        const result = await repository.readAll('/project');
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when base directory does not exist', () => {
+      it('returns an empty array', async () => {
+        mockFs.readdir.mockRejectedValue({ code: 'ENOENT' });
+
+        const result = await repository.readAll('/nonexistent');
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when a non-ENOENT error occurs', () => {
+      it('propagates the error', async () => {
+        mockFs.readdir.mockRejectedValue(new Error('Permission denied'));
+
+        await expect(repository.readAll('/project')).rejects.toThrow(
+          'Permission denied',
+        );
+      });
+    });
+
+    describe('when some lock files are invalid', () => {
+      it('skips invalid lock files and returns only valid ones', async () => {
+        mockFs.readdir.mockResolvedValue([
+          {
+            name: 'packmind-lock.json',
+            isFile: () => true,
+            isDirectory: () => false,
+            parentPath: '/project',
+          },
+          {
+            name: 'packmind-lock.json',
+            isFile: () => true,
+            isDirectory: () => false,
+            parentPath: '/project/sub',
+          },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>);
+
+        mockFs.readFile
+          .mockResolvedValueOnce(validLockFileContent)
+          .mockResolvedValueOnce('not valid json');
+
+        const result = await repository.readAll('/project');
+
+        expect(result).toHaveLength(1);
+      });
+    });
+  });
+
   describe('write', () => {
     const lockFile: PackmindLockFile = {
       lockfileVersion: 1,

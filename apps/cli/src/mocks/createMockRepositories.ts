@@ -43,6 +43,7 @@ export function createMockLockFileRepository(
 ): jest.Mocked<ILockFileRepository> {
   return {
     read: jest.fn(),
+    readAll: jest.fn(),
     write: jest.fn(),
     delete: jest.fn(),
     ...overrides,

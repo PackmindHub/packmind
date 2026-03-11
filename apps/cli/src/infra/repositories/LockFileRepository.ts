@@ -41,6 +41,35 @@ export class LockFileRepository implements ILockFileRepository {
     await fs.writeFile(lockFilePath, content, 'utf-8');
   }
 
+  async readAll(baseDirectory: string): Promise<PackmindLockFile[]> {
+    const lockFiles: PackmindLockFile[] = [];
+
+    try {
+      const entries = await fs.readdir(baseDirectory, {
+        withFileTypes: true,
+        recursive: true,
+      });
+
+      for (const entry of entries) {
+        if (!entry.isFile() || entry.name !== this.LOCK_FILENAME) {
+          continue;
+        }
+
+        const parentDir = entry.parentPath ?? entry.path;
+        const lockFile = await this.read(parentDir);
+        if (lockFile) {
+          lockFiles.push(lockFile);
+        }
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error;
+      }
+    }
+
+    return lockFiles;
+  }
+
   async delete(baseDirectory: string): Promise<void> {
     const lockFilePath = this.getLockFilePath(baseDirectory);
     try {
