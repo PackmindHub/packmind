@@ -161,7 +161,7 @@ export function OnboardingBuildCliSection() {
               </PMText>
             </PMVStack>
             <CopiableTextField
-              value="packmind-cli init"
+              value="packmind init"
               readOnly
               data-testid="OnboardingBuild.InitializeContent"
               onCopy={() =>

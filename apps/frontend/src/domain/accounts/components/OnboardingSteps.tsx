@@ -190,7 +190,7 @@ export const OnboardingSteps: React.FC = () => {
               <PMField.Root width="full">
                 <PMField.Label>Bash</PMField.Label>
                 <CopiableTextarea
-                  value="packmind-cli install <package-name>"
+                  value="packmind install <package-name>"
                   readOnly
                   rows={1}
                   width="full"

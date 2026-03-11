@@ -168,7 +168,7 @@ describe('DeployWithCliModal', () => {
 
       it('displays install command for test-package', () => {
         expect(
-          screen.getByDisplayValue('packmind-cli install test-package'),
+          screen.getByDisplayValue('packmind install test-package'),
         ).toBeInTheDocument();
       });
 
@@ -178,7 +178,7 @@ describe('DeployWithCliModal', () => {
 
       it('displays install command for another-package', () => {
         expect(
-          screen.getByDisplayValue('packmind-cli install another-package'),
+          screen.getByDisplayValue('packmind install another-package'),
         ).toBeInTheDocument();
       });
     });
