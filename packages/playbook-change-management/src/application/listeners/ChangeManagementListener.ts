@@ -1,6 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindListener } from '@packmind/node-utils';
-import { SkillDeletedEvent, StandardDeletedEvent } from '@packmind/types';
+import {
+  CommandDeletedEvent,
+  SkillDeletedEvent,
+  StandardDeletedEvent,
+} from '@packmind/types';
 import { ChangeProposalService } from '../services/ChangeProposalService';
 
 const origin = 'ChangeManagementListener';
@@ -14,9 +18,37 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
   }
 
   protected registerHandlers(): void {
+    this.subscribe(CommandDeletedEvent, this.handleCommandDeleted);
     this.subscribe(StandardDeletedEvent, this.handleStandardDeleted);
     this.subscribe(SkillDeletedEvent, this.handleSkillDeleted);
   }
+
+  private handleCommandDeleted = async (
+    event: CommandDeletedEvent,
+  ): Promise<void> => {
+    const { id: recipeId, spaceId, userId } = event.payload;
+    this.logger.info(
+      'Handling CommandDeletedEvent — cancelling pending proposals',
+      { recipeId, spaceId },
+    );
+
+    try {
+      await this.adapter.cancelPendingByArtefactId(spaceId, recipeId, userId);
+      this.logger.info('Cancelled pending proposals for deleted command', {
+        recipeId,
+        spaceId,
+      });
+    } catch (error) {
+      this.logger.error(
+        'Failed to cancel pending proposals for deleted command',
+        {
+          recipeId,
+          spaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+  };
 
   private handleStandardDeleted = async (
     event: StandardDeletedEvent,
