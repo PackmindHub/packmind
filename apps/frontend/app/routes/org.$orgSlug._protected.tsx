@@ -19,6 +19,8 @@ import {
 
 // NO clientLoader exported here to prevent blocking!
 
+const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
+
 export default function AuthenticatedLayout() {
   const { data: me, isLoading } = useGetMeQuery();
   const { data: onboardingStatus } = useGetOnboardingStatusQuery();
@@ -27,11 +29,25 @@ export default function AuthenticatedLayout() {
   const params = useParams();
   const authService = AuthService.getInstance();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   const handleToggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((prev) => !prev);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isSidebarCollapsed));
+    } catch {
+      // Storage unavailable — preference won't persist, but toggle still works
+    }
+  }, [isSidebarCollapsed]);
 
   const sidebarCollapseValue = useMemo(
     () => ({
