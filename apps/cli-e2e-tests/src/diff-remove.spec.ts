@@ -214,7 +214,6 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
               type: ChangeProposalType.removeCommand,
               artefactId: command.id,
               payload: {
-                targetId: rootTarget?.id,
                 packageIds: [pkg.id],
               },
             }),
@@ -344,7 +343,6 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
       expect(changeProposals).toEqual([
         expect.objectContaining({
           payload: {
-            targetId: expect.any(String),
             packageIds: [pkg.id, secondPackageId],
           },
         }),
