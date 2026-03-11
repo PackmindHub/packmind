@@ -12,10 +12,21 @@ export function ProposalLabel({
   proposalType,
 }: Readonly<ProposalLabelProps>) {
   const fieldLabel = getChangeProposalFieldLabel(proposalType);
+  const isRemoval =
+    proposalType === ChangeProposalType.removeStandard ||
+    proposalType === ChangeProposalType.removeCommand ||
+    proposalType === ChangeProposalType.removeSkill;
 
   return (
     <PMText fontWeight="medium" fontSize="sm">
-      #{proposalNumber} &mdash; {fieldLabel}
+      #{proposalNumber} &mdash;{' '}
+      {isRemoval ? (
+        <PMText as="span" color="error">
+          {fieldLabel}
+        </PMText>
+      ) : (
+        fieldLabel
+      )}
     </PMText>
   );
 }

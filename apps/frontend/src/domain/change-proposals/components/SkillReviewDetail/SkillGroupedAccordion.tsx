@@ -8,7 +8,10 @@ import {
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
-import { groupSkillProposalsByFile } from '../../utils/groupSkillProposalsByFile';
+import {
+  groupSkillProposalsByFile,
+  REMOVAL_GROUP_PATH,
+} from '../../utils/groupSkillProposalsByFile';
 import { ChangesSummaryBar } from '../shared/ChangesSummaryBar';
 import { ChangeProposalCard } from '../shared/ChangeProposalCard';
 import { ReviewedSectionDivider } from '../shared/ReviewedSectionDivider';
@@ -245,11 +248,13 @@ export function SkillGroupedAccordion({
           <PMVStack gap={5} width="full">
             {pendingFileGroups.map((group) => (
               <PMVStack key={group.filePath} gap={3} width="full">
-                <FileGroupHeader
-                  filePath={group.filePath}
-                  changeCount={group.changeCount}
-                  pendingCount={group.pendingCount}
-                />
+                {group.filePath !== REMOVAL_GROUP_PATH && (
+                  <FileGroupHeader
+                    filePath={group.filePath}
+                    changeCount={group.changeCount}
+                    pendingCount={group.pendingCount}
+                  />
+                )}
                 {group.proposals.map(renderCard)}
               </PMVStack>
             ))}
@@ -262,11 +267,13 @@ export function SkillGroupedAccordion({
                     gap={3}
                     width="full"
                   >
-                    <FileGroupHeader
-                      filePath={group.filePath}
-                      changeCount={group.proposals.length}
-                      pendingCount={0}
-                    />
+                    {group.filePath !== REMOVAL_GROUP_PATH && (
+                      <FileGroupHeader
+                        filePath={group.filePath}
+                        changeCount={group.proposals.length}
+                        pendingCount={0}
+                      />
+                    )}
                     {group.proposals.map(renderCard)}
                   </PMVStack>
                 ))}

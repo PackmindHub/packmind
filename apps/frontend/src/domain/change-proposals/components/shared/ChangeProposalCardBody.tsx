@@ -1,5 +1,6 @@
 import { ReactNode, useCallback } from 'react';
-import { PMSeparator, PMText, PMVStack } from '@packmind/ui';
+import { PMBadge, PMHStack, PMSeparator, PMText, PMVStack } from '@packmind/ui';
+import { LuFolder, LuGitBranch, LuPackage } from 'react-icons/lu';
 import {
   ChangeProposalDecision,
   ChangeProposalType,
@@ -8,7 +9,6 @@ import {
   RemoveArtefactPayload,
   SpaceId,
   TargetId,
-  getItemTypeFromChangeProposalType,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
@@ -46,15 +46,15 @@ interface ChangeProposalCardBodyProps {
 }
 
 function RemoveProposalContent({
-  proposalType,
   spaceId,
   targetId,
+  packageIds,
   poolStatus,
   decision,
 }: {
-  proposalType: ChangeProposalType;
   spaceId: SpaceId;
-  targetId: TargetId;
+  targetId: TargetId | undefined;
+  packageIds: PackageId[];
   poolStatus: PoolStatus;
   decision: RemoveArtefactDecision | null;
 }) {
@@ -65,38 +65,74 @@ function RemoveProposalContent({
   );
   const { data: targets } = useGetTargetsByOrganizationQuery();
 
-  const itemType = getItemTypeFromChangeProposalType(proposalType);
-  const artefactLabel = itemType.charAt(0).toUpperCase() + itemType.slice(1);
-
   const packageMap = new Map<PackageId, string>(
     packagesResponse?.packages?.map((pkg) => [pkg.id, pkg.name]) ?? [],
   );
 
-  const target = targets?.find((t) => t.id === targetId);
-  const targetPathLabel =
-    target && target.path !== '/' ? ` in folder ${target.path}` : '';
+  const target = targetId ? targets?.find((t) => t.id === targetId) : undefined;
   const repoLabel = target
-    ? `${target.repository.owner}/${target.repository.repo}${targetPathLabel}`
+    ? `${target.repository.owner}/${target.repository.repo}`
     : null;
+  const targetPath = target && target.path !== '/' ? target.path : null;
 
   const removedPackageIds =
     poolStatus === 'accepted' && decision && !decision.delete
       ? decision.removeFromPackages
       : [];
 
+  const distributedPackages = packageIds
+    .map((id) => ({ id, name: packageMap.get(id) ?? id }))
+    .filter((pkg) => pkg.name);
+
   return (
-    <PMVStack align="flex-start" gap={3}>
-      <PMText fontSize="sm" color="secondary">
-        {artefactLabel} has been removed from repository
-        {repoLabel ? ` ${repoLabel}` : ''}
-      </PMText>
-      {removedPackageIds.length > 0 && (
+    <PMVStack align="stretch" gap={4}>
+      <PMHStack gap={2} alignItems="center" flexWrap="wrap">
         <PMText fontSize="sm" color="secondary">
-          {artefactLabel} will be removed from the following packages:{' '}
-          {removedPackageIds
-            .map((packageId) => packageMap.get(packageId) ?? packageId)
-            .join(', ')}
+          Removed from repository
         </PMText>
+        {repoLabel && (
+          <PMBadge size="sm">
+            <LuGitBranch />
+            {repoLabel}
+          </PMBadge>
+        )}
+        {targetPath && (
+          <>
+            <PMText fontSize="sm" color="secondary">
+              in
+            </PMText>
+            <PMBadge size="sm" colorPalette="gray">
+              <LuFolder />
+              {targetPath}
+            </PMBadge>
+          </>
+        )}
+      </PMHStack>
+
+      {removedPackageIds.length > 0 ? (
+        <PMHStack gap={2} alignItems="center" flexWrap="wrap">
+          <PMText fontSize="sm" color="secondary">
+            Will be removed from packages
+          </PMText>
+          {removedPackageIds.map((id) => (
+            <PMBadge key={id} size="sm" colorPalette="red">
+              <LuPackage />
+              {packageMap.get(id) ?? id}
+            </PMBadge>
+          ))}
+        </PMHStack>
+      ) : (
+        <PMHStack gap={2} alignItems="center" flexWrap="wrap">
+          <PMText fontSize="sm" color="secondary">
+            Distributed in
+          </PMText>
+          {distributedPackages.map((pkg) => (
+            <PMBadge key={pkg.id} size="sm" colorPalette="gray">
+              <LuPackage />
+              {pkg.name}
+            </PMBadge>
+          ))}
+        </PMHStack>
       )}
     </PMVStack>
   );
@@ -181,9 +217,9 @@ export function ChangeProposalCardBody({
       <PMVStack p={4} alignItems="stretch">
         {isRemoveType ? (
           <RemoveProposalContent
-            proposalType={proposal.type}
             spaceId={proposal.spaceId}
-            targetId={removePayload.targetId}
+            targetId={proposal.targetId}
+            packageIds={packageIds}
             poolStatus={poolStatus}
             decision={removeDecision}
           />

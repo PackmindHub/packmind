@@ -3,7 +3,7 @@ import { Rule } from '../standards/Rule';
 import { SkillFileId } from '../skills/SkillFileId';
 import { SkillFile } from '../skills/SkillFile';
 import { ChangeProposalType } from './ChangeProposalType';
-import { PackageId, TargetId } from '../deployments';
+import { PackageId } from '../deployments';
 
 export type ScalarUpdatePayload = {
   oldValue: string;
@@ -70,7 +70,6 @@ export type SkillChangeProposalPayloadMap = {
  * Note: the `delete` and `removeFromPackages` fields are there to store the user decision when applying the changeProposal.
  * */
 export type RemoveArtefactPayload = {
-  targetId: TargetId;
   packageIds: PackageId[];
 };
 
