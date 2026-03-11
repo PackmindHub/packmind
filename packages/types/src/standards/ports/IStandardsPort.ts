@@ -38,6 +38,7 @@ export interface IStandardsPort {
   getRule(id: RuleId): Promise<Rule | null>;
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]>;
   getRulesByStandardId(id: StandardId): Promise<Rule[]>;
+  getRulesByVersionId(versionId: StandardVersionId): Promise<Rule[]>;
   listStandardsBySpace(
     spaceId: SpaceId,
     organizationId: OrganizationId,

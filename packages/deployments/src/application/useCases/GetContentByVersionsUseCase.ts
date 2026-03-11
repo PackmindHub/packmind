@@ -173,7 +173,9 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
           });
           return null;
         }
-        const rules = await this.standardsPort.getRulesByStandardId(standardId);
+        const rules = await this.standardsPort.getRulesByVersionId(
+          matchingVersion.id,
+        );
         return { ...matchingVersion, rules };
       }),
     );

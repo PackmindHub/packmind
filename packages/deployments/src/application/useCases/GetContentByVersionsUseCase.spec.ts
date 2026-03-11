@@ -83,7 +83,7 @@ describe('GetContentByVersionsUseCase', () => {
 
     standardsPort = {
       getStandardVersionByNumber: jest.fn().mockResolvedValue(null),
-      getRulesByStandardId: jest.fn().mockResolvedValue([]),
+      getRulesByVersionId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     recipesPort = {
@@ -305,11 +305,11 @@ describe('GetContentByVersionsUseCase', () => {
       );
     });
 
-    it('fetches rules for each matched standard', async () => {
+    it('fetches rules for each matched standard version', async () => {
       await useCase.execute(command);
 
-      expect(standardsPort.getRulesByStandardId).toHaveBeenCalledWith(
-        standardId,
+      expect(standardsPort.getRulesByVersionId).toHaveBeenCalledWith(
+        standardVersion.id,
       );
     });
 

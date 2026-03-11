@@ -101,9 +101,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     // Step 5: Fetch rules for each standard version
     const standardVersionsWithRules = await Promise.all(
       standardVersions.map(async (sv) => {
-        const rules = await this.standardsPort.getRulesByStandardId(
-          sv.standardId,
-        );
+        const rules = await this.standardsPort.getRulesByVersionId(sv.id);
         return { ...sv, rules };
       }),
     );

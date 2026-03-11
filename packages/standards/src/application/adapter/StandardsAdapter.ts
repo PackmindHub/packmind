@@ -366,6 +366,12 @@ export class StandardsAdapter
     return this._getRulesByStandardId.getRulesByStandardId(id);
   }
 
+  getRulesByVersionId(versionId: StandardVersionId): Promise<Rule[]> {
+    return this.services
+      .getStandardVersionService()
+      .getRulesByVersionId(versionId);
+  }
+
   getRule(id: RuleId): Promise<Rule | null> {
     return this.repositories.getRuleRepository().findById(id);
   }

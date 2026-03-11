@@ -105,7 +105,7 @@ describe('GetDeployedContentUseCase', () => {
     } as unknown as jest.Mocked<ISkillsPort>;
 
     standardsPort = {
-      getRulesByStandardId: jest.fn().mockResolvedValue([]),
+      getRulesByVersionId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     accountsPort = {
@@ -349,8 +349,8 @@ describe('GetDeployedContentUseCase', () => {
     it('fetches rules for each standard version', async () => {
       await useCase.execute(command);
 
-      expect(standardsPort.getRulesByStandardId).toHaveBeenCalledWith(
-        standardVersion.standardId,
+      expect(standardsPort.getRulesByVersionId).toHaveBeenCalledWith(
+        standardVersion.id,
       );
     });
 
