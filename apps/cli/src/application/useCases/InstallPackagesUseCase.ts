@@ -185,8 +185,10 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         continue;
       }
 
-      if (!artifacts[file.artifactSlug]) {
-        artifacts[file.artifactSlug] = {
+      const artifactKey = `${file.artifactType}:${file.artifactSlug}`;
+
+      if (!artifacts[artifactKey]) {
+        artifacts[artifactKey] = {
           type: file.artifactType,
           name: file.artifactName,
           id: file.artifactId,
@@ -201,7 +203,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       if (resolved) {
         const isSkillDefinition =
           resolved.artifactType === 'skill' && !file.skillFileId;
-        artifacts[file.artifactSlug].files.push({
+        artifacts[artifactKey].files.push({
           path: file.path,
           agent: resolved.codingAgent,
           ...(isSkillDefinition ? { isSkillDefinition: true } : {}),

@@ -1504,7 +1504,7 @@ Old packmind content
           installedAt: expect.any(String),
           cliVersion: 'unknown',
           artifacts: {
-            'coding-style': {
+            'standard:coding-style': {
               type: 'standard',
               name: 'Coding Style',
               id: 'artifact-1',
@@ -1518,7 +1518,7 @@ Old packmind content
                 },
               ],
             },
-            'setup-lint': {
+            'command:setup-lint': {
               type: 'command',
               name: 'Setup Lint',
               id: 'artifact-2',
@@ -1573,12 +1573,93 @@ Old packmind content
           '/test',
           expect.objectContaining({
             artifacts: {
-              'coding-style': expect.objectContaining({
+              'standard:coding-style': expect.objectContaining({
                 packageIds: ['pkg-aaa', 'pkg-bbb'],
               }),
             },
           }),
         );
+      });
+    });
+
+    describe('when two artifacts share the same slug but different types', () => {
+      beforeEach(async () => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/error-handling.md',
+                content: '# Error Handling Standard',
+                artifactType: 'standard',
+                artifactName: 'Error Handling',
+                artifactSlug: 'error-handling',
+                artifactId: 'std-1',
+                artifactVersion: 2,
+                spaceId: 'space-1',
+              },
+              {
+                path: '.packmind/commands/error-handling.md',
+                content: '# Error Handling Command',
+                artifactType: 'command',
+                artifactName: 'Error Handling',
+                artifactSlug: 'error-handling',
+                artifactId: 'cmd-1',
+                artifactVersion: 1,
+                spaceId: 'space-1',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+          agents: ['packmind'],
+        });
+      });
+
+      it('produces two separate entries in the artifacts map', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith('/test', {
+          lockfileVersion: 1,
+          packageSlugs: ['test-package'],
+          agents: ['packmind'],
+          installedAt: expect.any(String),
+          cliVersion: 'unknown',
+          artifacts: {
+            'standard:error-handling': {
+              type: 'standard',
+              name: 'Error Handling',
+              id: 'std-1',
+              version: 2,
+              spaceId: 'space-1',
+              packageIds: [],
+              files: [
+                {
+                  path: '.packmind/standards/error-handling.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+            'command:error-handling': {
+              type: 'command',
+              name: 'Error Handling',
+              id: 'cmd-1',
+              version: 1,
+              spaceId: 'space-1',
+              packageIds: [],
+              files: [
+                {
+                  path: '.packmind/commands/error-handling.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
       });
     });
 
@@ -1630,7 +1711,7 @@ Old packmind content
           installedAt: expect.any(String),
           cliVersion: 'unknown',
           artifacts: {
-            'coding-style': {
+            'standard:coding-style': {
               type: 'standard',
               name: 'Coding Style',
               id: 'artifact-1',
@@ -1734,7 +1815,7 @@ Old packmind content
           installedAt: expect.any(String),
           cliVersion: 'unknown',
           artifacts: {
-            complete: {
+            'standard:complete': {
               type: 'standard',
               name: 'Complete Standard',
               id: 'artifact-1',
@@ -1962,7 +2043,7 @@ Old packmind content
           '/test',
           expect.objectContaining({
             artifacts: {
-              'my-skill': expect.objectContaining({
+              'skill:my-skill': expect.objectContaining({
                 files: [
                   {
                     path: '.claude/skills/my-skill/SKILL.md',

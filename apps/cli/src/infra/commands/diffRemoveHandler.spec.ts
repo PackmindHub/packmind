@@ -747,7 +747,7 @@ describe('diffRemoveHandler', () => {
       cliVersion: '1.0.0',
       targetId: 'target-lock-123',
       artifacts: {
-        'my-standard': {
+        'standard:my-standard': {
           name: 'My Standard',
           type: 'standard',
           id: 'standard-lock-456',
@@ -809,8 +809,8 @@ describe('diffRemoveHandler', () => {
         const lockFileEmptyPackageIds: PackmindLockFile = {
           ...lockFileWithPackageIds,
           artifacts: {
-            'my-standard': {
-              ...lockFileWithPackageIds.artifacts['my-standard'],
+            'standard:my-standard': {
+              ...lockFileWithPackageIds.artifacts['standard:my-standard'],
               packageIds: [],
             },
           },
@@ -846,7 +846,7 @@ describe('diffRemoveHandler', () => {
         const lockFileDifferentArtifact: PackmindLockFile = {
           ...lockFileWithPackageIds,
           artifacts: {
-            'other-standard': {
+            'standard:other-standard': {
               name: 'Other Standard',
               type: 'standard',
               id: 'std-other',
@@ -889,8 +889,8 @@ describe('diffRemoveHandler', () => {
         const lockFileWrongType: PackmindLockFile = {
           ...lockFileWithPackageIds,
           artifacts: {
-            'my-standard': {
-              ...lockFileWithPackageIds.artifacts['my-standard'],
+            'command:my-standard': {
+              ...lockFileWithPackageIds.artifacts['standard:my-standard'],
               type: 'command',
             },
           },

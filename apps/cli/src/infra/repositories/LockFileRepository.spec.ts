@@ -28,7 +28,7 @@ describe('LockFileRepository', () => {
         installedAt: '2026-01-01T00:00:00.000Z',
         cliVersion: '1.0.0',
         artifacts: {
-          'my-standard': {
+          'standard:my-standard': {
             name: 'My Standard',
             type: 'standard',
             id: 'std-123',
@@ -39,7 +39,7 @@ describe('LockFileRepository', () => {
               { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
             ],
           },
-          'my-command': {
+          'command:my-command': {
             name: 'My Command',
             type: 'command',
             id: 'cmd-456',
@@ -50,7 +50,7 @@ describe('LockFileRepository', () => {
               { path: '.packmind/commands/my-command.md', agent: 'packmind' },
             ],
           },
-          'my-skill': {
+          'skill:my-skill': {
             name: 'My Skill',
             type: 'skill',
             id: 'skl-789',
@@ -218,7 +218,7 @@ describe('LockFileRepository', () => {
       installedAt: '2026-01-01T00:00:00.000Z',
       cliVersion: '1.0.0',
       artifacts: {
-        'my-standard': {
+        'standard:my-standard': {
           name: 'My Standard',
           type: 'standard',
           id: 'std-123',
