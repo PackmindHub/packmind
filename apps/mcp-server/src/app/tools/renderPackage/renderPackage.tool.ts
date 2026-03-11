@@ -15,7 +15,7 @@ export function registerRenderPackageTool(
     {
       title: 'Render Package',
       description:
-        'Render a Packmind package as file updates for the agent to apply. This tool is called after install_package when packmind-cli is not available.',
+        'Render a Packmind package as file updates for the agent to apply. This tool is called after install_package when packmind is not available.',
       inputSchema: {
         packageSlug: z
           .string()
