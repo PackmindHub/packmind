@@ -100,9 +100,9 @@ jobs:
           path: ./cli-binary
 
       - name: Make binary executable
-        run: chmod +x ./cli-binary/packmind-cli-linux-x64
+        run: chmod +x ./cli-binary/packmind-linux-x64
 
       - name: Run Packmind CLI V3
-        run: ./cli-binary/packmind-cli-linux-x64 lint .
+        run: ./cli-binary/packmind-linux-x64 lint .
         env:
           PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
