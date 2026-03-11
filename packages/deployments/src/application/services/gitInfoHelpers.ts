@@ -84,9 +84,7 @@ export function generateTargetName(relativePath: string): string {
   }
 
   // Remove leading/trailing slashes, replace internal slashes with hyphens, and slugify
-  const cleanPath = relativePath
-    .replace(/(^\/+)|(\/+$)/g, '')
-    .replace(/\//g, '-');
+  const cleanPath = relativePath.split('/').filter(Boolean).join('-');
   return slug(cleanPath, { lower: true });
 }
 
