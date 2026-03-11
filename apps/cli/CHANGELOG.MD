@@ -8,6 +8,7 @@
 
 - Fix incorrect `packageIds` payload when removing an artifact with `diff remove <path-to-artifact>
 - Fix wrong lookup when trying to remove an artefact with `diff remove` inside a repository.
+- Track information related to the repo and target when submitting new change proposals.
 
 ## Removed
 
