@@ -2368,7 +2368,7 @@ describe('DiffArtefactsUseCase', () => {
         ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
-        agents: ['claude-code', 'cursor'],
+        agents: ['claude', 'cursor'],
       });
 
       expect(mockGetContentByVersions).toHaveBeenCalledWith({
@@ -2416,6 +2416,49 @@ describe('DiffArtefactsUseCase', () => {
           artifactId: 'artifact-lock-2',
           spaceId: 'space-lock-2',
         },
+      ]);
+    });
+
+    it('includes targetId from lock file in diff results', async () => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['test-package'],
+        agents: ['packmind'],
+        installedAt: '2026-01-01T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'my-target-id',
+        artifacts: lockFileArtifacts,
+      });
+
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/my-command.md',
+              content: 'Server content from lock',
+              artifactType: 'command',
+              artifactName: 'My Command',
+              artifactId: 'artifact-lock-2',
+              spaceId: 'space-lock-2',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('Local content');
+
+      const result = await useCase.execute({
+        ...defaultGitInfo,
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          targetId: 'my-target-id',
+        }),
       ]);
     });
 
