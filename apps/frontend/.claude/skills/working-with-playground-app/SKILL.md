@@ -9,6 +9,74 @@ description: 'This skill provides guidance for building UI/UX prototypes in the 
 
 The playground app (`apps/playground/`) is a standalone Vite + React environment for iterating on UI/UX of Packmind features — both new and existing. Prototypes built here are meant to be easily convertible into production-ready code.
 
+## UX Design Thinking
+
+Before writing any code, think like a UX designer. The playground exists to explore how a feature *feels* to use — not just how it looks. Apply these principles to every prototype:
+
+### Design All States First
+
+Never prototype only the happy path. Before building, identify and plan for every state the user might encounter:
+
+- **Empty state** — What does the user see before any data exists? Guide them toward the first action.
+- **Loading state** — What appears while data is being fetched? Use skeletons or spinners to set expectations.
+- **Populated state** — The standard view with data. Test with both minimal and full datasets.
+- **Error state** — What happens when something fails? Show a clear message and a recovery path.
+- **Edge cases** — What about a single item? Hundreds? An extremely long name that might overflow?
+
+Prototype each state explicitly — use local state toggles or tabs to let reviewers switch between them.
+
+### Use Realistic, Varied Data
+
+Mock data should stress-test the design, not just fill space:
+
+- Include **long names** that could wrap or overflow, **short names** that could look sparse, and **special characters**.
+- Vary counts: 0 items, 1 item, a handful, and many (50+). Layouts that work for 5 items often break at 50.
+- Include **missing optional fields** — not every record will be complete.
+- Use **recognizable but realistic** content so reviewers can evaluate readability, not just layout.
+
+### Design for Interaction
+
+Prototypes should be clickable and stateful, not static mockups:
+
+- Wire up buttons, toggles, and form inputs with local state so reviewers experience the flow.
+- Simulate async operations (e.g., a brief delay before showing a success toast) to prototype timing and feedback.
+- Show what happens *after* an action — does a list update? Does a confirmation appear? Does the user navigate somewhere?
+
+### Establish Visual Hierarchy
+
+Guide the user's eye to what matters most:
+
+- **One primary action per view.** If everything is bold, nothing is. Use a primary button for the main action, secondary/ghost for the rest.
+- **Group related information** with spacing and borders, not just proximity.
+- **Size and weight signal importance.** Headings, subheadings, and body text should create a clear reading order.
+- **Use whitespace deliberately** — it separates sections and reduces cognitive load.
+
+### Make Affordance Obvious
+
+Users should understand what they can do without instructions:
+
+- **Clickable elements should look clickable.** Buttons look like buttons, links look like links.
+- **Destructive actions should look dangerous** — use red/warning styling and require confirmation.
+- **Disabled states should be visually distinct** and ideally explain *why* they're disabled (tooltip or helper text).
+- **Feedback should be immediate** — hover states, active states, and loading indicators tell the user the system responded.
+
+### Manage Information Density
+
+Show enough to be useful, hide enough to avoid overwhelm:
+
+- **Lead with a summary, offer detail on demand.** Use accordions, expandable rows, or drill-down views for secondary information.
+- **Don't front-load every field.** Tables and lists should show the most important 3–5 columns; offer a detail view for the rest.
+- **Use progressive disclosure** — reveal complexity as the user engages deeper (overview → detail → advanced settings).
+
+### Stay Consistent With the Product
+
+Before designing something new, check how the existing product handles similar patterns:
+
+- **Browse `apps/frontend/src/domain/`** for existing feature implementations. If a similar interaction exists, match its layout and behavior before inventing alternatives.
+- **Reuse established patterns** — if the product uses a sidebar + main content layout for listings, don't prototype a card grid for the same type of data without good reason.
+- **Follow the same information architecture** — similar actions in the same position, similar data in the same format.
+- When diverging from existing patterns, call it out explicitly so reviewers can evaluate the change intentionally.
+
 ## Running the Playground
 
 To start the playground dev server:
