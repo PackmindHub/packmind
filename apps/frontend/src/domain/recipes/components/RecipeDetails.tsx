@@ -46,6 +46,7 @@ import { ProposeChangeModal } from './ProposeChangeModal';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
 import { RecipeVersionHistoryHeader } from './RecipeVersionHistoryHeader';
 import { useListChangeProposalsByRecipeQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
+import { stripFrontmatter } from '../../change-proposals/utils/stripFrontmatter';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -283,7 +284,10 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                     width={{ '2xl': '4xl', smToXl: 'full' }}
                   >
                     <MarkdownEditorProvider>
-                      <MarkdownEditor defaultValue={recipe.content} readOnly />
+                      <MarkdownEditor
+                        defaultValue={stripFrontmatter(recipe.content)}
+                        readOnly
+                      />
                     </MarkdownEditorProvider>
                   </PMBox>
                 </>
