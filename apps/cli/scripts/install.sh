@@ -13,8 +13,6 @@ set -eu
 # Configuration
 REPO="PackmindHub/packmind"
 BINARY_NAME="packmind"
-# Temporary: release assets still use the old name until the release workflow is updated
-DOWNLOAD_BINARY_NAME="packmind-cli"
 DEFAULT_INSTALL_DIR="$HOME/.packmind/bin"
 DEFAULT_HOST="https://app.packmind.ai"
 
@@ -175,13 +173,13 @@ download_binary() {
     TEMP_DIR=$(mktemp -d)
     trap 'rm -rf "$TEMP_DIR"' EXIT
 
-    # Construct filename based on platform (uses DOWNLOAD_BINARY_NAME for release asset compatibility)
+    # Construct filename based on platform
     case "$PLATFORM" in
         windows-*)
-            filename="${DOWNLOAD_BINARY_NAME}-${PLATFORM}-${VERSION}.exe"
+            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}.exe"
             ;;
         *)
-            filename="${DOWNLOAD_BINARY_NAME}-${PLATFORM}-${VERSION}"
+            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}"
             ;;
     esac
 
