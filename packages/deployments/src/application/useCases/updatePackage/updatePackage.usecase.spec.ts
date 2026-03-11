@@ -25,6 +25,7 @@ import {
   Package,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
@@ -40,6 +41,7 @@ describe('UpdatePackageUsecase', () => {
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
@@ -168,6 +170,11 @@ describe('UpdatePackageUsecase', () => {
       findSkillBySlug: jest.fn(),
     } as unknown as jest.Mocked<ISkillsPort>;
 
+    mockEventEmitterService = {
+      emit: jest.fn(),
+      on: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     stubbedLogger = stubLogger();
 
     useCase = new UpdatePackageUsecase(
@@ -177,6 +184,7 @@ describe('UpdatePackageUsecase', () => {
       mockRecipesPort,
       mockStandardsPort,
       mockSkillsPort,
+      mockEventEmitterService,
       stubbedLogger,
     );
   });
@@ -592,6 +600,329 @@ describe('UpdatePackageUsecase', () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           'Database connection failed',
         );
+      });
+    });
+
+    describe('when a standard is removed and is in no other package', () => {
+      it('emits ArtefactRemovedFromPackageEvent with remainingPackagesCount=0', async () => {
+        const existingPackage = buildExistingPackage(packageId, spaceId);
+        existingPackage.standards = [standardId1];
+        const mockSpace = buildSpace();
+
+        mockPackageService.findById.mockResolvedValue(existingPackage);
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+
+        const updatedPackage = packageFactory({
+          id: packageId,
+          name: 'Updated Package',
+          slug: 'updated-package',
+          description: 'Updated description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [],
+        });
+        mockPackageService.updatePackage.mockResolvedValue(updatedPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          updatedPackage,
+        ]);
+
+        const command: UpdatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          name: 'Updated Package',
+          description: 'Updated description',
+          recipeIds: [],
+          standardIds: [],
+          skillsIds: [],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              artefactId: String(standardId1),
+              spaceId,
+              packageId,
+              remainingPackagesCount: 0,
+              userId,
+              organizationId,
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('when a standard is removed and another package still has it', () => {
+      it('emits ArtefactRemovedFromPackageEvent with remainingPackagesCount=1', async () => {
+        const otherPackageId = createPackageId(uuidv4());
+        const existingPackage = buildExistingPackage(packageId, spaceId);
+        existingPackage.standards = [standardId1];
+        const mockSpace = buildSpace();
+
+        mockPackageService.findById.mockResolvedValue(existingPackage);
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+
+        const updatedPackage = packageFactory({
+          id: packageId,
+          name: 'Updated Package',
+          slug: 'updated-package',
+          description: 'Updated description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [],
+        });
+
+        const otherPackage = packageFactory({
+          id: otherPackageId,
+          name: 'Other Package',
+          slug: 'other-package',
+          description: 'Other description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [standardId1],
+          skills: [],
+        });
+
+        mockPackageService.updatePackage.mockResolvedValue(updatedPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          updatedPackage,
+          otherPackage,
+        ]);
+
+        const command: UpdatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          name: 'Updated Package',
+          description: 'Updated description',
+          recipeIds: [],
+          standardIds: [],
+          skillsIds: [],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              artefactId: String(standardId1),
+              remainingPackagesCount: 1,
+              userId,
+              organizationId,
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('when a standard is kept in the new list', () => {
+      it('does not emit ArtefactRemovedFromPackageEvent for the kept standard', async () => {
+        const existingPackage = buildExistingPackage(packageId, spaceId);
+        existingPackage.standards = [standardId1];
+        const mockSpace = buildSpace();
+        const mockStandard = buildStandard(standardId1, spaceId);
+
+        mockPackageService.findById.mockResolvedValue(existingPackage);
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+        mockStandardsPort.getStandard.mockResolvedValue(mockStandard);
+
+        const updatedPackage = packageFactory({
+          id: packageId,
+          name: 'Updated Package',
+          slug: 'updated-package',
+          description: 'Updated description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [standardId1],
+          skills: [],
+        });
+        mockPackageService.updatePackage.mockResolvedValue(updatedPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          updatedPackage,
+        ]);
+
+        const command: UpdatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          name: 'Updated Package',
+          description: 'Updated description',
+          recipeIds: [],
+          standardIds: [standardId1],
+          skillsIds: [],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a recipe is removed from the package', () => {
+      it('emits ArtefactRemovedFromPackageEvent for the removed recipe', async () => {
+        const existingPackage = buildExistingPackage(packageId, spaceId);
+        existingPackage.recipes = [recipeId1];
+        const mockSpace = buildSpace();
+
+        mockPackageService.findById.mockResolvedValue(existingPackage);
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+
+        const updatedPackage = packageFactory({
+          id: packageId,
+          name: 'Updated Package',
+          slug: 'updated-package',
+          description: 'Updated description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [],
+        });
+        mockPackageService.updatePackage.mockResolvedValue(updatedPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          updatedPackage,
+        ]);
+
+        const command: UpdatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          name: 'Updated Package',
+          description: 'Updated description',
+          recipeIds: [],
+          standardIds: [],
+          skillsIds: [],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              artefactId: String(recipeId1),
+              spaceId,
+              packageId,
+              remainingPackagesCount: 0,
+              userId,
+              organizationId,
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('when a skill is removed from the package', () => {
+      it('emits ArtefactRemovedFromPackageEvent for the removed skill', async () => {
+        const existingPackage = buildExistingPackage(packageId, spaceId);
+        existingPackage.skills = [skillId1];
+        const mockSpace = buildSpace();
+
+        mockPackageService.findById.mockResolvedValue(existingPackage);
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+
+        const updatedPackage = packageFactory({
+          id: packageId,
+          name: 'Updated Package',
+          slug: 'updated-package',
+          description: 'Updated description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [],
+        });
+        mockPackageService.updatePackage.mockResolvedValue(updatedPackage);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          updatedPackage,
+        ]);
+
+        const command: UpdatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          name: 'Updated Package',
+          description: 'Updated description',
+          recipeIds: [],
+          standardIds: [],
+          skillsIds: [],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              artefactId: String(skillId1),
+              spaceId,
+              packageId,
+              remainingPackagesCount: 0,
+              userId,
+              organizationId,
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('when no artefacts are removed', () => {
+      beforeEach(async () => {
+        const existingPackage = buildExistingPackage(packageId, spaceId);
+        const mockSpace = buildSpace();
+
+        mockPackageService.findById.mockResolvedValue(existingPackage);
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+
+        const updatedPackage = packageFactory({
+          id: packageId,
+          name: 'Updated Package',
+          slug: 'updated-package',
+          description: 'Updated description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+          skills: [],
+        });
+        mockPackageService.updatePackage.mockResolvedValue(updatedPackage);
+
+        const command: UpdatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          name: 'Updated Package',
+          description: 'Updated description',
+          recipeIds: [],
+          standardIds: [],
+          skillsIds: [],
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('does not emit any event', () => {
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+      });
+
+      it('does not query packages by space', () => {
+        expect(mockPackageService.getPackagesBySpaceId).not.toHaveBeenCalled();
       });
     });
   });

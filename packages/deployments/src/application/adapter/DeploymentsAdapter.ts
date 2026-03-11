@@ -431,6 +431,7 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
+      ports.eventEmitterService,
     );
 
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(
