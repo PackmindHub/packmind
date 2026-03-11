@@ -15,6 +15,7 @@ import {
   ISkillsPort,
   ArtefactRemovedFromPackageEvent,
   createUserId,
+  createOrganizationId,
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
@@ -133,11 +134,6 @@ export class UpdatePackageUsecase
       }
     }
 
-    // Load current package state before update to detect removed artefacts
-    const currentPackage = await this.services
-      .getPackageService()
-      .findById(packageId);
-
     // Update package using the service
     const updatedPackage = await this.services
       .getPackageService()
@@ -159,13 +155,13 @@ export class UpdatePackageUsecase
     });
 
     // Compute removed artefacts and emit events
-    const removedStandards = (currentPackage?.standards ?? []).filter(
+    const removedStandards = (existingPackage.standards ?? []).filter(
       (id) => !standardIds.includes(id),
     );
-    const removedRecipes = (currentPackage?.recipes ?? []).filter(
+    const removedRecipes = (existingPackage.recipes ?? []).filter(
       (id) => !recipeIds.includes(id),
     );
-    const removedSkills = (currentPackage?.skills ?? []).filter(
+    const removedSkills = (existingPackage.skills ?? []).filter(
       (id) => !skillsIds.includes(id),
     );
 
@@ -196,7 +192,7 @@ export class UpdatePackageUsecase
             packageId: command.packageId,
             remainingPackagesCount,
             userId: createUserId(command.userId),
-            organizationId: command.organizationId,
+            organizationId: createOrganizationId(command.organizationId),
             source: command.source ?? 'ui',
           }),
         );
