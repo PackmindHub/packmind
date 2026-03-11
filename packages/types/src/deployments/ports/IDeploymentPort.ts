@@ -30,6 +30,8 @@ import {
   GetStandardDeploymentOverviewCommand,
   GetSkillDeploymentOverviewCommand,
   GetTargetsByGitRepoCommand,
+  GetTargetByIdCommand,
+  GetTargetByIdResponse,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
   IPullContentResponse,
@@ -246,6 +248,14 @@ export interface IDeploymentPort {
    * @returns Promise of array of targets for the specific repository branch
    */
   getTargetsByGitRepo(command: GetTargetsByGitRepoCommand): Promise<Target[]>;
+
+  /**
+   * Gets a target by its ID
+   *
+   * @param command - Command containing targetId and user/organization context
+   * @returns Promise of the target or null if not found
+   */
+  getTargetById(command: GetTargetByIdCommand): Promise<GetTargetByIdResponse>;
 
   /**
    * Gets all targets for a repository across all branches

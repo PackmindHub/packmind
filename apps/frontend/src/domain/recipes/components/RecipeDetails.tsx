@@ -19,7 +19,6 @@ import {
   PMEmptyState,
   PMFeatureFlag,
   DEFAULT_FEATURE_DOMAIN_MAP,
-  CHANGE_PROPOSALS_FEATURE_KEY,
   ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
   PMLink,
   PMBadge,
@@ -190,32 +189,26 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               </PMCopiable.Trigger>
             </PMTooltip>
           </PMCopiable.Root>
-          <PMFeatureFlag
-            featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={user?.email}
-          >
-            {pendingCount > 0 && (
-              <PMButton
-                variant="tertiary"
-                onClick={() =>
-                  navigate(
-                    routes.space.toReviewChangesArtefact(
-                      orgSlug || '',
-                      spaceSlug || '',
-                      'commands',
-                      recipe.id,
-                    ),
-                  )
-                }
-              >
-                <PMHStack gap={2}>
-                  Changes to review
-                  <PMBadge>{pendingCount}</PMBadge>
-                </PMHStack>
-              </PMButton>
-            )}
-          </PMFeatureFlag>
+          {pendingCount > 0 && (
+            <PMButton
+              variant="tertiary"
+              onClick={() =>
+                navigate(
+                  routes.space.toReviewChangesArtefact(
+                    orgSlug || '',
+                    spaceSlug || '',
+                    'commands',
+                    recipe.id,
+                  ),
+                )
+              }
+            >
+              <PMHStack gap={2}>
+                Changes to review
+                <PMBadge>{pendingCount}</PMBadge>
+              </PMHStack>
+            </PMButton>
+          )}
           <PMButton variant="primary" onClick={handleEditClick}>
             Edit
           </PMButton>

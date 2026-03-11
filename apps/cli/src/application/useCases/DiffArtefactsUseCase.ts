@@ -78,7 +78,7 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
       }
     }
 
-    return diffs;
+    return diffs.map((diff) => ({ ...diff, targetId: response.targetId }));
   }
 
   private async fetchContent(

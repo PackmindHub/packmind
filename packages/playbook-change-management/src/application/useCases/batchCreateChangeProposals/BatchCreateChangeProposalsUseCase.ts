@@ -5,8 +5,11 @@ import {
   BatchCreateChangeProposalsResponse,
   ChangeProposalType,
   CreateChangeProposalCommand,
+  GitRepoId,
   IAccountsPort,
+  IDeploymentPort,
   IPlaybookChangeManagementPort,
+  TargetId,
 } from '@packmind/types';
 
 const origin = 'BatchCreateChangeProposalsUseCase';
@@ -18,6 +21,7 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
   constructor(
     accountsPort: IAccountsPort,
     private readonly playbookChangeManagementPort: IPlaybookChangeManagementPort,
+    private readonly deploymentPort: IDeploymentPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -38,6 +42,22 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
     for (let i = 0; i < command.proposals.length; i++) {
       const proposal = command.proposals[i];
 
+      let targetId: TargetId | undefined;
+      let gitRepoId: GitRepoId | undefined;
+
+      if (proposal.targetId) {
+        const { target } = await this.deploymentPort.getTargetById({
+          userId: command.userId,
+          organizationId: command.organizationId,
+          targetId: proposal.targetId,
+        });
+
+        if (target) {
+          targetId = proposal.targetId;
+          gitRepoId = target.gitRepoId;
+        }
+      }
+
       const itemCommand = {
         userId: command.userId,
         organizationId: command.organizationId,
@@ -47,6 +67,8 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
         payload: proposal.payload,
         captureMode: proposal.captureMode,
         message: proposal.message,
+        targetId,
+        gitRepoId,
       } as CreateChangeProposalCommand<ChangeProposalType>;
 
       try {
