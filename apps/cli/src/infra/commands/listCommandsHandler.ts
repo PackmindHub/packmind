@@ -1,6 +1,16 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { formatSlug, formatLabel, formatHeader } from '../utils/consoleLogger';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+import {
+  formatSlug,
+  formatLabel,
+  formatHeader,
+  logWarningConsole,
+} from '../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
+import {
+  renderArtifactFiles,
+  formatAgentsHeader,
+} from '../utils/renderArtifactFiles';
 
 function buildCommandUrl(
   host: string,
@@ -15,12 +25,23 @@ export type ListCommandsHandlerDependencies = {
   exit: (code: number) => void;
   log: typeof console.log;
   error: typeof console.error;
+  files?: boolean;
+  lockFileRepository?: ILockFileRepository;
+  getCwd?: () => string;
 };
 
 export async function listCommandsHandler(
   deps: ListCommandsHandlerDependencies,
 ): Promise<void> {
-  const { packmindCliHexa, exit, log, error } = deps;
+  const {
+    packmindCliHexa,
+    exit,
+    log,
+    error,
+    files,
+    lockFileRepository,
+    getCwd,
+  } = deps;
 
   try {
     log('Fetching commands...\n');
@@ -35,6 +56,18 @@ export async function listCommandsHandler(
       a.slug.localeCompare(b.slug),
     );
 
+    // Read lock files if --files flag is passed
+    const lockFiles =
+      files && lockFileRepository && getCwd
+        ? await lockFileRepository.readAll(getCwd())
+        : [];
+
+    if (files && lockFiles.length === 0) {
+      logWarningConsole(
+        "No packmind-lock.json found. Run 'packmind install' first.",
+      );
+    }
+
     // Try to build webapp URL from credentials
     let urlBuilder: ((id: string) => string) | null = null;
     const apiKey = loadApiKey();
@@ -46,13 +79,20 @@ export async function listCommandsHandler(
       }
     }
 
-    log(formatHeader(`📋 Commands (${sortedCommands.length})\n`));
+    const agentsHeader =
+      files && lockFiles.length > 0 ? formatAgentsHeader(lockFiles) : '';
+    log(
+      formatHeader(`📋 Commands (${sortedCommands.length})${agentsHeader}\n`),
+    );
+
     sortedCommands.forEach((cmd, index) => {
-      log(`  ${formatSlug(cmd.slug)}`);
-      log(`  ${formatLabel('Name:')}  ${cmd.name}`);
+      log(`  ${formatSlug(cmd.slug)}  ${formatLabel(`"${cmd.name}"`)}`);
       if (urlBuilder) {
         const url = urlBuilder(cmd.id);
         log(`  ${formatLabel('Link:')}  ${url}`);
+      }
+      if (files && lockFiles.length > 0) {
+        renderArtifactFiles(lockFiles, 'command', cmd.slug, log);
       }
       if (index < sortedCommands.length - 1) {
         log('');
