@@ -225,8 +225,8 @@ describe('detectAddSkillFileConflicts', () => {
   });
 
   describe('regression: mismatched payload structures', () => {
-    describe('when compared with removal proposal', () => {
-      it('returns false without crashing', () => {
+    describe('when first proposal is removal type', () => {
+      it('rejects it via type guard and returns false', () => {
         const removalProposal = changeProposalFactory({
           type: ChangeProposalType.removeSkill,
           artefactId: changeProposal.artefactId,
@@ -235,6 +235,28 @@ describe('detectAddSkillFileConflicts', () => {
           },
         });
 
+        // Type guard should reject cp1 that is not addSkillFile
+        expect(
+          detectAddSkillFileConflict(
+            removalProposal as any,
+            changeProposal,
+            diffService,
+          ),
+        ).toEqual(false);
+      });
+    });
+
+    describe('when second proposal is removal type', () => {
+      it('rejects it via type guard and returns false', () => {
+        const removalProposal = changeProposalFactory({
+          type: ChangeProposalType.removeSkill,
+          artefactId: changeProposal.artefactId,
+          payload: {
+            packageIds: [],
+          },
+        });
+
+        // Type guard should reject cp2 that is not addSkillFile
         expect(
           detectAddSkillFileConflict(
             changeProposal,
