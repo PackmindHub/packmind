@@ -283,7 +283,7 @@ jobs:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: 15
     env:
-      PACKMIND_INSTANCE_URL: http://localhost:4200
+      PACKMIND_INSTANCE_URL: http://localhost:4201
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']

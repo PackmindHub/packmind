@@ -5,14 +5,18 @@ import {
   PMVerticalNav,
   PMVerticalNavSection,
   PMVStack,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SKILL_EVALUATION_FEATURE_KEY,
 } from '@packmind/ui';
-import { LuGitCommitVertical } from 'react-icons/lu';
+import { LuClipboardCheck, LuGitCommitVertical } from 'react-icons/lu';
 
 import type { Skill, SkillFile } from '@packmind/types';
 
 import { SkillFileTree } from './SkillFileTree';
 import { SkillDetailsNavEntry } from './SkillDetailsNavEntry';
 import { SkillNavKey } from '../utils/skillNavigation';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 interface ISkillDetailsSidebarProps {
   skill: Skill;
@@ -41,6 +45,14 @@ export const SkillDetailsSidebar = ({
   selectedFilePath,
   onFileSelect,
 }: ISkillDetailsSidebarProps) => {
+  const { user } = useAuthContext();
+
+  const isEvaluationEnabled = isFeatureFlagEnabled({
+    featureKeys: [SKILL_EVALUATION_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
+
   const skillSelectItems = useMemo(
     () =>
       (skills.length > 0 ? skills : [skill]).map((s) => ({
@@ -65,6 +77,8 @@ export const SkillDetailsSidebar = ({
     ? getPathForNavKey('distributions')
     : null;
 
+  const reviewUrl = getPathForNavKey ? getPathForNavKey('review') : null;
+
   const navEntries = [
     <SkillDetailsNavEntry
       key="distributions"
@@ -74,6 +88,18 @@ export const SkillDetailsSidebar = ({
       onSelect={onSectionSelect}
       url={distributionsUrl ?? undefined}
     />,
+    ...(isEvaluationEnabled
+      ? [
+          <SkillDetailsNavEntry
+            key="review"
+            label={{ icon: LuClipboardCheck, text: 'Evaluation', gap: 2 }}
+            value="review"
+            isActive={activeSection === 'review'}
+            onSelect={onSectionSelect}
+            url={reviewUrl ?? undefined}
+          />,
+        ]
+      : []),
   ];
 
   const showFileTree = files && files.length > 0 && onFileSelect;
