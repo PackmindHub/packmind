@@ -1864,14 +1864,15 @@ describe('diffArtefactsHandler', () => {
   });
 
   describe('multi-target support', () => {
+    const diff1 = {
+      filePath: '.packmind/commands/cmd.md',
+      type: ChangeProposalType.updateCommandDescription,
+      payload: { oldValue: 'old', newValue: 'new' },
+      artifactName: 'Frontend Command',
+      artifactType: 'command' as const,
+    };
+
     describe('when multiple targets are found under searchPath', () => {
-      const diff1 = {
-        filePath: '.packmind/commands/cmd.md',
-        type: ChangeProposalType.updateCommandDescription,
-        payload: { oldValue: 'old', newValue: 'new' },
-        artifactName: 'Frontend Command',
-        artifactType: 'command' as const,
-      };
       const diff2 = {
         filePath: '.packmind/commands/cmd.md',
         type: ChangeProposalType.updateCommandDescription,
@@ -1915,13 +1916,6 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('passes correct baseDirectory for backend target', async () => {
-        mockPackmindCliHexa.readFullConfig
-          .mockResolvedValueOnce({ packages: { 'frontend-pkg': '*' } })
-          .mockResolvedValueOnce({ packages: { 'backend-pkg': '*' } });
-        mockPackmindCliHexa.diffArtefacts
-          .mockResolvedValueOnce([diff1])
-          .mockResolvedValueOnce([diff2]);
-
         await diffArtefactsHandler(deps);
 
         expect(mockPackmindCliHexa.diffArtefacts).toHaveBeenCalledWith(
@@ -1967,15 +1961,19 @@ describe('diffArtefactsHandler', () => {
 
         expect(backendPath).toBeDefined();
       });
+    });
 
-      it('shows raw file path without prefix in single-target case', async () => {
+    describe('single-target: no path prefix applied', () => {
+      beforeEach(() => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
         mockPackmindCliHexa.readFullConfig.mockResolvedValue({
           packages: { 'my-pkg': '*' },
         });
         mockPackmindCliHexa.diffArtefacts.mockResolvedValue([diff1]);
+      });
 
+      it('shows raw file path without prefix', async () => {
         await diffArtefactsHandler(deps);
 
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
@@ -1986,14 +1984,7 @@ describe('diffArtefactsHandler', () => {
         expect(rawPath).toBeDefined();
       });
 
-      it('does not add target prefix in single-target case', async () => {
-        mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-pkg': '*' },
-        });
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([diff1]);
-
+      it('does not add target prefix', async () => {
         await diffArtefactsHandler(deps);
 
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
