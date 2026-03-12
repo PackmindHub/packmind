@@ -8,6 +8,7 @@ import {
   getErrorMessage,
 } from '@packmind/node-utils';
 import {
+  SpaceId,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -121,16 +122,32 @@ export class StandardVersionRepository
   async findByStandardIdAndVersion(
     standardId: StandardId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<StandardVersion | null> {
     this.logger.info('Finding standard version by standard ID and version', {
       standardId,
       version,
+      spaceIdCount: allowedSpaceIds.length,
     });
 
-    try {
-      const standardVersion = await this.repository.findOne({
-        where: { standardId, version },
+    if (allowedSpaceIds.length === 0) {
+      this.logger.warn('No allowed space IDs provided, returning null', {
+        standardId,
+        version,
       });
+      return null;
+    }
+
+    try {
+      const standardVersion = await this.repository
+        .createQueryBuilder('sv')
+        .innerJoin('sv.standard', 'standard')
+        .where('sv.standard_id = :standardId', { standardId })
+        .andWhere('sv.version = :version', { version })
+        .andWhere('standard.space_id IN (:...allowedSpaceIds)', {
+          allowedSpaceIds,
+        })
+        .getOne();
 
       if (standardVersion) {
         this.logger.info('Standard version found by standard ID and version', {

@@ -8,11 +8,13 @@ import {
   ICodingAgentPort,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   Organization,
   OrganizationId,
   RecipeVersion,
   SkillVersion,
+  Space,
   StandardVersion,
   User,
   UserOrganizationMembership,
@@ -55,11 +57,13 @@ describe('GetContentByVersionsUseCase', () => {
   let skillsPort: jest.Mocked<ISkillsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let useCase: GetContentByVersionsUseCase;
   let command: GetContentByVersionsCommand;
   let organizationId: OrganizationId;
   let organization: Organization;
+  let orgSpaceId: ReturnType<typeof createSpaceId>;
 
   beforeEach(() => {
     codingAgentPort = {
@@ -96,11 +100,20 @@ describe('GetContentByVersionsUseCase', () => {
     } as unknown as jest.Mocked<IAccountsPort>;
 
     organizationId = createOrganizationId(uuidv4());
+    orgSpaceId = createSpaceId(uuidv4());
     organization = {
       id: organizationId,
       name: 'Test Org',
       slug: 'test-org',
     };
+
+    spacesPort = {
+      listSpacesByOrganization: jest
+        .fn()
+        .mockResolvedValue([
+          { id: orgSpaceId, name: 'Global', slug: 'global' } as Space,
+        ]),
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     command = {
       organizationId: organizationId as unknown as string,
@@ -123,6 +136,7 @@ describe('GetContentByVersionsUseCase', () => {
       skillsPort,
       standardsPort,
       recipesPort,
+      spacesPort,
       accountsPort,
       stubLogger(),
     );
@@ -290,18 +304,21 @@ describe('GetContentByVersionsUseCase', () => {
       );
     });
 
-    it('fetches recipe version with correct id and version number', async () => {
+    it('fetches recipe version with correct id, version, and allowedSpaceIds', async () => {
       await useCase.execute(command);
 
-      expect(recipesPort.getRecipeVersion).toHaveBeenCalledWith(recipeId, 2);
+      expect(recipesPort.getRecipeVersion).toHaveBeenCalledWith(recipeId, 2, [
+        orgSpaceId,
+      ]);
     });
 
-    it('fetches standard version by number', async () => {
+    it('fetches standard version by number with allowed space IDs', async () => {
       await useCase.execute(command);
 
       expect(standardsPort.getStandardVersionByNumber).toHaveBeenCalledWith(
         standardId,
         3,
+        [orgSpaceId],
       );
     });
 

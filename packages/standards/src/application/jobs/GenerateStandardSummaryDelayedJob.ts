@@ -7,7 +7,7 @@ import {
   WorkerListeners,
 } from '@packmind/node-utils';
 import { Job } from 'bullmq';
-import { AiNotConfigured } from '@packmind/types';
+import { AiNotConfigured, ISpacesPort } from '@packmind/types';
 import {
   GenerateStandardSummaryInput,
   GenerateStandardSummaryOutput,
@@ -33,6 +33,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
     private readonly _updateStandardVersionSummaryUsecase: UpdateStandardVersionSummaryUsecase,
     private readonly _standardSummaryService: StandardSummaryService,
     private readonly _standardVersionService: StandardVersionService,
+    private readonly _spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
     super(queueFactory, logger);
@@ -82,10 +83,16 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
 
     // If no new summary was generated, reuse the previous version's summary
     if (!summary && input.standardVersion.version > 1) {
+      const spaces = await this._spacesPort.listSpacesByOrganization(
+        input.organizationId,
+      );
+      const allowedSpaceIds = spaces.map((s) => s.id);
+
       const previousVersion =
         await this._standardVersionService.getStandardVersion(
           input.standardVersion.standardId,
           input.standardVersion.version - 1,
+          allowedSpaceIds,
         );
       if (previousVersion?.summary) {
         summary = previousVersion.summary;

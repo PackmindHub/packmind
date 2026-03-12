@@ -33,6 +33,7 @@ export interface IStandardsPort {
   getStandardVersionByNumber(
     standardId: StandardId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<StandardVersion | null>;
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]>;
   getRule(id: RuleId): Promise<Rule | null>;

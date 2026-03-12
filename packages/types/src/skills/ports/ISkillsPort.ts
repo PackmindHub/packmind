@@ -22,6 +22,7 @@ export interface ISkillsPort {
   getSkillVersionByNumber(
     skillId: SkillId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<SkillVersion | null>;
   listSkillVersions(skillId: SkillId): Promise<SkillVersion[]>;
   listSkillsBySpace(
