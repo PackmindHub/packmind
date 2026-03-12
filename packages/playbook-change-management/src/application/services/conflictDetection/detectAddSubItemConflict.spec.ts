@@ -183,6 +183,11 @@ describe('detectAddSkillFileConflicts', () => {
     },
   };
 
+  const castToAddSkillFile = (
+    proposal: ChangeProposal<ChangeProposalType>,
+  ): ChangeProposal<ChangeProposalType.addSkillFile> =>
+    proposal as ChangeProposal<ChangeProposalType.addSkillFile>;
+
   beforeEach(() => {
     changeProposal = changeProposalFactory({
       type: ChangeProposalType.addSkillFile,
@@ -238,7 +243,7 @@ describe('detectAddSkillFileConflicts', () => {
         // Type guard should reject cp1 that is not addSkillFile
         expect(
           detectAddSkillFileConflict(
-            removalProposal as any,
+            castToAddSkillFile(removalProposal),
             changeProposal,
             diffService,
           ),
@@ -260,7 +265,7 @@ describe('detectAddSkillFileConflicts', () => {
         expect(
           detectAddSkillFileConflict(
             changeProposal,
-            removalProposal as any,
+            castToAddSkillFile(removalProposal),
             diffService,
           ),
         ).toEqual(false);
@@ -276,7 +281,7 @@ describe('detectAddSkillFileConflicts', () => {
 
         expect(
           detectAddSkillFileConflict(
-            proposalWithBadPayload as any,
+            castToAddSkillFile(proposalWithBadPayload),
             changeProposal,
             diffService,
           ),
@@ -300,8 +305,8 @@ describe('detectAddSkillFileConflicts', () => {
 
         expect(
           detectAddSkillFileConflict(
-            proposal1 as any,
-            proposal2 as any,
+            castToAddSkillFile(proposal1),
+            castToAddSkillFile(proposal2),
             diffService,
           ),
         ).toEqual(false);
@@ -317,7 +322,7 @@ describe('detectAddSkillFileConflicts', () => {
 
         expect(
           detectAddSkillFileConflict(
-            proposalWithNullPayload as any,
+            castToAddSkillFile(proposalWithNullPayload),
             changeProposal,
             diffService,
           ),
@@ -332,7 +337,7 @@ describe('detectAddSkillFileConflicts', () => {
 
         expect(
           detectAddSkillFileConflict(
-            proposalWithEmptyPayload as any,
+            castToAddSkillFile(proposalWithEmptyPayload),
             changeProposal,
             diffService,
           ),
