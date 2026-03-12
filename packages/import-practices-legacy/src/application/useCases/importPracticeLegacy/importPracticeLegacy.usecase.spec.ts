@@ -1,21 +1,22 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
-  IAccountsPort,
-  ISpacesPort,
-  ILinterPort,
-  Space,
-  Standard,
-  Rule,
-  ProgrammingLanguage,
   createOrganizationId,
-  createUserId,
+  createRuleId,
   createSpaceId,
   createStandardId,
-  createRuleId,
   createStandardVersionId,
+  createUserId,
   DetectionModeEnum,
   DetectionStatus,
+  IAccountsPort,
+  ILinterPort,
+  ISpacesPort,
+  ProgrammingLanguage,
+  Rule,
   RuleDetectionAssessmentStatus,
+  Space,
+  SpaceType,
+  Standard,
 } from '@packmind/types';
 import { StandardsAdapter } from '@packmind/standards';
 import { ImportPracticeLegacyUseCase } from './importPracticeLegacy.usecase';
@@ -37,6 +38,7 @@ describe('ImportPracticeLegacyUseCase', () => {
     id: spaceId,
     name: 'Global',
     slug: 'global',
+    type: SpaceType.open,
     organizationId,
   };
 
