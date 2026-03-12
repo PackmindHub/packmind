@@ -904,9 +904,31 @@ describe('lintHandler', () => {
         await lintHandler(createArgs({ path: 'missing.ts' }), deps);
       });
 
-      it('logs error message', () => {
+      it('logs "does not exist" error message', () => {
         expect(logErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining('does not exist'),
+        );
+      });
+
+      it('exits with code 1', () => {
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when fs.stat fails with a non-ENOENT error', () => {
+      beforeEach(async () => {
+        jest
+          .mocked(fs.stat)
+          .mockRejectedValue(
+            Object.assign(new Error('permission denied'), { code: 'EACCES' }),
+          );
+
+        await lintHandler(createArgs({ path: 'secret.ts' }), deps);
+      });
+
+      it('logs "cannot access" error message', () => {
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Cannot access'),
         );
       });
 

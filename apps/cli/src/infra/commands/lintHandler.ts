@@ -87,8 +87,12 @@ export async function lintHandler(
   let stats: import('fs').Stats;
   try {
     stats = await fs.stat(absolutePath);
-  } catch {
-    logErrorConsole(`File or directory "${absolutePath}" does not exist`);
+  } catch (err) {
+    const isNotFound = (err as NodeJS.ErrnoException).code === 'ENOENT';
+    const message = isNotFound
+      ? `File or directory "${absolutePath}" does not exist`
+      : `Cannot access "${absolutePath}": ${(err as Error).message}`;
+    logErrorConsole(message);
     exit(1);
     return;
   }
