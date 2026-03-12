@@ -894,7 +894,7 @@ describe('lintHandler', () => {
 
   describe('single file handling', () => {
     describe('when the given file does not exist', () => {
-      it('logs error and exits with code 1', async () => {
+      beforeEach(async () => {
         jest
           .mocked(fs.stat)
           .mockRejectedValue(
@@ -902,16 +902,21 @@ describe('lintHandler', () => {
           );
 
         await lintHandler(createArgs({ path: 'missing.ts' }), deps);
+      });
 
+      it('logs error message', () => {
         expect(logErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining('does not exist'),
         );
+      });
+
+      it('exits with code 1', () => {
         expect(mockExit).toHaveBeenCalledWith(1);
       });
     });
 
     describe('when single file matches .packmindignore pattern', () => {
-      it('logs warning about .packmindignore and exits with code 0', async () => {
+      beforeEach(async () => {
         jest.mocked(fs.stat).mockResolvedValue({
           isFile: () => true,
           isDirectory: () => false,
@@ -922,18 +927,29 @@ describe('lintHandler', () => {
         mockIgnoreReader.readIgnorePatterns.mockResolvedValue(['*.ts']);
 
         await lintHandler(createArgs({ path: 'src/file.ts' }), deps);
+      });
 
+      it('logs warning about .packmindignore', () => {
         expect(logWarningConsole).toHaveBeenCalledWith(
           expect.stringContaining('.packmindignore'),
         );
+      });
+
+      it('exits with code 0', () => {
         expect(mockExit).toHaveBeenCalledWith(0);
+      });
+
+      it('does not call lintFilesFromConfig', () => {
         expect(mockPackmindCliHexa.lintFilesFromConfig).not.toHaveBeenCalled();
+      });
+
+      it('does not call lintFilesAgainstRule', () => {
         expect(mockPackmindCliHexa.lintFilesAgainstRule).not.toHaveBeenCalled();
       });
     });
 
     describe('when single file does not match .packmindignore pattern', () => {
-      it('proceeds with linting', async () => {
+      beforeEach(async () => {
         jest.mocked(fs.stat).mockResolvedValue({
           isFile: () => true,
           isDirectory: () => false,
@@ -951,8 +967,13 @@ describe('lintHandler', () => {
         });
 
         await lintHandler(createArgs({ path: 'src/file.ts' }), deps);
+      });
 
+      it('calls lintFilesFromConfig', () => {
         expect(mockPackmindCliHexa.lintFilesFromConfig).toHaveBeenCalled();
+      });
+
+      it('exits with code 0', () => {
         expect(mockExit).toHaveBeenCalledWith(0);
       });
     });
