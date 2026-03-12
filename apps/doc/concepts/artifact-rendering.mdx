@@ -72,9 +72,9 @@ Commands are placed in specific locations, but unlike standards, you need to inv
 | Junie          | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
 | AGENTS.md      | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
 
-### Using Slash Commands (Claude Code, Cursor, GitHub Copilot)
+### Using Slash Commands (Claude Code, Cursor, GitHub Copilot, Continue)
 
-For AI assistants with native slash command support (**Continue**, **Claude Code**, **Cursor**, and **GitHub Copilot**), commands are rendered in dedicated folders and can be invoked using slash commands:
+For AI assistants with native slash command support (**Claude Code**, **Cursor**, **GitHub Copilot**, and **Continue**), commands are rendered in dedicated folders and can be invoked using slash commands:
 
 ```
 /create-new-use-case
@@ -82,7 +82,7 @@ For AI assistants with native slash command support (**Continue**, **Claude Code
 
 The AI assistant will recognize the command and execute the instructions defined in it.
 
-### Direct Source File Invocation (Continue, GitLab Duo, Junie, AGENTS.md)
+### Direct Source File Invocation (GitLab Duo, Junie, AGENTS.md)
 
 For AI assistants without native command rendering (**GitLab Duo**, **Junie**, and **AGENTS.md**), commands are not rendered in agent-specific files. Instead, you must reference the source command file directly from the `.packmind/commands/` folder:
 
@@ -145,7 +145,7 @@ These source files are the single source of truth. The files in AI assistant-spe
 1. Ensure you've distributed the package containing the commands
 2. Check the `.packmind/commands/` folder for the source files
 3. For Claude Code, Cursor, or GitHub Copilot: Verify the AI assistant-specific folder exists (e.g., `.cursor/commands/`)
-4. For Continue, GitLab Duo, Junie, or AGENTS.md: Commands are not rendered separately—use the files directly from `.packmind/commands/`
+4. For GitLab Duo, Junie, or AGENTS.md: Commands are not rendered separately—use the files directly from `.packmind/commands/`
 
 ### The AI assistant isn't following my standards
 

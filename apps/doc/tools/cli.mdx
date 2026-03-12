@@ -14,7 +14,6 @@ The Packmind CLI provides the following commands:
 - **`setup-mcp`** - Configure MCP for AI coding agents
 - **`install`** - Download packages locally
 - **`uninstall`** - Remove packages from your project
-- **`onboard`** - Scan project and generate standards/commands/skills
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
@@ -25,6 +24,7 @@ The Packmind CLI provides the following commands:
 - **`commands list`** - List all commands in your organization
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
+- **`packages list`** - List all packages in your organization
 - **`update`** - Update the CLI to the latest version
 
 ## Installation
@@ -312,44 +312,6 @@ The command auto-detects existing agent configurations in your project and pre-s
   `.cursor/` or `.claude/`), they will be automatically pre-selected when you
   run this command.
 </Tip>
-
-## Onboard Command
-
-Scan your project and generate standards, commands, and skills based on detected patterns.
-
-### When to Use Onboard
-
-Use the onboard command when:
-
-- You want to scan your project after running `init`
-- You want to re-scan after project changes
-- You want to regenerate project-specific content
-- You want to scan a different directory
-
-### Basic Usage
-
-```bash
-packmind-cli onboard
-```
-
-### Flags
-
-| Flag           | Short | Description                                               |
-| -------------- | ----- | --------------------------------------------------------- |
-| `--path <dir>` | `-p`  | Specify a different project path to scan                  |
-| `--dry-run`    | `-d`  | Preview without writing files                             |
-| `--yes`        | `-y`  | Skip confirmation prompts                                 |
-| `--push`       |       | Push generated standards and commands to Packmind backend |
-
-**Examples:**
-
-```bash
-# Scan a different directory
-packmind-cli onboard --path ./other-project
-
-# Preview what would be generated
-packmind-cli onboard --dry-run
-```
 
 ## Setup MCP Command
 
@@ -1018,6 +980,17 @@ If a command with the same slug already exists in your space, Packmind appends a
 ## Packages Command
 
 Create and manage packages from the command line.
+
+### List Packages
+
+```bash
+packmind-cli packages list
+```
+
+This command displays all packages in your Packmind organization, showing:
+
+- **Slug** — The package identifier
+- **Name** — The display name
 
 ### Create a Package
 
