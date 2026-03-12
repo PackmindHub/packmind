@@ -509,7 +509,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
       }
     }
 
-    if (isFile && files.length === 1 && scopeMatchCount === 0) {
+    if (isFile && scopeMatchCount === 0) {
       logInfoConsole(
         `File "${absoluteUserPath}" is out of scope for the requested rule/standard — no violations will be reported.`,
       );
