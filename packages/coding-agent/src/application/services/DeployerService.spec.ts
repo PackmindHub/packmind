@@ -854,7 +854,7 @@ describe('DeployerService', () => {
         'AGENTS.md',
         '.cursorrules',
         '.github/copilot-instructions.md',
-        '.junie.md',
+        '.junie/guidelines.md',
         '.packmind.md',
         '.gitlab/duo/chat-rules.md',
       ];
@@ -897,7 +897,7 @@ describe('DeployerService', () => {
         'AGENTS.md',
         '.cursorrules',
         '.github/copilot-instructions.md',
-        '.junie.md',
+        '.junie/guidelines.md',
         '.packmind.md',
         '.gitlab/duo/chat-rules.md',
       ])('includes %s file', (expectedFile) => {

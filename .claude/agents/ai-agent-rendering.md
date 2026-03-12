@@ -258,7 +258,7 @@ const agentToFile: Record<CodingAgent, string> = {
   agents_md: 'AGENTS.md',
   cursor: '.cursor/rules/packmind/recipes-index.mdc',
   copilot: '.github/copilot-instructions.md',
-  junie: '.junie.md',
+  junie: '.junie/guidelines.md',
   packmind: '.packmind.md',
   gitlab_duo: '.gitlab/duo/chat-rules.md',
   continue: '.continue/rules/packmind-recipes-index.md',
