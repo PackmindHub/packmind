@@ -8,6 +8,7 @@ import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
 import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
+import { DEFAULT_EXCLUDES } from '../services/ListFiles';
 import {
   ConfigWithTarget,
   DetectionSeverity,
@@ -96,7 +97,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
   public async execute(
     command: LintFilesFromConfigCommand,
   ): Promise<LintFilesFromConfigResult> {
-    const { path: userPath, diffMode } = command;
+    const { path: userPath, diffMode, ignorePatterns } = command;
 
     this.logger.debug(
       `Starting local linting: path="${userPath}", diffMode="${diffMode ?? 'none'}"`,
@@ -200,12 +201,17 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
       );
     }
 
+    const excludes = [...DEFAULT_EXCLUDES];
+    if (ignorePatterns?.length) {
+      excludes.push(...ignorePatterns);
+    }
+
     let files = isFile
       ? [{ path: absoluteUserPath }]
       : await this.services.listFiles.listFilesInDirectory(
           absoluteUserPath,
           [],
-          ['node_modules', 'dist', '.min.', '.map.', '.git'],
+          excludes,
         );
 
     // Filter files by modified files if diffMode is set

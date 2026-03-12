@@ -184,6 +184,42 @@ When creating rules that apply to multiple languages:
 
 4. **Activate independently**: You can activate the TypeScript program while keeping the JavaScript program in draft.
 
+## Excluding Files from Analysis
+
+You can exclude specific files or directories from lint analysis by creating a `.packmindignore` file. Any file matching a pattern in `.packmindignore` will be skipped entirely during linting.
+
+### File Location
+
+Place a `.packmindignore` file at the root of your project. In a **Git repository**, the CLI collects patterns from all `.packmindignore` files found between the linted directory and the Git repository root, merging them together. Outside a Git repository, only the `.packmindignore` in the linted directory is used.
+
+### Syntax
+
+- One pattern per line
+- Lines starting with `#` are comments
+- Empty lines are ignored
+- Simple names (e.g., `generated`) match any directory or file with that name at any level
+- Use `*` to match anything except path separators
+- Use `**` to match anything including subdirectories
+
+### Example
+
+```
+# Ignore all generated code
+generated
+
+# Ignore test fixture files
+test/fixtures/**
+
+# Ignore legacy JavaScript files in src
+src/*.legacy.js
+```
+
+<Note>
+  The following paths are **always excluded** by default, even without a
+  `.packmindignore` file: `node_modules`, `dist`, `.git`, `*.min.*` files, and
+  `*.map` files.
+</Note>
+
 ## Related Documentation
 
 - [Standards Management](/concepts/standards-management): Learn how to create rules and add code examples
