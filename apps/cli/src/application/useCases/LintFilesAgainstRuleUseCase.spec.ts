@@ -413,6 +413,56 @@ describe('LintFilesAgainstRuleUseCase', () => {
         expect(result.violations[0].violations.length).toBeGreaterThan(0);
       });
     });
+
+    describe('when single file matches an exclude pattern', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isFile: () => true,
+          isDirectory: () => false,
+        });
+
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+          '/project',
+        );
+        mockListFiles.findMatchingExcludePattern.mockReturnValue('*.min.*');
+        mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+          scope: [],
+          ruleContent: 'Test rule',
+          programs: [
+            {
+              language: 'typescript',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return [1]; }',
+              sourceCodeState: 'AST' as const,
+              severity: DetectionSeverity.ERROR,
+            },
+          ],
+        });
+
+        result = await useCase.execute({
+          path: '/project/src/bundle.min.js',
+          standardSlug: 'test-standard',
+          ruleId: 'rule-1' as RuleId,
+        });
+      });
+
+      it('returns empty violations', () => {
+        expect(result.violations).toHaveLength(0);
+      });
+
+      it('returns ignoredFile in summary', () => {
+        expect(result.summary.ignoredFile).toEqual({
+          filePath: '/project/src/bundle.min.js',
+          matchedPattern: '*.min.*',
+        });
+      });
+
+      it('does not execute linter', () => {
+        expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('when linter execution throws an error', () => {

@@ -268,6 +268,54 @@ describe('LintFilesFromConfigUseCase', () => {
         mockConfigFileRepository.findAllConfigsInTree,
       ).toHaveBeenCalledWith('/project/src', '/project');
     });
+
+    describe('when single file matches an exclude pattern', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isFile: () => true,
+          isDirectory: () => false,
+        });
+
+        const allConfigs: AllConfigsResult = {
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { typescript: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        };
+
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+          '/project',
+        );
+        mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+          allConfigs,
+        );
+        mockListFiles.findMatchingExcludePattern.mockReturnValue('*.min.*');
+
+        result = await useCase.execute({ path: '/project/src/bundle.min.js' });
+      });
+
+      it('returns empty violations', () => {
+        expect(result.violations).toHaveLength(0);
+      });
+
+      it('returns ignoredFile in summary', () => {
+        expect(result.summary.ignoredFile).toEqual({
+          filePath: '/project/src/bundle.min.js',
+          matchedPattern: '*.min.*',
+        });
+      });
+
+      it('does not execute linter', () => {
+        expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('when executing linting with target-based matching', () => {

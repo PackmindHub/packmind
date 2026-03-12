@@ -529,6 +529,68 @@ describe('ListFiles', () => {
     });
   });
 
+  describe('findMatchingExcludePattern', () => {
+    it('returns matching simple directory name pattern', () => {
+      const result = listFiles.findMatchingExcludePattern(
+        '/project/node_modules/lib.ts',
+        ['node_modules', 'dist'],
+      );
+
+      expect(result).toBe('node_modules');
+    });
+
+    it('returns matching glob pattern', () => {
+      const result = listFiles.findMatchingExcludePattern(
+        '/project/src/bundle.min.js',
+        ['*.min.*', '*.map'],
+      );
+
+      expect(result).toBe('*.min.*');
+    });
+
+    it('returns matching path pattern', () => {
+      const result = listFiles.findMatchingExcludePattern(
+        '/project/packages/pkg1/infra/repo.ts',
+        ['packages/**/infra'],
+      );
+
+      expect(result).toBe('packages/**/infra');
+    });
+
+    describe('when no pattern matches', () => {
+      it('returns null', () => {
+        const result = listFiles.findMatchingExcludePattern(
+          '/project/src/app.ts',
+          ['node_modules', 'dist', '*.min.*'],
+        );
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('when path contains substring similar to glob pattern', () => {
+      it('does not false-positive match dots against any character', () => {
+        const result = listFiles.findMatchingExcludePattern(
+          '/Users/dev/Code/packmind/packages/src/UseCase.spec.ts',
+          ['*.min.*', '*.map'],
+        );
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('when excludes list is empty', () => {
+      it('returns null', () => {
+        const result = listFiles.findMatchingExcludePattern(
+          '/project/src/app.ts',
+          [],
+        );
+
+        expect(result).toBeNull();
+      });
+    });
+  });
+
   describe('readFileContent', () => {
     it('reads and returns file content', async () => {
       const filePath = path.join(tempDir, 'test.txt');

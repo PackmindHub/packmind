@@ -34,6 +34,7 @@ export function createMockListFiles(
   return {
     listFilesInDirectory: jest.fn(),
     readFileContent: jest.fn(),
+    findMatchingExcludePattern: jest.fn().mockReturnValue(null),
     ...overrides,
   };
 }

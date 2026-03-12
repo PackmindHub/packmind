@@ -102,6 +102,7 @@ export async function lintHandler(
   }
 
   let violations: LintViolation[] = [];
+  let ignoredFile: { filePath: string; matchedPattern: string } | undefined;
 
   try {
     if (rule) {
@@ -115,6 +116,7 @@ export async function lintHandler(
         ignorePatterns,
       });
       violations = result.violations;
+      ignoredFile = result.summary?.ignoredFile;
     } else {
       const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
         absolutePath,
@@ -133,6 +135,7 @@ export async function lintHandler(
         ignorePatterns,
       });
       violations = result.violations;
+      ignoredFile = result.summary?.ignoredFile;
     }
   } catch (error) {
     if (isNotLoggedInError(error) && continueOnMissingKey) {
@@ -149,6 +152,14 @@ export async function lintHandler(
       return;
     }
     throw error;
+  }
+
+  if (ignoredFile) {
+    logWarningConsole(
+      `File "${ignoredFile.filePath}" was ignored (matched pattern "${ignoredFile.matchedPattern}"). Skipping lint.`,
+    );
+    exit(0);
+    return;
   }
 
   const effectiveSeverity = (s: DetectionSeverity | undefined) =>

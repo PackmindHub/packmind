@@ -19,6 +19,7 @@ export type LintFilesAgainstRuleResult = {
     violatedFiles: number;
     totalViolations: number;
     standardsChecked: string[];
+    ignoredFile?: { filePath: string; matchedPattern: string };
   };
 };
 

@@ -885,6 +885,85 @@ describe('lintHandler', () => {
     });
   });
 
+  describe('ignored file handling', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
+    });
+
+    describe('when lintFilesAgainstRule returns ignoredFile', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
+          violations: [],
+          summary: {
+            totalFiles: 0,
+            violatedFiles: 0,
+            totalViolations: 0,
+            standardsChecked: [],
+            ignoredFile: {
+              filePath: '/project/src/bundle.min.js',
+              matchedPattern: '*.min.*',
+            },
+          },
+        });
+
+        await lintHandler(
+          createArgs({
+            path: '/project/src/bundle.min.js',
+            rule: { standardSlug: 'test', ruleId: 'rule-1' as never },
+          }),
+          deps,
+        );
+      });
+
+      it('logs warning about ignored file', () => {
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'File "/project/src/bundle.min.js" was ignored (matched pattern "*.min.*"). Skipping lint.',
+        );
+      });
+
+      it('exits with code 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when lintFilesFromConfig returns ignoredFile', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+          hasConfigs: true,
+          configs: [{ path: '/project/packmind.json' }],
+        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations: [],
+          summary: {
+            totalFiles: 0,
+            violatedFiles: 0,
+            totalViolations: 0,
+            standardsChecked: [],
+            ignoredFile: {
+              filePath: '/project/src/app.js.map',
+              matchedPattern: '*.map',
+            },
+          },
+        });
+
+        await lintHandler(
+          createArgs({ path: '/project/src/app.js.map' }),
+          deps,
+        );
+      });
+
+      it('logs warning about ignored file', () => {
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'File "/project/src/app.js.map" was ignored (matched pattern "*.map"). Skipping lint.',
+        );
+      });
+
+      it('exits with code 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+  });
+
   describe('--continue-on-missing-key flag', () => {
     beforeEach(() => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');

@@ -206,6 +206,28 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
       excludes.push(...ignorePatterns);
     }
 
+    if (isFile) {
+      const matchedPattern = this.services.listFiles.findMatchingExcludePattern(
+        absoluteUserPath,
+        excludes,
+      );
+      if (matchedPattern) {
+        return {
+          violations: [],
+          summary: {
+            totalFiles: 0,
+            violatedFiles: 0,
+            totalViolations: 0,
+            standardsChecked: [],
+            ignoredFile: {
+              filePath: absoluteUserPath,
+              matchedPattern,
+            },
+          },
+        };
+      }
+    }
+
     let files = isFile
       ? [{ path: absoluteUserPath }]
       : await this.services.listFiles.listFilesInDirectory(
