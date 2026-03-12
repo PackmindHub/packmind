@@ -514,7 +514,8 @@ export async function diffArtefactsHandler(
         : targetDir;
 
       if (targetDirs.length > 1) {
-        logInfoConsole(`\nTarget: ${targetRelativePath}`);
+        log('');
+        logInfoConsole(`Target: ${targetRelativePath}`);
       }
 
       const packageCount = configPackages.length;
