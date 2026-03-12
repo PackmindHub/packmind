@@ -30,10 +30,10 @@
 3. **Stage 3**: `docker-proprietary` workflow's `build-cli-executables` job builds platform executables
 4. **Stage 3**: Uploads artifact as `cli-executables-{version}` (e.g., `cli-executables-0.1.0`)
 5. **Stage 3** (after docker-proprietary): `sign-macos-cli` job downloads the CLI executables artifact
-6. Copies `packmind-cli-macos-arm64` to `packmind-cli-macos-arm64-signed`
+6. Copies `packmind-macos-arm64` to `packmind-macos-arm64-signed`
 7. If secrets are configured: signs the copied binary (original remains unsigned)
 8. If secrets are NOT configured: skips signing (job still succeeds, doesn't block pipeline)
-9. Uploads signed binary as `cli-executables-{version}-macos-arm64-signed` (artifact contains the file `packmind-cli-macos-arm64-signed`)
+9. Uploads signed binary as `cli-executables-{version}-macos-arm64-signed` (artifact contains the file `packmind-macos-arm64-signed`)
 
 **Note**: The signing job only runs on `release-cli/*` tags. It will NOT run on main branch pushes, pull requests, or other release tags.
 
@@ -136,10 +136,10 @@ To enable notarization and eliminate security warnings, add these **3 additional
 6. Download the artifact `cli-executables-{version}-macos-arm64-signed`
 7. Extract and run the signed macOS executable:
    ```bash
-   chmod +x ./packmind-cli-macos-arm64-signed
+   chmod +x ./packmind-macos-arm64-signed
    # Will show security warning - use workaround:
-   xattr -d com.apple.quarantine ./packmind-cli-macos-arm64-signed
-   ./packmind-cli-macos-arm64-signed lint --help
+   xattr -d com.apple.quarantine ./packmind-macos-arm64-signed
+   ./packmind-macos-arm64-signed lint --help
    ```
 8. **Note**: Users will need the workaround until notarization is enabled
 
@@ -160,8 +160,8 @@ To enable notarization and eliminate security warnings, add these **3 additional
 6. Download the artifact `cli-executables-{version}-macos-arm64-signed`
 7. Extract and run the notarized macOS executable:
    ```bash
-   chmod +x ./packmind-cli-macos-arm64-signed
-   ./packmind-cli-macos-arm64-signed lint --help
+   chmod +x ./packmind-macos-arm64-signed
+   ./packmind-macos-arm64-signed lint --help
    ```
 8. **✅ Should run immediately without ANY warnings or workarounds!**
 
@@ -241,24 +241,24 @@ The entitlements file can be customized at `apps/cli/entitlements.plist` if addi
 
 - Ensure you downloaded the SIGNED artifact (`cli-executables-{version}-macos-arm64-signed`)
 - Check that signing step actually ran (not skipped)
-- Verify signature with: `codesign -vvv --verify ./packmind-cli-macos-arm64-signed`
+- Verify signature with: `codesign -vvv --verify ./packmind-macos-arm64-signed`
 - **If still seeing warnings**: Notarization might not have run
   - Check if notarization secrets are configured
   - Verify notarization step completed in GitHub Actions (look for "Accepted" status)
-  - Check notarization online: `spctl -a -vv -t install ./packmind-cli-macos-arm64-signed`
+  - Check notarization online: `spctl -a -vv -t install ./packmind-macos-arm64-signed`
 
 ### How to verify notarization worked
 
 ```bash
 # Check notarization status (requires internet connection)
-spctl -a -vv -t install ./packmind-cli-macos-arm64-signed
+spctl -a -vv -t install ./packmind-macos-arm64-signed
 
 # Expected output if notarized:
-# ./packmind-cli-macos-arm64-signed: accepted
+# ./packmind-macos-arm64-signed: accepted
 # source=Notarized Developer ID
 
 # Alternative: Check signature info
-codesign -dvv ./packmind-cli-macos-arm64-signed 2>&1 | grep -i "runtime\|notarized"
+codesign -dvv ./packmind-macos-arm64-signed 2>&1 | grep -i "runtime\|notarized"
 
 # Expected to see:
 # flags=0x10000(runtime) <- Hardened Runtime enabled
@@ -272,7 +272,7 @@ codesign -dvv ./packmind-cli-macos-arm64-signed 2>&1 | grep -i "runtime\|notariz
 2. **When ready**: Obtain Apple Developer certificate and add the 3 signing secrets to repository
 3. **Optional**: Add 3 notarization secrets for production-ready distribution
 4. **Test**: Create another `release-cli/*` tag to test signing (and notarization if configured)
-5. **Finally**: Download the `cli-executables-{version}-macos-arm64-signed` artifact and verify the signed executable (`packmind-cli-macos-arm64-signed`) works without warnings
+5. **Finally**: Download the `cli-executables-{version}-macos-arm64-signed` artifact and verify the signed executable (`packmind-macos-arm64-signed`) works without warnings
 
 ## Notes
 
