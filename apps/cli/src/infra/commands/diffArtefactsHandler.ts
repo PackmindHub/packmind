@@ -544,21 +544,18 @@ export async function diffArtefactsHandler(
       return { diffsFound: 0 };
     }
 
-    // Build display path map (prefixes file paths with target path in multi-target case)
+    // Build display path map: prefix each diff's file path with the target's
+    // path relative to cwd, so displayed paths are always relative to where
+    // the command was run.
     const displayPathMap = new Map<ArtefactDiff, string>();
-    const multipleTargets = targetResults.length > 1;
     for (const { targetRelativePath, diffs } of targetResults) {
       for (const diff of diffs) {
-        if (multipleTargets) {
-          displayPathMap.set(
-            diff,
-            targetRelativePath
-              ? `${targetRelativePath}/${diff.filePath}`
-              : diff.filePath,
-          );
-        } else {
-          displayPathMap.set(diff, diff.filePath);
-        }
+        displayPathMap.set(
+          diff,
+          targetRelativePath
+            ? `${targetRelativePath}/${diff.filePath}`
+            : diff.filePath,
+        );
       }
     }
 
