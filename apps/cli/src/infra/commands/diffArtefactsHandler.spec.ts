@@ -1931,13 +1931,13 @@ describe('diffArtefactsHandler', () => {
       it('prefixes frontend file path with target relative path in display output', async () => {
         await diffArtefactsHandler(deps);
 
-        // gitRoot = '/test', frontend target = '/test/project/src/frontend'
-        // targetRelativePath = '/project/src/frontend', prefix = 'project/src/frontend'
+        // cwd = '/test/project', frontend target = '/test/project/src/frontend'
+        // targetRelativePath = nodePath.relative(cwd, target) = 'src/frontend'
+        // diff1.filePath = 'src/frontend/.packmind/commands/cmd.md'
+        // expected display: 'src/frontend/src/frontend/.packmind/commands/cmd.md'
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
         const frontendPath = logCalls.find((c: string) =>
-          c.includes(
-            'project/src/frontend/src/frontend/.packmind/commands/cmd.md',
-          ),
+          c.includes('src/frontend/src/frontend/.packmind/commands/cmd.md'),
         );
 
         expect(frontendPath).toBeDefined();
@@ -1946,13 +1946,13 @@ describe('diffArtefactsHandler', () => {
       it('prefixes backend file path with target relative path in display output', async () => {
         await diffArtefactsHandler(deps);
 
-        // gitRoot = '/test', backend target = '/test/project/src/backend'
-        // targetRelativePath = '/project/src/backend', prefix = 'project/src/backend'
+        // cwd = '/test/project', backend target = '/test/project/src/backend'
+        // targetRelativePath = nodePath.relative(cwd, target) = 'src/backend'
+        // diff2.filePath = 'src/backend/.packmind/commands/cmd.md'
+        // expected display: 'src/backend/src/backend/.packmind/commands/cmd.md'
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
         const backendPath = logCalls.find((c: string) =>
-          c.includes(
-            'project/src/backend/src/backend/.packmind/commands/cmd.md',
-          ),
+          c.includes('src/backend/src/backend/.packmind/commands/cmd.md'),
         );
 
         expect(backendPath).toBeDefined();
@@ -1988,7 +1988,7 @@ describe('diffArtefactsHandler', () => {
 
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
         const prefixedPath = logCalls.find((c: string) =>
-          c.includes('project/src/frontend/src/frontend/'),
+          c.includes('src/frontend/src/frontend/'),
         );
 
         expect(prefixedPath).toBeUndefined();

@@ -509,9 +509,7 @@ export async function diffArtefactsHandler(
       if (configPackages.length === 0) continue;
 
       const relativePath = computeRelativePath(targetDir, gitRoot);
-      const targetRelativePath = targetDir.startsWith(gitRoot)
-        ? targetDir.slice(gitRoot.length) || '/'
-        : targetDir;
+      const targetRelativePath = nodePath.relative(cwd, targetDir);
 
       if (targetDirs.length > 1) {
         log('');
@@ -552,10 +550,11 @@ export async function diffArtefactsHandler(
     for (const { targetRelativePath, diffs } of targetResults) {
       for (const diff of diffs) {
         if (multipleTargets) {
-          const prefix = targetRelativePath.replace(/^\//, '');
           displayPathMap.set(
             diff,
-            prefix ? `${prefix}/${diff.filePath}` : diff.filePath,
+            targetRelativePath
+              ? `${targetRelativePath}/${diff.filePath}`
+              : diff.filePath,
           );
         } else {
           displayPathMap.set(diff, diff.filePath);
