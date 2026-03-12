@@ -178,6 +178,7 @@ describe('PublishArtifactsUseCase', () => {
       mockPublishArtifactsDelayedJob,
       mockDeployDefaultSkillsUseCase,
       undefined,
+      undefined,
       mockLogger,
     );
   });
@@ -422,6 +423,62 @@ describe('PublishArtifactsUseCase', () => {
           path: expect.stringMatching(/packmind\.json$/),
         }),
       );
+    });
+
+    it('includes packmind-lock.json in file updates', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'docs/packmind-lock.json',
+      );
+
+      expect(lockFile).toBeDefined();
+    });
+
+    it('generates valid lock file with lockfileVersion 1', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'docs/packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.lockfileVersion).toBe(1);
+    });
+
+    it('generates lock file with cliVersion set to app', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'docs/packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.cliVersion).toBe('app');
+    });
+
+    it('generates lock file with target id', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'docs/packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.targetId).toBe(targetId);
     });
   });
 
@@ -3816,6 +3873,202 @@ describe('PublishArtifactsUseCase', () => {
 
         expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
       });
+    });
+  });
+
+  describe('when lock file includes artifact metadata from rendered files', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let standardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const recipeId = createRecipeId(uuidv4());
+    const standardId = createStandardId(uuidv4());
+    const spaceId = uuidv4();
+    const pkgId = uuidv4();
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        recipeId,
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 3,
+      });
+
+      standardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        version: 2,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: '',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [standardVersion.id],
+        targetIds: [targetId],
+        packagesSlugs: ['my-package'],
+        packageIds: [createPackageId(pkgId)],
+        artifactSpaceIds: {
+          [recipeId]: spaceId,
+          [standardId]: spaceId,
+        },
+        artifactPackageIds: {
+          [recipeId]: [pkgId],
+          [standardId]: [pkgId],
+        },
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+        standardVersion,
+      );
+      mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/commands/test-recipe.md',
+            content: 'recipe content',
+            artifactType: 'command',
+            artifactId: recipeId,
+            artifactSlug: 'test-recipe',
+            artifactVersion: 3,
+          },
+          {
+            path: '.packmind/standards/test-standard.md',
+            content: 'standard content',
+            artifactType: 'standard',
+            artifactId: standardId,
+            artifactSlug: 'test-standard',
+            artifactVersion: 2,
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    it('includes recipe artifact entry in lock file', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.artifacts['command:test-recipe']).toEqual(
+        expect.objectContaining({
+          type: 'command',
+          version: 3,
+          name: 'Test Recipe',
+          id: recipeId,
+        }),
+      );
+    });
+
+    it('includes standard artifact entry in lock file', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.artifacts['standard:test-standard']).toEqual(
+        expect.objectContaining({
+          type: 'standard',
+          version: 2,
+          name: 'Test Standard',
+          id: standardId,
+        }),
+      );
+    });
+
+    it('includes package slugs in lock file', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.packageSlugs).toEqual(['my-package']);
+    });
+
+    it('includes space id in lock file artifact entries', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.artifacts['command:test-recipe'].spaceId).toBe(spaceId);
+    });
+
+    it('includes package ids in lock file artifact entries', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path === 'packmind-lock.json',
+      );
+
+      assert(lockFile, 'lockFile should be defined');
+      assert(lockFile.content, 'lockFile.content should be defined');
+      const parsed = JSON.parse(lockFile.content);
+
+      expect(parsed.artifacts['command:test-recipe'].packageIds).toEqual([
+        pkgId,
+      ]);
     });
   });
 });

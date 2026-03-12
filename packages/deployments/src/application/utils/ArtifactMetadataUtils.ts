@@ -93,3 +93,18 @@ export function enrichFileModificationsWithMetadata(
     }
   }
 }
+
+export function flattenArtifactMetadataMap(metadata: ArtifactMetadataMap): {
+  artifactSpaceIds: Record<string, string>;
+  artifactPackageIds: Record<string, string[]>;
+} {
+  const artifactSpaceIds: Record<string, string> = {};
+  const artifactPackageIds: Record<string, string[]> = {};
+  for (const artifactTypeMap of Object.values(metadata)) {
+    for (const [artifactId, meta] of artifactTypeMap) {
+      artifactSpaceIds[artifactId] = meta.spaceId;
+      artifactPackageIds[artifactId] = meta.packageIds;
+    }
+  }
+  return { artifactSpaceIds, artifactPackageIds };
+}
