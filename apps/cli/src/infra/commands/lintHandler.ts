@@ -1,3 +1,5 @@
+import * as fs from 'fs/promises';
+import * as pathModule from 'path';
 import { DetectionSeverity, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { LintViolation } from '../../domain/entities/LintViolation';
@@ -12,6 +14,7 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { PackmindIgnoreReader } from '../../application/services/PackmindIgnoreReader';
+import { matchesGlobPattern } from '../../application/services/ListFiles';
 
 const SEVERITY_LEVELS: Record<DetectionSeverity, number> = {
   [DetectionSeverity.WARNING]: 0,
@@ -81,7 +84,21 @@ export async function lintHandler(
   const targetPath = path ?? '.';
   const absolutePath = resolvePath(targetPath);
 
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
+  let stats: import('fs').Stats;
+  try {
+    stats = await fs.stat(absolutePath);
+  } catch {
+    logErrorConsole(`File or directory "${absolutePath}" does not exist`);
+    exit(1);
+    return;
+  }
+  const isFile = stats.isFile();
+  const directoryForOps = isFile
+    ? pathModule.dirname(absolutePath)
+    : absolutePath;
+
+  const gitRoot =
+    await packmindCliHexa.tryGetGitRepositoryRoot(directoryForOps);
 
   if (diff && !gitRoot) {
     throw new Error(
@@ -92,13 +109,26 @@ export async function lintHandler(
   let ignorePatterns: string[] = [];
   try {
     ignorePatterns = await packmindIgnoreReader.readIgnorePatterns(
-      absolutePath,
+      directoryForOps,
       gitRoot,
     );
   } catch (err) {
     logWarningConsole(
       `Failed to read .packmindignore: ${(err as Error).message}`,
     );
+  }
+
+  if (isFile && ignorePatterns.length > 0) {
+    const relPath = pathModule
+      .relative(gitRoot ?? directoryForOps, absolutePath)
+      .replace(/\\/g, '/');
+    if (ignorePatterns.some((p) => matchesGlobPattern(relPath, p))) {
+      logWarningConsole(
+        `File "${absolutePath}" is excluded by .packmindignore`,
+      );
+      exit(0);
+      return;
+    }
   }
 
   let violations: LintViolation[] = [];
@@ -117,7 +147,7 @@ export async function lintHandler(
       violations = result.violations;
     } else {
       const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
-        absolutePath,
+        directoryForOps,
         gitRoot,
       );
 

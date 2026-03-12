@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises';
 import { DetectionSeverity } from '@packmind/types';
 import { DiffMode } from '../../domain/entities/DiffMode';
 import { LintViolation } from '../../domain/entities/LintViolation';
@@ -19,6 +20,7 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 
+jest.mock('fs/promises');
 jest.mock('../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
@@ -56,6 +58,11 @@ describe('lintHandler', () => {
 
     mockExit = jest.fn();
     mockResolvePath = jest.fn((path) => `/absolute/${path}`);
+
+    jest.mocked(fs.stat).mockResolvedValue({
+      isFile: () => false,
+      isDirectory: () => true,
+    } as unknown as Awaited<ReturnType<typeof fs.stat>>);
 
     deps = {
       packmindCliHexa: mockPackmindCliHexa,
@@ -880,6 +887,100 @@ describe('lintHandler', () => {
           expect.objectContaining({
             ignorePatterns: [],
           }),
+        );
+      });
+    });
+  });
+
+  describe('single file handling', () => {
+    describe('when the given file does not exist', () => {
+      it('logs error and exits with code 1', async () => {
+        jest
+          .mocked(fs.stat)
+          .mockRejectedValue(
+            Object.assign(new Error('ENOENT'), { code: 'ENOENT' }),
+          );
+
+        await lintHandler(createArgs({ path: 'missing.ts' }), deps);
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('does not exist'),
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when single file matches .packmindignore pattern', () => {
+      it('logs warning about .packmindignore and exits with code 0', async () => {
+        jest.mocked(fs.stat).mockResolvedValue({
+          isFile: () => true,
+          isDirectory: () => false,
+        } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockIgnoreReader.readIgnorePatterns.mockResolvedValue(['*.ts']);
+
+        await lintHandler(createArgs({ path: 'src/file.ts' }), deps);
+
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('.packmindignore'),
+        );
+        expect(mockExit).toHaveBeenCalledWith(0);
+        expect(mockPackmindCliHexa.lintFilesFromConfig).not.toHaveBeenCalled();
+        expect(mockPackmindCliHexa.lintFilesAgainstRule).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when single file does not match .packmindignore pattern', () => {
+      it('proceeds with linting', async () => {
+        jest.mocked(fs.stat).mockResolvedValue({
+          isFile: () => true,
+          isDirectory: () => false,
+        } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockIgnoreReader.readIgnorePatterns.mockResolvedValue(['generated/**']);
+        mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+          hasConfigs: true,
+          configs: [{ path: '/project/packmind.json' }],
+        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations: [],
+        });
+
+        await lintHandler(createArgs({ path: 'src/file.ts' }), deps);
+
+        expect(mockPackmindCliHexa.lintFilesFromConfig).toHaveBeenCalled();
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when path is a single file in config mode', () => {
+      it('reads hierarchical config from the file directory, not the file itself', async () => {
+        jest.mocked(fs.stat).mockResolvedValue({
+          isFile: () => true,
+          isDirectory: () => false,
+        } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+          hasConfigs: true,
+          configs: [{ path: '/project/packmind.json' }],
+        });
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations: [],
+        });
+
+        // resolvePath('src/file.ts') = '/absolute/src/file.ts'
+        // directoryForOps = '/absolute/src'
+        await lintHandler(createArgs({ path: 'src/file.ts' }), deps);
+
+        expect(mockPackmindCliHexa.readHierarchicalConfig).toHaveBeenCalledWith(
+          '/absolute/src',
+          '/project',
         );
       });
     });
