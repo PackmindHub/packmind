@@ -807,11 +807,11 @@ describe('CursorDeployer', () => {
         ).toBe(true);
       });
 
-      it('deletes packmind-cli-list-commands default skill', () => {
+      it('deletes packmind-list-commands default skill', () => {
         expect(
           result.delete.some(
             (item) =>
-              item.path === '.cursor/skills/packmind-cli-list-commands' &&
+              item.path === '.cursor/skills/packmind-list-commands' &&
               item.type === DeleteItemType.Directory,
           ),
         ).toBe(true);

@@ -1,5 +1,5 @@
 ---
-name: 'packmind-cli-list-commands'
+name: 'packmind-list-commands'
 description: 'Reference for Packmind CLI listing commands. This skill should be used when an agent needs to discover available standards, commands, or skills in the Packmind organization.'
 license: 'Complete terms in LICENSE.txt'
 ---

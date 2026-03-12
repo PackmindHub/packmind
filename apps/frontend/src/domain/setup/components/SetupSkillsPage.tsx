@@ -62,7 +62,7 @@ const defaultSkills: DefaultSkill[] = [
     name: 'CLI List Commands',
     description:
       'Discover available standards, commands, and skills in your organization.',
-    slug: 'packmind-cli-list-commands',
+    slug: 'packmind-list-commands',
     minimumVersion: '1.0.0',
   },
 ];
