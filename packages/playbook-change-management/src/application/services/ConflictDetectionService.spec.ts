@@ -3,6 +3,8 @@ import {
   ChangeProposalType,
   createChangeProposalId,
   createRecipeId,
+  createSkillFileId,
+  createSkillId,
   createSpaceId,
   createUserId,
 } from '@packmind/types';
@@ -344,6 +346,49 @@ And a new line at the end
       ]);
 
       expect(result[2].conflictsWith).toEqual([]);
+    });
+  });
+
+  describe('with addSkillFile and updateSkillFilePermissions proposals', () => {
+    const skillId = createSkillId('skill-1');
+
+    const addSkillFileProposal = changeProposalFactory({
+      id: createChangeProposalId('1'),
+      type: ChangeProposalType.addSkillFile,
+      artefactId: skillId,
+      spaceId,
+      payload: {
+        item: {
+          path: 'references/project-config.md',
+          content: '# Config',
+          permissions: 'rw-rw-r--',
+          isBase64: false,
+        },
+      },
+      createdBy,
+    });
+
+    const updatePermissionsProposal = changeProposalFactory({
+      id: createChangeProposalId('2'),
+      type: ChangeProposalType.updateSkillFilePermissions,
+      artefactId: skillId,
+      spaceId,
+      payload: {
+        targetId: createSkillFileId('existing-file'),
+        oldValue: 'rw-r--r--',
+        newValue: 'rw-rw-r--',
+      },
+      createdBy,
+    });
+
+    it('does not crash and marks proposals as not conflicting', () => {
+      const result = service.detectConflicts([
+        addSkillFileProposal,
+        updatePermissionsProposal,
+      ]);
+
+      expect(result[0].conflictsWith).toEqual([]);
+      expect(result[1].conflictsWith).toEqual([]);
     });
   });
 
