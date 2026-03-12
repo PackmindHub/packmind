@@ -192,16 +192,9 @@ async function findTargetDirectories(
  * formatted as /path/to/dir/ (with leading and trailing slashes).
  */
 function computeRelativePath(targetAbsDir: string, gitRoot: string): string {
-  let relativePath = targetAbsDir.startsWith(gitRoot)
-    ? targetAbsDir.slice(gitRoot.length)
-    : '/';
-  if (!relativePath.startsWith('/')) {
-    relativePath = '/' + relativePath;
-  }
-  if (!relativePath.endsWith('/')) {
-    relativePath = relativePath + '/';
-  }
-  return relativePath;
+  const rel = nodePath.relative(gitRoot, targetAbsDir);
+  if (rel.startsWith('..')) return '/';
+  return rel ? `/${rel}/` : '/';
 }
 
 async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
