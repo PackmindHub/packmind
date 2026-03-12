@@ -381,13 +381,20 @@ And a new line at the end
       createdBy,
     });
 
-    it('does not crash and marks proposals as not conflicting', () => {
-      const result = service.detectConflicts([
+    let result: ReturnType<typeof service.detectConflicts>;
+
+    beforeEach(() => {
+      result = service.detectConflicts([
         addSkillFileProposal,
         updatePermissionsProposal,
       ]);
+    });
 
+    it('marks addSkillFile proposal as not conflicting', () => {
       expect(result[0].conflictsWith).toEqual([]);
+    });
+
+    it('marks updateSkillFilePermissions proposal as not conflicting', () => {
       expect(result[1].conflictsWith).toEqual([]);
     });
   });

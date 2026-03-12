@@ -294,23 +294,25 @@ describe('StandardVersionRepository', () => {
       expect(foundVersion).toBeNull();
     });
 
-    it('returns null when allowedSpaceIds is empty even if matching data exists', async () => {
-      const standard = await standardRepo.save(
-        standardFactory({ slug: `standard-${uuidv4()}` }),
-      );
-
-      await standardVersionRepository.add(
-        standardVersionFactory({ standardId: standard.id, version: 1 }),
-      );
-
-      const foundVersion =
-        await standardVersionRepository.findByStandardIdAndVersion(
-          standard.id,
-          1,
-          [],
+    describe('when allowedSpaceIds is empty even if matching data exists', () => {
+      it('returns null', async () => {
+        const standard = await standardRepo.save(
+          standardFactory({ slug: `standard-${uuidv4()}` }),
         );
 
-      expect(foundVersion).toBeNull();
+        await standardVersionRepository.add(
+          standardVersionFactory({ standardId: standard.id, version: 1 }),
+        );
+
+        const foundVersion =
+          await standardVersionRepository.findByStandardIdAndVersion(
+            standard.id,
+            1,
+            [],
+          );
+
+        expect(foundVersion).toBeNull();
+      });
     });
 
     it('returns null for non-existent standard id and version', async () => {
