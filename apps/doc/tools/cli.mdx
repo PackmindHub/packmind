@@ -501,7 +501,7 @@ This command:
 
 ### Specify a Path
 
-Lint a specific directory or file:
+Lint a specific directory:
 
 ```bash
 packmind-cli lint src/
@@ -510,6 +510,18 @@ packmind-cli lint src/
 ```bash
 packmind-cli lint /path/to/your/project
 ```
+
+Lint a single file:
+
+```bash
+packmind-cli lint src/components/Button.tsx
+```
+
+When a single file is passed:
+
+- The CLI verifies the file exists and exits with an error if not
+- `.packmindignore` patterns are checked — if the file matches, it is skipped and the command exits with code 0
+- If the file is not in scope for the requested rule or standard (i.e. its extension doesn't match the rule's configured languages), an informational message is logged and no violations are reported
 
 ### Limiting Scope with `--changed-files` and `--changed-lines`
 

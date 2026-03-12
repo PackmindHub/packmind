@@ -31,7 +31,6 @@ import { IPackmindServices } from '../../domain/services/IPackmindServices';
 import { IListFiles } from '../../domain/services/IListFiles';
 import { IGitService } from '../../domain/services/IGitService';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
-
 jest.mock('fs/promises');
 
 describe('LintFilesFromConfigUseCase', () => {

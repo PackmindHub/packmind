@@ -103,39 +103,39 @@ export class ListFiles implements IListFiles {
     const normalizedPath = path.normalize(filePath).replace(/\\/g, '/');
 
     for (const exclude of excludes) {
-      if (this.matchesGlobPattern(normalizedPath, exclude)) {
+      if (matchesGlobPattern(normalizedPath, exclude)) {
         return true;
       }
     }
 
     return false;
   }
+}
 
-  private matchesGlobPattern(filePath: string, pattern: string): boolean {
-    // Handle simple directory names (e.g., "node_modules", "dist")
-    if (!pattern.includes('*') && !pattern.includes('/')) {
-      const pathSegments = filePath.split('/');
-      return pathSegments.some((segment) => segment === pattern);
-    }
-
-    // Convert glob pattern to regex
-    // Escape regex metacharacters first, then replace glob wildcards
-    let regexPattern = pattern
-      .replace(/[.[\](){}^$+?|\\]/g, '\\$&')
-      .replace(/\*\*/g, '__DOUBLE_STAR__')
-      .replace(/\*/g, '[^/]*')
-      .replace(/__DOUBLE_STAR__/g, '.*')
-      .replace(/\//g, '\\/');
-
-    // Add anchors if the pattern doesn't start with ** or end with **
-    if (!pattern.startsWith('**/')) {
-      regexPattern = '(^|/)' + regexPattern;
-    }
-    if (!pattern.endsWith('/**')) {
-      regexPattern = regexPattern + '($|/)';
-    }
-
-    const regex = new RegExp(regexPattern);
-    return regex.test(filePath);
+export function matchesGlobPattern(filePath: string, pattern: string): boolean {
+  // Handle simple directory names (e.g., "node_modules", "dist")
+  if (!pattern.includes('*') && !pattern.includes('/')) {
+    const pathSegments = filePath.split('/');
+    return pathSegments.some((segment) => segment === pattern);
   }
+
+  // Convert glob pattern to regex
+  // Escape regex metacharacters first, then replace glob wildcards
+  let regexPattern = pattern
+    .replace(/[.[\](){}^$+?|\\]/g, '\\$&')
+    .replace(/\*\*/g, '__DOUBLE_STAR__')
+    .replace(/\*/g, '[^/]*')
+    .replace(/__DOUBLE_STAR__/g, '.*')
+    .replace(/\//g, '\\/');
+
+  // Add anchors if the pattern doesn't start with ** or end with **
+  if (!pattern.startsWith('**/')) {
+    regexPattern = '(^|/)' + regexPattern;
+  }
+  if (!pattern.endsWith('/**')) {
+    regexPattern = regexPattern + '($|/)';
+  }
+
+  const regex = new RegExp(regexPattern);
+  return regex.test(filePath);
 }

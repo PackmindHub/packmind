@@ -1,4 +1,5 @@
 import { execSync, ExecSyncOptions } from 'child_process';
+import { readFileSync } from 'fs';
 import { PackmindLogger } from '@packmind/logger';
 import { ModifiedLine } from '../../domain/entities/DiffMode';
 import * as path from 'path';
@@ -441,17 +442,10 @@ export class GitService implements IGitService {
    */
   private countFileLines(filePath: string): number {
     try {
-      const stdout = execSync(`wc -l < "${filePath}"`, { encoding: 'utf-8' });
-      const count = parseInt(stdout.trim(), 10);
-      // wc -l returns 0 for files without trailing newline, but file has content
-      // Add 1 if file has content but no trailing newline
-      if (count === 0) {
-        const content = execSync(`head -c 1 "${filePath}"`, {
-          encoding: 'utf-8',
-        });
-        return content.length > 0 ? 1 : 0;
-      }
-      return count;
+      const content = readFileSync(filePath, 'utf-8');
+      if (content.length === 0) return 0;
+      const newlines = (content.match(/\n/g) ?? []).length;
+      return content.endsWith('\n') ? newlines : newlines + 1;
     } catch {
       return 0;
     }
