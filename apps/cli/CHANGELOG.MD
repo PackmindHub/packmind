@@ -2,6 +2,7 @@
 
 ## Added
 
+- Fixed `diff` behavior that did not work properly with sub-directories
 - Add `.packmindignore` file support to exclude files/folders from linting without modifying CLI source code
 
 ## Changed
