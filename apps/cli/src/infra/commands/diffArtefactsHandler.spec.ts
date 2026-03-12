@@ -908,7 +908,7 @@ describe('diffArtefactsHandler', () => {
     });
   });
 
-  describe('when not in a Packmind project (Rule 4)', () => {
+  describe('when not in a Packmind project', () => {
     beforeEach(() => {
       mockPackmindCliHexa.configExists.mockResolvedValue(false);
       mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
