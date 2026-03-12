@@ -856,7 +856,7 @@ describe('DeployerService', () => {
         '.github/copilot-instructions.md',
         '.junie.md',
         '.packmind.md',
-        '.gitlab/duo_chat.yml',
+        '.gitlab/duo/chat-rules.md',
       ];
 
       let result: FileUpdates;
@@ -899,7 +899,7 @@ describe('DeployerService', () => {
         '.github/copilot-instructions.md',
         '.junie.md',
         '.packmind.md',
-        '.gitlab/duo_chat.yml',
+        '.gitlab/duo/chat-rules.md',
       ])('includes %s file', (expectedFile) => {
         expect(
           result.createOrUpdate.find((f) => f.path === expectedFile),
