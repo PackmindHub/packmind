@@ -478,6 +478,57 @@ describe('ListFiles', () => {
     });
   });
 
+  describe('when *.min.* pattern is used', () => {
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'src'));
+      await fs.writeFile(path.join(tempDir, 'src', 'admin.js'), 'admin file');
+      await fs.writeFile(
+        path.join(tempDir, 'src', 'app.min.js'),
+        'minified file',
+      );
+    });
+
+    it('does not exclude admin.js (dot is literal)', async () => {
+      const result = await listFiles.listFilesInDirectory(
+        tempDir,
+        [],
+        ['*.min.*'],
+      );
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'src', 'admin.js'),
+      });
+    });
+
+    it('excludes app.min.js', async () => {
+      const result = await listFiles.listFilesInDirectory(
+        tempDir,
+        [],
+        ['*.min.*'],
+      );
+      expect(result).not.toContainEqual({
+        path: path.join(tempDir, 'src', 'app.min.js'),
+      });
+    });
+  });
+
+  describe('when a pattern contains regex special characters like [', () => {
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'src'));
+      await fs.writeFile(path.join(tempDir, 'src', 'app.ts'), 'normal file');
+    });
+
+    it('does not throw and still returns files', async () => {
+      const result = await listFiles.listFilesInDirectory(
+        tempDir,
+        [],
+        ['src/[legacy]'],
+      );
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'src', 'app.ts'),
+      });
+    });
+  });
+
   describe('readFileContent', () => {
     it('reads and returns file content', async () => {
       const filePath = path.join(tempDir, 'test.txt');
