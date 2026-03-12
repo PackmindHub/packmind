@@ -3,6 +3,14 @@ import * as path from 'path';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
 import { FileResult, IListFiles } from '../../domain/services/IListFiles';
 
+export const DEFAULT_EXCLUDES = [
+  'node_modules',
+  'dist',
+  '*.min.*',
+  '*.map',
+  '.git',
+];
+
 export class ListFiles implements IListFiles {
   async listFilesInDirectory(
     directoryPath: string,
@@ -111,8 +119,9 @@ export class ListFiles implements IListFiles {
     }
 
     // Convert glob pattern to regex
-    // Replace ** with a placeholder, then * with [^/]*, then ** placeholder with .*
+    // Escape regex metacharacters first, then replace glob wildcards
     let regexPattern = pattern
+      .replace(/[.[\](){}^$+?|\\]/g, '\\$&')
       .replace(/\*\*/g, '__DOUBLE_STAR__')
       .replace(/\*/g, '[^/]*')
       .replace(/__DOUBLE_STAR__/g, '.*')

@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   UpdatePackageCommand,
   UpdatePackageResponse,
@@ -9,6 +13,9 @@ import {
   ISpacesPort,
   IStandardsPort,
   ISkillsPort,
+  ArtefactRemovedFromPackageEvent,
+  createUserId,
+  createOrganizationId,
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
@@ -25,6 +32,7 @@ export class UpdatePackageUsecase
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -145,6 +153,51 @@ export class UpdatePackageUsecase
       standardCount: updatedPackage.standards?.length ?? 0,
       skillCount: updatedPackage.skills?.length ?? 0,
     });
+
+    // Compute removed artefacts and emit events
+    const removedStandards = (existingPackage.standards ?? []).filter(
+      (id) => !standardIds.includes(id),
+    );
+    const removedRecipes = (existingPackage.recipes ?? []).filter(
+      (id) => !recipeIds.includes(id),
+    );
+    const removedSkills = (existingPackage.skills ?? []).filter(
+      (id) => !skillsIds.includes(id),
+    );
+
+    const removedArtefacts = [
+      ...removedStandards.map((id) => String(id)),
+      ...removedRecipes.map((id) => String(id)),
+      ...removedSkills.map((id) => String(id)),
+    ];
+
+    if (removedArtefacts.length > 0) {
+      const allPackages = await this.services
+        .getPackageService()
+        .getPackagesBySpaceId(command.spaceId);
+
+      for (const artefactId of removedArtefacts) {
+        const remainingPackagesCount = allPackages.filter(
+          (p) =>
+            p.id !== command.packageId &&
+            [...(p.standards ?? []), ...(p.recipes ?? []), ...(p.skills ?? [])]
+              .map(String)
+              .includes(artefactId),
+        ).length;
+
+        this.eventEmitterService.emit(
+          new ArtefactRemovedFromPackageEvent({
+            artefactId,
+            spaceId: command.spaceId,
+            packageId: command.packageId,
+            remainingPackagesCount,
+            userId: createUserId(command.userId),
+            organizationId: createOrganizationId(command.organizationId),
+            source: command.source ?? 'ui',
+          }),
+        );
+      }
+    }
 
     return { package: updatedPackage };
   }

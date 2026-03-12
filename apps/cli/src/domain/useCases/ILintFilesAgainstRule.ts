@@ -9,6 +9,7 @@ export type LintFilesAgainstRuleCommand = {
   draftMode?: boolean;
   language?: string;
   diffMode?: DiffMode;
+  ignorePatterns?: string[];
 };
 
 export type LintFilesAgainstRuleResult = {

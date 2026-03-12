@@ -237,6 +237,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         content: skillMarkdown,
         artifactType: 'skill',
         artifactName: skillVersion.name,
+        artifactId: skillVersion.skillId as string,
       });
 
       // Deploy additional skill files if provided
@@ -251,6 +252,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
                 content: skillFile.content,
                 artifactType: 'skill',
                 artifactName: skillVersion.name,
+                artifactId: skillVersion.skillId as string,
               });
             }
           }

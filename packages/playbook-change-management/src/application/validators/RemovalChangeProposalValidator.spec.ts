@@ -7,7 +7,6 @@ import {
   createSkillId,
   createSpaceId,
   createStandardId,
-  createTargetId,
   createUserId,
   IRecipesPort,
   ISkillsPort,
@@ -78,7 +77,6 @@ describe('RemovalChangeProposalValidator', () => {
   describe('validate() for removeStandard', () => {
     const standardId = createStandardId('standard-id');
     const payload: RemoveArtefactPayload = {
-      targetId: createTargetId('target-id'),
       packageIds: [createPackageId('package-id')],
     };
 
@@ -162,7 +160,6 @@ describe('RemovalChangeProposalValidator', () => {
   describe('validate() for removeCommand', () => {
     const recipeId = createRecipeId('recipe-id');
     const payload: RemoveArtefactPayload = {
-      targetId: createTargetId('target-id'),
       packageIds: [createPackageId('package-id')],
     };
 
@@ -251,7 +248,6 @@ describe('RemovalChangeProposalValidator', () => {
   describe('validate() for removeSkill', () => {
     const skillId = createSkillId('skill-id');
     const payload: RemoveArtefactPayload = {
-      targetId: createTargetId('target-id'),
       packageIds: [createPackageId('package-id')],
     };
 

@@ -12,9 +12,11 @@ import {
   ChangeProposalType,
   CodingAgent,
   createPackageId,
+  createTargetId,
 } from '@packmind/types';
 import { normalizePath } from '../../application/utils/pathUtils';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
+import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
 export type DiffRemoveHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -32,6 +34,77 @@ const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
   standard: 'standard',
   skill: 'skill',
 };
+
+type ArtifactMetadataResult = {
+  artifactId: string;
+  spaceId: string;
+  packageIds: string[];
+  artifactName: string;
+  targetId: string;
+};
+
+function findArtifactInLockFile(
+  lockFile: PackmindLockFile,
+  filePathForComparison: string,
+  expectedArtifactType: ArtifactType,
+): ArtifactMetadataResult | null {
+  if (!lockFile.targetId) {
+    return null;
+  }
+
+  for (const entry of Object.values(lockFile.artifacts)) {
+    if (entry.type !== expectedArtifactType) {
+      continue;
+    }
+
+    const matchingFile = entry.files.find(
+      (f) => normalizePath(f.path) === filePathForComparison,
+    );
+
+    if (matchingFile && entry.packageIds.length > 0) {
+      return {
+        artifactId: entry.id,
+        spaceId: entry.spaceId,
+        packageIds: entry.packageIds,
+        artifactName: entry.name,
+        targetId: lockFile.targetId,
+      };
+    }
+  }
+
+  return null;
+}
+
+function computeFilePathRelativeToTarget(
+  absoluteFilePath: string,
+  cwd: string,
+  gitRoot: string,
+): string {
+  const relativeToGitRoot = absoluteFilePath.startsWith(gitRoot)
+    ? absoluteFilePath.slice(gitRoot.length)
+    : absoluteFilePath;
+
+  let normalizedFilePath = normalizePath(relativeToGitRoot);
+  if (normalizedFilePath.startsWith('/')) {
+    normalizedFilePath = normalizedFilePath.slice(1);
+  }
+
+  // Paths are relative to the target (cwd relative to git root)
+  let relativePath = cwd.startsWith(gitRoot) ? cwd.slice(gitRoot.length) : '/';
+  if (!relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath;
+  }
+  if (!relativePath.endsWith('/')) {
+    relativePath = relativePath + '/';
+  }
+
+  // relativePath always starts with '/' after the normalization above
+  const relativePathPrefix = relativePath.slice(1);
+  return relativePathPrefix.length > 0 &&
+    normalizedFilePath.startsWith(relativePathPrefix)
+    ? normalizedFilePath.slice(relativePathPrefix.length)
+    : normalizedFilePath;
+}
 
 export async function diffRemoveHandler(
   deps: DiffRemoveHandlerDependencies,
@@ -122,13 +195,40 @@ export async function diffRemoveHandler(
     return;
   }
 
-  // Collect git info
-  let gitRemoteUrl: string | undefined;
-  let gitBranch: string | undefined;
-  let relativePath: string | undefined;
-
+  // Resolve git root once, shared by both lock file and API fallback paths
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-  if (gitRoot) {
+
+  // Try to resolve artifact metadata from lock file first
+  let metadata: ArtifactMetadataResult | null = null;
+
+  const lockFile = await packmindCliHexa.readLockFile(cwd);
+  if (lockFile) {
+    const lockFilePathForComparison = gitRoot
+      ? computeFilePathRelativeToTarget(matchPath, cwd, gitRoot)
+      : normalizePath(path.relative(cwd, matchPath));
+
+    metadata = findArtifactInLockFile(
+      lockFile,
+      lockFilePathForComparison,
+      artefactResult.artifactType,
+    );
+  }
+
+  // Fall back to getDeployed() API if lock file didn't provide the metadata
+  if (!metadata) {
+    if (!gitRoot) {
+      logErrorConsole(
+        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      );
+      exit(1);
+      return;
+    }
+
+    // Collect git info
+    let gitRemoteUrl: string | undefined;
+    let gitBranch: string | undefined;
+    let relativePath: string | undefined;
+
     try {
       gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
       gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
@@ -145,78 +245,69 @@ export async function diffRemoveHandler(
         `Failed to collect git info: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
-  }
 
-  if (!gitRemoteUrl || !gitBranch || !relativePath) {
-    logErrorConsole(
-      '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+    if (!gitRemoteUrl || !gitBranch || !relativePath) {
+      logErrorConsole(
+        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      );
+      exit(1);
+      return;
+    }
+
+    // Query what's deployed
+    const deployedContent = await packmindCliHexa
+      .getPackmindGateway()
+      .deployment.getDeployed({
+        packagesSlugs: configPackages,
+        gitRemoteUrl,
+        gitBranch,
+        relativePath,
+        agents: configAgents,
+      });
+
+    const filePathForComparison = computeFilePathRelativeToTarget(
+      matchPath,
+      cwd,
+      gitRoot,
     );
-    exit(1);
-    return;
-  }
 
-  // Query what's deployed
-  const deployedContent = await packmindCliHexa
-    .getPackmindGateway()
-    .deployment.getDeployed({
-      packagesSlugs: configPackages,
-      gitRemoteUrl,
-      gitBranch,
-      relativePath,
-      agents: configAgents,
-    });
-
-  // gitRoot is guaranteed non-null: the early exit above checks gitRemoteUrl,
-  // which is only set inside the `if (gitRoot)` block.
-  const relativeToGitRoot = matchPath.startsWith(gitRoot!)
-    ? matchPath.slice(gitRoot!.length)
-    : matchPath;
-
-  // Normalize by removing leading slash and converting backslashes
-  let normalizedFilePath = normalizePath(relativeToGitRoot);
-  if (normalizedFilePath.startsWith('/')) {
-    normalizedFilePath = normalizedFilePath.slice(1);
-  }
-
-  // Deployed file paths are relative to the target (relativePath), not the git root.
-  // Strip the relativePath prefix (e.g. "apps/frontend/") so the comparison works
-  // both when running from the repo root and from a sub-target directory.
-  const relativePathPrefix = relativePath.startsWith('/')
-    ? relativePath.slice(1)
-    : relativePath;
-  const filePathForComparison =
-    relativePathPrefix.length > 0 &&
-    normalizedFilePath.startsWith(relativePathPrefix)
-      ? normalizedFilePath.slice(relativePathPrefix.length)
-      : normalizedFilePath;
-
-  // Check if the file exists in deployed content and extract metadata
-  const deployedFile = deployedContent.fileUpdates.createOrUpdate.find(
-    (file) => normalizePath(file.path) === filePathForComparison,
-  );
-
-  if (!deployedFile) {
-    const artifactTypeLabel = ARTIFACT_TYPE_LABELS[artefactResult.artifactType];
-    logErrorConsole(`This ${artifactTypeLabel} does not come from Packmind`);
-    exit(1);
-    return;
-  }
-
-  // Validate we have the necessary metadata for creating a change proposal
-  if (!deployedFile.artifactId || !deployedFile.spaceId) {
-    logErrorConsole(
-      'Missing artifact metadata. Cannot create change proposal for removal.',
+    // Check if the file exists in deployed content and extract metadata
+    const deployedFile = deployedContent.fileUpdates.createOrUpdate.find(
+      (file) => normalizePath(file.path) === filePathForComparison,
     );
-    exit(1);
-    return;
-  }
 
-  if (!deployedContent.targetId || !deployedFile.packageIds) {
-    logErrorConsole(
-      'Missing target or package information. Cannot create change proposal for removal.',
-    );
-    exit(1);
-    return;
+    if (!deployedFile) {
+      const artifactTypeLabel =
+        ARTIFACT_TYPE_LABELS[artefactResult.artifactType];
+      logErrorConsole(`This ${artifactTypeLabel} does not come from Packmind`);
+      exit(1);
+      return;
+    }
+
+    // Validate we have the necessary metadata for creating a change proposal
+    if (!deployedFile.artifactId || !deployedFile.spaceId) {
+      logErrorConsole(
+        'Missing artifact metadata. Cannot create change proposal for removal.',
+      );
+      exit(1);
+      return;
+    }
+
+    if (!deployedContent.targetId || !deployedFile.packageIds) {
+      logErrorConsole(
+        'Missing target or package information. Cannot create change proposal for removal.',
+      );
+      exit(1);
+      return;
+    }
+
+    metadata = {
+      artifactId: deployedFile.artifactId,
+      spaceId: deployedFile.spaceId,
+      packageIds: deployedFile.packageIds,
+      artifactName: deployedFile.artifactName || artefactResult.artifactType,
+      targetId: deployedContent.targetId,
+    };
   }
 
   // Validate and get message
@@ -260,14 +351,13 @@ export async function diffRemoveHandler(
     filePath: absolutePath,
     type: changeProposalType,
     payload: {
-      targetId: deployedContent.targetId,
-      packageIds: deployedFile.packageIds.map(createPackageId),
+      packageIds: metadata.packageIds.map(createPackageId),
     },
-    artifactName: deployedFile.artifactName || artefactResult.artifactType,
+    artifactName: metadata.artifactName,
     artifactType: artefactResult.artifactType,
-    artifactId: deployedFile.artifactId,
-    spaceId: deployedFile.spaceId,
-    targetId: deployedContent.targetId,
+    artifactId: metadata.artifactId,
+    spaceId: metadata.spaceId,
+    targetId: createTargetId(metadata.targetId),
   };
 
   const result = await packmindCliHexa.submitDiffs([[diff]], message);

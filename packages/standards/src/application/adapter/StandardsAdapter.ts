@@ -366,6 +366,12 @@ export class StandardsAdapter
     return this._getRulesByStandardId.getRulesByStandardId(id);
   }
 
+  getRulesByVersionId(versionId: StandardVersionId): Promise<Rule[]> {
+    return this.services
+      .getStandardVersionService()
+      .getRulesByVersionId(versionId);
+  }
+
   getRule(id: RuleId): Promise<Rule | null> {
     return this.repositories.getRuleRepository().findById(id);
   }
@@ -388,6 +394,13 @@ export class StandardsAdapter
     standardId: StandardId,
   ): Promise<StandardVersion | null> {
     return this._getLatestStandardVersion.getLatestStandardVersion(standardId);
+  }
+
+  getStandardVersionByNumber(
+    standardId: StandardId,
+    version: number,
+  ): Promise<StandardVersion | null> {
+    return this._getStandardVersion.getStandardVersion(standardId, version);
   }
 
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]> {

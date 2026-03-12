@@ -8,6 +8,7 @@ import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
 import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
+import { DEFAULT_EXCLUDES } from '../services/ListFiles';
 import {
   DetectionProgramWithSeverity,
   DetectionSeverity,
@@ -130,6 +131,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
       ruleId,
       language,
       diffMode,
+      ignorePatterns,
     } = command;
 
     this.logger.debug(
@@ -231,12 +233,17 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
     }
 
     // Step 1: List files - if single file, use it directly; otherwise scan directory
+    const excludes = [...DEFAULT_EXCLUDES];
+    if (ignorePatterns?.length) {
+      excludes.push(...ignorePatterns);
+    }
+
     let files = isFile
       ? [{ path: absoluteLintPath }]
       : await this.services.listFiles.listFilesInDirectory(
           absoluteLintPath,
           [],
-          ['node_modules', 'dist', '.min.', '.map.', '.git'],
+          excludes,
         );
 
     // Filter files by modified files if diffMode is set

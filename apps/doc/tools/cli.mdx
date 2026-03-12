@@ -14,7 +14,6 @@ The Packmind CLI provides the following commands:
 - **`setup-mcp`** - Configure MCP for AI coding agents
 - **`install`** - Download packages locally
 - **`uninstall`** - Remove packages from your project
-- **`onboard`** - Scan project and generate standards/commands/skills
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
@@ -25,6 +24,7 @@ The Packmind CLI provides the following commands:
 - **`commands list`** - List all commands in your organization
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
+- **`packages list`** - List all packages in your organization
 - **`update`** - Update the CLI to the latest version
 
 ## Installation
@@ -1018,6 +1018,17 @@ If a command with the same slug already exists in your space, Packmind appends a
 ## Packages Command
 
 Create and manage packages from the command line.
+
+### List Packages
+
+```bash
+packmind packages list
+```
+
+This command displays all packages in your Packmind organization, showing:
+
+- **Slug** — The package identifier
+- **Name** — The display name
 
 ### Create a Package
 

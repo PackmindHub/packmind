@@ -16,6 +16,8 @@ import {
   DownloadDefaultSkillsZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
+  GetContentByVersionsCommand,
+  GetContentByVersionsResponse,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -494,4 +496,18 @@ export interface IDeploymentPort {
   getDeployedContent(
     command: GetDeployedContentCommand,
   ): Promise<GetDeployedContentResponse>;
+
+  /**
+   * Gets rendered content for specific artifact versions from a lock file.
+   *
+   * Accepts lock file entries (artifacts with type, id, version) and fetches the
+   * exact versions, renders them for coding agents, and returns file updates.
+   * Unlike getDeployedContent, this does not resolve targets or use distribution history.
+   *
+   * @param command - Command containing artifact version entries and organization context
+   * @returns Promise resolving to file updates for all coding agents
+   */
+  getContentByVersions(
+    command: GetContentByVersionsCommand,
+  ): Promise<GetContentByVersionsResponse>;
 }

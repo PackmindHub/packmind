@@ -91,7 +91,7 @@ describe('GetDeployedContentUseCase', () => {
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
     renderModeConfigurationService = {
-      resolveActiveCodingAgents: jest
+      resolveCodingAgents: jest
         .fn()
         .mockResolvedValue([CodingAgents.packmind, CodingAgents.claude]),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
@@ -105,7 +105,7 @@ describe('GetDeployedContentUseCase', () => {
     } as unknown as jest.Mocked<ISkillsPort>;
 
     standardsPort = {
-      getRulesByStandardId: jest.fn().mockResolvedValue([]),
+      getRulesByVersionId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     accountsPort = {
@@ -266,12 +266,14 @@ describe('GetDeployedContentUseCase', () => {
             content: 'standard content',
             artifactType: 'standard',
             artifactName: 'test-standard',
+            artifactId: standardId as string,
           },
           {
             path: '.packmind/commands/test-recipe.md',
             content: 'recipe content',
             artifactType: 'command',
             artifactName: 'test-recipe',
+            artifactId: recipeId as string,
           },
         ],
         delete: [],
@@ -296,11 +298,15 @@ describe('GetDeployedContentUseCase', () => {
             path: '.packmind/standards/test-standard.md',
             artifactId: standardId as string,
             spaceId: spaceId as string,
+            artifactVersion: standardVersion.version,
+            artifactSlug: standardVersion.slug,
           }),
           expect.objectContaining({
             path: '.packmind/commands/test-recipe.md',
             artifactId: recipeId as string,
             spaceId: spaceId as string,
+            artifactVersion: recipeVersion.version,
+            artifactSlug: recipeVersion.slug,
           }),
         ]),
       );
@@ -343,8 +349,8 @@ describe('GetDeployedContentUseCase', () => {
     it('fetches rules for each standard version', async () => {
       await useCase.execute(command);
 
-      expect(standardsPort.getRulesByStandardId).toHaveBeenCalledWith(
-        standardVersion.standardId,
+      expect(standardsPort.getRulesByVersionId).toHaveBeenCalledWith(
+        standardVersion.id,
       );
     });
 
@@ -452,8 +458,8 @@ describe('GetDeployedContentUseCase', () => {
       await useCase.execute(command);
 
       expect(
-        renderModeConfigurationService.resolveActiveCodingAgents,
-      ).not.toHaveBeenCalled();
+        renderModeConfigurationService.resolveCodingAgents,
+      ).toHaveBeenCalledWith(command.agents, organization.id);
     });
   });
 
@@ -468,8 +474,8 @@ describe('GetDeployedContentUseCase', () => {
       await useCase.execute(command);
 
       expect(
-        renderModeConfigurationService.resolveActiveCodingAgents,
-      ).toHaveBeenCalledWith(organization.id);
+        renderModeConfigurationService.resolveCodingAgents,
+      ).toHaveBeenCalledWith(undefined, organization.id);
     });
   });
 });

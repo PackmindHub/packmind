@@ -25,6 +25,8 @@ import {
   DownloadDefaultSkillsZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
+  GetContentByVersionsCommand,
+  GetContentByVersionsResponse,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -118,6 +120,7 @@ import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/list
 import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
+import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
@@ -171,6 +174,7 @@ export class DeploymentsAdapter
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
   private _downloadDefaultSkillsZipForAgentUseCase!: DownloadDefaultSkillsZipForAgentUseCase;
+  private _getContentByVersionsUseCase!: GetContentByVersionsUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
 
   constructor(
@@ -386,6 +390,15 @@ export class DeploymentsAdapter
       this.accountsPort,
     );
 
+    this._getContentByVersionsUseCase = new GetContentByVersionsUseCase(
+      this.codingAgentPort,
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.skillsPort,
+      this.standardsPort,
+      this.recipesPort,
+      this.accountsPort,
+    );
+
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
       this.accountsPort,
       this.deploymentsServices,
@@ -418,6 +431,7 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
+      ports.eventEmitterService,
     );
 
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(
@@ -440,15 +454,14 @@ export class DeploymentsAdapter
 
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(
       this.accountsPort,
-      this.gitPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
       this.deploymentsServices.getRepositories().getPackageRepository(),
-      this.deploymentsServices.getRepositories().getTargetRepository(),
       this.distributionRepository,
       this.distributedPackageRepository,
       this.deploymentsServices.getRenderModeConfigurationService(),
+      targetResolutionService,
     );
 
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
@@ -709,5 +722,11 @@ export class DeploymentsAdapter
     command: GetDeployedContentCommand,
   ): Promise<GetDeployedContentResponse> {
     return this._getDeployedContentUseCase.execute(command);
+  }
+
+  async getContentByVersions(
+    command: GetContentByVersionsCommand,
+  ): Promise<GetContentByVersionsResponse> {
+    return this._getContentByVersionsUseCase.execute(command);
   }
 }
