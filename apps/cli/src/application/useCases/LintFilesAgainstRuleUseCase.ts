@@ -23,7 +23,10 @@ import {
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { pathStartsWith } from '../utils/pathUtils';
-import { logErrorConsole } from '../../infra/utils/consoleLogger';
+import {
+  logErrorConsole,
+  logInfoConsole,
+} from '../../infra/utils/consoleLogger';
 import { handleScope } from '../utils/handleScope';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
@@ -358,6 +361,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
 
     // Step 4: Execute each program for each file and collect violations
     const violations: LintViolation[] = [];
+    let scopeMatchCount = 0;
 
     for (const file of files) {
       const fileViolations: LintViolation['violations'] = [];
@@ -421,6 +425,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
               `File "${normalizedFilePath}" matches target/scope - processing standard "${standard.name}"`,
             );
           }
+          scopeMatchCount++;
 
           for (const rule of standard.rules) {
             for (const activeProgram of rule.activeDetectionPrograms) {
@@ -502,6 +507,12 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
           violations: fileViolations,
         });
       }
+    }
+
+    if (isFile && files.length === 1 && scopeMatchCount === 0) {
+      logInfoConsole(
+        `File "${absoluteUserPath}" is out of scope for the requested rule/standard — no violations will be reported.`,
+      );
     }
 
     // Step 5: Filter violations by lines if diffMode is LINES

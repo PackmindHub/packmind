@@ -24,7 +24,10 @@ import {
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { pathStartsWith } from '../utils/pathUtils';
-import { logErrorConsole } from '../../infra/utils/consoleLogger';
+import {
+  logErrorConsole,
+  logInfoConsole,
+} from '../../infra/utils/consoleLogger';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
 const origin = 'LintFilesFromConfigUseCase';
@@ -225,6 +228,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
 
     const violations: LintViolation[] = [];
     const allStandardsChecked = new Set<string>();
+    let scopeMatchCount = 0;
 
     for (const file of files) {
       const fileViolations: LintViolation['violations'] = [];
@@ -279,6 +283,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
             }
 
             allStandardsChecked.add(standard.slug);
+            scopeMatchCount++;
 
             for (const rule of standard.rules) {
               for (const activeProgram of rule.activeDetectionPrograms) {
@@ -357,6 +362,12 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
           violations: fileViolations,
         });
       }
+    }
+
+    if (isFile && files.length === 1 && scopeMatchCount === 0) {
+      logInfoConsole(
+        `File "${absoluteUserPath}" is out of scope for the requested rule/standard — no violations will be reported.`,
+      );
     }
 
     // Nothing to await here, we won't delay execution
