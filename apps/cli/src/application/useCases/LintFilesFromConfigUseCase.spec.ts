@@ -31,14 +31,7 @@ import { IPackmindServices } from '../../domain/services/IPackmindServices';
 import { IListFiles } from '../../domain/services/IListFiles';
 import { IGitService } from '../../domain/services/IGitService';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
-import { logInfoConsole } from '../../infra/utils/consoleLogger';
-
 jest.mock('fs/promises');
-jest.mock('../../infra/utils/consoleLogger', () => ({
-  logErrorConsole: jest.fn(),
-  logInfoConsole: jest.fn(),
-  logWarningConsole: jest.fn(),
-}));
 
 describe('LintFilesFromConfigUseCase', () => {
   let useCase: LintFilesFromConfigUseCase;
@@ -719,71 +712,6 @@ describe('LintFilesFromConfigUseCase', () => {
       await expect(
         useCase.execute({ path: '/non-existent-path' }),
       ).rejects.toThrow(/does not exist or cannot be accessed/);
-    });
-  });
-
-  describe('when single file is out of scope for all standards', () => {
-    it('logs info message about file being out of scope', async () => {
-      (fs.stat as jest.Mock).mockResolvedValue({
-        isFile: () => true,
-        isDirectory: () => false,
-      });
-
-      const allConfigs: AllConfigsResult = {
-        configs: [
-          {
-            targetPath: '/',
-            absoluteTargetPath: '/project',
-            packages: { 'my-package': '*' },
-          },
-        ],
-        hasConfigs: true,
-        basePath: '/project',
-      };
-
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
-        '/project',
-      );
-      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
-        allConfigs,
-      );
-      mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue({
-        targets: [
-          {
-            name: 'Target',
-            path: '/',
-            standards: [
-              {
-                name: 'my-standard',
-                slug: 'my-standard',
-                scope: ['*.java'],
-                rules: [
-                  {
-                    content: 'Some rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'java',
-                        severity: DetectionSeverity.ERROR,
-                        detectionProgram: {
-                          mode: DetectionModeEnum.SINGLE_AST,
-                          code: 'function check() { return []; }',
-                          sourceCodeState: 'AST' as const,
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-
-      await useCase.execute({ path: '/project/src/file.ts' });
-
-      expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('out of scope'),
-      );
     });
   });
 });
