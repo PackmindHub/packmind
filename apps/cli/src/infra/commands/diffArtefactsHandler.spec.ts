@@ -877,7 +877,9 @@ describe('diffArtefactsHandler', () => {
     it('displays usage message', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockLog).toHaveBeenCalledWith('Usage: packmind-cli diff');
+      expect(mockLog).toHaveBeenCalledWith(
+        'No packages configured in any target.',
+      );
     });
 
     it('exits with code 0', async () => {

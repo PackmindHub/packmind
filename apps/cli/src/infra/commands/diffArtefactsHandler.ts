@@ -529,10 +529,7 @@ export async function diffArtefactsHandler(
 
     // Handle case where all targets had no packages configured
     if (targetResults.length === 0) {
-      log('Usage: packmind-cli diff');
-      log('');
-      log('Compare local command files against the server.');
-      log('Configure packages in packmind.json first.');
+      log('No packages configured in any target.');
       exit(0);
       return { diffsFound: 0 };
     }
