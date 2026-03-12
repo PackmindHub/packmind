@@ -251,6 +251,7 @@ export class PlaybookChangeManagementAdapter
         standardsPort,
         recipesPort,
         skillsPort,
+        deploymentPort,
         changeProposalService,
         conflictDetectionService,
       );

@@ -4,12 +4,14 @@ import {
   ChangeProposalType,
   createChangeProposalId,
   createOrganizationId,
+  createPackageId,
   createRecipeId,
   createSkillId,
   createSpaceId,
   createStandardId,
   createUserId,
   IAccountsPort,
+  IDeploymentPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -19,6 +21,7 @@ import {
   SkillId,
   StandardId,
 } from '@packmind/types';
+import { packageFactory } from '@packmind/deployments/test/packageFactory';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
@@ -60,6 +63,7 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
+  let deploymentPort: jest.Mocked<IDeploymentPort>;
   let service: jest.Mocked<ChangeProposalService>;
   let conflictDetectionService: jest.Mocked<ConflictDetectionService>;
 
@@ -105,12 +109,17 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       detectConflicts: jest.fn(),
     } as unknown as jest.Mocked<ConflictDetectionService>;
 
+    deploymentPort = {
+      listPackagesBySpace: jest.fn().mockResolvedValue({ packages: [] }),
+    } as unknown as jest.Mocked<IDeploymentPort>;
+
     useCase = new ListChangeProposalsByArtefactUseCase(
       accountsPort,
       spacesPort,
       standardsPort,
       recipesPort,
       skillsPort,
+      deploymentPort,
       service,
       conflictDetectionService,
       stubLogger(),
@@ -775,6 +784,125 @@ And a new line at the end
         const result = await useCase.execute(command);
 
         expect(result.changeProposals[2].conflictsWith).toEqual([]);
+      });
+    });
+  });
+
+  describe('currentPackageIds', () => {
+    const packageId1 = createPackageId('pkg-1');
+    const packageId2 = createPackageId('pkg-2');
+    const command = buildCommand();
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      standardsPort.getStandard.mockResolvedValue(standard);
+      recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+      skillsPort.getSkill.mockResolvedValue(null);
+      service.findProposalsByArtefact.mockResolvedValue([]);
+      conflictDetectionService.detectConflicts.mockReturnValue([]);
+    });
+
+    describe('when artefact is in some packages', () => {
+      beforeEach(() => {
+        deploymentPort.listPackagesBySpace.mockResolvedValue({
+          packages: [
+            packageFactory({
+              id: packageId1,
+              spaceId,
+              standards: [standardId],
+            }),
+            packageFactory({
+              id: packageId2,
+              spaceId,
+              standards: [],
+            }),
+          ],
+        });
+      });
+
+      it('returns only packages containing the artefact', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.currentPackageIds).toEqual([packageId1]);
+      });
+    });
+
+    describe('when artefact is in no packages', () => {
+      beforeEach(() => {
+        deploymentPort.listPackagesBySpace.mockResolvedValue({
+          packages: [
+            packageFactory({ id: packageId1, spaceId, standards: [] }),
+          ],
+        });
+      });
+
+      it('returns empty array', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.currentPackageIds).toEqual([]);
+      });
+    });
+
+    describe('when artefact is a recipe', () => {
+      const recipeCommand = buildCommand({ artefactId: recipeId });
+
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue(null);
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
+        deploymentPort.listPackagesBySpace.mockResolvedValue({
+          packages: [
+            packageFactory({
+              id: packageId1,
+              spaceId,
+              recipes: [recipeId],
+            }),
+          ],
+        });
+      });
+
+      it('checks the recipes field on packages', async () => {
+        const result = await useCase.execute(recipeCommand);
+
+        expect(result.currentPackageIds).toEqual([packageId1]);
+      });
+    });
+
+    describe('when artefact is a skill', () => {
+      const skillCommand = buildCommand({ artefactId: skillId });
+
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue(null);
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+        skillsPort.getSkill.mockResolvedValue(skill);
+        deploymentPort.listPackagesBySpace.mockResolvedValue({
+          packages: [
+            packageFactory({
+              id: packageId1,
+              spaceId,
+              skills: [skillId],
+            }),
+          ],
+        });
+      });
+
+      it('checks the skills field on packages', async () => {
+        const result = await useCase.execute(skillCommand);
+
+        expect(result.currentPackageIds).toEqual([packageId1]);
+      });
+    });
+
+    describe('when there are no packages in the space', () => {
+      beforeEach(() => {
+        deploymentPort.listPackagesBySpace.mockResolvedValue({
+          packages: [],
+        });
+      });
+
+      it('returns empty array', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.currentPackageIds).toEqual([]);
       });
     });
   });

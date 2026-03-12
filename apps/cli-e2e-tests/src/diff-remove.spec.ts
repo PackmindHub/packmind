@@ -218,6 +218,7 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
               },
             }),
           ],
+          currentPackageIds: [pkg.id],
         });
       });
     });
