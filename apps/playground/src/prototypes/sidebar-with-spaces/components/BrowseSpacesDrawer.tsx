@@ -11,7 +11,7 @@ import {
   PMDrawer,
   PMCloseButton,
 } from '@packmind/ui';
-import { LuStar, LuClock, LuUserPlus } from 'react-icons/lu';
+import { LuStar, LuClock, LuUserPlus, LuPlus } from 'react-icons/lu';
 
 import type { Space, JoinableSpace } from '../types';
 import { SPACE_CATEGORIES, joinableSpaces } from '../data';
@@ -63,7 +63,18 @@ export function BrowseSpacesDrawer({
         <PMDrawer.Positioner position="absolute">
           <PMDrawer.Content>
             <PMDrawer.Header paddingBottom={0} borderBottomWidth="0">
-              <PMDrawer.Title fontSize="sm">Spaces</PMDrawer.Title>
+              <PMDrawer.CloseTrigger asChild pos="initial">
+                <PMCloseButton size="sm" />
+              </PMDrawer.CloseTrigger>
+              <PMDrawer.Title fontSize="sm" flex={1}>
+                Spaces
+              </PMDrawer.Title>
+              <PMButton size="xs" variant="secondary">
+                <PMIcon fontSize="xs">
+                  <LuPlus />
+                </PMIcon>
+                New
+              </PMButton>
             </PMDrawer.Header>
 
             {/* Tabs */}
@@ -114,10 +125,6 @@ export function BrowseSpacesDrawer({
                 />
               )}
             </PMDrawer.Body>
-
-            <PMDrawer.CloseTrigger asChild>
-              <PMCloseButton size="sm" />
-            </PMDrawer.CloseTrigger>
           </PMDrawer.Content>
         </PMDrawer.Positioner>
       </PMPortal>
@@ -237,10 +244,8 @@ function MySpacesTab({
                 }}
                 title={pinned ? 'Unpin space' : 'Pin space'}
                 flexShrink={0}
-                color={pinned ? 'orange.400' : 'text.faded'}
-                opacity={pinned ? 1 : 0}
-                _groupHover={{ opacity: 1 }}
-                _hover={{ color: 'orange.400' }}
+                color={pinned ? 'yellow.400' : 'text.faded'}
+                _hover={{ color: 'yellow.400' }}
                 display="flex"
                 alignItems="center"
               >
@@ -277,7 +282,7 @@ function AllSpacesTab({
   return (
     <>
       {requestedSpaces.length > 0 && (
-        <PMBox mb={2}>
+        <PMBox>
           <SectionHeading>Requested</SectionHeading>
           {requestedSpaces.map((space) => (
             <JoinableSpaceRow key={space.id} space={space} />
@@ -302,7 +307,7 @@ function SectionHeading({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <PMBox
       paddingX={3}
-      paddingY={1.5}
+      paddingY={2}
       fontSize="10px"
       fontWeight="semibold"
       textTransform="uppercase"
@@ -342,11 +347,11 @@ function JoinableSpaceRow({ space }: Readonly<{ space: JoinableSpace }>) {
         {space.name}
       </PMText>
       {space.requiresRequest ? (
-        <PMButton size="xs" variant="secondary">
+        <PMButton size="xs" variant="tertiary">
           <PMIcon fontSize="xs">
             <LuClock />
           </PMIcon>
-          Request
+          Requested
         </PMButton>
       ) : (
         <PMButton size="xs" variant="secondary">

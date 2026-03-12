@@ -7,6 +7,9 @@ import {
   PMHStack,
   PMButton,
   PMText,
+  PMAvatar,
+  PMMenu,
+  PMPortal,
 } from '@packmind/ui';
 
 import {
@@ -32,6 +35,53 @@ function toggleInSet(prev: Set<string>, id: string): Set<string> {
   if (next.has(id)) next.delete(id);
   else next.add(id);
   return next;
+}
+
+function getSpaceInitials(name: string): string {
+  const words = name.trim().split(/\s+/);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+// ── Collapsed sub-components ─────────────────────────────────────────────────
+
+function CollapsedSpaceAvatar({
+  space,
+  isActive,
+  onClick,
+}: Readonly<{
+  space: Space;
+  isActive: boolean;
+  onClick: () => void;
+}>) {
+  return (
+    <PMBox
+      as="button"
+      display="flex"
+      justifyContent="center"
+      w="full"
+      py={0.5}
+      onClick={onClick}
+      cursor="pointer"
+      title={space.name}
+    >
+      <PMAvatar.Root
+        size="xs"
+        backgroundColor={space.color}
+        color="white"
+        borderRadius="sm"
+        outline={isActive ? '2px solid' : 'none'}
+        outlineColor={isActive ? space.color : 'transparent'}
+        outlineOffset="2px"
+      >
+        <PMAvatar.Fallback fontWeight="bold" fontSize="2xs" borderRadius="sm">
+          {getSpaceInitials(space.name)}
+        </PMAvatar.Fallback>
+      </PMAvatar.Root>
+    </PMBox>
+  );
 }
 
 // ── Main prototype ───────────────────────────────────────────────────────────
@@ -142,13 +192,213 @@ export default function SidebarWithSpacesPrototype() {
             </PMHStack>
           )
         }
-        footerNav={
-          isCollapsed ? undefined : (
+        footerNav={undefined}
+        width={sidebarWidth}
+        logo={!isCollapsed}
+        logoAction={
+          <PMIconButton
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            size="xs"
+            variant="ghost"
+            onClick={() => setIsCollapsed((v) => !v)}
+          >
+            {isCollapsed ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
+          </PMIconButton>
+        }
+        showLogoContainer
+      >
+        {/* Outer wrapper: fills parent VStack, prevents overflow */}
+        <PMBox display="flex" flexDirection="column" flex={1} minH={0} w="full">
+          {/* Spaces — scrollable */}
+          <PMBox
+            display="flex"
+            flexDirection="column"
+            gap={3}
+            overflowY="auto"
+            flex={1}
+            minH={0}
+          >
+            {/* Spaces header */}
+            {!isCollapsed && (
+              <PMBox
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                paddingX={2}
+              >
+                <PMBox
+                  fontSize="10px"
+                  fontWeight="semibold"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="text.faded"
+                >
+                  Spaces
+                </PMBox>
+                <PMBox
+                  as="button"
+                  fontSize="10px"
+                  color="text.faded"
+                  cursor="pointer"
+                  _hover={{ color: 'text.primary' }}
+                  transition="color 0.15s"
+                  onClick={() => setBrowseOpen(true)}
+                >
+                  Browse
+                </PMBox>
+              </PMBox>
+            )}
+
+            {/* Pinned spaces */}
+            {pinnedList.length > 0 && !isCollapsed && (
+              <PMBox>
+                {pinnedList.map((space) => {
+                  const isSpaceActive = activeKey.startsWith(space.id + ':');
+                  return (
+                    <SpaceNavBlock
+                      key={space.id}
+                      space={space}
+                      isActive={isSpaceActive}
+                      activeKey={activeKey}
+                      onSpaceClick={() => {
+                        if (!isSpaceActive) setActiveSpacePanel(space.id);
+                      }}
+                      onItemClick={isSpaceActive ? handleItemClick : undefined}
+                      isPinned={true}
+                      onPinToggle={() => togglePin(space.id)}
+                    />
+                  );
+                })}
+              </PMBox>
+            )}
+
+            {/* Collapsed pinned spaces */}
+            {pinnedList.length > 0 && isCollapsed && (
+              <PMBox display="flex" flexDirection="column" gap={0.5}>
+                {pinnedList.map((space) => {
+                  const isSpaceActive = activeKey.startsWith(space.id + ':');
+                  return (
+                    <CollapsedSpaceAvatar
+                      key={space.id}
+                      space={space}
+                      isActive={isSpaceActive}
+                      onClick={() => setActiveSpacePanel(space.id)}
+                    />
+                  );
+                })}
+              </PMBox>
+            )}
+
+            {/* Recent spaces */}
+            {recentList.length > 0 && !isCollapsed && (
+              <PMBox>
+                <PMBox
+                  paddingX={2}
+                  marginBottom={1}
+                  fontSize="10px"
+                  fontWeight="semibold"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="text.faded"
+                >
+                  Recent
+                </PMBox>
+                {recentList.map((space) => {
+                  const isSpaceActive = activeKey.startsWith(space.id + ':');
+                  return (
+                    <SpaceNavBlock
+                      key={space.id}
+                      space={space}
+                      isActive={isSpaceActive}
+                      activeKey={activeKey}
+                      onSpaceClick={() => {
+                        if (!isSpaceActive) setActiveSpacePanel(space.id);
+                      }}
+                      onItemClick={isSpaceActive ? handleItemClick : undefined}
+                      isPinned={false}
+                      onPinToggle={() => togglePin(space.id)}
+                    />
+                  );
+                })}
+              </PMBox>
+            )}
+          </PMBox>
+
+          {/* You section — always visible, pinned at bottom */}
+          {isCollapsed ? (
             <PMBox
               w="full"
               borderTopWidth="1px"
               borderColor="{colors.border.tertiary}"
               paddingTop={3}
+              display="flex"
+              justifyContent="center"
+              flexShrink={0}
+            >
+              <PMMenu.Root positioning={{ placement: 'right-end' }}>
+                <PMMenu.Trigger asChild>
+                  <PMBox
+                    cursor="pointer"
+                    display="inline-flex"
+                    _hover={{ opacity: 0.8 }}
+                  >
+                    <PMAvatar.Root
+                      size="xs"
+                      backgroundColor="background.secondary"
+                      color="text.primary"
+                    >
+                      <PMAvatar.Fallback fontSize="2xs" fontWeight="bold">
+                        You
+                      </PMAvatar.Fallback>
+                    </PMAvatar.Root>
+                  </PMBox>
+                </PMMenu.Trigger>
+                <PMPortal>
+                  <PMMenu.Positioner>
+                    <PMMenu.Content>
+                      <PMMenu.Item
+                        value="integrations"
+                        cursor="pointer"
+                        onClick={() => setActiveKey('bottom:integrations')}
+                      >
+                        <PMIcon fontSize="sm">
+                          <LuWrench />
+                        </PMIcon>
+                        Integrations
+                      </PMMenu.Item>
+                      <PMMenu.Item
+                        value="help"
+                        cursor="pointer"
+                        onClick={() => setActiveKey('bottom:help')}
+                      >
+                        <PMIcon fontSize="sm">
+                          <LuCircleHelp />
+                        </PMIcon>
+                        Help
+                      </PMMenu.Item>
+                      <PMMenu.Separator borderColor="border.tertiary" />
+                      <PMMenu.Item
+                        value="logout"
+                        cursor="pointer"
+                        onClick={() => setActiveKey('bottom:logout')}
+                      >
+                        <PMIcon fontSize="sm">
+                          <LuLogOut />
+                        </PMIcon>
+                        Log out
+                      </PMMenu.Item>
+                    </PMMenu.Content>
+                  </PMMenu.Positioner>
+                </PMPortal>
+              </PMMenu.Root>
+            </PMBox>
+          ) : (
+            <PMBox
+              w="full"
+              borderTopWidth="1px"
+              borderColor="{colors.border.tertiary}"
+              paddingTop={3}
+              flexShrink={0}
             >
               <PMBox
                 display="flex"
@@ -181,130 +431,26 @@ export default function SidebarWithSpacesPrototype() {
                   as="button"
                   display="flex"
                   alignItems="center"
-                  gap={1}
+                  gap={2}
                   w="full"
                   paddingX={2}
                   py={1}
                   fontSize="xs"
-                  fontWeight="medium"
-                  color="text.primary"
+                  fontWeight="normal"
+                  color="text.secondary"
                   borderRadius="sm"
                   cursor="pointer"
-                  _hover={{ bg: 'blue.800' }}
+                  _hover={{ bg: 'blue.800', color: 'text.primary' }}
                   transition="background-color 0.15s"
                   textAlign="left"
                   onClick={() => setActiveKey(item.key)}
                 >
-                  <PMIcon fontSize="xs" color="text.tertiary">
+                  <PMIcon fontSize="xs" color="text.faded">
                     {item.icon}
                   </PMIcon>
                   {item.label}
                 </PMBox>
               ))}
-            </PMBox>
-          )
-        }
-        width={sidebarWidth}
-        logo={!isCollapsed}
-        logoAction={
-          <PMIconButton
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            size="xs"
-            variant="ghost"
-            onClick={() => setIsCollapsed((v) => !v)}
-          >
-            {isCollapsed ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
-          </PMIconButton>
-        }
-        showLogoContainer
-      >
-        {/* Spaces */}
-        <PMBox display="flex" flexDirection="column" gap={3}>
-          {/* Spaces header */}
-          {!isCollapsed && (
-            <PMBox
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              paddingX={2}
-            >
-              <PMBox
-                fontSize="10px"
-                fontWeight="semibold"
-                textTransform="uppercase"
-                letterSpacing="wider"
-                color="text.faded"
-              >
-                Spaces
-              </PMBox>
-              <PMBox
-                as="button"
-                fontSize="10px"
-                color="text.faded"
-                cursor="pointer"
-                _hover={{ color: 'text.primary' }}
-                transition="color 0.15s"
-                onClick={() => setBrowseOpen(true)}
-              >
-                Browse
-              </PMBox>
-            </PMBox>
-          )}
-
-          {/* Pinned spaces */}
-          {pinnedList.length > 0 && !isCollapsed && (
-            <PMBox>
-              {pinnedList.map((space) => {
-                const isSpaceActive = activeKey.startsWith(space.id + ':');
-                return (
-                  <SpaceNavBlock
-                    key={space.id}
-                    space={space}
-                    isActive={isSpaceActive}
-                    activeKey={activeKey}
-                    onSpaceClick={() => {
-                      if (!isSpaceActive) setActiveSpacePanel(space.id);
-                    }}
-                    onItemClick={isSpaceActive ? handleItemClick : undefined}
-                    isPinned={true}
-                    onPinToggle={() => togglePin(space.id)}
-                  />
-                );
-              })}
-            </PMBox>
-          )}
-
-          {/* Recent spaces */}
-          {recentList.length > 0 && !isCollapsed && (
-            <PMBox>
-              <PMBox
-                paddingX={2}
-                marginBottom={1}
-                fontSize="10px"
-                fontWeight="semibold"
-                textTransform="uppercase"
-                letterSpacing="wider"
-                color="text.faded"
-              >
-                Recent
-              </PMBox>
-              {recentList.map((space) => {
-                const isSpaceActive = activeKey.startsWith(space.id + ':');
-                return (
-                  <SpaceNavBlock
-                    key={space.id}
-                    space={space}
-                    isActive={isSpaceActive}
-                    activeKey={activeKey}
-                    onSpaceClick={() => {
-                      if (!isSpaceActive) setActiveSpacePanel(space.id);
-                    }}
-                    onItemClick={isSpaceActive ? handleItemClick : undefined}
-                    isPinned={false}
-                    onPinToggle={() => togglePin(space.id)}
-                  />
-                );
-              })}
             </PMBox>
           )}
         </PMBox>

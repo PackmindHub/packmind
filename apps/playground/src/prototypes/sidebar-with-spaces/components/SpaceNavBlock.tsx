@@ -80,10 +80,8 @@ export function SpaceNavBlock({
           title={isPinned ? 'Unpin space' : 'Pin space'}
           flexShrink={0}
           transition="opacity 0.15s"
-          color={isPinned ? 'orange.400' : 'text.faded'}
-          opacity={isPinned ? 1 : 0}
-          _groupHover={{ opacity: 1 }}
-          _hover={{ color: 'orange.400' }}
+          color={isPinned ? 'yellow.400' : 'text.faded'}
+          _hover={{ color: 'yellow.400' }}
           display="flex"
           alignItems="center"
         >
@@ -93,7 +91,7 @@ export function SpaceNavBlock({
 
       {/* Inline nav for active space */}
       {isActive && onItemClick && activeKey && (
-        <PMBox mt={0.5} pb={3}>
+        <PMBox mt={2} pb={3}>
           {space.sections.map((section, sectionIdx) => (
             <PMBox key={section.heading ?? 'root'} mt={sectionIdx > 0 ? 2 : 0}>
               {section.heading && (
@@ -142,9 +140,9 @@ export function SpaceNavBlock({
                   >
                     {item.icon && (
                       <PMIcon
-                        fontSize="sm"
+                        fontSize="xs"
                         flexShrink={0}
-                        color={isItemActive ? 'text.primary' : 'text.tertiary'}
+                        color={isItemActive ? 'text.secondary' : 'text.faded'}
                       >
                         {item.icon}
                       </PMIcon>
