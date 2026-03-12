@@ -34,13 +34,19 @@ export const diffCommand = command({
         'Message describing the intent behind the changes (max 1024 chars)',
       type: optional(string),
     }),
+    path: option({
+      long: 'path',
+      short: 'p',
+      description: 'Path to analyze (relative to current directory)',
+      type: optional(string),
+    }),
     positionals: restPositionals({
       type: string,
       displayName: 'args',
       description: 'Subcommand and arguments (e.g., add <path>, remove <path>)',
     }),
   },
-  handler: async ({ submit, includeSubmitted, message, positionals }) => {
+  handler: async ({ submit, includeSubmitted, message, path, positionals }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -80,6 +86,7 @@ export const diffCommand = command({
       submit,
       includeSubmitted,
       message,
+      path,
     });
   },
 });
