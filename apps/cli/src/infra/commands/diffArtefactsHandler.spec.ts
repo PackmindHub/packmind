@@ -88,6 +88,7 @@ describe('diffArtefactsHandler', () => {
         diff,
         exists: false,
         createdAt: null,
+        message: null,
       })),
     }));
   });
@@ -1476,11 +1477,12 @@ describe('diffArtefactsHandler', () => {
 
       mockPackmindCliHexa.checkDiffs.mockResolvedValue({
         results: [
-          { diff: commandDiff, exists: false, createdAt: null },
+          { diff: commandDiff, exists: false, createdAt: null, message: null },
           {
             diff: standardDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1555,6 +1557,7 @@ describe('diffArtefactsHandler', () => {
             diff: commandDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1611,11 +1614,12 @@ describe('diffArtefactsHandler', () => {
 
       mockPackmindCliHexa.checkDiffs.mockResolvedValue({
         results: [
-          { diff: commandDiff, exists: false, createdAt: null },
+          { diff: commandDiff, exists: false, createdAt: null, message: null },
           {
             diff: standardDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1695,11 +1699,13 @@ describe('diffArtefactsHandler', () => {
               diff: commandDiff,
               exists: true,
               createdAt: '2025-06-15T10:30:00.000Z',
+              message: null,
             },
             {
               diff: standardDiff,
               exists: true,
               createdAt: '2025-06-15T10:30:00.000Z',
+              message: null,
             },
           ],
         });
@@ -1758,11 +1764,12 @@ describe('diffArtefactsHandler', () => {
 
       mockPackmindCliHexa.checkDiffs.mockResolvedValue({
         results: [
-          { diff: commandDiff, exists: false, createdAt: null },
+          { diff: commandDiff, exists: false, createdAt: null, message: null },
           {
             diff: standardDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1824,6 +1831,7 @@ describe('diffArtefactsHandler', () => {
             diff: commandDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
