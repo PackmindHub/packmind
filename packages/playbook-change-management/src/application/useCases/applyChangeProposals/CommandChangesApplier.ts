@@ -59,6 +59,7 @@ export class CommandChangesApplier
     const recipeVersion = await this.recipesPort.getRecipeVersion(
       recipe.id,
       recipe.version,
+      [recipe.spaceId],
     );
     if (!recipeVersion) {
       throw new Error(
@@ -87,6 +88,7 @@ export class CommandChangesApplier
     const newVersion = await this.recipesPort.getRecipeVersion(
       updateResult.recipe.id,
       updateResult.recipe.version,
+      [updateResult.recipe.spaceId],
     );
 
     if (!newVersion) {

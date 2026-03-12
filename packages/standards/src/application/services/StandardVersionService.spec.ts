@@ -1,4 +1,4 @@
-import { createUserId } from '@packmind/types';
+import { createSpaceId, createUserId, SpaceId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
@@ -395,6 +395,8 @@ describe('StandardVersionService', () => {
   });
 
   describe('getStandardVersion', () => {
+    const allowedSpaceIds: SpaceId[] = [createSpaceId(uuidv4())];
+
     describe('when the version exists', () => {
       let standardId: ReturnType<typeof createStandardId>;
       let version: number;
@@ -413,13 +415,14 @@ describe('StandardVersionService', () => {
         result = await standardVersionService.getStandardVersion(
           standardId,
           version,
+          allowedSpaceIds,
         );
       });
 
       it('calls repository with correct parameters', () => {
         expect(
           standardVersionRepository.findByStandardIdAndVersion,
-        ).toHaveBeenCalledWith(standardId, version);
+        ).toHaveBeenCalledWith(standardId, version, allowedSpaceIds);
       });
 
       it('returns the specific version', () => {
@@ -439,6 +442,7 @@ describe('StandardVersionService', () => {
         const result = await standardVersionService.getStandardVersion(
           standardId,
           version,
+          allowedSpaceIds,
         );
 
         expect(result).toBeNull();
@@ -447,6 +451,7 @@ describe('StandardVersionService', () => {
   });
 
   describe('prepareForGitPublishing', () => {
+    const allowedSpaceIds: SpaceId[] = [createSpaceId(uuidv4())];
     let standardId: ReturnType<typeof createStandardId>;
     let version: number;
     let standardVersion: StandardVersion;
@@ -484,13 +489,14 @@ describe('StandardVersionService', () => {
       result = await standardVersionService.prepareForGitPublishing(
         standardId,
         version,
+        allowedSpaceIds,
       );
     });
 
     it('calls version repository with correct parameters', () => {
       expect(
         standardVersionRepository.findByStandardIdAndVersion,
-      ).toHaveBeenCalledWith(standardId, version);
+      ).toHaveBeenCalledWith(standardId, version, allowedSpaceIds);
     });
 
     it('calls rule repository with correct version ID', () => {
@@ -529,7 +535,11 @@ describe('StandardVersionService', () => {
           .mockResolvedValue(null);
 
         await expect(
-          standardVersionService.prepareForGitPublishing(standardId, version),
+          standardVersionService.prepareForGitPublishing(
+            standardId,
+            version,
+            allowedSpaceIds,
+          ),
         ).rejects.toThrow(
           `Standard version not found for standard ${standardId} version ${version}`,
         );

@@ -7,6 +7,7 @@ import {
   RecipeId,
   RecipeVersion,
   RecipeVersionId,
+  SpaceId,
 } from '@packmind/types';
 
 const origin = 'RecipeVersionService';
@@ -82,6 +83,7 @@ export class RecipeVersionService {
   async getRecipeVersion(
     recipeId: RecipeId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<RecipeVersion | null> {
     this.logger.info('Getting recipe version', { recipeId, version });
 
@@ -90,6 +92,7 @@ export class RecipeVersionService {
         await this.recipeVersionRepository.findByRecipeIdAndVersion(
           recipeId,
           version,
+          allowedSpaceIds,
         );
 
       if (recipeVersion) {
@@ -193,6 +196,7 @@ export class RecipeVersionService {
   async prepareForGitPublishing(
     recipeId: RecipeId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<{ filePath: string; content: string }> {
     this.logger.info('Preparing recipe version for Git publishing', {
       recipeId,
@@ -204,6 +208,7 @@ export class RecipeVersionService {
         await this.recipeVersionRepository.findByRecipeIdAndVersion(
           recipeId,
           version,
+          allowedSpaceIds,
         );
 
       if (!recipeVersion) {

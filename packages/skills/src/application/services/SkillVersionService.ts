@@ -6,6 +6,7 @@ import {
   SkillId,
   SkillVersion,
   SkillVersionId,
+  SpaceId,
   UserId,
 } from '@packmind/types';
 
@@ -154,6 +155,7 @@ export class SkillVersionService {
   async getSkillVersion(
     skillId: SkillId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<SkillVersion | null> {
     this.logger.info('Getting skill version', { skillId, version });
 
@@ -162,6 +164,7 @@ export class SkillVersionService {
         await this.skillVersionRepository.findBySkillIdAndVersion(
           skillId,
           version,
+          allowedSpaceIds,
         );
 
       if (skillVersion) {

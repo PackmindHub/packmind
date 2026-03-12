@@ -7,6 +7,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "@packmind/accounts": "*",
+    "@packmind/deployments": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/recipes": "*",

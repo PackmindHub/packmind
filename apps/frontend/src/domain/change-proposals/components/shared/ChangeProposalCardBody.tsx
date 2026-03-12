@@ -80,9 +80,10 @@ function RemoveProposalContent({
       ? decision.removeFromPackages
       : [];
 
-  const distributedPackages = packageIds
-    .map((id) => ({ id, name: packageMap.get(id) ?? id }))
-    .filter((pkg) => pkg.name);
+  const distributedPackages = packageIds.map((id) => ({
+    id,
+    name: packageMap.get(id),
+  }));
 
   return (
     <PMVStack align="stretch" gap={4}>
@@ -114,12 +115,15 @@ function RemoveProposalContent({
           <PMText fontSize="sm" color="secondary">
             Will be removed from packages
           </PMText>
-          {removedPackageIds.map((id) => (
-            <PMBadge key={id} size="sm" colorPalette="red">
-              <LuPackage />
-              {packageMap.get(id) ?? id}
-            </PMBadge>
-          ))}
+          {removedPackageIds.map((id) => {
+            const name = packageMap.get(id);
+            return (
+              <PMBadge key={id} size="sm" colorPalette={name ? 'red' : 'gray'}>
+                <LuPackage />
+                {name ?? 'Deleted package'}
+              </PMBadge>
+            );
+          })}
         </PMHStack>
       ) : (
         <PMHStack gap={2} alignItems="center" flexWrap="wrap">
@@ -129,7 +133,7 @@ function RemoveProposalContent({
           {distributedPackages.map((pkg) => (
             <PMBadge key={pkg.id} size="sm" colorPalette="gray">
               <LuPackage />
-              {pkg.name}
+              {pkg.name ?? 'Deleted package'}
             </PMBadge>
           ))}
         </PMHStack>

@@ -1,5 +1,6 @@
 import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
+import { ISpacesPort } from '@packmind/types';
 import { GenerateStandardSummaryInput } from '../../domain/jobs/GenerateStandardSummary';
 import { GenerateStandardSummaryDelayedJob } from '../../application/jobs/GenerateStandardSummaryDelayedJob';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
@@ -16,6 +17,7 @@ export class GenerateStandardSummaryJobFactory implements IJobFactory<GenerateSt
     private readonly standardsRepositories: IStandardsRepositories,
     private readonly standardSummaryService: StandardSummaryService,
     private readonly standardVersionService: StandardVersionService,
+    private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -27,6 +29,7 @@ export class GenerateStandardSummaryJobFactory implements IJobFactory<GenerateSt
       new UpdateStandardVersionSummaryUsecase(this.standardsRepositories),
       this.standardSummaryService,
       this.standardVersionService,
+      this.spacesPort,
     );
 
     // Wrap the delayed job to implement IJobQueue interface

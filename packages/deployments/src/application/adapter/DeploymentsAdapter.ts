@@ -396,6 +396,7 @@ export class DeploymentsAdapter
       this.skillsPort,
       this.standardsPort,
       this.recipesPort,
+      this.spacesPort,
       this.accountsPort,
     );
 

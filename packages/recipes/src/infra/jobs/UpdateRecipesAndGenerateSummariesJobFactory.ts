@@ -1,5 +1,6 @@
 import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
+import { ISpacesPort } from '@packmind/types';
 import { UpdateRecipesAndGenerateSummariesInput } from '../../domain/jobs/UpdateRecipesAndGenerateSummaries';
 import { UpdateRecipesAndGenerateSummariesDelayedJob } from '../../application/jobs/UpdateRecipesAndGenerateSummariesDelayedJob';
 import { RecipeService } from '../../application/services/RecipeService';
@@ -16,6 +17,7 @@ export class UpdateRecipesAndGenerateSummariesJobFactory implements IJobFactory<
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
+    private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -29,6 +31,7 @@ export class UpdateRecipesAndGenerateSummariesJobFactory implements IJobFactory<
       this.recipeService,
       this.recipeVersionService,
       this.recipeSummaryService,
+      this.spacesPort,
     );
 
     return {

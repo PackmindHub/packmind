@@ -1,5 +1,6 @@
 import {
   IRepository,
+  SpaceId,
   SkillVersion,
   SkillId,
   SkillVersionId,
@@ -11,6 +12,7 @@ export interface ISkillVersionRepository extends IRepository<SkillVersion> {
   findBySkillIdAndVersion(
     skillId: SkillId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<SkillVersion | null>;
   updateMetadata(
     versionId: SkillVersionId,

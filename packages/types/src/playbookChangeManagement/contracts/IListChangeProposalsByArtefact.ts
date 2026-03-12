@@ -1,3 +1,4 @@
+import { PackageId } from '../../deployments/Package';
 import { RecipeId } from '../../recipes/RecipeId';
 import { SkillId } from '../../skills/SkillId';
 import { SpaceId } from '../../spaces/SpaceId';
@@ -18,6 +19,7 @@ export type ListChangeProposalsByArtefactResponse = {
   changeProposals: (ChangeProposal & {
     conflictsWith: ChangeProposalId[];
   })[];
+  currentPackageIds: PackageId[];
 };
 
 export interface IListChangeProposalsByArtefact<

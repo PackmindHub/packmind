@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   IAccountsPort,
+  IDeploymentPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -36,6 +37,7 @@ export class ListChangeProposalsByArtefactUseCase<
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly deploymentPort: IDeploymentPort,
     private readonly service: ChangeProposalService,
     private readonly conflictDetectionService: ConflictDetectionService,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -52,7 +54,7 @@ export class ListChangeProposalsByArtefactUseCase<
       command.organization.id,
     );
 
-    await validateArtefactInSpace(
+    const artefactType = await validateArtefactInSpace(
       command.artefactId,
       command.spaceId,
       this.standardsPort,
@@ -60,10 +62,24 @@ export class ListChangeProposalsByArtefactUseCase<
       this.skillsPort,
     );
 
-    const allProposals = await this.service.findProposalsByArtefact(
-      command.spaceId,
-      command.artefactId,
-    );
+    const [allProposals, { packages }] = await Promise.all([
+      this.service.findProposalsByArtefact(command.spaceId, command.artefactId),
+      this.deploymentPort.listPackagesBySpace({
+        spaceId: command.spaceId,
+        organizationId: command.organization.id,
+        userId: command.userId,
+      }),
+    ]);
+
+    const currentPackageIds = packages
+      .filter((pkg) => {
+        if (artefactType === 'standard')
+          return pkg.standards.includes(command.artefactId as StandardId);
+        if (artefactType === 'recipe')
+          return pkg.recipes.includes(command.artefactId as RecipeId);
+        return pkg.skills.includes(command.artefactId as SkillId);
+      })
+      .map((pkg) => pkg.id);
 
     const proposalsToReturn =
       command.pendingOnly === false
@@ -73,6 +89,6 @@ export class ListChangeProposalsByArtefactUseCase<
     const changeProposals =
       this.conflictDetectionService.detectConflicts(proposalsToReturn);
 
-    return { changeProposals };
+    return { changeProposals, currentPackageIds };
   }
 }

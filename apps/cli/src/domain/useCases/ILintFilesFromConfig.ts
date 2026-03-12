@@ -5,6 +5,7 @@ import { DiffMode } from '../entities/DiffMode';
 export type LintFilesFromConfigCommand = {
   path: string;
   diffMode?: DiffMode;
+  ignorePatterns?: string[];
 };
 
 export type LintFilesFromConfigResult = {

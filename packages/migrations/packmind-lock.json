@@ -1,0 +1,35 @@
+{
+  "lockfileVersion": 1,
+  "packageSlugs": ["migration"],
+  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
+  "installedAt": "2026-03-12T10:36:32.887Z",
+  "cliVersion": "0.21.1",
+  "artifacts": {
+    "command:create-or-update-model-and-typeorm-schemas": {
+      "type": "command",
+      "name": "Create or update model and TypeORM schemas",
+      "id": "e76d8f23-e2c3-4336-9cd3-c6102f47af0f",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["2faaea75-3f84-412d-9751-9a590d85405a"],
+      "files": [
+        {
+          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "cursor"
+        }
+      ]
+    }
+  }
+}

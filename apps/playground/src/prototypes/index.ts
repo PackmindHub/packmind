@@ -3,6 +3,7 @@ import ButtonsPrototype from './ButtonsPrototype';
 import ReviewChangesGroupViewPrototype from './review-changes-group-view/ReviewChangesGroupViewPrototype';
 import ReviewChangesDrillDownViewPrototype from './review-changes-drill-down-view/ReviewChangesDrillDownViewPrototype';
 import ArtifactRemovedPrototype from './artifact-removed/ArtifactRemovedPrototype';
+import SidebarWithSpacesPrototype from './sidebar-with-spaces/SidebarWithSpacesPrototype';
 
 export interface Prototype {
   name: string;
@@ -24,5 +25,10 @@ export const prototypes: Prototype[] = [
     name: 'Artifact removed — current UI',
     description: 'Reproduction of the current removal change proposal UI',
     component: ArtifactRemovedPrototype,
+  },
+  {
+    name: 'Sidebar with spaces',
+    description: 'Organization sidebar with spaces navigation',
+    component: SidebarWithSpacesPrototype,
   },
 ];

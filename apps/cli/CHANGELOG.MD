@@ -2,6 +2,8 @@
 
 ## Added
 
+- Add `.packmindignore` file support to exclude files/folders from linting without modifying CLI source code
+
 ## Changed
 
 ## Fixed

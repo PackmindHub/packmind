@@ -7,6 +7,7 @@ import {
   stubLogger,
 } from '@packmind/test-utils';
 import {
+  createSpaceId,
   createStandardId,
   createStandardVersionId,
   Standard,
@@ -174,6 +175,7 @@ describe('StandardVersionRepository', () => {
       await standardVersionRepository.findByStandardIdAndVersion(
         standard.id,
         2,
+        [standard.spaceId],
       );
     expect(foundVersion).toMatchObject({
       id: version2.id,
@@ -211,16 +213,19 @@ describe('StandardVersionRepository', () => {
         await standardVersionRepository.findByStandardIdAndVersion(
           standard.id,
           1,
+          [standard.spaceId],
         );
       foundVersion2 =
         await standardVersionRepository.findByStandardIdAndVersion(
           standard.id,
           2,
+          [standard.spaceId],
         );
       foundVersion3 =
         await standardVersionRepository.findByStandardIdAndVersion(
           standard.id,
           3,
+          [standard.spaceId],
         );
     });
 
@@ -289,11 +294,31 @@ describe('StandardVersionRepository', () => {
       expect(foundVersion).toBeNull();
     });
 
+    it('returns null when allowedSpaceIds is empty even if matching data exists', async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 1 }),
+      );
+
+      const foundVersion =
+        await standardVersionRepository.findByStandardIdAndVersion(
+          standard.id,
+          1,
+          [],
+        );
+
+      expect(foundVersion).toBeNull();
+    });
+
     it('returns null for non-existent standard id and version', async () => {
       const foundVersion =
         await standardVersionRepository.findByStandardIdAndVersion(
           createStandardId(uuidv4()),
           1,
+          [createSpaceId(uuidv4())],
         );
       expect(foundVersion).toBeNull();
     });

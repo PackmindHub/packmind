@@ -1,5 +1,6 @@
 import {
   IRepository,
+  SpaceId,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -14,6 +15,7 @@ export interface IStandardVersionRepository extends IRepository<StandardVersion>
   findByStandardIdAndVersion(
     standardId: StandardId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<StandardVersion | null>;
   updateSummary(
     standardVersionId: StandardVersionId,

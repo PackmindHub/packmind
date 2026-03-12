@@ -9,7 +9,12 @@ import { RecipeSchema } from '../schemas/RecipeSchema';
 import { recipeFactory } from '../../../test/recipeFactory';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 import { RecipeRepository } from './RecipeRepository';
-import { createRecipeId, Recipe, RecipeVersion } from '@packmind/types';
+import {
+  createRecipeId,
+  createSpaceId,
+  Recipe,
+  RecipeVersion,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { createGitCommit, gitCommitFactory } from '@packmind/git/test';
@@ -176,6 +181,7 @@ describe('RecipeVersionRepository', () => {
         await recipeVersionRepository.findByRecipeIdAndVersion(
           createRecipeId(uuidv4()),
           1,
+          [createSpaceId(uuidv4())],
         );
       expect(foundVersion).toBeNull();
     });
@@ -205,6 +211,7 @@ describe('RecipeVersionRepository', () => {
     const foundVersion = await recipeVersionRepository.findByRecipeIdAndVersion(
       recipe.id,
       2,
+      [recipe.spaceId],
     );
     expect(foundVersion).toEqual(recipeVersion2);
   });
@@ -222,7 +229,28 @@ describe('RecipeVersionRepository', () => {
       await recipeVersionRepository.add(recipeVersion1);
 
       const foundVersion =
-        await recipeVersionRepository.findByRecipeIdAndVersion(recipe.id, 5);
+        await recipeVersionRepository.findByRecipeIdAndVersion(recipe.id, 5, [
+          recipe.spaceId,
+        ]);
+      expect(foundVersion).toBeNull();
+    });
+  });
+
+  describe('when allowedSpaceIds is empty', () => {
+    it('returns null even if matching data exists', async () => {
+      const recipe = recipeFactory();
+      await recipeRepository.add(recipe);
+
+      await recipeVersionRepository.add(
+        recipeVersionFactory({ recipeId: recipe.id, version: 1 }),
+      );
+
+      const foundVersion =
+        await recipeVersionRepository.findByRecipeIdAndVersion(
+          recipe.id,
+          1,
+          [],
+        );
       expect(foundVersion).toBeNull();
     });
   });

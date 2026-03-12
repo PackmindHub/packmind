@@ -14,7 +14,7 @@ import {
 import { RecipeService } from '../services/RecipeService';
 import { RecipeVersionService } from '../services/RecipeVersionService';
 import { RecipeSummaryService } from '../services/RecipeSummaryService';
-import { AiNotConfigured, RecipeVersionId } from '@packmind/types';
+import { AiNotConfigured, ISpacesPort, RecipeVersionId } from '@packmind/types';
 
 const logOrigin = 'UpdateRecipesAndGenerateSummariesDelayedJob';
 
@@ -52,6 +52,7 @@ export class UpdateRecipesAndGenerateSummariesDelayedJob extends AbstractAIDelay
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
+    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
     super(queueFactory, logger);
@@ -239,10 +240,16 @@ export class UpdateRecipesAndGenerateSummariesDelayedJob extends AbstractAIDelay
 
       // If no new summary was generated, reuse the previous version's summary
       if (!summary) {
+        const spaces = await this.spacesPort.listSpacesByOrganization(
+          input.organizationId,
+        );
+        const allowedSpaceIds = spaces.map((s) => s.id);
+
         const previousVersion =
           await this.recipeVersionService.getRecipeVersion(
             existingRecipe.id,
             existingRecipe.version,
+            allowedSpaceIds,
           );
         if (previousVersion?.summary) {
           summary = previousVersion.summary;

@@ -1,4 +1,4 @@
-import { IRepository, RecipeId, RecipeVersion } from '@packmind/types';
+import { IRepository, RecipeId, RecipeVersion, SpaceId } from '@packmind/types';
 
 export interface IRecipeVersionRepository extends IRepository<RecipeVersion> {
   findByRecipeId(recipeId: RecipeId): Promise<RecipeVersion[]>;
@@ -6,5 +6,6 @@ export interface IRecipeVersionRepository extends IRepository<RecipeVersion> {
   findByRecipeIdAndVersion(
     recipeId: RecipeId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<RecipeVersion | null>;
 }

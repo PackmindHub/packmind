@@ -4,7 +4,9 @@ import {
   ChangeProposalType,
   CollectionItemDeletePayload,
   CollectionItemUpdatePayload,
+  PackageId,
   Recipe,
+  RemoveArtefactPayload,
   Rule,
   ScalarUpdatePayload,
   Skill,
@@ -228,6 +230,51 @@ export function computeCommandOutdatedIds(
     const currentValue =
       RECIPE_FIELD_BY_TYPE[proposal.type as ScalarCommandType](recipe);
     if (payload.oldValue !== currentValue) {
+      outdated.add(proposal.id);
+    }
+  }
+
+  return outdated;
+}
+
+// --- Merge helper ---
+
+export function mergeOutdatedIds(
+  ...sets: Set<ChangeProposalId>[]
+): Set<ChangeProposalId> {
+  const merged = new Set<ChangeProposalId>();
+  for (const set of sets) {
+    for (const id of set) {
+      merged.add(id);
+    }
+  }
+  return merged;
+}
+
+// --- Removal outdated detection ---
+
+const REMOVAL_TYPES = new Set<ChangeProposalType>([
+  ChangeProposalType.removeStandard,
+  ChangeProposalType.removeCommand,
+  ChangeProposalType.removeSkill,
+]);
+
+export function computeRemovalOutdatedIds(
+  proposals: ChangeProposal[],
+  currentPackageIds: PackageId[],
+): Set<ChangeProposalId> {
+  const outdated = new Set<ChangeProposalId>();
+  const currentSet = new Set(currentPackageIds);
+
+  for (const proposal of proposals) {
+    if (!REMOVAL_TYPES.has(proposal.type)) continue;
+
+    const payload = proposal.payload as RemoveArtefactPayload;
+    const hasOutdatedPackage = payload.packageIds.some(
+      (id) => !currentSet.has(id),
+    );
+
+    if (hasOutdatedPackage) {
       outdated.add(proposal.id);
     }
   }

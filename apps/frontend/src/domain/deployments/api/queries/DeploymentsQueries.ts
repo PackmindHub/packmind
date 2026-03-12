@@ -23,6 +23,11 @@ import { isPackmindError } from '../../../../services/api/errors/PackmindError';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import {
+  CHANGE_PROPOSALS_QUERY_SCOPE,
+  GET_GROUPED_CHANGE_PROPOSALS_KEY,
+} from '../../../change-proposals/api/queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { deploymentsGateways } from '../gateways';
 import {
   DeploymentQueryKeys,
@@ -716,6 +721,19 @@ export const useCreatePackageMutation = () => {
   });
 };
 
+function invalidateChangeProposalQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+    }),
+  ]);
+}
+
 export const useUpdatePackageMutation = () => {
   const queryClient = useQueryClient();
 
@@ -731,6 +749,7 @@ export const useUpdatePackageMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+      await invalidateChangeProposalQueries(queryClient);
     },
     onError: (error) => {
       console.error('Error updating package:', error);
@@ -755,6 +774,7 @@ export const useDeletePackagesBatchMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+      await invalidateChangeProposalQueries(queryClient);
     },
     onError: (error) => {
       console.error('Error deleting packages in batch:', error);

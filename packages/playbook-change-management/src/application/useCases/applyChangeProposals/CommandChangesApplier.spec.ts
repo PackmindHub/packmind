@@ -214,6 +214,7 @@ describe('CommandChangesApplier', () => {
       expect(recipePort.getRecipeVersion).toHaveBeenCalledWith(
         recipeVersion.recipeId,
         newVersion.version,
+        expect.arrayContaining([expect.any(String)]),
       );
     });
   });

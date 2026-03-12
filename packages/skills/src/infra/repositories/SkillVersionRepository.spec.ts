@@ -179,6 +179,7 @@ describe('SkillVersionRepository', () => {
       const foundVersion = await skillVersionRepository.findBySkillIdAndVersion(
         skill.id,
         2,
+        [skill.spaceId],
       );
 
       expect(foundVersion?.id).toBe(version2.id);
@@ -196,7 +197,27 @@ describe('SkillVersionRepository', () => {
         await skillVersionRepository.add(version1);
 
         const foundVersion =
-          await skillVersionRepository.findBySkillIdAndVersion(skill.id, 99);
+          await skillVersionRepository.findBySkillIdAndVersion(skill.id, 99, [
+            skill.spaceId,
+          ]);
+
+        expect(foundVersion).toBeNull();
+      });
+    });
+
+    describe('when allowedSpaceIds is empty', () => {
+      it('returns null even if matching data exists', async () => {
+        const skill = skillFactory();
+        await skillRepository.add(skill);
+
+        const version = skillVersionFactory({
+          skillId: skill.id,
+          version: 1,
+        });
+        await skillVersionRepository.add(version);
+
+        const foundVersion =
+          await skillVersionRepository.findBySkillIdAndVersion(skill.id, 1, []);
 
         expect(foundVersion).toBeNull();
       });
@@ -208,7 +229,9 @@ describe('SkillVersionRepository', () => {
         await skillRepository.add(skill);
 
         const foundVersion =
-          await skillVersionRepository.findBySkillIdAndVersion(skill.id, 1);
+          await skillVersionRepository.findBySkillIdAndVersion(skill.id, 1, [
+            skill.spaceId,
+          ]);
 
         expect(foundVersion).toBeNull();
       });

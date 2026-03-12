@@ -8,10 +8,13 @@ import {
   ICodingAgentPort,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   RecipeVersion,
   SkillVersion,
+  SpaceId,
   StandardVersion,
+  createOrganizationId,
   createRecipeId,
   createSkillId,
   createStandardId,
@@ -34,6 +37,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     private readonly skillsPort: ISkillsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
+    private readonly spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
@@ -48,14 +52,20 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       artifactCount: command.artifacts.length,
     });
 
-    // Step 1: Resolve coding agents
+    // Step 1: Fetch allowed spaces for the organization (IDOR protection)
+    const spaces = await this.spacesPort.listSpacesByOrganization(
+      createOrganizationId(command.organizationId),
+    );
+    const allowedSpaceIds = spaces.map((s) => s.id);
+
+    // Step 2: Resolve coding agents
     const codingAgents =
       await this.renderModeConfigurationService.resolveCodingAgents(
         command.agents,
         command.organization.id,
       );
 
-    // Step 2: Group artifacts by type
+    // Step 3: Group artifacts by type
     const standardEntries = command.artifacts.filter(
       (a) => a.type === 'standard',
     );
@@ -68,15 +78,15 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       skillCount: skillEntries.length,
     });
 
-    // Step 3: Fetch specific versions for each artifact type
+    // Step 4: Fetch specific versions for each artifact type
     const [recipeVersions, standardVersionsWithRules, skillVersions] =
       await Promise.all([
-        this.fetchRecipeVersions(recipeEntries),
-        this.fetchStandardVersionsWithRules(standardEntries),
-        this.fetchSkillVersionsWithFiles(skillEntries),
+        this.fetchRecipeVersions(recipeEntries, allowedSpaceIds),
+        this.fetchStandardVersionsWithRules(standardEntries, allowedSpaceIds),
+        this.fetchSkillVersionsWithFiles(skillEntries, allowedSpaceIds),
       ]);
 
-    // Step 4: Render artifacts for coding agents
+    // Step 5: Render artifacts for coding agents
     const fileUpdates = await this.codingAgentPort.deployArtifactsForAgents({
       recipeVersions,
       standardVersions: standardVersionsWithRules,
@@ -89,7 +99,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       deleteCount: fileUpdates.delete.length,
     });
 
-    // Step 5: Enrich file modifications with artifact metadata
+    // Step 6: Enrich file modifications with artifact metadata
     const recipeSpaceMap = new Map(recipeEntries.map((e) => [e.id, e.spaceId]));
     const standardSpaceMap = new Map(
       standardEntries.map((e) => [e.id, e.spaceId]),
@@ -110,7 +120,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       artifactMetadata,
     );
 
-    // Step 6: Generate skill folders
+    // Step 7: Generate skill folders
     const skillFolderPaths =
       this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
 
@@ -135,6 +145,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
 
   private async fetchRecipeVersions(
     entries: ArtifactVersionEntry[],
+    allowedSpaceIds: SpaceId[],
   ): Promise<RecipeVersion[]> {
     const results = await Promise.all(
       entries.map(async (entry) => {
@@ -142,6 +153,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
         const version = await this.recipesPort.getRecipeVersion(
           recipeId,
           entry.version,
+          allowedSpaceIds,
         );
         if (!version) {
           this.logger.warn('Recipe version not found', {
@@ -157,6 +169,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
 
   private async fetchStandardVersionsWithRules(
     entries: ArtifactVersionEntry[],
+    allowedSpaceIds: SpaceId[],
   ): Promise<StandardVersion[]> {
     const results = await Promise.all(
       entries.map(async (entry) => {
@@ -165,6 +178,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
           await this.standardsPort.getStandardVersionByNumber(
             standardId,
             entry.version,
+            allowedSpaceIds,
           );
         if (!matchingVersion) {
           this.logger.warn('Standard version not found', {
@@ -184,6 +198,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
 
   private async fetchSkillVersionsWithFiles(
     entries: ArtifactVersionEntry[],
+    allowedSpaceIds: SpaceId[],
   ): Promise<SkillVersion[]> {
     const results = await Promise.all(
       entries.map(async (entry) => {
@@ -191,6 +206,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
         const matchingVersion = await this.skillsPort.getSkillVersionByNumber(
           skillId,
           entry.version,
+          allowedSpaceIds,
         );
         if (!matchingVersion) {
           this.logger.warn('Skill version not found', {

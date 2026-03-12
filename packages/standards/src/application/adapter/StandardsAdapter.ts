@@ -138,7 +138,10 @@ export class StandardsAdapter
     this.llmPort = ports[ILlmPortName];
     this.eventEmitterService = ports.eventEmitterService;
 
-    this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
+    this.standardDelayedJobs = await this.buildDelayedJobs(
+      ports.jobsService,
+      ports[ISpacesPortName],
+    );
 
     // Set llmPort to services
     if (this.llmPort) {
@@ -307,6 +310,7 @@ export class StandardsAdapter
    */
   private async buildDelayedJobs(
     jobsService: JobsService,
+    spacesPort: ISpacesPort,
   ): Promise<IStandardDelayedJobs> {
     this.logger.debug('Building standards delayed jobs');
 
@@ -314,6 +318,7 @@ export class StandardsAdapter
       this.repositories,
       this.services.getStandardSummaryService(),
       this.services.getStandardVersionService(),
+      spacesPort,
     );
 
     jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
@@ -399,8 +404,13 @@ export class StandardsAdapter
   getStandardVersionByNumber(
     standardId: StandardId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<StandardVersion | null> {
-    return this._getStandardVersion.getStandardVersion(standardId, version);
+    return this._getStandardVersion.getStandardVersion(
+      standardId,
+      version,
+      allowedSpaceIds,
+    );
   }
 
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]> {

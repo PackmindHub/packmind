@@ -27,7 +27,11 @@ import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
 import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
-import { computeCommandOutdatedIds } from '../../utils/computeOutdatedProposalIds';
+import {
+  computeCommandOutdatedIds,
+  computeRemovalOutdatedIds,
+  mergeOutdatedIds,
+} from '../../utils/computeOutdatedProposalIds';
 import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { CommandReviewHeader } from './CommandReviewHeader';
 import { DiffView } from './DiffView';
@@ -70,6 +74,8 @@ export function CommandReviewDetail({
 
   const selectedRecipeProposals =
     selectedRecipeProposalsData?.changeProposals ?? [];
+  const currentPackageIds =
+    selectedRecipeProposalsData?.currentPackageIds ?? [];
 
   const { data: selectedRecipe } = useGetRecipeByIdQuery(recipeId);
 
@@ -108,8 +114,12 @@ export function CommandReviewDetail({
   );
 
   const outdatedProposalIds = useMemo(
-    () => computeCommandOutdatedIds(selectedRecipeProposals, selectedRecipe),
-    [selectedRecipeProposals, selectedRecipe],
+    () =>
+      mergeOutdatedIds(
+        computeCommandOutdatedIds(selectedRecipeProposals, selectedRecipe),
+        computeRemovalOutdatedIds(selectedRecipeProposals, currentPackageIds),
+      ),
+    [selectedRecipeProposals, selectedRecipe, currentPackageIds],
   );
 
   useBeforeUnload(

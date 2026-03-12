@@ -1,8 +1,14 @@
 import { IBaseAdapter } from '@packmind/node-utils';
-import { OrganizationId } from '@packmind/types';
-import { ISpacesPort } from '@packmind/types';
-import { Space, SpaceId } from '@packmind/types';
+import {
+  ISpacesPort,
+  ListUserSpacesCommand,
+  ListUserSpacesResponse,
+  OrganizationId,
+  Space,
+  SpaceId,
+} from '@packmind/types';
 import type { SpacesHexa } from '../../SpacesHexa';
+import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 
 /**
  * SpacesAdapter - Implements the ISpacesPort interface for cross-domain access
@@ -37,6 +43,14 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   async getSpaceById(spaceId: SpaceId): Promise<Space | null> {
     const spaceService = this.hexa.getSpaceService();
     return spaceService.getSpaceById(spaceId);
+  }
+
+  async listUserSpaces(
+    command: ListUserSpacesCommand,
+  ): Promise<ListUserSpacesResponse> {
+    const spaceService = this.hexa.getSpaceService();
+    const useCase = new ListUserSpacesUseCase(spaceService);
+    return useCase.execute(command);
   }
 
   /**
