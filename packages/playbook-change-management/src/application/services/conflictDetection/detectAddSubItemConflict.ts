@@ -49,10 +49,15 @@ export const detectAddRuleConflict =
 export const detectAddSkillFileConflict =
   makeDetectAddSubItemConflict<ChangeProposalType.addSkillFile>({
     [ChangeProposalType.addSkillFile]: (cp1, cp2) => {
-      // Guard against mismatched payload structures from different proposal types
-      const cp1Item = (cp1.payload as any)?.item;
-      const cp2Item = (cp2.payload as any)?.item;
-      if (!cp1Item || !cp2Item) return false;
-      return cp1Item.path === cp2Item.path;
+      // Both must be addSkillFile proposals with valid item.path to conflict
+      if (cp1.type !== ChangeProposalType.addSkillFile) return false;
+      if (cp2.type !== ChangeProposalType.addSkillFile) return false;
+
+      const payload1 = cp1.payload as Record<string, unknown>;
+      const payload2 = cp2.payload as Record<string, unknown>;
+      const item1 = payload1?.item as Record<string, unknown> | undefined;
+      const item2 = payload2?.item as Record<string, unknown> | undefined;
+      if (!item1 || !item2) return false;
+      return item1.path === item2.path;
     },
   });
