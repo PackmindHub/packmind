@@ -38,9 +38,9 @@ Get started on the [Helm Chart GitHub repository](https://github.com/PackmindHub
 
 Connecting a LLM offers a better experience when distributing your standards and commands in your Git Repositories, while it's _not mandatory_ and you can use Packmind without this.
 
-_OpenAI_ is the only currently supported AI Provider.
+Packmind supports multiple AI providers: **OpenAI**, **Anthropic Claude**, **Google Gemini**, **Azure OpenAI**, and **OpenAI-Compatible** providers. See [LLM Configuration](/administration/llm-configuration) for full details on configuring each provider.
 
-If you use Docker Compose, you'll have to update the `docker-compose.yml` file.
+The Docker Compose template includes OpenAI configuration by default. To use Docker Compose with OpenAI, update the `docker-compose.yml` file:
 
 ```yaml
 x-openai-config: &openai-config
@@ -167,7 +167,7 @@ Redis Configuration:
 
 - `REDIS_URI` - Full Redis connection URI used for caching and SSE (Server-Sent Events) client connections
 
-SMTP Configuration:
+### SMTP Configuration
 
 - `SMTP_HOST` - SMTP server hostname for sending emails
 - `SMTP_PORT` - SMTP server port number
