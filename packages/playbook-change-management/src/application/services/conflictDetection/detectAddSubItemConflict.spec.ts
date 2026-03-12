@@ -223,4 +223,67 @@ describe('detectAddSkillFileConflicts', () => {
       ),
     ).toEqual(true);
   });
+
+  describe('regression: mismatched payload structures', () => {
+    describe('when compared with removal proposal', () => {
+      it('returns false without crashing', () => {
+        const removalProposal = changeProposalFactory({
+          type: ChangeProposalType.removeSkill,
+          artefactId: changeProposal.artefactId,
+          payload: {
+            packageIds: [],
+          },
+        });
+
+        expect(
+          detectAddSkillFileConflict(
+            changeProposal,
+            removalProposal as any,
+            diffService,
+          ),
+        ).toEqual(false);
+      });
+    });
+
+    describe('when first proposal has mismatched payload structure', () => {
+      it('returns false', () => {
+        const proposalWithBadPayload = {
+          ...changeProposal,
+          payload: { packageIds: [] },
+        };
+
+        expect(
+          detectAddSkillFileConflict(
+            proposalWithBadPayload as any,
+            changeProposal,
+            diffService,
+          ),
+        ).toEqual(false);
+      });
+    });
+
+    describe('when both proposals have mismatched payload structures', () => {
+      it('returns false', () => {
+        const proposal1 = changeProposalFactory({
+          type: ChangeProposalType.removeSkill,
+          artefactId: changeProposal.artefactId,
+          payload: { packageIds: [] },
+        });
+
+        const proposal2 = changeProposalFactory({
+          type: ChangeProposalType.removeSkill,
+          artefactId: changeProposal.artefactId,
+          payload: { packageIds: [] },
+        });
+
+        expect(
+          detectAddSkillFileConflict(
+            proposal1 as any,
+            proposal2 as any,
+            diffService,
+          ),
+        ).toEqual(false);
+      });
+    });
+  });
 });
