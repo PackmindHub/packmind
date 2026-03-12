@@ -285,5 +285,37 @@ describe('detectAddSkillFileConflicts', () => {
         ).toEqual(false);
       });
     });
+
+    describe('when payload is null or empty', () => {
+      it('handles null payload without crashing', () => {
+        const proposalWithNullPayload = {
+          ...changeProposal,
+          payload: null,
+        };
+
+        expect(
+          detectAddSkillFileConflict(
+            proposalWithNullPayload as any,
+            changeProposal,
+            diffService,
+          ),
+        ).toEqual(false);
+      });
+
+      it('handles empty object payload without crashing', () => {
+        const proposalWithEmptyPayload = {
+          ...changeProposal,
+          payload: {},
+        };
+
+        expect(
+          detectAddSkillFileConflict(
+            proposalWithEmptyPayload as any,
+            changeProposal,
+            diffService,
+          ),
+        ).toEqual(false);
+      });
+    });
   });
 });
