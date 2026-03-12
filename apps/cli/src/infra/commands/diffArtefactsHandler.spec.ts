@@ -1866,14 +1866,14 @@ describe('diffArtefactsHandler', () => {
   describe('multi-target support', () => {
     describe('when multiple targets are found under searchPath', () => {
       const diff1 = {
-        filePath: 'src/frontend/.packmind/commands/cmd.md',
+        filePath: '.packmind/commands/cmd.md',
         type: ChangeProposalType.updateCommandDescription,
         payload: { oldValue: 'old', newValue: 'new' },
         artifactName: 'Frontend Command',
         artifactType: 'command' as const,
       };
       const diff2 = {
-        filePath: 'src/backend/.packmind/commands/cmd.md',
+        filePath: '.packmind/commands/cmd.md',
         type: ChangeProposalType.updateCommandDescription,
         payload: { oldValue: 'old', newValue: 'new' },
         artifactName: 'Backend Command',
@@ -1943,11 +1943,11 @@ describe('diffArtefactsHandler', () => {
 
         // cwd = '/test/project', frontend target = '/test/project/src/frontend'
         // targetRelativePath = nodePath.relative(cwd, target) = 'src/frontend'
-        // diff1.filePath = 'src/frontend/.packmind/commands/cmd.md'
-        // expected display: 'src/frontend/src/frontend/.packmind/commands/cmd.md'
+        // diff1.filePath = '.packmind/commands/cmd.md' (relative to baseDirectory)
+        // expected display: 'src/frontend/.packmind/commands/cmd.md'
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
         const frontendPath = logCalls.find((c: string) =>
-          c.includes('src/frontend/src/frontend/.packmind/commands/cmd.md'),
+          c.includes('src/frontend/.packmind/commands/cmd.md'),
         );
 
         expect(frontendPath).toBeDefined();
@@ -1958,11 +1958,11 @@ describe('diffArtefactsHandler', () => {
 
         // cwd = '/test/project', backend target = '/test/project/src/backend'
         // targetRelativePath = nodePath.relative(cwd, target) = 'src/backend'
-        // diff2.filePath = 'src/backend/.packmind/commands/cmd.md'
-        // expected display: 'src/backend/src/backend/.packmind/commands/cmd.md'
+        // diff2.filePath = '.packmind/commands/cmd.md' (relative to baseDirectory)
+        // expected display: 'src/backend/.packmind/commands/cmd.md'
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
         const backendPath = logCalls.find((c: string) =>
-          c.includes('src/backend/src/backend/.packmind/commands/cmd.md'),
+          c.includes('src/backend/.packmind/commands/cmd.md'),
         );
 
         expect(backendPath).toBeDefined();
@@ -1980,7 +1980,7 @@ describe('diffArtefactsHandler', () => {
 
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
         const rawPath = logCalls.find((c: string) =>
-          c.includes('src/frontend/.packmind/commands/cmd.md'),
+          c.includes('.packmind/commands/cmd.md'),
         );
 
         expect(rawPath).toBeDefined();
@@ -1998,7 +1998,7 @@ describe('diffArtefactsHandler', () => {
 
         const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
         const prefixedPath = logCalls.find((c: string) =>
-          c.includes('src/frontend/src/frontend/'),
+          c.includes('src/frontend/.packmind/'),
         );
 
         expect(prefixedPath).toBeUndefined();
