@@ -1,0 +1,61 @@
+{
+  "lockfileVersion": 1,
+  "packageSlugs": ["design-system"],
+  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
+  "installedAt": "2026-03-12T10:36:32.983Z",
+  "cliVersion": "0.21.1",
+  "artifacts": {
+    "command:wrapping-chakra-ui-with-slot-components": {
+      "type": "command",
+      "name": "Wrapping Chakra UI with Slot Components",
+      "id": "9c0df659-eb9f-4e37-b915-8540f982d6f2",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["41dd679d-01d1-4e20-8348-006616433412"],
+      "files": [
+        {
+          "path": ".packmind/commands/wrapping-chakra-ui-with-slot-components.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/wrapping-chakra-ui-with-slot-components.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/wrapping-chakra-ui-with-slot-components.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/wrapping-chakra-ui-with-slot-components.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:front-end-ui-and-design-systems": {
+      "type": "standard",
+      "name": "Front-end UI and Design Systems",
+      "id": "4135f974-b52a-4d6b-a222-9894e8998c3f",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["41dd679d-01d1-4e20-8348-006616433412"],
+      "files": [
+        {
+          "path": ".packmind/standards/front-end-ui-and-design-systems.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-front-end-ui-and-design-systems.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-front-end-ui-and-design-systems.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-front-end-ui-and-design-systems.mdc",
+          "agent": "cursor"
+        }
+      ]
+    }
+  }
+}

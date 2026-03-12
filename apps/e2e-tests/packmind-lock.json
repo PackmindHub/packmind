@@ -1,0 +1,61 @@
+{
+  "lockfileVersion": 1,
+  "packageSlugs": ["e2e"],
+  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
+  "installedAt": "2026-03-12T10:36:31.702Z",
+  "cliVersion": "0.21.1",
+  "artifacts": {
+    "standard:e2e-page-object": {
+      "type": "standard",
+      "name": "[E2E] Page object",
+      "id": "d17c4b7f-61a6-43af-a88a-ce1f787ea121",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["089886ae-99f4-4e02-bf0e-00ef30b1f6d3"],
+      "files": [
+        {
+          "path": ".packmind/standards/e2e-page-object.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-e2e-page-object.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-e2e-page-object.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-e2e-page-object.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:e2e-writing-e2e-tests": {
+      "type": "standard",
+      "name": "[E2E] Writing E2E tests",
+      "id": "895b4321-da5f-4eca-84f7-47c9f2b7a888",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["089886ae-99f4-4e02-bf0e-00ef30b1f6d3"],
+      "files": [
+        {
+          "path": ".packmind/standards/e2e-writing-e2e-tests.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-e2e-writing-e2e-tests.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-e2e-writing-e2e-tests.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-e2e-writing-e2e-tests.mdc",
+          "agent": "cursor"
+        }
+      ]
+    }
+  }
+}

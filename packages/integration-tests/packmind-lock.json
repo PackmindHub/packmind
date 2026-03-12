@@ -1,0 +1,35 @@
+{
+  "lockfileVersion": 1,
+  "packageSlugs": ["integration-tests"],
+  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
+  "installedAt": "2026-03-12T10:36:32.835Z",
+  "cliVersion": "0.21.1",
+  "artifacts": {
+    "standard:integration-tests-structure-and-patterns": {
+      "type": "standard",
+      "name": "Integration Tests Structure and Patterns",
+      "id": "969ff6c8-c847-4f32-9162-54165825bded",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["93f50f80-a364-4205-a4b4-377856b19842"],
+      "files": [
+        {
+          "path": ".packmind/standards/integration-tests-structure-and-patterns.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-integration-tests-structure-and-patterns.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-integration-tests-structure-and-patterns.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-integration-tests-structure-and-patterns.mdc",
+          "agent": "cursor"
+        }
+      ]
+    }
+  }
+}
