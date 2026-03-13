@@ -27,6 +27,7 @@ import {
   QueryOption,
   Recipe,
   RecipeId,
+  SpaceId,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
   UpdateRecipesFromGitHubCommand,
@@ -230,6 +231,7 @@ export class RecipesAdapter
         this.recipesServices.getRecipeService(),
         this.recipesServices.getRecipeVersionService(),
         this.recipesServices.getRecipeSummaryService(),
+        this.spacesPort!,
       );
     await updateRecipesJobFactory.createQueue();
 
@@ -368,8 +370,16 @@ export class RecipesAdapter
     return this._listRecipeVersions.listRecipeVersions(recipeId);
   }
 
-  public getRecipeVersion(recipeId: RecipeId, version: number) {
-    return this._getRecipeVersion.getRecipeVersion(recipeId, version);
+  public getRecipeVersion(
+    recipeId: RecipeId,
+    version: number,
+    allowedSpaceIds: SpaceId[],
+  ) {
+    return this._getRecipeVersion.getRecipeVersion(
+      recipeId,
+      version,
+      allowedSpaceIds,
+    );
   }
 
   public deleteRecipesBatch(command: DeleteRecipesBatchCommand) {

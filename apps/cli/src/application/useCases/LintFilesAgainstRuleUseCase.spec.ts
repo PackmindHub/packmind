@@ -27,8 +27,17 @@ import { createMockPackmindRepositories } from '../../mocks/createMockRepositori
 import { stubLogger } from '@packmind/test-utils';
 import { IListFiles } from '../../domain/services/IListFiles';
 import { IGitService } from '../../domain/services/IGitService';
+import {
+  logErrorConsole,
+  logInfoConsole,
+} from '../../infra/utils/consoleLogger';
 
 jest.mock('fs/promises');
+jest.mock('../../infra/utils/consoleLogger', () => ({
+  logErrorConsole: jest.fn(),
+  logInfoConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
+}));
 
 describe('LintFilesAgainstRuleUseCase', () => {
   let useCase: LintFilesAgainstRuleUseCase;
@@ -418,7 +427,6 @@ describe('LintFilesAgainstRuleUseCase', () => {
   describe('when linter execution throws an error', () => {
     const mockFiles = [{ path: '/project/src/file1.ts' }];
     let result: Awaited<ReturnType<typeof useCase.execute>>;
-    let consoleSpy: jest.SpyInstance;
 
     beforeEach(async () => {
       mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
@@ -443,8 +451,6 @@ describe('LintFilesAgainstRuleUseCase', () => {
         new Error('AST parsing failed'),
       );
 
-      consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
       result = await useCase.execute({
         path: '/project',
         standardSlug: 'test-standard',
@@ -452,17 +458,12 @@ describe('LintFilesAgainstRuleUseCase', () => {
       });
     });
 
-    afterEach(() => {
-      consoleSpy.mockRestore();
-    });
-
     it('returns empty violations array', () => {
       expect(result.violations).toHaveLength(0);
     });
 
     it('logs error message to console', () => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Error executing programs for file'),
       );
     });
@@ -1278,6 +1279,41 @@ describe('LintFilesAgainstRuleUseCase', () => {
         );
         expect(pattern).toBe('/backend/test/**/*.spec.ts');
       });
+    });
+  });
+
+  describe('when single file is out of scope for the rule', () => {
+    it('logs info message about file being out of scope', async () => {
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false,
+      });
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+        '/project',
+      );
+      mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+        scope: ['*.java'],
+        ruleContent: 'Some rule',
+        programs: [
+          {
+            language: 'java',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function check() { return []; }',
+            sourceCodeState: 'AST' as const,
+            severity: DetectionSeverity.ERROR,
+          },
+        ],
+      });
+
+      await useCase.execute({
+        path: '/project/src/file.ts',
+        standardSlug: 'my-standard',
+        ruleId: 'rule-1' as RuleId,
+      });
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('out of scope'),
+      );
     });
   });
 });

@@ -31,7 +31,11 @@ import {
   ViewMode,
 } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
-import { computeSkillOutdatedIds } from '../../utils/computeOutdatedProposalIds';
+import {
+  computeRemovalOutdatedIds,
+  computeSkillOutdatedIds,
+  mergeOutdatedIds,
+} from '../../utils/computeOutdatedProposalIds';
 import {
   filterProposalsByFilePath,
   getFilePathsWithChanges,
@@ -89,6 +93,7 @@ export function SkillReviewDetail({
 
   const selectedSkillProposals =
     selectedSkillProposalsData?.changeProposals ?? [];
+  const currentPackageIds = selectedSkillProposalsData?.currentPackageIds ?? [];
 
   const pool = useChangeProposalPool(selectedSkillProposals);
   const navigateToNextArtifact = useNavigateAfterApply(artefactId);
@@ -158,8 +163,12 @@ export function SkillReviewDetail({
   }, [filePathFilter]);
 
   const outdatedProposalIds = useMemo(
-    () => computeSkillOutdatedIds(selectedSkillProposals, skill, files),
-    [selectedSkillProposals, skill, files],
+    () =>
+      mergeOutdatedIds(
+        computeSkillOutdatedIds(selectedSkillProposals, skill, files),
+        computeRemovalOutdatedIds(selectedSkillProposals, currentPackageIds),
+      ),
+    [selectedSkillProposals, skill, files, currentPackageIds],
   );
 
   useBeforeUnload(

@@ -1,5 +1,5 @@
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { StandardVersion } from '@packmind/types';
+import { SpaceId, StandardVersion } from '@packmind/types';
 import { StandardId } from '@packmind/types';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 
@@ -19,6 +19,7 @@ export class GetStandardVersionUsecase {
   public async getStandardVersion(
     standardId: StandardId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<StandardVersion | null> {
     this.logger.info('Getting standard version', { standardId, version });
 
@@ -27,6 +28,7 @@ export class GetStandardVersionUsecase {
         await this.standardVersionService.getStandardVersion(
           standardId,
           version,
+          allowedSpaceIds,
         );
       this.logger.info('Standard version retrieved successfully', {
         standardId,

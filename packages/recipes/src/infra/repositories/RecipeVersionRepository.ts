@@ -3,7 +3,7 @@ import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { RecipeId, RecipeVersion } from '@packmind/types';
+import { RecipeId, RecipeVersion, SpaceId } from '@packmind/types';
 
 const origin = 'RecipeVersionRepository';
 
@@ -108,17 +108,32 @@ export class RecipeVersionRepository
   async findByRecipeIdAndVersion(
     recipeId: RecipeId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<RecipeVersion | null> {
     this.logger.info('Finding recipe version by recipe ID and version', {
       recipeId,
       version,
+      spaceIdCount: allowedSpaceIds.length,
     });
 
-    try {
-      const recipeVersion = await this.repository.findOne({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: { recipeId: recipeId as any, version }, // TypeORM compatibility with branded types
+    if (allowedSpaceIds.length === 0) {
+      this.logger.warn('No allowed space IDs provided, returning null', {
+        recipeId,
+        version,
       });
+      return null;
+    }
+
+    try {
+      const recipeVersion = await this.repository
+        .createQueryBuilder('rv')
+        .innerJoin('rv.recipe', 'recipe')
+        .where('rv.recipe_id = :recipeId', { recipeId })
+        .andWhere('rv.version = :version', { version })
+        .andWhere('recipe.space_id IN (:...allowedSpaceIds)', {
+          allowedSpaceIds,
+        })
+        .getOne();
 
       if (recipeVersion) {
         this.logger.info('Recipe version found by recipe ID and version', {

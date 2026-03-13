@@ -1,0 +1,502 @@
+{
+  "lockfileVersion": 1,
+  "packageSlugs": ["packages-packmind"],
+  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
+  "installedAt": "2026-03-12T10:36:32.593Z",
+  "cliVersion": "0.21.1",
+  "artifacts": {
+    "command:create-new-package-in-monorepo": {
+      "type": "command",
+      "name": "Create New Package",
+      "id": "231875a1-cd53-414c-8fbb-c4f301a2d386",
+      "version": 4,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/commands/create-new-package-in-monorepo.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/create-new-package-in-monorepo.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/create-new-package-in-monorepo.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/create-new-package-in-monorepo.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "command:repository-implementation-and-testing-pattern": {
+      "type": "command",
+      "name": "Repository Implementation and Testing Pattern",
+      "id": "d08e183f-beff-431e-9b0e-d21ffb64014c",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/commands/repository-implementation-and-testing-pattern.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/repository-implementation-and-testing-pattern.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/repository-implementation-and-testing-pattern.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/repository-implementation-and-testing-pattern.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "command:create-or-update-model-and-typeorm-schemas": {
+      "type": "command",
+      "name": "Create or update model and TypeORM schemas",
+      "id": "e76d8f23-e2c3-4336-9cd3-c6102f47af0f",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:usecase-test-structure-and-validation": {
+      "type": "standard",
+      "name": "UseCase Test Structure and Validation",
+      "id": "10213584-b320-407d-a8f3-40b678b0bc3d",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/usecase-test-structure-and-validation.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-usecase-test-structure-and-validation.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-usecase-test-structure-and-validation.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-usecase-test-structure-and-validation.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:domain-events": {
+      "type": "standard",
+      "name": "Domain Events",
+      "id": "13efa764-49dd-4fe3-b165-ebdd5c07ad55",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/domain-events.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-domain-events.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-domain-events.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-domain-events.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:back-end-typescript-clean-code-practices": {
+      "type": "standard",
+      "name": "Back-end TypeScript Clean Code Practices",
+      "id": "2e289137-cf3f-48a7-b6eb-bd2b4abf5caa",
+      "version": 8,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-back-end-typescript-clean-code-practices.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-back-end-typescript-clean-code-practices.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-back-end-typescript-clean-code-practices.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:use-case-architecture-patterns": {
+      "type": "standard",
+      "name": "Use Case Architecture Patterns",
+      "id": "4906974d-1960-426d-92af-170c3dbc6b36",
+      "version": 4,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/use-case-architecture-patterns.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-use-case-architecture-patterns.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-use-case-architecture-patterns.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-use-case-architecture-patterns.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:port-adapter-cross-domain-integration": {
+      "type": "standard",
+      "name": "Port-Adapter Cross-Domain Integration",
+      "id": "5534ff2c-297b-419e-9aaf-4ee16bae7f1f",
+      "version": 12,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/port-adapter-cross-domain-integration.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-port-adapter-cross-domain-integration.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-port-adapter-cross-domain-integration.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-port-adapter-cross-domain-integration.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:jest-test-suite-organization-and-patterns": {
+      "type": "standard",
+      "name": "Jest Test Suite Organization and Patterns",
+      "id": "85f88ffe-8bb5-475a-94cf-2924b3d28866",
+      "version": 6,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/jest-test-suite-organization-and-patterns.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-jest-test-suite-organization-and-patterns.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-jest-test-suite-organization-and-patterns.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-jest-test-suite-organization-and-patterns.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:compliance-logging-personal-information": {
+      "type": "standard",
+      "name": "Compliance - Logging Personal Information",
+      "id": "b81c1442-e55e-4eec-b207-6330b632fef7",
+      "version": 3,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/compliance-logging-personal-information.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-compliance-logging-personal-information.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-compliance-logging-personal-information.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-compliance-logging-personal-information.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:backend-tests-redaction": {
+      "type": "standard",
+      "name": "Backend Tests Redaction",
+      "id": "bb95e639-1e75-4197-872a-3348393290dc",
+      "version": 7,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/backend-tests-redaction.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-backend-tests-redaction.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-backend-tests-redaction.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-backend-tests-redaction.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:back-end-repositories-sql-queries-using-typeorm": {
+      "type": "standard",
+      "name": "Back-end repositories SQL queries using TypeORM",
+      "id": "ea68e1f0-61dd-46cf-ac64-0e5c7cc57d99",
+      "version": 4,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".packmind/standards/back-end-repositories-sql-queries-using-typeorm.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-back-end-repositories-sql-queries-using-typeorm.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "skill:hexagonal-architecture": {
+      "type": "skill",
+      "name": "hexagonal-architecture",
+      "id": "6e1f3f9d-8c03-4824-92bb-facf926d880f",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
+      "files": [
+        {
+          "path": ".github/skills/hexagonal-architecture/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/hexa-facade.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/adapter.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/contract.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/event.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/listener.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/port.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/repository.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/schema.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/service.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/components/usecase.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/layers/application-layer.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/layers/domain-layer.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/hexagonal-architecture/layers/infrastructure-layer.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/hexa-facade.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/adapter.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/contract.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/event.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/listener.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/port.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/repository.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/schema.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/service.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/components/usecase.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/layers/application-layer.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/layers/domain-layer.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/hexagonal-architecture/layers/infrastructure-layer.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/hexa-facade.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/adapter.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/contract.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/event.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/listener.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/port.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/repository.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/schema.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/service.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/components/usecase.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/layers/application-layer.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/layers/domain-layer.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/hexagonal-architecture/layers/infrastructure-layer.md",
+          "agent": "cursor"
+        }
+      ]
+    }
+  }
+}

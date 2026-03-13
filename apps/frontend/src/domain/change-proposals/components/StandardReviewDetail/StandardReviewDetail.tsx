@@ -30,7 +30,11 @@ import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
 import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
 import { getStandardByIdKey } from '../../../standards/api/queryKeys';
-import { computeStandardOutdatedIds } from '../../utils/computeOutdatedProposalIds';
+import {
+  computeRemovalOutdatedIds,
+  computeStandardOutdatedIds,
+  mergeOutdatedIds,
+} from '../../utils/computeOutdatedProposalIds';
 import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { ReviewHeader } from '../shared/ReviewHeader';
 import { StandardDiffView } from './StandardDiffView';
@@ -66,6 +70,8 @@ export function StandardReviewDetail({
 
   const selectedStandardProposals =
     selectedStandardProposalsData?.changeProposals ?? [];
+  const currentPackageIds =
+    selectedStandardProposalsData?.currentPackageIds ?? [];
 
   const { data: selectedStandardData } = useGetStandardByIdQuery(standardId);
   const selectedStandard = selectedStandardData?.standard ?? undefined;
@@ -114,12 +120,15 @@ export function StandardReviewDetail({
 
   const outdatedProposalIds = useMemo(
     () =>
-      computeStandardOutdatedIds(
-        selectedStandardProposals,
-        selectedStandard,
-        rules,
+      mergeOutdatedIds(
+        computeStandardOutdatedIds(
+          selectedStandardProposals,
+          selectedStandard,
+          rules,
+        ),
+        computeRemovalOutdatedIds(selectedStandardProposals, currentPackageIds),
       ),
-    [selectedStandardProposals, selectedStandard, rules],
+    [selectedStandardProposals, selectedStandard, rules, currentPackageIds],
   );
 
   useBeforeUnload(

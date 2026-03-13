@@ -3,6 +3,7 @@
 ## Added
 
 - Fixed `diff` behavior that did not work properly with sub-directories
+- The `lint` command now accepts a single file path in addition to a directory; it validates existence, respects `.packmindignore`, and logs an info message when the file is out of scope for the requested rule/standard
 - Add `.packmindignore` file support to exclude files/folders from linting without modifying CLI source code
 
 ## Changed

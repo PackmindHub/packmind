@@ -20,6 +20,7 @@ import { RecipeVersion } from '../RecipeVersion';
 
 // QueryOption is now exported from @packmind/types/database/types
 import type { QueryOption } from '../../database/types';
+import { SpaceId } from '../../spaces';
 
 export const IRecipesPortName = 'IRecipesPort' as const;
 
@@ -101,6 +102,7 @@ export interface IRecipesPort {
   getRecipeVersion(
     recipeId: RecipeId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<RecipeVersion | null>;
 
   /**

@@ -4,6 +4,7 @@ import {
   ChangeProposalId,
   ChangeProposalStatus,
   ChangeProposalType,
+  PackageId,
   Recipe,
   Rule,
   Skill,
@@ -15,6 +16,7 @@ import {
   computeSkillOutdatedIds,
   computeStandardOutdatedIds,
   computeCommandOutdatedIds,
+  computeRemovalOutdatedIds,
 } from './computeOutdatedProposalIds';
 
 // ---------------------------------------------------------------------------
@@ -986,6 +988,119 @@ describe('computeCommandOutdatedIds', () => {
 
     it('excludes the fresh proposal', () => {
       expect(result.has(fresh.id)).toBe(false);
+    });
+  });
+});
+
+describe('computeRemovalOutdatedIds', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  describe('when no removal proposals exist', () => {
+    it('returns an empty set', () => {
+      const proposals = [
+        makeProposal({
+          type: ChangeProposalType.updateSkillName,
+          payload: { oldValue: 'old', newValue: 'new' },
+        }),
+      ];
+
+      const result = computeRemovalOutdatedIds(proposals, [
+        'pkg-1' as PackageId,
+      ]);
+      expect(result.size).toBe(0);
+    });
+  });
+
+  describe('when a packageId is not in currentPackageIds', () => {
+    it('marks removal proposal as outdated', () => {
+      const proposal = makeProposal({
+        type: ChangeProposalType.removeStandard,
+        payload: { packageIds: ['pkg-removed' as PackageId] },
+      });
+
+      const result = computeRemovalOutdatedIds(
+        [proposal],
+        ['pkg-1' as PackageId],
+      );
+      expect(result.has(proposal.id)).toBe(true);
+    });
+  });
+
+  describe('when all packageIds are in currentPackageIds', () => {
+    it('does not mark removal proposal as outdated', () => {
+      const proposal = makeProposal({
+        type: ChangeProposalType.removeCommand,
+        payload: { packageIds: ['pkg-1' as PackageId, 'pkg-2' as PackageId] },
+      });
+
+      const result = computeRemovalOutdatedIds(
+        [proposal],
+        ['pkg-1' as PackageId, 'pkg-2' as PackageId],
+      );
+      expect(result.size).toBe(0);
+    });
+  });
+
+  describe('when payload has empty packageIds', () => {
+    it('does not mark proposal as outdated', () => {
+      const proposal = makeProposal({
+        type: ChangeProposalType.removeStandard,
+        payload: { packageIds: [] },
+      });
+
+      const result = computeRemovalOutdatedIds(
+        [proposal],
+        ['pkg-1' as PackageId],
+      );
+      expect(result.size).toBe(0);
+    });
+  });
+
+  describe('when currentPackageIds is empty', () => {
+    it('marks removal proposal as outdated', () => {
+      const proposal = makeProposal({
+        type: ChangeProposalType.removeSkill,
+        payload: { packageIds: ['pkg-1' as PackageId] },
+      });
+
+      const result = computeRemovalOutdatedIds([proposal], []);
+      expect(result.has(proposal.id)).toBe(true);
+    });
+  });
+
+  describe('when proposals contain non-removal types', () => {
+    it('ignores non-removal-type proposals', () => {
+      const removalProposal = makeProposal({
+        type: ChangeProposalType.removeSkill,
+        payload: { packageIds: ['pkg-gone' as PackageId] },
+      });
+      const updateProposal = makeProposal({
+        type: ChangeProposalType.updateStandardName,
+        payload: { oldValue: 'old', newValue: 'new' },
+      });
+
+      const result = computeRemovalOutdatedIds(
+        [removalProposal, updateProposal],
+        ['pkg-1' as PackageId],
+      );
+      expect(result.has(removalProposal.id)).toBe(true);
+    });
+
+    it('counts only removal-type proposals as outdated', () => {
+      const removalProposal = makeProposal({
+        type: ChangeProposalType.removeSkill,
+        payload: { packageIds: ['pkg-gone' as PackageId] },
+      });
+      const updateProposal = makeProposal({
+        type: ChangeProposalType.updateStandardName,
+        payload: { oldValue: 'old', newValue: 'new' },
+      });
+
+      const result = computeRemovalOutdatedIds(
+        [removalProposal, updateProposal],
+        ['pkg-1' as PackageId],
+      );
+      expect(result.size).toBe(1);
     });
   });
 });
