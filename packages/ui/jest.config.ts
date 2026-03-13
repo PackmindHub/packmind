@@ -3,8 +3,21 @@ export default {
   preset: '../../jest.preset.ts',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
-    '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
+    '^.+\\.[tj]sx?$': [
+      '@swc/jest',
+      {
+        jsc: {
+          parser: { syntax: 'typescript', tsx: true, decorators: false },
+          transform: { react: { runtime: 'automatic' } },
+          target: 'es2022',
+        },
+        module: { type: 'commonjs' },
+      },
+    ],
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
+  ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/packages/ui',
   testEnvironment: 'jsdom',
