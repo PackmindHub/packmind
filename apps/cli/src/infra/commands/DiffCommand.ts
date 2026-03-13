@@ -64,9 +64,13 @@ export const diffCommand = command({
     }
 
     if (positionals[0] === 'remove' || positionals[0] === 'rm') {
+      const removeFilePath =
+        path && positionals[1]
+          ? `${path}/${positionals[1]}`.replace(/\/+/g, '/')
+          : positionals[1];
       await diffRemoveHandler({
         packmindCliHexa,
-        filePath: positionals[1],
+        filePath: removeFilePath,
         message,
         exit: process.exit,
         getCwd: () => process.cwd(),
