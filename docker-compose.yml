@@ -26,7 +26,7 @@ services:
           sleep 1;
         done;
         echo '[nx-daemon] Socket ready, pre-warming project graph...';
-        npx nx show projects >/dev/null 2>&1 &
+        npx nx show projects >/dev/null &
         tail -f /dev/null
       "
     volumes:
