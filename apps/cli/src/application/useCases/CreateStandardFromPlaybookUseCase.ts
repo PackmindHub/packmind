@@ -13,7 +13,7 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
   ) {}
 
   async execute(playbook: IPlaybookInput): Promise<ICreateStandardResult> {
-    const space = await this.spaceService.getGlobalSpace();
+    const space = await this.spaceService.getDefaultSpace();
 
     const standard = await this.gateway.standards.create(space.id, {
       name: playbook.name,

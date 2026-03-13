@@ -49,7 +49,7 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     };
 
     beforeEach(async () => {
-      mockSpaceService.getGlobalSpace.mockResolvedValue(
+      mockSpaceService.getDefaultSpace.mockResolvedValue(
         spaceFactory({
           id: createSpaceId('space-1'),
           slug: 'global',
@@ -67,7 +67,7 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     });
 
     it('fetches the global space', () => {
-      expect(mockSpaceService.getGlobalSpace).toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).toHaveBeenCalled();
     });
 
     it('creates command with provided data', () => {
@@ -91,7 +91,7 @@ describe('CreateCommandFromPlaybookUseCase', () => {
 
   describe('when command is created', () => {
     it('returns command id, name, and slug', async () => {
-      mockSpaceService.getGlobalSpace.mockResolvedValue(
+      mockSpaceService.getDefaultSpace.mockResolvedValue(
         spaceFactory({
           id: createSpaceId('space-1'),
           slug: 'global',

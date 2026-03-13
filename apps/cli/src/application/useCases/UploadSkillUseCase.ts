@@ -39,7 +39,7 @@ export class UploadSkillUseCase implements IUploadSkillUseCase {
       throw new Error(`Skill size (${totalSize} bytes) exceeds 10MB limit`);
     }
 
-    const space = await this.deps.spaceService.getGlobalSpace();
+    const space = await this.deps.spaceService.getDefaultSpace();
     const payload = {
       files: files.map((f) => ({
         path: f.relativePath,

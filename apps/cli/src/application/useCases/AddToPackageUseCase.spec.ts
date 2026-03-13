@@ -41,7 +41,7 @@ describe('AddToPackageUseCase', () => {
     standardsGateway = createMockStandardsGateway();
     packagesGateway = createMockPackagesGateway();
     mockSpaceService = createMockSpaceService({
-      getGlobalSpace: jest.fn().mockResolvedValue({ id: 'space-123' }),
+      getDefaultSpace: jest.fn().mockResolvedValue({ id: 'space-123' }),
     });
 
     mockGateway = {

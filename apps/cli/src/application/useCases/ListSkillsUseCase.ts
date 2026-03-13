@@ -13,7 +13,7 @@ export class ListSkillsUseCase implements IListSkillsUseCase {
   ) {}
 
   public async execute(): Promise<IListSkillsResult> {
-    const space = await this.spaceService.getGlobalSpace();
+    const space = await this.spaceService.getDefaultSpace();
     const skills = await this.packmindGateway.skills.list({
       spaceId: createSpaceId(space.id),
     });

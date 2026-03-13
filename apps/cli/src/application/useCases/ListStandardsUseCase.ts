@@ -12,7 +12,7 @@ export class ListStandardsUseCase implements IListStandardsUseCase {
   ) {}
 
   public async execute(): Promise<IListStandardsResult> {
-    const globalSpace = await this.spaceService.getGlobalSpace();
+    const globalSpace = await this.spaceService.getDefaultSpace();
     const listStandardsResponse = await this.packmindGateway.standards.list({
       spaceId: globalSpace.id,
     });

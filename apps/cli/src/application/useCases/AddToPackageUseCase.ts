@@ -28,7 +28,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     const { packageSlug, itemType, itemSlugs } = command;
 
     // Get global space ID
-    const space = await this.spaceService.getGlobalSpace();
+    const space = await this.spaceService.getDefaultSpace();
     const packages = await this.gateway.packages.list({});
     const pkg = packages.packages.find((pkg) => pkg.slug === packageSlug);
     if (!pkg) {
@@ -82,7 +82,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
   ): Promise<{ ids: string[]; idToSlugMap: Map<string, string> }> {
     const ids: string[] = [];
     const idToSlugMap = new Map<string, string>();
-    const globalSpace = await this.spaceService.getGlobalSpace();
+    const globalSpace = await this.spaceService.getDefaultSpace();
 
     for (const slug of slugs) {
       let item: { id: string } | null = null;

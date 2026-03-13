@@ -376,8 +376,8 @@ export class PackmindCliHexa {
     return this.hexa.repositories.packmindGateway;
   }
 
-  public async getGlobalSpace(): Promise<Space> {
-    return this.hexa.services.spaceService.getGlobalSpace();
+  public async getDefaultSpace(): Promise<Space> {
+    return this.hexa.services.spaceService.getDefaultSpace();
   }
 
   public getSpaceService(): ISpaceService {

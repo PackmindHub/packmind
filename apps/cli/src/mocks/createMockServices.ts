@@ -35,7 +35,7 @@ export function createMockSpaceService(
   overrides?: Partial<jest.Mocked<ISpaceService>>,
 ): jest.Mocked<ISpaceService> {
   return {
-    getGlobalSpace: jest.fn(),
+    getDefaultSpace: jest.fn(),
     ...overrides,
   };
 }

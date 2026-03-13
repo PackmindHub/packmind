@@ -13,7 +13,7 @@ export class CreatePackageUseCase implements ICreatePackageUseCase {
   ) {}
 
   async execute(command: ICreatePackageCommand): Promise<ICreatePackageResult> {
-    const space = await this.spaceService.getGlobalSpace();
+    const space = await this.spaceService.getDefaultSpace();
     const result = await this.gateway.packages.create({
       spaceId: space.id,
       name: command.name,

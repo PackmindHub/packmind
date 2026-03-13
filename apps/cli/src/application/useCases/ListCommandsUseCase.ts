@@ -12,7 +12,7 @@ export class ListCommandsUseCase implements IListCommandsUseCase {
   ) {}
 
   public async execute(): Promise<IListCommandsResult> {
-    const space = await this.spaceService.getGlobalSpace();
+    const space = await this.spaceService.getDefaultSpace();
     const listCommandsResponse = await this.packmindGateway.commands.list({
       spaceId: space.id,
     });

@@ -67,7 +67,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpaceService.getGlobalSpace).not.toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -115,7 +115,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpaceService.getGlobalSpace).not.toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -167,7 +167,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpaceService.getGlobalSpace).not.toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -201,7 +201,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpaceService.getGlobalSpace.mockResolvedValue({
+      mockSpaceService.getDefaultSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -224,7 +224,7 @@ describe('UploadSkillUseCase', () => {
     it('gets the global space', async () => {
       await useCase.execute({ skillPath: '/skills/my-skill' });
 
-      expect(mockSpaceService.getGlobalSpace).toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).toHaveBeenCalled();
     });
 
     it('uploads skill with correct spaceId', async () => {
@@ -315,7 +315,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpaceService.getGlobalSpace.mockResolvedValue({
+      mockSpaceService.getDefaultSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -356,7 +356,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpaceService.getGlobalSpace.mockResolvedValue({
+      mockSpaceService.getDefaultSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -409,7 +409,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: true,
         },
       ]);
-      mockSpaceService.getGlobalSpace.mockResolvedValue({
+      mockSpaceService.getDefaultSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -458,7 +458,7 @@ describe('UploadSkillUseCase', () => {
         isBase64: false,
       });
       mockedReadSkillDirectory.mockResolvedValue(files);
-      mockSpaceService.getGlobalSpace.mockResolvedValue({
+      mockSpaceService.getDefaultSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -500,7 +500,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: true,
         },
       ]);
-      mockSpaceService.getGlobalSpace.mockResolvedValue({
+      mockSpaceService.getDefaultSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });

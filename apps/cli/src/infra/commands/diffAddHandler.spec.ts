@@ -47,7 +47,7 @@ const STANDARD_WITH_SCOPE_CONTENT = [
 
 describe('diffAddHandler', () => {
   let mockSubmitDiffs: jest.Mock;
-  let mockGetGlobal: jest.Mock;
+  let mockGetDefaultSpace: jest.Mock;
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
@@ -62,7 +62,7 @@ describe('diffAddHandler', () => {
       errors: [],
     });
 
-    mockGetGlobal = jest.fn().mockResolvedValue({
+    mockGetDefaultSpace = jest.fn().mockResolvedValue({
       id: 'space-123',
       name: 'Global',
       slug: 'global',
@@ -71,7 +71,7 @@ describe('diffAddHandler', () => {
 
     mockPackmindCliHexa = {
       submitDiffs: mockSubmitDiffs,
-      getGlobalSpace: mockGetGlobal,
+      getDefaultSpace: mockGetDefaultSpace,
       configExists: jest
         .fn()
         .mockImplementation((dir: string) =>
@@ -86,7 +86,7 @@ describe('diffAddHandler', () => {
         ),
       tryGetGitRepositoryRoot: jest.fn().mockResolvedValue(null),
       getPackmindGateway: () => ({
-        spaces: { getGlobal: mockGetGlobal },
+        spaces: { getDefaultSpace: mockGetDefaultSpace },
       }),
     } as unknown as PackmindCliHexa;
 
@@ -335,7 +335,7 @@ describe('diffAddHandler', () => {
           tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
           getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
           getCurrentBranch: mockGetCurrentBranch,
-          getGlobalSpace: mockGetGlobal,
+          getDefaultSpace: mockGetDefaultSpace,
           getPackmindGateway: () => ({
             deployment: { getDeployed: mockGetDeployed },
           }),
@@ -363,7 +363,7 @@ describe('diffAddHandler', () => {
     it('fetches the global space', async () => {
       await diffAddHandler(buildDeps());
 
-      expect(mockGetGlobal).toHaveBeenCalled();
+      expect(mockGetDefaultSpace).toHaveBeenCalled();
     });
 
     it('exits with 0 on success', async () => {
