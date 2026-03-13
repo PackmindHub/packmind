@@ -55,9 +55,20 @@ module.exports = {
       {
         test: /\.ts$/,
         use: {
-          loader: 'ts-loader',
+          loader: 'swc-loader',
           options: {
-            configFile: join(__dirname, 'tsconfig.app.json'),
+            jsc: {
+              parser: { syntax: 'typescript', decorators: true },
+              transform: {
+                legacyDecorator: true,
+                decoratorMetadata: true,
+                useDefineForClassFields: false,
+              },
+              target: 'es2021',
+              keepClassNames: true,
+            },
+            module: { type: 'commonjs' },
+            sourceMaps: true,
           },
         },
         exclude: /node_modules/,
