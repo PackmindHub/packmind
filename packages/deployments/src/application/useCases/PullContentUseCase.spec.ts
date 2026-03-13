@@ -36,6 +36,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
+import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
@@ -72,6 +73,7 @@ describe('PullContentUseCase', () => {
   let packmindConfigService: jest.Mocked<PackmindConfigService>;
   let distributionRepository: jest.Mocked<IDistributionRepository>;
   let targetResolutionService: jest.Mocked<TargetResolutionService>;
+  let lockFileService: jest.Mocked<PackmindLockFileService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
@@ -186,6 +188,20 @@ describe('PullContentUseCase', () => {
       }),
     } as unknown as jest.Mocked<TargetResolutionService>;
 
+    lockFileService = {
+      buildLockFile: jest.fn().mockReturnValue({
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        installedAt: new Date().toISOString(),
+        artifacts: {},
+      }),
+      createLockFileModification: jest.fn().mockReturnValue({
+        path: 'packmind-lock.json',
+        content: '{}',
+      }),
+    } as unknown as jest.Mocked<PackmindLockFileService>;
+
     organizationId = createOrganizationId(uuidv4());
     organization = {
       id: organizationId,
@@ -216,6 +232,7 @@ describe('PullContentUseCase', () => {
       distributionRepository,
       targetResolutionService,
       packmindConfigService,
+      lockFileService,
       stubLogger(),
     );
   });
@@ -237,6 +254,7 @@ describe('PullContentUseCase', () => {
           distributionRepository,
           targetResolutionService,
           packmindConfigService,
+          lockFileService,
           stubLogger(),
         );
       }).not.toThrow();
@@ -399,10 +417,10 @@ describe('PullContentUseCase', () => {
         } as FileUpdates);
       });
 
-      it('includes only packmind.json in createOrUpdate', async () => {
+      it('includes only packmind.json and packmind-lock.json in createOrUpdate', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.fileUpdates.createOrUpdate).toHaveLength(1);
+        expect(result.fileUpdates.createOrUpdate).toHaveLength(2);
       });
 
       it('sets packmind.json as the file path', async () => {
@@ -761,6 +779,182 @@ describe('PullContentUseCase', () => {
         expect(packmindJsonFile?.content).toBe(
           '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
         );
+      });
+    });
+
+    describe('when generating packmind-lock.json lock file', () => {
+      let testPackage: PackageWithArtefacts;
+
+      beforeEach(() => {
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [],
+        } as FileUpdates);
+      });
+
+      it('includes packmind-lock.json in file updates', async () => {
+        const result = await useCase.execute(command);
+
+        const lockJsonFile = result.fileUpdates.createOrUpdate.find(
+          (file) => file.path === 'packmind-lock.json',
+        );
+        expect(lockJsonFile).toBeDefined();
+      });
+
+      it('calls buildLockFile with resolved coding agents', async () => {
+        await useCase.execute(command);
+
+        expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [CodingAgents.packmind, CodingAgents.agents_md],
+          }),
+        );
+      });
+
+      it('calls buildLockFile with package slugs from command', async () => {
+        await useCase.execute(command);
+
+        expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageSlugs: ['test-package'],
+          }),
+        );
+      });
+
+      describe('when no artifacts exist', () => {
+        it('calls buildLockFile with empty artifact metadata', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              artifactSpaceIds: {},
+              artifactPackageIds: {},
+            }),
+          );
+        });
+      });
+
+      describe('when artifacts have metadata', () => {
+        let recipe: Recipe;
+        let recipeVersion: RecipeVersion;
+
+        beforeEach(() => {
+          recipe = {
+            id: createRecipeId('recipe-1'),
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+            content: 'recipe content',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          recipeVersion = {
+            id: createRecipeVersionId('rv-1'),
+            recipeId: recipe.id,
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+            content: 'recipe content',
+            version: 1,
+            userId: null,
+          };
+
+          testPackage.recipes = [recipe];
+          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+            testPackage,
+          ]);
+
+          recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        });
+
+        it('calls buildLockFile with flattened artifact metadata', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              artifactSpaceIds: expect.objectContaining({
+                [String(recipe.id)]: String(testPackage.spaceId),
+              }),
+              artifactPackageIds: expect.objectContaining({
+                [String(recipe.id)]: [String(testPackage.id)],
+              }),
+            }),
+          );
+        });
+      });
+
+      describe('when git info is available', () => {
+        const targetId = createTargetId('target-1');
+
+        beforeEach(() => {
+          command = {
+            ...command,
+            gitRemoteUrl: 'https://github.com/owner/repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+            {
+              id: targetId,
+              organizationId: organization.id,
+              gitRemoteUrl: 'https://github.com/owner/repo.git',
+              gitBranch: 'main',
+              relativePath: '/',
+            },
+          );
+        });
+
+        it('calls buildLockFile with resolved target id', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              targetId: String(targetId),
+            }),
+          );
+        });
+      });
+
+      describe('when git info is not available', () => {
+        beforeEach(() => {
+          command = {
+            ...command,
+            gitRemoteUrl: undefined,
+            gitBranch: undefined,
+            relativePath: undefined,
+          };
+        });
+
+        it('calls buildLockFile without target id', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              targetId: undefined,
+            }),
+          );
+        });
       });
     });
 

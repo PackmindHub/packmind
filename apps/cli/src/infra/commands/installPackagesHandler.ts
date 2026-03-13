@@ -469,7 +469,6 @@ async function executeInstallForDirectory(
       packagesSlugs: configPackages,
       previousPackagesSlugs: configPackages, // Pass for consistency
       agents: configAgents, // Pass agents from config if present
-      cliVersion: CLI_VERSION,
     });
 
     // Show installation message with counts
@@ -661,7 +660,6 @@ export async function installPackagesHandler(
       gitBranch,
       relativePath,
       agents: configAgents, // Pass agents from config if present (overrides org-level)
-      cliVersion: CLI_VERSION,
     });
 
     // Show installation message with counts
@@ -938,7 +936,6 @@ export async function uninstallPackagesHandler(
         packagesSlugs: [],
         previousPackagesSlugs: Object.keys(configPackages),
         agents: configAgents,
-        cliVersion: CLI_VERSION,
       });
 
       // Display results
@@ -966,7 +963,6 @@ export async function uninstallPackagesHandler(
         packagesSlugs: remainingPackages,
         previousPackagesSlugs: Object.keys(configPackages),
         agents: configAgents,
-        cliVersion: CLI_VERSION,
       });
 
       // Show removal message with counts
