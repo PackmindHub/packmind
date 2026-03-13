@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.base.effective.json",
+  "ts-node": {
+    "swc": true
+  },
   "compilerOptions": {
     "module": "commonjs",
     "baseUrl": "../../",
