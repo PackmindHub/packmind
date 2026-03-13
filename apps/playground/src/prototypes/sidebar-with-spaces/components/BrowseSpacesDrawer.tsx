@@ -236,21 +236,23 @@ function MySpacesTab({
                   {space.name}
                 </PMText>
               </PMBox>
-              <PMBox
-                as="button"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  onPinToggle(space.id);
-                }}
-                title={pinned ? 'Unpin space' : 'Pin space'}
-                flexShrink={0}
-                color={pinned ? 'yellow.400' : 'text.faded'}
-                _hover={{ color: 'yellow.400' }}
-                display="flex"
-                alignItems="center"
-              >
-                <LuStar size={12} fill={pinned ? 'currentColor' : 'none'} />
-              </PMBox>
+              {space.id !== 'default' && (
+                <PMBox
+                  as="button"
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    onPinToggle(space.id);
+                  }}
+                  title={pinned ? 'Unpin space' : 'Pin space'}
+                  flexShrink={0}
+                  color={pinned ? 'yellow.400' : 'text.faded'}
+                  _hover={{ color: 'yellow.400' }}
+                  display="flex"
+                  alignItems="center"
+                >
+                  <LuStar size={12} fill={pinned ? 'currentColor' : 'none'} />
+                </PMBox>
+              )}
             </PMBox>
           );
         })}

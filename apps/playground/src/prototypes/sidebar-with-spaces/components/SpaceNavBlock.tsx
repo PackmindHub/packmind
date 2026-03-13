@@ -11,6 +11,7 @@ export function SpaceNavBlock({
   onItemClick,
   isPinned,
   onPinToggle,
+  showPinToggle = true,
 }: Readonly<{
   space: Space;
   isActive?: boolean;
@@ -19,6 +20,7 @@ export function SpaceNavBlock({
   onItemClick?: (key: string) => void;
   isPinned: boolean;
   onPinToggle: () => void;
+  showPinToggle?: boolean;
 }>) {
   return (
     <PMBox>
@@ -26,7 +28,7 @@ export function SpaceNavBlock({
         role="group"
         display="flex"
         alignItems="center"
-        gap={1}
+        gap={2}
         paddingX={2}
         paddingY={1}
         borderRadius="sm"
@@ -40,7 +42,7 @@ export function SpaceNavBlock({
           onClick={onSpaceClick}
           display="flex"
           alignItems="center"
-          gap={1}
+          gap={2}
           flex={1}
           minW={0}
           fontSize="xs"
@@ -71,22 +73,24 @@ export function SpaceNavBlock({
             {space.name}
           </PMText>
         </PMBox>
-        <PMBox
-          as="button"
-          onClick={(e: React.MouseEvent) => {
-            e.stopPropagation();
-            onPinToggle();
-          }}
-          title={isPinned ? 'Unpin space' : 'Pin space'}
-          flexShrink={0}
-          transition="opacity 0.15s"
-          color={isPinned ? 'yellow.400' : 'text.faded'}
-          _hover={{ color: 'yellow.400' }}
-          display="flex"
-          alignItems="center"
-        >
-          <LuStar size={12} fill={isPinned ? 'currentColor' : 'none'} />
-        </PMBox>
+        {showPinToggle && (
+          <PMBox
+            as="button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              onPinToggle();
+            }}
+            title={isPinned ? 'Unpin space' : 'Pin space'}
+            flexShrink={0}
+            transition="opacity 0.15s"
+            color={isPinned ? 'yellow.400' : 'text.faded'}
+            _hover={{ color: 'yellow.400' }}
+            display="flex"
+            alignItems="center"
+          >
+            <LuStar size={12} fill={isPinned ? 'currentColor' : 'none'} />
+          </PMBox>
+        )}
       </PMBox>
 
       {/* Inline nav for active space */}
