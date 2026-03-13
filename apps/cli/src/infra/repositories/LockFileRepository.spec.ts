@@ -26,7 +26,6 @@ describe('LockFileRepository', () => {
         packageSlugs: ['my-package'],
         agents: ['claude', 'packmind'],
         installedAt: '2026-01-01T00:00:00.000Z',
-        cliVersion: '1.0.0',
         artifacts: {
           'standard:my-standard': {
             name: 'My Standard',
@@ -114,31 +113,27 @@ describe('LockFileRepository', () => {
       it.each([
         [
           'missing artifacts',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0"}',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01"}',
         ],
         [
           'artifacts is an array',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":[]}',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":[]}',
         ],
         [
           'artifacts is a string',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":"bad"}',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":"bad"}',
         ],
         [
           'missing packageSlugs',
-          '{"lockfileVersion":1,"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":{}}',
-        ],
-        [
-          'missing cliVersion',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          '{"lockfileVersion":1,"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
         ],
         [
           'missing installedAt',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"cliVersion":"1.0.0","artifacts":{}}',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"artifacts":{}}',
         ],
         [
           'missing agents',
-          '{"lockfileVersion":1,"packageSlugs":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","artifacts":{}}',
+          '{"lockfileVersion":1,"packageSlugs":[],"installedAt":"2026-01-01","artifacts":{}}',
         ],
         ['completely wrong shape', '{}'],
       ])('returns null when %s', async (_label, content) => {
@@ -155,7 +150,7 @@ describe('LockFileRepository', () => {
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":123,"artifacts":{}}',
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":123,"artifacts":{}}',
           );
 
           result = await repository.read('/project');
@@ -175,7 +170,7 @@ describe('LockFileRepository', () => {
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","cliVersion":"1.0.0","targetId":"target-abc","artifacts":{}}',
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":"target-abc","artifacts":{}}',
           );
 
           result = await repository.read('/project');
@@ -216,7 +211,6 @@ describe('LockFileRepository', () => {
       packageSlugs: ['my-package'],
       agents: ['packmind'],
       installedAt: '2026-01-01T00:00:00.000Z',
-      cliVersion: '1.0.0',
       artifacts: {
         'standard:my-standard': {
           name: 'My Standard',
@@ -301,7 +295,6 @@ describe('LockFileRepository', () => {
       packageSlugs: [],
       agents: [],
       installedAt: '2026-01-01T00:00:00.000Z',
-      cliVersion: '1.0.0',
       artifacts: {},
     };
 

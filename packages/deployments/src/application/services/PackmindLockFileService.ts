@@ -100,7 +100,6 @@ export class PackmindLockFileService {
       packageSlugs: [...params.packageSlugs].sort(),
       agents: [...params.codingAgents].sort(),
       installedAt: new Date().toISOString(),
-      cliVersion: 'app',
       targetId: params.targetId,
       artifacts,
     };

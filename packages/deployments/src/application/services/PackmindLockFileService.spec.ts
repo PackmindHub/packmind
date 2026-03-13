@@ -121,10 +121,6 @@ describe('PackmindLockFileService', () => {
         expect(result.lockfileVersion).toBe(1);
       });
 
-      it('returns cliVersion as app', () => {
-        expect(result.cliVersion).toBe('app');
-      });
-
       it('returns the targetId', () => {
         expect(result.targetId).toBe('target-1');
       });
@@ -437,7 +433,6 @@ describe('PackmindLockFileService', () => {
         packageSlugs: ['my-package'],
         agents: ['claude'],
         installedAt: FIXED_DATE,
-        cliVersion: 'app',
         targetId: 'target-1',
         artifacts: {},
       };
@@ -453,7 +448,6 @@ describe('PackmindLockFileService', () => {
         packageSlugs: ['pkg-a'],
         agents: ['claude'],
         installedAt: FIXED_DATE,
-        cliVersion: 'app',
         targetId: 'target-1',
         artifacts: {},
       };
@@ -469,7 +463,6 @@ describe('PackmindLockFileService', () => {
         packageSlugs: ['pkg-a', 'pkg-b'],
         agents: ['claude', 'cursor'],
         installedAt: FIXED_DATE,
-        cliVersion: 'app',
         targetId: 'target-1',
         artifacts: {
           'command:my-recipe': {

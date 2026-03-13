@@ -451,21 +451,6 @@ describe('PublishArtifactsUseCase', () => {
       expect(parsed.lockfileVersion).toBe(1);
     });
 
-    it('generates lock file with cliVersion set to app', async () => {
-      await useCase.execute(command);
-
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      const lockFile = jobInput.fileUpdates.createOrUpdate.find(
-        (f: { path: string }) => f.path === 'docs/packmind-lock.json',
-      );
-
-      assert(lockFile, 'lockFile should be defined');
-      assert(lockFile.content, 'lockFile.content should be defined');
-      const parsed = JSON.parse(lockFile.content);
-
-      expect(parsed.cliVersion).toBe('app');
-    });
-
     it('generates lock file with target id', async () => {
       await useCase.execute(command);
 

@@ -19,11 +19,10 @@ export type PackmindLockFileEntry = {
 };
 
 export type PackmindLockFile = {
-  lockfileVersion: 1;
+  lockfileVersion: number;
   packageSlugs: string[];
   agents: CodingAgent[];
   installedAt: string;
-  cliVersion: string;
   targetId?: string;
   artifacts: Record<string, PackmindLockFileEntry>;
 };
