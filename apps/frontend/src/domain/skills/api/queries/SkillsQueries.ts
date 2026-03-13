@@ -13,6 +13,11 @@ import {
   GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
 } from '../../../deployments/api/queryKeys';
+import {
+  CHANGE_PROPOSALS_QUERY_SCOPE,
+  GET_GROUPED_CHANGE_PROPOSALS_KEY,
+} from '../../../change-proposals/api/queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 
 export const getSkillsBySpaceQueryOptions = (
   organizationId: OrganizationId | undefined,
@@ -160,6 +165,15 @@ export const useDeleteSkillMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+
+      // Proposals on the deleted skill are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
+      });
     },
     onError: (error) => {
       console.error('Error deleting skill:', error);
@@ -200,6 +214,15 @@ export const useDeleteSkillsBatchMutation = () => {
       // Packages containing deleted skills need to be refreshed
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+
+      // Proposals on the deleted skills are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
       });
     },
     onError: (error) => {
