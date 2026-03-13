@@ -14,7 +14,7 @@ Search the project root and all subdirectories.
 
 ### Step 1: List Commands
 
-Run \`packmind-cli commands list\` to get slugs and names. Do NOT read individual command files yet.
+Run \`packmind commands list\` to get slugs and names. Do NOT read individual command files yet.
 
 ### Step 2: Filter Relevant Commands
 

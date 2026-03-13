@@ -863,7 +863,7 @@ describe('diffArtefactsHandler', () => {
     it('displays usage message', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockLog).toHaveBeenCalledWith('Usage: packmind-cli diff');
+      expect(mockLog).toHaveBeenCalledWith('Usage: packmind diff');
     });
 
     it('exits with code 0', async () => {
@@ -881,7 +881,7 @@ describe('diffArtefactsHandler', () => {
     it('displays usage message', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockLog).toHaveBeenCalledWith('Usage: packmind-cli diff');
+      expect(mockLog).toHaveBeenCalledWith('Usage: packmind diff');
     });
 
     it('exits with code 0', async () => {
@@ -1265,7 +1265,7 @@ describe('diffArtefactsHandler', () => {
         });
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          'Failed to submit "My Command": command is outdated, please run `packmind-cli install` to update it',
+          'Failed to submit "My Command": command is outdated, please run `packmind install` to update it',
         );
       });
     });
@@ -1473,7 +1473,7 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('run `packmind-cli diff --include-submitted`'),
+        expect.stringContaining('run `packmind diff --include-submitted`'),
       );
     });
 

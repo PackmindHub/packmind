@@ -70,7 +70,7 @@ nx run packmind-cli:build-executable
 # or: bun run apps/cli/bun-build.ts
 ```
 
-**Output**: `dist/apps/cli-executables/packmind-cli-<platform>-<arch>`
+**Output**: `dist/apps/cli-executables/packmind-<platform>-<arch>`
 
 #### Build for Specific Platforms
 
@@ -95,11 +95,11 @@ nx run packmind-cli:build-executable-all
 
 **Output**: Multiple executables in `dist/apps/cli-executables/`:
 
-- `packmind-cli-linux-x64` / `packmind-cli-linux-x64-baseline`
-- `packmind-cli-linux-arm64`
-- `packmind-cli-windows-x64.exe` / `packmind-cli-windows-x64-baseline.exe`
-- `packmind-cli-macos-x64`
-- `packmind-cli-macos-arm64`
+- `packmind-linux-x64` / `packmind-linux-x64-baseline`
+- `packmind-linux-arm64`
+- `packmind-windows-x64.exe` / `packmind-windows-x64-baseline.exe`
+- `packmind-macos-x64`
+- `packmind-macos-arm64`
 
 > **Note**: Baseline versions support older CPUs (pre-2013). Use these for maximum compatibility.
 
@@ -107,10 +107,10 @@ nx run packmind-cli:build-executable-all
 
 ```bash
 # Test the executable
-./dist/apps/cli-executables/packmind-cli-macos-arm64 lint --help
+./dist/apps/cli-executables/packmind-macos-arm64 lint --help
 
 # Run a lint
-./dist/apps/cli-executables/packmind-cli-macos-arm64 lint .
+./dist/apps/cli-executables/packmind-macos-arm64 lint .
 ```
 
 ### Cross-Platform Building
@@ -119,10 +119,10 @@ Bun supports true cross-compilation - you can build for any platform from any pl
 
 ```bash
 # Build for Linux from macOS
-bun build --compile --target=bun-linux-x64 apps/cli/src/main.ts --outfile dist/packmind-cli-linux
+bun build --compile --target=bun-linux-x64 apps/cli/src/main.ts --outfile dist/packmind-linux
 
 # Build for Windows from macOS
-bun build --compile --target=bun-windows-x64 apps/cli/src/main.ts --outfile dist/packmind-cli-windows.exe
+bun build --compile --target=bun-windows-x64 apps/cli/src/main.ts --outfile dist/packmind-windows.exe
 ```
 
 ### How It Works
@@ -173,13 +173,13 @@ These permissions allow the CLI to:
 ```bash
 # Ad-hoc signing with entitlements (for local testing)
 codesign --sign - --force --entitlements apps/cli/entitlements.plist \
-  dist/apps/cli-executables/packmind-cli-macos-arm64
+  dist/apps/cli-executables/packmind-macos-arm64
 
 # Verify signature
-codesign --verify --verbose dist/apps/cli-executables/packmind-cli-macos-arm64
+codesign --verify --verbose dist/apps/cli-executables/packmind-macos-arm64
 
 # Check entitlements
-codesign -d --entitlements - dist/apps/cli-executables/packmind-cli-macos-arm64
+codesign -d --entitlements - dist/apps/cli-executables/packmind-macos-arm64
 ```
 
 #### Production Signing (CI/CD)
@@ -192,45 +192,45 @@ For production distribution, the GitHub Actions workflow automatically signs mac
 
 ```bash
 # Login via browser (recommended)
-packmind-cli login
+packmind login
 
 # Login to self-hosted instance
-packmind-cli login --host https://your-instance.com
+packmind login --host https://your-instance.com
 
 # Login with manual code
-packmind-cli login --code YOUR_CODE
+packmind login --code YOUR_CODE
 
 # Check authentication status
-packmind-cli whoami
+packmind whoami
 
 # Logout (clear credentials)
-packmind-cli logout
+packmind logout
 ```
 
 ### Basic Commands
 
 ```bash
 # Show help
-packmind-cli --help
+packmind --help
 
 # Lint current directory
-packmind-cli lint .
+packmind lint .
 
 # Lint specific path
-packmind-cli lint src/
+packmind lint src/
 
 # Show lint command help
-packmind-cli lint --help
+packmind lint --help
 ```
 
 ### Output Formats
 
 ```bash
 # Human-readable output (default)
-packmind-cli lint .
+packmind lint .
 
 # IDE-friendly output
-packmind-cli lint . --logger=ide
+packmind lint . --logger=ide
 ```
 
 ### Draft Mode
@@ -239,10 +239,10 @@ Test detection programs before they're in production:
 
 ```bash
 # Run draft detection for a specific rule
-packmind-cli lint . --draft --rule=@standard-slug/ruleId
+packmind lint . --draft --rule=@standard-slug/ruleId
 
 # Specify language
-packmind-cli lint . --draft --rule=@standard-slug/ruleId --language=typescript
+packmind lint . --draft --rule=@standard-slug/ruleId --language=typescript
 ```
 
 ## Architecture

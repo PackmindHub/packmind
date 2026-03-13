@@ -130,7 +130,7 @@ export const setupMcpCommand = command({
     if (!credentials) {
       logErrorConsole('Not authenticated');
       logConsole('\nNo credentials found. You can authenticate by either:');
-      logConsole('  1. Running `packmind-cli login`');
+      logConsole('  1. Running `packmind login`');
       logConsole('  2. Setting PACKMIND_API_KEY_V3 environment variable');
       logConsole(`\nCredentials are loaded from (in order of priority):`);
       logConsole(`  1. PACKMIND_API_KEY_V3 environment variable`);
@@ -140,7 +140,7 @@ export const setupMcpCommand = command({
 
     if (credentials.isExpired) {
       logErrorConsole('Credentials expired');
-      logConsole('\nRun `packmind-cli login` to re-authenticate.');
+      logConsole('\nRun `packmind login` to re-authenticate.');
       process.exit(1);
     }
 

@@ -51,7 +51,7 @@ basename "$(git rev-parse --show-toplevel)"
 
 Remember this as the repository name for package creation in Step 2.
 
-Also run `packmind-cli whoami` and extract the `Host:` value from the output. Remember this URL for the completion summary.
+Also run `packmind whoami` and extract the `Host:` value from the output. Remember this URL for the completion summary.
 
 ---
 
@@ -64,7 +64,7 @@ Handle package creation or selection.
 List available packages:
 
 ```bash
-packmind-cli install --list
+packmind install --list
 ```
 
 Parse the output to get package names.
@@ -74,7 +74,7 @@ Parse the output to get package names.
 Auto-create package using repository name:
 
 ```bash
-packmind-cli packages create "${REPO_NAME}-standards"
+packmind packages create "${REPO_NAME}-standards"
 ```
 
 Print:
@@ -97,7 +97,7 @@ Ask via AskUserQuestion:
 ### If "Create new package" is selected
 
 - Ask for package name (suggest `${REPO_NAME}-standards` as default)
-- Run: `packmind-cli packages create <name>`
+- Run: `packmind packages create <name>`
 
 Remember the selected/created package name for later reference.
 
@@ -378,11 +378,11 @@ Convert the markdown draft to this JSON format:
 3. Write the JSON to `.packmind/standards/_drafts/<slug>.json`
 4. Run CLI command to create:
 ```bash
-packmind-cli standards create .packmind/standards/_drafts/<slug>.json
+packmind standards create .packmind/standards/_drafts/<slug>.json
 ```
 5. If creation succeeded, add to package:
 ```bash
-packmind-cli packages add --to <package-slug> --standard <slug>
+packmind packages add --to <package-slug> --standard <slug>
 ```
 6. Track result (success/failure)
 
@@ -393,11 +393,11 @@ packmind-cli packages add --to <package-slug> --standard <slug>
 3. Write the JSON to `.packmind/commands/_drafts/<slug>.json`
 4. Run CLI command to create:
 ```bash
-packmind-cli commands create .packmind/commands/_drafts/<slug>.json
+packmind commands create .packmind/commands/_drafts/<slug>.json
 ```
 5. If creation succeeded, add to package:
 ```bash
-packmind-cli packages add --to <package-slug> --command <slug>
+packmind packages add --to <package-slug> --command <slug>
 ```
 6. Track result (success/failure)
 
@@ -453,8 +453,8 @@ Your standards and commands have been created and deployed locally.
 
 Next steps:
   - Reload your AI coding assistant to start using them
-  - Visit [host from packmind-cli whoami] to manage your standards and commands
-  - Run `packmind-cli install [package-slug]` in other repos to distribute them
+  - Visit [host from packmind whoami] to manage your standards and commands
+  - Run `packmind install [package-slug]` in other repos to distribute them
 ============================================================
 ```
 
@@ -476,10 +476,10 @@ Failed items:
 
 Failed drafts remain in .packmind/*/_drafts/ for review.
 You can fix and re-run, or create manually with:
-  packmind-cli standards create <file>
-  packmind-cli packages add --to <package-slug> --standard <slug>
-  packmind-cli commands create <file>
-  packmind-cli packages add --to <package-slug> --command <slug>
+  packmind standards create <file>
+  packmind packages add --to <package-slug> --standard <slug>
+  packmind commands create <file>
+  packmind packages add --to <package-slug> --command <slug>
 ============================================================
 ```
 
@@ -498,7 +498,7 @@ The analysis didn't find enough recurring patterns to generate standards or comm
 
 This can happen with smaller codebases or projects with very diverse coding styles.
 You can try again later as the codebase grows, or create standards manually with:
-  packmind-cli standards create <file>
+  packmind standards create <file>
 ============================================================
 ```
 
@@ -508,13 +508,13 @@ You can try again later as the codebase grows, or create standards manually with
 
 ### Package creation fails
 
-If `packmind-cli packages create` fails:
+If `packmind packages create` fails:
 
 ```
 ❌ Failed to create package: [error message]
 
 Please check:
-  - You are logged in: `packmind-cli login`
+  - You are logged in: `packmind login`
   - Your network connection is working
   - The package name is valid
 
@@ -531,14 +531,14 @@ If CLI commands fail with authentication errors:
 ❌ Not logged in to Packmind
 
 Please run:
-  packmind-cli login
+  packmind login
 
 Then re-run this skill.
 ```
 
 ### No packages available
 
-If `packmind-cli install --list` returns no packages:
+If `packmind install --list` returns no packages:
 
 Auto-create a package using the repository name.
 
@@ -549,7 +549,7 @@ Auto-create a package using the repository name.
 Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally using the package selected/created in Step 2:
 
 ```bash
-packmind-cli install <package-slug>
+packmind install <package-slug>
 ```
 
 This deploys to agent-specific folders:

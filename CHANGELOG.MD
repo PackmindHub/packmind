@@ -10,6 +10,7 @@
 
 ## Changed
 
+- Renamed CLI executable from `packmind-cli` to `packmind`. The `packmind-cli` command remains available for backward compatibility but displays a deprecation warning
 - Commands are now rendered directly in `.claude/commands/` and `.cursor/commands/` instead of the `packmind` subdirectory, with automatic cleanup of the legacy path on next deploy
 
 ## Fixed

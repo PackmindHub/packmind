@@ -53,7 +53,7 @@ export async function addToPackageHandler(
         `${formatItemType(itemType, result.added.length)} ${formatItemList(result.added)} added to "${packageSlug}"`,
       );
       logSuccessConsole(
-        `Run \`packmind-cli install ${packageSlug}\` to install the ${pluralize(itemType, result.added.length)}`,
+        `Run \`packmind install ${packageSlug}\` to install the ${pluralize(itemType, result.added.length)}`,
       );
     }
 
@@ -69,7 +69,7 @@ export async function addToPackageHandler(
     logErrorConsole(message);
     if (error instanceof ItemNotFoundError) {
       logInfoConsole(
-        `Run \`packmind-cli ${error.itemType}s list\` to display available ${error.itemType}s`,
+        `Run \`packmind ${error.itemType}s list\` to display available ${error.itemType}s`,
       );
     }
     return { success: false, error: message };

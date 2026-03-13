@@ -86,12 +86,12 @@ The CLI validates the command after conversion. Ensure the markdown file meets t
 
 ## Prerequisites
 
-Before creating a command, verify that packmind-cli is available:
+Before creating a command, verify that packmind is available:
 
-Check if packmind-cli is installed:
+Check if packmind is installed:
 
 ```bash
-packmind-cli --version
+packmind --version
 ```
 
 If not available, install it:
@@ -103,7 +103,7 @@ npm install -g @packmind/cli
 Then login to Packmind:
 
 ```bash
-packmind-cli login
+packmind login
 ```
 
 ## Command Creation Process
@@ -222,14 +222,14 @@ Define specific, actionable scenarios:
 6. Pipe the JSON directly to the CLI via stdin using a heredoc (no intermediate file needed):
 
 ```bash
-packmind-cli commands create --origin-skill packmind-create-command <<'EOF'
+packmind commands create --origin-skill packmind-create-command <<'EOF'
 {"name":"...","summary":"...","whenToUse":[...],"contextValidationCheckpoints":[...],"steps":[...]}
 EOF
 ```
 
 Expected output on success:
 ```
-packmind-cli Command "Your Command Name" created successfully (ID: <uuid>)
+packmind Command "Your Command Name" created successfully (ID: <uuid>)
 View it in the webapp: <url>
 ```
 
@@ -237,7 +237,7 @@ View it in the webapp: <url>
 
 **"Not logged in" error:**
 ```bash
-packmind-cli login
+packmind login
 ```
 
 **"Failed to resolve global space" error:**
@@ -259,7 +259,7 @@ After the command is **successfully created**, delete the draft markdown file in
 
 After successful creation, check if the command fits an existing package:
 
-1. Run `packmind-cli install --list` to get available packages
+1. Run `packmind install --list` to get available packages
 2. If no packages exist, skip this step silently and end the workflow
 3. Analyze the created command's name and summary against each package's name and description
 4. If a package is a clear semantic fit (the command's domain/technology aligns with the package's purpose):
@@ -270,9 +270,9 @@ After successful creation, check if the command fits an existing package:
      - Skip
 5. If no clear fit is found, skip silently (do not mention packages)
 6. If user chooses to add:
-   - Run: `packmind-cli packages add --to <package-slug> --command <command-slug>`
-   - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
-   - If yes, run: `packmind-cli install`
+   - Run: `packmind packages add --to <package-slug> --command <command-slug>`
+   - Ask: "Would you like me to run `packmind install` to sync the changes?"
+   - If yes, run: `packmind install`
 
 ## Complete Example
 
@@ -328,7 +328,7 @@ Add the controller and use case to the appropriate NestJS module's \`controllers
 
 **Creating the command (piped via stdin):**
 ```bash
-packmind-cli commands create --origin-skill packmind-create-command <<'EOF'
+packmind commands create --origin-skill packmind-create-command <<'EOF'
 {"name":"Create API Endpoint","summary":"Set up a new REST API endpoint...","whenToUse":[...],"contextValidationCheckpoints":[...],"steps":[...]}
 EOF
 ```

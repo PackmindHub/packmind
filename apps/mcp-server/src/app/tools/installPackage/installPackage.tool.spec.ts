@@ -87,8 +87,8 @@ describe('installPackage.tool', () => {
       expect(resultText).toContain('packmind_list_packages');
     });
 
-    it('includes packmind-cli install command', () => {
-      expect(resultText).toContain('packmind-cli install');
+    it('includes packmind install command', () => {
+      expect(resultText).toContain('packmind install');
     });
 
     it('includes packmind.json reference', () => {

@@ -21,6 +21,9 @@ import { initCommand } from './infra/commands/InitCommand';
 import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
+import { checkDeprecatedBinaryName } from './infra/utils/deprecation';
+
+checkDeprecatedBinaryName();
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -85,12 +88,12 @@ if (hasEmbeddedWasmFiles()) {
 // Check for --version or -v flag
 const args = process.argv.slice(2);
 if (args.includes('--version') || args.includes('-v')) {
-  logConsole(`packmind-cli version ${CLI_VERSION}`);
+  logConsole(`packmind version ${CLI_VERSION}`);
   process.exit(0);
 }
 
 const app = subcommands({
-  name: 'packmind-cli',
+  name: 'packmind',
   description: 'Packmind CLI tool',
   cmds: {
     commands: commandsCommand,

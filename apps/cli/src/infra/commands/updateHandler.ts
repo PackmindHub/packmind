@@ -108,7 +108,7 @@ async function downloadExecutable(
   platformSuffix: string,
   targetPath: string,
 ): Promise<void> {
-  const assetName = `packmind-cli-${platformSuffix}-${version}`;
+  const assetName = `packmind-${platformSuffix}-${version}`;
   const url = `https://github.com/${GITHUB_REPO}/releases/download/release-cli/${version}/${assetName}`;
 
   logInfoConsole(`Downloading ${assetName}...`);
@@ -215,7 +215,7 @@ export async function updateHandler(
   if (isHomebrewInstall(deps.executablePath)) {
     logInfoConsole(
       'This CLI was installed via Homebrew.\n' +
-        'To update, run: brew upgrade packmind-cli',
+        'To update, run: brew upgrade packmind',
     );
     process.exit(0);
     return;
@@ -272,7 +272,7 @@ export async function updateHandler(
 
     if (message.includes('EACCES') || message.includes('permission denied')) {
       logErrorConsole(
-        `Permission denied. Try running with sudo:\n  sudo packmind-cli update`,
+        `Permission denied. Try running with sudo:\n  sudo packmind update`,
       );
     } else {
       logErrorConsole(`Update failed: ${message}`);

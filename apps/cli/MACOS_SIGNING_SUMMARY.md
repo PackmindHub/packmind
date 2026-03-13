@@ -138,7 +138,7 @@ security find-identity -v -p codesigning
 4. Download `cli-executables-signed-*` artifact
 5. Run the executable - should work without warnings:
    ```bash
-   ./packmind-cli-macos-arm64 lint --help
+   ./packmind-macos-arm64 lint --help
    ```
 
 ## Entitlements Rationale

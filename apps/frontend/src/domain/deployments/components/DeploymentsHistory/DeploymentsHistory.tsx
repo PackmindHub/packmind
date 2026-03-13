@@ -151,7 +151,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       if (deployment.source === 'cli') {
         return (
           <PMTooltip
-            label="This distribution was done using packmind-cli, no commit available"
+            label="This distribution was done using packmind, no commit available"
             placement="top"
           >
             <PMBox display="inline-flex" cursor="help">

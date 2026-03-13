@@ -54,7 +54,7 @@ export async function diffAddHandler(
   } = deps;
 
   if (!filePath) {
-    logErrorConsole('Missing file path. Usage: packmind-cli diff add <path>');
+    logErrorConsole('Missing file path. Usage: packmind diff add <path>');
     exit(1);
     return;
   }
@@ -156,7 +156,7 @@ export async function diffAddHandler(
     message = validation.message;
   } else {
     logErrorConsole(
-      'Non-interactive mode requires -m flag. Usage: packmind-cli diff add <path> -m "your message"',
+      'Non-interactive mode requires -m flag. Usage: packmind diff add <path> -m "your message"',
     );
     exit(1);
     return;

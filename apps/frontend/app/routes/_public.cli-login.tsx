@@ -107,7 +107,7 @@ export default function CliLoginRoute() {
     const currentHost = window.location.origin;
     const isDefaultHost = currentHost === 'https://app.packmind.ai';
     const hostFlag = isDefaultHost ? '' : ` --host ${currentHost}`;
-    return `packmind-cli login${hostFlag} --code ${loginCode}`;
+    return `packmind login${hostFlag} --code ${loginCode}`;
   };
 
   // Render the code input section - shown whenever code is available

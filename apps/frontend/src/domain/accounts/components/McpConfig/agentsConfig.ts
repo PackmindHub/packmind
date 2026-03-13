@@ -10,7 +10,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'cli',
         label: 'Packmind CLI',
         available: true,
-        getCliCommand: () => 'packmind-cli setup-mcp --target claude',
+        getCliCommand: () => 'packmind setup-mcp --target claude',
       },
       {
         type: 'cli',
@@ -30,7 +30,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'cli',
         label: 'Packmind CLI',
         available: true,
-        getCliCommand: () => 'packmind-cli setup-mcp --target copilot',
+        getCliCommand: () => 'packmind setup-mcp --target copilot',
       },
       {
         type: 'magicLink',
@@ -107,7 +107,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'cli',
         label: 'Packmind CLI',
         available: true,
-        getCliCommand: () => 'packmind-cli setup-mcp --target cursor',
+        getCliCommand: () => 'packmind setup-mcp --target cursor',
       },
       {
         type: 'magicLink',
@@ -155,7 +155,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'cli',
         label: 'Packmind CLI',
         available: true,
-        getCliCommand: () => 'packmind-cli setup-mcp --target continue',
+        getCliCommand: () => 'packmind setup-mcp --target continue',
       },
       {
         type: 'json',

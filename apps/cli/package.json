@@ -4,6 +4,7 @@
   "description": "A command-line interface for Packmind linting and code quality checks",
   "private": false,
   "bin": {
+    "packmind": "./main.cjs",
     "packmind-cli": "./main.cjs"
   },
   "main": "./main.cjs",

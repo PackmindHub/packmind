@@ -10,7 +10,7 @@ export const CLI_INSTALL_SCRIPT_URL =
   'https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh';
 export const NPM_INSTALL_COMMAND = 'npm install -g @packmind/cli';
 export const HOMEBREW_INSTALL_COMMAND = `brew tap PackmindHub/cli
-brew install packmind-cli`;
+brew install packmind`;
 // ⚠️ END CRITICAL SECTION ⚠️
 
 export const detectUserOs = (): OsType => {
@@ -41,7 +41,7 @@ export const buildCurlInstallCommand = (loginCode: string): string => {
 
 export const buildCliLoginCommand = (): string => {
   const hostFlag = isDefaultHost() ? '' : ` --host ${getCurrentHost()}`;
-  return `packmind-cli login${hostFlag}`;
+  return `packmind login${hostFlag}`;
 };
 
 export const formatExpirationDate = (expiresAt?: string | Date): string => {

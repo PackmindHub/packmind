@@ -1,6 +1,6 @@
 # Create Standard Procedure
 
-Write a new standard file locally at `.packmind/standards/<slug>.md`. Do NOT call any CLI commands — Phase 4 handles submission via `packmind-cli diff add`.
+Write a new standard file locally at `.packmind/standards/<slug>.md`. Do NOT call any CLI commands — Phase 4 handles submission via `packmind diff add`.
 
 ## Slug Derivation
 

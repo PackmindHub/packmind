@@ -293,11 +293,11 @@ describe('CopilotDeployer', () => {
         ).toBe(true);
       });
 
-      it('deletes packmind-cli-list-commands default skill', () => {
+      it('deletes packmind-list-commands default skill', () => {
         expect(
           result.delete.some(
             (item) =>
-              item.path === '.github/skills/packmind-cli-list-commands' &&
+              item.path === '.github/skills/packmind-list-commands' &&
               item.type === DeleteItemType.Directory,
           ),
         ).toBe(true);

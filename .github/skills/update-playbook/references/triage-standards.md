@@ -14,7 +14,7 @@ Standards are managed org-wide via the Packmind CLI and installed per-crate via 
 
 ### Step 1: List All Standards via CLI
 
-Run `packmind-cli standards list` to get the full catalog. The output provides slug, name, and description for each standard — enough for shallow relevance matching.
+Run `packmind standards list` to get the full catalog. The output provides slug, name, and description for each standard — enough for shallow relevance matching.
 
 Do NOT read individual standard files at this stage.
 

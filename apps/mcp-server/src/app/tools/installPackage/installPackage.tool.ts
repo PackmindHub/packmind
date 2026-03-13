@@ -15,7 +15,7 @@ export function registerInstallPackageTool(
     {
       title: 'Install Package',
       description:
-        'Install a Packmind package. Returns instructions on how to install using packmind-cli or, if not available, using the render_package tool.',
+        'Install a Packmind package. Returns instructions on how to install using packmind or, if not available, using the render_package tool.',
       inputSchema: {
         packageSlug: z
           .string()
@@ -50,18 +50,18 @@ Follow these steps to install a Packmind package:
 ## Step 1: Find the package
 Call the \`packmind_list_packages\` MCP tool to see available packages and find the slug of the package you want to install. If you are unsure which package to install, ask the user to confirm.
 
-## Step 2: Check if packmind-cli is installed
-Run: \`which packmind-cli\` or \`packmind-cli --version\`
+## Step 2: Check if packmind is installed
+Run: \`which packmind\` or \`packmind --version\`
 
 ## Step 3: Install the package
 
-**If packmind-cli IS available:**
+**If packmind IS available:**
 Run this command in the target directory:
 \`\`\`
-packmind-cli install <packageSlug>
+packmind install <packageSlug>
 \`\`\`
 
-**If packmind-cli is NOT available (do NOT try to install it):**
+**If packmind is NOT available (do NOT try to install it):**
 
 First, check if a \`packmind.json\` file exists in the target directory. If it exists, read it and extract the list of already installed packages from the \`packages\` section. The file structure is:
 \`\`\`json

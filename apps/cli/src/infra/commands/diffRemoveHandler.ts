@@ -122,7 +122,7 @@ export async function diffRemoveHandler(
 
   if (!filePath) {
     logErrorConsole(
-      'Missing file path. Usage: packmind-cli diff remove <path> -m "message"',
+      'Missing file path. Usage: packmind diff remove <path> -m "message"',
     );
     exit(1);
     return;
@@ -333,7 +333,7 @@ export async function diffRemoveHandler(
     message = validation.message;
   } else {
     logErrorConsole(
-      'Non-interactive mode requires -m flag. Usage: packmind-cli diff remove <path> -m "your message"',
+      'Non-interactive mode requires -m flag. Usage: packmind diff remove <path> -m "your message"',
     );
     exit(1);
     return;
