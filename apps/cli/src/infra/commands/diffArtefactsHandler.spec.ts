@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises';
 import {
   diffArtefactsHandler,
   DiffHandlerDependencies,
@@ -5,6 +6,7 @@ import {
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ChangeProposalType, createSkillFileId } from '@packmind/types';
 
+jest.mock('fs/promises');
 jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   logInfoConsole: jest.fn(),
@@ -34,7 +36,6 @@ describe('diffArtefactsHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
   let mockExit: jest.Mock;
   let mockLog: jest.Mock;
-  let mockError: jest.Mock;
   let mockGetCwd: jest.Mock;
   let deps: DiffHandlerDependencies;
 
@@ -54,7 +55,6 @@ describe('diffArtefactsHandler', () => {
 
     mockExit = jest.fn();
     mockLog = jest.fn();
-    mockError = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/test/project');
 
     deps = {
@@ -62,8 +62,11 @@ describe('diffArtefactsHandler', () => {
       exit: mockExit,
       getCwd: mockGetCwd,
       log: mockLog,
-      error: mockError,
     };
+
+    jest.mocked(fs.stat).mockResolvedValue({
+      isDirectory: () => true,
+    } as unknown as Awaited<ReturnType<typeof fs.stat>>);
 
     mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/test');
     mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
@@ -925,7 +928,8 @@ describe('diffArtefactsHandler', () => {
     it('displays error about not being in a Packmind project', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith(
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Not inside a Packmind project'),
       );
     });
@@ -952,16 +956,11 @@ describe('diffArtefactsHandler', () => {
       );
     });
 
-    it('displays error header', async () => {
+    it('displays the error', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith('\n❌ Failed to diff:');
-    });
-
-    it('displays the error detail', async () => {
-      await diffArtefactsHandler(deps);
-
-      expect(mockError).toHaveBeenCalledWith('   Invalid JSON');
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith('Invalid JSON');
     });
 
     it('exits with code 1', async () => {
@@ -982,16 +981,11 @@ describe('diffArtefactsHandler', () => {
       );
     });
 
-    it('displays error header', async () => {
-      await diffArtefactsHandler(deps);
-
-      expect(mockError).toHaveBeenCalledWith('\n❌ Failed to diff:');
-    });
-
     it('displays error message', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith('   Network error');
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith('Network error');
     });
 
     it('exits with code 1', async () => {
@@ -1045,8 +1039,9 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith(
-        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
     });
 
@@ -1075,8 +1070,9 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith(
-        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
     });
 
@@ -1993,6 +1989,28 @@ describe('diffArtefactsHandler', () => {
         );
 
         expect(prefixedPath).toBeUndefined();
+      });
+    });
+
+    describe('when --path option points to a non-existent directory', () => {
+      beforeEach(() => {
+        jest.mocked(fs.stat).mockRejectedValue(new Error('ENOENT'));
+      });
+
+      it('displays an error with the resolved path', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffArtefactsHandler({ ...deps, path: 'non/existent/path' });
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          'Path does not exist: /test/project/non/existent/path',
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await diffArtefactsHandler({ ...deps, path: 'non/existent/path' });
+
+        expect(mockExit).toHaveBeenCalledWith(1);
       });
     });
 

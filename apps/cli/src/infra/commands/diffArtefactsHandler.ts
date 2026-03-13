@@ -1,4 +1,5 @@
 import * as nodePath from 'path';
+import * as fs from 'fs/promises';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   ArtifactType,
@@ -26,7 +27,6 @@ export type DiffHandlerDependencies = {
   exit: (code: number) => void;
   getCwd: () => string;
   log: typeof console.log;
-  error: typeof console.error;
   submit?: boolean;
   includeSubmitted?: boolean;
   message?: string;
@@ -202,7 +202,7 @@ async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
   gitBranch: string;
   gitRoot: string;
 } | null> {
-  const { packmindCliHexa, exit, getCwd, error } = deps;
+  const { packmindCliHexa, exit, getCwd } = deps;
   const cwd = getCwd();
 
   let gitRemoteUrl: string | undefined;
@@ -221,8 +221,8 @@ async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
   }
 
   if (!gitRemoteUrl || !gitBranch || !gitRoot) {
-    error(
-      '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+    logErrorConsole(
+      'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
     );
     exit(1);
     return null;
@@ -444,7 +444,6 @@ export async function diffArtefactsHandler(
     exit,
     getCwd,
     log,
-    error,
     submit,
     includeSubmitted,
     message: messageFlag,
@@ -454,12 +453,23 @@ export async function diffArtefactsHandler(
   // Compute search path (--path / -p flag)
   const searchPath = nodePath.resolve(cwd, deps.path ?? '.');
 
+  // Validate that the specified path exists
+  if (deps.path !== undefined) {
+    try {
+      await fs.stat(searchPath);
+    } catch {
+      logErrorConsole(`Path does not exist: ${searchPath}`);
+      exit(1);
+      return { diffsFound: 0 };
+    }
+  }
+
   // Find all target directories under searchPath
   let targetDirs: string[];
   try {
     targetDirs = await findTargetDirectories(searchPath, packmindCliHexa);
   } catch (err) {
-    error(
+    logErrorConsole(
       `Failed to discover target directories: ${err instanceof Error ? err.message : String(err)}`,
     );
     exit(1);
@@ -473,8 +483,8 @@ export async function diffArtefactsHandler(
       null,
     );
     if (!hierarchicalConfig.hasConfigs) {
-      error(
-        '\n❌ Not inside a Packmind project. No packmind.json found in the current directory or any parent directory.',
+      logErrorConsole(
+        'Not inside a Packmind project. No packmind.json found in the current directory or any parent directory.',
       );
       exit(1);
     } else {
@@ -616,11 +626,10 @@ export async function diffArtefactsHandler(
     exit(0);
     return { diffsFound: changeCount };
   } catch (err) {
-    error('\n❌ Failed to diff:');
     if (err instanceof Error) {
-      error(`   ${err.message}`);
+      logErrorConsole(err.message);
     } else {
-      error(`   ${String(err)}`);
+      logErrorConsole(String(err));
     }
     exit(1);
     return { diffsFound: 0 };

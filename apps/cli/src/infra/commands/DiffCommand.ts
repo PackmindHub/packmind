@@ -82,7 +82,6 @@ export const diffCommand = command({
       exit: process.exit,
       getCwd: () => process.cwd(),
       log: console.log,
-      error: console.error,
       submit,
       includeSubmitted,
       message,
