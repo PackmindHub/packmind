@@ -84,7 +84,9 @@ async function bootstrap() {
       timestamp: new Date().toISOString(),
     });
 
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn'],
+    });
 
     // Enable Amplitude proxy BEFORE body-parser (proxy needs raw body stream)
     await enableAmplitudeProxy(app);

@@ -13,6 +13,7 @@ export function spaceFactory(overrides: Partial<Space> = {}): Space {
     slug: 'test-space',
     type: SpaceType.open,
     organizationId: createOrganizationId(uuidv4()),
+    isDefaultSpace: true,
     ...overrides,
   };
 }

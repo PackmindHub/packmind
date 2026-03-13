@@ -266,28 +266,39 @@ export default function SidebarWithSpacesPrototype() {
                       onItemClick={isSpaceActive ? handleItemClick : undefined}
                       isPinned={true}
                       onPinToggle={() => togglePin(space.id)}
+                      showPinToggle={space.id !== 'default'}
                     />
                   );
                 })}
               </PMBox>
             )}
 
-            {/* Collapsed pinned spaces */}
-            {pinnedList.length > 0 && isCollapsed && (
-              <PMBox display="flex" flexDirection="column" gap={0.5}>
-                {pinnedList.map((space) => {
-                  const isSpaceActive = activeKey.startsWith(space.id + ':');
-                  return (
-                    <CollapsedSpaceAvatar
-                      key={space.id}
-                      space={space}
-                      isActive={isSpaceActive}
-                      onClick={() => setActiveSpacePanel(space.id)}
-                    />
-                  );
-                })}
-              </PMBox>
-            )}
+            {/* Collapsed spaces: pinned + active (if not already pinned) */}
+            {isCollapsed &&
+              (() => {
+                const collapsedSpaces = [...pinnedList];
+                if (activeSpace && !pinnedSpaces.has(activeSpace.id)) {
+                  collapsedSpaces.push(activeSpace);
+                }
+                if (collapsedSpaces.length === 0) return null;
+                return (
+                  <PMBox display="flex" flexDirection="column" gap={0.5}>
+                    {collapsedSpaces.map((space) => {
+                      const isSpaceActive = activeKey.startsWith(
+                        space.id + ':',
+                      );
+                      return (
+                        <CollapsedSpaceAvatar
+                          key={space.id}
+                          space={space}
+                          isActive={isSpaceActive}
+                          onClick={() => setActiveSpacePanel(space.id)}
+                        />
+                      );
+                    })}
+                  </PMBox>
+                );
+              })()}
 
             {/* Recent spaces */}
             {recentList.length > 0 && !isCollapsed && (

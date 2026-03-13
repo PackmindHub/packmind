@@ -1,5 +1,5 @@
 ---
-description: 'Implement a new Packmind AI agent rendering system with deployer, type/registry/frontend/docs updates, and full unit/integration tests to enable consistent single- or multi-file standards/recipes distribution when adding or extending AI coding assistant integrations and rendering formats.'
+description: 'Implement a new Packmind AI agent rendering/deployer pipeline (single-file or multi-file) with type and registry wiring, frontend UI/docs updates, and thorough unit/integration tests to reliably support additional coding assistants and distribution formats when introducing a new agent integration or render mode.'
 ---
 
 Add a new AI agent rendering system to Packmind, supporting both single-file (like AGENTS.md) and multi-file (like Cursor/Continue) patterns, including type definitions, deployer implementation, registry registration, frontend UI integration, documentation updates, and comprehensive tests following Packmind test standards.
@@ -259,7 +259,7 @@ link: `.packmind/standards/${standardVersion.slug}.md`
     copilot: '.github/copilot-instructions.md',
     junie: '.junie/guidelines.md',
     packmind: '.packmind.md',
-    gitlab_duo: '.gitlab/duo/chat-rules.md',
+    gitlab_duo: '.gitlab/duo/chat-rules.md.yml',
     continue: '.continue/rules/packmind-recipes-index.md',
   };
 ```

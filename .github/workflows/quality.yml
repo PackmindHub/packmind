@@ -3,6 +3,7 @@ name: Quality and Security Checks
 env:
   ENTERPRISE_EDITION: proprietary
   OSS_EDITION: oss
+  HUSKY: '0'
 
 on:
   workflow_call:
@@ -60,7 +61,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate Proprietary tsconfig
         env:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}

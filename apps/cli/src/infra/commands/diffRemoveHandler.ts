@@ -7,6 +7,7 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
 import {
   ArtifactType,
   ChangeProposalType,
@@ -80,9 +81,10 @@ function computeFilePathRelativeToTarget(
   cwd: string,
   gitRoot: string,
 ): string {
-  const relativeToGitRoot = absoluteFilePath.startsWith(gitRoot)
-    ? absoluteFilePath.slice(gitRoot.length)
-    : absoluteFilePath;
+  const relGitRoot = path.relative(gitRoot, absoluteFilePath);
+  const relativeToGitRoot = relGitRoot.startsWith('..')
+    ? absoluteFilePath
+    : relGitRoot;
 
   let normalizedFilePath = normalizePath(relativeToGitRoot);
   if (normalizedFilePath.startsWith('/')) {
@@ -90,16 +92,12 @@ function computeFilePathRelativeToTarget(
   }
 
   // Paths are relative to the target (cwd relative to git root)
-  let relativePath = cwd.startsWith(gitRoot) ? cwd.slice(gitRoot.length) : '/';
-  if (!relativePath.startsWith('/')) {
-    relativePath = '/' + relativePath;
-  }
-  if (!relativePath.endsWith('/')) {
-    relativePath = relativePath + '/';
-  }
-
-  // relativePath always starts with '/' after the normalization above
-  const relativePathPrefix = relativePath.slice(1);
+  const relCwd = path.relative(gitRoot, cwd);
+  const relativePathPrefix = relCwd.startsWith('..')
+    ? ''
+    : relCwd
+      ? relCwd + '/'
+      : '';
   return relativePathPrefix.length > 0 &&
     normalizedFilePath.startsWith(relativePathPrefix)
     ? normalizedFilePath.slice(relativePathPrefix.length)
@@ -162,11 +160,25 @@ export async function diffRemoveHandler(
     return;
   }
 
+  // Infer target directory from the file path (walk up to nearest packmind.json)
+  const fileDir = skillDirPath
+    ? path.dirname(skillDirPath)
+    : path.dirname(absolutePath);
+
+  const targetDir = await findNearestConfigDir(fileDir, packmindCliHexa);
+  if (!targetDir) {
+    logErrorConsole(
+      'Not inside a Packmind project. No packmind.json found in any parent directory.',
+    );
+    exit(1);
+    return;
+  }
+
   // Read config to get packages
   let configPackages: string[];
   let configAgents: CodingAgent[] | undefined;
   try {
-    const fullConfig = await packmindCliHexa.readFullConfig(cwd);
+    const fullConfig = await packmindCliHexa.readFullConfig(targetDir);
     if (fullConfig) {
       configPackages = Object.keys(fullConfig.packages);
       configAgents = fullConfig.agents;
@@ -196,16 +208,16 @@ export async function diffRemoveHandler(
   }
 
   // Resolve git root once, shared by both lock file and API fallback paths
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
 
   // Try to resolve artifact metadata from lock file first
   let metadata: ArtifactMetadataResult | null = null;
 
-  const lockFile = await packmindCliHexa.readLockFile(cwd);
+  const lockFile = await packmindCliHexa.readLockFile(targetDir);
   if (lockFile) {
     const lockFilePathForComparison = gitRoot
-      ? computeFilePathRelativeToTarget(matchPath, cwd, gitRoot)
-      : normalizePath(path.relative(cwd, matchPath));
+      ? computeFilePathRelativeToTarget(matchPath, targetDir, gitRoot)
+      : normalizePath(path.relative(targetDir, matchPath));
 
     metadata = findArtifactInLockFile(
       lockFile,
@@ -233,13 +245,8 @@ export async function diffRemoveHandler(
       gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
       gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
 
-      relativePath = cwd.startsWith(gitRoot) ? cwd.slice(gitRoot.length) : '/';
-      if (!relativePath.startsWith('/')) {
-        relativePath = '/' + relativePath;
-      }
-      if (!relativePath.endsWith('/')) {
-        relativePath = relativePath + '/';
-      }
+      const rel = path.relative(gitRoot, targetDir);
+      relativePath = rel.startsWith('..') ? '/' : rel ? `/${rel}/` : '/';
     } catch (err) {
       logErrorConsole(
         `Failed to collect git info: ${err instanceof Error ? err.message : String(err)}`,
@@ -267,7 +274,7 @@ export async function diffRemoveHandler(
 
     const filePathForComparison = computeFilePathRelativeToTarget(
       matchPath,
-      cwd,
+      targetDir,
       gitRoot,
     );
 

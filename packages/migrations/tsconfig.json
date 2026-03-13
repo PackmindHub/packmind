@@ -1,5 +1,10 @@
 {
   "extends": "../../tsconfig.base.effective.json",
+  "ts-node": {
+    // SWC skips emitDecoratorMetadata — keep entities[] empty in datasourceDocker.ts
+    // and avoid importing decorator-heavy modules from migration files.
+    "swc": true
+  },
   "compilerOptions": {
     "module": "commonjs",
     "baseUrl": "../../",

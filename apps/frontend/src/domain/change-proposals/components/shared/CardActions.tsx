@@ -126,7 +126,7 @@ function RemoveFromPackagesModal({
                         )
                       }
                     >
-                      {packageMap.get(packageId) ?? packageId}
+                      {packageMap.get(packageId) ?? 'Deleted package'}
                     </PMCheckbox>
                   ))}
                 </PMVStack>

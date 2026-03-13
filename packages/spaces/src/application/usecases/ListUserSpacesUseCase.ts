@@ -1,12 +1,12 @@
 import {
-  IListUserSpacesResponse,
+  IListUserSpaces,
   ListUserSpacesCommand,
   ListUserSpacesResponse,
   OrganizationId,
 } from '@packmind/types';
 import { SpaceService } from '../services/SpaceService';
 
-export class ListUserSpacesUseCase implements IListUserSpacesResponse {
+export class ListUserSpacesUseCase implements IListUserSpaces {
   constructor(private readonly spaceService: SpaceService) {}
 
   async execute(

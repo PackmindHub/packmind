@@ -1,5 +1,8 @@
 name: Docker Image Build
 
+env:
+  HUSKY: '0'
+
 on:
   workflow_call:
     inputs:
@@ -119,7 +122,7 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: npm ci --no-audit
+        run: npm ci --no-audit --no-fund
 
       # Download all build artifacts
       - name: Download API build artifacts

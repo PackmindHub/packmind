@@ -426,6 +426,10 @@ This downloads all commands, standards, and skills from the specified packages a
   installed alongside your package contents.
 </Note>
 
+### Lock File (`packmind-lock.json`)
+
+When you install or uninstall packages, the CLI generates a `packmind-lock.json` file alongside your `packmind.json`. This file records the exact versions of all installed artifacts.
+
 ### Recursive Install (Monorepos)
 
 For monorepos or projects with multiple `packmind.json` files, use the recursive flag to install packages across all locations:

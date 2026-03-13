@@ -34,20 +34,30 @@ export const diffCommand = command({
         'Message describing the intent behind the changes (max 1024 chars)',
       type: optional(string),
     }),
+    path: option({
+      long: 'path',
+      short: 'p',
+      description: 'Path to analyze (relative to current directory)',
+      type: optional(string),
+    }),
     positionals: restPositionals({
       type: string,
       displayName: 'args',
       description: 'Subcommand and arguments (e.g., add <path>, remove <path>)',
     }),
   },
-  handler: async ({ submit, includeSubmitted, message, positionals }) => {
+  handler: async ({ submit, includeSubmitted, message, path, positionals }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     if (positionals[0] === 'add') {
+      const addFilePath =
+        path && positionals[1]
+          ? `${path}/${positionals[1]}`.replace(/\/+/g, '/')
+          : positionals[1];
       await diffAddHandler({
         packmindCliHexa,
-        filePath: positionals[1],
+        filePath: addFilePath,
         message,
         exit: process.exit,
         getCwd: () => process.cwd(),
@@ -58,9 +68,13 @@ export const diffCommand = command({
     }
 
     if (positionals[0] === 'remove' || positionals[0] === 'rm') {
+      const removeFilePath =
+        path && positionals[1]
+          ? `${path}/${positionals[1]}`.replace(/\/+/g, '/')
+          : positionals[1];
       await diffRemoveHandler({
         packmindCliHexa,
-        filePath: positionals[1],
+        filePath: removeFilePath,
         message,
         exit: process.exit,
         getCwd: () => process.cwd(),
@@ -76,10 +90,10 @@ export const diffCommand = command({
       exit: process.exit,
       getCwd: () => process.cwd(),
       log: console.log,
-      error: console.error,
       submit,
       includeSubmitted,
       message,
+      path,
     });
   },
 });

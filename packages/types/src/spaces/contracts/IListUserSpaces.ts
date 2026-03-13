@@ -7,7 +7,7 @@ export type ListUserSpacesResponse = {
   discoverableSpaces: Space[];
 };
 
-export type IListUserSpacesResponse = IUseCase<
+export type IListUserSpaces = IUseCase<
   ListUserSpacesCommand,
   ListUserSpacesResponse
 >;

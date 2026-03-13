@@ -104,7 +104,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         SkillsHexa, // Skills domain
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
-        SkillsHexa,
         ImportPracticeLegacyHexa, // After StandardsHexa (depends on Linter/Standards ports)
         PlaybookChangeManagementHexa,
         CodingAgentHexa,
