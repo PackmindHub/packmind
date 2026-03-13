@@ -3,6 +3,7 @@ import { IDiffViolationFilterService } from '../domain/services/IDiffViolationFi
 import { IExecuteLinterProgramsUseCase } from '@packmind/types';
 import { IListFiles } from '../domain/services/IListFiles';
 import { IGitService } from '../domain/services/IGitService';
+import { ISpaceService } from '../domain/services/ISpaceService';
 
 type MockServicesOverrides = {
   listFiles?: Partial<jest.Mocked<IListFiles>>;
@@ -11,6 +12,7 @@ type MockServicesOverrides = {
   diffViolationFilterService?: Partial<
     jest.Mocked<IDiffViolationFilterService>
   >;
+  spaceService?: Partial<jest.Mocked<ISpaceService>>;
 };
 
 export function createMockServices(
@@ -25,6 +27,16 @@ export function createMockServices(
     diffViolationFilterService: createMockDiffViolationFilterService(
       overrides?.diffViolationFilterService,
     ),
+    spaceService: createMockSpaceService(overrides?.spaceService),
+  };
+}
+
+export function createMockSpaceService(
+  overrides?: Partial<jest.Mocked<ISpaceService>>,
+): jest.Mocked<ISpaceService> {
+  return {
+    getGlobalSpace: jest.fn(),
+    ...overrides,
   };
 }
 

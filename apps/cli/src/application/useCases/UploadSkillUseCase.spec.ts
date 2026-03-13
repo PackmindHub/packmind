@@ -1,14 +1,14 @@
 import {
   createMockPackmindGateway,
   createMockSkillsGateway,
-  createMockSpacesGateway,
 } from '../../mocks/createMockGateways';
+import { createMockSpaceService } from '../../mocks/createMockServices';
 
 jest.mock('../../infra/utils/readSkillDirectory');
 
 import { UploadSkillUseCase } from './UploadSkillUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
 import { readSkillDirectory } from '../../infra/utils/readSkillDirectory';
 import { createSkillId } from '@packmind/types';
@@ -19,20 +19,20 @@ const mockedReadSkillDirectory = readSkillDirectory as jest.MockedFunction<
 
 describe('UploadSkillUseCase', () => {
   let useCase: UploadSkillUseCase;
-  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
   let mockSkillsGateway: jest.Mocked<ISkillsGateway>;
   let mockGateway: jest.Mocked<IPackmindGateway>;
 
   beforeEach(() => {
-    mockSpacesGateway = createMockSpacesGateway();
+    mockSpaceService = createMockSpaceService();
     mockSkillsGateway = createMockSkillsGateway();
     mockGateway = createMockPackmindGateway({
-      spaces: mockSpacesGateway,
       skills: mockSkillsGateway,
     });
 
     useCase = new UploadSkillUseCase({
       gateway: mockGateway,
+      spaceService: mockSpaceService,
     });
   });
 
@@ -67,7 +67,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpacesGateway.getGlobal).not.toHaveBeenCalled();
+      expect(mockSpaceService.getGlobalSpace).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -115,7 +115,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpacesGateway.getGlobal).not.toHaveBeenCalled();
+      expect(mockSpaceService.getGlobalSpace).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -167,7 +167,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpacesGateway.getGlobal).not.toHaveBeenCalled();
+      expect(mockSpaceService.getGlobalSpace).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -201,7 +201,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpacesGateway.getGlobal.mockResolvedValue({
+      mockSpaceService.getGlobalSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -224,7 +224,7 @@ describe('UploadSkillUseCase', () => {
     it('gets the global space', async () => {
       await useCase.execute({ skillPath: '/skills/my-skill' });
 
-      expect(mockSpacesGateway.getGlobal).toHaveBeenCalled();
+      expect(mockSpaceService.getGlobalSpace).toHaveBeenCalled();
     });
 
     it('uploads skill with correct spaceId', async () => {
@@ -315,7 +315,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpacesGateway.getGlobal.mockResolvedValue({
+      mockSpaceService.getGlobalSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -356,7 +356,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpacesGateway.getGlobal.mockResolvedValue({
+      mockSpaceService.getGlobalSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -409,7 +409,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: true,
         },
       ]);
-      mockSpacesGateway.getGlobal.mockResolvedValue({
+      mockSpaceService.getGlobalSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -458,7 +458,7 @@ describe('UploadSkillUseCase', () => {
         isBase64: false,
       });
       mockedReadSkillDirectory.mockResolvedValue(files);
-      mockSpacesGateway.getGlobal.mockResolvedValue({
+      mockSpaceService.getGlobalSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });
@@ -500,7 +500,7 @@ describe('UploadSkillUseCase', () => {
           isBase64: true,
         },
       ]);
-      mockSpacesGateway.getGlobal.mockResolvedValue({
+      mockSpaceService.getGlobalSpace.mockResolvedValue({
         id: 'space-123',
         slug: 'global',
       });

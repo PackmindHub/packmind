@@ -83,6 +83,8 @@ import {
 import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
 import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { loadCredentials } from './infra/utils/credentials';
+import { Space } from '@packmind/types';
+import { ISpaceService } from './domain/services/ISpaceService';
 
 const origin = 'PackmindCliHexa';
 
@@ -372,6 +374,14 @@ export class PackmindCliHexa {
 
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
+  }
+
+  public async getGlobalSpace(): Promise<Space> {
+    return this.hexa.services.spaceService.getGlobalSpace();
+  }
+
+  public getSpaceService(): ISpaceService {
+    return this.hexa.services.spaceService;
   }
 
   /**

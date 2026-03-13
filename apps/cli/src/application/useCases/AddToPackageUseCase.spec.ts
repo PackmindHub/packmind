@@ -1,12 +1,14 @@
 import { AddToPackageUseCase } from './AddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 import {
   createMockCommandsGateway,
   createMockPackagesGateway,
   createMockSkillsGateway,
   createMockStandardsGateway,
 } from '../../mocks/createMockGateways';
+import { createMockSpaceService } from '../../mocks/createMockServices';
 import { recipeFactory } from '@packmind/recipes/test';
 import { skillFactory } from '@packmind/skills/test';
 import { standardFactory } from '@packmind/standards/test';
@@ -26,6 +28,7 @@ import { packageFactory } from '@packmind/deployments/test';
 describe('AddToPackageUseCase', () => {
   let useCase: AddToPackageUseCase;
   let mockGateway: jest.Mocked<IPackmindGateway>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
   let commandsGateway: jest.Mocked<ICommandsGateway>;
   let skillsGateway: jest.Mocked<ISkillsGateway>;
   let standardsGateway: jest.Mocked<IStandardsGateway>;
@@ -37,9 +40,11 @@ describe('AddToPackageUseCase', () => {
     skillsGateway = createMockSkillsGateway();
     standardsGateway = createMockStandardsGateway();
     packagesGateway = createMockPackagesGateway();
+    mockSpaceService = createMockSpaceService({
+      getGlobalSpace: jest.fn().mockResolvedValue({ id: 'space-123' }),
+    });
 
     mockGateway = {
-      spaces: { getGlobal: jest.fn().mockResolvedValue({ id: 'space-123' }) },
       packages: packagesGateway,
       standards: standardsGateway,
       commands: commandsGateway,
@@ -48,7 +53,7 @@ describe('AddToPackageUseCase', () => {
 
     pkg = packageFactory({ id: createPackageId('package-1') });
 
-    useCase = new AddToPackageUseCase(mockGateway);
+    useCase = new AddToPackageUseCase(mockGateway, mockSpaceService);
   });
 
   afterEach(() => {

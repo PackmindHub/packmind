@@ -4,12 +4,16 @@ import {
 } from '../../domain/useCases/IListSkillsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { createSpaceId } from '@packmind/types';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 
 export class ListSkillsUseCase implements IListSkillsUseCase {
-  constructor(private readonly packmindGateway: IPackmindGateway) {}
+  constructor(
+    private readonly packmindGateway: IPackmindGateway,
+    private readonly spaceService: ISpaceService,
+  ) {}
 
   public async execute(): Promise<IListSkillsResult> {
-    const space = await this.packmindGateway.spaces.getGlobal();
+    const space = await this.spaceService.getGlobalSpace();
     const skills = await this.packmindGateway.skills.list({
       spaceId: createSpaceId(space.id),
     });

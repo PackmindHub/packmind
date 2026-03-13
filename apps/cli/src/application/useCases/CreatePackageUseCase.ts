@@ -4,12 +4,16 @@ import {
   ICreatePackageResult,
   ICreatePackageUseCase,
 } from '../../domain/useCases/ICreatePackageUseCase';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 
 export class CreatePackageUseCase implements ICreatePackageUseCase {
-  constructor(private readonly gateway: IPackmindGateway) {}
+  constructor(
+    private readonly gateway: IPackmindGateway,
+    private readonly spaceService: ISpaceService,
+  ) {}
 
   async execute(command: ICreatePackageCommand): Promise<ICreatePackageResult> {
-    const space = await this.gateway.spaces.getGlobal();
+    const space = await this.spaceService.getGlobalSpace();
     const result = await this.gateway.packages.create({
       spaceId: space.id,
       name: command.name,

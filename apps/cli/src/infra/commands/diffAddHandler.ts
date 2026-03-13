@@ -162,7 +162,7 @@ export async function diffAddHandler(
     return;
   }
 
-  const space = await packmindCliHexa.getPackmindGateway().spaces.getGlobal();
+  const space = await packmindCliHexa.getGlobalSpace();
 
   // Try to resolve targetId from git context (best-effort, non-blocking)
   let targetId: TargetId | undefined;

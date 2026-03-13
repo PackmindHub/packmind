@@ -71,9 +71,7 @@ describe('diffAddHandler', () => {
 
     mockPackmindCliHexa = {
       submitDiffs: mockSubmitDiffs,
-      getPackmindGateway: () => ({
-        spaces: { getGlobal: mockGetGlobal },
-      }),
+      getGlobalSpace: mockGetGlobal,
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -316,8 +314,8 @@ describe('diffAddHandler', () => {
           tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
           getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
           getCurrentBranch: mockGetCurrentBranch,
+          getGlobalSpace: mockGetGlobal,
           getPackmindGateway: () => ({
-            spaces: { getGlobal: mockGetGlobal },
             deployment: { getDeployed: mockGetDeployed },
           }),
         } as unknown as PackmindCliHexa;
