@@ -1,0 +1,69 @@
+---
+title: 'Update from External Sources'
+---
+
+Your team's coding knowledge doesn't live only in the codebase. Valuable conventions, decisions, and best practices are scattered across pull request reviews, Slack discussions, issue trackers, and documentation wikis. Packmind can automatically mine these external sources using AI agent skills and [MCP servers](https://modelcontextprotocol.io/), classify findings for playbook relevance, and submit them as [change proposals](/playbook-maintenance/change-proposals) for your team to review.
+
+<Tip>
+  Looking to do a one-time import from a knowledge base? See [Import from
+  Confluence, Notion and more](/tools/import-from-knowledge-base).
+</Tip>
+
+## Why Mine External Sources?
+
+- **Knowledge is scattered** — PR review comments, Slack threads, Jira issues, and wiki pages all contain insights that should live in the playbook.
+- **Manual updates are easy to forget** — Without automation, new conventions agreed upon in a PR review or a Slack discussion may never make it into the playbook.
+- **Continuous mining keeps the playbook current** — Regularly scanning external sources ensures emerging patterns and decisions are captured as they happen.
+- **Change proposals ensure human review** — Every finding goes through a [change proposal](/playbook-maintenance/change-proposals), so your team stays in control of what enters the playbook.
+
+## How It Works
+
+The workflow follows a three-stage pipeline:
+
+1. **Fetch** — A source skill queries an external tool through its MCP server (e.g., fetching merged PR review comments from GitHub, or retrieving recent channel messages from Slack).
+2. **Classify** — The AI agent analyzes the fetched data and identifies items relevant to coding conventions, best practices, architectural decisions, or recurring patterns.
+3. **Update** — Classified findings are handed off to the `packmind-update-playbook` skill, which creates [change proposals](/playbook-maintenance/change-proposals) in Packmind — standards, commands, or skills depending on the nature of each finding.
+
+<Info>
+  This workflow is AI agent agnostic. It works with any agent that supports MCP
+  — Claude Code, GitHub Copilot, Cursor, Windsurf, and others.
+</Info>
+
+## Supported Sources
+
+| Source                       | What is mined                              | MCP Server                                                                               |
+| ---------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| **GitHub PR Comments**       | Review comments from merged pull requests  | [GitHub MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/github)       |
+| **Slack Conversations**      | Channel discussions and threaded messages  | [Slack MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/slack)         |
+| **Jira Issues**              | Resolved issues and their comments         | [Jira MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/atlassian)      |
+| **GitLab MR Comments**       | Review comments from merged merge requests | [GitLab MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/gitlab)       |
+| **Confluence Documentation** | Pages and spaces                           | [Atlassian MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/atlassian) |
+| **Notion Documentation**     | Pages and databases                        | [Notion MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/notion)       |
+
+<Tip>
+  These are example use cases. Any tool that exposes an MCP server can be used
+  as a source — see [Adding Custom Sources](#adding-custom-sources) below.
+</Tip>
+
+## Example Skills Repository
+
+The [demo-use-case-skills](https://github.com/PackmindHub/demo-use-case-skills) repository contains ready-to-use source skills for all six integrations listed above. Inside you will find:
+
+- **Source skills** for each integration — one skill per external source, each handling data fetching, noise filtering, and relevance classification.
+- **Shared skills** — `packmind-update-playbook` (creates change proposals from findings) and `packmind-cli-list-commands` (prevents duplicate artifacts).
+- **CI workflow examples** — GitHub Actions configurations for running source skills on a schedule, so your playbook is updated automatically without manual intervention.
+
+Each integration folder includes its own README with setup instructions, MCP server configuration, and usage examples. Head to the repository to get started.
+
+## Adding Custom Sources
+
+The architecture is extensible by design. To add a new external source, create a skill that fetches data from the source's MCP server, classifies findings for playbook relevance, and hands them off to `packmind-update-playbook`. Any tool with an MCP server can become a source — monitoring tools, design systems, internal APIs, and more.
+
+## Learn More
+
+- [Change Proposals](/playbook-maintenance/change-proposals) — How change proposals are reviewed and applied
+- [Updating Your Playbook](/playbook-maintenance/updating-your-playbook) — Overview of all playbook update workflows
+- [Import from Confluence, Notion and more](/tools/import-from-knowledge-base) — One-time import from knowledge bases
+- [Skills Management](/concepts/skills-management) — How skills work and how to create them
+- [CLI Reference](/tools/cli) — CLI installation and commands
+- [Demo Use Case Skills](https://github.com/PackmindHub/demo-use-case-skills) — Example source skills repository
