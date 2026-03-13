@@ -286,7 +286,9 @@ describe('PackmindLockFileService', () => {
     });
 
     describe('when skill files have skillFileId', () => {
-      it('sets isSkillDefinition only for files without skillFileId', () => {
+      let result: ReturnType<typeof service.buildLockFile>;
+
+      beforeEach(() => {
         const fileModifications: FileModification[] = [
           {
             path: '.claude/skills/my-skill/SKILL.md',
@@ -303,7 +305,7 @@ describe('PackmindLockFileService', () => {
           },
         ];
 
-        const result = service.buildLockFile({
+        result = service.buildLockFile({
           fileModifications,
           recipeVersions: [],
           standardVersions: [],
@@ -314,14 +316,18 @@ describe('PackmindLockFileService', () => {
           artifactSpaceIds: { [String(skillId)]: 'space-C' },
           artifactPackageIds: { [String(skillId)]: ['pkg-3'] },
         });
+      });
 
-        const files = result.artifacts['skill:my-skill'].files;
-        expect(files[0]).toEqual({
+      it('sets isSkillDefinition for the skill definition file', () => {
+        expect(result.artifacts['skill:my-skill'].files[0]).toEqual({
           path: '.claude/skills/my-skill/SKILL.md',
           agent: 'claude',
           isSkillDefinition: true,
         });
-        expect(files[1]).toEqual({
+      });
+
+      it('does not set isSkillDefinition for files with skillFileId', () => {
+        expect(result.artifacts['skill:my-skill'].files[1]).toEqual({
           path: '.claude/skills/my-skill/helper.ts',
           agent: 'claude',
         });
@@ -398,7 +404,9 @@ describe('PackmindLockFileService', () => {
     });
 
     describe('when artifactSpaceIds or artifactPackageIds are missing for an artifact', () => {
-      it('defaults spaceId to empty string and packageIds to empty array', () => {
+      let result: ReturnType<typeof service.buildLockFile>;
+
+      beforeEach(() => {
         const fileModifications: FileModification[] = [
           {
             path: '.claude/commands/my-recipe.md',
@@ -408,7 +416,7 @@ describe('PackmindLockFileService', () => {
           },
         ];
 
-        const result = service.buildLockFile({
+        result = service.buildLockFile({
           fileModifications,
           recipeVersions,
           standardVersions: [],
@@ -419,8 +427,13 @@ describe('PackmindLockFileService', () => {
           artifactSpaceIds: {},
           artifactPackageIds: {},
         });
+      });
 
+      it('defaults spaceId to empty string', () => {
         expect(result.artifacts['command:my-recipe'].spaceId).toBe('');
+      });
+
+      it('defaults packageIds to empty array', () => {
         expect(result.artifacts['command:my-recipe'].packageIds).toEqual([]);
       });
     });

@@ -841,15 +841,17 @@ describe('PullContentUseCase', () => {
         );
       });
 
-      it('calls buildLockFile with empty artifact metadata when no artifacts exist', async () => {
-        await useCase.execute(command);
+      describe('when no artifacts exist', () => {
+        it('calls buildLockFile with empty artifact metadata', async () => {
+          await useCase.execute(command);
 
-        expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
-          expect.objectContaining({
-            artifactSpaceIds: {},
-            artifactPackageIds: {},
-          }),
-        );
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              artifactSpaceIds: {},
+              artifactPackageIds: {},
+            }),
+          );
+        });
       });
 
       describe('when artifacts have metadata', () => {
