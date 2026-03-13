@@ -730,6 +730,7 @@ function invalidateChangeProposalQueries(
     }),
     queryClient.invalidateQueries({
       queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+      refetchType: 'all',
     }),
   ]);
 }
@@ -819,6 +820,7 @@ export const useRemovePackageFromTargetsMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
       });
+      await invalidateChangeProposalQueries(queryClient);
     },
     onError: (error) => {
       console.error('Error removing package from targets:', error);

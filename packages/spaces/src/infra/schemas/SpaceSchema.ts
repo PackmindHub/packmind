@@ -27,6 +27,11 @@ export const SpaceSchema = new EntitySchema<
       length: 50,
       default: SpaceType.open,
     },
+    isDefaultSpace: {
+      name: 'is_default_space',
+      type: 'boolean',
+      default: true,
+    },
     organizationId: {
       name: 'organization_id',
       type: 'uuid',

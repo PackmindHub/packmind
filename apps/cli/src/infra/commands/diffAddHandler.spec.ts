@@ -72,6 +72,22 @@ describe('diffAddHandler', () => {
     mockPackmindCliHexa = {
       submitDiffs: mockSubmitDiffs,
       getGlobalSpace: mockGetGlobal,
+      configExists: jest
+        .fn()
+        .mockImplementation((dir: string) =>
+          Promise.resolve(dir === '/project'),
+        ),
+      readFullConfig: jest
+        .fn()
+        .mockImplementation((dir: string) =>
+          Promise.resolve(
+            dir === '/project' ? { packages: { 'my-package': '*' } } : null,
+          ),
+        ),
+      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue(null),
+      getPackmindGateway: () => ({
+        spaces: { getGlobal: mockGetGlobal },
+      }),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -310,6 +326,11 @@ describe('diffAddHandler', () => {
 
         mockPackmindCliHexa = {
           submitDiffs: mockSubmitDiffs,
+          configExists: jest
+            .fn()
+            .mockImplementation((dir: string) =>
+              Promise.resolve(dir === '/project'),
+            ),
           readFullConfig: mockReadFullConfig,
           tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
           getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
