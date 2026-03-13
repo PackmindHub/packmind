@@ -29,9 +29,14 @@ describe('diffRemoveHandler', () => {
     mockExistsSync = jest.fn().mockReturnValue(true);
     mockUnlinkSync = jest.fn().mockReturnValue(undefined);
     mockRmSync = jest.fn().mockReturnValue(undefined);
-    mockReadFullConfig = jest.fn().mockResolvedValue({
-      packages: { 'test-package': '*' },
-      agents: ['packmind'],
+    mockReadFullConfig = jest.fn().mockImplementation((dir: string) => {
+      if (dir === '/project/git-root') {
+        return Promise.resolve({
+          packages: { 'test-package': '*' },
+          agents: ['packmind'],
+        });
+      }
+      return Promise.resolve(null);
     });
 
     mockTryGetGitRepositoryRoot = jest
@@ -72,6 +77,11 @@ describe('diffRemoveHandler', () => {
 
     mockPackmindCliHexa = {
       readFullConfig: mockReadFullConfig,
+      configExists: jest
+        .fn()
+        .mockImplementation((dir: string) =>
+          Promise.resolve(dir === '/project/git-root'),
+        ),
       tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
       getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
       getCurrentBranch: mockGetCurrentBranch,
@@ -637,7 +647,21 @@ describe('diffRemoveHandler', () => {
   describe('when working in a subdirectory', () => {
     beforeEach(() => {
       mockGetCwd.mockReturnValue('/project/git-root/apps/frontend');
-      // The file path in createOrUpdate is relative to git root
+      // The subdirectory has its own packmind.json (target is the subdirectory)
+      (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+        (dir: string) =>
+          Promise.resolve(dir === '/project/git-root/apps/frontend'),
+      );
+      mockReadFullConfig.mockImplementation((dir: string) => {
+        if (dir === '/project/git-root/apps/frontend') {
+          return Promise.resolve({
+            packages: { 'test-package': '*' },
+            agents: ['packmind'],
+          });
+        }
+        return Promise.resolve(null);
+      });
+      // The file path in createOrUpdate is relative to target (subdirectory)
       mockGetDeployed.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
