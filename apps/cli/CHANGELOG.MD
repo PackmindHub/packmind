@@ -4,6 +4,7 @@
 
 - The `lint` command now accepts a single file path in addition to a directory; it validates existence, respects `.packmindignore`, and logs an info message when the file is out of scope for the requested rule/standard
 - Add `.packmindignore` file support to exclude files/folders from linting without modifying CLI source code
+- Generate `packmind-lock` file to track installed package versions and artifact checksums
 
 ## Changed
 
