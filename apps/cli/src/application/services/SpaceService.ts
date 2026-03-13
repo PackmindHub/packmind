@@ -7,11 +7,12 @@ export class SpaceService implements ISpaceService {
 
   async getGlobalSpace(): Promise<Space> {
     const { spaces } = await this.spaceGateway.getUserSpaces({});
+    const defaultSpace = spaces.find((space) => space.isDefaultSpace);
 
-    if (spaces.length > 1) {
-      throw new Error('Multiple spaces detected');
+    if (!defaultSpace) {
+      throw new Error('No default space found for this organization');
     }
 
-    return spaces[0];
+    return defaultSpace;
   }
 }
