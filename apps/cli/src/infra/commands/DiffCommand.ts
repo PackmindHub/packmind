@@ -51,9 +51,13 @@ export const diffCommand = command({
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     if (positionals[0] === 'add') {
+      const addFilePath =
+        path && positionals[1]
+          ? `${path}/${positionals[1]}`.replace(/\/+/g, '/')
+          : positionals[1];
       await diffAddHandler({
         packmindCliHexa,
-        filePath: positionals[1],
+        filePath: addFilePath,
         message,
         exit: process.exit,
         getCwd: () => process.cwd(),
