@@ -13,4 +13,5 @@ export type Space = {
   slug: string;
   type: SpaceType;
   organizationId: OrganizationId;
+  isDefaultSpace: boolean;
 };
