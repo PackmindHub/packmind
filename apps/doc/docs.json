@@ -64,7 +64,8 @@
         "icon": "arrows-rotate",
         "pages": [
           "playbook-maintenance/updating-your-playbook",
-          "playbook-maintenance/change-proposals"
+          "playbook-maintenance/change-proposals",
+          "playbook-maintenance/update-from-external-sources"
         ]
       },
       {
