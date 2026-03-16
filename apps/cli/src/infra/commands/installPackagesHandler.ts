@@ -574,6 +574,10 @@ export async function installPackagesHandler(
         notificationSent: false,
       };
     }
+
+    // Show which packmind.json is being targeted
+    const displayPath = `./${args.path.replace(/\/$/, '')}/packmind.json`;
+    log(`Installing in ${displayPath}...`);
   }
 
   // Read existing config (including agents if present)

@@ -989,6 +989,114 @@ describe('installPackagesHandler', () => {
         });
       });
     });
+
+    describe('when --path is provided', () => {
+      describe('with a valid directory', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isDirectory: () => true,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { 'existing-pkg': '*' },
+          });
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 1,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 0,
+            standardsCount: 1,
+            skillsCount: 0,
+            errors: [],
+          });
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+          mockPackmindCliHexa.addPackagesToConfig.mockResolvedValue(undefined);
+          mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+            filesCreated: 0,
+            filesUpdated: 0,
+            errors: [],
+          });
+        });
+
+        it('displays the target packmind.json path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['new-pkg'], path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(mockLog).toHaveBeenCalledWith(
+            'Installing in ./apps/frontend/packmind.json...',
+          );
+        });
+
+        it('resolves the path and installs in the target directory', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['new-pkg'], path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              baseDirectory: '/project/apps/frontend',
+            }),
+          );
+        });
+      });
+
+      describe('with a non-existent path', () => {
+        beforeEach(() => {
+          mockFs.stat.mockRejectedValue(new Error('ENOENT'));
+        });
+
+        it('logs error message for non-existent path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'does/not/exist' },
+            deps,
+          );
+
+          expect(mockError).toHaveBeenCalledWith(
+            '❌ Path does not exist: /project/does/not/exist',
+          );
+        });
+
+        it('exits with code 1 for non-existent path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'does/not/exist' },
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+
+      describe('with a path pointing to a file', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isDirectory: () => false,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+        });
+
+        it('logs error message for non-directory path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(mockError).toHaveBeenCalledWith(
+            '❌ Path is not a directory: /project/apps/frontend/index.ts',
+          );
+        });
+
+        it('exits with code 1 for non-directory path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+    });
   });
 
   describe('uninstallPackagesHandler', () => {
