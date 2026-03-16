@@ -576,7 +576,8 @@ export async function installPackagesHandler(
     }
 
     // Show which packmind.json is being targeted
-    const displayPath = `./${args.path.replace(/\/$/, '')}/packmind.json`;
+    const normalizedPath = args.path.replace(/^\.\//, '').replace(/\/$/, '');
+    const displayPath = `./${normalizedPath}/packmind.json`;
     log(`Installing in ${displayPath}...`);
   }
 
