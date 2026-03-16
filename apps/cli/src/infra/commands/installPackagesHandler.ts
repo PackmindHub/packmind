@@ -584,10 +584,23 @@ export async function installPackagesHandler(
   }
 
   // Normalize slugs to `@space/pkg` form (fetches default space once if needed)
-  const normalizedNewSlugs =
-    await packmindCliHexa.normalizePackageSlugs(packagesSlugs);
-  const normalizedConfigSlugs =
-    await packmindCliHexa.normalizePackageSlugs(configPackages);
+  let normalizedNewSlugs: string[];
+  let normalizedConfigSlugs: string[];
+  try {
+    normalizedNewSlugs =
+      await packmindCliHexa.normalizePackageSlugs(packagesSlugs);
+    normalizedConfigSlugs =
+      await packmindCliHexa.normalizePackageSlugs(configPackages);
+  } catch (err) {
+    error(`ERROR ${err instanceof Error ? err.message : String(err)}`);
+    exit(1);
+    return {
+      filesCreated: 0,
+      filesUpdated: 0,
+      filesDeleted: 0,
+      notificationSent: false,
+    };
+  }
 
   // Merge config packages with normalized command line args, deduplicating
   const allPackages = [

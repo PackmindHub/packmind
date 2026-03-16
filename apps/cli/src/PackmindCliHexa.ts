@@ -380,16 +380,28 @@ export class PackmindCliHexa {
     return this.hexa.services.spaceService.getDefaultSpace();
   }
 
+  public async getSpaces(): Promise<Space[]> {
+    return this.hexa.services.spaceService.getSpaces();
+  }
+
   /**
    * Normalizes package slugs to the `@space-slug/package-slug` format.
    * Unprefixed slugs are resolved against the organization's default space.
    * Already-prefixed slugs (`@space/pkg`) are returned as-is.
+   * Throws if there are multiple spaces and any slug is unprefixed.
    */
   public async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
     if (slugs.length === 0) return [];
 
     const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
     if (!hasUnprefixed) return slugs;
+
+    const spaces = await this.getSpaces();
+    if (spaces.length > 1) {
+      throw new Error(
+        `Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @${spaces[0].slug}/my-package).`,
+      );
+    }
 
     const defaultSpace = await this.getDefaultSpace();
     return slugs.map((slug) =>

@@ -749,6 +749,36 @@ describe('installPackagesHandler', () => {
         });
       });
 
+      describe('when normalizePackageSlugs throws (e.g. multiple spaces)', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+          mockPackmindCliHexa.normalizePackageSlugs.mockRejectedValue(
+            new Error(
+              'Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @my-space/my-package).',
+            ),
+          );
+
+          await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+        });
+
+        it('calls error with the error message', () => {
+          expect(mockError).toHaveBeenCalledWith(
+            expect.stringContaining('multiple spaces'),
+          );
+        });
+
+        it('calls exit(1)', () => {
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+
+        it('does not call installPackages', () => {
+          expect(mockPackmindCliHexa.installPackages).not.toHaveBeenCalled();
+        });
+      });
+
       describe('when all packages already exist in config', () => {
         beforeEach(async () => {
           mockPackmindCliHexa.configExists.mockResolvedValue(true);
