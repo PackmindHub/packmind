@@ -5,6 +5,7 @@ import {
   IPackmindGateway,
   RunCliResult,
   readFile,
+  updateFile,
 } from './helpers';
 import { Package, Space } from '@packmind/types';
 
@@ -14,6 +15,7 @@ describeWithUserSignedUp('diff command', (getContext) => {
   let testDir: string;
   let space: Space;
   let pkg: Package;
+  let installResult: RunCliResult;
 
   beforeEach(async () => {
     const context = await getContext();
@@ -36,8 +38,6 @@ describeWithUserSignedUp('diff command', (getContext) => {
   });
 
   describe('when user specifies the packages to install in the command line', () => {
-    let installResult: RunCliResult;
-
     describe('when user does not specify the space slug', () => {
       beforeEach(async () => {
         installResult = await runCli(`install ${pkg.slug}`, {
@@ -70,6 +70,33 @@ describeWithUserSignedUp('diff command', (getContext) => {
       });
 
       it('references the space slug in the packmind.json file', () => {
+        const packmindJson = readFile('packmind.json', testDir);
+
+        expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+      });
+    });
+  });
+
+  describe('when content to install is read from packmind.json', () => {
+    describe('when packages are not prefixed by space slug', () => {
+      beforeEach(async () => {
+        updateFile(
+          'packmind.json',
+          JSON.stringify({ packages: { [pkg.slug]: '*' } }),
+          testDir,
+        );
+
+        installResult = await runCli(`install`, {
+          apiKey,
+          cwd: testDir,
+        });
+      });
+
+      it('succeeds', () => {
+        expect(installResult.returnCode).toBe(0);
+      });
+
+      it('updates the packmind.json file with a prefixed label of the package', () => {
         const packmindJson = readFile('packmind.json', testDir);
 
         expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);

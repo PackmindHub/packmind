@@ -703,10 +703,16 @@ export async function installPackagesHandler(
 
     // Write config only if there are new packages (preserves property order)
     // Use normalized slugs so config always stores `@space/pkg` format
+    const configSlugsWereNormalized = configPackages.some(
+      (slug, i) => slug !== normalizedConfigSlugs[i],
+    );
     const newPackages = normalizedNewSlugs.filter(
       (slug) => !normalizedConfigSlugs.includes(slug),
     );
-    if (newPackages.length > 0) {
+    if (configSlugsWereNormalized) {
+      // Rewrite entire packages section to update slugs to normalized format
+      await packmindCliHexa.writeConfig(cwd, allPackages);
+    } else if (newPackages.length > 0) {
       await packmindCliHexa.addPackagesToConfig(cwd, newPackages);
     }
 
