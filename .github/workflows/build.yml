@@ -63,6 +63,7 @@ jobs:
         run: node scripts/select-tsconfig.mjs
       - name: Build API
         env:
+          NODE_ENV: production
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx build api
