@@ -59,6 +59,7 @@ import { SkillResultTabContent } from './SkillResultTabContent';
 import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
 import { SKILL_MD_MARKDOWN_TYPES } from '../../constants/skillProposalTypes';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 
 interface SkillReviewDetailProps {
   artefactId: string;
@@ -339,14 +340,11 @@ export function SkillReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={false}
+            showEditButton={isEditableProposalType}
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={() => {
-              /* Edit mode is out of scope for skills */
-            }}
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}

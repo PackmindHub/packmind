@@ -40,6 +40,7 @@ import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 
 interface CommandReviewDetailProps {
   artefactId: string;
@@ -268,14 +269,11 @@ export function CommandReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={false}
+            showEditButton={isEditableProposalType}
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={() => {
-              /* Edit mode is not supported for commands */
-            }}
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}

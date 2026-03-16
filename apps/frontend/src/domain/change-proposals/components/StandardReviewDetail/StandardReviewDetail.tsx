@@ -10,6 +10,7 @@ import {
   SpaceId,
   StandardId,
 } from '@packmind/types';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
@@ -290,14 +291,11 @@ export function StandardReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={false}
+            showEditButton={isEditableProposalType}
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={() => {
-              /* Edit mode is out of scope for standards */
-            }}
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
