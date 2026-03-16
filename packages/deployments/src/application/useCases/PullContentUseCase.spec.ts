@@ -825,9 +825,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -907,9 +907,9 @@ describe('PullContentUseCase', () => {
           };
 
           testPackage.recipes = [recipe];
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
 
           recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
         });

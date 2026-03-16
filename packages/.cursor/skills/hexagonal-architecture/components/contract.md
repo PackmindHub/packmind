@@ -59,6 +59,10 @@ export interface IUseCase<TCommand, TResponse> {
 // Shorthand for public use cases
 export interface IPublicUseCase<TCommand, TResponse>
   extends IUseCase<TCommand, TResponse> {}
+
+// For system-initiated use cases (background jobs, webhooks)
+export interface ISystemUseCase<TCommand, TResponse>
+  extends IUseCase<TCommand, TResponse> {}
 ```
 
 ## Conventions

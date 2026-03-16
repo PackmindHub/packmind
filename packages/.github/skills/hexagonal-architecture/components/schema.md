@@ -55,7 +55,7 @@ export const StandardSchema = new EntitySchema<
 
 ## Schema Mixins
 
-Every schema uses these shared column definitions from `@packmind/node-utils`:
+Schemas use these shared column definitions from `@packmind/node-utils`:
 
 | Mixin | Columns Added |
 |-------|--------------|
@@ -71,5 +71,5 @@ Every schema uses these shared column definitions from `@packmind/node-utils`:
   - `userId` -> `name: 'user_id'`
   - `spaceId` -> `name: 'space_id'`
 - **Table naming** — plural `snake_case` (`standards`, `rule_examples`)
-- **Always include mixins** — `uuidSchema`, `timestampsSchemas`, `softDeleteSchemas`
-- **Indices** — define explicitly with meaningful names (`idx_{table}_{columns}`)
+- **Always include `uuidSchema` and `timestampsSchemas`** — `softDeleteSchemas` is a design decision per entity (omit it if the entity should not support soft deletes)
+- **Indices** — recommended with meaningful names (`idx_{table}_{columns}`); not all schemas require them
