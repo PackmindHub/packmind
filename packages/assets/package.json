@@ -5,7 +5,5 @@
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
-  "dependencies": {
-    "tslib": "^2.3.0"
-  }
+  "dependencies": {}
 }

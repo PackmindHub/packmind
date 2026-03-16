@@ -39,6 +39,9 @@ describe('installPackagesHandler', () => {
       writeConfig: jest.fn(),
       addPackagesToConfig: jest.fn(),
       installPackages: jest.fn(),
+      normalizePackageSlugs: jest
+        .fn()
+        .mockImplementation(async (slugs: string[]) => slugs),
       tryGetGitRepositoryRoot: jest.fn(),
       getGitRemoteUrlFromPath: jest.fn(),
       getCurrentBranch: jest.fn(),
@@ -712,6 +715,35 @@ describe('installPackagesHandler', () => {
           });
 
           await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('does not call addPackagesToConfig', () => {
+          expect(
+            mockPackmindCliHexa.addPackagesToConfig,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when config has unprefixed package slugs', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.normalizePackageSlugs.mockImplementation(
+            async (slugs: string[]) =>
+              slugs.map((s) => (s.startsWith('@') ? s : `@my-space/${s}`)),
+          );
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+          mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('calls writeConfig with the normalized slugs', () => {
+          expect(mockPackmindCliHexa.writeConfig).toHaveBeenCalledWith(
+            '/project',
+            ['@my-space/backend'],
+          );
         });
 
         it('does not call addPackagesToConfig', () => {

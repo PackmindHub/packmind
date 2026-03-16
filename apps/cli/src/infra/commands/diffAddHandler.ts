@@ -163,7 +163,7 @@ export async function diffAddHandler(
     return;
   }
 
-  const space = await packmindCliHexa.getPackmindGateway().spaces.getGlobal();
+  const space = await packmindCliHexa.getDefaultSpace();
 
   // Infer target directory from the file path (walk up to nearest packmind.json)
   const fileDir =

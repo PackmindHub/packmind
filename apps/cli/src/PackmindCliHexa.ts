@@ -83,6 +83,8 @@ import {
 import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
 import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { loadCredentials } from './infra/utils/credentials';
+import { Space } from '@packmind/types';
+import { ISpaceService } from './domain/services/ISpaceService';
 
 const origin = 'PackmindCliHexa';
 
@@ -372,6 +374,31 @@ export class PackmindCliHexa {
 
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
+  }
+
+  public async getDefaultSpace(): Promise<Space> {
+    return this.hexa.services.spaceService.getDefaultSpace();
+  }
+
+  /**
+   * Normalizes package slugs to the `@space-slug/package-slug` format.
+   * Unprefixed slugs are resolved against the organization's default space.
+   * Already-prefixed slugs (`@space/pkg`) are returned as-is.
+   */
+  public async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
+    if (slugs.length === 0) return [];
+
+    const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
+    if (!hasUnprefixed) return slugs;
+
+    const defaultSpace = await this.getDefaultSpace();
+    return slugs.map((slug) =>
+      slug.startsWith('@') ? slug : `@${defaultSpace.slug}/${slug}`,
+    );
+  }
+
+  public getSpaceService(): ISpaceService {
+    return this.hexa.services.spaceService;
   }
 
   /**

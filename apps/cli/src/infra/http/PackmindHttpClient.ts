@@ -1,4 +1,5 @@
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
+import { version } from '../../../package.json';
 
 interface IAuthContext {
   host: string;
@@ -72,6 +73,7 @@ export class PackmindHttpClient {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.apiKey}`,
+          'User-Agent': `packmind-cli:${version}`,
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
       });
