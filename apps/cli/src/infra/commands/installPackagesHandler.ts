@@ -1155,7 +1155,7 @@ export async function recursiveInstallHandler(
     if (!allConfigs.hasConfigs) {
       log('No packmind.json files found in this repository.');
       log('');
-      log('Usage: packmind-cli install -r');
+      log('Usage: packmind-cli install');
       log('');
       log(
         'This command requires at least one packmind.json file in the repository.',
