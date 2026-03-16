@@ -305,6 +305,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --no-audit --no-fund
+        timeout-minutes: 30
 
       - name: Generate tsconfig
         env:
