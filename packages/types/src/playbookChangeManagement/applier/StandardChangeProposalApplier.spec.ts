@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createChangeProposalFactory } from './testHelpers';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
+import { ChangeProposalStatus } from '../ChangeProposalStatus';
 import { StandardVersion } from '../../standards/StandardVersion';
 import { createStandardId } from '../../standards/StandardId';
 import { createStandardVersionId } from '../../standards/StandardVersionId';
@@ -160,6 +161,30 @@ describe('StandardChangeProposalApplier', () => {
 
         expect(result.version.name).toBe('Third');
       });
+
+      describe('when decision differs from payload', () => {
+        it('uses the decision newValue instead of payload newValue', () => {
+          const source = standardVersionFactory({ name: 'Original Name' });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateStandardName,
+            payload: {
+              oldValue: 'Original Name',
+              newValue: 'Payload Name',
+            },
+            status: ChangeProposalStatus.applied,
+            decision: {
+              oldValue: 'Original Name',
+              newValue: 'Decision Name',
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect(result.version.name).toBe('Decision Name');
+        });
+      });
     });
 
     describe('updateStandardScope', () => {
@@ -175,6 +200,30 @@ describe('StandardChangeProposalApplier', () => {
         ]);
 
         expect(result.version.scope).toBe('new-scope');
+      });
+
+      describe('when decision differs from payload', () => {
+        it('uses the decision newValue instead of payload newValue', () => {
+          const source = standardVersionFactory({ scope: 'old-scope' });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateStandardScope,
+            payload: {
+              oldValue: 'old-scope',
+              newValue: 'payload-scope',
+            },
+            status: ChangeProposalStatus.applied,
+            decision: {
+              oldValue: 'old-scope',
+              newValue: 'decision-scope',
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect(result.version.scope).toBe('decision-scope');
+        });
       });
     });
 
@@ -213,6 +262,34 @@ describe('StandardChangeProposalApplier', () => {
         expect(() =>
           applier.applyChangeProposals(source, [proposal as ChangeProposal]),
         ).toThrow(ChangeProposalConflictError);
+      });
+
+      describe('when decision differs from payload', () => {
+        it('applies diff using the decision values instead of payload values', () => {
+          const source = standardVersionFactory({
+            description: 'line1\nline2\nline3',
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateStandardDescription,
+            payload: {
+              oldValue: 'line1\nline2\nline3',
+              newValue: 'line1\npayload-modified\nline3',
+            },
+            status: ChangeProposalStatus.applied,
+            decision: {
+              oldValue: 'line1\nline2\nline3',
+              newValue: 'line1\ndecision-modified\nline3',
+            },
+          });
+
+          const result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+
+          expect(result.version.description).toBe(
+            'line1\ndecision-modified\nline3',
+          );
+        });
       });
     });
 
