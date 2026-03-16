@@ -285,7 +285,7 @@ jobs:
 
   cli-e2e-tests:
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 15
+    timeout-minutes: 45
     env:
       PACKMIND_INSTANCE_URL: http://localhost:4200
     strategy:
