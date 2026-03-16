@@ -377,6 +377,7 @@ export class DeploymentsAdapter
       ports.eventEmitterService,
       this.distributionRepository,
       targetResolutionService,
+      this.spacesPort,
     );
 
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(

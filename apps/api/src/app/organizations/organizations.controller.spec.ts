@@ -7,12 +7,19 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { IAccountsPort, IDeploymentPort } from '@packmind/types';
+import {
+  IAccountsPort,
+  IDeploymentPort,
+  ISpacesPort,
+  ListUserSpacesResponse,
+} from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 
 describe('OrganizationsController', () => {
   let controller: OrganizationsController;
   let mockAccountsAdapter: jest.Mocked<IAccountsPort>;
   let mockDeploymentAdapter: jest.Mocked<IDeploymentPort>;
+  let mockSpacesAdapter: jest.Mocked<ISpacesPort>;
 
   beforeEach(() => {
     const logger = stubLogger();
@@ -26,9 +33,14 @@ describe('OrganizationsController', () => {
       getContentByVersions: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
+    mockSpacesAdapter = {
+      listUserSpaces: jest.fn(),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     controller = new OrganizationsController(
       mockAccountsAdapter,
       mockDeploymentAdapter,
+      mockSpacesAdapter,
       logger,
     );
   });
@@ -630,6 +642,41 @@ describe('OrganizationsController', () => {
             agents: undefined,
           }),
         );
+      });
+    });
+  });
+
+  describe('listUserSpaces', () => {
+    const orgId = createOrganizationId('org-123');
+    const mockRequest = {
+      user: { userId: 'user-123' },
+    } as AuthenticatedRequest;
+
+    describe('when the organization has spaces', () => {
+      const space1 = spaceFactory({ organizationId: orgId });
+      const space2 = spaceFactory({ organizationId: orgId });
+      const mockResponse: ListUserSpacesResponse = {
+        spaces: [space1, space2],
+        discoverableSpaces: [],
+      };
+
+      beforeEach(() => {
+        mockSpacesAdapter.listUserSpaces.mockResolvedValue(mockResponse);
+      });
+
+      it('returns the user spaces response', async () => {
+        const result = await controller.listUserSpaces(orgId, mockRequest);
+
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('calls adapter with correct command', async () => {
+        await controller.listUserSpaces(orgId, mockRequest);
+
+        expect(mockSpacesAdapter.listUserSpaces).toHaveBeenCalledWith({
+          userId: 'user-123',
+          organizationId: orgId,
+        });
       });
     });
   });

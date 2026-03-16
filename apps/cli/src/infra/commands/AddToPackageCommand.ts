@@ -65,7 +65,7 @@ export const addToPackageCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const hexa = new PackmindCliHexa(packmindLogger);
     const gateway = hexa.getPackmindGateway();
-    const useCase = new AddToPackageUseCase(gateway);
+    const useCase = new AddToPackageUseCase(gateway, hexa.getSpaceService());
 
     const result = await addToPackageHandler(
       to,
