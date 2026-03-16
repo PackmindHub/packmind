@@ -9,7 +9,7 @@ import {
 } from './helpers';
 import { Package, Space } from '@packmind/types';
 
-describeWithUserSignedUp('diff command', (getContext) => {
+describeWithUserSignedUp('install command', (getContext) => {
   let gateway: IPackmindGateway;
   let apiKey: string;
   let testDir: string;

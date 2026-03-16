@@ -457,20 +457,24 @@ async function executeInstallForDirectory(
     };
   }
 
+  // Normalize slugs to `@space/pkg` form (fetches default space once if needed)
+  const normalizedConfigPackages =
+    await packmindCliHexa.normalizePackageSlugs(configPackages);
+
   try {
     // Show fetching message
-    const packageCount = configPackages.length;
+    const packageCount = normalizedConfigPackages.length;
     const packageWord = packageCount === 1 ? 'package' : 'packages';
     log(
-      `  Fetching ${packageCount} ${packageWord}: ${configPackages.join(', ')}...`,
+      `  Fetching ${packageCount} ${packageWord}: ${normalizedConfigPackages.join(', ')}...`,
     );
 
     // Execute the install operation
     // Pass previous packages for change detection (same as current since we're pulling existing config)
     const result = await packmindCliHexa.installPackages({
       baseDirectory: directory,
-      packagesSlugs: configPackages,
-      previousPackagesSlugs: configPackages, // Pass for consistency
+      packagesSlugs: normalizedConfigPackages,
+      previousPackagesSlugs: normalizedConfigPackages, // Pass for consistency
       agents: configAgents, // Pass agents from config if present
       cliVersion: CLI_VERSION,
     });
@@ -499,6 +503,14 @@ async function executeInstallForDirectory(
       };
     }
 
+    // Rewrite config if slugs were normalized to `@space/pkg` format
+    const configSlugsWereNormalized = configPackages.some(
+      (slug, i) => slug !== normalizedConfigPackages[i],
+    );
+    if (configSlugsWereNormalized) {
+      await packmindCliHexa.writeConfig(directory, normalizedConfigPackages);
+    }
+
     // Notify distribution if files were created, updated or deleted (including skill directories)
     const skillDirsDeleted = result.skillDirectoriesDeleted || 0;
     let notificationSent = false;
@@ -511,7 +523,7 @@ async function executeInstallForDirectory(
       notificationSent = await notifyDistributionIfInGitRepo({
         packmindCliHexa,
         cwd: directory,
-        packages: configPackages,
+        packages: normalizedConfigPackages,
         agents: configAgents,
         log: () => {
           /* empty */
