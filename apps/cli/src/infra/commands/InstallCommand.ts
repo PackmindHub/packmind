@@ -9,6 +9,7 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
+import { logWarningConsole } from '../utils/consoleLogger';
 
 export const installCommand = command({
   name: 'install',
@@ -84,7 +85,7 @@ export const installCommand = command({
 
     // Handle --recursive flag (deprecated, now default behavior)
     if (recursive) {
-      console.warn(
+      logWarningConsole(
         '⚠️  The --recursive flag is deprecated. Install is now recursive by default.',
       );
       await recursiveInstallHandler({ path: path || undefined }, deps);
