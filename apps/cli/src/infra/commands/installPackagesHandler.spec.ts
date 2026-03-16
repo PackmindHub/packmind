@@ -35,6 +35,9 @@ describe('installPackagesHandler', () => {
       writeConfig: jest.fn(),
       addPackagesToConfig: jest.fn(),
       installPackages: jest.fn(),
+      normalizePackageSlugs: jest
+        .fn()
+        .mockImplementation(async (slugs: string[]) => slugs),
       tryGetGitRepositoryRoot: jest.fn(),
       getGitRemoteUrlFromPath: jest.fn(),
       getCurrentBranch: jest.fn(),

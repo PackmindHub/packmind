@@ -380,6 +380,23 @@ export class PackmindCliHexa {
     return this.hexa.services.spaceService.getDefaultSpace();
   }
 
+  /**
+   * Normalizes package slugs to the `@space-slug/package-slug` format.
+   * Unprefixed slugs are resolved against the organization's default space.
+   * Already-prefixed slugs (`@space/pkg`) are returned as-is.
+   */
+  public async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
+    if (slugs.length === 0) return [];
+
+    const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
+    if (!hasUnprefixed) return slugs;
+
+    const defaultSpace = await this.getDefaultSpace();
+    return slugs.map((slug) =>
+      slug.startsWith('@') ? slug : `@${defaultSpace.slug}/${slug}`,
+    );
+  }
+
   public getSpaceService(): ISpaceService {
     return this.hexa.services.spaceService;
   }

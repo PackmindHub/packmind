@@ -50,7 +50,7 @@ describeWithUserSignedUp('diff command', (getContext) => {
         expect(installResult.returnCode).toBe(0);
       });
 
-      it.skip('references the space slug in the packmind.json file', () => {
+      it('references the space slug in the packmind.json file', () => {
         const packmindJson = readFile('packmind.json', testDir);
 
         expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
