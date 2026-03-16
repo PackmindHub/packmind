@@ -19,10 +19,13 @@ type SingleLineChangeProposals =
 export const detectSingleLineConflict: ConflictDetector<
   SingleLineChangeProposals
 > = (cp1, cp2) => {
+  const newValue1 = (cp1.decision ?? cp1.payload).newValue;
+  const newValue2 = (cp2.decision ?? cp2.payload).newValue;
+
   return (
     !sameProposal(cp1, cp2) &&
     sameType(cp1, cp2) &&
     sameArtefact(cp1, cp2) &&
-    cp1.payload.newValue !== cp2.payload.newValue
+    newValue1 !== newValue2
   );
 };

@@ -17,8 +17,10 @@ export const detectMultiLineConflict: ConflictDetector<
   if (sameProposal(cp1, cp2) || !sameType(cp1, cp2) || !sameArtefact(cp1, cp2))
     return false;
 
-  const { oldValue: oldValue1, newValue: newValue1 } = cp1.payload;
-  const { oldValue: oldValue2, newValue: newValue2 } = cp2.payload;
+  const { oldValue: oldValue1 } = cp1.payload;
+  const { oldValue: oldValue2 } = cp2.payload;
+  const newValue1 = (cp1.decision ?? cp1.payload).newValue;
+  const newValue2 = (cp2.decision ?? cp2.payload).newValue;
 
   if (oldValue1 !== oldValue2) {
     return false;
