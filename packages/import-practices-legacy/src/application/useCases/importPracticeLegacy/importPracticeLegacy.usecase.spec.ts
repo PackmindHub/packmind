@@ -40,6 +40,7 @@ describe('ImportPracticeLegacyUseCase', () => {
     slug: 'global',
     type: SpaceType.open,
     organizationId,
+    isDefaultSpace: true,
   };
 
   const mockUser = {
