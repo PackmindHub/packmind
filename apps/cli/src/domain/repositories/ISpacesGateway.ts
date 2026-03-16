@@ -1,5 +1,5 @@
-import { Space } from '@packmind/types';
+import { Gateway, IListUserSpaces } from '@packmind/types';
 
 export interface ISpacesGateway {
-  getGlobal(): Promise<Space>;
+  getUserSpaces: Gateway<IListUserSpaces>;
 }

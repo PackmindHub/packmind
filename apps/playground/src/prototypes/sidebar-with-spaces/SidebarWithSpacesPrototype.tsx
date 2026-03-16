@@ -288,12 +288,71 @@ export default function SidebarWithSpacesPrototype() {
                         space.id + ':',
                       );
                       return (
-                        <CollapsedSpaceAvatar
+                        <PMBox
                           key={space.id}
-                          space={space}
-                          isActive={isSpaceActive}
-                          onClick={() => setActiveSpacePanel(space.id)}
-                        />
+                          display="flex"
+                          flexDirection="column"
+                          alignItems="center"
+                          gap={0.5}
+                          bg={isSpaceActive ? 'blue.900' : 'transparent'}
+                          borderRadius="md"
+                          py={isSpaceActive ? 1.5 : 0}
+                        >
+                          <CollapsedSpaceAvatar
+                            space={space}
+                            isActive={isSpaceActive}
+                            onClick={() => setActiveSpacePanel(space.id)}
+                          />
+                          {isSpaceActive && (
+                            <PMBox
+                              display="flex"
+                              flexDirection="column"
+                              alignItems="center"
+                              gap={0.5}
+                              mt={1}
+                            >
+                              {space.sections
+                                .flatMap((s) => s.items)
+                                .map((item) => {
+                                  const key = `${space.id}:${item.id}`;
+                                  const isItemActive = activeKey === key;
+                                  return (
+                                    <PMBox
+                                      key={key}
+                                      as="button"
+                                      display="flex"
+                                      alignItems="center"
+                                      justifyContent="center"
+                                      w="28px"
+                                      h="28px"
+                                      borderRadius="sm"
+                                      cursor="pointer"
+                                      bg={
+                                        isItemActive
+                                          ? 'blue.800'
+                                          : 'transparent'
+                                      }
+                                      color={
+                                        isItemActive
+                                          ? 'text.primary'
+                                          : 'text.faded'
+                                      }
+                                      _hover={
+                                        isItemActive
+                                          ? undefined
+                                          : { color: 'text.primary' }
+                                      }
+                                      transition="background-color 0.15s"
+                                      title={item.label}
+                                      onClick={() => handleItemClick(key)}
+                                    >
+                                      <PMIcon fontSize="xs">{item.icon}</PMIcon>
+                                    </PMBox>
+                                  );
+                                })}
+                            </PMBox>
+                          )}
+                        </PMBox>
                       );
                     })}
                   </PMBox>

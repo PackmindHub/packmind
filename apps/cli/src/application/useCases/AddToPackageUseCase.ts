@@ -6,6 +6,7 @@ import {
 } from '../../domain/useCases/IAddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ItemNotFoundError } from '../../domain/errors/ItemNotFoundError';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 import {
   AddArtefactsToPackageCommand,
   createRecipeId,
@@ -18,13 +19,16 @@ import {
 } from '@packmind/types';
 
 export class AddToPackageUseCase implements IAddToPackageUseCase {
-  constructor(private readonly gateway: IPackmindGateway) {}
+  constructor(
+    private readonly gateway: IPackmindGateway,
+    private readonly spaceService: ISpaceService,
+  ) {}
 
   async execute(command: IAddToPackageCommand): Promise<IAddToPackageResult> {
     const { packageSlug, itemType, itemSlugs } = command;
 
     // Get global space ID
-    const space = await this.gateway.spaces.getGlobal();
+    const space = await this.spaceService.getDefaultSpace();
     const packages = await this.gateway.packages.list({});
     const pkg = packages.packages.find((pkg) => pkg.slug === packageSlug);
     if (!pkg) {
@@ -78,7 +82,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
   ): Promise<{ ids: string[]; idToSlugMap: Map<string, string> }> {
     const ids: string[] = [];
     const idToSlugMap = new Map<string, string>();
-    const globalSpace = await this.gateway.spaces.getGlobal();
+    const globalSpace = await this.spaceService.getDefaultSpace();
 
     for (const slug of slugs) {
       let item: { id: string } | null = null;

@@ -6,7 +6,7 @@
   "tags": ["type:util", "scope:test", "env:node"],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/test-utils",

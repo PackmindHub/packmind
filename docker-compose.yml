@@ -101,7 +101,6 @@ services:
       - -c
       - |
         apk add --no-cache git && \
-        rm -rf node_modules/.cache && \
         npm install --unsafe-perm --audit=false --fund=false && \
         chmod -R +x node_modules/.bin 2>/dev/null || true
     volumes:

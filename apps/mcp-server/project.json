@@ -23,7 +23,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["^build"],
+      "dependsOn": [],
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/mcp-server",

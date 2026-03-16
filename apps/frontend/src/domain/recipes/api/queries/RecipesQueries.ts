@@ -16,6 +16,10 @@ import {
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import {
+  CHANGE_PROPOSALS_QUERY_SCOPE,
+  GET_GROUPED_CHANGE_PROPOSALS_KEY,
+} from '../../../change-proposals/api/queryKeys';
 
 export const getRecipesBySpaceQueryOptions = (
   organizationId: OrganizationId | undefined,
@@ -239,6 +243,15 @@ export const useDeleteRecipeMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+
+      // Proposals on the deleted command are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
+      });
     },
     onError: async (error, variables, context) => {
       console.error('Error deleting command');
@@ -276,6 +289,15 @@ export const useDeleteRecipesBatchMutation = () => {
       // Packages containing the deleted recipes need to be refreshed
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+
+      // Proposals on the deleted commands are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
       });
     },
     onError: async (error, variables, context) => {

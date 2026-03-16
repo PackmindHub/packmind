@@ -104,6 +104,9 @@ describe('PackmindHttpClient', () => {
             headers: expect.objectContaining({
               'Content-Type': 'application/json',
               Authorization: expect.stringContaining('Bearer '),
+              'User-Agent': expect.stringMatching(
+                /^packmind-cli:\d+\.\d+\.\d+/,
+              ),
             }),
           }),
         );

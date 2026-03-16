@@ -6,9 +6,11 @@ import {
 import { readSkillDirectory } from '../../infra/utils/readSkillDirectory';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { createSpaceId } from '@packmind/types';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 
 type IIUploadSkillDependencies = {
   gateway: IPackmindGateway;
+  spaceService: ISpaceService;
 };
 
 export class UploadSkillUseCase implements IUploadSkillUseCase {
@@ -37,7 +39,7 @@ export class UploadSkillUseCase implements IUploadSkillUseCase {
       throw new Error(`Skill size (${totalSize} bytes) exceeds 10MB limit`);
     }
 
-    const space = await this.deps.gateway.spaces.getGlobal();
+    const space = await this.deps.spaceService.getDefaultSpace();
     const payload = {
       files: files.map((f) => ({
         path: f.relativePath,

@@ -1,31 +1,30 @@
 import { CreateCommandFromPlaybookUseCase } from './CreateCommandFromPlaybookUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
+import { ISpaceService } from '../../domain/services/ISpaceService';
+import { createMockSpaceService } from '../../mocks/createMockServices';
 import { spaceFactory } from '@packmind/spaces/test';
 import { createRecipeId, createSpaceId } from '@packmind/types';
 import { recipeFactory } from '@packmind/recipes/test';
 
 describe('CreateCommandFromPlaybookUseCase', () => {
   let useCase: CreateCommandFromPlaybookUseCase;
-  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
   let mockCommandsGateway: jest.Mocked<ICommandsGateway>;
-  let mockGateway: jest.Mocked<Pick<IPackmindGateway, 'spaces' | 'commands'>>;
+  let mockGateway: jest.Mocked<Pick<IPackmindGateway, 'commands'>>;
 
   beforeEach(() => {
-    mockSpacesGateway = {
-      getGlobal: jest.fn(),
-    };
+    mockSpaceService = createMockSpaceService();
     mockCommandsGateway = {
       create: jest.fn(),
       list: jest.fn(),
     };
     mockGateway = {
-      spaces: mockSpacesGateway,
       commands: mockCommandsGateway,
     };
     useCase = new CreateCommandFromPlaybookUseCase(
       mockGateway as unknown as IPackmindGateway,
+      mockSpaceService,
     );
   });
 
@@ -50,7 +49,7 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     };
 
     beforeEach(async () => {
-      mockSpacesGateway.getGlobal.mockResolvedValue(
+      mockSpaceService.getDefaultSpace.mockResolvedValue(
         spaceFactory({
           id: createSpaceId('space-1'),
           slug: 'global',
@@ -68,7 +67,7 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     });
 
     it('fetches the global space', () => {
-      expect(mockSpacesGateway.getGlobal).toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).toHaveBeenCalled();
     });
 
     it('creates command with provided data', () => {
@@ -92,7 +91,7 @@ describe('CreateCommandFromPlaybookUseCase', () => {
 
   describe('when command is created', () => {
     it('returns command id, name, and slug', async () => {
-      mockSpacesGateway.getGlobal.mockResolvedValue(
+      mockSpaceService.getDefaultSpace.mockResolvedValue(
         spaceFactory({
           id: createSpaceId('space-1'),
           slug: 'global',

@@ -4,14 +4,18 @@ import {
   ICommandPlaybookInput,
   ICreateCommandResult,
 } from '../../domain/useCases/ICreateCommandFromPlaybookUseCase';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 
 export class CreateCommandFromPlaybookUseCase implements ICreateCommandFromPlaybookUseCase {
-  constructor(private readonly gateway: IPackmindGateway) {}
+  constructor(
+    private readonly gateway: IPackmindGateway,
+    private readonly spaceService: ISpaceService,
+  ) {}
 
   async execute(
     playbook: ICommandPlaybookInput,
   ): Promise<ICreateCommandResult> {
-    const space = await this.gateway.spaces.getGlobal();
+    const space = await this.spaceService.getDefaultSpace();
 
     const command = await this.gateway.commands.create({
       spaceId: space.id,

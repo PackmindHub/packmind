@@ -18,6 +18,10 @@ export interface IPackageRepository extends IRepository<Package> {
     slugs: string[],
     organizationId: OrganizationId,
   ): Promise<PackageWithArtefacts[]>;
+  findBySlugsAndSpaceWithArtefacts(
+    slugs: string[],
+    spaceId: SpaceId,
+  ): Promise<PackageWithArtefacts[]>;
   addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
   addStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
   updatePackageDetails(

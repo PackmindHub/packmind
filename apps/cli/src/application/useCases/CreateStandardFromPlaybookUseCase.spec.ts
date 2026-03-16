@@ -1,18 +1,19 @@
 import { CreateStandardFromPlaybookUseCase } from './CreateStandardFromPlaybookUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { IStandardsGateway } from '../../domain/repositories/IStandardsGateway';
+import { ISpaceService } from '../../domain/services/ISpaceService';
+import { createMockSpaceService } from '../../mocks/createMockServices';
+import { spaceFactory } from '@packmind/spaces/test';
+import { createSpaceId } from '@packmind/types';
 
 describe('CreateStandardFromPlaybookUseCase', () => {
   let useCase: CreateStandardFromPlaybookUseCase;
-  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
+  let mockSpaceService: jest.Mocked<ISpaceService>;
   let mockStandardsGateway: jest.Mocked<IStandardsGateway>;
-  let mockGateway: jest.Mocked<Pick<IPackmindGateway, 'spaces' | 'standards'>>;
+  let mockGateway: jest.Mocked<Pick<IPackmindGateway, 'standards'>>;
 
   beforeEach(() => {
-    mockSpacesGateway = {
-      getGlobal: jest.fn(),
-    };
+    mockSpaceService = createMockSpaceService();
     mockStandardsGateway = {
       create: jest.fn(),
       getRules: jest.fn(),
@@ -20,11 +21,11 @@ describe('CreateStandardFromPlaybookUseCase', () => {
       list: jest.fn(),
     };
     mockGateway = {
-      spaces: mockSpacesGateway,
       standards: mockStandardsGateway,
     };
     useCase = new CreateStandardFromPlaybookUseCase(
       mockGateway as unknown as IPackmindGateway,
+      mockSpaceService,
     );
   });
 
@@ -34,10 +35,12 @@ describe('CreateStandardFromPlaybookUseCase', () => {
 
   describe('when executing', () => {
     it('gets the global space first', async () => {
-      mockSpacesGateway.getGlobal.mockResolvedValue({
-        id: 'space-1',
-        slug: 'global',
-      });
+      mockSpaceService.getDefaultSpace.mockResolvedValue(
+        spaceFactory({
+          id: createSpaceId('space-1'),
+          slug: 'global',
+        }),
+      );
       mockStandardsGateway.create.mockResolvedValue({
         id: 'std-1',
         name: 'Test Standard',
@@ -50,14 +53,16 @@ describe('CreateStandardFromPlaybookUseCase', () => {
         rules: [{ content: 'Rule 1' }],
       });
 
-      expect(mockSpacesGateway.getGlobal).toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).toHaveBeenCalled();
     });
 
     it('creates standard in space with rules', async () => {
-      mockSpacesGateway.getGlobal.mockResolvedValue({
-        id: 'space-1',
-        slug: 'global',
-      });
+      mockSpaceService.getDefaultSpace.mockResolvedValue(
+        spaceFactory({
+          id: createSpaceId('space-1'),
+          slug: 'global',
+        }),
+      );
       mockStandardsGateway.create.mockResolvedValue({
         id: 'std-1',
         name: 'Test Standard',
@@ -79,10 +84,12 @@ describe('CreateStandardFromPlaybookUseCase', () => {
     });
 
     it('returns standardId and name from gateway result', async () => {
-      mockSpacesGateway.getGlobal.mockResolvedValue({
-        id: 'space-1',
-        slug: 'global',
-      });
+      mockSpaceService.getDefaultSpace.mockResolvedValue(
+        spaceFactory({
+          id: createSpaceId('space-1'),
+          slug: 'global',
+        }),
+      );
       mockStandardsGateway.create.mockResolvedValue({
         id: 'std-1',
         name: 'Test Standard',
@@ -100,10 +107,12 @@ describe('CreateStandardFromPlaybookUseCase', () => {
 
     describe('when rules have no examples', () => {
       beforeEach(async () => {
-        mockSpacesGateway.getGlobal.mockResolvedValue({
-          id: 'space-1',
-          slug: 'global',
-        });
+        mockSpaceService.getDefaultSpace.mockResolvedValue(
+          spaceFactory({
+            id: createSpaceId('space-1'),
+            slug: 'global',
+          }),
+        );
         mockStandardsGateway.create.mockResolvedValue({
           id: 'std-1',
           name: 'Test',
@@ -132,10 +141,12 @@ describe('CreateStandardFromPlaybookUseCase', () => {
 
     describe('when rules have examples', () => {
       beforeEach(() => {
-        mockSpacesGateway.getGlobal.mockResolvedValue({
-          id: 'space-1',
-          slug: 'global',
-        });
+        mockSpaceService.getDefaultSpace.mockResolvedValue(
+          spaceFactory({
+            id: createSpaceId('space-1'),
+            slug: 'global',
+          }),
+        );
         mockStandardsGateway.create.mockResolvedValue({
           id: 'std-1',
           name: 'Test',

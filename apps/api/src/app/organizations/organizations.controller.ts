@@ -21,6 +21,8 @@ import {
   CodingAgent,
   isValidCodingAgent,
   ArtifactVersionEntry,
+  ISpacesPort,
+  ListUserSpacesResponse,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -32,6 +34,7 @@ import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import {
   InjectAccountsAdapter,
   InjectDeploymentAdapter,
+  InjectSpacesAdapter,
 } from '../shared/HexaInjection';
 
 const origin = 'OrganizationsController';
@@ -51,6 +54,7 @@ export class OrganizationsController {
     @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
     @InjectDeploymentAdapter()
     private readonly deploymentAdapter: IDeploymentPort,
+    @InjectSpacesAdapter() private readonly spacesAdapter: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -419,6 +423,25 @@ export class OrganizationsController {
       );
       throw error;
     }
+  }
+
+  /**
+   * List spaces for the authenticated user within an organization
+   * GET /organizations/:orgId/user-spaces
+   */
+  @Get('user-spaces')
+  async listUserSpaces(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListUserSpacesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/user-spaces - Listing user spaces',
+      { organizationId, userId },
+    );
+
+    return this.spacesAdapter.listUserSpaces({ userId, organizationId });
   }
 
   /**
