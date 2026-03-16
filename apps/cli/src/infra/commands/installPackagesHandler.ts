@@ -589,7 +589,9 @@ export async function installPackagesHandler(
 
     // Show which packmind.json is being targeted
     const relativeToCwd = path.relative(rawCwd, resolvedPath);
-    const displayPath = `./${relativeToCwd}/packmind.json`;
+    const displayPath = relativeToCwd
+      ? `./${relativeToCwd}/packmind.json`
+      : `./packmind.json`;
     log(`Installing in ${displayPath}...`);
   }
 
@@ -1179,9 +1181,11 @@ export async function recursiveInstallHandler(
       // When --path is provided, show paths relative to cwd for clarity
       const displayPath = args.path
         ? computeDisplayPath(
-            config.absoluteTargetPath.startsWith(cwd)
-              ? config.absoluteTargetPath.slice(cwd.length) || '/'
-              : config.targetPath,
+            config.absoluteTargetPath === cwd
+              ? '/'
+              : config.absoluteTargetPath.startsWith(cwd + '/')
+                ? config.absoluteTargetPath.slice(cwd.length)
+                : config.targetPath,
           )
         : computeDisplayPath(config.targetPath);
       log(`Installing in ${displayPath}...`);
