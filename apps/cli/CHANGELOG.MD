@@ -7,6 +7,8 @@
 
 ## Changed
 
+- Packages are now prefixed with the space slug (eg: `@global/my-package` instead of `my-package`) to support multi-spaces in organizations.
+
 ## Fixed
 
 ## Removed
