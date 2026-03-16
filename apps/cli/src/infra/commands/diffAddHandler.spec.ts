@@ -1,6 +1,7 @@
 import { diffAddHandler, DiffAddHandlerDependencies } from './diffAddHandler';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ChangeProposalType } from '@packmind/types';
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 
 jest.mock('../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
@@ -85,9 +86,7 @@ describe('diffAddHandler', () => {
           ),
         ),
       tryGetGitRepositoryRoot: jest.fn().mockResolvedValue(null),
-      getPackmindGateway: () => ({
-        spaces: { getDefaultSpace: mockGetDefaultSpace },
-      }),
+      getPackmindGateway: () => createMockPackmindGateway(),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
