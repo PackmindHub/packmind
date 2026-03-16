@@ -3,7 +3,7 @@ import { compilerOptions } from '../../tsconfig.base.effective.json';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   pathsToModuleNameMapper,
-  swcTransform,
+  swcTransformWithDecorators,
   standardTransformIgnorePatterns,
   standardModuleFileExtensions,
 } from '../../jest-utils';
@@ -12,7 +12,7 @@ export default {
   displayName: 'linter',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
-  transform: swcTransform,
+  transform: swcTransformWithDecorators,
   transformIgnorePatterns: standardTransformIgnorePatterns,
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/linter',
