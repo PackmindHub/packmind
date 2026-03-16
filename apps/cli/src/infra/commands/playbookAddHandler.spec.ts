@@ -1,0 +1,529 @@
+import {
+  playbookAddHandler,
+  PlaybookAddHandlerDependencies,
+} from './playbookAddHandler';
+import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
+
+jest.mock('../utils/consoleLogger', () => ({
+  logErrorConsole: jest.fn(),
+  logInfoConsole: jest.fn(),
+  logSuccessConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
+}));
+
+const VALID_COMMAND_CONTENT = '---\nname: My Command\n---\nDo something useful';
+
+const VALID_STANDARD_CONTENT = [
+  '# My Standard',
+  '',
+  'A description of the standard.',
+  '',
+  '## Rules',
+  '',
+  '* Do not use var',
+  '* Always use const',
+].join('\n');
+
+const VALID_SKILL_MD_CONTENT = [
+  '---',
+  'name: My Skill',
+  'description: A useful skill',
+  '---',
+  'This is the prompt body.',
+].join('\n');
+
+describe('playbookAddHandler', () => {
+  let mockPackmindCliHexa: PackmindCliHexa;
+  let mockExit: jest.Mock;
+  let mockGetCwd: jest.Mock;
+  let mockReadFile: jest.Mock;
+  let mockReadSkillDirectory: jest.Mock;
+  let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
+  let mockGetDeployed: jest.Mock;
+
+  beforeEach(() => {
+    mockGetDeployed = jest.fn().mockResolvedValue({
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skillFolders: [],
+      targetId: 'target-456',
+      resolvedAgents: [],
+    });
+
+    mockPackmindCliHexa = {
+      getDefaultSpace: jest.fn().mockResolvedValue({
+        id: 'space-123',
+        name: 'Global',
+        slug: 'global',
+        organizationId: 'org-1',
+      }),
+      configExists: jest
+        .fn()
+        .mockImplementation((dir: string) =>
+          Promise.resolve(dir === '/project'),
+        ),
+      readFullConfig: jest
+        .fn()
+        .mockImplementation((dir: string) =>
+          Promise.resolve(
+            dir === '/project'
+              ? { packages: { 'my-package': '*' }, agents: [] }
+              : null,
+          ),
+        ),
+      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
+      getGitRemoteUrlFromPath: jest
+        .fn()
+        .mockReturnValue('git@github.com:org/repo.git'),
+      getCurrentBranch: jest.fn().mockReturnValue('main'),
+      getPackmindGateway: () => ({
+        deployment: { getDeployed: mockGetDeployed },
+      }),
+    } as unknown as PackmindCliHexa;
+
+    mockExit = jest.fn();
+    mockGetCwd = jest.fn().mockReturnValue('/project');
+    mockReadFile = jest.fn().mockReturnValue(VALID_COMMAND_CONTENT);
+    mockReadSkillDirectory = jest.fn().mockResolvedValue([]);
+
+    mockPlaybookLocalRepository = {
+      addChange: jest.fn(),
+      removeChange: jest.fn(),
+      getChanges: jest.fn().mockReturnValue([]),
+      getChange: jest.fn().mockReturnValue(null),
+    };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function buildDeps(
+    overrides: Partial<PlaybookAddHandlerDependencies> = {},
+  ): PlaybookAddHandlerDependencies {
+    return {
+      packmindCliHexa: mockPackmindCliHexa,
+      filePath: '.claude/commands/my-command.md',
+      exit: mockExit,
+      getCwd: mockGetCwd,
+      readFile: mockReadFile,
+      readSkillDirectory: mockReadSkillDirectory,
+      playbookLocalRepository: mockPlaybookLocalRepository,
+      ...overrides,
+    };
+  }
+
+  describe('when filePath is missing', () => {
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps({ filePath: undefined }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Missing file path'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(buildDeps({ filePath: undefined }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(buildDeps({ filePath: undefined }));
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when file path is unsupported', () => {
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps({ filePath: 'src/index.ts' }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Unsupported file path'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(buildDeps({ filePath: 'src/index.ts' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(buildDeps({ filePath: 'src/index.ts' }));
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when readFile throws', () => {
+    beforeEach(() => {
+      mockReadFile.mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to read file'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when no packmind.json found', () => {
+    beforeEach(() => {
+      (mockPackmindCliHexa.configExists as jest.Mock).mockResolvedValue(false);
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('No packmind.json found'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when local content matches deployed content', () => {
+    beforeEach(() => {
+      mockGetDeployed.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: VALID_COMMAND_CONTENT,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('logs already up to date', async () => {
+      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when command content differs from deployed', () => {
+    beforeEach(() => {
+      mockGetDeployed.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: 'old content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('adds change to playbook', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          codingAgent: 'claude',
+          content: VALID_COMMAND_CONTENT,
+          spaceId: 'space-123',
+          targetId: 'target-456',
+        }),
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('logs confirmation', async () => {
+      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        expect.stringContaining('My Command'),
+      );
+    });
+  });
+
+  describe('when command has no deployed counterpart', () => {
+    it('adds change to playbook', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          codingAgent: 'claude',
+          content: VALID_COMMAND_CONTENT,
+          spaceId: 'space-123',
+          targetId: 'target-456',
+        }),
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when standard file is provided', () => {
+    beforeEach(() => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+    });
+
+    it('adds change with standard artifact type', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifactType: 'standard',
+          artifactName: 'My Standard',
+          codingAgent: 'packmind',
+          content: VALID_STANDARD_CONTENT,
+        }),
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when skill is provided', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('adds change with skill artifact type', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+        }),
+      );
+    });
+
+    it('serializes skill content as yaml with name', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+      expect(callArg.content).toContain('name: My Skill');
+    });
+
+    it('serializes skill content as yaml with description', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+      expect(callArg.content).toContain('description: A useful skill');
+    });
+
+    it('uses skill directory path for readSkillDirectory', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+        '/project/.claude/skills/my-skill',
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when skill readSkillDirectory fails', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockRejectedValue(
+        new Error('ENOENT: no such file or directory'),
+      );
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/missing/SKILL.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to read skill directory'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/missing/SKILL.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when skill parse fails', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/bad/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: 'No frontmatter here',
+          size: 19,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('logs error', async () => {
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/bad/SKILL.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to parse SKILL.md'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/bad/SKILL.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when deployed context is unavailable', () => {
+    beforeEach(() => {
+      (
+        mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+      ).mockResolvedValue(null);
+    });
+
+    it('still adds change without targetId', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '.claude/commands/my-command.md',
+          spaceId: 'space-123',
+        }),
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when addedAt is set', () => {
+    it('includes an ISO date string', async () => {
+      await playbookAddHandler(buildDeps());
+
+      const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+      expect(callArg.addedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    });
+  });
+
+  describe('when filePath is relative to cwd', () => {
+    it('normalizes filePath relative to git root', async () => {
+      (
+        mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+      ).mockResolvedValue('/project');
+
+      await playbookAddHandler(buildDeps());
+
+      const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+      expect(callArg.filePath).toBe('.claude/commands/my-command.md');
+    });
+  });
+});
