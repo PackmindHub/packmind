@@ -6,10 +6,12 @@ import {
   RunCliResult,
   readFile,
   updateFile,
+  fileExists,
 } from './helpers';
 import { Package, Space } from '@packmind/types';
+import fs from 'fs';
 
-describeWithUserSignedUp('diff command', (getContext) => {
+describeWithUserSignedUp('install command', (getContext) => {
   let gateway: IPackmindGateway;
   let apiKey: string;
   let testDir: string;
@@ -101,6 +103,113 @@ describeWithUserSignedUp('diff command', (getContext) => {
 
         expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
       });
+    });
+  });
+
+  describe('when using --path to scope install to a subdirectory', () => {
+    beforeEach(async () => {
+      fs.mkdirSync(`${testDir}/apps/frontend`, { recursive: true });
+
+      installResult = await runCli(`install ${pkg.slug} --path apps/frontend`, {
+        apiKey,
+        cwd: testDir,
+      });
+    });
+
+    it('succeeds', () => {
+      expect(installResult.returnCode).toBe(0);
+    });
+
+    it('creates packmind.json in the target directory with normalized slug', () => {
+      const packmindJson = readFile('apps/frontend/packmind.json', testDir);
+
+      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+    });
+
+    it('does not create packmind.json at the root', () => {
+      expect(fileExists('packmind.json', testDir)).toBe(false);
+    });
+  });
+
+  describe('when installing recursively across multiple directories', () => {
+    beforeEach(async () => {
+      // Create packmind.json at root and in a subdirectory
+      updateFile(
+        'packmind.json',
+        JSON.stringify({ packages: { [pkg.slug]: '*' } }),
+        testDir,
+      );
+      fs.mkdirSync(`${testDir}/apps/sub`, { recursive: true });
+      updateFile(
+        'apps/sub/packmind.json',
+        JSON.stringify({ packages: { [pkg.slug]: '*' } }),
+        testDir,
+      );
+
+      installResult = await runCli(`install`, {
+        apiKey,
+        cwd: testDir,
+      });
+    });
+
+    it('succeeds', () => {
+      expect(installResult.returnCode).toBe(0);
+    });
+
+    it('normalizes slugs in root packmind.json', () => {
+      const packmindJson = readFile('packmind.json', testDir);
+
+      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+    });
+
+    it('normalizes slugs in subdirectory packmind.json', () => {
+      const packmindJson = readFile('apps/sub/packmind.json', testDir);
+
+      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+    });
+  });
+
+  describe('when using --path to scope recursive install to a subtree', () => {
+    beforeEach(async () => {
+      // Create packmind.json at root and in a subdirectory
+      updateFile(
+        'packmind.json',
+        JSON.stringify({ packages: { [pkg.slug]: '*' } }),
+        testDir,
+      );
+      fs.mkdirSync(`${testDir}/apps/backend`, { recursive: true });
+      updateFile(
+        'apps/backend/packmind.json',
+        JSON.stringify({ packages: { [pkg.slug]: '*' } }),
+        testDir,
+      );
+
+      installResult = await runCli(`install --path apps/backend`, {
+        apiKey,
+        cwd: testDir,
+      });
+    });
+
+    it('succeeds', () => {
+      expect(installResult.returnCode).toBe(0);
+    });
+
+    it('normalizes slugs in the target subdirectory', () => {
+      const packmindJson = readFile('apps/backend/packmind.json', testDir);
+
+      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+    });
+
+    it('does not normalize the root packmind.json', () => {
+      const packmindJson = readFile('packmind.json', testDir);
+
+      expect(packmindJson).not.toContain(`@${space.slug}/${pkg.slug}`);
+    });
+
+    it('preserves the original slug in the root packmind.json', () => {
+      const packmindJson = readFile('packmind.json', testDir);
+
+      expect(packmindJson).toContain(pkg.slug);
     });
   });
 });

@@ -2,6 +2,9 @@
 
 ## Added
 
+- CLI `install` command is now recursive by default (no `-r` flag needed); the `-r`/`--recursive` flag is deprecated with a warning
+- CLI `install` command now supports `--path <dir>` to scope recursive install to a specific directory
+
 ## Changed
 
 ## Fixed
