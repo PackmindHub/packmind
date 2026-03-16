@@ -618,7 +618,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
       // Generate lock file
       const lockFile = this.lockFileService.buildLockFile({
-        fileModifications: baseFileUpdates.createOrUpdate,
+        fileModifications: baseFileUpdates.createOrUpdate.filter(
+          (f) => f.artifactType && f.artifactId,
+        ),
         recipeVersions: installedRecipeVersions,
         standardVersions: installedStandardVersions,
         skillVersions: installedSkillVersions,
