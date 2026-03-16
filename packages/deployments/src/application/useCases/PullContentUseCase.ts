@@ -621,7 +621,9 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         : { artifactSpaceIds: {}, artifactPackageIds: {} };
 
       const lockFile = this.lockFileService.buildLockFile({
-        fileModifications: mergedFileUpdates.createOrUpdate,
+        fileModifications: mergedFileUpdates.createOrUpdate.filter(
+          (f) => f.artifactType && f.artifactId,
+        ),
         recipeVersions,
         standardVersions,
         skillVersions,
