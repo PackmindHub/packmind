@@ -31,14 +31,14 @@ The workflow follows a three-stage pipeline:
 
 ## Supported Sources
 
-| Source                       | What is mined                              | MCP Server                                                                               |
-| ---------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| **GitHub PR Comments**       | Review comments from merged pull requests  | [GitHub MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/github)       |
-| **Slack Conversations**      | Channel discussions and threaded messages  | [Slack MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/slack)         |
-| **Jira Issues**              | Resolved issues and their comments         | [Jira MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/atlassian)      |
-| **GitLab MR Comments**       | Review comments from merged merge requests | [GitLab MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/gitlab)       |
-| **Confluence Documentation** | Pages and spaces                           | [Atlassian MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/atlassian) |
-| **Notion Documentation**     | Pages and databases                        | [Notion MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/notion)       |
+| Source                       | What is mined                              |
+| ---------------------------- | ------------------------------------------ |
+| **GitHub PR Comments**       | Review comments from merged pull requests  |
+| **Slack Conversations**      | Channel discussions and threaded messages  |
+| **Jira Issues**              | Resolved issues and their comments         |
+| **GitLab MR Comments**       | Review comments from merged merge requests |
+| **Confluence Documentation** | Pages and spaces                           |
+| **Notion Documentation**     | Pages and databases                        |
 
 <Tip>
   These are example use cases. Any tool that exposes an MCP server can be used
@@ -47,17 +47,17 @@ The workflow follows a three-stage pipeline:
 
 ## Example Skills Repository
 
-The [demo-use-case-skills](https://github.com/PackmindHub/demo-use-case-skills) repository contains ready-to-use source skills for all six integrations listed above. Inside you will find:
+The [demo-use-case-skills](https://github.com/PackmindHub/demo-use-case-skills) repository is a **public showcase** of example source skills. None of these skills are built into or available within the Packmind app — they are provided as open-source examples that teams can use as-is, adapt to their needs, or draw inspiration from when building their own. Inside you will find:
 
 - **Source skills** for each integration — one skill per external source, each handling data fetching, noise filtering, and relevance classification.
 - **Shared skills** — `packmind-update-playbook` (creates change proposals from findings) and `packmind-cli-list-commands` (prevents duplicate artifacts).
 - **CI workflow examples** — GitHub Actions configurations for running source skills on a schedule, so your playbook is updated automatically without manual intervention.
 
-Each integration folder includes its own README with setup instructions, MCP server configuration, and usage examples. Head to the repository to get started.
+Each integration folder includes its own README with setup instructions, MCP server configuration, and usage examples.
 
 ## Adding Custom Sources
 
-The architecture is extensible by design. To add a new external source, create a skill that fetches data from the source's MCP server, classifies findings for playbook relevance, and hands them off to `packmind-update-playbook`. Any tool with an MCP server can become a source — monitoring tools, design systems, internal APIs, and more.
+The architecture is extensible by design. The [example skills repository](https://github.com/PackmindHub/demo-use-case-skills) demonstrates how to build source skills, and you can follow the same pattern to create your own. To add a new external source, create a skill that fetches data from the source's MCP server, classifies findings for playbook relevance, and hands them off to `packmind-update-playbook`. Any tool with an MCP server can become a source — monitoring tools, design systems, internal APIs, and more.
 
 ## Learn More
 
