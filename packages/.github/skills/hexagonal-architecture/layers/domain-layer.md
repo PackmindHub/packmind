@@ -11,7 +11,10 @@ The domain layer contains pure business logic with **zero framework dependencies
 domain/
 ├── entities/              # Domain entities, value objects
 ├── repositories/          # Repository port interfaces (not implementations)
-└── jobs/                  # Delayed job type definitions
+├── jobs/                  # Delayed job type definitions
+├── errors/                # Domain-specific error classes
+├── utils/                 # Domain-specific utility functions
+└── types/                 # Domain-specific type definitions
 ```
 
 ## Entities

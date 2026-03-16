@@ -34,7 +34,7 @@ The full payload at runtime will be: `StandardCreatedPayload & UserEventPayload`
 
 ### SystemEvent
 
-For background processes — `organizationId` required, `userId` optional:
+Available for background processes — `organizationId` optional, no `userId`. **Prefer `UserEvent`** for most events; `SystemEvent` is available but rarely needed:
 
 ```typescript
 import { SystemEvent, SystemEventPayload } from './base';
@@ -73,6 +73,6 @@ See [listener.md](listener.md) for the listener pattern.
 
 - **Event naming** — `{Entity}{Past tense verb}Event` (e.g., `StandardCreatedEvent`, `RuleDeletedEvent`)
 - **Static `eventName`** — dot-separated string: `{entity}.{action}` (e.g., `standard.created`)
-- **UserEvent vs SystemEvent** — use `UserEvent` when a user triggered it, `SystemEvent` for background/automated
+- **Prefer `UserEvent`** — use `UserEvent` for all user-triggered events (the most common case). `SystemEvent` is available for background/automated processes but is rarely needed
 - **Payload is a plain type** — no classes, just type aliases
 - **Events are fire-and-forget** — emitters don't wait for listener results

@@ -14,7 +14,10 @@ packages/{domain}/src/
 ├── domain/                          # Pure business logic, zero dependencies
 │   ├── entities/                    # Domain entities and value objects
 │   ├── repositories/                # Repository interfaces (ports)
-│   └── jobs/                        # Delayed job definitions
+│   ├── jobs/                        # Delayed job definitions
+│   ├── errors/                      # Domain-specific error classes
+│   ├── utils/                       # Domain-specific utility functions
+│   └── types/                       # Domain-specific type definitions
 │
 ├── application/                     # Orchestration & coordination
 │   ├── useCases/{name}/             # One folder per use case
@@ -22,12 +25,12 @@ packages/{domain}/src/
 │   ├── services/                    # Domain services + service aggregator
 │   ├── adapter/                     # Outbound adapter (implements port)
 │   ├── listeners/                   # Domain event listeners
-│   └── jobs/                        # Job factories
+│   └── jobs/                        # Delayed job implementations
 │
 ├── infra/                           # Concrete implementations
 │   ├── repositories/                # Repository implementations (TypeORM)
 │   ├── schemas/                     # TypeORM EntitySchema definitions
-│   └── jobs/                        # Job queue implementations
+│   └── jobs/                        # Job factories
 │
 └── index.ts                         # Package exports + {Domain}Hexa facade
 ```

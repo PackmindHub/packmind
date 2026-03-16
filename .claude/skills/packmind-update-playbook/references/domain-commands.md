@@ -7,7 +7,7 @@ Scan existing commands, identify which are relevant to the user's validated inte
 Commands are reusable multi-step workflows distributed to AI coding agents. Each command has a name, summary, "when to use" list, context validation checkpoints, and numbered steps. Source files live in `**/.packmind/commands/<slug>.md`. Installed copies also exist in agent directories:
 - Claude Code: `**/.claude/commands/`
 - Cursor: `**/.cursor/commands/`
-- GitHub Copilot: `**/.github/prompts/`
+- GitHub Copilot: `**/.github/prompt/`
 Search the project root and all subdirectories.
 
 ## Instructions
@@ -22,12 +22,7 @@ For each command in the list, ask: **Does the user's intent involve updating thi
 
 Relevant means: the intent explicitly targets this command, describes changes to its workflow steps, or references issues with its current behavior. Match by workflow topic using slug and name — no deep reading yet.
 
-New commands may be proposed when ALL of the following are true:
-- The intent explicitly describes a new multi-step workflow
-- No existing command overlaps with the proposed workflow
-- The workflow would be reused across sessions (not a one-off task)
-
-Apply a HIGH BAR — most intents should result in updates to existing commands, not new ones.
+Do NOT propose new commands — command creation is a deliberate, user-driven process.
 
 ### Step 3: Deep Analyze Flagged Commands
 
@@ -45,20 +40,10 @@ Apply a HIGH BAR — only propose updates when there is strong evidence:
 
 Do NOT propose updates for minor wording or changes not supported by the user's intent.
 
-For each new command that passes validation, follow the procedure in [create-command-procedure.md](create-command-procedure.md) to write the command file.
-
 ## Output Format
 
 ```markdown
 ## Commands Change Report
-
-### New Commands
-(If none: "No new commands needed.")
-
-#### Command Name (`<slug>`)
-- **Reason**: why this command is needed
-- **When to use**: trigger scenarios
-- **Key steps**: overview of the workflow
 
 ### Command Updates
 (If none: "No updates needed.")
