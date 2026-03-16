@@ -1,5 +1,13 @@
-import { ReactNode, useCallback } from 'react';
-import { PMBadge, PMHStack, PMSeparator, PMText, PMVStack } from '@packmind/ui';
+import { ReactNode, useCallback, useState } from 'react';
+import {
+  PMBadge,
+  PMHStack,
+  PMInput,
+  PMSeparator,
+  PMText,
+  PMTextArea,
+  PMVStack,
+} from '@packmind/ui';
 import { LuFolder, LuGitBranch, LuPackage } from 'react-icons/lu';
 import {
   ChangeProposalDecision,
@@ -7,6 +15,7 @@ import {
   PackageId,
   RemoveArtefactDecision,
   RemoveArtefactPayload,
+  ScalarUpdatePayload,
   SpaceId,
   TargetId,
 } from '@packmind/types';
@@ -14,6 +23,10 @@ import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { extractProposalDiffValues } from '../../utils/extractProposalDiffValues';
 import { isMarkdownContent } from '../../utils/isMarkdownContent';
+import {
+  isEditableProposalType,
+  isSingleLineProposalType,
+} from '../../utils/editableProposalTypes';
 import { ProposalMessage } from './ProposalMessage';
 import { CardToolbar } from './CardToolbar';
 import { FocusedView } from './FocusedView';
@@ -169,6 +182,12 @@ export function ChangeProposalCardBody({
     proposal.type === ChangeProposalType.removeCommand ||
     proposal.type === ChangeProposalType.removeSkill;
 
+  const editable = isEditableProposalType(proposal.type);
+  const singleLine = isSingleLineProposalType(proposal.type);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedValue, setEditedValue] = useState(newValue);
+  const isEditValid = editedValue.trim().length > 0;
+
   const handleAccept = useCallback(
     (decision?: ChangeProposalDecision) => {
       const finalDecision =
@@ -183,6 +202,29 @@ export function ChangeProposalCardBody({
     [isRemoveType, proposal.payload, onAccept],
   );
 
+  const handleEditToggle = useCallback(() => {
+    setEditedValue(newValue);
+    setIsEditing(true);
+    onEdit();
+  }, [newValue, onEdit]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditedValue(newValue);
+    setIsEditing(false);
+  }, [newValue]);
+
+  const handleAcceptEdit = useCallback(() => {
+    const scalarPayload = proposal.payload as ScalarUpdatePayload;
+    const editDecision: ScalarUpdatePayload = {
+      oldValue: scalarPayload.oldValue,
+      newValue: editedValue,
+    };
+    setIsEditing(false);
+    onAccept(editDecision as ChangeProposalDecision);
+  }, [proposal.payload, editedValue, onAccept]);
+
+  const resolvedShowEditButton = showEditButton ?? editable;
+
   return (
     <PMVStack gap={0} alignItems="stretch">
       {showToolbar && (
@@ -196,13 +238,17 @@ export function ChangeProposalCardBody({
               spaceId={proposal.spaceId}
               isOutdated={isOutdated}
               isBlockedByConflict={isBlockedByConflict}
+              isEditing={isEditing}
+              isEditValid={isEditValid}
               viewMode={viewMode}
-              showEditButton={showEditButton}
+              showEditButton={resolvedShowEditButton}
               onViewModeChange={onViewModeChange}
-              onEdit={onEdit}
+              onEdit={handleEditToggle}
               onAccept={handleAccept}
               onDismiss={onDismiss}
               onUndo={onUndo}
+              onCancelEdit={handleCancelEdit}
+              onAcceptEdit={handleAcceptEdit}
             />
           </PMVStack>
         </>
@@ -219,7 +265,24 @@ export function ChangeProposalCardBody({
 
       <PMSeparator borderColor="border.tertiary" />
       <PMVStack p={4} alignItems="stretch">
-        {isRemoveType ? (
+        {isEditing ? (
+          singleLine ? (
+            <PMInput
+              value={editedValue}
+              onChange={(e) => setEditedValue(e.target.value)}
+              size="sm"
+              autoFocus
+            />
+          ) : (
+            <PMTextArea
+              value={editedValue}
+              onChange={(e) => setEditedValue(e.target.value)}
+              size="sm"
+              rows={10}
+              autoFocus
+            />
+          )
+        ) : isRemoveType ? (
           <RemoveProposalContent
             spaceId={proposal.spaceId}
             targetId={proposal.targetId}
