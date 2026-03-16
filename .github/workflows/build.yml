@@ -284,13 +284,16 @@ jobs:
           retention-days: 30
 
   cli-e2e-tests:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     env:
       PACKMIND_INSTANCE_URL: http://localhost:4200
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
+        runner:
+          - ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+          - depot-windows-2025-4
 
     steps:
       - uses: actions/checkout@v4
@@ -308,9 +311,10 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
 
-      - run: ./node_modules/.bin/nx run packmind-cli:build
+      - run: npx nx run packmind-cli:build
 
       - name: Fix CLI artifacts permissions
+        if: runner.os != 'Windows'
         run: |
           chmod +x dist/apps/cli/main.cjs || true
           chmod -R +r dist/apps/cli/
@@ -339,6 +343,7 @@ jobs:
           APP_WEB_URL: ${{ env.PACKMIND_INSTANCE_URL }}
 
       - name: Wait for services to be ready
+        shell: bash
         env:
           COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
           PACKMIND_INSTANCE_URL: ${{ env.PACKMIND_INSTANCE_URL }}
@@ -350,10 +355,11 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384'
-        run: ./node_modules/.bin/nx test cli-e2e-tests
+        run: npx nx test cli-e2e-tests
 
       - name: Collect Docker container logs
         if: always()
+        shell: bash
         env:
           COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
         run: |
@@ -371,12 +377,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-cli-e2e-${{ github.run_number }}-${{ github.sha }}
+          name: docker-logs-cli-e2e-${{ github.run_number }}-${{ matrix.runner }}-${{ github.sha }}
           path: docker-logs-cli-e2e/
           if-no-files-found: ignore
 
       - name: Cleanup Docker containers
         if: always()
+        shell: bash
         env:
           COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
         run: docker compose down -v --remove-orphans
