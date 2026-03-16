@@ -23,7 +23,10 @@ export const createStandardCommand = command({
       const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
       const hexa = new PackmindCliHexa(packmindLogger);
       const gateway = hexa.getPackmindGateway();
-      const useCase = new CreateStandardFromPlaybookUseCase(gateway);
+      const useCase = new CreateStandardFromPlaybookUseCase(
+        gateway,
+        hexa.getSpaceService(),
+      );
 
       const result = await createStandardHandler(file, useCase, originSkill);
 

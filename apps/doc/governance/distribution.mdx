@@ -10,20 +10,7 @@ The distribution will commit instructions files that will be used by AI Agents (
 
 Packmind supports multiple AI coding assistants. Organization administrators can choose which agents to enable in **Settings** → **Distribution** → **Rendering**. See [Manage AI Agent Rendering](/administration/manage-ai-agents) for details.
 
-Here is an overview of the supported agents:
-
-| AI Agent           | What It Does                     | File Location                     |
-| ------------------ | -------------------------------- | --------------------------------- |
-| **Packmind**       | Internal renderer (required)     | `.packmind/`                      |
-| **AGENTS.md**      | Updates instructions file        | `AGENTS.md`                       |
-| **GitHub Copilot** | Updates instructions file        | `.github/copilot-instructions.md` |
-| **Cursor**         | Creates rules in YAML format     | `.cursor/rules/`                  |
-| **Claude Code**    | Updates instructions file        | `CLAUDE.md`                       |
-| **Junie**          | Updates guidelines file          | `.junie/guidelines.md`            |
-| **Gitlab Duo**     | Updates chat rules file          | `.gitlab/duo/chat-rules.md`       |
-| **Continue**       | Creates rules in Markdown format | `.continue/rules/packmind/`       |
-
-When you distribute standards, commands, or skills, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
+For a detailed breakdown of where standards, commands, and skills appear for each AI assistant, see [Understanding Where Your Artifacts Appear](/concepts/artifact-rendering).
 
 <Note>
   **Default skills included** — All distributions automatically include
@@ -31,8 +18,6 @@ When you distribute standards, commands, or skills, only the enabled agents will
   skills with AI assistance). These are added alongside your package contents
   regardless of which distribution method you use.
 </Note>
-
-For detailed information about where your artifacts appear and how to use them with each AI assistant, see [Understanding Where Your Artifacts Appear](/concepts/artifact-rendering).
 
 <Tip>
   **Need support for a new AI agent?** You can create an issue in our

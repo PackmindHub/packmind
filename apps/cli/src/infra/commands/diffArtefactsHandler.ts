@@ -1,10 +1,11 @@
+import * as nodePath from 'path';
+import * as fs from 'fs/promises';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   ArtifactType,
   CHANGE_PROPOSAL_TYPE_LABELS,
   ChangeProposalPayload,
   ChangeProposalType,
-  CodingAgent,
 } from '@packmind/types';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import { CheckDiffItemResult } from '../../domain/useCases/ICheckDiffsUseCase';
@@ -26,14 +27,19 @@ export type DiffHandlerDependencies = {
   exit: (code: number) => void;
   getCwd: () => string;
   log: typeof console.log;
-  error: typeof console.error;
   submit?: boolean;
   includeSubmitted?: boolean;
   message?: string;
+  path?: string;
 };
 
 export type DiffHandlerResult = {
   diffsFound: number;
+};
+
+type TargetDiffResult = {
+  targetRelativePath: string;
+  diffs: ArtefactDiff[];
 };
 
 const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
@@ -154,72 +160,59 @@ function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
   return `${proposalCount} ${proposalWord} ignored, run \`packmind-cli diff --include-submitted\` to see what's waiting for validation`;
 }
 
-async function readConfigAndPackages(deps: DiffHandlerDependencies): Promise<{
-  configPackages: string[];
-  configAgents: CodingAgent[] | undefined;
-} | null> {
-  const { packmindCliHexa, exit, getCwd, log, error } = deps;
-  const cwd = getCwd();
+/**
+ * Finds all target directories under searchPath that contain packmind.json.
+ * Checks searchPath itself first, then looks for descendants.
+ */
+async function findTargetDirectories(
+  searchPath: string,
+  packmindCliHexa: PackmindCliHexa,
+): Promise<string[]> {
+  const targets: string[] = [];
 
-  let configPackages: string[];
-  let configAgents: CodingAgent[] | undefined;
-  try {
-    const fullConfig = await packmindCliHexa.readFullConfig(cwd);
-    if (fullConfig) {
-      configPackages = Object.keys(fullConfig.packages);
-      configAgents = fullConfig.agents;
-    } else {
-      configPackages = [];
-    }
-  } catch (err) {
-    error('ERROR Failed to parse packmind.json');
-    if (err instanceof Error) {
-      error(`ERROR ${err.message}`);
-    } else {
-      error(`ERROR ${String(err)}`);
-    }
-    error('\n💡 Please fix the packmind.json file or delete it to continue.');
-    exit(1);
-    return null;
+  // Check searchPath itself (existence check only, no JSON parsing)
+  const exists = await packmindCliHexa.configExists(searchPath);
+  if (exists) {
+    targets.push(searchPath);
   }
 
-  if (configPackages.length === 0) {
-    log('Usage: packmind-cli diff');
-    log('');
-    log('Compare local command files against the server.');
-    log('Configure packages in packmind.json first.');
-    exit(0);
-    return null;
+  // Find descendant targets
+  const descendants = await packmindCliHexa.findDescendantConfigs(searchPath);
+  for (const dir of descendants) {
+    if (!targets.includes(dir)) {
+      targets.push(dir);
+    }
   }
 
-  return { configPackages, configAgents };
+  return targets;
+}
+
+/**
+ * Computes the relative path of targetAbsDir with respect to gitRoot,
+ * formatted as /path/to/dir/ (with leading and trailing slashes).
+ */
+function computeRelativePath(targetAbsDir: string, gitRoot: string): string {
+  const rel = nodePath.relative(gitRoot, targetAbsDir);
+  if (rel.startsWith('..')) return '/';
+  return rel ? `/${rel}/` : '/';
 }
 
 async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
   gitRemoteUrl: string;
   gitBranch: string;
-  relativePath: string;
+  gitRoot: string;
 } | null> {
-  const { packmindCliHexa, exit, getCwd, error } = deps;
+  const { packmindCliHexa, exit, getCwd } = deps;
   const cwd = getCwd();
 
   let gitRemoteUrl: string | undefined;
   let gitBranch: string | undefined;
-  let relativePath: string | undefined;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
   if (gitRoot) {
     try {
       gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
       gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
-
-      relativePath = cwd.startsWith(gitRoot) ? cwd.slice(gitRoot.length) : '/';
-      if (!relativePath.startsWith('/')) {
-        relativePath = '/' + relativePath;
-      }
-      if (!relativePath.endsWith('/')) {
-        relativePath = relativePath + '/';
-      }
     } catch (err) {
       logWarningConsole(
         `Failed to collect git info: ${err instanceof Error ? err.message : String(err)}`,
@@ -227,15 +220,15 @@ async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
     }
   }
 
-  if (!gitRemoteUrl || !gitBranch || !relativePath) {
-    error(
-      '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+  if (!gitRemoteUrl || !gitBranch || !gitRoot) {
+    logErrorConsole(
+      'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
     );
     exit(1);
     return null;
   }
 
-  return { gitRemoteUrl, gitBranch, relativePath };
+  return { gitRemoteUrl, gitBranch, gitRoot };
 }
 
 async function handleSubmission(params: {
@@ -360,6 +353,7 @@ function extractUniqueAndSortedArtefacts(groups: Map<string, ArtefactDiff[]>) {
 
 function displayDiffs(params: {
   diffsToDisplay: ArtefactDiff[];
+  displayPathMap: Map<ArtefactDiff, string>;
   submittedLookup: Map<ArtefactDiff, CheckDiffItemResult>;
   includeSubmitted: boolean | undefined;
   unsubmittedItems: CheckDiffItemResult[];
@@ -368,6 +362,7 @@ function displayDiffs(params: {
 }): number {
   const {
     diffsToDisplay,
+    displayPathMap,
     submittedLookup,
     includeSubmitted,
     unsubmittedItems,
@@ -386,7 +381,7 @@ function displayDiffs(params: {
     const subGroups = subGroupByChangeContent(groupDiffs);
     for (const subGroup of subGroups) {
       for (const diff of subGroup) {
-        log(`  ${formatFilePath(diff.filePath)}`);
+        log(`  ${formatFilePath(displayPathMap.get(diff) ?? diff.filePath)}`);
       }
       const label =
         CHANGE_PROPOSAL_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
@@ -449,42 +444,125 @@ export async function diffArtefactsHandler(
     exit,
     getCwd,
     log,
-    error,
     submit,
     includeSubmitted,
     message: messageFlag,
   } = deps;
   const cwd = getCwd();
 
-  const config = await readConfigAndPackages(deps);
-  if (!config) {
+  // Compute search path (--path / -p flag)
+  const searchPath = nodePath.resolve(cwd, deps.path ?? '.');
+
+  // Validate that the specified path exists
+  if (deps.path !== undefined) {
+    try {
+      await fs.stat(searchPath);
+    } catch {
+      logErrorConsole(`Path does not exist: ${searchPath}`);
+      exit(1);
+      return { diffsFound: 0 };
+    }
+  }
+
+  // Find all target directories under searchPath
+  let targetDirs: string[];
+  try {
+    targetDirs = await findTargetDirectories(searchPath, packmindCliHexa);
+  } catch (err) {
+    logErrorConsole(
+      `Failed to discover target directories: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    exit(1);
     return { diffsFound: 0 };
   }
-  const { configPackages, configAgents } = config;
+
+  if (targetDirs.length === 0) {
+    // Rule 4: distinguish "not in a project" from "no targets under this path"
+    const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
+      cwd,
+      null,
+    );
+    if (!hierarchicalConfig.hasConfigs) {
+      logErrorConsole(
+        'Not inside a Packmind project. No packmind.json found in the current directory or any parent directory.',
+      );
+      exit(1);
+    } else {
+      log('No Packmind targets found under the current directory.');
+      exit(0);
+    }
+    return { diffsFound: 0 };
+  }
 
   try {
     const gitInfo = await collectGitInfo(deps);
     if (!gitInfo) {
       return { diffsFound: 0 };
     }
-    const { gitRemoteUrl, gitBranch, relativePath } = gitInfo;
+    const { gitRemoteUrl, gitBranch, gitRoot } = gitInfo;
 
-    const packageCount = configPackages.length;
-    const packageWord = packageCount === 1 ? 'package' : 'packages';
-    logInfoConsole(
-      `Comparing ${packageCount} ${packageWord}: ${configPackages.join(', ')}...`,
-    );
+    // Process each target and collect diffs
+    const targetResults: TargetDiffResult[] = [];
 
-    const diffs = await packmindCliHexa.diffArtefacts({
-      baseDirectory: cwd,
-      packagesSlugs: configPackages,
-      gitRemoteUrl,
-      gitBranch,
-      relativePath,
-      agents: configAgents,
-    });
+    for (const targetDir of targetDirs) {
+      const config = await packmindCliHexa.readFullConfig(targetDir);
+      if (!config) continue;
 
-    if (diffs.length === 0) {
+      const configPackages = Object.keys(config.packages);
+      if (configPackages.length === 0) continue;
+
+      const relativePath = computeRelativePath(targetDir, gitRoot);
+      const targetRelativePath = nodePath.relative(cwd, targetDir);
+
+      if (targetDirs.length > 1) {
+        log('');
+        logInfoConsole(`Target: ${targetRelativePath}`);
+      }
+
+      const packageCount = configPackages.length;
+      const packageWord = packageCount === 1 ? 'package' : 'packages';
+      logInfoConsole(
+        `Comparing ${packageCount} ${packageWord}: ${configPackages.join(', ')}...`,
+      );
+
+      const diffs = await packmindCliHexa.diffArtefacts({
+        baseDirectory: targetDir,
+        packagesSlugs: configPackages,
+        gitRemoteUrl,
+        gitBranch,
+        relativePath,
+        agents: config.agents,
+      });
+
+      targetResults.push({ targetRelativePath, diffs });
+    }
+
+    // Handle case where all targets had no packages configured
+    if (targetResults.length === 0) {
+      log('No packages configured in any target.');
+      exit(0);
+      return { diffsFound: 0 };
+    }
+
+    // Build display path map: prefix each diff's file path with the target's
+    // path relative to cwd, so displayed paths are always relative to where
+    // the command was run.
+    const displayPathMap = new Map<ArtefactDiff, string>();
+    for (const { targetRelativePath, diffs } of targetResults) {
+      for (const diff of diffs) {
+        displayPathMap.set(
+          diff,
+          targetRelativePath
+            ? `${targetRelativePath}/${diff.filePath}`
+            : diff.filePath,
+        );
+      }
+    }
+
+    // Merge all diffs
+    const allDiffs = targetResults.flatMap((r) => r.diffs);
+
+    if (allDiffs.length === 0) {
       log('No changes found.');
       if (submit) {
         logInfoConsole('No changes to submit.');
@@ -494,7 +572,7 @@ export async function diffArtefactsHandler(
     }
 
     // Check which diffs have already been submitted
-    const allGroupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
+    const allGroupedDiffs = Array.from(groupDiffsByArtefact(allDiffs).values());
     const checkResult = await packmindCliHexa.checkDiffs(allGroupedDiffs);
 
     const submittedItems = checkResult.results.filter((r) => r.exists);
@@ -502,7 +580,7 @@ export async function diffArtefactsHandler(
 
     // Determine which diffs to display
     const diffsToDisplay = includeSubmitted
-      ? diffs
+      ? allDiffs
       : unsubmittedItems.map((r) => r.diff);
 
     // Build a lookup for submitted status (used with --include-submitted)
@@ -525,6 +603,7 @@ export async function diffArtefactsHandler(
 
     const changeCount = displayDiffs({
       diffsToDisplay,
+      displayPathMap,
       submittedLookup,
       includeSubmitted,
       unsubmittedItems,
@@ -547,11 +626,10 @@ export async function diffArtefactsHandler(
     exit(0);
     return { diffsFound: changeCount };
   } catch (err) {
-    error('\n❌ Failed to diff:');
     if (err instanceof Error) {
-      error(`   ${err.message}`);
+      logErrorConsole(err.message);
     } else {
-      error(`   ${String(err)}`);
+      logErrorConsole(String(err));
     }
     exit(1);
     return { diffsFound: 0 };

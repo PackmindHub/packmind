@@ -20,6 +20,7 @@ import {
 } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
+import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
 
 type SkillFile = {
   path: string;
@@ -162,23 +163,36 @@ export async function diffAddHandler(
     return;
   }
 
-  const space = await packmindCliHexa.getPackmindGateway().spaces.getGlobal();
+  const space = await packmindCliHexa.getDefaultSpace();
+
+  // Infer target directory from the file path (walk up to nearest packmind.json)
+  const fileDir =
+    artefactResult.artifactType === 'skill'
+      ? absolutePath.endsWith('SKILL.md')
+        ? path.dirname(path.dirname(absolutePath))
+        : path.dirname(absolutePath)
+      : path.dirname(absolutePath);
+
+  const targetDir = await findNearestConfigDir(fileDir, packmindCliHexa);
+  if (!targetDir) {
+    logErrorConsole(
+      'Not inside a Packmind project. No packmind.json found in any parent directory.',
+    );
+    exit(1);
+    return;
+  }
 
   // Try to resolve targetId from git context (best-effort, non-blocking)
   let targetId: TargetId | undefined;
   try {
-    const cwd = getCwd();
-    const fullConfig = await packmindCliHexa.readFullConfig(cwd);
+    const fullConfig = await packmindCliHexa.readFullConfig(targetDir);
     const configPackages = fullConfig ? Object.keys(fullConfig.packages) : [];
-    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
     if (gitRoot && configPackages.length > 0) {
       const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
       const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
-      let relativePath = cwd.startsWith(gitRoot)
-        ? cwd.slice(gitRoot.length)
-        : '/';
-      if (!relativePath.startsWith('/')) relativePath = '/' + relativePath;
-      if (!relativePath.endsWith('/')) relativePath = relativePath + '/';
+      const rel = path.relative(gitRoot, targetDir);
+      const relativePath = rel.startsWith('..') ? '/' : rel ? `/${rel}/` : '/';
       const deployedContent = await packmindCliHexa
         .getPackmindGateway()
         .deployment.getDeployed({

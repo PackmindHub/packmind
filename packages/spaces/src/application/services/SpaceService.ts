@@ -26,6 +26,7 @@ export class SpaceService {
   async createSpace(
     name: string,
     organizationId: OrganizationId,
+    isDefaultSpace = true,
   ): Promise<Space> {
     this.logger.info('Creating space', { name, organizationId });
 
@@ -46,6 +47,7 @@ export class SpaceService {
         slug: baseSlug,
         type: SpaceType.open,
         organizationId,
+        isDefaultSpace,
       };
 
       const createdSpace = await this.spaceRepository.add(space);

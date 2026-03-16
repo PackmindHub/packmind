@@ -7,7 +7,6 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@packmind/linter-ast": "*",
-    "@packmind/logger": "*",
-    "tslib": "^2.3.0"
+    "@packmind/logger": "*"
   }
 }

@@ -23,6 +23,11 @@ import {
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
+import {
+  CHANGE_PROPOSALS_QUERY_SCOPE,
+  GET_GROUPED_CHANGE_PROPOSALS_KEY,
+} from '../../../change-proposals/api/queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 
 export const getStandardsBySpaceQueryOptions = (
@@ -337,6 +342,15 @@ export const useDeleteStandardMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_PACKAGE_BY_ID_KEY,
       });
+
+      // Proposals on the deleted standard are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
+      });
     },
     onError: async (error, variables, context) => {
       console.error('Error deleting standard');
@@ -425,6 +439,15 @@ export const useDeleteStandardsBatchMutation = () => {
       // Also invalidate individual package detail queries
       await queryClient.invalidateQueries({
         queryKey: GET_PACKAGE_BY_ID_KEY,
+      });
+
+      // Proposals on the deleted standards are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
       });
     },
     onError: async (error, variables, context) => {

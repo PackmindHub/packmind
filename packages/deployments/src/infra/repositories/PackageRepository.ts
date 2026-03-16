@@ -316,8 +316,6 @@ export class PackageRepository
     });
 
     try {
-      // Find packages by slugs within spaces of the organization
-      // First get space IDs for the organization using repository
       const spaces = await this.repository.manager
         .getRepository(SpaceSchema)
         .find({
@@ -331,7 +329,6 @@ export class PackageRepository
         return [];
       }
 
-      // Then find packages by slugs within those spaces
       const packages = await this.repository.find({
         where: {
           slug: In(slugs),
@@ -339,143 +336,14 @@ export class PackageRepository
         },
       });
 
-      if (packages.length === 0) {
-        return [];
-      }
-
-      const packageIds = packages.map((p) => p.id);
-
-      const recipeRelations: PackageRecipe[] = await this.repository.manager
-        .getRepository(PackageRecipesSchema)
-        .find({
-          where: { package_id: In(packageIds) },
-        });
-
-      const standardRelations: PackageStandard[] = await this.repository.manager
-        .getRepository(PackageStandardsSchema)
-        .find({
-          where: { package_id: In(packageIds) },
-        });
-
-      const skillRelations: PackageSkill[] = await this.repository.manager
-        .getRepository(PackageSkillsSchema)
-        .find({
-          where: { package_id: In(packageIds) },
-        });
-
-      const uniqueRecipeIds = [
-        ...new Set(recipeRelations.map((r) => r.recipe_id)),
-      ];
-      const uniqueStandardIds = [
-        ...new Set(standardRelations.map((s) => s.standard_id)),
-      ];
-      const uniqueSkillIds = [
-        ...new Set(skillRelations.map((s) => s.skill_id)),
-      ];
-
-      const recipes: Recipe[] =
-        uniqueRecipeIds.length > 0
-          ? await this.repository.manager
-              .getRepository<Recipe>(RecipeSchema)
-              .find({
-                where: { id: In(uniqueRecipeIds) },
-              })
-          : [];
-
-      // Fetch standards
-      const standardsEntities =
-        uniqueStandardIds.length > 0
-          ? await this.repository.manager
-              .getRepository<Standard>(StandardSchema)
-              .find({
-                where: { id: In(uniqueStandardIds) },
-              })
-          : [];
-
-      // Fetch summaries for standards from standard_versions
-      const standardVersionsWithSummary =
-        standardsEntities.length > 0
-          ? await this.repository.manager
-              .getRepository(StandardVersionSchema)
-              .find({
-                where: { standardId: In(uniqueStandardIds) },
-              })
-          : [];
-
-      // Create a map for quick lookup of summaries by standard_id and version
-      const summaryMap = new Map<string, string>();
-      for (const sv of standardVersionsWithSummary) {
-        if (sv.summary) {
-          summaryMap.set(`${sv.standardId}:${sv.version}`, sv.summary);
-        }
-      }
-
-      const standards: Standard[] = standardsEntities.map((standard) => ({
-        ...standard,
-        summary:
-          summaryMap.get(`${standard.id}:${standard.version}`) || undefined,
-      }));
-
-      const skills: Skill[] =
-        uniqueSkillIds.length > 0
-          ? await this.repository.manager
-              .getRepository<Skill>(SkillSchema)
-              .find({
-                where: { id: In(uniqueSkillIds) },
-              })
-          : [];
-
-      const recipesMap = new Map<string, Recipe>(recipes.map((r) => [r.id, r]));
-      const standardsMap = new Map<string, Standard>(
-        standards.map((s) => [s.id, s]),
-      );
-      const skillsMap = new Map<string, Skill>(skills.map((s) => [s.id, s]));
-
-      const recipesByPackage = recipeRelations.reduce(
-        (acc, rel) => {
-          if (!acc[rel.package_id]) acc[rel.package_id] = [];
-          const recipe = recipesMap.get(rel.recipe_id);
-          if (recipe) acc[rel.package_id].push(recipe);
-          return acc;
-        },
-        {} as Record<string, Recipe[]>,
-      );
-
-      const standardsByPackage = standardRelations.reduce(
-        (acc, rel) => {
-          if (!acc[rel.package_id]) acc[rel.package_id] = [];
-          const standard = standardsMap.get(rel.standard_id);
-          if (standard) acc[rel.package_id].push(standard);
-          return acc;
-        },
-        {} as Record<string, Standard[]>,
-      );
-
-      const skillsByPackage = skillRelations.reduce(
-        (acc, rel) => {
-          if (!acc[rel.package_id]) acc[rel.package_id] = [];
-          const skill = skillsMap.get(rel.skill_id);
-          if (skill) acc[rel.package_id].push(skill);
-          return acc;
-        },
-        {} as Record<string, Skill[]>,
-      );
-
-      const packagesWithArtefacts: PackageWithArtefacts[] = packages.map(
-        (pkg) => ({
-          ...pkg,
-          recipes: recipesByPackage[pkg.id] || [],
-          standards: standardsByPackage[pkg.id] || [],
-          skills: skillsByPackage[pkg.id] || [],
-        }),
-      );
+      const result = await this.enrichPackagesWithArtefacts(packages);
 
       this.logger.info('Packages found by slugs successfully', {
         requestedCount: slugs.length,
-        foundCount: packagesWithArtefacts.length,
+        foundCount: result.length,
       });
 
-      return packagesWithArtefacts;
+      return result;
     } catch (error) {
       this.logger.error('Failed to find packages by slugs', {
         slugs,
@@ -483,6 +351,158 @@ export class PackageRepository
       });
       throw error;
     }
+  }
+
+  async findBySlugsAndSpaceWithArtefacts(
+    slugs: string[],
+    spaceId: SpaceId,
+  ): Promise<PackageWithArtefacts[]> {
+    if (slugs.length === 0) {
+      this.logger.info('No slugs provided to findBySlugsAndSpaceWithArtefacts');
+      return [];
+    }
+
+    this.logger.info('Finding packages by slugs and space with artefacts', {
+      slugs,
+      spaceId,
+    });
+
+    try {
+      const packages = await this.repository.find({
+        where: {
+          slug: In(slugs),
+          spaceId,
+        },
+      });
+
+      const result = await this.enrichPackagesWithArtefacts(packages);
+
+      this.logger.info('Packages found by slugs and space successfully', {
+        requestedCount: slugs.length,
+        foundCount: result.length,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to find packages by slugs and space', {
+        slugs,
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  private async enrichPackagesWithArtefacts(
+    packages: Package[],
+  ): Promise<PackageWithArtefacts[]> {
+    if (packages.length === 0) {
+      return [];
+    }
+
+    const packageIds = packages.map((p) => p.id);
+
+    const [recipeRelations, standardRelations, skillRelations] =
+      await Promise.all([
+        this.repository.manager
+          .getRepository(PackageRecipesSchema)
+          .find({ where: { package_id: In(packageIds) } }),
+        this.repository.manager
+          .getRepository(PackageStandardsSchema)
+          .find({ where: { package_id: In(packageIds) } }),
+        this.repository.manager
+          .getRepository(PackageSkillsSchema)
+          .find({ where: { package_id: In(packageIds) } }),
+      ]);
+
+    const uniqueRecipeIds = [
+      ...new Set(recipeRelations.map((r) => r.recipe_id)),
+    ];
+    const uniqueStandardIds = [
+      ...new Set(standardRelations.map((s) => s.standard_id)),
+    ];
+    const uniqueSkillIds = [...new Set(skillRelations.map((s) => s.skill_id))];
+
+    const [recipes, standardsEntities, skills] = await Promise.all([
+      uniqueRecipeIds.length > 0
+        ? this.repository.manager
+            .getRepository<Recipe>(RecipeSchema)
+            .find({ where: { id: In(uniqueRecipeIds) } })
+        : Promise.resolve<Recipe[]>([]),
+      uniqueStandardIds.length > 0
+        ? this.repository.manager
+            .getRepository<Standard>(StandardSchema)
+            .find({ where: { id: In(uniqueStandardIds) } })
+        : Promise.resolve<Standard[]>([]),
+      uniqueSkillIds.length > 0
+        ? this.repository.manager
+            .getRepository<Skill>(SkillSchema)
+            .find({ where: { id: In(uniqueSkillIds) } })
+        : Promise.resolve<Skill[]>([]),
+    ]);
+
+    const standardVersionsWithSummary =
+      standardsEntities.length > 0
+        ? await this.repository.manager
+            .getRepository(StandardVersionSchema)
+            .find({ where: { standardId: In(uniqueStandardIds) } })
+        : [];
+
+    const summaryMap = new Map<string, string>();
+    for (const sv of standardVersionsWithSummary) {
+      if (sv.summary) {
+        summaryMap.set(`${sv.standardId}:${sv.version}`, sv.summary);
+      }
+    }
+
+    const standards: Standard[] = standardsEntities.map((standard) => ({
+      ...standard,
+      summary:
+        summaryMap.get(`${standard.id}:${standard.version}`) || undefined,
+    }));
+
+    const recipesMap = new Map<string, Recipe>(recipes.map((r) => [r.id, r]));
+    const standardsMap = new Map<string, Standard>(
+      standards.map((s) => [s.id, s]),
+    );
+    const skillsMap = new Map<string, Skill>(skills.map((s) => [s.id, s]));
+
+    const recipesByPackage = recipeRelations.reduce(
+      (acc, rel) => {
+        if (!acc[rel.package_id]) acc[rel.package_id] = [];
+        const recipe = recipesMap.get(rel.recipe_id);
+        if (recipe) acc[rel.package_id].push(recipe);
+        return acc;
+      },
+      {} as Record<string, Recipe[]>,
+    );
+
+    const standardsByPackage = standardRelations.reduce(
+      (acc, rel) => {
+        if (!acc[rel.package_id]) acc[rel.package_id] = [];
+        const standard = standardsMap.get(rel.standard_id);
+        if (standard) acc[rel.package_id].push(standard);
+        return acc;
+      },
+      {} as Record<string, Standard[]>,
+    );
+
+    const skillsByPackage = skillRelations.reduce(
+      (acc, rel) => {
+        if (!acc[rel.package_id]) acc[rel.package_id] = [];
+        const skill = skillsMap.get(rel.skill_id);
+        if (skill) acc[rel.package_id].push(skill);
+        return acc;
+      },
+      {} as Record<string, Skill[]>,
+    );
+
+    return packages.map((pkg) => ({
+      ...pkg,
+      recipes: recipesByPackage[pkg.id] || [],
+      standards: standardsByPackage[pkg.id] || [],
+      skills: skillsByPackage[pkg.id] || [],
+    }));
   }
 
   async addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void> {

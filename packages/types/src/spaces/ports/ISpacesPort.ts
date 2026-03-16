@@ -2,6 +2,10 @@ import { OrganizationId } from '../../accounts/Organization';
 import { Space } from '../Space';
 import { SpaceId } from '../SpaceId';
 import {
+  GetDefaultSpaceCommand,
+  GetDefaultSpaceResponse,
+} from '../contracts/IGetDefaultSpace';
+import {
   ListUserSpacesCommand,
   ListUserSpacesResponse,
 } from '../contracts/IListUserSpaces';
@@ -47,4 +51,12 @@ export interface ISpacesPort {
   listUserSpaces(
     command: ListUserSpacesCommand,
   ): Promise<ListUserSpacesResponse>;
+
+  /**
+   * Get the default space for the authenticated user's organization.
+   * Throws DefaultSpaceNotFoundError if no default space exists.
+   */
+  getDefaultSpace(
+    command: GetDefaultSpaceCommand,
+  ): Promise<GetDefaultSpaceResponse>;
 }

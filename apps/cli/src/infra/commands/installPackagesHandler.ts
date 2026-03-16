@@ -582,8 +582,16 @@ export async function installPackagesHandler(
     };
   }
 
-  // Merge config packages with command line args
-  const allPackages = [...new Set([...configPackages, ...packagesSlugs])];
+  // Normalize slugs to `@space/pkg` form (fetches default space once if needed)
+  const normalizedNewSlugs =
+    await packmindCliHexa.normalizePackageSlugs(packagesSlugs);
+  const normalizedConfigSlugs =
+    await packmindCliHexa.normalizePackageSlugs(configPackages);
+
+  // Merge config packages with normalized command line args, deduplicating
+  const allPackages = [
+    ...new Set([...normalizedConfigSlugs, ...normalizedNewSlugs]),
+  ];
 
   // Show help if no packages from either source
   if (allPackages.length === 0) {
@@ -655,7 +663,7 @@ export async function installPackagesHandler(
     const result = await packmindCliHexa.installPackages({
       baseDirectory: cwd,
       packagesSlugs: allPackages,
-      previousPackagesSlugs: configPackages, // Pass previous config for change detection
+      previousPackagesSlugs: normalizedConfigSlugs, // Pass previous config for change detection
       gitRemoteUrl,
       gitBranch,
       relativePath,
@@ -692,10 +700,17 @@ export async function installPackagesHandler(
     }
 
     // Write config only if there are new packages (preserves property order)
-    const newPackages = packagesSlugs.filter(
-      (slug) => !configPackages.includes(slug),
+    // Use normalized slugs so config always stores `@space/pkg` format
+    const configSlugsWereNormalized = configPackages.some(
+      (slug, i) => slug !== normalizedConfigSlugs[i],
     );
-    if (newPackages.length > 0) {
+    const newPackages = normalizedNewSlugs.filter(
+      (slug) => !normalizedConfigSlugs.includes(slug),
+    );
+    if (configSlugsWereNormalized) {
+      // Rewrite entire packages section to update slugs to normalized format
+      await packmindCliHexa.writeConfig(cwd, allPackages);
+    } else if (newPackages.length > 0) {
       await packmindCliHexa.addPackagesToConfig(cwd, newPackages);
     }
 

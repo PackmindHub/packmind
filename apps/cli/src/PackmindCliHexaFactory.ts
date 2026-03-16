@@ -49,6 +49,7 @@ import { ISubmitDiffsUseCase } from './domain/useCases/ISubmitDiffsUseCase';
 import { SubmitDiffsUseCase } from './application/useCases/SubmitDiffsUseCase';
 import { ICheckDiffsUseCase } from './domain/useCases/ICheckDiffsUseCase';
 import { CheckDiffsUseCase } from './application/useCases/CheckDiffsUseCase';
+import { SpaceService } from './application/services/SpaceService';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -89,6 +90,7 @@ export class PackmindCliHexaFactory {
       gitRemoteUrlService: new GitService(),
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
       diffViolationFilterService: new DiffViolationFilterService(),
+      spaceService: new SpaceService(this.repositories.packmindGateway.spaces),
     };
 
     this.useCases = {
@@ -122,11 +124,19 @@ export class PackmindCliHexaFactory {
       }),
       listStandards: new ListStandardsUseCase(
         this.repositories.packmindGateway,
+        this.services.spaceService,
       ),
-      listCommands: new ListCommandsUseCase(this.repositories.packmindGateway),
-      listSkills: new ListSkillsUseCase(this.repositories.packmindGateway),
+      listCommands: new ListCommandsUseCase(
+        this.repositories.packmindGateway,
+        this.services.spaceService,
+      ),
+      listSkills: new ListSkillsUseCase(
+        this.repositories.packmindGateway,
+        this.services.spaceService,
+      ),
       uploadSkill: new UploadSkillUseCase({
         gateway: this.repositories.packmindGateway,
+        spaceService: this.services.spaceService,
       }),
       diffArtefacts: new DiffArtefactsUseCase(
         this.repositories.packmindGateway,

@@ -27,7 +27,10 @@ export const createCommandCommand = command({
       const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
       const hexa = new PackmindCliHexa(packmindLogger);
       const gateway = hexa.getPackmindGateway();
-      const useCase = new CreateCommandFromPlaybookUseCase(gateway);
+      const useCase = new CreateCommandFromPlaybookUseCase(
+        gateway,
+        hexa.getSpaceService(),
+      );
 
       const result = await createCommandHandler(file, useCase, originSkill);
 

@@ -1,5 +1,8 @@
 name: Build and Test
 
+env:
+  HUSKY: '0'
+
 on:
   workflow_call:
     inputs:
@@ -53,13 +56,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
       - name: Build API
         env:
+          NODE_ENV: production
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx build api
@@ -94,7 +98,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -142,7 +146,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -180,7 +184,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -230,7 +234,7 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
 
-      - run: npm ci --no-audit
+      - run: npm ci --no-audit --no-fund
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -297,7 +301,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund
 
       - name: Generate tsconfig
         env:
@@ -340,7 +344,7 @@ jobs:
           PACKMIND_INSTANCE_URL: ${{ env.PACKMIND_INSTANCE_URL }}
         run: |
           echo "Waiting for API to be ready..."
-          timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/health > /dev/null 2>&1; do sleep 2; done" || true
+          timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done" || true
 
       - name: Run CLI E2E tests
         env:

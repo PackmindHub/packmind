@@ -13,16 +13,18 @@ import {
   IPullContentResponse,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   OrganizationId,
   PackageId,
+  PackageWithArtefacts,
   PullContentCommand,
   RecipeVersion,
   SkillVersion,
+  SpaceId,
   StandardVersion,
   createOrganizationId,
   createUserId,
-  PackageWithArtefacts,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
@@ -68,6 +70,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly distributionRepository: IDistributionRepository,
     private readonly targetResolutionService: TargetResolutionService,
+    private readonly spacesPort: ISpacesPort,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     private readonly lockFileService: PackmindLockFileService = new PackmindLockFileService(),
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
@@ -118,32 +121,27 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       let recipeVersions: RecipeVersion[] = [];
       let standardVersions: StandardVersion[] = [];
       let skillVersions: SkillVersion[] = [];
-      let packages: Awaited<
-        ReturnType<PackageService['getPackagesBySlugsWithArtefacts']>
-      > = [];
+      let packages: PackageWithArtefacts[] = [];
       let artifactMetadata: ReturnType<typeof buildArtifactMetadataMap> | null =
         null;
+      // Normalized slugs in "@space-slug/package-slug" format
+      let normalizedCurrentSlugs: string[] = [];
 
       if (!isRemovalOnlyOperation && command.packagesSlugs) {
-        packages = await this.packageService.getPackagesBySlugsWithArtefacts(
+        const resolution = await this.resolvePackagesBySlugs(
           command.packagesSlugs,
           command.organization.id,
         );
+        packages = resolution.packages;
+        normalizedCurrentSlugs = resolution.normalizedSlugs;
 
-        // Check if all requested slugs were found
-        const foundSlugs = packages.map((pkg) => pkg.slug);
-        const unknownSlugs = command.packagesSlugs.filter(
-          (slug) => !foundSlugs.includes(slug),
-        );
-
-        if (unknownSlugs.length > 0) {
+        if (resolution.notFoundSlugs.length > 0) {
           this.logger.error('Pull content failed: unknown package slugs', {
-            unknownSlugs,
+            unknownSlugs: resolution.notFoundSlugs,
             requestedSlugs: command.packagesSlugs,
-            foundSlugs,
             organizationId: command.organizationId,
           });
-          throw new PackagesNotFoundError(unknownSlugs);
+          throw new PackagesNotFoundError(resolution.notFoundSlugs);
         }
 
         this.logger.info('Found packages with relations', {
@@ -282,9 +280,15 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         command.previousPackagesSlugs &&
         command.previousPackagesSlugs.length > 0
       ) {
-        const removedPackageSlugs = this.computeRemovedPackages(
+        // Normalize previous slugs to "@space/package" format for consistent comparison
+        const normalizedPreviousSlugs = await this.normalizeSlugs(
           command.previousPackagesSlugs,
-          command.packagesSlugs ?? [],
+          command.organization.id,
+        );
+
+        const removedPackageSlugs = this.computeRemovedPackages(
+          normalizedPreviousSlugs,
+          normalizedCurrentSlugs,
         );
 
         if (removedPackageSlugs.length > 0) {
@@ -311,8 +315,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         // Also check for updated packages (packages that are in both lists)
         // to detect artifacts that were removed from those packages
         const updatedPackageSlugs = this.computeUpdatedPackages(
-          command.previousPackagesSlugs,
-          command.packagesSlugs ?? [],
+          normalizedPreviousSlugs,
+          normalizedCurrentSlugs,
         );
 
         if (updatedPackageSlugs.length > 0) {
@@ -590,10 +594,14 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
       }
 
-      // Add packmind.json config file
+      // Add packmind.json config file - use normalized slugs so the config always stores "@space/package" format
+      const configSlugs =
+        normalizedCurrentSlugs.length > 0
+          ? normalizedCurrentSlugs
+          : command.packagesSlugs;
       const configFile =
         this.packmindConfigService.createConfigFileModification(
-          command.packagesSlugs,
+          configSlugs,
           undefined, // existingPackages - not needed, we already have all packages in packagesSlugs
           command.agents, // Pass agents to preserve them
         );
@@ -704,6 +712,142 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     }
   }
 
+  /**
+   * Parses a package slug to extract optional space prefix.
+   * Format: "@space-slug/package-slug" or "package-slug"
+   */
+  private parsePackageSlug(slug: string): {
+    spaceSlug: string | null;
+    packageSlug: string;
+  } {
+    if (slug.startsWith('@')) {
+      const slashIndex = slug.indexOf('/', 1);
+      if (slashIndex !== -1) {
+        return {
+          spaceSlug: slug.slice(1, slashIndex),
+          packageSlug: slug.slice(slashIndex + 1),
+        };
+      }
+    }
+    return { spaceSlug: null, packageSlug: slug };
+  }
+
+  /**
+   * Resolves packages by slugs, respecting space prefixes.
+   * Slugs prefixed with "@space-slug/" are resolved within that specific space.
+   * Unprefixed slugs are resolved within the organization's default space.
+   * Returns packages, not-found slugs, and normalized slugs in "@space/package" format.
+   */
+  private async resolvePackagesBySlugs(
+    slugs: string[],
+    organizationId: OrganizationId,
+  ): Promise<{
+    packages: PackageWithArtefacts[];
+    notFoundSlugs: string[];
+    normalizedSlugs: string[];
+  }> {
+    const parsedSlugs = slugs.map((slug) => ({
+      originalSlug: slug,
+      ...this.parsePackageSlug(slug),
+    }));
+
+    // Group by space slug (null = default space)
+    const spaceGroups = new Map<string | null, typeof parsedSlugs>();
+    for (const parsed of parsedSlugs) {
+      const group = spaceGroups.get(parsed.spaceSlug) ?? [];
+      group.push(parsed);
+      spaceGroups.set(parsed.spaceSlug, group);
+    }
+
+    // Resolve default space once if needed
+    let defaultSpaceSlug: string | null = null;
+    let defaultSpaceId: SpaceId | null = null;
+    if (spaceGroups.has(null)) {
+      const allSpaces =
+        await this.spacesPort.listSpacesByOrganization(organizationId);
+      const defaultSpace = allSpaces.find((s) => s.isDefaultSpace) ?? null;
+      defaultSpaceId = defaultSpace?.id ?? null;
+      defaultSpaceSlug = defaultSpace?.slug ?? null;
+    }
+
+    const packages: PackageWithArtefacts[] = [];
+    const notFoundSlugs: string[] = [];
+    // Map from originalSlug → normalizedSlug
+    const normalizedSlugMap = new Map<string, string>();
+
+    for (const [spaceSlug, group] of spaceGroups) {
+      let resolvedSpaceSlug: string | null;
+      let spaceId: SpaceId | null;
+
+      if (spaceSlug === null) {
+        spaceId = defaultSpaceId;
+        resolvedSpaceSlug = defaultSpaceSlug;
+      } else {
+        const space = await this.spacesPort.getSpaceBySlug(
+          spaceSlug,
+          organizationId,
+        );
+        spaceId = space?.id ?? null;
+        resolvedSpaceSlug = space?.slug ?? null;
+      }
+
+      if (!spaceId || !resolvedSpaceSlug) {
+        notFoundSlugs.push(...group.map((g) => g.originalSlug));
+        continue;
+      }
+
+      const pkgSlugs = group.map((g) => g.packageSlug);
+      const found =
+        await this.packageService.getPackagesBySlugsAndSpaceWithArtefacts(
+          pkgSlugs,
+          spaceId,
+        );
+      packages.push(...found);
+
+      const foundSlugs = new Set(found.map((p) => p.slug));
+      for (const g of group) {
+        if (!foundSlugs.has(g.packageSlug)) {
+          notFoundSlugs.push(g.originalSlug);
+        } else {
+          normalizedSlugMap.set(
+            g.originalSlug,
+            `@${resolvedSpaceSlug}/${g.packageSlug}`,
+          );
+        }
+      }
+    }
+
+    const normalizedSlugs = slugs
+      .map((slug) => normalizedSlugMap.get(slug))
+      .filter((s): s is string => s !== undefined);
+
+    return { packages, notFoundSlugs, normalizedSlugs };
+  }
+
+  /**
+   * Normalizes package slugs to "@space-slug/package-slug" format.
+   * Unprefixed slugs are resolved to the organization's default space.
+   * Already-prefixed slugs are returned as-is.
+   */
+  private async normalizeSlugs(
+    slugs: string[],
+    organizationId: OrganizationId,
+  ): Promise<string[]> {
+    const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
+    let defaultSpaceSlug: string | null = null;
+    if (hasUnprefixed) {
+      const allSpaces =
+        await this.spacesPort.listSpacesByOrganization(organizationId);
+      defaultSpaceSlug = allSpaces.find((s) => s.isDefaultSpace)?.slug ?? null;
+    }
+
+    return slugs.map((slug) => {
+      if (slug.startsWith('@')) return slug;
+      if (defaultSpaceSlug) return `@${defaultSpaceSlug}/${slug}`;
+      return slug;
+    });
+  }
+
   private mergeFileUpdates(target: FileUpdates, source: FileUpdates): void {
     // Merge createOrUpdate files (avoid duplicates by path)
     const existingPaths = new Set(target.createOrUpdate.map((f) => f.path));
@@ -804,7 +948,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     skillVersions: SkillVersion[];
   }> {
     // Fetch packages by slugs (they may not exist anymore, so we handle gracefully)
-    const packages = await this.packageService.getPackagesBySlugsWithArtefacts(
+    const { packages } = await this.resolvePackagesBySlugs(
       removedPackageSlugs,
       organizationId,
     );
