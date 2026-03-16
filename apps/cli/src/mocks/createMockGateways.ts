@@ -62,7 +62,6 @@ export function createMockSpacesGateway(
   overrides?: Partial<jest.Mocked<ISpacesGateway>>,
 ): jest.Mocked<ISpacesGateway> {
   return {
-    getGlobal: jest.fn(),
     getUserSpaces: jest.fn(),
     ...overrides,
   };
