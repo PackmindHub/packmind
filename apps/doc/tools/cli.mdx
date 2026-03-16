@@ -432,19 +432,22 @@ When you install or uninstall packages, the CLI generates a `packmind-lock.json`
 
 ### Recursive Install (Monorepos)
 
-For monorepos or projects with multiple `packmind.json` files, use the recursive flag to install packages across all locations:
+By default, `packmind-cli install` (with no package slugs) finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
 
 ```bash
-packmind-cli install -r
+packmind-cli install
 ```
 
-Or the long form:
+To scope the recursive install to a specific directory, use the `--path` option:
 
 ```bash
-packmind-cli install --recursive
+packmind-cli install --path apps/frontend
 ```
 
-This finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
+<Warning>
+  The `-r` / `--recursive` flag is deprecated. Install is now recursive by
+  default. Using the flag still works but will print a deprecation warning.
+</Warning>
 
 <Tip>
   **AI Agent Rendering** — The files created by the install command depend on

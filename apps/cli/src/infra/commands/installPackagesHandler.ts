@@ -1,3 +1,5 @@
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   CodingAgent,
@@ -372,6 +374,7 @@ export async function statusHandler(
 
 export type InstallPackagesArgs = {
   packagesSlugs: string[];
+  path?: string;
 };
 
 export type InstallPackagesResult = {
@@ -390,7 +393,7 @@ export type UninstallPackagesResult = {
   packagesUninstalled: string[];
 };
 
-export type RecursiveInstallArgs = Record<string, never>;
+export type RecursiveInstallArgs = { path?: string };
 
 export type RecursiveInstallResult = {
   directoriesProcessed: number;
@@ -542,7 +545,36 @@ export async function installPackagesHandler(
 ): Promise<InstallPackagesResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
   const { packagesSlugs } = args;
-  const cwd = getCwd();
+  const rawCwd = getCwd();
+
+  // If --path is provided, resolve it and use as the working directory
+  let cwd = rawCwd;
+  if (args.path) {
+    const resolvedPath = path.resolve(rawCwd, args.path);
+    try {
+      const stat = await fs.stat(resolvedPath);
+      if (!stat.isDirectory()) {
+        error(`❌ Path is not a directory: ${resolvedPath}`);
+        exit(1);
+        return {
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          notificationSent: false,
+        };
+      }
+      cwd = resolvedPath;
+    } catch {
+      error(`❌ Path does not exist: ${resolvedPath}`);
+      exit(1);
+      return {
+        filesCreated: 0,
+        filesUpdated: 0,
+        filesDeleted: 0,
+        notificationSent: false,
+      };
+    }
+  }
 
   // Read existing config (including agents if present)
   let configPackages: string[];
@@ -1041,7 +1073,7 @@ export async function uninstallPackagesHandler(
 }
 
 export async function recursiveInstallHandler(
-  _args: RecursiveInstallArgs,
+  args: RecursiveInstallArgs,
   deps: InstallHandlerDependencies,
 ): Promise<RecursiveInstallResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
@@ -1056,14 +1088,35 @@ export async function recursiveInstallHandler(
     errors: [],
   };
 
+  // If --path is provided, resolve it relative to cwd, validate, and handle packmind.json file paths
+  let startDirectory = cwd;
+  if (args.path) {
+    const resolvedPath = path.resolve(cwd, args.path);
+
+    try {
+      const stat = await fs.stat(resolvedPath);
+      if (!stat.isDirectory()) {
+        error(`❌ Path is not a directory: ${resolvedPath}`);
+        exit(1);
+        return result;
+      }
+      startDirectory = resolvedPath;
+    } catch {
+      error(`❌ Path does not exist: ${resolvedPath}`);
+      exit(1);
+      return result;
+    }
+  }
+
   try {
     // Try to get git root, fallback to cwd
     const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-    const basePath = gitRoot ?? cwd;
+    // When --path is provided, scope both ancestor and descendant search to startDirectory
+    const basePath = args.path ? startDirectory : (gitRoot ?? cwd);
 
-    // Find all configs in the tree (current directory + descendants)
+    // Find all configs in the tree (start directory + descendants)
     const allConfigs = await packmindCliHexa.findAllConfigsInTree(
-      cwd,
+      startDirectory,
       basePath,
     );
 
@@ -1091,7 +1144,14 @@ export async function recursiveInstallHandler(
 
     // Process each directory
     for (const config of sortedConfigs) {
-      const displayPath = computeDisplayPath(config.targetPath);
+      // When --path is provided, show paths relative to cwd for clarity
+      const displayPath = args.path
+        ? computeDisplayPath(
+            config.absoluteTargetPath.startsWith(cwd)
+              ? config.absoluteTargetPath.slice(cwd.length) || '/'
+              : config.targetPath,
+          )
+        : computeDisplayPath(config.targetPath);
       log(`Installing in ${displayPath}...`);
 
       const installResult = await executeInstallForDirectory(

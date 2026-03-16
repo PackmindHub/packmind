@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   listPackagesHandler,
@@ -9,6 +10,9 @@ import {
   InstallHandlerDependencies,
 } from './installPackagesHandler';
 import { createPackageId, createSpaceId, createUserId } from '@packmind/types';
+
+jest.mock('fs/promises');
+const mockFs = fs as jest.Mocked<typeof fs>;
 
 // Mock the consoleLogger module to avoid chalk ESM issues
 jest.mock('../utils/consoleLogger', () => ({
@@ -2026,6 +2030,134 @@ describe('installPackagesHandler', () => {
         expect(mockLog).toHaveBeenCalledWith(
           'Summary: 1 directory processed, 1 files added, 0 changed, 0 removed',
         );
+      });
+    });
+
+    describe('when --path is provided', () => {
+      describe('with a valid directory', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isDirectory: () => true,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+            '/project',
+          );
+          mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+            configs: [
+              {
+                targetPath: '/apps/frontend',
+                absoluteTargetPath: '/project/apps/frontend',
+                packages: { frontend: '*' },
+              },
+            ],
+            hasConfigs: true,
+            basePath: '/project/apps/frontend',
+          });
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { frontend: '*' },
+          });
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            skillsCount: 0,
+            errors: [],
+          });
+        });
+
+        it('resolves the path relative to cwd and scopes findAllConfigsInTree to that directory', async () => {
+          await recursiveInstallHandler({ path: 'apps/frontend' }, deps);
+
+          expect(mockPackmindCliHexa.findAllConfigsInTree).toHaveBeenCalledWith(
+            '/project/apps/frontend',
+            '/project/apps/frontend',
+          );
+        });
+
+        it('processes configs found within the scoped path', async () => {
+          const result = await recursiveInstallHandler(
+            { path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(result.directoriesProcessed).toBe(1);
+        });
+
+        it('counts files created from scoped configs', async () => {
+          const result = await recursiveInstallHandler(
+            { path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(result.totalFilesCreated).toBe(2);
+        });
+
+        it('displays paths relative to cwd, not to the scoped path', async () => {
+          await recursiveInstallHandler({ path: 'apps/frontend' }, deps);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            'Installing in ./apps/frontend/packmind.json...',
+          );
+        });
+      });
+
+      describe('with a non-existent path', () => {
+        beforeEach(() => {
+          mockFs.stat.mockRejectedValue(new Error('ENOENT'));
+        });
+
+        it('logs error message for non-existent path', async () => {
+          await recursiveInstallHandler({ path: 'does/not/exist' }, deps);
+
+          expect(mockError).toHaveBeenCalledWith(
+            '❌ Path does not exist: /project/does/not/exist',
+          );
+        });
+
+        it('exits with code 1 for non-existent path', async () => {
+          await recursiveInstallHandler({ path: 'does/not/exist' }, deps);
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+
+        it('does not call findAllConfigsInTree', async () => {
+          await recursiveInstallHandler({ path: 'does/not/exist' }, deps);
+
+          expect(
+            mockPackmindCliHexa.findAllConfigsInTree,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('with a path pointing to a file', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isFile: () => false,
+            isDirectory: () => false,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+        });
+
+        it('logs error message for non-directory path', async () => {
+          await recursiveInstallHandler(
+            { path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(mockError).toHaveBeenCalledWith(
+            '❌ Path is not a directory: /project/apps/frontend/index.ts',
+          );
+        });
+
+        it('exits with code 1 for non-directory path', async () => {
+          await recursiveInstallHandler(
+            { path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
       });
     });
   });
