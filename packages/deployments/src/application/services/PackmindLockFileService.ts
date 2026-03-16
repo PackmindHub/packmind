@@ -10,6 +10,7 @@ import {
   StandardVersion,
   resolveArtefactFromPath,
 } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 
 type VersionInfo = {
   name: string;
@@ -19,6 +20,12 @@ type VersionInfo = {
 };
 
 export class PackmindLockFileService {
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      'PackmindLockFileService',
+    ),
+  ) {}
+
   buildLockFile(params: {
     fileModifications: FileModification[];
     recipeVersions: RecipeVersion[];
@@ -45,16 +52,32 @@ export class PackmindLockFileService {
     >();
     for (const file of params.fileModifications) {
       if (!file.artifactType || !file.artifactId) {
+        this.logger.warn(
+          'Skipping file modification with missing artifactType or artifactId',
+          { path: file.path },
+        );
         continue;
       }
 
       const resolved = resolveArtefactFromPath(file.path);
       if (!resolved) {
+        this.logger.warn(
+          'Skipping file modification with unresolvable artefact path',
+          { path: file.path, artifactId: file.artifactId },
+        );
         continue;
       }
 
       const versionInfo = versionLookup.get(file.artifactId);
       if (!versionInfo) {
+        this.logger.warn(
+          'Skipping file modification with no matching version info',
+          {
+            path: file.path,
+            artifactId: file.artifactId,
+            artifactType: file.artifactType,
+          },
+        );
         continue;
       }
 
