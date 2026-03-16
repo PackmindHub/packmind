@@ -8,7 +8,7 @@
  *   bun run apps/cli/bun-build.ts                    # Build for current platform
  *   bun run apps/cli/bun-build.ts --target=linux     # Build for Linux (x64 and arm64)
  *   bun run apps/cli/bun-build.ts --target=macos     # Build for macOS (x64 and arm64)
- *   bun run apps/cli/bun-build.ts --target=windows   # Build for Windows (x64)
+ *   bun run apps/cli/bun-build.ts --target=windows   # Build for Windows (x64 and arm64)
  *   bun run apps/cli/bun-build.ts --target=all       # Build for all platforms
  */
 
