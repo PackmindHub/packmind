@@ -6,6 +6,7 @@ import {
   ICodingAgentPort,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   Organization,
   OrganizationId,
@@ -16,6 +17,8 @@ import {
   RenderMode,
   Skill,
   SkillVersion,
+  Space,
+  SpaceType,
   Standard,
   StandardVersion,
   User,
@@ -72,14 +75,16 @@ describe('PullContentUseCase', () => {
   let packmindConfigService: jest.Mocked<PackmindConfigService>;
   let distributionRepository: jest.Mocked<IDistributionRepository>;
   let targetResolutionService: jest.Mocked<TargetResolutionService>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
   let organization: Organization;
+  let defaultSpace: Space;
 
   beforeEach(() => {
     packageService = {
-      getPackagesBySlugsWithArtefacts: jest.fn(),
+      getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
     recipesPort = {
@@ -193,6 +198,20 @@ describe('PullContentUseCase', () => {
       slug: 'packmind',
     };
 
+    defaultSpace = {
+      id: createSpaceId('default-space'),
+      name: 'Default Space',
+      slug: 'default',
+      type: SpaceType.open,
+      organizationId,
+      isDefaultSpace: true,
+    };
+
+    spacesPort = {
+      listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
+      getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     command = {
       organizationId: organizationId as unknown as string,
       userId: uuidv4(),
@@ -215,6 +234,7 @@ describe('PullContentUseCase', () => {
       eventEmitterService,
       distributionRepository,
       targetResolutionService,
+      spacesPort,
       packmindConfigService,
       stubLogger(),
     );
@@ -236,6 +256,7 @@ describe('PullContentUseCase', () => {
           eventEmitterService,
           distributionRepository,
           targetResolutionService,
+          spacesPort,
           packmindConfigService,
           stubLogger(),
         );
@@ -289,9 +310,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -344,9 +365,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -385,9 +406,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -431,7 +452,7 @@ describe('PullContentUseCase', () => {
         skills: [],
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         testPackage,
       ]);
 
@@ -496,9 +517,9 @@ describe('PullContentUseCase', () => {
           skills: [skill],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -553,10 +574,9 @@ describe('PullContentUseCase', () => {
             skills: [skill],
           };
 
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-            secondPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage, secondPackage],
+          );
 
           command.packagesSlugs = ['test-package', 'test-package-2'];
 
@@ -616,9 +636,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
       });
 
       it('throws PackagesNotFoundError', async () => {
@@ -650,9 +670,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
       });
 
       it('throws PackagesNotFoundError', async () => {
@@ -666,7 +686,9 @@ describe('PullContentUseCase', () => {
       beforeEach(() => {
         // Package exists but belongs to a different organization
         // Repository filters by organization, so it returns empty array
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [],
+        );
       });
 
       it('throws PackagesNotFoundError', async () => {
@@ -675,13 +697,13 @@ describe('PullContentUseCase', () => {
         );
       });
 
-      it('passes the organization ID to packageService', async () => {
+      it('passes the default space ID to packageService', async () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         await useCase.execute(command).catch(() => {});
 
         expect(
-          packageService.getPackagesBySlugsWithArtefacts,
-        ).toHaveBeenCalledWith(['test-package'], organization.id);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['test-package'], defaultSpace.id);
       });
     });
 
@@ -701,9 +723,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -724,12 +746,16 @@ describe('PullContentUseCase', () => {
         expect(packmindJsonFile).toBeDefined();
       });
 
-      it('calls PackmindConfigService with package slugs and undefined agents', async () => {
+      it('calls PackmindConfigService with normalized package slugs and undefined agents', async () => {
         await useCase.execute(command);
 
         expect(
           packmindConfigService.createConfigFileModification,
-        ).toHaveBeenCalledWith(['test-package'], undefined, undefined);
+        ).toHaveBeenCalledWith(
+          [`@${defaultSpace.slug}/test-package`],
+          undefined,
+          undefined,
+        );
       });
 
       describe('when agents are provided in command', () => {
@@ -745,10 +771,11 @@ describe('PullContentUseCase', () => {
 
           expect(
             packmindConfigService.createConfigFileModification,
-          ).toHaveBeenCalledWith(['test-package'], undefined, [
-            CodingAgents.claude,
-            CodingAgents.cursor,
-          ]);
+          ).toHaveBeenCalledWith(
+            [`@${defaultSpace.slug}/test-package`],
+            undefined,
+            [CodingAgents.claude, CodingAgents.cursor],
+          );
         });
       });
 
@@ -780,9 +807,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -886,9 +913,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -920,9 +947,9 @@ describe('PullContentUseCase', () => {
       describe('when agents support skills', () => {
         beforeEach(() => {
           testPackage.skills = [skill];
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
           skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
           renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
@@ -943,9 +970,9 @@ describe('PullContentUseCase', () => {
       describe('when agents do not support skills', () => {
         beforeEach(() => {
           testPackage.skills = [skill];
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
           skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
@@ -1015,9 +1042,9 @@ describe('PullContentUseCase', () => {
           };
 
           testPackage.skills = [skillA, skillB];
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
           skillsPort.getLatestSkillVersion
             .mockResolvedValueOnce(skillVersionA)
             .mockResolvedValueOnce(skillVersionB);
@@ -1129,7 +1156,7 @@ describe('PullContentUseCase', () => {
             previousPackagesSlugs: ['test-package'],
           };
 
-          packageService.getPackagesBySlugsWithArtefacts
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts
             .mockResolvedValueOnce([currentPackage])
             .mockResolvedValueOnce([previousPackage]);
 
@@ -1240,9 +1267,9 @@ describe('PullContentUseCase', () => {
             relativePath: '/',
           };
 
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
 
           recipesPort.listRecipeVersions.mockResolvedValue([]);
           standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -1422,9 +1449,9 @@ describe('PullContentUseCase', () => {
           relativePath: '/',
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(
@@ -1569,9 +1596,9 @@ describe('PullContentUseCase', () => {
           relativePath: '/',
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([
           currentRecipeVersion,
@@ -1861,7 +1888,7 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a', 'package-b'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts
           .mockResolvedValueOnce([packageB])
           .mockResolvedValueOnce([packageA])
           .mockResolvedValueOnce([packageA]);
@@ -1961,7 +1988,7 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a', 'package-b'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts
           .mockResolvedValueOnce([packageB])
           .mockResolvedValueOnce([packageAOnlyShared])
           .mockResolvedValueOnce([packageAOnlyShared]);
@@ -2010,7 +2037,7 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a', 'package-b'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts
           .mockResolvedValueOnce([packageBDifferent])
           .mockResolvedValueOnce([packageAUniqueOnly])
           .mockResolvedValueOnce([packageAUniqueOnly]);
@@ -2063,9 +2090,9 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValueOnce([
-          packageA,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValueOnce(
+          [packageA],
+        );
 
         recipesPort.listRecipeVersions
           .mockResolvedValueOnce([sharedRecipeVersion])
@@ -2100,7 +2127,7 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          packageService.getPackagesBySlugsWithArtefacts,
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
         ).toHaveBeenCalledTimes(1);
       });
 
@@ -2108,8 +2135,8 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          packageService.getPackagesBySlugsWithArtefacts,
-        ).toHaveBeenCalledWith(['package-a'], organization.id);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['package-a'], defaultSpace.id);
       });
 
       it('calls generateRemovalUpdatesForAgents with all artifacts from removed package', async () => {
@@ -2221,7 +2248,7 @@ describe('PullContentUseCase', () => {
         skills: [],
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         testPackage,
       ]);
     });
@@ -2420,7 +2447,7 @@ describe('PullContentUseCase', () => {
         skills: [skill],
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         testPackage,
       ]);
 
@@ -2610,6 +2637,117 @@ describe('PullContentUseCase', () => {
     });
   });
 
+  describe('when resolving packages with space-prefixed slugs', () => {
+    const explicitSpaceId = createSpaceId('explicit-space');
+    const testPackage: PackageWithArtefacts = {
+      id: createPackageId('test-package-id'),
+      slug: 'test-package',
+      name: 'Test Package',
+      description: 'Test package description',
+      spaceId: explicitSpaceId,
+      createdBy: createUserId('user-1'),
+      recipes: [],
+      standards: [],
+      skills: [],
+    };
+
+    beforeEach(() => {
+      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+      codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      } as FileUpdates);
+    });
+
+    describe('when slug is prefixed with a space slug', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['@my-space/test-package'],
+        };
+        spacesPort.getSpaceBySlug.mockResolvedValue({
+          id: explicitSpaceId,
+          name: 'My Space',
+          slug: 'my-space',
+          type: SpaceType.open,
+          organizationId,
+          isDefaultSpace: false,
+        });
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
+      });
+
+      it('resolves the space by its slug', async () => {
+        await useCase.execute(command);
+
+        expect(spacesPort.getSpaceBySlug).toHaveBeenCalledWith(
+          'my-space',
+          organization.id,
+        );
+      });
+
+      it('fetches the package within the resolved space', async () => {
+        await useCase.execute(command);
+
+        expect(
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['test-package'], explicitSpaceId);
+      });
+
+      it('does not query the default space', async () => {
+        await useCase.execute(command);
+
+        expect(spacesPort.listSpacesByOrganization).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when slug has no space prefix', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['test-package'],
+        };
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
+      });
+
+      it('queries the default space', async () => {
+        await useCase.execute(command);
+
+        expect(spacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
+          organization.id,
+        );
+      });
+
+      it('fetches the package within the default space', async () => {
+        await useCase.execute(command);
+
+        expect(
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['test-package'], defaultSpace.id);
+      });
+    });
+
+    describe('when the space slug does not exist', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['@unknown-space/test-package'],
+        };
+        spacesPort.getSpaceBySlug.mockResolvedValue(null);
+      });
+
+      it('throws PackagesNotFoundError for the prefixed slug', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          'Package "@unknown-space/test-package" was not found',
+        );
+      });
+    });
+  });
+
   describe('render mode cleanup', () => {
     const gitRemoteUrl = 'https://github.com/packmind/packmind.git';
     const gitBranch = 'main';
@@ -2624,7 +2762,7 @@ describe('PullContentUseCase', () => {
         relativePath,
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         {
           id: createPackageId('test-package-id'),
           slug: 'test-package',

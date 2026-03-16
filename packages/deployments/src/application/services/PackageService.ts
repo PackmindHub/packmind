@@ -134,6 +134,45 @@ export class PackageService {
     }
   }
 
+  async getPackagesBySlugsAndSpaceWithArtefacts(
+    slugs: string[],
+    spaceId: SpaceId,
+  ): Promise<PackageWithArtefacts[]> {
+    this.logger.info('Getting packages by slugs and space with artefacts', {
+      slugs,
+      count: slugs.length,
+      spaceId,
+    });
+
+    try {
+      const packages =
+        await this.packageRepository.findBySlugsAndSpaceWithArtefacts(
+          slugs,
+          spaceId,
+        );
+
+      this.logger.info(
+        'Packages found by slugs and space with artefacts successfully',
+        {
+          requestedCount: slugs.length,
+          foundCount: packages.length,
+        },
+      );
+
+      return packages;
+    } catch (error) {
+      this.logger.error(
+        'Failed to get packages by slugs and space with artefacts',
+        {
+          slugs,
+          spaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   async createPackage(
     pkg: Omit<Package, 'recipes' | 'standards' | 'skills'>,
     recipeIds: RecipeId[],
