@@ -1,7 +1,12 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
-import { ISpacesPort, ISpacesPortName } from '@packmind/types';
+import {
+  IAccountsPort,
+  IAccountsPortName,
+  ISpacesPort,
+  ISpacesPortName,
+} from '@packmind/types';
 import { SpacesAdapter } from './application/adapters/SpacesAdapter';
 import { SpacesRepositories } from './infra/repositories/SpacesRepositories';
 import { SpacesServices } from './application/services/SpacesServices';
@@ -55,13 +60,16 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async initialize(_registry: HexaRegistry): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing SpacesHexa (adapter retrieval phase)');
 
     try {
-      // SpacesAdapter has no port dependencies, initialize with empty ports
-      this.spacesAdapter.initialize({});
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
+
+      await this.spacesAdapter.initialize({
+        [IAccountsPortName]: accountsPort,
+      });
 
       this.logger.info('SpacesHexa initialized successfully');
     } catch (error) {
