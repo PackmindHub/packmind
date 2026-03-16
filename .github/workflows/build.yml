@@ -285,7 +285,7 @@ jobs:
 
   cli-e2e-tests:
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       PACKMIND_INSTANCE_URL: http://localhost:4200
     strategy:
@@ -320,6 +320,33 @@ jobs:
           chmod +x dist/apps/cli/main.cjs || true
           chmod -R +r dist/apps/cli/
           ls -la dist/apps/cli/
+
+      - name: Switch Docker to Linux containers (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "Switching Docker to Linux container mode..."
+          & 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchLinuxEngine
+          Start-Sleep -Seconds 10
+          Write-Host "Waiting for Docker daemon to be ready..."
+          $retries = 0
+          while ($retries -lt 30) {
+            try {
+              docker info 2>&1 | Out-Null
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "Docker is ready with Linux containers"
+                docker info --format '{{.OSType}}'
+                break
+              }
+            } catch {}
+            $retries++
+            Write-Host "Waiting for Docker daemon... (attempt $retries/30)"
+            Start-Sleep -Seconds 5
+          }
+          if ($retries -eq 30) {
+            Write-Host "::error::Docker daemon did not become ready in time"
+            exit 1
+          }
 
       - name: Start docker compose for CLI E2E tests
         uses: nick-fields/retry@v3
