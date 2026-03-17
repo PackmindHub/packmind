@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
+import {
+  PMAlertDialog,
+  PMBox,
+  PMSpinner,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  EDIT_CHANGE_PROPOSALS_FEATURE_KEY,
+} from '@packmind/ui';
 import {
   AcceptedChangeProposal,
   ChangeProposalDecision,
@@ -57,7 +64,7 @@ export function StandardReviewDetail({
   spaceSlug,
 }: Readonly<StandardReviewDetailProps>) {
   const standardId = artefactId as StandardId;
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const queryClient = useQueryClient();
   const userLookup = useUserLookup();
@@ -291,7 +298,15 @@ export function StandardReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={isEditableProposalType}
+            showEditButton={
+              isFeatureFlagEnabled({
+                featureKeys: [EDIT_CHANGE_PROPOSALS_FEATURE_KEY],
+                featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+                userEmail: user?.email,
+              })
+                ? isEditableProposalType
+                : false
+            }
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
