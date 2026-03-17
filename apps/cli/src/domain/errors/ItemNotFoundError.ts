@@ -6,8 +6,12 @@ export class ItemNotFoundError extends Error {
   constructor(
     public readonly itemType: string,
     public readonly slug: string,
+    public readonly spaceSlug?: string,
   ) {
-    super(`${itemType} '${slug}' not found`);
+    const message = spaceSlug
+      ? `${itemType} '${slug}' not found in space '@${spaceSlug}'`
+      : `${itemType} '${slug}' not found`;
+    super(message);
     this.name = 'ItemNotFoundError';
   }
 }

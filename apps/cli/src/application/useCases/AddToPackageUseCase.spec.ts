@@ -17,6 +17,7 @@ import {
   createPackageId,
   createRecipeId,
   createSkillId,
+  createSpaceId,
   createStandardId,
   Package,
 } from '@packmind/types';
@@ -41,7 +42,9 @@ describe('AddToPackageUseCase', () => {
     standardsGateway = createMockStandardsGateway();
     packagesGateway = createMockPackagesGateway();
     mockSpaceService = createMockSpaceService({
-      getDefaultSpace: jest.fn().mockResolvedValue({ id: 'space-123' }),
+      getDefaultSpace: jest
+        .fn()
+        .mockResolvedValue({ id: 'space-123', slug: 'global' }),
     });
 
     mockGateway = {
@@ -51,7 +54,10 @@ describe('AddToPackageUseCase', () => {
       skills: skillsGateway,
     } as unknown as jest.Mocked<IPackmindGateway>;
 
-    pkg = packageFactory({ id: createPackageId('package-1') });
+    pkg = packageFactory({
+      id: createPackageId('package-1'),
+      spaceId: createSpaceId('space-123'),
+    });
 
     useCase = new AddToPackageUseCase(mockGateway, mockSpaceService);
   });
@@ -233,6 +239,118 @@ describe('AddToPackageUseCase', () => {
           itemSlugs: ['non-existent'],
         }),
       ).rejects.toThrow("standard 'non-existent' not found");
+    });
+  });
+
+  describe('when spaceSlug is provided', () => {
+    const TEAM_SPACE = { id: 'space-team', slug: 'team' };
+    let teamPkg: Package;
+
+    beforeEach(() => {
+      teamPkg = packageFactory({
+        id: createPackageId('package-team'),
+        slug: 'team-package',
+        spaceId: createSpaceId('space-team'),
+      });
+
+      mockSpaceService.getSpaces = jest
+        .fn()
+        .mockResolvedValue([{ id: 'space-123', slug: 'global' }, TEAM_SPACE]);
+
+      standardsGateway.list.mockResolvedValue({
+        standards: [
+          standardFactory({
+            id: createStandardId('std-id-1'),
+            slug: 'std-1',
+            name: 'Std 1',
+            description: 'desc',
+          }),
+        ],
+      });
+
+      packagesGateway.list.mockResolvedValue({ packages: [pkg, teamPkg] });
+      packagesGateway.addArtefacts.mockResolvedValue({
+        package: teamPkg,
+        added: { standards: ['std-id-1'], commands: [], skills: [] },
+        skipped: { standards: [], commands: [], skills: [] },
+      });
+    });
+
+    it('resolves the space by slug instead of using the default space', async () => {
+      await useCase.execute({
+        packageSlug: teamPkg.slug,
+        spaceSlug: 'team',
+        itemType: 'standard',
+        itemSlugs: ['std-1'],
+      });
+
+      expect(mockSpaceService.getSpaces).toHaveBeenCalled();
+      expect(mockSpaceService.getDefaultSpace).not.toHaveBeenCalled();
+    });
+
+    it('uses the resolved space id when calling addArtefacts', async () => {
+      await useCase.execute({
+        packageSlug: teamPkg.slug,
+        spaceSlug: 'team',
+        itemType: 'standard',
+        itemSlugs: ['std-1'],
+      });
+
+      expect(mockGateway.packages.addArtefacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packageId: teamPkg.id,
+          spaceId: 'space-team',
+        }),
+      );
+    });
+
+    it('uses the resolved space id when listing standards', async () => {
+      await useCase.execute({
+        packageSlug: teamPkg.slug,
+        spaceSlug: 'team',
+        itemType: 'standard',
+        itemSlugs: ['std-1'],
+      });
+
+      expect(mockGateway.standards.list).toHaveBeenCalledWith(
+        expect.objectContaining({ spaceId: 'space-team' }),
+      );
+    });
+
+    it('includes the space name in the error when an artefact is not found', async () => {
+      standardsGateway.list.mockResolvedValue({ standards: [] });
+      packagesGateway.list.mockResolvedValue({ packages: [teamPkg] });
+
+      await expect(
+        useCase.execute({
+          packageSlug: teamPkg.slug,
+          spaceSlug: 'team',
+          itemType: 'standard',
+          itemSlugs: ['missing-std'],
+        }),
+      ).rejects.toThrow("standard 'missing-std' not found in space '@team'");
+    });
+
+    it('throws when the package belongs to a different space', async () => {
+      await expect(
+        useCase.execute({
+          packageSlug: pkg.slug, // pkg lives in space-123, not 'team'
+          spaceSlug: 'team',
+          itemType: 'standard',
+          itemSlugs: ['std-1'],
+        }),
+      ).rejects.toThrow(`package '${pkg.slug}' not found`);
+    });
+
+    it('throws when the spaceSlug does not match any space', async () => {
+      await expect(
+        useCase.execute({
+          packageSlug: teamPkg.slug,
+          spaceSlug: 'unknown',
+          itemType: 'standard',
+          itemSlugs: ['std-1'],
+        }),
+      ).rejects.toThrow("Space 'unknown' not found");
     });
   });
 
