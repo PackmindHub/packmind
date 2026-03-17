@@ -1,7 +1,6 @@
 import * as fs from 'fs/promises';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
-  listPackagesHandler,
   showPackageHandler,
   installPackagesHandler,
   uninstallPackagesHandler,
@@ -9,7 +8,6 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
-import { createPackageId, createSpaceId, createUserId } from '@packmind/types';
 
 jest.mock('fs/promises');
 const mockFs = fs as jest.Mocked<typeof fs>;
@@ -31,7 +29,6 @@ describe('installPackagesHandler', () => {
 
   beforeEach(() => {
     mockPackmindCliHexa = {
-      listPackages: jest.fn(),
       getPackageBySlug: jest.fn(),
       configExists: jest.fn(),
       readConfig: jest.fn(),
@@ -66,93 +63,6 @@ describe('installPackagesHandler', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('listPackagesHandler', () => {
-    describe('when packages are found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.listPackages.mockResolvedValue([
-          {
-            slug: 'zebra',
-            name: 'Zebra Package',
-            description: 'A zebra package',
-            id: createPackageId('zebra'),
-            spaceId: createSpaceId('my-space'),
-            createdBy: createUserId('my-user'),
-            recipes: [],
-            standards: [],
-          },
-          {
-            slug: 'alpha',
-            name: 'Alpha Package',
-            description: 'An alpha package',
-            id: createPackageId('alpha'),
-            spaceId: createSpaceId('my-space'),
-            createdBy: createUserId('my-user'),
-            recipes: [],
-            standards: [],
-          },
-        ]);
-
-        await listPackagesHandler({}, deps);
-      });
-
-      it('logs fetching message', () => {
-        expect(mockLog).toHaveBeenCalledWith(
-          'Fetching available packages...\n',
-        );
-      });
-
-      it('logs available packages header', () => {
-        expect(mockLog).toHaveBeenCalledWith('Available packages:\n');
-      });
-
-      it('displays packages sorted alphabetically', () => {
-        expect(mockLog).toHaveBeenCalledWith(expect.stringContaining('alpha'));
-      });
-
-      it('exits with 0', () => {
-        expect(mockExit).toHaveBeenCalledWith(0);
-      });
-    });
-
-    describe('when no packages are found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.listPackages.mockResolvedValue([]);
-
-        await listPackagesHandler({}, deps);
-      });
-
-      it('displays no packages message', () => {
-        expect(mockLog).toHaveBeenCalledWith('No packages found.');
-      });
-
-      it('exits with 0', () => {
-        expect(mockExit).toHaveBeenCalledWith(0);
-      });
-    });
-
-    describe('when listing fails', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.listPackages.mockRejectedValue(
-          new Error('Network error'),
-        );
-
-        await listPackagesHandler({}, deps);
-      });
-
-      it('displays error header', () => {
-        expect(mockError).toHaveBeenCalledWith('\n❌ Failed to list packages:');
-      });
-
-      it('displays error message', () => {
-        expect(mockError).toHaveBeenCalledWith('   Network error');
-      });
-
-      it('exits with 1', () => {
-        expect(mockExit).toHaveBeenCalledWith(1);
-      });
-    });
   });
 
   describe('showPackageHandler', () => {

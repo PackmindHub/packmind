@@ -1,8 +1,6 @@
 import { command } from 'cmd-ts';
-import {
-  InstallHandlerDependencies,
-  listPackagesHandler,
-} from './installPackagesHandler';
+import { InstallHandlerDependencies } from './installPackagesHandler';
+import { listPackagesHandler } from './packages/listPackagesHandler';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 

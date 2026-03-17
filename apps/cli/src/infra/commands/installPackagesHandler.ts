@@ -7,20 +7,7 @@ import {
   PackmindFileConfig,
   SummarizedArtifact,
 } from '@packmind/types';
-import {
-  logWarningConsole,
-  formatSlug,
-  formatLabel,
-} from '../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../utils/credentials';
-
-function buildPackageUrl(
-  host: string,
-  orgSlug: string,
-  packageId: string,
-): string {
-  return `${host}/org/${orgSlug}/space/global/packages/${packageId}`;
-}
+import { logWarningConsole } from '../utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -122,81 +109,6 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     }
   } catch {
     // Silently ignore default skills installation errors as it's a secondary operation
-  }
-}
-
-export type ListPackagesArgs = Record<string, never>;
-
-export async function listPackagesHandler(
-  _args: ListPackagesArgs,
-  deps: InstallHandlerDependencies,
-): Promise<void> {
-  const { packmindCliHexa, exit, log, error } = deps;
-
-  try {
-    log('Fetching available packages...\n');
-    const packages = await packmindCliHexa.listPackages({});
-
-    if (packages.length === 0) {
-      log('No packages found.');
-      exit(0);
-      return;
-    }
-
-    // Sort packages alphabetically by slug
-    const sortedPackages = [...packages].sort((a, b) =>
-      a.slug.localeCompare(b.slug),
-    );
-
-    // Try to build webapp URL from credentials
-    let urlBuilder: ((id: string) => string) | null = null;
-    const apiKey = loadApiKey();
-    if (apiKey) {
-      const decoded = decodeApiKey(apiKey);
-      const orgSlug = decoded?.jwt?.organization?.slug;
-      if (decoded?.host && orgSlug) {
-        urlBuilder = (id: string) => buildPackageUrl(decoded.host, orgSlug, id);
-      }
-    }
-
-    log('Available packages:\n');
-    sortedPackages.forEach((pkg, index) => {
-      log(`- ${formatSlug(pkg.slug)}`);
-      log(`    ${formatLabel('Name:')} ${pkg.name}`);
-      if (urlBuilder) {
-        const url = urlBuilder(pkg.id);
-        log(`    ${formatLabel('Link:')} ${url}`);
-      }
-      if (pkg.description) {
-        const descriptionLines = pkg.description
-          .trim()
-          .split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line.length > 0);
-        const [firstLine, ...restLines] = descriptionLines;
-        log(`    ${formatLabel('Description:')} ${firstLine}`);
-        restLines.forEach((line) => {
-          log(`                 ${line}`);
-        });
-      }
-      // Add blank line between packages (but not after the last one)
-      if (index < sortedPackages.length - 1) {
-        log('');
-      }
-    });
-
-    const exampleSlug = formatSlug(sortedPackages[0].slug);
-    log('\nHow to install a package:\n');
-    log(`  $ packmind-cli install ${exampleSlug}`);
-    exit(0);
-  } catch (err) {
-    error('\n❌ Failed to list packages:');
-    if (err instanceof Error) {
-      error(`   ${err.message}`);
-    } else {
-      error(`   ${String(err)}`);
-    }
-    exit(1);
   }
 }
 

@@ -2,13 +2,13 @@ import { command, restPositionals, string, flag, option } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
-  listPackagesHandler,
   showPackageHandler,
   installPackagesHandler,
   recursiveInstallHandler,
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
+import { listPackagesHandler } from './packages/listPackagesHandler';
 import { logWarningConsole } from '../utils/consoleLogger';
 
 export const installCommand = command({
