@@ -117,12 +117,24 @@ export function useChangeProposalPool(
     ] as unknown as ChangeProposalDecision<T>;
   };
 
+  const proposalsWithDecisions = useMemo(
+    () =>
+      proposals.map((p) => {
+        const decision = decisionsTaken[p.id];
+        return decision
+          ? ({ ...p, decision } as ChangeProposalWithConflicts)
+          : p;
+      }),
+    [proposals, decisionsTaken],
+  );
+
   return {
     reviewingProposalId,
     acceptedProposalIds,
     rejectedProposalIds,
     blockedByConflictIds,
     hasPooledDecisions,
+    proposalsWithDecisions,
     getDecisionForChangeProposal,
     handleSelectProposal,
     handlePoolAccept,

@@ -305,7 +305,7 @@ export function CommandReviewDetail({
         {reviewState.activeTab === 'result' && (
           <ResultTabContent
             recipe={selectedRecipe}
-            proposals={selectedRecipeProposals}
+            proposals={pool.proposalsWithDecisions}
             acceptedProposalIds={pool.acceptedProposalIds}
           />
         )}
