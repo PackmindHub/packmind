@@ -1,5 +1,6 @@
 import type { Space } from '@packmind/types';
 import { SpaceNavBlock } from '../../organizations/components/sidebar/SpaceNavBlock';
+import { PMSeparator } from '@packmind/ui';
 
 interface CustomSpacesNavBlockProps {
   spaces: Space[];
@@ -16,6 +17,7 @@ export function CustomSpacesNavBlock({
 }: Readonly<CustomSpacesNavBlockProps>): React.ReactElement {
   return (
     <>
+      <PMSeparator borderColor="border.secondary" my={2} />
       {spaces
         .filter((space) => !space.isDefaultSpace)
         .map((space) => (
