@@ -396,7 +396,17 @@ export class PackmindCliHexa {
     const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
     if (!hasUnprefixed) return slugs;
 
-    const spaces = await this.getSpaces();
+    let spaces: Space[];
+    try {
+      spaces = await this.getSpaces();
+    } catch {
+      // Older versions of the Packmind app do not support spaces — return slugs as-is.
+      logWarningConsole(
+        'Your Packmind instance is outdated and needs to be updated. It will not be supported in the v1 release of packmind-cli.',
+      );
+      return slugs;
+    }
+
     if (spaces.length > 1) {
       throw new Error(
         `Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @${spaces[0].slug}/my-package).`,
