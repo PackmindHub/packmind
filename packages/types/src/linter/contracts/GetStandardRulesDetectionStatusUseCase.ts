@@ -3,6 +3,10 @@ import { StandardId, RuleId } from '../../standards';
 import { ProgrammingLanguage } from '../../languages';
 import { RuleLanguageDetectionStatus } from '../../standards';
 import { IUseCase } from '../../UseCase';
+import {
+  DetectionSeverity,
+  ActiveDetectionProgramId,
+} from '../ActiveDetectionProgram';
 
 export type GetStandardRulesDetectionStatusCommand = {
   organizationId: OrganizationId;
@@ -13,6 +17,8 @@ export type GetStandardRulesDetectionStatusCommand = {
 export type RuleLanguageStatus = {
   language: ProgrammingLanguage;
   status: RuleLanguageDetectionStatus;
+  severity?: DetectionSeverity;
+  activeDetectionProgramId?: ActiveDetectionProgramId;
 };
 
 export type RuleDetectionStatusSummary = {

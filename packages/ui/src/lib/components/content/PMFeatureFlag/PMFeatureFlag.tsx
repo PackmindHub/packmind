@@ -21,17 +21,33 @@ export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
   'change-proposals-in-webapp';
 
 export const EDIT_CHANGE_PROPOSALS_FEATURE_KEY = 'edit-change-proposals';
+export const SKILL_EVALUATION_FEATURE_KEY = 'skill-evaluation';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [STANDARD_SAMPLES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [CHANGE_PROPOSALS_FEATURE_KEY]: [
+    '@packmind.com',
+    '@promyze.com',
+    '@monpetitplacement.fr',
+    '@ninaa.io',
+  ],
   [ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY]: [
     '@packmind.com',
     '@promyze.com',
   ],
   [EDIT_CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [SKILL_EVALUATION_FEATURE_KEY]: [
+    'cedric.teyton@packmind.com',
+    'arthur.magne@packmind.com',
+    'joan.racenet@packmind.com',
+  ],
+};
+
+const isEmailEntry = (entry: string): boolean => {
+  const trimmed = entry.trim();
+  return trimmed.includes('@') && !trimmed.startsWith('@');
 };
 
 const normalizeDomain = (domain: string): string =>
@@ -52,24 +68,30 @@ const extractDomainFromEmail = (email?: string | null): string | null => {
   return normalizedEmail.slice(atIndex + 1);
 };
 
-const isDomainAllowedForFeature = ({
+const isAllowedForFeature = ({
   featureKey,
-  domain,
+  userEmail,
   featureDomainMap,
 }: {
   featureKey: string;
-  domain: string;
+  userEmail: string;
   featureDomainMap: Record<string, readonly string[]>;
 }): boolean => {
-  const allowedDomains = featureDomainMap[featureKey];
+  const allowedEntries = featureDomainMap[featureKey];
 
-  if (!allowedDomains?.length) {
+  if (!allowedEntries?.length) {
     return false;
   }
 
-  return allowedDomains.some(
-    (allowedDomain) => normalizeDomain(allowedDomain) === domain,
-  );
+  const normalizedEmail = userEmail.trim().toLowerCase();
+  const userDomain = extractDomainFromEmail(normalizedEmail);
+
+  return allowedEntries.some((entry) => {
+    if (isEmailEntry(entry)) {
+      return entry.trim().toLowerCase() === normalizedEmail;
+    }
+    return userDomain ? normalizeDomain(entry) === userDomain : false;
+  });
 };
 
 export const isFeatureFlagEnabled = ({
@@ -84,16 +106,14 @@ export const isFeatureFlagEnabled = ({
     return true;
   }
 
-  const userDomain = extractDomainFromEmail(userEmail);
-
-  if (!userDomain) {
+  if (!userEmail) {
     return false;
   }
 
   return featureKeys.some((featureKey) =>
-    isDomainAllowedForFeature({
+    isAllowedForFeature({
       featureKey,
-      domain: userDomain,
+      userEmail,
       featureDomainMap,
     }),
   );
