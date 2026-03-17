@@ -768,7 +768,6 @@ describe('diffRemoveHandler', () => {
       packageSlugs: ['test-package'],
       agents: ['packmind'],
       installedAt: '2026-01-01T00:00:00.000Z',
-      cliVersion: '1.0.0',
       targetId: 'target-lock-123',
       artifacts: {
         'standard:my-standard': {

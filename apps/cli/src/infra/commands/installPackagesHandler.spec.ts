@@ -1264,7 +1264,6 @@ describe('installPackagesHandler', () => {
           packagesSlugs: [],
           previousPackagesSlugs: ['backend'],
           agents: undefined,
-          cliVersion: expect.any(String),
         });
       });
 
