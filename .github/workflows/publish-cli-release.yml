@@ -242,6 +242,15 @@ jobs:
             exit 1
           fi
           
+          # Rename and copy Windows arm64
+          if [ -f "executables/packmind-cli-windows-arm64.exe" ]; then
+            cp "executables/packmind-cli-windows-arm64.exe" "release-assets/packmind-cli-windows-arm64-${VERSION}.exe"
+            echo "✅ Prepared Windows arm64 executable"
+          else
+            echo "❌ Error: Windows arm64 executable not found"
+            exit 1
+          fi
+
           # Copy signed macOS arm64 (already versioned) - must be signed
           if [ -f "executables-signed/packmind-cli-macos-arm64-${VERSION}" ]; then
             cp "executables-signed/packmind-cli-macos-arm64-${VERSION}" "release-assets/packmind-cli-macos-arm64-${VERSION}"
@@ -276,6 +285,7 @@ jobs:
             - **Linux arm64**: `packmind-cli-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}`
             - **macOS arm64**: `packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}`
             - **Windows x64**: `packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe`
+            - **Windows arm64**: `packmind-cli-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe`
             
             Make the executable runnable (Linux/macOS):
             ```bash
@@ -291,6 +301,7 @@ jobs:
             release-assets/packmind-cli-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}
             release-assets/packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}
             release-assets/packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe
+            release-assets/packmind-cli-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe
       
       - name: Summary
         env:
@@ -306,6 +317,7 @@ jobs:
           echo "- packmind-cli-linux-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "- packmind-cli-macos-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "- packmind-cli-windows-x64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-windows-arm64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [View Release](https://github.com/${REPOSITORY}/releases/tag/${REF})" >> $GITHUB_STEP_SUMMARY
 

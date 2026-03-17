@@ -219,6 +219,14 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [pkg.slug],
         packageIds: [packageId],
+        artifactSpaceIds: {
+          [recipeId]: pkg.spaceId,
+          [standardId]: pkg.spaceId,
+        },
+        artifactPackageIds: {
+          [recipeId]: [pkg.id as string],
+          [standardId]: [pkg.id as string],
+        },
       });
     });
 
@@ -333,6 +341,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [pkg.slug],
         packageIds: [packageId],
+        artifactSpaceIds: {
+          [recipeId]: pkg.spaceId,
+        },
+        artifactPackageIds: {
+          [recipeId]: [pkg.id as string],
+        },
       });
     });
   });
@@ -385,6 +399,12 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [pkg.slug],
         packageIds: [packageId],
+        artifactSpaceIds: {
+          [standardId]: pkg.spaceId,
+        },
+        artifactPackageIds: {
+          [standardId]: [pkg.id as string],
+        },
       });
     });
   });
@@ -595,6 +615,18 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
         packagesSlugs: [package1.slug, package2.slug],
         packageIds: [package1Id, package2Id],
+        artifactSpaceIds: {
+          [sharedRecipeId]: package2.spaceId,
+          [uniqueRecipeId]: package1.spaceId,
+          [sharedStandardId]: package2.spaceId,
+          [uniqueStandardId]: package2.spaceId,
+        },
+        artifactPackageIds: {
+          [sharedRecipeId]: [package1.id as string, package2.id as string],
+          [uniqueRecipeId]: [package1.id as string],
+          [sharedStandardId]: [package1.id as string, package2.id as string],
+          [uniqueStandardId]: [package2.id as string],
+        },
       });
     });
 

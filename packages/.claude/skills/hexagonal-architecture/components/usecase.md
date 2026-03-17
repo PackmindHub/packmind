@@ -16,7 +16,7 @@ Requires the user to be an authenticated member of the organization.
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { IGetStandardByIdUseCase, GetStandardByIdCommand, GetStandardByIdResponse } from '@packmind/types';
 
-export class GetStandardByIdUsecase
+export class GetStandardByIdUseCase
   extends AbstractMemberUseCase<GetStandardByIdCommand, GetStandardByIdResponse>
   implements IGetStandardByIdUseCase {
 
@@ -27,7 +27,7 @@ export class GetStandardByIdUsecase
     super(accountsPort);
   }
 
-  async executeForMembers(
+  protected async executeForMembers(
     command: GetStandardByIdCommand & MemberContext,
   ): Promise<GetStandardByIdResponse> {
     // MemberContext provides: user, organization, membership
@@ -50,7 +50,7 @@ Requires the user to have admin role in the organization.
 ```typescript
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 
-export class DeleteStandardUsecase
+export class DeleteStandardUseCase
   extends AbstractAdminUseCase<DeleteStandardCommand, void> {
 
   constructor(
@@ -60,7 +60,7 @@ export class DeleteStandardUsecase
     super(accountsPort);
   }
 
-  async executeForAdmins(
+  protected async executeForAdmins(
     command: DeleteStandardCommand & AdminContext,
   ): Promise<void> {
     await this.standardService.deleteStandard(command.standardId);
@@ -75,7 +75,7 @@ No authentication required.
 ```typescript
 import { IPublicUseCase } from '@packmind/types';
 
-export class PublicGetStandardUsecase
+export class PublicGetStandardUseCase
   implements IPublicUseCase<PublicGetStandardCommand, Standard | null> {
 
   constructor(private readonly standardService: StandardService) {}
@@ -96,6 +96,6 @@ See [contract.md](contract.md) for the pattern.
 
 - **One folder per use case** — `useCases/{camelCaseName}/{camelCaseName}.usecase.ts`
 - **Use case names are verb-first** — `getStandardById`, `createRule`, `deleteStandard`
-- **Use cases call services** — they orchestrate, services contain reusable logic
+- **Use cases call services, not repositories** — use cases orchestrate via services; never access repositories directly
 - **Emit events** when the operation has side effects other domains care about
 - **Test file colocated** — `{name}.usecase.spec.ts` in the same folder

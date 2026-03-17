@@ -7,8 +7,10 @@ import {
   Param,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
@@ -25,6 +27,7 @@ import {
   CreateChangeProposalResponse,
   ListChangeProposalsBySpaceResponse,
   OrganizationId,
+  PreviewArtifactRenderingCommand,
   SpaceId,
 } from '@packmind/types';
 import { ChangeProposalsService } from './change-proposals.service';
@@ -299,5 +302,40 @@ export class OrganizationsSpacesChangeProposalsController {
       );
       throw error;
     }
+  }
+
+  /**
+   * Preview how artifacts render for a coding agent, returned as a zip file
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/preview-rendering
+   */
+  @Post('preview-rendering')
+  async previewArtifactRendering(
+    @Body() body: PreviewArtifactRenderingCommand,
+    @Res() response: Response,
+  ): Promise<void> {
+    if (!body.codingAgent) {
+      throw new BadRequestException('codingAgent is required');
+    }
+
+    this.logger.info(
+      'POST .../change-proposals/preview-rendering - Previewing artifact rendering',
+      {
+        codingAgent: body.codingAgent,
+        recipesCount: body.recipeVersions?.length ?? 0,
+        standardsCount: body.standardVersions?.length ?? 0,
+        skillsCount: body.skillVersions?.length ?? 0,
+      },
+    );
+
+    const result =
+      await this.changeProposalsService.previewArtifactRendering(body);
+
+    response
+      .setHeader('Content-Type', 'application/zip')
+      .setHeader(
+        'Content-Disposition',
+        `attachment; filename="${result.fileName}"`,
+      )
+      .send(Buffer.from(result.fileContent, 'base64'));
   }
 }

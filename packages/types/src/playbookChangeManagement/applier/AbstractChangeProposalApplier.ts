@@ -84,6 +84,13 @@ export abstract class AbstractChangeProposalApplier<
     changeProposal: ChangeProposal,
   ): Version;
 
+  protected getEffectivePayload<T extends ChangeProposalType>(
+    changeProposal: ChangeProposal<T>,
+  ): ChangeProposal<T>['payload'] {
+    return (changeProposal.decision ??
+      changeProposal.payload) as ChangeProposal<T>['payload'];
+  }
+
   protected applyDiff(
     changeProposalId: ChangeProposalId,
     payload: ScalarUpdatePayload,

@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
+import {
+  PMAlertDialog,
+  PMBox,
+  PMSpinner,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  EDIT_CHANGE_PROPOSALS_FEATURE_KEY,
+} from '@packmind/ui';
 import {
   AcceptedChangeProposal,
   ChangeProposalDecision,
@@ -40,6 +47,7 @@ import { OriginalTabContent } from './OriginalTabContent';
 import { ResultTabContent } from './ResultTabContent';
 import { useParams, useBlocker, useBeforeUnload } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 
 interface CommandReviewDetailProps {
   artefactId: string;
@@ -53,7 +61,7 @@ export function CommandReviewDetail({
   spaceSlug: spaceSlugProp,
 }: Readonly<CommandReviewDetailProps>) {
   const recipeId = artefactId as RecipeId;
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceId, space } = useCurrentSpace();
   const { orgSlug: orgSlugParam } = useParams<{ orgSlug: string }>();
   const queryClient = useQueryClient();
@@ -268,14 +276,19 @@ export function CommandReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={false}
+            showEditButton={
+              isFeatureFlagEnabled({
+                featureKeys: [EDIT_CHANGE_PROPOSALS_FEATURE_KEY],
+                featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+                userEmail: user?.email,
+              })
+                ? isEditableProposalType
+                : false
+            }
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={() => {
-              /* Edit mode is not supported for commands */
-            }}
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}

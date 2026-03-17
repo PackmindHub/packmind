@@ -25,11 +25,11 @@ Command-line interface for Packmind, built with cmd-ts and tree-sitter parsers.
 
 ## Main Commands
 
-- Build: `nx build packmind-cli`
-- Test: `nx test packmind-cli`
+- Build: `./node_modules/.bin/nx build packmind-cli`
+- Test: `./node_modules/.bin/nx test packmind-cli`
 - Build npm executable (current platform): `npm run packmind-cli:build`
 - Build portable bun executables: `bun run apps/cli/bun-build.ts --target=all`
-- Lint: `nx lint packmind-cli`
+- Lint: `./node_modules/.bin/nx lint packmind-cli`
 
 <!-- start: Packmind standards -->
 # Packmind Standards

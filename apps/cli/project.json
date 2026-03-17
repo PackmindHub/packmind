@@ -106,7 +106,7 @@
       "options": {
         "command": "bun run apps/cli/bun-build.ts --target=windows"
       },
-      "description": "Build standalone executables for Windows (x64) using Bun"
+      "description": "Build standalone executables for Windows (x64 + arm64) using Bun"
     },
     "run": {
       "executor": "@nx/js:node",

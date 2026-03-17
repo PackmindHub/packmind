@@ -14,6 +14,7 @@ import {
 import {
   buildArtifactMetadataMap,
   enrichFileModificationsWithMetadata,
+  flattenArtifactMetadataMap,
 } from './ArtifactMetadataUtils';
 
 describe('ArtifactMetadataUtils', () => {
@@ -318,6 +319,123 @@ describe('ArtifactMetadataUtils', () => {
 
       it('does not set artifactVersion', () => {
         expect(files[0].artifactVersion).toBeUndefined();
+      });
+    });
+  });
+
+  describe('flattenArtifactMetadataMap', () => {
+    describe('with all three artifact types populated', () => {
+      const recipeId = createRecipeId('recipe-flat-1');
+      const standardId = createStandardId('standard-flat-1');
+      const skillId = createSkillId('skill-flat-1');
+
+      let result: ReturnType<typeof flattenArtifactMetadataMap>;
+
+      beforeEach(() => {
+        const metadata = buildArtifactMetadataMap({
+          recipes: {
+            spaceIdMap: new Map([[recipeId as string, 'space-A']]),
+            packageIdMap: new Map([[recipeId as string, ['pkg-1', 'pkg-2']]]),
+            versions: [
+              {
+                id: createRecipeVersionId('rv-flat-1'),
+                recipeId,
+                name: 'Recipe',
+                slug: 'recipe-slug',
+                content: 'content',
+                version: 3,
+                userId: createUserId('user-1'),
+              },
+            ],
+          },
+          standards: {
+            spaceIdMap: new Map([[standardId as string, 'space-B']]),
+            packageIdMap: new Map([[standardId as string, ['pkg-3']]]),
+            versions: [
+              {
+                id: createStandardVersionId('sv-flat-1'),
+                standardId,
+                name: 'Standard',
+                slug: 'standard-slug',
+                description: 'desc',
+                version: 2,
+                scope: null,
+              },
+            ],
+          },
+          skills: {
+            spaceIdMap: new Map([[skillId as string, 'space-C']]),
+            packageIdMap: new Map([[skillId as string, ['pkg-4', 'pkg-5']]]),
+            versions: [
+              {
+                id: createSkillVersionId('skv-flat-1'),
+                skillId,
+                name: 'Skill',
+                slug: 'skill-slug',
+                description: 'desc',
+                prompt: 'prompt',
+                version: 1,
+                userId: createUserId('user-1'),
+              },
+            ],
+          },
+        });
+
+        result = flattenArtifactMetadataMap(metadata);
+      });
+
+      it('extracts spaceId for recipe artifact', () => {
+        expect(result.artifactSpaceIds[recipeId as string]).toBe('space-A');
+      });
+
+      it('extracts packageIds for recipe artifact', () => {
+        expect(result.artifactPackageIds[recipeId as string]).toEqual([
+          'pkg-1',
+          'pkg-2',
+        ]);
+      });
+
+      it('extracts spaceId for standard artifact', () => {
+        expect(result.artifactSpaceIds[standardId as string]).toBe('space-B');
+      });
+
+      it('extracts packageIds for standard artifact', () => {
+        expect(result.artifactPackageIds[standardId as string]).toEqual([
+          'pkg-3',
+        ]);
+      });
+
+      it('extracts spaceId for skill artifact', () => {
+        expect(result.artifactSpaceIds[skillId as string]).toBe('space-C');
+      });
+
+      it('extracts packageIds for skill artifact', () => {
+        expect(result.artifactPackageIds[skillId as string]).toEqual([
+          'pkg-4',
+          'pkg-5',
+        ]);
+      });
+    });
+
+    describe('with empty metadata maps', () => {
+      let result: ReturnType<typeof flattenArtifactMetadataMap>;
+
+      beforeEach(() => {
+        const metadata = buildArtifactMetadataMap({
+          recipes: { spaceIdMap: new Map(), versions: [] },
+          standards: { spaceIdMap: new Map(), versions: [] },
+          skills: { spaceIdMap: new Map(), versions: [] },
+        });
+
+        result = flattenArtifactMetadataMap(metadata);
+      });
+
+      it('returns empty artifactSpaceIds', () => {
+        expect(result.artifactSpaceIds).toEqual({});
+      });
+
+      it('returns empty artifactPackageIds', () => {
+        expect(result.artifactPackageIds).toEqual({});
       });
     });
   });

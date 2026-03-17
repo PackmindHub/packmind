@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
+import {
+  PMAlertDialog,
+  PMBox,
+  PMSpinner,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  EDIT_CHANGE_PROPOSALS_FEATURE_KEY,
+} from '@packmind/ui';
 import {
   AcceptedChangeProposal,
   ChangeProposalDecision,
@@ -59,6 +66,7 @@ import { SkillResultTabContent } from './SkillResultTabContent';
 import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
 import { SKILL_MD_MARKDOWN_TYPES } from '../../constants/skillProposalTypes';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 
 interface SkillReviewDetailProps {
   artefactId: string;
@@ -72,7 +80,7 @@ export function SkillReviewDetail({
   spaceSlug,
 }: Readonly<SkillReviewDetailProps>) {
   const skillId = artefactId as SkillId;
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const queryClient = useQueryClient();
   const userLookup = useUserLookup();
@@ -339,14 +347,19 @@ export function SkillReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={false}
+            showEditButton={
+              isFeatureFlagEnabled({
+                featureKeys: [EDIT_CHANGE_PROPOSALS_FEATURE_KEY],
+                featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+                userEmail: user?.email,
+              })
+                ? isEditableProposalType
+                : false
+            }
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={() => {
-              /* Edit mode is out of scope for skills */
-            }}
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}

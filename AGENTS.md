@@ -9,7 +9,7 @@ This is an Nx monorepo containing applications and reusable packages.
 - **Database**: PostgreSQL with TypeORM for entity persistence
 - **Cache**: Redis for caching
 - **Background Jobs**: BullMQ for job queue management
-- **Testing**: Jest with @swc/jest as test runner. Tests are run with `nx run <project-name>` as detailed below.
+- **Testing**: Jest with @swc/jest as test runner. Tests are run with `./node_modules/.bin/nx run <project-name>` as detailed below.
 
 ## Directory Structure
 
@@ -27,20 +27,18 @@ docker compose up
 
 This starts the entire development environment.
 Docker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
-Don't use `nx serve` commands for local development, let user starts the stack with `docker compose up`
-
 ## Working with Nx
 
-The following commands apply for both NX apps and packages (use `nx show projects` to list actual apps and packages.)
-- Test a project: `nx test <project-name>`
-- Lint a project: `nx lint <project-name>`
-- Build a project: `nx build <project-name>`
+The following commands apply for both NX apps and packages (use `./node_modules/.bin/nx show projects` to list actual apps and packages.)
+- Test a project: `./node_modules/.bin/nx test <project-name>`
+- Lint a project: `./node_modules/.bin/nx lint <project-name>`
+- Build a project: `./node_modules/.bin/nx build <project-name>`
 - Test affected projects: `npm run test:staged`
 - Lint affected projects: `npm run lint:staged`
 
 ## Code Quality
 
-- **Linting**: `nx lint <project-name>` runs ESLint, using the config file `eslint.config.mjs`.
+- **Linting**: `./node_modules/.bin/nx lint <project-name>` runs ESLint, using the config file `eslint.config.mjs`.
 - **Formatting**: Prettier is used for code formatting. You don't have to run it, it's set as a pre-commit hook.
 
 ## Commands
@@ -69,7 +67,7 @@ Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
 - Each sub task MUST have its own commit.
-- Use the `nx lint` and `nx test` commands on the apps and packages you've edited
+- Use the `./node_modules/.bin/nx lint` and `./node_modules/.bin/nx test` commands on the apps and packages you've edited
 
 <!-- start: Packmind standards -->
 # Packmind Standards

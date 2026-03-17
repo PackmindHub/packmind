@@ -17,8 +17,12 @@ export class StandardsAdapter
 
   // Cross-domain ports (set during initialize)
   private accountsPort: IAccountsPort | null = null;
-  private gitPort: IGitPort | null = null;
-  private spacesPort: ISpacesPort | null = null;
+  private standardDelayedJobs: IStandardDelayedJobs | null = null;
+
+  // Use cases — created once in initialize(), reused across calls
+  private _createStandard!: CreateStandardUsecase;
+  private _getStandardById!: GetStandardByIdUsecase;
+  private _deleteStandard!: DeleteStandardUsecase;
 
   constructor(
     private readonly standardsServices: StandardsServices,
@@ -26,44 +30,58 @@ export class StandardsAdapter
   ) {}
 
   // Called by Hexa during registry initialization
-  async initialize(deps: Record<string, unknown>): Promise<void> {
-    this.accountsPort = deps[IAccountsPortName] as IAccountsPort;
-    this.gitPort = deps[IGitPortName] as IGitPort;
-    this.spacesPort = deps[ISpacesPortName] as ISpacesPort;
+  async initialize(deps: {
+    [IAccountsPortName]: IAccountsPort;
+    [ISpacesPortName]: ISpacesPort;
+    [ILinterPortName]: ILinterPort;
+    jobsService: JobsService;
+    eventEmitterService: PackmindEventEmitterService;
+  }): Promise<void> {
+    this.accountsPort = deps[IAccountsPortName];
+    const eventEmitterService = deps.eventEmitterService;
+
+    // Build delayed job objects from job service
+    this.standardDelayedJobs = this.buildDelayedJobs(deps.jobsService);
 
     // Wire ports into services
-    this.standardsServices.setLinterAdapter(deps[ILinterPortName] as ILinterPort);
-  }
+    this.standardsServices.setLinterAdapter(deps[ILinterPortName]);
 
-  // --- Port methods: delegate to use cases ---
-
-  async getStandard(command: GetStandardByIdCommand): Promise<GetStandardByIdResponse> {
-    const useCase = new GetStandardByIdUsecase(
-      this.accountsPort!,
+    // Create use cases ONCE — stored as private fields for reuse
+    this._getStandardById = new GetStandardByIdUsecase(
+      this.accountsPort,
       this.standardsServices.getStandardService(),
     );
-    return useCase.execute(command);
+
+    this._createStandard = new CreateStandardUsecase(
+      this.accountsPort,
+      this.standardsServices.getStandardService(),
+      this.standardsServices.getStandardVersionService(),
+      this.standardDelayedJobs.standardSummaryDelayedJob,
+      eventEmitterService,
+    );
+
+    this._deleteStandard = new DeleteStandardUsecase(
+      this.accountsPort,
+      this.standardsServices.getStandardService(),
+      eventEmitterService,
+    );
+  }
+
+  // --- Port methods: delegate to cached use case instances ---
+
+  async getStandard(command: GetStandardByIdCommand): Promise<GetStandardByIdResponse> {
+    return this._getStandardById.execute(command);
   }
 
   async createStandard(command: CreateStandardCommand): Promise<Standard> {
-    const useCase = new CreateStandardUsecase(
-      this.accountsPort!,
-      this.standardsServices.getStandardService(),
-      this.eventEmitterService,
-    );
-    return useCase.execute(command);
-  }
-
-  // --- Background jobs ---
-
-  async addGenerateStandardSummaryJob(input: GenerateStandardSummaryInput): Promise<string> {
-    return this.jobsService.submitJob('generateStandardSummary', input);
+    const result = await this._createStandard.execute(command);
+    return result.standard;
   }
 
   // --- Adapter interface ---
 
   getPort(): IStandardsPort {
-    return this;
+    return this as IStandardsPort;
   }
 }
 ```
@@ -85,6 +103,7 @@ The consumer only sees the `IStandardsPort` interface, never the adapter class d
 
 - **One adapter per domain** — `{Domain}Adapter`
 - **Implements `IBaseAdapter<TPort>` and `TPort`** — both the lifecycle interface and the port
-- **Use case instantiation** — use cases are created per-call inside adapter methods
+- **Use case instantiation** — use cases are created once in `initialize()` and stored as private fields (prefixed with `_`), reused across method calls
 - **Cross-domain ports** — stored as nullable fields, set during `initialize()`
-- **No business logic** — the adapter delegates to use cases and services, it doesn't contain logic itself
+- **No business logic** — the adapter only delegates to use cases and services; all logic lives in use cases/services
+- **Delayed jobs** — background jobs use pre-built delayed job objects (via factories), not direct job service calls

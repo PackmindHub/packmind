@@ -14,6 +14,7 @@ export * from './SkillDeploymentOverview';
 export * from './FileUpdates';
 export * from './Package';
 export * from './PackmindFileConfig';
+export * from './PackmindLockFile';
 export * from './DistributionId';
 export * from './Distribution';
 export * from './DistributionOperation';

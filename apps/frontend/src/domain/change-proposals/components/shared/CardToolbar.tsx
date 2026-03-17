@@ -19,6 +19,8 @@ interface CardToolbarProps {
   spaceId: SpaceId;
   isOutdated: boolean;
   isBlockedByConflict: boolean;
+  isEditing?: boolean;
+  isEditValid?: boolean;
   viewMode: ViewMode;
   showEditButton?: boolean;
   onViewModeChange: (mode: ViewMode) => void;
@@ -26,6 +28,8 @@ interface CardToolbarProps {
   onAccept: (decision?: ChangeProposalDecision) => void;
   onDismiss: () => void;
   onUndo: () => void;
+  onCancelEdit?: () => void;
+  onAcceptEdit?: () => void;
 }
 
 function isRemoveProposal(type: ChangeProposalType): boolean {
@@ -43,6 +47,8 @@ export function CardToolbar({
   spaceId,
   isOutdated,
   isBlockedByConflict,
+  isEditing,
+  isEditValid,
   viewMode,
   showEditButton,
   onViewModeChange,
@@ -50,6 +56,8 @@ export function CardToolbar({
   onAccept,
   onDismiss,
   onUndo,
+  onCancelEdit,
+  onAcceptEdit,
 }: Readonly<CardToolbarProps>) {
   const isFocused = viewMode === 'focused';
   const isExpanded = !isFocused;
@@ -84,11 +92,15 @@ export function CardToolbar({
         spaceId={spaceId}
         isOutdated={isOutdated}
         isBlockedByConflict={isBlockedByConflict}
+        isEditing={isEditing}
+        isEditValid={isEditValid}
         showEditButton={showEditButton}
         onEdit={onEdit}
         onAccept={onAccept}
         onDismiss={onDismiss}
         onUndo={onUndo}
+        onCancelEdit={onCancelEdit}
+        onAcceptEdit={onAcceptEdit}
       />
     </PMHStack>
   );

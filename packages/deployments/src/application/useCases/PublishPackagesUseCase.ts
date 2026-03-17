@@ -168,6 +168,36 @@ export class PublishPackagesUseCase implements IPublishPackages {
     // Extract package slugs
     const packagesSlugs = packages.map((p) => p.slug);
 
+    // Build artifact metadata maps for lock file generation
+    const artifactSpaceIds: Record<string, string> = {};
+    const artifactPackageIds: Record<string, string[]> = {};
+
+    for (const pkg of packages) {
+      for (const recipeId of pkg.recipes) {
+        artifactSpaceIds[recipeId] = pkg.spaceId as string;
+        if (!artifactPackageIds[recipeId]) {
+          artifactPackageIds[recipeId] = [];
+        }
+        artifactPackageIds[recipeId].push(pkg.id as string);
+      }
+
+      for (const standardId of pkg.standards) {
+        artifactSpaceIds[standardId] = pkg.spaceId as string;
+        if (!artifactPackageIds[standardId]) {
+          artifactPackageIds[standardId] = [];
+        }
+        artifactPackageIds[standardId].push(pkg.id as string);
+      }
+
+      for (const skillId of pkg.skills) {
+        artifactSpaceIds[skillId] = pkg.spaceId as string;
+        if (!artifactPackageIds[skillId]) {
+          artifactPackageIds[skillId] = [];
+        }
+        artifactPackageIds[skillId].push(pkg.id as string);
+      }
+    }
+
     // Publish artifacts using the unified publishArtifacts use case
     const { distributions } = await this.deploymentPort.publishArtifacts({
       userId: command.userId,
@@ -178,6 +208,8 @@ export class PublishPackagesUseCase implements IPublishPackages {
       targetIds: command.targetIds,
       packagesSlugs,
       packageIds: command.packageIds,
+      artifactSpaceIds,
+      artifactPackageIds,
     } as PublishArtifactsCommand);
 
     // Store distributed package records for each distribution

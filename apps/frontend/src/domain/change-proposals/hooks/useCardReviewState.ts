@@ -10,12 +10,6 @@ export function useCardReviewState() {
   const [viewModeByProposal, setViewModeByProposal] = useState<
     Map<ChangeProposalId, ViewMode>
   >(new Map());
-  const [editingProposalId, setEditingProposalId] =
-    useState<ChangeProposalId | null>(null);
-  const [editedValues, setEditedValues] = useState<
-    Map<ChangeProposalId, string>
-  >(new Map());
-
   const toggleCard = useCallback((ids: string[]) => {
     setExpandedCardIds(ids);
   }, []);
@@ -45,43 +39,6 @@ export function useCardReviewState() {
     [],
   );
 
-  const startEditing = useCallback(
-    (proposalId: ChangeProposalId, initialValue: string) => {
-      setEditingProposalId(proposalId);
-      if (!editedValues.has(proposalId)) {
-        setEditedValues((prev) => {
-          const next = new Map(prev);
-          next.set(proposalId, initialValue);
-          return next;
-        });
-      }
-    },
-    [editedValues],
-  );
-
-  const cancelEditing = useCallback(() => {
-    setEditingProposalId(null);
-  }, []);
-
-  const setEditedValue = useCallback(
-    (proposalId: ChangeProposalId, value: string) => {
-      setEditedValues((prev) => {
-        const next = new Map(prev);
-        next.set(proposalId, value);
-        return next;
-      });
-    },
-    [],
-  );
-
-  const resetEditedValue = useCallback((proposalId: ChangeProposalId) => {
-    setEditedValues((prev) => {
-      const next = new Map(prev);
-      next.delete(proposalId);
-      return next;
-    });
-  }, []);
-
   return {
     activeTab,
     setActiveTab,
@@ -89,13 +46,7 @@ export function useCardReviewState() {
     toggleCard,
     collapseCard,
     expandCard,
-    editingProposalId,
-    editedValues,
     getViewMode,
     setViewMode,
-    startEditing,
-    cancelEditing,
-    setEditedValue,
-    resetEditedValue,
   };
 }

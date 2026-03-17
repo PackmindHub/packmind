@@ -784,6 +784,356 @@ describe('GitlabRepository', () => {
         );
       });
     });
+
+    describe('when files have executable permissions', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({ data: [], headers: {} });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-perm',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-perm',
+          },
+        });
+      });
+
+      it('adds chmod action for files with executable permissions', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: '#!/bin/bash',
+            permissions: 'rwxr-xr-x',
+          },
+        ];
+
+        await gitlabRepository.commitFiles(files, 'Add script');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: 'Add script',
+            actions: [
+              {
+                action: 'create',
+                file_path: 'scripts/run.sh',
+                content: '#!/bin/bash',
+              },
+              {
+                action: 'chmod',
+                file_path: 'scripts/run.sh',
+                execute_filemode: true,
+              },
+            ],
+          },
+        );
+      });
+
+      it('does not add chmod action for non-executable files', async () => {
+        const files = [
+          { path: 'data.txt', content: 'data', permissions: 'rw-r--r--' },
+        ];
+
+        await gitlabRepository.commitFiles(files, 'Add data');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: 'Add data',
+            actions: [
+              { action: 'create', file_path: 'data.txt', content: 'data' },
+            ],
+          },
+        );
+      });
+    });
+
+    describe('when only permissions change (content identical)', () => {
+      const existingContent = 'existing script content';
+
+      beforeEach(() => {
+        // File exists in tree and has identical content
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-sha',
+                content: Buffer.from(existingContent).toString('base64'),
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-chmod',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-chmod',
+          },
+        });
+      });
+
+      describe('when executable permissions are requested', () => {
+        let result: Awaited<ReturnType<typeof gitlabRepository.commitFiles>>;
+
+        beforeEach(async () => {
+          const files = [
+            {
+              path: 'scripts/run.sh',
+              content: existingContent,
+              permissions: 'rwxr-xr-x',
+            },
+          ];
+
+          result = await gitlabRepository.commitFiles(files, 'Fix permissions');
+        });
+
+        it('creates a commit', async () => {
+          expect(result.sha).not.toBe('no-changes');
+        });
+
+        it('includes chmod action', async () => {
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            '/projects/testowner%2Ftestrepo/repository/commits',
+            expect.objectContaining({
+              actions: expect.arrayContaining([
+                {
+                  action: 'chmod',
+                  file_path: 'scripts/run.sh',
+                  execute_filemode: true,
+                },
+              ]),
+            }),
+          );
+        });
+      });
+
+      describe('when no executable permissions are requested', () => {
+        it('returns no-changes', async () => {
+          const files = [
+            {
+              path: 'scripts/run.sh',
+              content: existingContent,
+              permissions: 'rw-r--r--',
+            },
+          ];
+
+          const result = await gitlabRepository.commitFiles(files, 'No change');
+
+          expect(result.sha).toBe('no-changes');
+        });
+      });
+    });
+
+    describe('when removing executable bit from an existing executable file', () => {
+      const existingContent = 'existing script content';
+
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-sha',
+                content: Buffer.from(existingContent).toString('base64'),
+                execute_filemode: true,
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-chmod-remove',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-chmod-remove',
+          },
+        });
+      });
+
+      it('emits chmod action with execute_filemode false', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: existingContent,
+            permissions: 'rw-r--r--',
+          },
+        ];
+
+        await gitlabRepository.commitFiles(files, 'Remove executable bit');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: 'Remove executable bit',
+            actions: [
+              {
+                action: 'chmod',
+                file_path: 'scripts/run.sh',
+                execute_filemode: false,
+              },
+            ],
+          },
+        );
+      });
+
+      it('creates a commit', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: existingContent,
+            permissions: 'rw-r--r--',
+          },
+        ];
+
+        const result = await gitlabRepository.commitFiles(
+          files,
+          'Remove executable bit',
+        );
+
+        expect(result.sha).not.toBe('no-changes');
+      });
+    });
+
+    describe('when only permissions change, commit excludes unchanged update action', () => {
+      const existingContent = 'existing script content';
+
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-sha',
+                content: Buffer.from(existingContent).toString('base64'),
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-perm-only',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-perm-only',
+          },
+        });
+      });
+
+      it('includes only the chmod action, not an update action', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: existingContent,
+            permissions: 'rwxr-xr-x',
+          },
+        ];
+
+        await gitlabRepository.commitFiles(files, 'Add executable permission');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: 'Add executable permission',
+            actions: [
+              {
+                action: 'chmod',
+                file_path: 'scripts/run.sh',
+                execute_filemode: true,
+              },
+            ],
+          },
+        );
+      });
+    });
+
+    describe('when file is already executable and content is unchanged', () => {
+      const existingContent = 'existing script content';
+
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-sha',
+                content: Buffer.from(existingContent).toString('base64'),
+                execute_filemode: true,
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+      });
+
+      it('returns no-changes', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: existingContent,
+            permissions: 'rwxr-xr-x',
+          },
+        ];
+
+        const result = await gitlabRepository.commitFiles(
+          files,
+          'Should not commit',
+        );
+
+        expect(result.sha).toBe('no-changes');
+      });
+
+      it('does not create a commit', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: existingContent,
+            permissions: 'rwxr-xr-x',
+          },
+        ];
+
+        await gitlabRepository.commitFiles(files, 'Should not commit');
+
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('getFileOnRepo', () => {
@@ -817,6 +1167,7 @@ describe('GitlabRepository', () => {
         expect(result).toEqual({
           sha: 'blob-id-123',
           content: Buffer.from('file content').toString('base64'),
+          execute_filemode: false,
         });
       });
     });

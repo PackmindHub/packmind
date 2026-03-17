@@ -16,6 +16,8 @@ export type PublishArtifactsCommand = PackmindCommand & {
   targetIds: TargetId[];
   packagesSlugs: string[];
   packageIds: PackageId[];
+  artifactSpaceIds?: Record<string, string>;
+  artifactPackageIds?: Record<string, string[]>;
 };
 
 /**

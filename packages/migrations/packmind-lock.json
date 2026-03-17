@@ -2,8 +2,8 @@
   "lockfileVersion": 1,
   "packageSlugs": ["migration"],
   "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-12T10:36:32.887Z",
-  "cliVersion": "0.21.1",
+  "installedAt": "2026-03-16T14:26:20.633Z",
+  "cliVersion": "0.22.0",
   "artifacts": {
     "command:create-or-update-model-and-typeorm-schemas": {
       "type": "command",

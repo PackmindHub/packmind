@@ -1,8 +1,11 @@
 import { PMBox, PMHeading, PMMarkdownViewer, PMVStack } from '@packmind/ui';
+import { useCallback } from 'react';
 import {
   ChangeProposalId,
   CommandCreationProposalOverview,
+  RecipeId,
 } from '@packmind/types';
+import { PREVIEW_RECIPE_VERSION_ID } from '../../utils/changeProposalHelpers';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { useUserLookup } from '../../hooks/useUserLookup';
@@ -49,6 +52,29 @@ export function CreateCommandReviewDetail({
 
   const userLookup = useUserLookup();
 
+  const getPreviewCommand = useCallback(() => {
+    if (!displayedProposal) {
+      return { recipeVersions: [], standardVersions: [], skillVersions: [] };
+    }
+    return {
+      recipeVersions: [
+        {
+          id: PREVIEW_RECIPE_VERSION_ID,
+          recipeId: 'preview' as RecipeId,
+          name: displayedProposal.payload.name,
+          slug: displayedProposal.payload.name
+            .toLowerCase()
+            .replace(/\s+/g, '-'),
+          content: displayedProposal.payload.content,
+          version: 1,
+          userId: displayedProposal.createdBy,
+        },
+      ],
+      standardVersions: [],
+      skillVersions: [],
+    };
+  }, [displayedProposal]);
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -70,6 +96,7 @@ export function CreateCommandReviewDetail({
         onDismiss={handleReject}
         isPending={isPending}
         isSubmitted={!!submittedState}
+        getPreviewCommand={getPreviewCommand}
       />
       <PMBox
         px={6}

@@ -33,11 +33,15 @@ interface CardActionsProps {
   spaceId: SpaceId;
   isOutdated: boolean;
   isBlockedByConflict: boolean;
+  isEditing?: boolean;
+  isEditValid?: boolean;
   showEditButton?: boolean;
   onEdit: () => void;
   onAccept: (decision?: ChangeProposalDecision) => void;
   onDismiss: () => void;
   onUndo: () => void;
+  onCancelEdit?: () => void;
+  onAcceptEdit?: () => void;
 }
 
 function isRemoveProposal(type: ChangeProposalType): boolean {
@@ -243,11 +247,15 @@ export function CardActions({
   spaceId,
   isOutdated,
   isBlockedByConflict,
+  isEditing = false,
+  isEditValid = true,
   showEditButton = true,
   onEdit,
   onAccept,
   onDismiss,
   onUndo,
+  onCancelEdit,
+  onAcceptEdit,
 }: Readonly<CardActionsProps>) {
   if (poolStatus !== 'pending') {
     return (
@@ -255,6 +263,29 @@ export function CardActions({
         <LuUndo2 />
         Undo
       </PMButton>
+    );
+  }
+
+  if (isEditing) {
+    return (
+      <PMHStack gap={2}>
+        <PMButton size="xs" variant="outline" onClick={onCancelEdit}>
+          <LuX />
+          Cancel
+        </PMButton>
+        <PMButton
+          size="xs"
+          variant="outline"
+          onClick={onAcceptEdit}
+          disabled={!isEditValid}
+          color="green.300"
+          borderColor="green.300"
+          opacity={isEditValid ? 1 : 0.5}
+        >
+          <LuCheck />
+          Accept
+        </PMButton>
+      </PMHStack>
     );
   }
 

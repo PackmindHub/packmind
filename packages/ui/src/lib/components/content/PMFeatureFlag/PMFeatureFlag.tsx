@@ -20,6 +20,7 @@ export const CHANGE_PROPOSALS_FEATURE_KEY = 'change-proposals';
 export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
   'change-proposals-in-webapp';
 
+export const EDIT_CHANGE_PROPOSALS_FEATURE_KEY = 'edit-change-proposals';
 export const SKILL_EVALUATION_FEATURE_KEY = 'skill-evaluation';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
@@ -36,6 +37,7 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
     '@packmind.com',
     '@promyze.com',
   ],
+  [EDIT_CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [SKILL_EVALUATION_FEATURE_KEY]: [
     'cedric.teyton@packmind.com',
     'arthur.magne@packmind.com',

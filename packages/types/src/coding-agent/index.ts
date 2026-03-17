@@ -4,3 +4,4 @@ export * from './ports';
 export * from './validation';
 export * from './CodingAgent';
 export * from './CodingAgentArtefactPaths';
+export * from './resolveArtefactFromPath';

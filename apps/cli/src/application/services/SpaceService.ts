@@ -5,8 +5,13 @@ import { Space } from '@packmind/types';
 export class SpaceService implements ISpaceService {
   constructor(private readonly spaceGateway: ISpacesGateway) {}
 
-  async getDefaultSpace(): Promise<Space> {
+  async getSpaces(): Promise<Space[]> {
     const { spaces } = await this.spaceGateway.getUserSpaces({});
+    return spaces;
+  }
+
+  async getDefaultSpace(): Promise<Space> {
+    const spaces = await this.getSpaces();
     const defaultSpace = spaces.find((space) => space.isDefaultSpace);
 
     if (!defaultSpace) {

@@ -1,7 +1,7 @@
 {
   "packages": {
-    "generic": "*",
-    "playground": "*",
-    "proprietary": "*"
+    "@global/generic": "*",
+    "@global/playground": "*"
+    "@global/proprietary": "*"
   }
 }

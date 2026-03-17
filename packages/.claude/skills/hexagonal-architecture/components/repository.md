@@ -19,7 +19,7 @@ export interface IStandardRepository extends IRepository<Standard> {
 }
 ```
 
-`IRepository<T>` provides the base contract: `find`, `findOne`, `save`, `delete`.
+`IRepository<T>` provides the base contract: `add`, `findById`, `deleteById`, `restoreById`.
 
 ### Repository Aggregator Interface
 
@@ -82,21 +82,32 @@ export class StandardRepository
 ```typescript
 // infra/repositories/StandardsRepositories.ts
 export class StandardsRepositories implements IStandardsRepositories {
-  constructor(private readonly dataSource: DataSource) {}
+  private readonly standardRepository: IStandardRepository;
+  private readonly standardVersionRepository: IStandardVersionRepository;
+
+  constructor(private readonly dataSource: DataSource) {
+    // Eager instantiation — all repositories created once in constructor
+    this.standardRepository = new StandardRepository(
+      this.dataSource.getRepository(StandardSchema),
+    );
+    this.standardVersionRepository = new StandardVersionRepository(
+      this.dataSource.getRepository(StandardVersionSchema),
+    );
+  }
 
   getStandardRepository(): IStandardRepository {
-    return new StandardRepository();
+    return this.standardRepository;
   }
 
   getStandardVersionRepository(): IStandardVersionRepository {
-    return new StandardVersionRepository();
+    return this.standardVersionRepository;
   }
 }
 ```
 
 ## Conventions
 
-- **`AbstractRepository<T>` base class** — provides `find`, `findOne`, `save`, `delete` with soft-delete support
+- **`AbstractRepository<T>` base class** — provides `add`, `findById`, `deleteById`, `restoreById` with soft-delete support
 - **Constructor defaults** — repository and logger have default values for production, overridable for tests
 - **Parameterized queries** — always use `:param` bindings in QueryBuilder, never string interpolation
 - **Soft deletes** — check `opts?.includeDeleted` and call `qb.withDeleted()` when needed

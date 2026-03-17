@@ -6,6 +6,7 @@ import {
   ChangeProposalType,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
+import { recomputeBlockedIds } from '../utils/recomputeConflicts';
 
 export function useChangeProposalPool(
   proposals: ChangeProposalWithConflicts[],
@@ -38,18 +39,10 @@ export function useChangeProposalPool(
     );
   }, [proposals]);
 
-  const blockedByConflictIds = useMemo(() => {
-    const blocked = new Set<ChangeProposalId>();
-    for (const id of acceptedProposalIds) {
-      const proposal = proposals.find((p) => p.id === id);
-      if (proposal) {
-        for (const conflictId of proposal.conflictsWith) {
-          blocked.add(conflictId);
-        }
-      }
-    }
-    return blocked;
-  }, [acceptedProposalIds, proposals]);
+  const blockedByConflictIds = useMemo(
+    () => recomputeBlockedIds(proposals, acceptedProposalIds, decisionsTaken),
+    [acceptedProposalIds, proposals, decisionsTaken],
+  );
 
   const hasPooledDecisions =
     acceptedProposalIds.size > 0 || rejectedProposalIds.size > 0;

@@ -8,7 +8,7 @@
  *   bun run apps/cli/bun-build.ts                    # Build for current platform
  *   bun run apps/cli/bun-build.ts --target=linux     # Build for Linux (x64 and arm64)
  *   bun run apps/cli/bun-build.ts --target=macos     # Build for macOS (x64 and arm64)
- *   bun run apps/cli/bun-build.ts --target=windows   # Build for Windows (x64)
+ *   bun run apps/cli/bun-build.ts --target=windows   # Build for Windows (x64 and arm64)
  *   bun run apps/cli/bun-build.ts --target=all       # Build for all platforms
  */
 
@@ -88,6 +88,13 @@ const AVAILABLE_TARGETS: BuildTarget[] = [
     os: 'win32',
     arch: 'x64',
   },
+  // Windows arm64
+  {
+    target: 'bun-windows-arm64',
+    outputName: 'packmind-cli-windows-arm64.exe',
+    os: 'win32',
+    arch: 'arm64',
+  },
 ];
 
 // Parse command line arguments
@@ -138,7 +145,7 @@ if (!targetArg) {
     logger.log('  - all (all platforms)');
     logger.log('  - linux (Linux x64 + arm64)');
     logger.log('  - macos/darwin (macOS x64 + arm64)');
-    logger.log('  - windows (Windows x64)');
+    logger.log('  - windows (Windows x64 + arm64)');
     logger.log('  Or specific targets:');
     AVAILABLE_TARGETS.forEach((t) => logger.log(`  - ${t.target}`));
     process.exit(1);

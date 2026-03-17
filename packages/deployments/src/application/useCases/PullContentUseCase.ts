@@ -28,6 +28,7 @@ import {
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
+import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { NoPackageSlugsProvidedError } from '../../domain/errors/NoPackageSlugsProvidedError';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
@@ -36,6 +37,7 @@ import { TargetResolutionService } from '../services/TargetResolutionService';
 import {
   buildArtifactMetadataMap,
   enrichFileModificationsWithMetadata,
+  flattenArtifactMetadataMap,
 } from '../utils/ArtifactMetadataUtils';
 
 const origin = 'PullContentUseCase';
@@ -70,6 +72,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly targetResolutionService: TargetResolutionService,
     private readonly spacesPort: ISpacesPort,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
+    private readonly lockFileService: PackmindLockFileService = new PackmindLockFileService(),
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -611,6 +614,28 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           artifactMetadata,
         );
       }
+
+      // Generate packmind-lock.json
+      const { artifactSpaceIds, artifactPackageIds } = artifactMetadata
+        ? flattenArtifactMetadataMap(artifactMetadata)
+        : { artifactSpaceIds: {}, artifactPackageIds: {} };
+
+      const lockFile = this.lockFileService.buildLockFile({
+        fileModifications: mergedFileUpdates.createOrUpdate.filter(
+          (f) => f.artifactType && f.artifactId,
+        ),
+        recipeVersions,
+        standardVersions,
+        skillVersions,
+        codingAgents,
+        packageSlugs: command.packagesSlugs ?? [],
+        targetId: resolvedTargetId,
+        artifactSpaceIds,
+        artifactPackageIds,
+      });
+      mergedFileUpdates.createOrUpdate.push(
+        this.lockFileService.createLockFileModification(lockFile),
+      );
 
       this.logger.info('Successfully pulled content', {
         organizationId: command.organizationId,

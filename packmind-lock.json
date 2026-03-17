@@ -1,9 +1,9 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["generic"],
+  "packageSlugs": ["@global/generic", "@global/playground"],
   "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-12T10:36:31.152Z",
-  "cliVersion": "0.21.1",
+  "installedAt": "2026-03-16T14:26:19.287Z",
+  "cliVersion": "0.22.0",
   "artifacts": {
     "command:update-handoff": {
       "type": "command",
@@ -87,7 +87,7 @@
       "type": "command",
       "name": "Adding ai-agent rendering system",
       "id": "90ec87fc-6104-4e52-aee2-bdf88992f7ee",
-      "version": 5,
+      "version": 6,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
       "files": [
@@ -417,6 +417,80 @@
           "path": ".cursor/skills/test-factory-patterns/SKILL.md",
           "agent": "cursor",
           "isSkillDefinition": true
+        }
+      ]
+    },
+    "skill:working-with-playground-app": {
+      "type": "skill",
+      "name": "working-with-playground-app",
+      "id": "9f2f119d-b7ca-4415-b056-03bb4d7ee387",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["16a47324-2b84-49b9-818e-0619273c66ed"],
+      "files": [
+        {
+          "path": ".github/skills/working-with-playground-app/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/skills/working-with-playground-app/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/skills/working-with-playground-app/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "skill:working-with-pm-design-kit": {
+      "type": "skill",
+      "name": "working-with-pm-design-kit",
+      "id": "a21235ed-a979-41db-ad6f-6cc87c7b840d",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["16a47324-2b84-49b9-818e-0619273c66ed"],
+      "files": [
+        {
+          "path": ".github/skills/working-with-pm-design-kit/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/working-with-pm-design-kit/references/component-catalog.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/skills/working-with-pm-design-kit/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/working-with-pm-design-kit/references/component-catalog.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/skills/working-with-pm-design-kit/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/working-with-pm-design-kit/references/component-catalog.md",
+          "agent": "cursor"
         }
       ]
     }

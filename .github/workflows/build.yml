@@ -281,6 +281,7 @@ jobs:
             dist/apps/cli-executables/packmind-cli-linux-arm64
             dist/apps/cli-executables/packmind-cli-macos-arm64
             dist/apps/cli-executables/packmind-cli-windows-x64.exe
+            dist/apps/cli-executables/packmind-cli-windows-arm64.exe
           retention-days: 30
 
   cli-e2e-tests:

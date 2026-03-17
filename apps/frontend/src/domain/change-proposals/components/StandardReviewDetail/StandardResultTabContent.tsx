@@ -1,14 +1,17 @@
 import {
   PMBox,
   PMHeading,
+  PMHStack,
   PMMarkdownViewer,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ChangeProposalId, Rule, Standard } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { applyStandardProposals } from '../../utils/applyStandardProposals';
+import { PREVIEW_STANDARD_VERSION_ID } from '../../utils/changeProposalHelpers';
+import { DownloadAsAgentButton } from '../shared/DownloadAsAgentButton';
 
 interface StandardResultTabContentProps {
   standard: Standard;
@@ -31,6 +34,26 @@ export function StandardResultTabContent({
 
   const hasAccepted = acceptedProposalIds.size > 0;
 
+  const getPreviewCommand = useCallback(
+    () => ({
+      recipeVersions: [],
+      standardVersions: [
+        {
+          id: PREVIEW_STANDARD_VERSION_ID,
+          standardId: standard.id,
+          name: applied.name,
+          slug: standard.slug,
+          description: applied.description,
+          version: standard.version,
+          scope: applied.scope,
+          rules: applied.rules,
+        },
+      ],
+      skillVersions: [],
+    }),
+    [applied, standard],
+  );
+
   const sortedRules = useMemo(
     () =>
       [...applied.rules].sort((a, b) =>
@@ -41,7 +64,7 @@ export function StandardResultTabContent({
 
   return (
     <PMBox p={6}>
-      <PMBox mb={6}>
+      <PMHStack mb={6} justifyContent="space-between" alignItems="center">
         <PMText
           fontSize="2xs"
           fontWeight="medium"
@@ -50,7 +73,13 @@ export function StandardResultTabContent({
         >
           Version with accepted changes
         </PMText>
-      </PMBox>
+        {hasAccepted && (
+          <DownloadAsAgentButton
+            getPreviewCommand={getPreviewCommand}
+            label="Try with agent"
+          />
+        )}
+      </PMHStack>
       {hasAccepted ? (
         <>
           <PMHeading size="md" mb={4}>

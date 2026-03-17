@@ -39,6 +39,7 @@ import {
   getTargetPrefixedPath,
 } from '../utils/GitFileUtils';
 import { PackmindConfigService } from '../services/PackmindConfigService';
+import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { v4 as uuidv4 } from 'uuid';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 
@@ -62,6 +63,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly publishArtifactsDelayedJob: PublishArtifactsDelayedJob,
     private readonly deployDefaultSkillsUseCase: IDeployDefaultSkillsUseCase,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
+    private readonly lockFileService: PackmindLockFileService = new PackmindLockFileService(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -310,6 +312,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           targets,
           codingAgents,
           command.packagesSlugs,
+          command.artifactSpaceIds ?? {},
+          command.artifactPackageIds ?? {},
         );
 
         // Build commit message for the job
@@ -467,6 +471,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     targets: Target[],
     codingAgents: CodingAgent[],
     packagesSlugs: string[],
+    artifactSpaceIds: Record<string, string>,
+    artifactPackageIds: Record<string, string[]>,
   ): Promise<{
     fileUpdatesPerTarget: Map<string, FileUpdates>;
     renderModesPerTarget: Map<string, RenderMode[]>;
@@ -609,6 +615,24 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           targetCodingAgents,
         );
       }
+
+      // Generate lock file
+      const lockFile = this.lockFileService.buildLockFile({
+        fileModifications: baseFileUpdates.createOrUpdate.filter(
+          (f) => f.artifactType && f.artifactId,
+        ),
+        recipeVersions: installedRecipeVersions,
+        standardVersions: installedStandardVersions,
+        skillVersions: installedSkillVersions,
+        codingAgents: targetCodingAgents,
+        packageSlugs: packagesSlugs,
+        targetId: target.id,
+        artifactSpaceIds,
+        artifactPackageIds,
+      });
+      const lockFileModification =
+        this.lockFileService.createLockFileModification(lockFile);
+      baseFileUpdates.createOrUpdate.push(lockFileModification);
 
       // Apply target path prefixing
       const prefixedFileUpdates = applyTargetPrefixingToFileUpdates(

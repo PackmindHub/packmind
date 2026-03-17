@@ -13,6 +13,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalId,
   ChangeProposalRejectedEvent,
+  isChangeProposalEdited,
   ChangeProposalStatus,
   ChangeProposalType,
   createOrganizationId,
@@ -308,6 +309,7 @@ export class ApplyChangeProposalsUseCase<
           itemType: getItemTypeFromChangeProposalType(proposal.type),
           itemId: String(proposal.artefactId ?? ''),
           changeType: proposal.type,
+          edited: isChangeProposalEdited(proposal.type, proposal.decision),
         }),
       );
     }

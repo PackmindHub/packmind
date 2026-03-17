@@ -1,6 +1,7 @@
 import { changeProposalFactory } from '../../../../test';
 import {
   ChangeProposal,
+  ChangeProposalStatus,
   ChangeProposalType,
   createStandardId,
   ScalarUpdatePayload,
@@ -100,5 +101,91 @@ describe('detectMultiLineConflict', () => {
         diffService,
       ),
     ).toEqual(true);
+  });
+
+  describe('when decision is set', () => {
+    describe('when both proposals have decision', () => {
+      it('passes decision newValues to diffService.hasConflict instead of payload newValues', () => {
+        const cp1 = changeProposalFactory({
+          type: ChangeProposalType.updateStandardDescription,
+          artefactId: changeProposal.artefactId,
+          payload: { oldValue: 'base text', newValue: 'payload-change-1' },
+          status: ChangeProposalStatus.applied,
+          decision: { oldValue: 'base text', newValue: 'decision-change-1' },
+        }) as ChangeProposal<ChangeProposalType.updateStandardDescription>;
+
+        const cp2 = changeProposalFactory({
+          type: ChangeProposalType.updateStandardDescription,
+          artefactId: changeProposal.artefactId,
+          payload: { oldValue: 'base text', newValue: 'payload-change-2' },
+          status: ChangeProposalStatus.applied,
+          decision: { oldValue: 'base text', newValue: 'decision-change-2' },
+        }) as ChangeProposal<ChangeProposalType.updateStandardDescription>;
+
+        detectMultiLineConflict(cp1, cp2, diffService);
+
+        expect(diffService.hasConflict).toHaveBeenCalledWith(
+          'base text',
+          'decision-change-1',
+          'decision-change-2',
+        );
+      });
+    });
+
+    describe('when only one proposal has decision', () => {
+      it('passes decision newValue for one and payload newValue for the other', () => {
+        const cpWithDecision = changeProposalFactory({
+          type: ChangeProposalType.updateStandardDescription,
+          artefactId: changeProposal.artefactId,
+          payload: { oldValue: 'base text', newValue: 'payload-change' },
+          status: ChangeProposalStatus.applied,
+          decision: { oldValue: 'base text', newValue: 'decision-change' },
+        }) as ChangeProposal<ChangeProposalType.updateStandardDescription>;
+
+        const cpWithoutDecision = changeProposalFactory({
+          type: ChangeProposalType.updateStandardDescription,
+          artefactId: changeProposal.artefactId,
+          payload: { oldValue: 'base text', newValue: 'other-change' },
+        }) as ChangeProposal<ChangeProposalType.updateStandardDescription>;
+
+        detectMultiLineConflict(cpWithDecision, cpWithoutDecision, diffService);
+
+        expect(diffService.hasConflict).toHaveBeenCalledWith(
+          'base text',
+          'decision-change',
+          'other-change',
+        );
+      });
+    });
+
+    describe('when proposals have different payload oldValues', () => {
+      let cp1: ChangeProposal<ChangeProposalType.updateStandardDescription>;
+      let cp2: ChangeProposal<ChangeProposalType.updateStandardDescription>;
+
+      beforeEach(() => {
+        cp1 = changeProposalFactory({
+          type: ChangeProposalType.updateStandardDescription,
+          artefactId: changeProposal.artefactId,
+          payload: { oldValue: 'base-1', newValue: 'change-1' },
+          status: ChangeProposalStatus.applied,
+          decision: { oldValue: 'decision-base', newValue: 'decision-change' },
+        }) as ChangeProposal<ChangeProposalType.updateStandardDescription>;
+
+        cp2 = changeProposalFactory({
+          type: ChangeProposalType.updateStandardDescription,
+          artefactId: changeProposal.artefactId,
+          payload: { oldValue: 'base-2', newValue: 'change-2' },
+        }) as ChangeProposal<ChangeProposalType.updateStandardDescription>;
+      });
+
+      it('returns false', () => {
+        expect(detectMultiLineConflict(cp1, cp2, diffService)).toEqual(false);
+      });
+
+      it('does not call diffService.hasConflict', () => {
+        detectMultiLineConflict(cp1, cp2, diffService);
+        expect(diffService.hasConflict).not.toHaveBeenCalled();
+      });
+    });
   });
 });
