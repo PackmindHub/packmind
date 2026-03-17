@@ -1,7 +1,14 @@
 import { Package, Space } from '@packmind/types';
-import { formatSlug, formatLabel } from '../../utils/consoleLogger';
+import {
+  formatSlug,
+  formatLabel,
+  formatCommand,
+  logConsole,
+  logInfoConsole,
+  logErrorConsole,
+} from '../../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../../utils/credentials';
-import { InstallHandlerDependencies } from '../installPackagesHandler';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 
 function buildPackageUrl(
   host: string,
@@ -12,7 +19,7 @@ function buildPackageUrl(
   return `${host}/org/${orgSlug}/space/${spaceSlug}/packages/${packageId}`;
 }
 
-export type ListPackagesArgs = Record<string, never>;
+export type ListPackagesArgs = { space?: string };
 
 type UrlBuilder = (spaceSlug: string, id: string) => string | null;
 
@@ -31,13 +38,12 @@ function logPackageEntry(
   fullSlug: string,
   spaceSlug: string,
   buildUrl: UrlBuilder,
-  log: (msg: string) => void,
 ): void {
-  log(`- ${formatSlug(fullSlug)}`);
-  log(`    ${formatLabel('Name:')} ${pkg.name}`);
+  logConsole(`- ${formatSlug(fullSlug)}`);
+  logConsole(`    ${formatLabel('Name:')} ${pkg.name}`);
   const url = buildUrl(spaceSlug, pkg.id as string);
   if (url) {
-    log(`    ${formatLabel('Link:')} ${url}`);
+    logConsole(`    ${formatLabel('Link:')} ${url}`);
   }
   if (pkg.description) {
     const lines = pkg.description
@@ -46,8 +52,8 @@ function logPackageEntry(
       .map((l) => l.trim())
       .filter((l) => l.length > 0);
     const [first, ...rest] = lines;
-    log(`    ${formatLabel('Description:')} ${first}`);
-    rest.forEach((l) => log(`                 ${l}`));
+    logConsole(`    ${formatLabel('Description:')} ${first}`);
+    rest.forEach((l) => logConsole(`                 ${l}`));
   }
 }
 
@@ -85,18 +91,17 @@ function displayGroupedPackages(
   packages: Package[],
   spaces: Space[],
   buildUrl: UrlBuilder,
-  log: (msg: string) => void,
 ): string {
   const { groups, orphaned } = groupPackagesBySpace(packages, spaces);
   let firstSlug: string | null = null;
 
   for (const { space, pkgs } of groups) {
-    log(`Space "${space.name}":\n`);
+    logConsole(`Space "${space.name}":\n`);
     for (const pkg of [...pkgs].sort((a, b) => a.slug.localeCompare(b.slug))) {
       const fullSlug = `@${space.slug}/${pkg.slug}`;
       firstSlug ??= fullSlug;
-      logPackageEntry(pkg, fullSlug, space.slug, buildUrl, log);
-      log('');
+      logPackageEntry(pkg, fullSlug, space.slug, buildUrl);
+      logConsole('');
     }
   }
 
@@ -104,68 +109,76 @@ function displayGroupedPackages(
     a.slug.localeCompare(b.slug),
   )) {
     firstSlug ??= pkg.slug;
-    logPackageEntry(pkg, pkg.slug, 'global', buildUrl, log);
-    log('');
+    logPackageEntry(pkg, pkg.slug, 'global', buildUrl);
+    logConsole('');
   }
 
   return firstSlug ?? formatSlug(packages[0].slug);
 }
 
-function displayFlatPackages(
-  packages: Package[],
-  buildUrl: UrlBuilder,
-  log: (msg: string) => void,
-): string {
-  const sorted = [...packages].sort((a, b) => a.slug.localeCompare(b.slug));
-  sorted.forEach((pkg, index) => {
-    logPackageEntry(pkg, formatSlug(pkg.slug), 'global', buildUrl, log);
-    if (index < sorted.length - 1) {
-      log('');
-    }
-  });
-  return formatSlug(sorted[0].slug);
-}
+export type ListHandlerDependencies = {
+  packmindCliHexa: PackmindCliHexa;
+  exit: (code: number) => void;
+};
 
 export async function listPackagesHandler(
-  _args: ListPackagesArgs,
-  deps: InstallHandlerDependencies,
+  args: ListPackagesArgs,
+  deps: ListHandlerDependencies,
 ): Promise<void> {
-  const { packmindCliHexa, exit, log, error } = deps;
+  const { packmindCliHexa, exit } = deps;
 
   try {
-    log('Fetching available packages...\n');
-    const [packages, spaces] = await Promise.all([
+    logInfoConsole('Fetching available packages...');
+    const [allPackages, allSpaces] = await Promise.all([
       packmindCliHexa.listPackages({}),
-      packmindCliHexa.getSpaces().catch(() => null),
+      packmindCliHexa.getSpaces(),
     ]);
 
+    if (!allSpaces || allSpaces.length === 0) {
+      throw new Error('Unable to list organization spaces.');
+    }
+
+    let packages = allPackages;
+    let spaces = allSpaces;
+    const spaceFilter = args.space?.startsWith('@')
+      ? args.space.slice(1)
+      : args.space;
+
+    if (spaceFilter) {
+      const matchedSpace = allSpaces.find((s) => s.slug === spaceFilter);
+      if (!matchedSpace) {
+        logErrorConsole(`Space "${spaceFilter}" not found.`);
+        exit(1);
+        return;
+      }
+      spaces = [matchedSpace];
+      packages = allPackages.filter((pkg) => pkg.spaceId === matchedSpace.id);
+    }
+
     if (packages.length === 0) {
-      log('No packages found.');
+      logConsole(
+        spaceFilter
+          ? `No packages found in space "${spaceFilter}".`
+          : 'No packages found.',
+      );
       exit(0);
       return;
     }
 
     const buildUrl = resolveUrlBuilder();
 
-    log('Available packages:\n');
+    logConsole('\nAvailable packages:\n');
 
-    let exampleSlug: string;
-    if (spaces && spaces.length > 0) {
-      exampleSlug = displayGroupedPackages(packages, spaces, buildUrl, log);
-      log('How to install a package:\n');
-    } else {
-      exampleSlug = displayFlatPackages(packages, buildUrl, log);
-      log('\nHow to install a package:\n');
-    }
-
-    log(`  $ packmind-cli install ${exampleSlug}`);
+    const exampleSlug = displayGroupedPackages(packages, spaces, buildUrl);
+    logConsole('How to install a package:\n');
+    logConsole(`  ${formatCommand(`packmind-cli install ${exampleSlug}`)}`);
     exit(0);
   } catch (err) {
-    error('\n❌ Failed to list packages:');
+    logErrorConsole('Failed to list packages:');
     if (err instanceof Error) {
-      error(`   ${err.message}`);
+      logErrorConsole(err.message);
     } else {
-      error(`   ${String(err)}`);
+      logErrorConsole(String(err));
     }
     exit(1);
   }
