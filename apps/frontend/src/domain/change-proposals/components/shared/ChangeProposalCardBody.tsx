@@ -324,7 +324,7 @@ export function ChangeProposalCardBody({
         ) : isEdited ? (
           <PMVStack gap={4} alignItems="stretch">
             <Collapsible.Root>
-              <PMHStack gap={1} alignItems="center">
+              <PMHStack alignItems="center" justifyContent="space-between">
                 <Collapsible.Trigger cursor="pointer" textAlign="left">
                   <PMHStack gap={1} alignItems="center">
                     <PMText fontSize="xs" color="secondary" fontWeight="medium">
