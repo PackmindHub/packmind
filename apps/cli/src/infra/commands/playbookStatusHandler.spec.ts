@@ -22,7 +22,7 @@ describe('playbookStatusHandler', () => {
   let mockReadFile: jest.Mock;
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
-  let mockGetDeployed: jest.Mock;
+  let mockGetContentByVersions: jest.Mock;
   let mockLogConsole: jest.Mock;
 
   const repoRoot = '/project';
@@ -30,41 +30,20 @@ describe('playbookStatusHandler', () => {
   beforeEach(() => {
     mockLogConsole = jest.requireMock('../utils/consoleLogger').logConsole;
 
-    mockGetDeployed = jest.fn().mockResolvedValue({
+    mockGetContentByVersions = jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
-      targetId: 'target-456',
       resolvedAgents: [],
     });
 
     mockPackmindCliHexa = {
-      getDefaultSpace: jest.fn().mockResolvedValue({
-        id: 'space-123',
-        name: 'Global',
-        slug: 'global',
-        organizationId: 'org-1',
-      }),
       configExists: jest
         .fn()
         .mockImplementation((dir: string) =>
           Promise.resolve(dir === '/project'),
         ),
-      readFullConfig: jest
-        .fn()
-        .mockImplementation((dir: string) =>
-          Promise.resolve(
-            dir === '/project'
-              ? { packages: { 'my-package': '*' }, agents: [] }
-              : null,
-          ),
-        ),
-      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
-      getGitRemoteUrlFromPath: jest
-        .fn()
-        .mockReturnValue('git@github.com:org/repo.git'),
-      getCurrentBranch: jest.fn().mockReturnValue('main'),
       getPackmindGateway: () => ({
-        deployment: { getDeployed: mockGetDeployed },
+        deployment: { getContentByVersions: mockGetContentByVersions },
       }),
     } as unknown as PackmindCliHexa;
 
@@ -97,7 +76,7 @@ describe('playbookStatusHandler', () => {
       packmindCliHexa: mockPackmindCliHexa,
       playbookLocalRepository: mockPlaybookLocalRepository,
       lockFileRepository: mockLockFileRepository,
-      repoRoot,
+      cwd: repoRoot,
       exit: mockExit,
       readFile: mockReadFile,
       ...overrides,
@@ -189,7 +168,7 @@ describe('playbookStatusHandler', () => {
 
     beforeEach(() => {
       mockLockFileRepository.read.mockResolvedValue(lockFile);
-      mockGetDeployed.mockResolvedValue({
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -200,7 +179,6 @@ describe('playbookStatusHandler', () => {
           delete: [],
         },
         skillFolders: [],
-        targetId: 'target-456',
         resolvedAgents: [],
       });
       mockReadFile.mockReturnValue('local modified content');
@@ -215,7 +193,9 @@ describe('playbookStatusHandler', () => {
     it('displays the untracked artifact', async () => {
       await playbookStatusHandler(buildDeps());
 
-      expect(mockLogConsole).toHaveBeenCalledWith('  - Standard "My standard"');
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "My standard". packmind',
+      );
     });
 
     it('displays add hint', async () => {
@@ -224,6 +204,23 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith(
         'Use `packmind playbook add <path>` to track them',
       );
+    });
+
+    it('calls getContentByVersions with lock file artifacts and agents', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockGetContentByVersions).toHaveBeenCalledWith({
+        artifacts: [
+          {
+            name: 'My standard',
+            type: 'standard',
+            id: 'artifact-1',
+            version: 1,
+            spaceId: 'space-123',
+          },
+        ],
+        agents: ['claude'],
+      });
     });
   });
 
@@ -310,7 +307,7 @@ describe('playbookStatusHandler', () => {
         },
       ]);
       mockLockFileRepository.read.mockResolvedValue(lockFile);
-      mockGetDeployed.mockResolvedValue({
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -321,7 +318,6 @@ describe('playbookStatusHandler', () => {
           delete: [],
         },
         skillFolders: [],
-        targetId: 'target-456',
         resolvedAgents: [],
       });
       mockReadFile.mockReturnValue('local modified content');
@@ -368,7 +364,7 @@ describe('playbookStatusHandler', () => {
 
     beforeEach(() => {
       mockLockFileRepository.read.mockResolvedValue(lockFile);
-      mockGetDeployed.mockResolvedValue({
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -379,7 +375,6 @@ describe('playbookStatusHandler', () => {
           delete: [],
         },
         skillFolders: [],
-        targetId: 'target-456',
         resolvedAgents: [],
       });
       mockReadFile.mockImplementation(() => {
@@ -391,6 +386,98 @@ describe('playbookStatusHandler', () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith('No changes detected.');
+    });
+  });
+
+  describe('when the project directory differs from the git root', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'artifact-1': {
+          name: 'My command',
+          type: 'command',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.claude/commands/my-command.md',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+        (dir: string) => Promise.resolve(dir === '/gitroot/subproject'),
+      );
+
+      mockLockFileRepository.read.mockImplementation((dir: string) =>
+        Promise.resolve(dir === '/gitroot/subproject' ? lockFile : null),
+      );
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockImplementation((filePath: string) => {
+        if (filePath.includes('/gitroot/subproject/')) {
+          return 'local modified content';
+        }
+        throw new Error('ENOENT: no such file or directory');
+      });
+    });
+
+    it('displays the untracked header for the subproject', async () => {
+      await playbookStatusHandler(
+        buildDeps({
+          cwd: '/gitroot/subproject',
+        }),
+      );
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
+    });
+
+    it('displays the untracked artifact with agent label for the subproject', async () => {
+      await playbookStatusHandler(
+        buildDeps({
+          cwd: '/gitroot/subproject',
+        }),
+      );
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Command "My command". claude',
+      );
+    });
+
+    it('reads local files relative to the project directory, not git root', async () => {
+      await playbookStatusHandler(
+        buildDeps({
+          cwd: '/gitroot/subproject',
+        }),
+      );
+
+      expect(mockReadFile).toHaveBeenCalledWith(
+        expect.stringContaining(
+          '/gitroot/subproject/.claude/commands/my-command.md',
+        ),
+      );
     });
   });
 
@@ -433,7 +520,7 @@ describe('playbookStatusHandler', () => {
         },
       ]);
       mockLockFileRepository.read.mockResolvedValue(lockFile);
-      mockGetDeployed.mockResolvedValue({
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -444,7 +531,6 @@ describe('playbookStatusHandler', () => {
           delete: [],
         },
         skillFolders: [],
-        targetId: 'target-456',
         resolvedAgents: [],
       });
       mockReadFile.mockReturnValue('local modified content');
@@ -473,6 +559,44 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith(
         expect.stringContaining('Already staged'),
       );
+    });
+  });
+
+  describe('when getContentByVersions API fails', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'artifact-1': {
+          name: 'My standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              agent: 'packmind',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockRejectedValue(new Error('Network error'));
+    });
+
+    it('gracefully shows no untracked changes', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith('No changes detected.');
     });
   });
 });
