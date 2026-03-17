@@ -344,10 +344,11 @@ describeWithUserSignedUp('diff remove <path> command', (getContext) => {
       expect(changeProposals).toEqual([
         expect.objectContaining({
           payload: {
-            packageIds: [pkg.id, secondPackageId],
+            packageIds: expect.arrayContaining([pkg.id, secondPackageId]),
           },
         }),
       ]);
+      expect(changeProposals[0].payload.packageIds).toHaveLength(2);
     });
   });
 });
