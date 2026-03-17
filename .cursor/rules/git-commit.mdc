@@ -1,0 +1,135 @@
+---
+description: Git commit best practices - ensure all files staged, gitmoji convention, and compilable units
+alwaysApply: false
+---
+# Git Commit Best Practices
+
+## Pre-Commit Checks
+
+### 1. Stage All Files (No Floating Files)
+- **ALWAYS** check `git status` before committing
+- Ensure there are NO untracked or unstaged files that should be part of the commit
+- Use `git add .` or `git add <specific-files>` to stage all relevant changes
+- If files should NOT be committed, add them to `.gitignore`
+- **NEVER** commit with floating/unstaged files that are part of your changes
+
+### 2. Gitmoji Convention
+All commit messages MUST follow the gitmoji convention:
+
+**Format**: `<gitmoji> <type>: <description>`
+
+**Common gitmojis**:
+- ✨ `:sparkles:` - New feature
+- 🐛 `:bug:` - Bug fix
+- 📝 `:memo:` - Documentation
+- 🔧 `:wrench:` - Configuration files
+- ✅ `:white_check_mark:` - Tests
+- 🚀 `:rocket:` - Performance improvements
+- ♻️ `:recycle:` - Refactoring
+- 🔥 `:fire:` - Remove code/files
+- 🎨 `:art:` - Code structure/format
+- 🔒 `:lock:` - Security improvements
+- ⬆️ `:arrow_up:` - Upgrade dependencies
+- ⬇️ `:arrow_down:` - Downgrade dependencies
+
+**Examples**:
+- `✨ feat: add user authentication service`
+- `🐛 fix: resolve null pointer exception in payment processing`
+- `📝 docs: update API documentation for user endpoints`
+- `🔧 config: update typescript strict mode settings`
+
+**Complete commit message with co-author**:
+```
+✨ feat: add user authentication service
+
+Implement OAuth2 authentication flow with JWT tokens for secure user login.
+
+Changes:
+- Add AuthService class with login/logout methods
+- Create JWT token validation middleware
+- Update user routes with authentication guards
+
+Co-authored-by: Cursor <cursor@packmind.com>
+```
+
+### 3. Co-Author Attribution
+When working with AI assistance (Cursor), ALWAYS add Cursor as a co-author:
+
+**Required Co-Author**:
+- **Name**: Cursor
+- **Email**: cursor@packmind.com
+- **Format**: `Co-authored-by: Cursor <cursor@packmind.com>`
+
+**Placement**: Add the co-author line at the end of the commit message, separated by a blank line.
+
+### 4. Compilable Unit of Work
+Each commit MUST represent a complete, compilable unit:
+
+**Requirements**:
+- Code MUST compile successfully after the commit
+- All new interfaces MUST have corresponding implementations
+- All imported modules/dependencies MUST exist
+- Tests MUST pass (if applicable)
+- No broken references or missing dependencies
+
+**Good Commit Practices**:
+- ✅ Add interface AND its implementation together
+- ✅ Add test files along with the code they test
+- ✅ Update imports when moving/renaming files
+- ✅ Include configuration changes needed for new features
+
+**Bad Commit Practices**:
+- ❌ Commit interface without implementation
+- ❌ Commit code that references non-existent modules
+- ❌ Commit partial refactoring that breaks builds
+- ❌ Commit failing tests without fixes
+
+## Pre-Commit Checklist
+
+Before every commit, verify:
+
+1. **Staging**: `git status` shows no relevant unstaged files
+2. **Build**: `nx build <project>` succeeds for affected projects
+3. **Tests**: `nx test <project>` passes for affected projects
+4. **Lint**: `nx lint <project>` passes for affected projects
+5. **Message**: Commit message follows gitmoji convention
+6. **Co-Author**: Include Cursor as co-author when using AI assistance
+7. **Scope**: Commit represents atomic, complete change
+
+## Commands to Run Before Committing
+
+```bash
+# Check status
+git status
+
+# Stage all relevant files
+git add .
+
+# Run lint, test, and build for specific project
+nx lint <project>
+nx test <project>
+nx build <project>
+
+# Or run for all affected projects
+nx run-many -t lint,test,build
+
+# Ensure Packmind standards compliance (requires environment variables)
+source .env && npm run packmind-cli
+
+# Commit with proper gitmoji message and co-author
+git commit -m "✨ feat: add new feature description
+
+Co-authored-by: cursoragent <cursoragent@cursor.com>"
+```
+
+YOU MUST NEVER use the "--no-verify" option.
+
+## Integration with Packmind Standards
+
+When committing in the Packmind monorepo:
+- Run `nx lint <project>` for the affected project
+- Run `nx test <project>` for the affected project
+- Ensure `source .env && npm run packmind-cli` passes (environment variables required)
+- Always include Cursor as co-author when using AI assistance
+- Follow the project-specific standards in each package
+

@@ -32,12 +32,20 @@ export const useSkillSectionNavigation = ({
         return routes.space.toSkillDistributions(orgSlug, spaceSlug, skillSlug);
       }
 
+      if (navKey === 'review') {
+        return routes.space.toSkillReview(orgSlug, spaceSlug, skillSlug);
+      }
+
       return null;
     },
     [orgSlug, spaceSlug, skillSlug],
   );
 
   const activeSection: SkillNavKey = useMemo(() => {
+    if (location.pathname.includes('/review')) {
+      return 'review';
+    }
+
     if (location.pathname.includes('/distributions')) {
       return 'distributions';
     }

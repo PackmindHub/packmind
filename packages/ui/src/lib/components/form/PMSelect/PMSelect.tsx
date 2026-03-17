@@ -76,7 +76,10 @@ const CollapsibleItemGroup = React.forwardRef<
   );
 });
 
-export const PMSelect = {
+export const PMSelect: typeof ChakraSelect & {
+  ItemGroupLabel: typeof PMSelectItemGroupLabel;
+  CollapsibleItemGroup: typeof CollapsibleItemGroup;
+} = {
   ...ChakraSelect,
   ItemGroupLabel: PMSelectItemGroupLabel,
   CollapsibleItemGroup,
