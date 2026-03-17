@@ -10,17 +10,25 @@ import {
   CheckChangeProposalsResponse,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
+  ICodingAgentPort,
   IPlaybookChangeManagementPort,
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
+  PreviewArtifactRenderingCommand,
+  PreviewArtifactRenderingResponse,
 } from '@packmind/types';
-import { InjectPlaybookChangeManagementAdapter } from '../../../shared/HexaInjection';
+import {
+  InjectCodingAgentAdapter,
+  InjectPlaybookChangeManagementAdapter,
+} from '../../../shared/HexaInjection';
 
 @Injectable()
 export class ChangeProposalsService {
   constructor(
     @InjectPlaybookChangeManagementAdapter()
     private readonly playbookChangeManagementAdapter: IPlaybookChangeManagementPort,
+    @InjectCodingAgentAdapter()
+    private readonly codingAgentAdapter: ICodingAgentPort,
     private readonly logger: PackmindLogger,
   ) {}
 
@@ -57,5 +65,11 @@ export class ChangeProposalsService {
     return this.playbookChangeManagementAdapter.listChangeProposalsBySpace(
       command,
     );
+  }
+
+  async previewArtifactRendering(
+    command: PreviewArtifactRenderingCommand,
+  ): Promise<PreviewArtifactRenderingResponse> {
+    return this.codingAgentAdapter.previewArtifactRendering(command);
   }
 }

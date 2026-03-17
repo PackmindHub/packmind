@@ -1,6 +1,8 @@
 import { PMBadge, PMBox, PMHStack, PMText } from '@packmind/ui';
+import { PreviewArtifactRenderingCommand } from '@packmind/types';
 import { RelativeTime } from './RelativeTime';
 import { ReviewActionButtons } from '../ReviewActionButtons';
+import { DownloadAsAgentButton } from './DownloadAsAgentButton';
 
 interface CreationReviewHeaderProps {
   artefactName: string;
@@ -10,6 +12,10 @@ interface CreationReviewHeaderProps {
   onDismiss: () => void;
   isPending: boolean;
   isSubmitted: boolean;
+  getPreviewCommand?: () => Omit<
+    PreviewArtifactRenderingCommand,
+    'codingAgent'
+  >;
 }
 
 export function CreationReviewHeader({
@@ -20,6 +26,7 @@ export function CreationReviewHeader({
   onDismiss,
   isPending,
   isSubmitted,
+  getPreviewCommand,
 }: Readonly<CreationReviewHeaderProps>) {
   return (
     <PMBox
@@ -45,11 +52,20 @@ export function CreationReviewHeader({
           </PMText>
         </PMHStack>
         {!isSubmitted && (
-          <ReviewActionButtons
-            onAccept={onAccept}
-            onDismiss={onDismiss}
-            isPending={isPending}
-          />
+          <PMHStack gap={2}>
+            {getPreviewCommand && (
+              <DownloadAsAgentButton
+                getPreviewCommand={getPreviewCommand}
+                size="xs"
+                label="Try with agent"
+              />
+            )}
+            <ReviewActionButtons
+              onAccept={onAccept}
+              onDismiss={onDismiss}
+              isPending={isPending}
+            />
+          </PMHStack>
         )}
       </PMHStack>
     </PMBox>

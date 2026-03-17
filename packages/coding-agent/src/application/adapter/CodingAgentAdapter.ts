@@ -17,12 +17,15 @@ import {
   IGitPortName,
   IStandardsPort,
   IStandardsPortName,
+  PreviewArtifactRenderingCommand,
+  PreviewArtifactRenderingResponse,
   RenderArtifactsCommand,
   RenderArtifactsResponse,
 } from '@packmind/types';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 import { RenderArtifactsUseCase } from '../useCases/RenderArtifactsUseCase';
+import { PreviewArtifactRenderingUseCase } from '../useCases/PreviewArtifactRenderingUseCase';
 
 const origin = 'CodingAgentAdapter';
 
@@ -33,6 +36,7 @@ export class CodingAgentAdapter
   private gitPort: IGitPort | null = null;
 
   private _renderArtifactsUseCase!: RenderArtifactsUseCase;
+  private _previewArtifactRenderingUseCase!: PreviewArtifactRenderingUseCase;
 
   constructor(
     private readonly codingAgentRepositories: ICodingAgentRepositories,
@@ -68,6 +72,10 @@ export class CodingAgentAdapter
 
     this._renderArtifactsUseCase = new RenderArtifactsUseCase(
       this.codingAgentServices,
+    );
+
+    this._previewArtifactRenderingUseCase = new PreviewArtifactRenderingUseCase(
+      this.codingAgentRepositories,
     );
 
     this.logger.info('CodingAgentAdapter initialized successfully');
@@ -170,6 +178,12 @@ export class CodingAgentAdapter
       command.artifacts,
       command.agents,
     );
+  }
+
+  async previewArtifactRendering(
+    command: PreviewArtifactRenderingCommand,
+  ): Promise<PreviewArtifactRenderingResponse> {
+    return this._previewArtifactRenderingUseCase.execute(command);
   }
 
   getSkillsFolderPathForAgents(

@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   PMBox,
   PMHeading,
+  PMHStack,
   PMMarkdownViewer,
   PMText,
   PMVStack,
@@ -9,6 +10,8 @@ import {
 import { ChangeProposalId, Skill, SkillFile } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { applySkillProposals } from '../../utils/applySkillProposals';
+import { PREVIEW_SKILL_VERSION_ID } from '../../utils/changeProposalHelpers';
+import { DownloadAsAgentButton } from '../shared/DownloadAsAgentButton';
 import { SKILL_MD_PATH } from '../../utils/groupSkillProposalsByFile';
 import { SkillOptionalField } from './SkillContent/SkillOptionalField';
 import { MetadataKeyValueDisplay } from './SkillContent/MetadataKeyValueDisplay';
@@ -42,6 +45,31 @@ export function SkillResultTabContent({
 
   const hasAccepted = acceptedProposalIds.size > 0;
 
+  const getPreviewCommand = useCallback(
+    () => ({
+      recipeVersions: [],
+      standardVersions: [],
+      skillVersions: [
+        {
+          id: PREVIEW_SKILL_VERSION_ID,
+          skillId: skill.id,
+          version: skill.version,
+          userId: skill.userId,
+          name: applied.name,
+          slug: skill.slug,
+          description: applied.description,
+          prompt: applied.prompt,
+          license: applied.license,
+          compatibility: applied.compatibility,
+          metadata: applied.metadata,
+          allowedTools: applied.allowedTools,
+          files: applied.files,
+        },
+      ],
+    }),
+    [applied, skill],
+  );
+
   const showScalarFields = !filePathFilter || filePathFilter === SKILL_MD_PATH;
   const showFiles = !filePathFilter || filePathFilter !== SKILL_MD_PATH;
 
@@ -55,7 +83,7 @@ export function SkillResultTabContent({
 
   return (
     <PMBox p={6}>
-      <PMBox mb={6}>
+      <PMHStack mb={6} justifyContent="space-between" alignItems="center">
         <PMText
           fontSize="2xs"
           fontWeight="medium"
@@ -64,7 +92,13 @@ export function SkillResultTabContent({
         >
           Version with accepted changes
         </PMText>
-      </PMBox>
+        {hasAccepted && (
+          <DownloadAsAgentButton
+            getPreviewCommand={getPreviewCommand}
+            label="Try with agent"
+          />
+        )}
+      </PMHStack>
 
       {hasAccepted ? (
         <>

@@ -5,11 +5,14 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   ChangeProposalId,
+  RuleId,
   StandardCreationProposalOverview,
+  StandardId,
 } from '@packmind/types';
+import { PREVIEW_STANDARD_VERSION_ID } from '../../utils/changeProposalHelpers';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { useUserLookup } from '../../hooks/useUserLookup';
@@ -65,6 +68,36 @@ export function CreateStandardReviewDetail({
     [displayedProposal],
   );
 
+  const getPreviewCommand = useCallback(() => {
+    if (!displayedProposal) {
+      return { recipeVersions: [], standardVersions: [], skillVersions: [] };
+    }
+    return {
+      recipeVersions: [],
+      standardVersions: [
+        {
+          id: PREVIEW_STANDARD_VERSION_ID,
+          standardId: 'preview' as StandardId,
+          name: displayedProposal.payload.name,
+          slug: displayedProposal.payload.name
+            .toLowerCase()
+            .replace(/\s+/g, '-'),
+          description: displayedProposal.payload.description,
+          version: 1,
+          scope: Array.isArray(displayedProposal.payload.scope)
+            ? displayedProposal.payload.scope.join(', ')
+            : displayedProposal.payload.scope,
+          rules: displayedProposal.payload.rules.map((r, i) => ({
+            id: `rule-${i}` as RuleId,
+            content: r.content,
+            standardVersionId: PREVIEW_STANDARD_VERSION_ID,
+          })),
+        },
+      ],
+      skillVersions: [],
+    };
+  }, [displayedProposal]);
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -86,6 +119,7 @@ export function CreateStandardReviewDetail({
         onDismiss={handleReject}
         isPending={isPending}
         isSubmitted={!!submittedState}
+        getPreviewCommand={getPreviewCommand}
       />
       <PMBox
         px={6}

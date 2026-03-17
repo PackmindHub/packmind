@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import { LuFile } from 'react-icons/lu';
 import {
@@ -14,7 +14,10 @@ import {
 import {
   ChangeProposalId,
   SkillCreationProposalOverview,
+  SkillFileId,
+  SkillId,
 } from '@packmind/types';
+import { PREVIEW_SKILL_VERSION_ID } from '../../utils/changeProposalHelpers';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { useUserLookup } from '../../hooks/useUserLookup';
@@ -103,6 +106,39 @@ export function CreateSkillReviewDetail({
     [allFiles],
   );
 
+  const getPreviewCommand = useCallback(() => {
+    if (!displayedProposal) {
+      return { recipeVersions: [], standardVersions: [], skillVersions: [] };
+    }
+    return {
+      recipeVersions: [],
+      standardVersions: [],
+      skillVersions: [
+        {
+          id: PREVIEW_SKILL_VERSION_ID,
+          skillId: 'preview' as SkillId,
+          version: 1,
+          userId: displayedProposal.createdBy,
+          name: displayedProposal.payload.name,
+          slug: displayedProposal.payload.name
+            .toLowerCase()
+            .replace(/\s+/g, '-'),
+          description: displayedProposal.payload.description,
+          prompt: displayedProposal.payload.prompt,
+          license: displayedProposal.payload.license,
+          compatibility: displayedProposal.payload.compatibility,
+          metadata: displayedProposal.payload.metadata,
+          allowedTools: displayedProposal.payload.allowedTools,
+          files: (displayedProposal.payload.files ?? []).map((f, i) => ({
+            ...f,
+            id: `file-${i}` as SkillFileId,
+            skillVersionId: PREVIEW_SKILL_VERSION_ID,
+          })),
+        },
+      ],
+    };
+  }, [displayedProposal]);
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -124,6 +160,7 @@ export function CreateSkillReviewDetail({
         onDismiss={handleReject}
         isPending={isPending}
         isSubmitted={!!submittedState}
+        getPreviewCommand={getPreviewCommand}
       />
       <PMBox
         px={6}

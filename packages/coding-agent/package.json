@@ -12,9 +12,11 @@
     "@packmind/types": "*",
     "@packmind/standards": "*",
     "@packmind/skills": "*",
+    "@packmind/test-utils": "0.0.1",
+    "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "semver": "^6.3.1",
     "typeorm": "0.3.28",
-    "uuid": "^11.1.0",
-    "@packmind/test-utils": "0.0.1"
+    "uuid": "^11.1.0"
   }
 }
