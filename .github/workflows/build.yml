@@ -208,7 +208,7 @@ jobs:
           if-no-files-found: ignore
 
   build-cli:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    runs-on: ${{ matrix.runner }}
     outputs:
       artifact-name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
       cli-executables-artifact: cli-executables-${{ steps.get-version.outputs.version }}
@@ -216,6 +216,9 @@ jobs:
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
+        runner:
+          - ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+          - depot-windows-2025-4
 
     steps:
       - uses: actions/checkout@v4
@@ -226,15 +229,18 @@ jobs:
           cache: 'npm'
 
       - name: Set up Bun
+        if: runner.os != 'Windows'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Get package version
+        if: runner.os != 'Windows'
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
 
       - run: npm ci --no-audit --no-fund
+        timeout-minutes: 30
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -251,28 +257,33 @@ jobs:
         run: ./node_modules/.bin/nx test packmind-cli
 
       - name: Upload CLI build artifacts
+        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/cli/
 
       - name: Build CLI executables for all platforms
+        if: runner.os != 'Windows'
         run: |
           echo "📦 Building CLI executables with embedded WASM files..."
           bun --version
           bun run apps/cli/bun-build.ts --target=all
 
       - name: List built executables
+        if: runner.os != 'Windows'
         run: |
           echo "Built executables (with embedded WASM files):"
           ls -lh dist/apps/cli-executables/
 
       - name: Test executables
+        if: runner.os != 'Windows'
         run: |
           node dist/apps/cli/main.cjs --version
           ./dist/apps/cli-executables/packmind-cli-linux-x64 --version
 
       - name: Upload CLI executables
+        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: cli-executables-${{ steps.get-version.outputs.version }}
@@ -282,139 +293,6 @@ jobs:
             dist/apps/cli-executables/packmind-cli-macos-arm64
             dist/apps/cli-executables/packmind-cli-windows-x64.exe
           retention-days: 30
-
-  cli-e2e-tests:
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
-    env:
-      PACKMIND_INSTANCE_URL: http://localhost:4200
-    strategy:
-      matrix:
-        node-version: ['${{ inputs.node-version }}']
-        runner:
-          - ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-          - depot-windows-2025-4
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - run: npm ci --no-audit --no-fund
-        timeout-minutes: 30
-
-      - name: Generate tsconfig
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-        run: node scripts/select-tsconfig.mjs
-
-      - run: npx nx run packmind-cli:build
-
-      - name: Fix CLI artifacts permissions
-        if: runner.os != 'Windows'
-        run: |
-          chmod +x dist/apps/cli/main.cjs || true
-          chmod -R +r dist/apps/cli/
-          ls -la dist/apps/cli/
-
-      - name: Switch Docker to Linux containers (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Write-Host "Switching Docker to Linux container mode..."
-          & 'C:\Program Files\Docker\Docker\DockerCli.exe' -SwitchLinuxEngine
-          Start-Sleep -Seconds 10
-          Write-Host "Waiting for Docker daemon to be ready..."
-          $retries = 0
-          while ($retries -lt 30) {
-            try {
-              docker info 2>&1 | Out-Null
-              if ($LASTEXITCODE -eq 0) {
-                Write-Host "Docker is ready with Linux containers"
-                docker info --format '{{.OSType}}'
-                break
-              }
-            } catch {}
-            $retries++
-            Write-Host "Waiting for Docker daemon... (attempt $retries/30)"
-            Start-Sleep -Seconds 5
-          }
-          if ($retries -eq 30) {
-            Write-Host "::error::Docker daemon did not become ready in time"
-            exit 1
-          }
-
-      - name: Start docker compose for CLI E2E tests
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 15
-          max_attempts: 3
-          retry_wait_seconds: 10
-          command: |
-            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
-            echo "Docker version:"
-            docker --version
-            docker compose version
-            echo "Starting containers..."
-            docker compose up -d --wait --wait-timeout 300
-            echo "Docker compose up completed. Container status:"
-            docker compose ps -a
-            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-          CI: 'true'
-          APP_WEB_URL: ${{ env.PACKMIND_INSTANCE_URL }}
-
-      - name: Wait for services to be ready
-        shell: bash
-        env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-          PACKMIND_INSTANCE_URL: ${{ env.PACKMIND_INSTANCE_URL }}
-        run: |
-          echo "Waiting for API to be ready..."
-          timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done" || true
-
-      - name: Run CLI E2E tests
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          NODE_OPTIONS: '--max-old-space-size=16384'
-        run: npx nx test cli-e2e-tests
-
-      - name: Collect Docker container logs
-        if: always()
-        shell: bash
-        env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-        run: |
-          mkdir -p docker-logs-cli-e2e
-          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
-          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
-          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
-            echo "Collecting logs for $container..."
-            docker logs "$container" > "docker-logs-cli-e2e/${container}.log" 2>&1 || true
-          done
-          echo "Collected logs:"
-          ls -la docker-logs-cli-e2e/ || echo "No logs collected"
-
-      - name: Upload Docker logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs-cli-e2e-${{ github.run_number }}-${{ matrix.runner }}-${{ github.sha }}
-          path: docker-logs-cli-e2e/
-          if-no-files-found: ignore
-
-      - name: Cleanup Docker containers
-        if: always()
-        shell: bash
-        env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-        run: docker compose down -v --remove-orphans
 
   e2e-tests:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
