@@ -115,19 +115,19 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith('Changes to be submitted:');
     });
 
-    it('displays the standard with updated changeType', async () => {
+    it('displays the standard with changeType and file path inline', async () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Standard "My standard" (updated). packmind',
+        '  - Standard "My standard" (updated) .packmind/standards/my-standard.md',
       );
     });
 
-    it('displays the command with created changeType', async () => {
+    it('displays the command with changeType and file path inline', async () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Command "My command" (created). claude',
+        '  - Command "My command" (created) .claude/commands/my-command.md',
       );
     });
 
@@ -136,6 +136,57 @@ describe('playbookStatusHandler', () => {
 
       expect(mockLogConsole).toHaveBeenCalledWith(
         'Use `packmind playbook submit` to send them',
+      );
+    });
+  });
+
+  describe('when the same artifact is staged for multiple agents', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/commands/add-console.md',
+          artifactType: 'command',
+          artifactName: 'Add console',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+        } as never,
+        {
+          filePath: '.packmind/commands/add-console.md',
+          artifactType: 'command',
+          artifactName: 'Add console',
+          codingAgent: 'packmind',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+        } as never,
+      ]);
+    });
+
+    it('displays the artifact header without inline path', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Command "Add console" (updated)',
+      );
+    });
+
+    it('displays the first file path on its own line', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '    .claude/commands/add-console.md',
+      );
+    });
+
+    it('displays the second file path on its own line', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '    .packmind/commands/add-console.md',
       );
     });
   });
@@ -190,11 +241,11 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
     });
 
-    it('displays the untracked artifact', async () => {
+    it('displays the untracked artifact with file path inline', async () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Standard "My standard". packmind',
+        '  - Standard "My standard" .packmind/standards/my-standard.md',
       );
     });
 
@@ -221,6 +272,81 @@ describe('playbookStatusHandler', () => {
         ],
         agents: ['claude'],
       });
+    });
+  });
+
+  describe('when the same artifact has untracked changes for multiple agents', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude', 'packmind'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'artifact-1': {
+          name: 'My standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              agent: 'packmind',
+            },
+            {
+              path: '.claude/rules/packmind/standard-my-standard.md',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              content: 'deployed content',
+            },
+            {
+              path: '.claude/rules/packmind/standard-my-standard.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('local modified content');
+    });
+
+    it('displays the artifact header without inline path', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith('  - Standard "My standard"');
+    });
+
+    it('displays the first file path on its own line', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '    .packmind/standards/my-standard.md',
+      );
+    });
+
+    it('displays the second file path on its own line', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '    .claude/rules/packmind/standard-my-standard.md',
+      );
     });
   });
 
@@ -445,33 +571,21 @@ describe('playbookStatusHandler', () => {
     });
 
     it('displays the untracked header for the subproject', async () => {
-      await playbookStatusHandler(
-        buildDeps({
-          cwd: '/gitroot/subproject',
-        }),
-      );
+      await playbookStatusHandler(buildDeps({ cwd: '/gitroot/subproject' }));
 
       expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
     });
 
-    it('displays the untracked artifact with agent label for the subproject', async () => {
-      await playbookStatusHandler(
-        buildDeps({
-          cwd: '/gitroot/subproject',
-        }),
-      );
+    it('displays the untracked artifact with file path for the subproject', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/gitroot/subproject' }));
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Command "My command". claude',
+        '  - Command "My command" .claude/commands/my-command.md',
       );
     });
 
-    it('reads local files relative to the project directory, not git root', async () => {
-      await playbookStatusHandler(
-        buildDeps({
-          cwd: '/gitroot/subproject',
-        }),
-      );
+    it('reads local files relative to the project directory', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/gitroot/subproject' }));
 
       expect(mockReadFile).toHaveBeenCalledWith(
         expect.stringContaining(
