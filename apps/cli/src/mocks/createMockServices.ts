@@ -36,6 +36,7 @@ export function createMockSpaceService(
 ): jest.Mocked<ISpaceService> {
   return {
     getDefaultSpace: jest.fn(),
+    getSpaces: jest.fn(),
     ...overrides,
   };
 }
