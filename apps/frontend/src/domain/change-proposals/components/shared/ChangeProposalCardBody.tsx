@@ -324,18 +324,24 @@ export function ChangeProposalCardBody({
         ) : isEdited ? (
           <PMVStack gap={4} alignItems="stretch">
             <Collapsible.Root>
-              <Collapsible.Trigger
-                cursor="pointer"
-                width="full"
-                textAlign="left"
-              >
-                <PMHStack gap={1} alignItems="center">
-                  <PMText fontSize="xs" color="secondary" fontWeight="medium">
-                    Original proposal
-                  </PMText>
-                  <CollapsibleChevron />
-                </PMHStack>
-              </Collapsible.Trigger>
+              <PMHStack gap={1} alignItems="center">
+                <Collapsible.Trigger cursor="pointer" textAlign="left">
+                  <PMHStack gap={1} alignItems="center">
+                    <PMText fontSize="xs" color="secondary" fontWeight="medium">
+                      Original proposal
+                    </PMText>
+                    <CollapsibleChevron />
+                  </PMHStack>
+                </Collapsible.Trigger>
+                <PMButton
+                  size="xs"
+                  variant="plain"
+                  color="blue.400"
+                  onClick={onUndo}
+                >
+                  Reset to original
+                </PMButton>
+              </PMHStack>
               <Collapsible.Content>
                 <PMVStack gap={1} alignItems="stretch" opacity={0.6} pt={2}>
                   <FocusedView
