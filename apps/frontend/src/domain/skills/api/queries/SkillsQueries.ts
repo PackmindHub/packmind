@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
 import { skillsGateway } from '../gateways';
 import {
-  GET_SKILLS_KEY,
+  getSkillsBySpaceKey,
   getSkillByIdKey,
   getSkillBySlugKey,
   getSkillVersionsKey,
@@ -23,7 +23,7 @@ export const getSkillsBySpaceQueryOptions = (
   organizationId: OrganizationId | undefined,
   spaceId: SpaceId | undefined,
 ) => ({
-  queryKey: GET_SKILLS_KEY,
+  queryKey: getSkillsBySpaceKey(spaceId),
   queryFn: () => {
     if (!organizationId) {
       throw new Error('Organization ID is required to fetch skills');
@@ -153,7 +153,7 @@ export const useDeleteSkillMutation = () => {
     onSuccess: async () => {
       // Invalidate skills list
       await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_KEY,
+        queryKey: getSkillsBySpaceKey(spaceId),
       });
 
       // Invalidate skills deployment overview
@@ -203,7 +203,7 @@ export const useDeleteSkillsBatchMutation = () => {
     onSuccess: async () => {
       // Invalidate skills list
       await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_KEY,
+        queryKey: getSkillsBySpaceKey(spaceId),
       });
 
       // Invalidate skills deployment overview
