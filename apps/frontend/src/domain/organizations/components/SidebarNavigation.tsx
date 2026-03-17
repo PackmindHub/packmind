@@ -158,7 +158,17 @@ export const SidebarNavigation: React.FunctionComponent<
     return;
   }
 
+  if (!spaces) {
+    return;
+  }
+
   const orgSlug = organization.slug;
+
+  const defaultSpace = spaces.find((space) => space.isDefaultSpace);
+
+  if (!defaultSpace) {
+    return;
+  }
 
   return (
     <>
@@ -203,24 +213,18 @@ export const SidebarNavigation: React.FunctionComponent<
               </PMBox>
             )}
 
-            {/* Default space — always rendered directly */}
-            {spaces
-              ?.filter((space) => space.isDefaultSpace)
-              .map((space) => (
-                <SpaceNavBlock
-                  key={space.id}
-                  space={space}
-                  orgSlug={orgSlug}
-                  isActive={space.slug === currentSpaceSlug}
-                  onSpaceClick={() => {
-                    if (space.slug !== currentSpaceSlug) {
-                      setActiveSpacePanel(space.id);
-                    }
-                  }}
-                />
-              ))}
+            <SpaceNavBlock
+              key={defaultSpace.id}
+              space={defaultSpace}
+              orgSlug={orgSlug}
+              isActive={defaultSpace.slug === currentSpaceSlug}
+              onSpaceClick={() => {
+                if (defaultSpace.slug !== currentSpaceSlug) {
+                  setActiveSpacePanel(defaultSpace.id);
+                }
+              }}
+            />
 
-            {/* Non-default spaces — rendered via container for edition-gating */}
             {spaces && (
               <CustomSpacesNavBlock
                 spaces={spaces}
