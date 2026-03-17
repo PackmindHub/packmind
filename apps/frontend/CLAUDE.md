@@ -25,7 +25,6 @@ React Router v7 single-page application for Packmind, built with Chakra UI and T
 
 - Build: `./node_modules/.bin/nx build frontend`
 - Test: `./node_modules/.bin/nx test frontend`
-- Dev server: `./node_modules/.bin/nx dev frontend` *(for isolated testing only; use `docker compose up` for regular local development)*
 - Type check: `./node_modules/.bin/nx typecheck frontend`
 - Lint: `./node_modules/.bin/nx lint frontend`
 

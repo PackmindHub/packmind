@@ -27,8 +27,6 @@ docker compose up
 
 This starts the entire development environment.
 Docker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
-Don't use `./node_modules/.bin/nx serve` commands for local development, let user starts the stack with `docker compose up`
-
 ## Working with Nx
 
 The following commands apply for both NX apps and packages (use `./node_modules/.bin/nx show projects` to list actual apps and packages.)

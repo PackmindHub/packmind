@@ -25,8 +25,6 @@ Main backend API for Packmind, built with NestJS and hexagonal architecture.
 
 - Build: `./node_modules/.bin/nx build api`
 - Test: `./node_modules/.bin/nx test api`
-- Serve (development): `./node_modules/.bin/nx serve api` *(for isolated testing only; use `docker compose up` for regular local development)*
-- Start (production): `./node_modules/.bin/nx start api`
 - Type check: `./node_modules/.bin/nx typecheck api`
 - Lint: `./node_modules/.bin/nx lint api`
 
