@@ -1167,6 +1167,7 @@ describe('GitlabRepository', () => {
         expect(result).toEqual({
           sha: 'blob-id-123',
           content: Buffer.from('file content').toString('base64'),
+          execute_filemode: false,
         });
       });
     });

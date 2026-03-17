@@ -30,7 +30,11 @@ export interface IGitRepo {
   getFileOnRepo(
     path: string,
     branch?: string,
-  ): Promise<{ sha: string; content: string } | null>;
+  ): Promise<{
+    sha: string;
+    content: string;
+    execute_filemode?: boolean;
+  } | null>;
 
   listDirectoriesOnRepo(
     name: string,

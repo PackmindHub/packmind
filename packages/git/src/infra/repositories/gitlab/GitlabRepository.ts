@@ -235,13 +235,12 @@ export class GitlabRepository implements IGitRepo {
 
           // File exists - fetch content and metadata to check changes
           try {
-            const encodedPath = encodeURIComponent(file.path);
-            const response = await this.axiosInstance.get(
-              `/projects/${this.encodedProjectPath}/repository/files/${encodedPath}`,
-              { params: { ref: targetBranch } },
+            const existingFile = await this.getFileOnRepo(
+              file.path,
+              targetBranch,
             );
 
-            if (!response.data || !response.data.blob_id) {
+            if (!existingFile) {
               return {
                 path: file.path,
                 hasChanges: true,
@@ -252,7 +251,7 @@ export class GitlabRepository implements IGitRepo {
 
             // File exists, check if content is different
             const existingContent = Buffer.from(
-              response.data.content || '',
+              existingFile.content,
               'base64',
             ).toString('utf-8');
             const hasChanges = existingContent !== file.content;
@@ -261,7 +260,7 @@ export class GitlabRepository implements IGitRepo {
               path: file.path,
               hasChanges,
               action: 'update' as const,
-              existingExecuteFilemode: response.data.execute_filemode === true,
+              existingExecuteFilemode: existingFile.execute_filemode === true,
             };
           } catch (fileError: unknown) {
             // If the files API fails for an existing file, treat as create
@@ -496,7 +495,11 @@ export class GitlabRepository implements IGitRepo {
   async getFileOnRepo(
     path: string,
     branch?: string,
-  ): Promise<{ sha: string; content: string } | null> {
+  ): Promise<{
+    sha: string;
+    content: string;
+    execute_filemode?: boolean;
+  } | null> {
     const targetBranch = branch || this.options.branch;
 
     try {
@@ -525,6 +528,7 @@ export class GitlabRepository implements IGitRepo {
         return {
           sha: response.data.blob_id,
           content: response.data.content || '',
+          execute_filemode: response.data.execute_filemode === true,
         };
       }
 

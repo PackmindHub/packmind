@@ -98,7 +98,7 @@ export class GithubRepository implements IGitRepo {
             return {
               path: file.path,
               hasChanges: existingContent !== file.content,
-              hasPermissionChanges: !!file.permissions,
+              hasPermissionsSpecified: !!file.permissions,
             };
           }
         }),
@@ -162,7 +162,7 @@ export class GithubRepository implements IGitRepo {
       // Step 6: Check if there are any changes to commit (file modifications, permission changes, or deletions)
       // For permission changes, compare the existing tree mode with the desired mode
       const hasPermissionChanges = fileDifferenceCheck.some((check, i) => {
-        if (!check.hasPermissionChanges) return false;
+        if (!check.hasPermissionsSpecified) return false;
         const existingMode = existingPathsWithModes.get(check.path);
         const desiredMode = this.getGitMode(files[i].permissions);
         return existingMode !== desiredMode;
@@ -217,10 +217,11 @@ export class GithubRepository implements IGitRepo {
         if (hasContentChanges || hasModeChange) {
           // When permissions is not specified, preserve the existing mode
           // to avoid accidentally resetting 100755 files to 100644
-          const mode =
-            files[i].permissions || !existingMode
-              ? desiredMode
-              : (existingMode as '100644' | '100755');
+          const mode = files[i].permissions
+            ? desiredMode
+            : existingMode
+              ? (existingMode as '100644' | '100755')
+              : desiredMode;
           treeItems.push({
             path: files[i].path,
             mode,
@@ -361,7 +362,11 @@ export class GithubRepository implements IGitRepo {
   async getFileOnRepo(
     path: string,
     branch?: string,
-  ): Promise<{ sha: string; content: string } | null> {
+  ): Promise<{
+    sha: string;
+    content: string;
+    execute_filemode?: boolean;
+  } | null> {
     const { owner, repo } = this.options;
     const targetBranch = branch || this.options.branch;
 
