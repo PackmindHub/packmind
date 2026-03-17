@@ -1,7 +1,6 @@
 import * as fs from 'fs/promises';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
-  showPackageHandler,
   installPackagesHandler,
   uninstallPackagesHandler,
   recursiveInstallHandler,
@@ -32,7 +31,6 @@ describe('installPackagesHandler', () => {
 
   beforeEach(() => {
     mockPackmindCliHexa = {
-      getPackageBySlug: jest.fn(),
       configExists: jest.fn(),
       readConfig: jest.fn(),
       readFullConfig: jest.fn(),
@@ -66,72 +64,6 @@ describe('installPackagesHandler', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('showPackageHandler', () => {
-    describe('when package is found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.getPackageBySlug.mockResolvedValue({
-          name: 'Test Package',
-          slug: 'test-package',
-          description: 'A test package',
-          standards: [{ name: 'Standard 1', summary: 'A standard' }],
-          recipes: [{ name: 'Recipe 1', summary: 'A recipe' }],
-        });
-
-        await showPackageHandler({ slug: 'test-package' }, deps);
-      });
-
-      it('logs fetching message', () => {
-        expect(mockLog).toHaveBeenCalledWith(
-          "Fetching package details for 'test-package'...\n",
-        );
-      });
-
-      it('logs package name with slug', () => {
-        expect(mockLog).toHaveBeenCalledWith('Test Package (test-package):\n');
-      });
-
-      it('logs package description', () => {
-        expect(mockLog).toHaveBeenCalledWith('A test package\n');
-      });
-
-      it('logs standards section', () => {
-        expect(mockLog).toHaveBeenCalledWith('Standards:');
-      });
-
-      it('logs commands section', () => {
-        expect(mockLog).toHaveBeenCalledWith('Commands:');
-      });
-
-      it('exits with 0', () => {
-        expect(mockExit).toHaveBeenCalledWith(0);
-      });
-    });
-
-    describe('when package is not found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.getPackageBySlug.mockRejectedValue(
-          new Error('Package not found'),
-        );
-
-        await showPackageHandler({ slug: 'non-existent' }, deps);
-      });
-
-      it('displays error header', () => {
-        expect(mockError).toHaveBeenCalledWith(
-          '\n❌ Failed to fetch package details:',
-        );
-      });
-
-      it('displays error message', () => {
-        expect(mockError).toHaveBeenCalledWith('   Package not found');
-      });
-
-      it('exits with 1', () => {
-        expect(mockExit).toHaveBeenCalledWith(1);
-      });
-    });
   });
 
   describe('installPackagesHandler', () => {

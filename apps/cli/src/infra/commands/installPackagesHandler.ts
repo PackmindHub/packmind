@@ -5,7 +5,6 @@ import {
   CodingAgent,
   ConfigWithTarget,
   PackmindFileConfig,
-  SummarizedArtifact,
 } from '@packmind/types';
 import { logErrorConsole, logWarningConsole } from '../utils/consoleLogger';
 
@@ -109,67 +108,6 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     }
   } catch {
     // Silently ignore default skills installation errors as it's a secondary operation
-  }
-}
-
-export type ShowPackageArgs = {
-  slug: string;
-};
-
-export async function showPackageHandler(
-  args: ShowPackageArgs,
-  deps: InstallHandlerDependencies,
-): Promise<void> {
-  const { packmindCliHexa, exit, log, error } = deps;
-  const { slug } = args;
-
-  try {
-    log(`Fetching package details for '${slug}'...\n`);
-    const pkg = await packmindCliHexa.getPackageBySlug({ slug });
-
-    // Display package name and slug
-    log(`${pkg.name} (${pkg.slug}):\n`);
-
-    // Display description if available
-    if (pkg.description) {
-      log(`${pkg.description}\n`);
-    }
-
-    // Display standards
-    if (pkg.standards && pkg.standards.length > 0) {
-      log('Standards:');
-      pkg.standards.forEach((standard: SummarizedArtifact) => {
-        if (standard.summary) {
-          log(`  - ${standard.name}: ${standard.summary}`);
-        } else {
-          log(`  - ${standard.name}`);
-        }
-      });
-      log('');
-    }
-
-    // Display recipes
-    if (pkg.recipes && pkg.recipes.length > 0) {
-      log('Commands:');
-      pkg.recipes.forEach((recipe: SummarizedArtifact) => {
-        if (recipe.summary) {
-          log(`  - ${recipe.name}: ${recipe.summary}`);
-        } else {
-          log(`  - ${recipe.name}`);
-        }
-      });
-      log('');
-    }
-
-    exit(0);
-  } catch (err) {
-    error('\n❌ Failed to fetch package details:');
-    if (err instanceof Error) {
-      error(`   ${err.message}`);
-    } else {
-      error(`   ${String(err)}`);
-    }
-    exit(1);
   }
 }
 
