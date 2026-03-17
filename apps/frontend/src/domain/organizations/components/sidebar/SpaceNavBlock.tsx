@@ -206,6 +206,7 @@ function SpaceNameRow({
       cursor="pointer"
       width="full"
       textAlign="left"
+      bg={isActive ? 'blue.900' : 'transparent'}
       _hover={isActive ? undefined : { backgroundColor: 'blue.900' }}
       transition="background-color 0.15s"
     >
