@@ -334,4 +334,111 @@ describe('PlaybookLocalRepository', () => {
       });
     });
   });
+
+  describe('clearAll', () => {
+    describe('when playbook file exists with entries', () => {
+      const entries: PlaybookChangeEntry[] = [
+        {
+          filePath: '.packmind/standards/std-1.md',
+          artifactType: 'standard',
+          artifactName: 'Standard 1',
+          codingAgent: 'claude',
+          addedAt: '2026-03-16T10:00:00.000Z',
+          spaceId: 'space-1',
+          content: '# Standard 1',
+          changeType: 'created',
+        },
+        {
+          filePath: '.packmind/commands/cmd-1.md',
+          artifactType: 'command',
+          artifactName: 'Command 1',
+          codingAgent: 'claude',
+          addedAt: '2026-03-16T11:00:00.000Z',
+          spaceId: 'space-1',
+          content: '# Command 1',
+          changeType: 'updated',
+        },
+      ];
+
+      beforeEach(() => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(
+          yaml.stringify({ version: 1, changes: entries }),
+        );
+        mockFs.mkdirSync.mockReturnValue(undefined);
+        mockFs.writeFileSync.mockReturnValue(undefined);
+
+        repository.clearAll();
+      });
+
+      it('writes a YAML file with empty changes array', () => {
+        const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
+        const parsed = yaml.parse(writtenContent) as PlaybookYaml;
+
+        expect(parsed.changes).toEqual([]);
+      });
+    });
+
+    describe('when playbook file does not exist', () => {
+      beforeEach(() => {
+        mockFs.existsSync.mockReturnValue(false);
+        mockFs.mkdirSync.mockReturnValue(undefined);
+        mockFs.writeFileSync.mockReturnValue(undefined);
+
+        repository.clearAll();
+      });
+
+      it('writes a YAML file with empty changes array', () => {
+        const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
+        const parsed = yaml.parse(writtenContent) as PlaybookYaml;
+
+        expect(parsed.changes).toEqual([]);
+      });
+    });
+  });
+
+  describe('changeType field persistence', () => {
+    const entryWithChangeType: PlaybookChangeEntry = {
+      filePath: '.packmind/standards/my-standard.md',
+      artifactType: 'standard',
+      artifactName: 'My Standard',
+      codingAgent: 'claude',
+      addedAt: '2026-03-16T10:00:00.000Z',
+      spaceId: 'space-1',
+      content: '# Content',
+      changeType: 'created',
+    };
+
+    describe('when adding an entry with changeType', () => {
+      beforeEach(() => {
+        mockFs.existsSync.mockReturnValue(false);
+        mockFs.mkdirSync.mockReturnValue(undefined);
+        mockFs.writeFileSync.mockReturnValue(undefined);
+
+        repository.addChange(entryWithChangeType);
+      });
+
+      it('persists the changeType field', () => {
+        const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
+        const parsed = yaml.parse(writtenContent) as PlaybookYaml;
+
+        expect(parsed.changes[0].changeType).toBe('created');
+      });
+    });
+
+    describe('when reading an entry with changeType', () => {
+      beforeEach(() => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(
+          yaml.stringify({ version: 1, changes: [entryWithChangeType] }),
+        );
+      });
+
+      it('returns the changeType field', () => {
+        const changes = repository.getChanges();
+
+        expect(changes[0].changeType).toBe('created');
+      });
+    });
+  });
 });

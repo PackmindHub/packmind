@@ -60,6 +60,10 @@ export class PlaybookLocalRepository implements IPlaybookLocalRepository {
     return this.readYaml().changes.find((c) => c.filePath === filePath) ?? null;
   }
 
+  clearAll(): void {
+    this.writeYaml({ version: 1, changes: [] });
+  }
+
   private normalizeRepoRoot(repoRoot: string): string {
     let normalized = repoRoot.replace(/\\/g, '/');
     normalized = normalized.replace(/\/$/, '');

@@ -3,6 +3,7 @@ export interface PlaybookChangeEntry {
   artifactType: 'standard' | 'command' | 'skill';
   artifactName: string;
   codingAgent: string;
+  changeType?: 'created' | 'updated';
   addedAt: string; // ISO 8601
   spaceId: string;
   targetId?: string;
@@ -19,4 +20,5 @@ export interface IPlaybookLocalRepository {
   removeChange(filePath: string): boolean;
   getChanges(): PlaybookChangeEntry[];
   getChange(filePath: string): PlaybookChangeEntry | null;
+  clearAll(): void;
 }
