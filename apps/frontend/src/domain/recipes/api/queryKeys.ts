@@ -1,4 +1,6 @@
+import { RecipeId, SpaceId } from '@packmind/types';
 import { ORGANIZATION_QUERY_SCOPE } from '../../organizations/api/queryKeys';
+import { SPACES_SCOPE } from '../../spaces/api/queryKeys';
 
 export const RECIPES_QUERY_SCOPE = 'recipes';
 
@@ -9,24 +11,40 @@ export enum RecipeQueryKeys {
   GET_CHANGE_PROPOSALS = 'get-change-proposals',
 }
 
-// Base query key arrays for reuse
-export const GET_RECIPES_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  RECIPES_QUERY_SCOPE,
-  RecipeQueryKeys.LIST,
-] as const;
+export const getRecipesBySpaceKey = (spaceId: SpaceId | undefined) =>
+  [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    RECIPES_QUERY_SCOPE,
+    RecipeQueryKeys.LIST,
+  ] as const;
 
-export const GET_RECIPE_BY_ID_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  RECIPES_QUERY_SCOPE,
-  RecipeQueryKeys.GET_BY_ID,
-] as const;
+export const getRecipeByIdKey = (
+  spaceId: SpaceId | undefined,
+  recipeId: RecipeId | undefined,
+) =>
+  [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    RECIPES_QUERY_SCOPE,
+    RecipeQueryKeys.GET_BY_ID,
+    recipeId,
+  ] as const;
 
-export const GET_RECIPE_VERSIONS_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  RECIPES_QUERY_SCOPE,
-  RecipeQueryKeys.GET_VERSIONS,
-] as const;
+export const getRecipeVersionsKey = (
+  spaceId: SpaceId | undefined,
+  recipeId: RecipeId | undefined,
+) =>
+  [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    RECIPES_QUERY_SCOPE,
+    RecipeQueryKeys.GET_VERSIONS,
+    recipeId,
+  ] as const;
 
 export const GET_CHANGE_PROPOSALS_KEY = [
   ORGANIZATION_QUERY_SCOPE,

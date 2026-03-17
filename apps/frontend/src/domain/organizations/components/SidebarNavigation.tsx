@@ -12,7 +12,10 @@ import {
   PMText,
 } from '@packmind/ui';
 import { NavLink, useLocation, useParams } from 'react-router';
-import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
+import {
+  AuthContextOrganization,
+  useAuthContext,
+} from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
@@ -22,6 +25,11 @@ import {
   LuSettings,
   LuWrench,
 } from 'react-icons/lu';
+import {
+  PMFeatureFlag,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SPACES_MANAGEMENT_FEATURE_KEY,
+} from '@packmind/ui';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
@@ -137,6 +145,7 @@ export const SidebarNavigation: React.FunctionComponent<
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
   const { data: spaces } = useGetSpacesQuery();
   const { isCollapsed } = useSidebarCollapse();
+  const { user } = useAuthContext();
   const [activeSpacePanel, setActiveSpacePanel] = useState<string | null>(null);
   const location = useLocation();
 
@@ -209,7 +218,13 @@ export const SidebarNavigation: React.FunctionComponent<
                 >
                   Spaces
                 </PMText>
-                <BrowseSpaces />
+                <PMFeatureFlag
+                  featureKeys={[SPACES_MANAGEMENT_FEATURE_KEY]}
+                  featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+                  userEmail={user?.email}
+                >
+                  <BrowseSpaces />
+                </PMFeatureFlag>
               </PMBox>
             )}
 

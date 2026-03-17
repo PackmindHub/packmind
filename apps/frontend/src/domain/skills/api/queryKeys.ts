@@ -11,11 +11,14 @@ export enum SkillQueryKeys {
   VERSIONS = 'versions',
 }
 
-export const GET_SKILLS_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  SKILLS_QUERY_SCOPE,
-  SkillQueryKeys.LIST,
-] as const;
+export const getSkillsBySpaceKey = (spaceId: SpaceId | undefined) =>
+  [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    SKILLS_QUERY_SCOPE,
+    SkillQueryKeys.LIST,
+  ] as const;
 
 export const getSkillBySlugKey = (
   spaceId: SpaceId | undefined,

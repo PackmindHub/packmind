@@ -33,7 +33,7 @@ import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
 import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
 import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
-import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
+import { getRecipeByIdKey } from '../../../recipes/api/queryKeys';
 import {
   computeCommandOutdatedIds,
   computeRemovalOutdatedIds,
@@ -175,7 +175,7 @@ export function CommandReviewDetail({
           queryKey: [...GET_CHANGE_PROPOSALS_BY_RECIPE_KEY, recipeId],
         }),
         queryClient.invalidateQueries({
-          queryKey: [...GET_RECIPE_BY_ID_KEY, recipeId],
+          queryKey: getRecipeByIdKey(spaceId, recipeId),
         }),
       ]);
 
