@@ -873,6 +873,67 @@ describe('GithubRepository', () => {
         });
       });
     });
+
+    describe('when content changes on a 100755 file without permissions field', () => {
+      const existingContent = 'old script content';
+      const newContent = 'new script content';
+
+      beforeEach(() => {
+        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue({
+          sha: 'existing-sha',
+          content: Buffer.from(existingContent).toString('base64'),
+        });
+
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (url.includes('/git/refs/')) {
+            return Promise.resolve({ data: { object: { sha: refSha } } });
+          } else if (url.includes('/git/commits/')) {
+            return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+          } else if (url.includes('/git/trees/')) {
+            return Promise.resolve({
+              data: {
+                sha: baseTreeSha,
+                tree: [
+                  {
+                    path: 'scripts/run.sh',
+                    type: 'blob',
+                    sha: 'existing-sha',
+                    mode: '100755',
+                  },
+                ],
+              },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      it('preserves existing 100755 mode', async () => {
+        const filesWithoutPermissions = [
+          {
+            path: 'scripts/run.sh',
+            content: newContent,
+          },
+        ];
+
+        await githubRepository.commitFiles(
+          filesWithoutPermissions,
+          'Update script content',
+        );
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/trees`,
+          expect.objectContaining({
+            tree: [
+              expect.objectContaining({
+                path: 'scripts/run.sh',
+                mode: '100755',
+              }),
+            ],
+          }),
+        );
+      });
+    });
   });
 
   describe('isValidBranch', () => {

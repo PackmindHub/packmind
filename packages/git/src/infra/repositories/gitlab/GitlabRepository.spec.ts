@@ -940,6 +940,62 @@ describe('GitlabRepository', () => {
         });
       });
     });
+
+    describe('when file is already executable and content is unchanged', () => {
+      const existingContent = 'existing script content';
+
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [{ path: 'scripts/run.sh', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-sha',
+                content: Buffer.from(existingContent).toString('base64'),
+                execute_filemode: true,
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+      });
+
+      it('returns no-changes', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: existingContent,
+            permissions: 'rwxr-xr-x',
+          },
+        ];
+
+        const result = await gitlabRepository.commitFiles(
+          files,
+          'Should not commit',
+        );
+
+        expect(result.sha).toBe('no-changes');
+      });
+
+      it('does not create a commit', async () => {
+        const files = [
+          {
+            path: 'scripts/run.sh',
+            content: existingContent,
+            permissions: 'rwxr-xr-x',
+          },
+        ];
+
+        await gitlabRepository.commitFiles(files, 'Should not commit');
+
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('getFileOnRepo', () => {

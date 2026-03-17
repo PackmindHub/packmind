@@ -213,7 +213,7 @@ export class GitlabRepository implements IGitRepo {
       const existingPaths = await this.fetchRepositoryTree(targetBranch);
 
       // Determine create/update for files to commit using tree lookup
-      // Only call getFileOnRepo for existing files to check content changes
+      // Only call the files API for existing files to check content changes and existing permissions
       const fileAnalysis = await Promise.all(
         deduplicatedFiles.map(async (file) => {
           const normalizedPath = this.normalizePath(file.path);
@@ -229,27 +229,30 @@ export class GitlabRepository implements IGitRepo {
               path: file.path,
               hasChanges: true,
               action: 'create' as const,
+              existingExecuteFilemode: false,
             };
           }
 
-          // File exists - fetch content to check if it changed
+          // File exists - fetch content and metadata to check changes
           try {
-            const existingFile = await this.getFileOnRepo(
-              file.path,
-              targetBranch,
+            const encodedPath = encodeURIComponent(file.path);
+            const response = await this.axiosInstance.get(
+              `/projects/${this.encodedProjectPath}/repository/files/${encodedPath}`,
+              { params: { ref: targetBranch } },
             );
 
-            if (!existingFile) {
+            if (!response.data || !response.data.blob_id) {
               return {
                 path: file.path,
                 hasChanges: true,
                 action: 'create' as const,
+                existingExecuteFilemode: false,
               };
             }
 
             // File exists, check if content is different
             const existingContent = Buffer.from(
-              existingFile.content,
+              response.data.content || '',
               'base64',
             ).toString('utf-8');
             const hasChanges = existingContent !== file.content;
@@ -258,9 +261,10 @@ export class GitlabRepository implements IGitRepo {
               path: file.path,
               hasChanges,
               action: 'update' as const,
+              existingExecuteFilemode: response.data.execute_filemode === true,
             };
           } catch (fileError: unknown) {
-            // If getFileOnRepo fails for an existing file, treat as create
+            // If the files API fails for an existing file, treat as create
             // This handles transient errors gracefully
             this.logger.debug('File content check failed, treating as create', {
               filePath: file.path,
@@ -273,6 +277,7 @@ export class GitlabRepository implements IGitRepo {
               path: file.path,
               hasChanges: true,
               action: 'create' as const,
+              existingExecuteFilemode: false,
             };
           }
         }),
@@ -327,9 +332,16 @@ export class GitlabRepository implements IGitRepo {
         }
       }
 
-      // Add chmod actions for executable files (must come after create/update actions)
-      for (const file of deduplicatedFiles) {
+      // Add chmod actions for executable files that aren't already executable
+      // (must come after create/update actions)
+      for (let i = 0; i < deduplicatedFiles.length; i++) {
+        const file = deduplicatedFiles[i];
+        const analysis = fileAnalysis[i];
         if (file.permissions && this.isExecutable(file.permissions)) {
+          // Skip chmod if the existing file already has execute_filemode
+          if (analysis.existingExecuteFilemode) {
+            continue;
+          }
           actions.push({
             action: 'chmod' as const,
             file_path: file.path,
@@ -342,9 +354,12 @@ export class GitlabRepository implements IGitRepo {
       const hasFileChanges = fileDifferenceCheck.some(
         (file) => file.hasChanges,
       );
-      const hasPermissionChanges = deduplicatedFiles.some(
-        (file) => file.permissions && this.isExecutable(file.permissions),
-      );
+      const hasPermissionChanges = deduplicatedFiles.some((file, index) => {
+        if (!file.permissions || !this.isExecutable(file.permissions))
+          return false;
+        // Only count as a permission change if the file isn't already executable
+        return !fileAnalysis[index].existingExecuteFilemode;
+      });
       const hasDeletions = existingDeleteFiles.length > 0;
       const hasChanges = hasFileChanges || hasDeletions || hasPermissionChanges;
 

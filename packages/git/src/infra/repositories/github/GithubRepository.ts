@@ -217,9 +217,15 @@ export class GithubRepository implements IGitRepo {
           files[i].permissions && existingMode !== desiredMode;
 
         if (hasContentChanges || hasModeChange) {
+          // When permissions is not specified, preserve the existing mode
+          // to avoid accidentally resetting 100755 files to 100644
+          const mode =
+            files[i].permissions || !existingMode
+              ? desiredMode
+              : (existingMode as '100644' | '100755');
           treeItems.push({
             path: files[i].path,
-            mode: desiredMode,
+            mode,
             type: 'blob',
             content: files[i].content,
           });
