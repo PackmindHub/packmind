@@ -161,12 +161,10 @@ export class GithubRepository implements IGitRepo {
 
       // Step 6: Check if there are any changes to commit (file modifications, permission changes, or deletions)
       // For permission changes, compare the existing tree mode with the desired mode
-      const hasPermissionChanges = fileDifferenceCheck.some((check) => {
+      const hasPermissionChanges = fileDifferenceCheck.some((check, i) => {
         if (!check.hasPermissionChanges) return false;
-        const matchingFile = files.find((f) => f.path === check.path);
-        if (!matchingFile?.permissions) return false;
         const existingMode = existingPathsWithModes.get(check.path);
-        const desiredMode = this.getGitMode(matchingFile.permissions);
+        const desiredMode = this.getGitMode(files[i].permissions);
         return existingMode !== desiredMode;
       });
       const hasFileChanges = fileDifferenceCheck.some(
