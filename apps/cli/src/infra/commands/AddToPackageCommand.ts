@@ -1,11 +1,10 @@
 import { command, option, string, multioption, array } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { AddToPackageUseCase } from '../../application/useCases/AddToPackageUseCase';
-import { addToPackageHandler } from './addToPackageHandler';
 import { logErrorConsole } from '../utils/consoleLogger';
 import { ItemType } from '../../domain/useCases/IAddToPackageUseCase';
 import { originSkillOption } from './sharedOptions';
+import { addToPackageHandler } from './packages/addToPackageHandler';
 
 export const addToPackageCommand = command({
   name: 'add',
@@ -13,7 +12,8 @@ export const addToPackageCommand = command({
   args: {
     to: option({
       long: 'to',
-      description: 'Target package slug',
+      description:
+        'Target package slug (use @space/package format when multiple spaces exist)',
       type: string,
     }),
     standards: multioption({
@@ -64,19 +64,10 @@ export const addToPackageCommand = command({
 
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const hexa = new PackmindCliHexa(packmindLogger);
-    const gateway = hexa.getPackmindGateway();
-    const useCase = new AddToPackageUseCase(gateway, hexa.getSpaceService());
 
-    const result = await addToPackageHandler(
-      to,
-      itemType,
-      itemSlugs,
-      useCase,
-      originSkill,
+    await addToPackageHandler(
+      { to, itemType, itemSlugs, originSkill },
+      { hexa, exit: process.exit },
     );
-
-    if (!result.success) {
-      process.exit(1);
-    }
   },
 });
