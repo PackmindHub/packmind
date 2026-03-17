@@ -66,7 +66,7 @@ export const playbookCommand = command({
         packmindCliHexa,
         playbookLocalRepository,
         lockFileRepository,
-        repoRoot,
+        cwd: process.cwd(),
         exit: process.exit,
         readFile: (p) => readFileSync(p, 'utf-8'),
       });

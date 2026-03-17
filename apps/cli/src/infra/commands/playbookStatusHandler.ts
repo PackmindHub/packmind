@@ -1,19 +1,22 @@
 import * as path from 'path';
 
 import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
-import { resolveDeployedContext } from '../../application/utils/resolveDeployedContext';
 import { normalizePath } from '../../application/utils/pathUtils';
 import { formatLabel, logConsole } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { PackmindLockFileEntry } from '../../domain/repositories/PackmindLockFile';
+import {
+  PackmindLockFile,
+  PackmindLockFileEntry,
+} from '../../domain/repositories/PackmindLockFile';
+import { ArtifactVersionEntry, FileModification } from '@packmind/types';
 
 export type PlaybookStatusHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   playbookLocalRepository: IPlaybookLocalRepository;
   lockFileRepository: ILockFileRepository;
-  repoRoot: string;
+  cwd: string;
   exit: (code: number) => void;
   readFile: (path: string) => string;
 };
@@ -21,6 +24,7 @@ export type PlaybookStatusHandlerDependencies = {
 type UntrackedChange = {
   artifactName: string;
   artifactType: string;
+  codingAgent: string;
 };
 
 function capitalize(s: string): string {
@@ -30,16 +34,46 @@ function capitalize(s: string): string {
 function findArtifactForFile(
   filePath: string,
   artifacts: Record<string, PackmindLockFileEntry>,
-): PackmindLockFileEntry | undefined {
+): { entry: PackmindLockFileEntry; agent: string } | undefined {
   const normalized = normalizePath(filePath);
   for (const entry of Object.values(artifacts)) {
     for (const file of entry.files) {
       if (normalizePath(file.path) === normalized) {
-        return entry;
+        return { entry, agent: file.agent };
       }
     }
   }
   return undefined;
+}
+
+function lockFileToArtifactVersionEntries(
+  lockFile: PackmindLockFile,
+): ArtifactVersionEntry[] {
+  return Object.values(lockFile.artifacts).map((entry) => ({
+    name: entry.name,
+    type: entry.type,
+    id: entry.id,
+    version: entry.version,
+    spaceId: entry.spaceId,
+  }));
+}
+
+async function fetchDeployedFiles(
+  packmindCliHexa: PackmindCliHexa,
+  lockFile: PackmindLockFile,
+): Promise<FileModification[]> {
+  try {
+    const artifacts = lockFileToArtifactVersionEntries(lockFile);
+    const response = await packmindCliHexa
+      .getPackmindGateway()
+      .deployment.getContentByVersions({
+        artifacts,
+        agents: lockFile.agents,
+      });
+    return response.fileUpdates.createOrUpdate;
+  } catch {
+    return [];
+  }
 }
 
 export async function playbookStatusHandler(
@@ -49,7 +83,7 @@ export async function playbookStatusHandler(
     packmindCliHexa,
     playbookLocalRepository,
     lockFileRepository,
-    repoRoot,
+    cwd,
     exit,
     readFile,
   } = deps;
@@ -61,46 +95,41 @@ export async function playbookStatusHandler(
 
   const untrackedChanges: UntrackedChange[] = [];
 
-  const projectDir = await findNearestConfigDir(repoRoot, packmindCliHexa);
+  const projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
   if (projectDir) {
     const lockFile = await lockFileRepository.read(projectDir);
 
     if (lockFile && Object.keys(lockFile.artifacts).length > 0) {
-      const deployedContext = await resolveDeployedContext(
-        packmindCliHexa,
-        projectDir,
-      );
+      const deployedFiles = await fetchDeployedFiles(packmindCliHexa, lockFile);
 
-      if (deployedContext?.deployedContent) {
-        for (const deployedFile of deployedContext.deployedContent.fileUpdates
-          .createOrUpdate) {
-          const normalizedDeployedPath = normalizePath(deployedFile.path);
+      for (const deployedFile of deployedFiles) {
+        const normalizedDeployedPath = normalizePath(deployedFile.path);
 
-          if (stagedPaths.has(normalizedDeployedPath)) {
-            continue;
-          }
+        if (stagedPaths.has(normalizedDeployedPath)) {
+          continue;
+        }
 
-          let localContent: string;
-          try {
-            localContent = readFile(path.join(repoRoot, deployedFile.path));
-          } catch {
-            continue;
-          }
+        let localContent: string;
+        try {
+          localContent = readFile(path.join(projectDir, deployedFile.path));
+        } catch {
+          continue;
+        }
 
-          if (
-            deployedFile.content &&
-            localContent.trim() !== deployedFile.content.trim()
-          ) {
-            const artifact = findArtifactForFile(
-              deployedFile.path,
-              lockFile.artifacts,
-            );
-            if (artifact) {
-              untrackedChanges.push({
-                artifactName: artifact.name,
-                artifactType: artifact.type,
-              });
-            }
+        if (
+          deployedFile.content &&
+          localContent.trim() !== deployedFile.content.trim()
+        ) {
+          const result = findArtifactForFile(
+            deployedFile.path,
+            lockFile.artifacts,
+          );
+          if (result) {
+            untrackedChanges.push({
+              artifactName: result.entry.name,
+              artifactType: result.entry.type,
+              codingAgent: result.agent,
+            });
           }
         }
       }
@@ -126,7 +155,7 @@ export async function playbookStatusHandler(
     logConsole('Changes not tracked:');
     for (const change of untrackedChanges) {
       logConsole(
-        `  - ${capitalize(change.artifactType)} "${change.artifactName}"`,
+        `  - ${capitalize(change.artifactType)} "${change.artifactName}". ${formatLabel(change.codingAgent)}`,
       );
     }
     logConsole('');
