@@ -12,6 +12,8 @@ jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
 }));
 
+jest.mock('../../application/utils/parseLenientStandard');
+
 const VALID_COMMAND_CONTENT = '---\nname: My Command\n---\nDo something useful';
 
 const VALID_STANDARD_CONTENT = [
@@ -524,6 +526,168 @@ describe('playbookAddHandler', () => {
 
       const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
       expect(callArg.filePath).toBe('.claude/commands/my-command.md');
+    });
+  });
+
+  describe('changeType field', () => {
+    describe('when file path exists in deployed content', () => {
+      beforeEach(() => {
+        mockGetDeployed.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/commands/my-command.md',
+                content: 'old content',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+      });
+
+      it('sets changeType to "updated"', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.changeType).toBe('updated');
+      });
+    });
+
+    describe('when file path does not exist in deployed content', () => {
+      beforeEach(() => {
+        mockGetDeployed.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/other-standard.md',
+                content: 'something else',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+      });
+
+      it('sets changeType to "created"', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.changeType).toBe('created');
+      });
+    });
+
+    describe('when deployed context is unavailable', () => {
+      beforeEach(() => {
+        (
+          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+        ).mockResolvedValue(null);
+      });
+
+      it('defaults changeType to "created"', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.changeType).toBe('created');
+      });
+    });
+  });
+
+  describe('lenient standard parsing fallback', () => {
+    const HEADING_ONLY_CONTENT = '# My Lenient Standard\n\nSome description.';
+    const NO_HEADING_CONTENT = 'Just some plain text without a heading.';
+
+    describe('when content has a heading', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(HEADING_ONLY_CONTENT);
+        const { parseLenientStandard } = jest.requireMock(
+          '../../application/utils/parseLenientStandard',
+        );
+        parseLenientStandard.mockReturnValue({
+          name: 'My Lenient Standard',
+          description: 'Some description.',
+        });
+      });
+
+      it('uses lenient name as artifactName', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.packmind/standards/my-lenient.md' }),
+        );
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            artifactName: 'My Lenient Standard',
+            content: HEADING_ONLY_CONTENT,
+          }),
+        );
+      });
+    });
+
+    describe('when content has no heading', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue(NO_HEADING_CONTENT);
+        const { parseLenientStandard } = jest.requireMock(
+          '../../application/utils/parseLenientStandard',
+        );
+        parseLenientStandard.mockReturnValue({
+          name: 'my-lenient',
+          description: NO_HEADING_CONTENT,
+        });
+      });
+
+      it('uses filename as artifactName', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.packmind/standards/my-lenient.md' }),
+        );
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            artifactName: 'my-lenient',
+            content: NO_HEADING_CONTENT,
+          }),
+        );
+      });
+    });
+
+    describe('when both parsers return null', () => {
+      beforeEach(() => {
+        mockReadFile.mockReturnValue('   ');
+        const { parseLenientStandard } = jest.requireMock(
+          '../../application/utils/parseLenientStandard',
+        );
+        parseLenientStandard.mockReturnValue(null);
+      });
+
+      it('logs "File is empty."', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(
+          buildDeps({ filePath: '.packmind/standards/empty.md' }),
+        );
+
+        expect(logErrorConsole).toHaveBeenCalledWith('File is empty.');
+      });
+
+      it('exits with 1', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.packmind/standards/empty.md' }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not add to playbook', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.packmind/standards/empty.md' }),
+        );
+
+        expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+      });
     });
   });
 });

@@ -4,6 +4,7 @@ import * as yaml from 'yaml';
 import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
 import { parseCommandFile } from '../../application/utils/parseCommandFile';
 import { parseStandardMdForAgent } from '../../application/utils/parseStandardMd';
+import { parseLenientStandard } from '../../application/utils/parseLenientStandard';
 import { parseSkillDirectory } from '../../application/utils/parseSkillDirectory';
 import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
 import { resolveDeployedContext } from '../../application/utils/resolveDeployedContext';
@@ -119,12 +120,17 @@ export async function playbookAddHandler(
       artifactName = parseResult.parsed.name;
     } else {
       const parsed = parseStandardMdForAgent(localContent, codingAgent);
-      if (!parsed) {
-        logErrorConsole('File format is invalid.');
-        exit(1);
-        return;
+      if (parsed) {
+        artifactName = parsed.name;
+      } else {
+        const lenient = parseLenientStandard(localContent, absolutePath);
+        if (!lenient) {
+          logErrorConsole('File is empty.');
+          exit(1);
+          return;
+        }
+        artifactName = lenient.name;
       }
-      artifactName = parsed.name;
     }
 
     serializedContent = localContent;
@@ -182,11 +188,28 @@ export async function playbookAddHandler(
     ? normalizePath(path.relative(gitRoot, absolutePath))
     : normalizePath(path.relative(targetDir, absolutePath));
 
+  // Determine changeType based on deployed content
+  let changeType: 'created' | 'updated' = 'created';
+  if (deployedContext?.deployedContent) {
+    const relPath = gitRoot
+      ? normalizePath(path.relative(gitRoot, absolutePath))
+      : normalizePath(path.relative(targetDir, absolutePath));
+
+    const existsInDeployed =
+      deployedContext.deployedContent.fileUpdates.createOrUpdate.some(
+        (f) => normalizePath(f.path) === relPath,
+      );
+    if (existsInDeployed) {
+      changeType = 'updated';
+    }
+  }
+
   playbookLocalRepository.addChange({
     filePath: normalizedFilePath,
     artifactType,
     artifactName,
     codingAgent,
+    changeType,
     content: serializedContent,
     spaceId,
     targetId,
