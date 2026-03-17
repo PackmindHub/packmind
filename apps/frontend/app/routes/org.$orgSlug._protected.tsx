@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useParams } from 'react-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PMBox, PMHStack } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 import { SidebarCollapseProvider } from '../../src/domain/organizations/components/SidebarCollapseContext';
@@ -29,6 +29,7 @@ export default function AuthenticatedLayout() {
   const params = useParams();
   const authService = AuthService.getInstance();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const contentAreaRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
@@ -135,9 +136,14 @@ export default function AuthenticatedLayout() {
         gap={0}
         overflow={'hidden'}
       >
-        <SidebarNavigation organization={me.organization} />
-        <PMBox flex={'1'} h="100%" overflow={'auto'}>
-          <Outlet />
+        <SidebarNavigation
+          organization={me.organization}
+          contentAreaRef={contentAreaRef}
+        />
+        <PMBox flex={'1'} h="100%" overflow={'auto'} position="relative">
+          <div ref={contentAreaRef} style={{ height: '100%' }}>
+            <Outlet />
+          </div>
         </PMBox>
       </PMHStack>
       <OnboardingIntentModal

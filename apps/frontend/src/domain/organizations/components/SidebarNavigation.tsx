@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type RefObject, useEffect, useState } from 'react';
 import {
   PMVerticalNav,
   PMVerticalNavSection,
@@ -8,38 +8,35 @@ import {
   PMSeparator,
   PMBadge,
   PMTooltip,
+  PMBox,
+  PMText,
 } from '@packmind/ui';
-import { NavLink, useParams } from 'react-router';
-import {
-  AuthContextOrganization,
-  useAuthContext,
-} from '../../accounts/hooks/useAuthContext';
+import { NavLink, useLocation, useParams } from 'react-router';
+import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
 import {
-  LuBookCheck,
-  LuEye,
-  LuHouse,
-  LuPackage,
   LuPanelLeftClose,
   LuPanelLeftOpen,
   LuSettings,
-  LuTerminal,
-  LuWandSparkles,
   LuWrench,
 } from 'react-icons/lu';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
-import { ReviewChangesNavLink } from '../../change-proposals/components/ReviewChangesNavLink';
 import { useSidebarCollapse } from './SidebarCollapseContext';
+import { SpaceNavBlock } from './sidebar/SpaceNavBlock';
+import { SpaceNavPanel } from './sidebar/SpaceNavPanel';
+import { BrowseSpaces } from '@packmind/proprietary/frontend/domain/spaces-management/components/BrowseSpaces';
+import { CustomSpacesNavBlock } from '@packmind/proprietary/frontend/domain/spaces-management/components/CustomSpacesNavBlock';
 
 const SIDEBAR_WIDTH_EXPANDED = '220px';
 const SIDEBAR_WIDTH_COLLAPSED = '48px';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
+  contentAreaRef: RefObject<HTMLElement | null>;
 }
 
 interface SidebarNavigationLinkProps {
@@ -136,11 +133,16 @@ function SidebarCollapseToggle() {
 
 export const SidebarNavigation: React.FunctionComponent<
   Readonly<ISidebarNavigationProps>
-> = ({ organization }) => {
+> = ({ organization, contentAreaRef }) => {
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
-  const { user } = useAuthContext();
   const { data: spaces } = useGetSpacesQuery();
   const { isCollapsed } = useSidebarCollapse();
+  const [activeSpacePanel, setActiveSpacePanel] = useState<string | null>(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    setActiveSpacePanel(null);
+  }, [location.pathname]);
 
   // Use spaceSlug from URL if available, otherwise use first space from query
   const currentSpaceSlug =
@@ -150,15 +152,16 @@ export const SidebarNavigation: React.FunctionComponent<
     ? SIDEBAR_WIDTH_COLLAPSED
     : SIDEBAR_WIDTH_EXPANDED;
 
+  const panelSpace = spaces?.find((s) => s.id === activeSpacePanel);
+
   if (!organization) {
     return;
   }
 
   const orgSlug = organization.slug;
 
-  // Don't render space-scoped links if we don't have a space slug yet
-  if (!currentSpaceSlug) {
-    return (
+  return (
+    <>
       <PMVerticalNav
         headerNav={
           isCollapsed ? undefined : (
@@ -170,116 +173,111 @@ export const SidebarNavigation: React.FunctionComponent<
         logo={!isCollapsed}
         logoAction={<SidebarCollapseToggle />}
       >
-        <PMVerticalNavSection navEntries={[]} />
+        <PMBox display="flex" flexDirection="column" flex={1} minH={0} w="full">
+          {/* Spaces -- scrollable */}
+          <PMBox
+            display="flex"
+            flexDirection="column"
+            gap={1}
+            overflowY="auto"
+            flex={1}
+            minH={0}
+          >
+            {!isCollapsed && (
+              <PMBox
+                paddingX={2}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <PMText
+                  fontSize="10px"
+                  fontWeight="semibold"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="faded"
+                >
+                  Spaces
+                </PMText>
+                <BrowseSpaces />
+              </PMBox>
+            )}
+
+            {/* Default space — always rendered directly */}
+            {spaces
+              ?.filter((space) => space.isDefaultSpace)
+              .map((space) => (
+                <SpaceNavBlock
+                  key={space.id}
+                  space={space}
+                  orgSlug={orgSlug}
+                  isActive={space.slug === currentSpaceSlug}
+                  onSpaceClick={() => {
+                    if (space.slug !== currentSpaceSlug) {
+                      setActiveSpacePanel(space.id);
+                    }
+                  }}
+                />
+              ))}
+
+            {/* Non-default spaces — rendered via container for edition-gating */}
+            {spaces && (
+              <CustomSpacesNavBlock
+                spaces={spaces}
+                orgSlug={orgSlug}
+                currentSpaceSlug={currentSpaceSlug}
+                onSpaceClick={(space) => {
+                  if (space.slug !== currentSpaceSlug) {
+                    setActiveSpacePanel(space.id);
+                  }
+                }}
+              />
+            )}
+          </PMBox>
+
+          {/* Bottom section -- pinned at bottom */}
+          <PMSeparator borderColor={'border.tertiary'} />
+          {(() => {
+            const lastEntries: React.ReactElement[] = [];
+
+            lastEntries.push(
+              <SidebarNavigationLink
+                key="setup"
+                url={routes.org.toSetup(orgSlug)}
+                label="Integrations"
+                icon={<LuWrench />}
+              />,
+            );
+
+            if (organization.role === 'admin') {
+              lastEntries.push(
+                <SidebarNavigationLink
+                  key="settings"
+                  url={routes.org.toSettings(orgSlug)}
+                  label="Settings"
+                  icon={<LuSettings />}
+                  data-testid={SidebarNavigationDataTestId.SettingsLink}
+                />,
+              );
+            }
+            if (!isCollapsed) {
+              lastEntries.push(<SidebarHelpMenu key="help" />);
+            }
+            return <PMVerticalNavSection navEntries={lastEntries} />;
+          })()}
+        </PMBox>
       </PMVerticalNav>
-    );
-  }
-  return (
-    <PMVerticalNav
-      headerNav={
-        isCollapsed ? undefined : (
-          <SidebarOrgaSelector currentOrganization={organization} />
-        )
-      }
-      footerNav={isCollapsed ? undefined : <SidebarAccountMenu />}
-      width={sidebarWidth}
-      logo={!isCollapsed}
-      logoAction={<SidebarCollapseToggle />}
-    >
-      <PMVerticalNavSection
-        navEntries={[
-          <SidebarNavigationLink
-            key="dashboard"
-            url={routes.org.toDashboard(orgSlug)}
-            label="Dashboard"
-            exact
-            icon={<LuHouse />}
-          />,
-        ]}
-      />
-      <PMVerticalNavSection
-        title={isCollapsed ? undefined : 'Playbook'}
-        navEntries={[
-          <SidebarNavigationLink
-            key="standards"
-            url={routes.space.toStandards(orgSlug, currentSpaceSlug)}
-            label="Standards"
-            icon={<LuBookCheck />}
-          />,
-          <SidebarNavigationLink
-            key="recipes"
-            url={routes.space.toCommands(orgSlug, currentSpaceSlug)}
-            label="Commands"
-            icon={<LuTerminal />}
-          />,
-          <SidebarNavigationLink
-            key="skills"
-            url={routes.space.toSkills(orgSlug, currentSpaceSlug)}
-            label="Skills"
-            icon={<LuWandSparkles />}
-            data-testid={SidebarNavigationDataTestId.SkillsLink}
-          />,
-          <ReviewChangesNavLink
-            key="change-proposals"
-            orgSlug={orgSlug}
-            spaceSlug={currentSpaceSlug}
-          />,
-        ]}
-      />
-      <PMVerticalNavSection
-        title={isCollapsed ? undefined : 'Distribution'}
-        navEntries={[
-          <SidebarNavigationLink
-            key="packages"
-            url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
-            label="Packages"
-            icon={<LuPackage />}
-            data-testid={SidebarNavigationDataTestId.PackagesLink}
-          />,
-          <SidebarNavigationLink
-            key="overview"
-            url={routes.org.toDeployments(orgSlug)}
-            label="Overview"
-            icon={<LuEye />}
-            badge={{
-              text: 'Enterprise',
-              colorScheme: 'purple',
-              tooltipLabel: 'Coming soon to the Enterprise plan',
-            }}
-          />,
-        ]}
-      />
-      <PMSeparator borderColor={'border.tertiary'} />
-      {(() => {
-        const lastEntries: React.ReactElement[] = [];
 
-        // Setup is available to all users
-        lastEntries.push(
-          <SidebarNavigationLink
-            key="setup"
-            url={routes.org.toSetup(orgSlug)}
-            label="Integrations"
-            icon={<LuWrench />}
-          />,
-        );
-
-        // Settings is only available to admins
-        if (organization.role === 'admin') {
-          lastEntries.push(
-            <SidebarNavigationLink
-              key="settings"
-              url={routes.org.toSettings(orgSlug)}
-              label="Settings"
-              icon={<LuSettings />}
-              data-testid={SidebarNavigationDataTestId.SettingsLink}
-            />,
-          );
-        }
-        if (!isCollapsed) {
-          lastEntries.push(<SidebarHelpMenu key="help" />);
-        }
-        return <PMVerticalNavSection navEntries={lastEntries} />;
-      })()}
-    </PMVerticalNav>
+      {/* SpaceNavPanel drawer */}
+      {panelSpace && (
+        <SpaceNavPanel
+          space={panelSpace}
+          orgSlug={orgSlug}
+          open={true}
+          onClose={() => setActiveSpacePanel(null)}
+          containerRef={contentAreaRef}
+        />
+      )}
+    </>
   );
 };
