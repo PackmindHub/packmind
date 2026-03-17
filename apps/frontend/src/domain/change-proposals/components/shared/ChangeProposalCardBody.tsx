@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useState } from 'react';
 import {
   PMBadge,
+  PMButton,
   PMHStack,
   PMInput,
   PMSeparator,
@@ -8,6 +9,7 @@ import {
   PMTextArea,
   PMVStack,
 } from '@packmind/ui';
+import { LuCheck, LuX } from 'react-icons/lu';
 import { LuFolder, LuGitBranch, LuPackage } from 'react-icons/lu';
 import {
   ChangeProposalDecision,
@@ -227,7 +229,7 @@ export function ChangeProposalCardBody({
 
   return (
     <PMVStack gap={0} alignItems="stretch">
-      {showToolbar && (
+      {showToolbar && !isEditing && (
         <>
           <PMSeparator borderColor="border.tertiary" />
           <PMVStack p={4} alignItems="stretch">
@@ -238,8 +240,6 @@ export function ChangeProposalCardBody({
               spaceId={proposal.spaceId}
               isOutdated={isOutdated}
               isBlockedByConflict={isBlockedByConflict}
-              isEditing={isEditing}
-              isEditValid={isEditValid}
               viewMode={viewMode}
               showEditButton={resolvedShowEditButton}
               onViewModeChange={onViewModeChange}
@@ -247,8 +247,6 @@ export function ChangeProposalCardBody({
               onAccept={handleAccept}
               onDismiss={onDismiss}
               onUndo={onUndo}
-              onCancelEdit={handleCancelEdit}
-              onAcceptEdit={handleAcceptEdit}
             />
           </PMVStack>
         </>
@@ -266,22 +264,42 @@ export function ChangeProposalCardBody({
       <PMSeparator borderColor="border.tertiary" />
       <PMVStack p={4} alignItems="stretch">
         {isEditing ? (
-          singleLine ? (
-            <PMInput
-              value={editedValue}
-              onChange={(e) => setEditedValue(e.target.value)}
-              size="sm"
-              autoFocus
-            />
-          ) : (
-            <PMTextArea
-              value={editedValue}
-              onChange={(e) => setEditedValue(e.target.value)}
-              size="sm"
-              rows={10}
-              autoFocus
-            />
-          )
+          <PMVStack gap={3} alignItems="stretch">
+            {singleLine ? (
+              <PMInput
+                value={editedValue}
+                onChange={(e) => setEditedValue(e.target.value)}
+                size="sm"
+                autoFocus
+              />
+            ) : (
+              <PMTextArea
+                value={editedValue}
+                onChange={(e) => setEditedValue(e.target.value)}
+                size="sm"
+                rows={10}
+                autoFocus
+              />
+            )}
+            <PMHStack gap={2} justifyContent="flex-end">
+              <PMButton size="xs" variant="outline" onClick={handleCancelEdit}>
+                <LuX />
+                Cancel
+              </PMButton>
+              <PMButton
+                size="xs"
+                variant="outline"
+                onClick={handleAcceptEdit}
+                disabled={!isEditValid}
+                color="green.300"
+                borderColor="green.300"
+                opacity={isEditValid ? 1 : 0.5}
+              >
+                <LuCheck />
+                Save & Accept
+              </PMButton>
+            </PMHStack>
+          </PMVStack>
         ) : isRemoveType ? (
           <RemoveProposalContent
             spaceId={proposal.spaceId}
