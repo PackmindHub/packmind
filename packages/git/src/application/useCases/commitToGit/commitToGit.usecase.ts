@@ -6,7 +6,7 @@ import {
   DeleteItem,
   DeleteItemType,
 } from '@packmind/types';
-import { IGitRepo } from '../../../domain/repositories/IGitRepo';
+import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
@@ -59,13 +59,17 @@ export class CommitToGit {
     const gitRepoInstance = this.createGitRepoInstance(repo, provider);
 
     // Process files to handle section-based updates
-    const processedFiles: { path: string; content: string }[] = [];
+    const processedFiles: CommitFile[] = [];
     const filesToDelete: DeleteItem[] = [];
 
     for (const file of files) {
       if (file.content !== undefined) {
         // File has full content, use it directly
-        processedFiles.push({ path: file.path, content: file.content });
+        processedFiles.push({
+          path: file.path,
+          content: file.content,
+          permissions: file.skillFilePermissions,
+        });
       } else if (file.sections !== undefined) {
         // File has sections, fetch existing content and merge
         this.logger.debug('Processing file with sections', {
@@ -99,7 +103,11 @@ export class CommitToGit {
           }
           // If file didn't exist, skip it entirely (nothing to create or delete)
         } else {
-          processedFiles.push({ path: file.path, content: mergedContent });
+          processedFiles.push({
+            path: file.path,
+            content: mergedContent,
+            permissions: file.skillFilePermissions,
+          });
         }
       }
     }

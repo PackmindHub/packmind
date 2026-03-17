@@ -95,11 +95,17 @@ describe('GithubRepository', () => {
 
     // Default tree items returned by the tree fetch (for filtering deletions)
     const defaultTreeItems = [
-      { path: 'test/file-to-delete.txt', type: 'blob', sha: 'existing-sha-1' },
+      {
+        path: 'test/file-to-delete.txt',
+        type: 'blob',
+        sha: 'existing-sha-1',
+        mode: '100644',
+      },
       {
         path: 'test/another-file-to-delete.txt',
         type: 'blob',
         sha: 'existing-sha-2',
+        mode: '100644',
       },
     ];
 
@@ -677,6 +683,310 @@ describe('GithubRepository', () => {
             expect.anything(),
           );
         });
+      });
+    });
+
+    describe('when files have executable permissions', () => {
+      beforeEach(() => {
+        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
+      });
+
+      it('uses 100755 mode for files with executable permissions', async () => {
+        const executableFiles = [
+          {
+            path: 'scripts/run.sh',
+            content: '#!/bin/bash',
+            permissions: 'rwxr-xr-x',
+          },
+        ];
+
+        await githubRepository.commitFiles(executableFiles, 'Add script');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/trees`,
+          expect.objectContaining({
+            tree: [
+              expect.objectContaining({
+                path: 'scripts/run.sh',
+                mode: '100755',
+                type: 'blob',
+              }),
+            ],
+          }),
+        );
+      });
+
+      it('uses 100644 mode for files without permissions', async () => {
+        const regularFiles = [{ path: 'readme.md', content: '# Readme' }];
+
+        await githubRepository.commitFiles(regularFiles, 'Add readme');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/trees`,
+          expect.objectContaining({
+            tree: [
+              expect.objectContaining({
+                path: 'readme.md',
+                mode: '100644',
+                type: 'blob',
+              }),
+            ],
+          }),
+        );
+      });
+
+      it('uses 100644 mode for non-executable permissions', async () => {
+        const nonExecFiles = [
+          { path: 'data.txt', content: 'data', permissions: 'rw-r--r--' },
+        ];
+
+        await githubRepository.commitFiles(nonExecFiles, 'Add data');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/trees`,
+          expect.objectContaining({
+            tree: [
+              expect.objectContaining({
+                path: 'data.txt',
+                mode: '100644',
+                type: 'blob',
+              }),
+            ],
+          }),
+        );
+      });
+    });
+
+    describe('when only permissions change (content identical)', () => {
+      const existingContent = 'existing script content';
+
+      beforeEach(() => {
+        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue({
+          sha: 'existing-sha',
+          content: Buffer.from(existingContent).toString('base64'),
+        });
+
+        // Override tree to include the file with 100644 mode
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (url.includes('/git/refs/')) {
+            return Promise.resolve({ data: { object: { sha: refSha } } });
+          } else if (url.includes('/git/commits/')) {
+            return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+          } else if (url.includes('/git/trees/')) {
+            return Promise.resolve({
+              data: {
+                sha: baseTreeSha,
+                tree: [
+                  {
+                    path: 'scripts/run.sh',
+                    type: 'blob',
+                    sha: 'existing-sha',
+                    mode: '100644',
+                  },
+                ],
+              },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      describe('when mode differs from desired', () => {
+        let result: Awaited<ReturnType<typeof githubRepository.commitFiles>>;
+
+        beforeEach(async () => {
+          const filesWithPermissionOnly = [
+            {
+              path: 'scripts/run.sh',
+              content: existingContent,
+              permissions: 'rwxr-xr-x',
+            },
+          ];
+
+          result = await githubRepository.commitFiles(
+            filesWithPermissionOnly,
+            'Fix permissions',
+          );
+        });
+
+        it('detects permission change', async () => {
+          expect(result.sha).not.toBe('no-changes');
+        });
+
+        it('creates tree with 100755 mode', async () => {
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            `/repos/${options.owner}/${options.repo}/git/trees`,
+            expect.objectContaining({
+              tree: [
+                expect.objectContaining({
+                  path: 'scripts/run.sh',
+                  mode: '100755',
+                }),
+              ],
+            }),
+          );
+        });
+      });
+
+      describe('when permissions already match', () => {
+        beforeEach(() => {
+          // Override tree to have 100755 already
+          mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+            if (url.includes('/git/refs/')) {
+              return Promise.resolve({ data: { object: { sha: refSha } } });
+            } else if (url.includes('/git/commits/')) {
+              return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+            } else if (url.includes('/git/trees/')) {
+              return Promise.resolve({
+                data: {
+                  sha: baseTreeSha,
+                  tree: [
+                    {
+                      path: 'scripts/run.sh',
+                      type: 'blob',
+                      sha: 'existing-sha',
+                      mode: '100755',
+                    },
+                  ],
+                },
+              });
+            }
+            return Promise.reject(new Error(`Unexpected GET: ${url}`));
+          });
+        });
+
+        it('returns no-changes', async () => {
+          const filesWithSamePermissions = [
+            {
+              path: 'scripts/run.sh',
+              content: existingContent,
+              permissions: 'rwxr-xr-x',
+            },
+          ];
+
+          const result = await githubRepository.commitFiles(
+            filesWithSamePermissions,
+            'No change',
+          );
+
+          expect(result.sha).toBe('no-changes');
+        });
+      });
+
+      describe('when removing executable bit (100755 to 100644)', () => {
+        beforeEach(() => {
+          // Override tree to have 100755
+          mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+            if (url.includes('/git/refs/')) {
+              return Promise.resolve({ data: { object: { sha: refSha } } });
+            } else if (url.includes('/git/commits/')) {
+              return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+            } else if (url.includes('/git/trees/')) {
+              return Promise.resolve({
+                data: {
+                  sha: baseTreeSha,
+                  tree: [
+                    {
+                      path: 'scripts/run.sh',
+                      type: 'blob',
+                      sha: 'existing-sha',
+                      mode: '100755',
+                    },
+                  ],
+                },
+              });
+            }
+            return Promise.reject(new Error(`Unexpected GET: ${url}`));
+          });
+        });
+
+        it('creates tree with 100644 mode', async () => {
+          const filesRemoveExec = [
+            {
+              path: 'scripts/run.sh',
+              content: existingContent,
+              permissions: 'rw-r--r--',
+            },
+          ];
+
+          await githubRepository.commitFiles(
+            filesRemoveExec,
+            'Remove executable bit',
+          );
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            `/repos/${options.owner}/${options.repo}/git/trees`,
+            expect.objectContaining({
+              tree: [
+                expect.objectContaining({
+                  path: 'scripts/run.sh',
+                  mode: '100644',
+                }),
+              ],
+            }),
+          );
+        });
+      });
+    });
+
+    describe('when content changes on a 100755 file without permissions field', () => {
+      const existingContent = 'old script content';
+      const newContent = 'new script content';
+
+      beforeEach(() => {
+        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue({
+          sha: 'existing-sha',
+          content: Buffer.from(existingContent).toString('base64'),
+        });
+
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (url.includes('/git/refs/')) {
+            return Promise.resolve({ data: { object: { sha: refSha } } });
+          } else if (url.includes('/git/commits/')) {
+            return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+          } else if (url.includes('/git/trees/')) {
+            return Promise.resolve({
+              data: {
+                sha: baseTreeSha,
+                tree: [
+                  {
+                    path: 'scripts/run.sh',
+                    type: 'blob',
+                    sha: 'existing-sha',
+                    mode: '100755',
+                  },
+                ],
+              },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      it('preserves existing 100755 mode', async () => {
+        const filesWithoutPermissions = [
+          {
+            path: 'scripts/run.sh',
+            content: newContent,
+          },
+        ];
+
+        await githubRepository.commitFiles(
+          filesWithoutPermissions,
+          'Update script content',
+        );
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/trees`,
+          expect.objectContaining({
+            tree: [
+              expect.objectContaining({
+                path: 'scripts/run.sh',
+                mode: '100755',
+              }),
+            ],
+          }),
+        );
       });
     });
   });
