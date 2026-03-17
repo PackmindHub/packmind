@@ -9,8 +9,9 @@ import {
   PMTextArea,
   PMVStack,
 } from '@packmind/ui';
-import { LuCheck, LuX } from 'react-icons/lu';
+import { LuCheck, LuChevronDown, LuChevronUp, LuX } from 'react-icons/lu';
 import { LuFolder, LuGitBranch, LuPackage } from 'react-icons/lu';
+import { Collapsible, useCollapsibleContext } from '@chakra-ui/react';
 import {
   ChangeProposalDecision,
   ChangeProposalType,
@@ -37,6 +38,11 @@ import {
   useGetTargetsByOrganizationQuery,
   useListPackagesBySpaceQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
+
+const CollapsibleChevron = () => {
+  const { open } = useCollapsibleContext();
+  return open ? <LuChevronUp size={12} /> : <LuChevronDown size={12} />;
+};
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -186,6 +192,13 @@ export function ChangeProposalCardBody({
 
   const editable = isEditableProposalType(proposal.type);
   const singleLine = isSingleLineProposalType(proposal.type);
+  const isEdited =
+    editable &&
+    decision != null &&
+    (decision as ScalarUpdatePayload).newValue !== newValue;
+  const editedNewValue = isEdited
+    ? (decision as ScalarUpdatePayload).newValue
+    : null;
   const [isEditing, setIsEditing] = useState(false);
   const [editedValue, setEditedValue] = useState(newValue);
   const isEditValid = editedValue.trim().length > 0;
@@ -308,6 +321,43 @@ export function ChangeProposalCardBody({
             poolStatus={poolStatus}
             decision={removeDecision}
           />
+        ) : isEdited ? (
+          <PMVStack gap={4} alignItems="stretch">
+            <Collapsible.Root>
+              <Collapsible.Trigger
+                cursor="pointer"
+                width="full"
+                textAlign="left"
+              >
+                <PMHStack gap={1} alignItems="center">
+                  <PMText fontSize="xs" color="secondary" fontWeight="medium">
+                    Original proposal
+                  </PMText>
+                  <CollapsibleChevron />
+                </PMHStack>
+              </Collapsible.Trigger>
+              <Collapsible.Content>
+                <PMVStack gap={1} alignItems="stretch" opacity={0.6} pt={2}>
+                  <FocusedView
+                    oldValue={oldValue}
+                    newValue={newValue}
+                    isMarkdownContent={markdown}
+                  />
+                </PMVStack>
+              </Collapsible.Content>
+            </Collapsible.Root>
+            <PMSeparator borderColor="border.tertiary" />
+            <PMVStack gap={1} alignItems="stretch">
+              <PMText fontSize="xs" color="secondary" fontWeight="medium">
+                Edited
+              </PMText>
+              <FocusedView
+                oldValue={oldValue}
+                newValue={editedNewValue!}
+                isMarkdownContent={markdown}
+              />
+            </PMVStack>
+          </PMVStack>
         ) : !showToolbar && renderExpandedView ? (
           renderExpandedView(viewMode, proposal)
         ) : viewMode === 'focused' ? (
