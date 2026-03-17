@@ -1,5 +1,5 @@
-import { ICreatePackageUseCase } from '../../domain/useCases/ICreatePackageUseCase';
-import { loadApiKey, decodeApiKey } from '../utils/credentials';
+import { ICreatePackageUseCase } from '../../../domain/useCases/ICreatePackageUseCase';
+import { loadApiKey, decodeApiKey } from '../../utils/credentials';
 
 export interface ICreatePackageHandlerResult {
   success: boolean;
@@ -13,9 +13,10 @@ export interface ICreatePackageHandlerResult {
 function buildWebappUrl(
   host: string,
   orgSlug: string,
+  spaceSlug: string,
   packageId: string,
 ): string {
-  return `${host}/org/${orgSlug}/space/global/packages/${packageId}`;
+  return `${host}/org/${orgSlug}/space/${spaceSlug}/packages/${packageId}`;
 }
 
 export async function createPackageHandler(
@@ -23,6 +24,7 @@ export async function createPackageHandler(
   description: string | undefined,
   useCase: ICreatePackageUseCase,
   originSkill?: string,
+  spaceSlug?: string,
 ): Promise<ICreatePackageHandlerResult> {
   const trimmedName = name.trim();
   if (!trimmedName) {
@@ -34,6 +36,7 @@ export async function createPackageHandler(
       name: trimmedName,
       description,
       originSkill,
+      spaceSlug,
     });
 
     // Try to build webapp URL from credentials
@@ -45,6 +48,7 @@ export async function createPackageHandler(
         webappUrl = buildWebappUrl(
           decoded.host,
           decoded.jwt.organization.slug,
+          result.spaceSlug,
           result.packageId,
         );
       }
@@ -52,7 +56,7 @@ export async function createPackageHandler(
 
     return {
       success: true,
-      slug: result.slug,
+      slug: `@${result.spaceSlug}/${result.slug}`,
       packageName: result.name,
       packageId: result.packageId,
       webappUrl,

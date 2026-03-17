@@ -1,5 +1,5 @@
 import { createPackageHandler } from './createPackageHandler';
-import { ICreatePackageUseCase } from '../../domain/useCases/ICreatePackageUseCase';
+import { ICreatePackageUseCase } from '../../../domain/useCases/ICreatePackageUseCase';
 
 describe('createPackageHandler', () => {
   let mockUseCase: jest.Mocked<ICreatePackageUseCase>;
@@ -18,6 +18,7 @@ describe('createPackageHandler', () => {
         packageId: 'pkg-123',
         name: 'FrontEnd',
         slug: 'frontend',
+        spaceSlug: 'global',
       });
 
       result = await createPackageHandler('FrontEnd', undefined, mockUseCase);
@@ -27,8 +28,8 @@ describe('createPackageHandler', () => {
       expect(result.success).toBe(true);
     });
 
-    it('returns the slug', () => {
-      expect(result.slug).toBe('frontend');
+    it('returns the slug with space prefix', () => {
+      expect(result.slug).toBe('@global/frontend');
     });
 
     it('returns the packageName', () => {
@@ -39,6 +40,8 @@ describe('createPackageHandler', () => {
       expect(mockUseCase.execute).toHaveBeenCalledWith({
         name: 'FrontEnd',
         description: undefined,
+        originSkill: undefined,
+        spaceSlug: undefined,
       });
     });
   });
@@ -51,6 +54,7 @@ describe('createPackageHandler', () => {
         packageId: 'pkg-456',
         name: 'BackEnd',
         slug: 'backend',
+        spaceSlug: 'global',
       });
 
       result = await createPackageHandler(
@@ -68,6 +72,42 @@ describe('createPackageHandler', () => {
       expect(mockUseCase.execute).toHaveBeenCalledWith({
         name: 'BackEnd',
         description: 'Backend standards',
+        originSkill: undefined,
+        spaceSlug: undefined,
+      });
+    });
+  });
+
+  describe('when creating a package with a specific space', () => {
+    let result: Awaited<ReturnType<typeof createPackageHandler>>;
+
+    beforeEach(async () => {
+      mockUseCase.execute.mockResolvedValue({
+        packageId: 'pkg-789',
+        name: 'FrontEnd',
+        slug: 'frontend',
+        spaceSlug: 'my-team',
+      });
+
+      result = await createPackageHandler(
+        'FrontEnd',
+        undefined,
+        mockUseCase,
+        undefined,
+        'my-team',
+      );
+    });
+
+    it('returns success', () => {
+      expect(result.success).toBe(true);
+    });
+
+    it('passes spaceSlug to use case', () => {
+      expect(mockUseCase.execute).toHaveBeenCalledWith({
+        name: 'FrontEnd',
+        description: undefined,
+        originSkill: undefined,
+        spaceSlug: 'my-team',
       });
     });
   });

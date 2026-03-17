@@ -1,6 +1,6 @@
 import { command, positional, string, option, optional } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { createPackageHandler } from './createPackageHandler';
+import { createPackageHandler } from './packages/createPackageHandler';
 import {
   logErrorConsole,
   logConsole,
@@ -28,9 +28,14 @@ export const createPackageCommand = command({
       description: 'Description of the package (optional)',
       type: optional(string),
     }),
+    space: option({
+      long: 'space',
+      description: 'Slug of the space in which to create the package',
+      type: optional(string),
+    }),
     originSkill: originSkillOption,
   },
-  handler: async ({ name, description, originSkill }) => {
+  handler: async ({ name, description, space, originSkill }) => {
     try {
       const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
       const hexa = new PackmindCliHexa(packmindLogger);
@@ -42,6 +47,7 @@ export const createPackageCommand = command({
         description,
         useCase,
         originSkill,
+        space ?? undefined,
       );
 
       if (result.success) {
