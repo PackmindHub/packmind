@@ -2,13 +2,13 @@ import { command, restPositionals, string, flag, option } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
-  showPackageHandler,
   installPackagesHandler,
   recursiveInstallHandler,
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
 import { listPackagesHandler } from './packages/listPackagesHandler';
+import { showPackageHandler } from './packages/showPackageHandler';
 import { logWarningConsole } from '../utils/consoleLogger';
 
 export const installCommand = command({
@@ -79,7 +79,10 @@ export const installCommand = command({
 
     // Handle --show option
     if (show) {
-      await showPackageHandler({ slug: show }, deps);
+      await showPackageHandler(
+        { slug: show },
+        { packmindCliHexa, exit: process.exit },
+      );
       return;
     }
 
