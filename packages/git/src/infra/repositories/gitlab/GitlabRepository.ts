@@ -286,18 +286,24 @@ export class GitlabRepository implements IGitRepo {
       const fileDifferenceCheck = fileAnalysis;
 
       // Prepare actions with correct create/update types
+      // Only include files with content changes or new files (skip unchanged updates)
       const actions: Array<
         | { action: 'create' | 'update'; file_path: string; content: string }
         | { action: 'delete'; file_path: string }
         | { action: 'chmod'; file_path: string; execute_filemode: boolean }
-      > = deduplicatedFiles.map((file, index) => {
-        const analysis = fileAnalysis[index];
-        return {
+      > = deduplicatedFiles
+        .map((file, index) => {
+          const analysis = fileAnalysis[index];
+          return { file, analysis };
+        })
+        .filter(
+          ({ analysis }) => analysis.action === 'create' || analysis.hasChanges,
+        )
+        .map(({ file, analysis }) => ({
           action: analysis.action,
           file_path: file.path,
           content: file.content,
-        };
-      });
+        }));
 
       // Filter deleteFiles using the same existingPaths from tree
       let existingDeleteFiles: { path: string }[] = [];
@@ -332,7 +338,7 @@ export class GitlabRepository implements IGitRepo {
         }
       }
 
-      // Add chmod actions for executable files that aren't already executable
+      // Add chmod actions for permission changes
       // (must come after create/update actions)
       for (let i = 0; i < deduplicatedFiles.length; i++) {
         const file = deduplicatedFiles[i];
@@ -347,6 +353,17 @@ export class GitlabRepository implements IGitRepo {
             file_path: file.path,
             execute_filemode: true,
           });
+        } else if (
+          file.permissions &&
+          !this.isExecutable(file.permissions) &&
+          analysis.existingExecuteFilemode
+        ) {
+          // Remove executable bit when file is currently executable but desired permissions are not
+          actions.push({
+            action: 'chmod' as const,
+            file_path: file.path,
+            execute_filemode: false,
+          });
         }
       }
 
@@ -355,10 +372,11 @@ export class GitlabRepository implements IGitRepo {
         (file) => file.hasChanges,
       );
       const hasPermissionChanges = deduplicatedFiles.some((file, index) => {
-        if (!file.permissions || !this.isExecutable(file.permissions))
-          return false;
-        // Only count as a permission change if the file isn't already executable
-        return !fileAnalysis[index].existingExecuteFilemode;
+        if (!file.permissions) return false;
+        const wantsExecutable = this.isExecutable(file.permissions);
+        const isAlreadyExecutable = fileAnalysis[index].existingExecuteFilemode;
+        // Permission change if adding or removing executable bit
+        return wantsExecutable !== isAlreadyExecutable;
       });
       const hasDeletions = existingDeleteFiles.length > 0;
       const hasChanges = hasFileChanges || hasDeletions || hasPermissionChanges;

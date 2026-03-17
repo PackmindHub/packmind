@@ -872,6 +872,61 @@ describe('GithubRepository', () => {
           expect(result.sha).toBe('no-changes');
         });
       });
+
+      describe('when removing executable bit (100755 to 100644)', () => {
+        beforeEach(() => {
+          // Override tree to have 100755
+          mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+            if (url.includes('/git/refs/')) {
+              return Promise.resolve({ data: { object: { sha: refSha } } });
+            } else if (url.includes('/git/commits/')) {
+              return Promise.resolve({ data: { tree: { sha: baseTreeSha } } });
+            } else if (url.includes('/git/trees/')) {
+              return Promise.resolve({
+                data: {
+                  sha: baseTreeSha,
+                  tree: [
+                    {
+                      path: 'scripts/run.sh',
+                      type: 'blob',
+                      sha: 'existing-sha',
+                      mode: '100755',
+                    },
+                  ],
+                },
+              });
+            }
+            return Promise.reject(new Error(`Unexpected GET: ${url}`));
+          });
+        });
+
+        it('creates tree with 100644 mode', async () => {
+          const filesRemoveExec = [
+            {
+              path: 'scripts/run.sh',
+              content: existingContent,
+              permissions: 'rw-r--r--',
+            },
+          ];
+
+          await githubRepository.commitFiles(
+            filesRemoveExec,
+            'Remove executable bit',
+          );
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            `/repos/${options.owner}/${options.repo}/git/trees`,
+            expect.objectContaining({
+              tree: [
+                expect.objectContaining({
+                  path: 'scripts/run.sh',
+                  mode: '100644',
+                }),
+              ],
+            }),
+          );
+        });
+      });
     });
 
     describe('when content changes on a 100755 file without permissions field', () => {
