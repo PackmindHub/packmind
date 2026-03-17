@@ -29,11 +29,11 @@ Model Context Protocol server exposing Packmind capabilities to AI coding agents
 
 ## Main Commands
 
-- Build: `nx build mcp-server`
-- Test: `nx test mcp-server`
-- Serve (development): `nx serve mcp-server` *(for isolated testing only; use `docker compose up` for regular local development)*
-- Type check: `nx typecheck mcp-server`
-- Lint: `nx lint mcp-server`
+- Build: `./node_modules/.bin/nx build mcp-server`
+- Test: `./node_modules/.bin/nx test mcp-server`
+- Serve (development): `./node_modules/.bin/nx serve mcp-server` *(for isolated testing only; use `docker compose up` for regular local development)*
+- Type check: `./node_modules/.bin/nx typecheck mcp-server`
+- Lint: `./node_modules/.bin/nx lint mcp-server`
 
 ## Configuration
 

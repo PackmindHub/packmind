@@ -9,7 +9,7 @@ This is an Nx monorepo containing applications and reusable packages.
 - **Database**: PostgreSQL with TypeORM for entity persistence
 - **Cache**: Redis for caching
 - **Background Jobs**: BullMQ for job queue management
-- **Testing**: Jest with @swc/jest as test runner. Tip: use `nx show projects` to list actual apps and packages.
+- **Testing**: Jest with @swc/jest as test runner. Tip: use `./node_modules/.bin/nx show projects` to list actual apps and packages.
 
 ## Directory Structure
 
@@ -21,19 +21,19 @@ This is an Nx monorepo containing applications and reusable packages.
 
 Local development uses Docker Compose to run all services (API, frontend, database, Redis, mcp-Server, Postgresq).
 This starts the entire development environmentDocker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
-Do not use nx serve commands for regular local development. Use docker compose up to start the full development environment. Only use `nx serve <app>` for isolated testing of a single application.
+Do not use `./node_modules/.bin/nx serve` commands for regular local development. Use docker compose up to start the full development environment. Only use `./node_modules/.bin/nx serve <app>` for isolated testing of a single application.
 ## Working with Nx
 
-The following commands apply for both NX apps and packages (use `nx show projects` to list actual apps and packages.)
-- Test a project: `nx test <project-name>`
-- Lint a project: `nx lint <project-name>`
-- Build a project: `nx build <project-name>`
+The following commands apply for both NX apps and packages (use `./node_modules/.bin/nx show projects` to list actual apps and packages.)
+- Test a project: `./node_modules/.bin/nx test <project-name>`
+- Lint a project: `./node_modules/.bin/nx lint <project-name>`
+- Build a project: `./node_modules/.bin/nx build <project-name>`
 - Test affected projects: `npm run test:staged`
 - Lint affected projects: `npm run lint:staged`
 
 ## Code Quality
 
-- **Linting**: `nx lint <project-name>` runs ESLint, using the config file `eslint.config.mjs`.
+- **Linting**: `./node_modules/.bin/nx lint <project-name>` runs ESLint, using the config file `eslint.config.mjs`.
 - **Formatting**: Prettier is used for code formatting. You don't have to run it, it's set as a pre-commit hook.
 
 ## Commands
@@ -63,5 +63,5 @@ Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
 - Each sub task MUST have its own commit.
-- Use the `nx lint` and `nx test` commands on the apps and packages you've edited
+- Use the `./node_modules/.bin/nx lint` and `./node_modules/.bin/nx test` commands on the apps and packages you've edited
 
