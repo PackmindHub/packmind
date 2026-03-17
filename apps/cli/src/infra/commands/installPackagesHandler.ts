@@ -7,7 +7,7 @@ import {
   PackmindFileConfig,
   SummarizedArtifact,
 } from '@packmind/types';
-import { logWarningConsole } from '../utils/consoleLogger';
+import { logErrorConsole, logWarningConsole } from '../utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -477,7 +477,7 @@ export async function installPackagesHandler(
     try {
       const stat = await fs.stat(resolvedPath);
       if (!stat.isDirectory()) {
-        error(`❌ Path is not a directory: ${resolvedPath}`);
+        logErrorConsole(`Path is not a directory: ${resolvedPath}`);
         exit(1);
         return {
           filesCreated: 0,
@@ -488,7 +488,7 @@ export async function installPackagesHandler(
       }
       cwd = resolvedPath;
     } catch {
-      error(`❌ Path does not exist: ${resolvedPath}`);
+      logErrorConsole(`Path does not exist: ${resolvedPath}`);
       exit(1);
       return {
         filesCreated: 0,
@@ -1051,13 +1051,13 @@ export async function recursiveInstallHandler(
     try {
       const stat = await fs.stat(resolvedPath);
       if (!stat.isDirectory()) {
-        error(`❌ Path is not a directory: ${resolvedPath}`);
+        logErrorConsole(`Path is not a directory: ${resolvedPath}`);
         exit(1);
         return result;
       }
       startDirectory = resolvedPath;
     } catch {
-      error(`❌ Path does not exist: ${resolvedPath}`);
+      logErrorConsole(`Path does not exist: ${resolvedPath}`);
       exit(1);
       return result;
     }

@@ -14,10 +14,13 @@ const mockFs = fs as jest.Mocked<typeof fs>;
 
 // Mock the consoleLogger module to avoid chalk ESM issues
 jest.mock('../utils/consoleLogger', () => ({
+  logErrorConsole: jest.fn(),
   logWarningConsole: jest.fn(),
   formatSlug: jest.fn((slug: string) => slug),
   formatLabel: jest.fn((label: string) => label),
 }));
+
+import * as consoleLogger from '../utils/consoleLogger';
 
 describe('installPackagesHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
@@ -1026,8 +1029,8 @@ describe('installPackagesHandler', () => {
             deps,
           );
 
-          expect(mockError).toHaveBeenCalledWith(
-            '❌ Path does not exist: /project/does/not/exist',
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path does not exist: /project/does/not/exist',
           );
         });
 
@@ -1054,8 +1057,8 @@ describe('installPackagesHandler', () => {
             deps,
           );
 
-          expect(mockError).toHaveBeenCalledWith(
-            '❌ Path is not a directory: /project/apps/frontend/index.ts',
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path is not a directory: /project/apps/frontend/index.ts',
           );
         });
 
@@ -2190,8 +2193,8 @@ describe('installPackagesHandler', () => {
         it('logs error message for non-existent path', async () => {
           await recursiveInstallHandler({ path: 'does/not/exist' }, deps);
 
-          expect(mockError).toHaveBeenCalledWith(
-            '❌ Path does not exist: /project/does/not/exist',
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path does not exist: /project/does/not/exist',
           );
         });
 
@@ -2224,8 +2227,8 @@ describe('installPackagesHandler', () => {
             deps,
           );
 
-          expect(mockError).toHaveBeenCalledWith(
-            '❌ Path is not a directory: /project/apps/frontend/index.ts',
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path is not a directory: /project/apps/frontend/index.ts',
           );
         });
 
