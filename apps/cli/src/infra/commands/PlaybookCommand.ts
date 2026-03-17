@@ -36,6 +36,7 @@ export const playbookCommand = command({
     const playbookLocalRepository = new PlaybookLocalRepository(repoRoot);
 
     if (positionals[0] === 'add') {
+      const lockFileRepository = new LockFileRepository();
       await playbookAddHandler({
         packmindCliHexa,
         filePath: positionals[1],
@@ -44,6 +45,7 @@ export const playbookCommand = command({
         readFile: (p) => readFileSync(p, 'utf-8'),
         readSkillDirectory,
         playbookLocalRepository,
+        lockFileRepository,
       });
       return;
     }

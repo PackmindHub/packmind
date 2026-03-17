@@ -3,6 +3,7 @@ import * as yaml from 'yaml';
 import {
   ChangeProposalArtefactId,
   ChangeProposalCaptureMode,
+  ChangeProposalPayload,
   ChangeProposalType,
   SpaceId,
   TargetId,
@@ -500,7 +501,7 @@ export async function playbookSubmitHandler(
         type: p.type,
         artefactId:
           p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
-        payload: p.payload,
+        payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
         captureMode: ChangeProposalCaptureMode.commit,
         message: resolvedMessage,
         targetId: (p.targetId ?? '') as TargetId,

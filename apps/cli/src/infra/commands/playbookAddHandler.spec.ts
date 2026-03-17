@@ -4,8 +4,10 @@ import {
 } from './playbookAddHandler';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 
 jest.mock('../utils/consoleLogger', () => ({
+  formatLabel: jest.fn((label: string) => label),
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
@@ -42,6 +44,7 @@ describe('playbookAddHandler', () => {
   let mockReadFile: jest.Mock;
   let mockReadSkillDirectory: jest.Mock;
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
+  let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   let mockGetDeployed: jest.Mock;
 
   beforeEach(() => {
@@ -93,6 +96,13 @@ describe('playbookAddHandler', () => {
       removeChange: jest.fn(),
       getChanges: jest.fn().mockReturnValue([]),
       getChange: jest.fn().mockReturnValue(null),
+      clearAll: jest.fn(),
+    };
+
+    mockLockFileRepository = {
+      read: jest.fn().mockResolvedValue(null),
+      write: jest.fn(),
+      delete: jest.fn(),
     };
   });
 
@@ -111,6 +121,7 @@ describe('playbookAddHandler', () => {
       readFile: mockReadFile,
       readSkillDirectory: mockReadSkillDirectory,
       playbookLocalRepository: mockPlaybookLocalRepository,
+      lockFileRepository: mockLockFileRepository,
       ...overrides,
     };
   }

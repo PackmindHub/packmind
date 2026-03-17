@@ -9,12 +9,14 @@ import { parseSkillDirectory } from '../../application/utils/parseSkillDirectory
 import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
 import { resolveDeployedContext } from '../../application/utils/resolveDeployedContext';
 import {
+  formatLabel,
   logErrorConsole,
   logInfoConsole,
   logSuccessConsole,
 } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../application/utils/pathUtils';
 
 type SkillFile = {
@@ -34,6 +36,7 @@ export type PlaybookAddHandlerDependencies = {
   readFile: (path: string) => string;
   readSkillDirectory: (dirPath: string) => Promise<SkillFile[]>;
   playbookLocalRepository: IPlaybookLocalRepository;
+  lockFileRepository: ILockFileRepository;
 };
 
 export async function playbookAddHandler(
@@ -47,6 +50,7 @@ export async function playbookAddHandler(
     readFile,
     readSkillDirectory,
     playbookLocalRepository,
+    lockFileRepository,
   } = deps;
 
   if (!filePath) {
@@ -163,16 +167,17 @@ export async function playbookAddHandler(
     deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
   const targetId = deployedContext?.targetId;
 
+  // Deployed content and lock file paths are relative to the project directory
+  // (targetDir), not the git root. Use targetDir-relative paths for all comparisons.
+  const normalizedFilePath = normalizePath(
+    path.relative(targetDir, absolutePath),
+  );
+
   // Check if content matches deployed
   if (deployedContext?.deployedContent) {
-    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
-    const relativeFilePath = gitRoot
-      ? normalizePath(path.relative(gitRoot, absolutePath))
-      : normalizePath(path.relative(targetDir, absolutePath));
-
     const deployedFile =
       deployedContext.deployedContent.fileUpdates.createOrUpdate.find(
-        (f) => normalizePath(f.path) === relativeFilePath,
+        (f) => normalizePath(f.path) === normalizedFilePath,
       );
 
     if (deployedFile && deployedFile.content === localContent) {
@@ -182,25 +187,26 @@ export async function playbookAddHandler(
     }
   }
 
-  // Normalize filePath relative to git root
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
-  const normalizedFilePath = gitRoot
-    ? normalizePath(path.relative(gitRoot, absolutePath))
-    : normalizePath(path.relative(targetDir, absolutePath));
-
-  // Determine changeType based on deployed content
+  // Determine changeType: check deployed content first, then fall back to lock file
   let changeType: 'created' | 'updated' = 'created';
   if (deployedContext?.deployedContent) {
-    const relPath = gitRoot
-      ? normalizePath(path.relative(gitRoot, absolutePath))
-      : normalizePath(path.relative(targetDir, absolutePath));
-
     const existsInDeployed =
       deployedContext.deployedContent.fileUpdates.createOrUpdate.some(
-        (f) => normalizePath(f.path) === relPath,
+        (f) => normalizePath(f.path) === normalizedFilePath,
       );
     if (existsInDeployed) {
       changeType = 'updated';
+    }
+  }
+  if (changeType === 'created') {
+    const lockFile = await lockFileRepository.read(targetDir);
+    if (lockFile) {
+      const existsInLockFile = Object.values(lockFile.artifacts).some((entry) =>
+        entry.files.some((f) => normalizePath(f.path) === normalizedFilePath),
+      );
+      if (existsInLockFile) {
+        changeType = 'updated';
+      }
     }
   }
 
@@ -216,6 +222,8 @@ export async function playbookAddHandler(
     addedAt: new Date().toISOString(),
   });
 
-  logSuccessConsole(`Added "${artifactName}" (${artifactType}) to playbook.`);
+  logSuccessConsole(
+    `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook. ${formatLabel(codingAgent)}`,
+  );
   exit(0);
 }

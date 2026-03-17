@@ -3,7 +3,7 @@ import * as path from 'path';
 import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
 import { resolveDeployedContext } from '../../application/utils/resolveDeployedContext';
 import { normalizePath } from '../../application/utils/pathUtils';
-import { logConsole } from '../utils/consoleLogger';
+import { formatLabel, logConsole } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
@@ -87,7 +87,10 @@ export async function playbookStatusHandler(
             continue;
           }
 
-          if (localContent.trim() !== deployedFile.content.trim()) {
+          if (
+            deployedFile.content &&
+            localContent.trim() !== deployedFile.content.trim()
+          ) {
             const artifact = findArtifactForFile(
               deployedFile.path,
               lockFile.artifacts,
@@ -107,10 +110,9 @@ export async function playbookStatusHandler(
   if (stagedChanges.length > 0) {
     logConsole('Changes to be submitted:');
     for (const change of stagedChanges) {
-      const changeType =
-        (change as Record<string, unknown>).changeType ?? 'updated';
+      const changeType = change.changeType ?? 'updated';
       logConsole(
-        `  - ${capitalize(change.artifactType)} "${change.artifactName}" ${changeType}`,
+        `  - ${capitalize(change.artifactType)} "${change.artifactName}" (${changeType}). ${formatLabel(change.codingAgent)}`,
       );
     }
     logConsole('');

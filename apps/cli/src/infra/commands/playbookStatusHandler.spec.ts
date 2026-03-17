@@ -8,6 +8,7 @@ import { ILockFileRepository } from '../../domain/repositories/ILockFileReposito
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
 jest.mock('../utils/consoleLogger', () => ({
+  formatLabel: jest.fn((label: string) => label),
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
@@ -75,6 +76,7 @@ describe('playbookStatusHandler', () => {
       removeChange: jest.fn(),
       getChanges: jest.fn().mockReturnValue([]),
       getChange: jest.fn().mockReturnValue(null),
+      clearAll: jest.fn(),
     };
 
     mockLockFileRepository = {
@@ -138,7 +140,7 @@ describe('playbookStatusHandler', () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Standard "My standard" updated',
+        '  - Standard "My standard" (updated). packmind',
       );
     });
 
@@ -146,7 +148,7 @@ describe('playbookStatusHandler', () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Command "My command" created',
+        '  - Command "My command" (created). claude',
       );
     });
 
