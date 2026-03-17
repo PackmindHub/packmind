@@ -6,6 +6,7 @@ import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   DeleteItem,
+  FileModification,
   FetchFileContentInput,
   FetchFileContentOutput,
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
@@ -340,7 +341,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
   public commitToGit(
     repo: GitRepo,
-    files: { path: string; content: string }[],
+    files: FileModification[],
     commitMessage: string,
     deleteFiles?: DeleteItem[],
   ): Promise<GitCommit> {

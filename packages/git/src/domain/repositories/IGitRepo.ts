@@ -1,8 +1,14 @@
 import { GitCommit } from '@packmind/types';
 
+export type CommitFile = {
+  path: string;
+  content: string;
+  permissions?: string;
+};
+
 export interface IGitRepo {
   commitFiles(
-    files: { path: string; content: string }[],
+    files: CommitFile[],
     commitMessage: string,
     deleteFiles?: { path: string }[],
   ): Promise<Omit<GitCommit, 'id'>>;

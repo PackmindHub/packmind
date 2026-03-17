@@ -1,4 +1,4 @@
-import { IGitRepo } from '../../../domain/repositories/IGitRepo';
+import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
@@ -158,8 +158,14 @@ export class GitlabRepository implements IGitRepo {
     );
   }
 
+  private isExecutable(permissions: string): boolean {
+    return (
+      permissions[2] === 'x' || permissions[5] === 'x' || permissions[8] === 'x'
+    );
+  }
+
   async commitFiles(
-    files: { path: string; content: string }[],
+    files: CommitFile[],
     commitMessage: string,
     deleteFiles?: { path: string }[],
   ): Promise<Omit<GitCommit, 'id'>> {
@@ -186,7 +192,7 @@ export class GitlabRepository implements IGitRepo {
           .reduce((map, file) => {
             map.set(this.normalizePath(file.path), file);
             return map;
-          }, new Map<string, { path: string; content: string }>())
+          }, new Map<string, CommitFile>())
           .values(),
       );
 
@@ -278,6 +284,7 @@ export class GitlabRepository implements IGitRepo {
       const actions: Array<
         | { action: 'create' | 'update'; file_path: string; content: string }
         | { action: 'delete'; file_path: string }
+        | { action: 'chmod'; file_path: string; execute_filemode: boolean }
       > = deduplicatedFiles.map((file, index) => {
         const analysis = fileAnalysis[index];
         return {
@@ -320,12 +327,26 @@ export class GitlabRepository implements IGitRepo {
         }
       }
 
-      // Check if there are any changes to commit
+      // Add chmod actions for executable files (must come after create/update actions)
+      for (const file of deduplicatedFiles) {
+        if (file.permissions && this.isExecutable(file.permissions)) {
+          actions.push({
+            action: 'chmod' as const,
+            file_path: file.path,
+            execute_filemode: true,
+          });
+        }
+      }
+
+      // Check if there are any changes to commit (content, permissions, or deletions)
       const hasFileChanges = fileDifferenceCheck.some(
         (file) => file.hasChanges,
       );
+      const hasPermissionChanges = deduplicatedFiles.some(
+        (file) => file.permissions && this.isExecutable(file.permissions),
+      );
       const hasDeletions = existingDeleteFiles.length > 0;
-      const hasChanges = hasFileChanges || hasDeletions;
+      const hasChanges = hasFileChanges || hasDeletions || hasPermissionChanges;
 
       if (!hasChanges) {
         this.logger.info('No changes detected, skipping commit', {

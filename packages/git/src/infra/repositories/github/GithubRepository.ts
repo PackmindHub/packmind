@@ -1,4 +1,4 @@
-import { IGitRepo } from '../../../domain/repositories/IGitRepo';
+import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
@@ -50,8 +50,17 @@ export class GithubRepository implements IGitRepo {
     });
   }
 
+  private getGitMode(permissions?: string): '100644' | '100755' {
+    if (!permissions) return '100644';
+    return permissions[2] === 'x' ||
+      permissions[5] === 'x' ||
+      permissions[8] === 'x'
+      ? '100755'
+      : '100644';
+  }
+
   async commitFiles(
-    files: { path: string; content: string }[],
+    files: CommitFile[],
     commitMessage: string,
     deleteFiles?: { path: string }[],
   ): Promise<Omit<GitCommit, 'id'>> {
@@ -70,7 +79,7 @@ export class GithubRepository implements IGitRepo {
       const { owner, repo, branch } = this.options;
       const targetBranch = branch || 'main';
 
-      // Step 1: Check if there are any actual changes to commit (file modifications)
+      // Step 1: Check if there are any actual changes to commit (file modifications or permission changes)
       const fileDifferenceCheck = await Promise.all(
         files.map(async (file) => {
           const existingFile = await this.getFileOnRepo(
@@ -89,6 +98,7 @@ export class GithubRepository implements IGitRepo {
             return {
               path: file.path,
               hasChanges: existingContent !== file.content,
+              hasPermissionChanges: !!file.permissions,
             };
           }
         }),
@@ -125,15 +135,18 @@ export class GithubRepository implements IGitRepo {
         `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
         { params: { recursive: 1 } },
       );
-      const existingPaths = new Set(
+      const existingPathsWithModes = new Map<string, string>(
         treeResponse.data.tree
           .filter((item: { type: string }) => item.type === 'blob')
-          .map((item: { path: string }) => item.path),
+          .map((item: { path: string; mode: string }) => [
+            item.path,
+            item.mode,
+          ]),
       );
 
       // Step 5: Filter delete files to only those that exist in the repo
       const existingDeleteFiles = deleteFiles
-        ? deleteFiles.filter((file) => existingPaths.has(file.path))
+        ? deleteFiles.filter((file) => existingPathsWithModes.has(file.path))
         : [];
 
       const skippedDeleteCount =
@@ -146,12 +159,21 @@ export class GithubRepository implements IGitRepo {
         });
       }
 
-      // Step 6: Check if there are any changes to commit (file modifications or deletions)
+      // Step 6: Check if there are any changes to commit (file modifications, permission changes, or deletions)
+      // For permission changes, compare the existing tree mode with the desired mode
+      const hasPermissionChanges = fileDifferenceCheck.some((check) => {
+        if (!check.hasPermissionChanges) return false;
+        const matchingFile = files.find((f) => f.path === check.path);
+        if (!matchingFile?.permissions) return false;
+        const existingMode = existingPathsWithModes.get(check.path);
+        const desiredMode = this.getGitMode(matchingFile.permissions);
+        return existingMode !== desiredMode;
+      });
       const hasFileChanges = fileDifferenceCheck.some(
         (file) => file.hasChanges,
       );
       const hasDeletions = existingDeleteFiles.length > 0;
-      const hasChanges = hasFileChanges || hasDeletions;
+      const hasChanges = hasFileChanges || hasDeletions || hasPermissionChanges;
 
       if (!hasChanges) {
         this.logger.info('No changes detected, skipping commit', {
@@ -180,18 +202,24 @@ export class GithubRepository implements IGitRepo {
 
       const treeItems: {
         path: string;
-        mode: '100644';
+        mode: '100644' | '100755';
         type: 'blob';
         content?: string;
         sha?: null;
       }[] = [];
 
-      // Add only files that have changes
+      // Add files that have content changes or permission changes
       for (let i = 0; i < files.length; i++) {
-        if (fileDifferenceCheck[i].hasChanges) {
+        const hasContentChanges = fileDifferenceCheck[i].hasChanges;
+        const existingMode = existingPathsWithModes.get(files[i].path);
+        const desiredMode = this.getGitMode(files[i].permissions);
+        const hasModeChange =
+          files[i].permissions && existingMode !== desiredMode;
+
+        if (hasContentChanges || hasModeChange) {
           treeItems.push({
             path: files[i].path,
-            mode: '100644', // Regular file mode
+            mode: desiredMode,
             type: 'blob',
             content: files[i].content,
           });
