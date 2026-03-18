@@ -336,7 +336,7 @@ describe('playbookSubmitHandler', () => {
               artefactId: null,
               payload: {
                 name: 'My Command',
-                content: COMMAND_CONTENT,
+                content: 'Do something useful',
               },
             }),
           ]),

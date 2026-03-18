@@ -140,13 +140,16 @@ function buildCreatedStandardProposals(
 function buildCreatedCommandProposals(
   entry: PlaybookChangeEntry,
 ): ProposalItem[] {
+  const parsed = parseCommandFile(entry.content, entry.filePath);
+  const content = parsed.success ? parsed.parsed.content : entry.content;
+
   return [
     {
       type: ChangeProposalType.createCommand,
       artefactId: null,
       payload: {
         name: entry.artifactName,
-        content: entry.content,
+        content,
       },
       targetId: entry.targetId,
       spaceId: entry.spaceId,
