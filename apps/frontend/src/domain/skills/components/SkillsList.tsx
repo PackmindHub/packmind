@@ -14,7 +14,6 @@ import {
   PMAlertDialog,
   PMCheckbox,
   PMInput,
-  PMBadge,
   useTableSort,
   isFeatureFlagEnabled,
   DEFAULT_FEATURE_DOMAIN_MAP,
