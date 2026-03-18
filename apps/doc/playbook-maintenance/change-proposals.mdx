@@ -4,11 +4,6 @@ title: 'Change Proposals'
 
 Change proposals are one of two ways to update your playbook. Unlike [direct updates](/playbook-maintenance/updating-your-playbook#direct-updates), change proposals require team review before changes are applied.
 
-<Info>
-  **Private Beta** — Change Proposals is currently in private beta. Contact
-  Packmind to get access to this feature.
-</Info>
-
 <Note>
   Change Proposals require **CLI version 0.21.0 or later**. Run `packmind
   --version` to check your version, and see [CLI
@@ -168,6 +163,31 @@ Once changes have been submitted, they can be reviewed in the Packmind web inter
 3. Each proposal shows the modification type and a diff view highlighting additions and removals
 4. Review each proposal and choose to **accept** or **dismiss** it
 5. Click **Apply changes** to create a new version of the artifact with the accepted changes
+
+### Editing a Proposal Before Accepting
+
+Reviewers can edit a change proposal's proposed value before accepting it. This is useful when a proposal is mostly correct but needs minor adjustments — for example, fixing a typo in a proposed name or refining the wording of a description.
+
+To edit a proposal:
+
+1. Click the **edit** button on the proposal card
+2. Modify the proposed value in the input field
+3. Click **Save & Accept** to accept the proposal with your edits, or **Cancel** to discard your changes
+
+<Note>
+  Editing is available for name, description, and prompt updates on standards,
+  commands, and skills. Other proposal types (rule changes, skill file updates,
+  removals, and creations) cannot be edited.
+</Note>
+
+Once a proposal has been edited:
+
+- An **Edited** badge appears on the proposal card
+- The card shows both the **original proposal** (collapsed by default) and the **edited** version, so reviewers can compare the two
+- A **Reset to original** button lets you discard the edit and revert to the original proposed value
+- If you **undo** the acceptance (move the proposal back to "To review"), the edit is discarded
+
+Editing a proposal may also trigger **conflict recomputation** — if the edited value introduces or resolves a conflict with another pending proposal, the conflict status is updated automatically.
 
 ## Conflict Management
 

@@ -6,7 +6,6 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "tslib": "^2.3.0",
     "typeorm": "0.3.28",
     "@packmind/git": "*",
     "@packmind/llm": "*",

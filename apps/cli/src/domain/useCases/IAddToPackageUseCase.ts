@@ -2,6 +2,7 @@ export type ItemType = 'standard' | 'command' | 'skill';
 
 export interface IAddToPackageCommand {
   packageSlug: string;
+  spaceSlug?: string;
   itemType: ItemType;
   itemSlugs: string[];
   originSkill?: string;

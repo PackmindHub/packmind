@@ -42,9 +42,10 @@ export class ConflictDetectionService {
   ): ChangeProposalId[] {
     const conflictDetector = getConflictDetector(proposal);
     return otherProposals.reduce((acc, otherProposal) => {
+      const secondCPDetector = getConflictDetector(otherProposal);
       if (
         conflictDetector(proposal, otherProposal, this.diffService) ||
-        conflictDetector(otherProposal, proposal, this.diffService)
+        secondCPDetector(otherProposal, proposal, this.diffService)
       ) {
         acc.push(otherProposal.id);
       }

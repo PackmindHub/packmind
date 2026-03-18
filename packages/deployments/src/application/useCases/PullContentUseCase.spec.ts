@@ -6,6 +6,7 @@ import {
   ICodingAgentPort,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   Organization,
   OrganizationId,
@@ -16,6 +17,8 @@ import {
   RenderMode,
   Skill,
   SkillVersion,
+  Space,
+  SpaceType,
   Standard,
   StandardVersion,
   User,
@@ -36,6 +39,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
+import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
@@ -72,14 +76,17 @@ describe('PullContentUseCase', () => {
   let packmindConfigService: jest.Mocked<PackmindConfigService>;
   let distributionRepository: jest.Mocked<IDistributionRepository>;
   let targetResolutionService: jest.Mocked<TargetResolutionService>;
+  let lockFileService: jest.Mocked<PackmindLockFileService>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
   let organization: Organization;
+  let defaultSpace: Space;
 
   beforeEach(() => {
     packageService = {
-      getPackagesBySlugsWithArtefacts: jest.fn(),
+      getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
     recipesPort = {
@@ -186,12 +193,40 @@ describe('PullContentUseCase', () => {
       }),
     } as unknown as jest.Mocked<TargetResolutionService>;
 
+    lockFileService = {
+      buildLockFile: jest.fn().mockReturnValue({
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        installedAt: new Date().toISOString(),
+        artifacts: {},
+      }),
+      createLockFileModification: jest.fn().mockReturnValue({
+        path: 'packmind-lock.json',
+        content: '{}',
+      }),
+    } as unknown as jest.Mocked<PackmindLockFileService>;
+
     organizationId = createOrganizationId(uuidv4());
     organization = {
       id: organizationId,
       name: 'Packmind',
       slug: 'packmind',
     };
+
+    defaultSpace = {
+      id: createSpaceId('default-space'),
+      name: 'Default Space',
+      slug: 'default',
+      type: SpaceType.open,
+      organizationId,
+      isDefaultSpace: true,
+    };
+
+    spacesPort = {
+      listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
+      getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     command = {
       organizationId: organizationId as unknown as string,
@@ -215,7 +250,9 @@ describe('PullContentUseCase', () => {
       eventEmitterService,
       distributionRepository,
       targetResolutionService,
+      spacesPort,
       packmindConfigService,
+      lockFileService,
       stubLogger(),
     );
   });
@@ -236,7 +273,9 @@ describe('PullContentUseCase', () => {
           eventEmitterService,
           distributionRepository,
           targetResolutionService,
+          spacesPort,
           packmindConfigService,
+          lockFileService,
           stubLogger(),
         );
       }).not.toThrow();
@@ -289,9 +328,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -344,9 +383,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -385,9 +424,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -399,10 +438,10 @@ describe('PullContentUseCase', () => {
         } as FileUpdates);
       });
 
-      it('includes only packmind.json in createOrUpdate', async () => {
+      it('includes only packmind.json and packmind-lock.json in createOrUpdate', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.fileUpdates.createOrUpdate).toHaveLength(1);
+        expect(result.fileUpdates.createOrUpdate).toHaveLength(2);
       });
 
       it('sets packmind.json as the file path', async () => {
@@ -431,7 +470,7 @@ describe('PullContentUseCase', () => {
         skills: [],
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         testPackage,
       ]);
 
@@ -496,9 +535,9 @@ describe('PullContentUseCase', () => {
           skills: [skill],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -553,10 +592,9 @@ describe('PullContentUseCase', () => {
             skills: [skill],
           };
 
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-            secondPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage, secondPackage],
+          );
 
           command.packagesSlugs = ['test-package', 'test-package-2'];
 
@@ -616,9 +654,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
       });
 
       it('throws PackagesNotFoundError', async () => {
@@ -650,9 +688,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
       });
 
       it('throws PackagesNotFoundError', async () => {
@@ -666,7 +704,9 @@ describe('PullContentUseCase', () => {
       beforeEach(() => {
         // Package exists but belongs to a different organization
         // Repository filters by organization, so it returns empty array
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [],
+        );
       });
 
       it('throws PackagesNotFoundError', async () => {
@@ -675,13 +715,13 @@ describe('PullContentUseCase', () => {
         );
       });
 
-      it('passes the organization ID to packageService', async () => {
+      it('passes the default space ID to packageService', async () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         await useCase.execute(command).catch(() => {});
 
         expect(
-          packageService.getPackagesBySlugsWithArtefacts,
-        ).toHaveBeenCalledWith(['test-package'], organization.id);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['test-package'], defaultSpace.id);
       });
     });
 
@@ -701,9 +741,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -724,12 +764,16 @@ describe('PullContentUseCase', () => {
         expect(packmindJsonFile).toBeDefined();
       });
 
-      it('calls PackmindConfigService with package slugs and undefined agents', async () => {
+      it('calls PackmindConfigService with normalized package slugs and undefined agents', async () => {
         await useCase.execute(command);
 
         expect(
           packmindConfigService.createConfigFileModification,
-        ).toHaveBeenCalledWith(['test-package'], undefined, undefined);
+        ).toHaveBeenCalledWith(
+          [`@${defaultSpace.slug}/test-package`],
+          undefined,
+          undefined,
+        );
       });
 
       describe('when agents are provided in command', () => {
@@ -745,10 +789,11 @@ describe('PullContentUseCase', () => {
 
           expect(
             packmindConfigService.createConfigFileModification,
-          ).toHaveBeenCalledWith(['test-package'], undefined, [
-            CodingAgents.claude,
-            CodingAgents.cursor,
-          ]);
+          ).toHaveBeenCalledWith(
+            [`@${defaultSpace.slug}/test-package`],
+            undefined,
+            [CodingAgents.claude, CodingAgents.cursor],
+          );
         });
       });
 
@@ -761,6 +806,182 @@ describe('PullContentUseCase', () => {
         expect(packmindJsonFile?.content).toBe(
           '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
         );
+      });
+    });
+
+    describe('when generating packmind-lock.json lock file', () => {
+      let testPackage: PackageWithArtefacts;
+
+      beforeEach(() => {
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [],
+        };
+
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
+
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [],
+        } as FileUpdates);
+      });
+
+      it('includes packmind-lock.json in file updates', async () => {
+        const result = await useCase.execute(command);
+
+        const lockJsonFile = result.fileUpdates.createOrUpdate.find(
+          (file) => file.path === 'packmind-lock.json',
+        );
+        expect(lockJsonFile).toBeDefined();
+      });
+
+      it('calls buildLockFile with resolved coding agents', async () => {
+        await useCase.execute(command);
+
+        expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [CodingAgents.packmind, CodingAgents.agents_md],
+          }),
+        );
+      });
+
+      it('calls buildLockFile with package slugs from command', async () => {
+        await useCase.execute(command);
+
+        expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageSlugs: ['test-package'],
+          }),
+        );
+      });
+
+      describe('when no artifacts exist', () => {
+        it('calls buildLockFile with empty artifact metadata', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              artifactSpaceIds: {},
+              artifactPackageIds: {},
+            }),
+          );
+        });
+      });
+
+      describe('when artifacts have metadata', () => {
+        let recipe: Recipe;
+        let recipeVersion: RecipeVersion;
+
+        beforeEach(() => {
+          recipe = {
+            id: createRecipeId('recipe-1'),
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+            content: 'recipe content',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          recipeVersion = {
+            id: createRecipeVersionId('rv-1'),
+            recipeId: recipe.id,
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+            content: 'recipe content',
+            version: 1,
+            userId: null,
+          };
+
+          testPackage.recipes = [recipe];
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
+
+          recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        });
+
+        it('calls buildLockFile with flattened artifact metadata', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              artifactSpaceIds: expect.objectContaining({
+                [String(recipe.id)]: String(testPackage.spaceId),
+              }),
+              artifactPackageIds: expect.objectContaining({
+                [String(recipe.id)]: [String(testPackage.id)],
+              }),
+            }),
+          );
+        });
+      });
+
+      describe('when git info is available', () => {
+        const targetId = createTargetId('target-1');
+
+        beforeEach(() => {
+          command = {
+            ...command,
+            gitRemoteUrl: 'https://github.com/owner/repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          targetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+            {
+              id: targetId,
+              organizationId: organization.id,
+              gitRemoteUrl: 'https://github.com/owner/repo.git',
+              gitBranch: 'main',
+              relativePath: '/',
+            },
+          );
+        });
+
+        it('calls buildLockFile with resolved target id', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              targetId: String(targetId),
+            }),
+          );
+        });
+      });
+
+      describe('when git info is not available', () => {
+        beforeEach(() => {
+          command = {
+            ...command,
+            gitRemoteUrl: undefined,
+            gitBranch: undefined,
+            relativePath: undefined,
+          };
+        });
+
+        it('calls buildLockFile without target id', async () => {
+          await useCase.execute(command);
+
+          expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+            expect.objectContaining({
+              targetId: undefined,
+            }),
+          );
+        });
       });
     });
 
@@ -780,9 +1001,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -886,9 +1107,9 @@ describe('PullContentUseCase', () => {
           skills: [],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -920,9 +1141,9 @@ describe('PullContentUseCase', () => {
       describe('when agents support skills', () => {
         beforeEach(() => {
           testPackage.skills = [skill];
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
           skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
           renderModeConfigurationService.resolveCodingAgents.mockResolvedValue([
@@ -943,9 +1164,9 @@ describe('PullContentUseCase', () => {
       describe('when agents do not support skills', () => {
         beforeEach(() => {
           testPackage.skills = [skill];
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
           skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
@@ -1015,9 +1236,9 @@ describe('PullContentUseCase', () => {
           };
 
           testPackage.skills = [skillA, skillB];
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
           skillsPort.getLatestSkillVersion
             .mockResolvedValueOnce(skillVersionA)
             .mockResolvedValueOnce(skillVersionB);
@@ -1129,7 +1350,7 @@ describe('PullContentUseCase', () => {
             previousPackagesSlugs: ['test-package'],
           };
 
-          packageService.getPackagesBySlugsWithArtefacts
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts
             .mockResolvedValueOnce([currentPackage])
             .mockResolvedValueOnce([previousPackage]);
 
@@ -1240,9 +1461,9 @@ describe('PullContentUseCase', () => {
             relativePath: '/',
           };
 
-          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-            testPackage,
-          ]);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+            [testPackage],
+          );
 
           recipesPort.listRecipeVersions.mockResolvedValue([]);
           standardsPort.getLatestStandardVersion.mockResolvedValue(null);
@@ -1422,9 +1643,9 @@ describe('PullContentUseCase', () => {
           relativePath: '/',
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(
@@ -1569,9 +1790,9 @@ describe('PullContentUseCase', () => {
           relativePath: '/',
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
 
         recipesPort.listRecipeVersions.mockResolvedValue([
           currentRecipeVersion,
@@ -1861,7 +2082,7 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a', 'package-b'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts
           .mockResolvedValueOnce([packageB])
           .mockResolvedValueOnce([packageA])
           .mockResolvedValueOnce([packageA]);
@@ -1961,7 +2182,7 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a', 'package-b'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts
           .mockResolvedValueOnce([packageB])
           .mockResolvedValueOnce([packageAOnlyShared])
           .mockResolvedValueOnce([packageAOnlyShared]);
@@ -2010,7 +2231,7 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a', 'package-b'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts
           .mockResolvedValueOnce([packageBDifferent])
           .mockResolvedValueOnce([packageAUniqueOnly])
           .mockResolvedValueOnce([packageAUniqueOnly]);
@@ -2063,9 +2284,9 @@ describe('PullContentUseCase', () => {
           previousPackagesSlugs: ['package-a'],
         };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValueOnce([
-          packageA,
-        ]);
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValueOnce(
+          [packageA],
+        );
 
         recipesPort.listRecipeVersions
           .mockResolvedValueOnce([sharedRecipeVersion])
@@ -2100,7 +2321,7 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          packageService.getPackagesBySlugsWithArtefacts,
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
         ).toHaveBeenCalledTimes(1);
       });
 
@@ -2108,8 +2329,8 @@ describe('PullContentUseCase', () => {
         await useCase.execute(command);
 
         expect(
-          packageService.getPackagesBySlugsWithArtefacts,
-        ).toHaveBeenCalledWith(['package-a'], organization.id);
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['package-a'], defaultSpace.id);
       });
 
       it('calls generateRemovalUpdatesForAgents with all artifacts from removed package', async () => {
@@ -2221,7 +2442,7 @@ describe('PullContentUseCase', () => {
         skills: [],
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         testPackage,
       ]);
     });
@@ -2420,7 +2641,7 @@ describe('PullContentUseCase', () => {
         skills: [skill],
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         testPackage,
       ]);
 
@@ -2610,6 +2831,117 @@ describe('PullContentUseCase', () => {
     });
   });
 
+  describe('when resolving packages with space-prefixed slugs', () => {
+    const explicitSpaceId = createSpaceId('explicit-space');
+    const testPackage: PackageWithArtefacts = {
+      id: createPackageId('test-package-id'),
+      slug: 'test-package',
+      name: 'Test Package',
+      description: 'Test package description',
+      spaceId: explicitSpaceId,
+      createdBy: createUserId('user-1'),
+      recipes: [],
+      standards: [],
+      skills: [],
+    };
+
+    beforeEach(() => {
+      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(null);
+      codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      } as FileUpdates);
+    });
+
+    describe('when slug is prefixed with a space slug', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['@my-space/test-package'],
+        };
+        spacesPort.getSpaceBySlug.mockResolvedValue({
+          id: explicitSpaceId,
+          name: 'My Space',
+          slug: 'my-space',
+          type: SpaceType.open,
+          organizationId,
+          isDefaultSpace: false,
+        });
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
+      });
+
+      it('resolves the space by its slug', async () => {
+        await useCase.execute(command);
+
+        expect(spacesPort.getSpaceBySlug).toHaveBeenCalledWith(
+          'my-space',
+          organization.id,
+        );
+      });
+
+      it('fetches the package within the resolved space', async () => {
+        await useCase.execute(command);
+
+        expect(
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['test-package'], explicitSpaceId);
+      });
+
+      it('does not query the default space', async () => {
+        await useCase.execute(command);
+
+        expect(spacesPort.listSpacesByOrganization).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when slug has no space prefix', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['test-package'],
+        };
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [testPackage],
+        );
+      });
+
+      it('queries the default space', async () => {
+        await useCase.execute(command);
+
+        expect(spacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
+          organization.id,
+        );
+      });
+
+      it('fetches the package within the default space', async () => {
+        await useCase.execute(command);
+
+        expect(
+          packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+        ).toHaveBeenCalledWith(['test-package'], defaultSpace.id);
+      });
+    });
+
+    describe('when the space slug does not exist', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['@unknown-space/test-package'],
+        };
+        spacesPort.getSpaceBySlug.mockResolvedValue(null);
+      });
+
+      it('throws PackagesNotFoundError for the prefixed slug', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          'Package "@unknown-space/test-package" was not found',
+        );
+      });
+    });
+  });
+
   describe('render mode cleanup', () => {
     const gitRemoteUrl = 'https://github.com/packmind/packmind.git';
     const gitBranch = 'main';
@@ -2624,7 +2956,7 @@ describe('PullContentUseCase', () => {
         relativePath,
       };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         {
           id: createPackageId('test-package-id'),
           slug: 'test-package',

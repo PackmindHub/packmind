@@ -7,7 +7,12 @@ import {
   AbstractRepository,
   getErrorMessage,
 } from '@packmind/node-utils';
-import { SkillId, SkillVersion, SkillVersionId } from '@packmind/types';
+import {
+  SkillId,
+  SkillVersion,
+  SkillVersionId,
+  SpaceId,
+} from '@packmind/types';
 
 const origin = 'SkillVersionRepository';
 
@@ -111,16 +116,32 @@ export class SkillVersionRepository
   async findBySkillIdAndVersion(
     skillId: SkillId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<SkillVersion | null> {
     this.logger.info('Finding skill version by skill ID and version', {
       skillId,
       version,
+      spaceIdCount: allowedSpaceIds.length,
     });
 
-    try {
-      const skillVersion = await this.repository.findOne({
-        where: { skillId, version },
+    if (allowedSpaceIds.length === 0) {
+      this.logger.warn('No allowed space IDs provided, returning null', {
+        skillId,
+        version,
       });
+      return null;
+    }
+
+    try {
+      const skillVersion = await this.repository
+        .createQueryBuilder('sv')
+        .innerJoin('sv.skill', 'skill')
+        .where('sv.skill_id = :skillId', { skillId })
+        .andWhere('sv.version = :version', { version })
+        .andWhere('skill.space_id IN (:...allowedSpaceIds)', {
+          allowedSpaceIds,
+        })
+        .getOne();
 
       if (skillVersion) {
         this.logger.info('Skill version found by skill ID and version', {

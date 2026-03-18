@@ -6,6 +6,7 @@ import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 import {
   createRecipeId,
   createRecipeVersionId,
+  createSpaceId,
   createUserId,
   RecipeVersion,
 } from '@packmind/types';
@@ -161,31 +162,42 @@ describe('RecipeVersionService', () => {
   });
 
   describe('getRecipeVersion', () => {
-    let recipeId: ReturnType<typeof createRecipeId>;
-    let version: number;
-    let recipeVersion: RecipeVersion;
-    let result: RecipeVersion | null;
+    describe('when called with allowedSpaceIds', () => {
+      let recipeId: ReturnType<typeof createRecipeId>;
+      let allowedSpaceIds: ReturnType<typeof createSpaceId>[];
+      let version: number;
+      let recipeVersion: RecipeVersion;
+      let result: RecipeVersion | null;
 
-    beforeEach(async () => {
-      service = new RecipeVersionService(mockRepository, stubbedLogger);
-      recipeId = createRecipeId(uuidv4());
-      version = 1;
-      recipeVersion = recipeVersionFactory();
+      beforeEach(async () => {
+        service = new RecipeVersionService(mockRepository, stubbedLogger);
+        recipeId = createRecipeId(uuidv4());
+        allowedSpaceIds = [createSpaceId(uuidv4()), createSpaceId(uuidv4())];
+        version = 1;
+        recipeVersion = recipeVersionFactory();
 
-      mockRepository.findByRecipeIdAndVersion.mockResolvedValue(recipeVersion);
+        mockRepository.findByRecipeIdAndVersion.mockResolvedValue(
+          recipeVersion,
+        );
 
-      result = await service.getRecipeVersion(recipeId, version);
-    });
+        result = await service.getRecipeVersion(
+          recipeId,
+          version,
+          allowedSpaceIds,
+        );
+      });
 
-    it('calls repository with recipe id and version', () => {
-      expect(mockRepository.findByRecipeIdAndVersion).toHaveBeenCalledWith(
-        recipeId,
-        version,
-      );
-    });
+      it('calls repository with recipe id, version, and allowedSpaceIds', () => {
+        expect(mockRepository.findByRecipeIdAndVersion).toHaveBeenCalledWith(
+          recipeId,
+          version,
+          allowedSpaceIds,
+        );
+      });
 
-    it('returns version from repository', () => {
-      expect(result).toEqual(recipeVersion);
+      it('returns version from repository', () => {
+        expect(result).toEqual(recipeVersion);
+      });
     });
   });
 });

@@ -55,3 +55,9 @@ export const APPLY_CREATION_CHANGE_PROPOSALS_MUTATION_KEY = [
   CHANGE_PROPOSALS_QUERY_SCOPE,
   'apply-creation',
 ] as const;
+
+export const RECOMPUTE_CONFLICTS_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  CHANGE_PROPOSALS_QUERY_SCOPE,
+  'recompute-conflicts',
+] as const;

@@ -4,11 +4,10 @@ Scan existing standards, identify which are relevant to the user's validated int
 
 ## What Standards Are
 
-Standards are coding rules and conventions distributed to AI coding agents. Each standard has a name, description, and a list of rules (imperative, verb-first bullets). Source files live in `.packmind/standards/<slug>.md`. Installed copies also exist in agent directories:
-- Claude Code: `.claude/rules/packmind/`
-- Cursor: `.cursor/rules/packmind/`
-- GitHub Copilot: `.github/instructions/packmind-*`
-
+Standards are coding conventions distributed to AI coding agents. Each standard has a name (with `[TAG]` prefix), description, rules (imperative, ~25 words max each), and scope (file glob). Source files live in `**/.packmind/standards/<slug>.md`. Installed copies also exist in agent directories:
+- Claude Code: `**/.claude/rules/packmind/`
+- Cursor: `**/.cursor/rules/packmind/`
+- GitHub Copilot: `**/.github/instructions/packmind-*`
 Search the project root and all subdirectories.
 
 ## Instructions
@@ -19,32 +18,32 @@ Run `packmind standards list` to get slugs, names, and descriptions. Do NOT read
 
 ### Step 2: Filter Relevant Standards
 
-For each standard in the list, ask: **Does the user's intent involve updating this standard?**
+For each standard in the list, ask: **Does the user's stated intent relate to the domain this standard covers?**
 
-Relevant means: the intent explicitly targets this standard, describes changes to its rules or conventions, or references issues with its current content. Match by topic using slug and name — no deep reading yet.
+Relevant means: the intent targets this standard directly, involves changes to files matching the standard's scope, or describes modifications that could add, change, or invalidate a rule. Match by topic using slug, name, and description — no deep reading yet.
 
-Also identify **new standard opportunities** if the user's intent suggests creating one. A new standard is warranted if:
-- The intent describes a coding convention or best practice that no existing standard covers
-- A recurring pattern or anti-pattern emerged that should be codified
-- The user explicitly requests a new standard for a specific topic
+Also identify **new standard ideas** if the user's intent suggests capturing a new convention. A new standard must meet ALL of:
+- **Lintable**: mechanically verifiable by reading code (not subjective judgment)
+- **Recurring**: pattern applies broadly or is a hard constraint (not a one-off)
+- **Uncovered**: no existing standard already addresses it
+
+Skip general best practices any competent developer already knows.
 
 ### Step 3: Deep Analyze Flagged Standards
 
-For each relevant standard, read `.packmind/standards/<slug>.md`. Evaluate the standard against the user's requested changes:
-- Intent requests adding rules → propose adding them
-- Intent requests modifying rules → propose the specific modifications
-- Intent requests removing rules → propose removal with rationale
-- Intent requests changing the description → propose the new description
+For each relevant existing standard, read `**/.packmind/standards/<slug>.md` and evaluate every rule against the user's intent:
+- Rule aligns with the requested change → apply the modification
+- Rule conflicts with the intent → update or remove as requested
+- Intent describes a pattern this standard should cover but doesn't → gap, propose adding a rule
 - If conversation context exists, use it as supporting evidence for the evaluation
 
-Apply a HIGH BAR — only propose updates when there is strong evidence:
-- The user's intent clearly describes a needed change
-- A rule references a pattern, API, or tool that no longer applies
-- A critical gap is identified that the intent highlights
+For each new standard idea, draft concrete rules and apply the lintability gate:
+- **Mechanically verifiable**: can an agent check compliance by reading code?
+- **Clear scope**: does it have a file glob where it applies?
+- **Actionable**: does it say exactly what to do (not "prefer X" or "consider Y")?
+- **Non-obvious**: would a senior developer NOT already do this without the rule?
 
-Do NOT propose updates for minor wording or changes not supported by the user's intent.
-
-For each new standard that passes validation, follow the procedure in [create-standard-procedure.md](create-standard-procedure.md) to write the standard file.
+Prefer fewer, sharper rules. When in doubt, leave it out.
 
 ## Output Format
 
@@ -54,17 +53,24 @@ For each new standard that passes validation, follow the procedure in [create-st
 ### New Standards
 (If none: "No new standards needed.")
 
-#### Standard Name (`<slug>`)
-- **Reason**: why this standard is needed
-- **Rules**: key rules to include
+#### [TAG] Standard Name
+- **Scope**: `file/glob/pattern`
+- **Reason**: why this pattern warrants a standard
+- **Rules**:
+  - Rule in imperative form (~25 words max)
 
 ### Standard Updates
 (If none: "No updates needed.")
 
-#### Standard Name (`<slug>`)
+#### [TAG] Standard Name (`<slug>`)
 - **Reason**: what changed or what's missing
-- **Rules to add**: rule text
-- **Rules to modify**: old → new
-- **Rules to remove**: rule text — reason
+- **Rules to add**: new rule text
+- **Rules to modify**: "old text" → "new text"
+- **Rules to remove**: "rule text" — reason
 
+### Standards to Deprecate
+(If none: "No deprecations needed.")
+
+#### [TAG] Standard Name (`<slug>`)
+- **Reason**: why no longer relevant
 ```

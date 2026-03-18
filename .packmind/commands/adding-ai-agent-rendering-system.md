@@ -255,7 +255,7 @@ link: `.packmind/standards/${standardVersion.slug}.md`
     copilot: '.github/copilot-instructions.md',
     junie: '.junie/guidelines.md',
     packmind: '.packmind.md',
-    gitlab_duo: '.gitlab/duo/chat-rules.md',
+    gitlab_duo: '.gitlab/duo/chat-rules.md.yml',
     continue: '.continue/rules/packmind-recipes-index.md',
   };
 ```

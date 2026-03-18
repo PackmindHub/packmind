@@ -1,24 +1,12 @@
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   CodingAgent,
   ConfigWithTarget,
   PackmindFileConfig,
-  SummarizedArtifact,
 } from '@packmind/types';
-import {
-  logWarningConsole,
-  formatSlug,
-  formatLabel,
-} from '../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../utils/credentials';
-
-function buildPackageUrl(
-  host: string,
-  orgSlug: string,
-  packageId: string,
-): string {
-  return `${host}/org/${orgSlug}/space/global/packages/${packageId}`;
-}
+import { logErrorConsole, logWarningConsole } from '../utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -120,142 +108,6 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     }
   } catch {
     // Silently ignore default skills installation errors as it's a secondary operation
-  }
-}
-
-export type ListPackagesArgs = Record<string, never>;
-
-export async function listPackagesHandler(
-  _args: ListPackagesArgs,
-  deps: InstallHandlerDependencies,
-): Promise<void> {
-  const { packmindCliHexa, exit, log, error } = deps;
-
-  try {
-    log('Fetching available packages...\n');
-    const packages = await packmindCliHexa.listPackages({});
-
-    if (packages.length === 0) {
-      log('No packages found.');
-      exit(0);
-      return;
-    }
-
-    // Sort packages alphabetically by slug
-    const sortedPackages = [...packages].sort((a, b) =>
-      a.slug.localeCompare(b.slug),
-    );
-
-    // Try to build webapp URL from credentials
-    let urlBuilder: ((id: string) => string) | null = null;
-    const apiKey = loadApiKey();
-    if (apiKey) {
-      const decoded = decodeApiKey(apiKey);
-      const orgSlug = decoded?.jwt?.organization?.slug;
-      if (decoded?.host && orgSlug) {
-        urlBuilder = (id: string) => buildPackageUrl(decoded.host, orgSlug, id);
-      }
-    }
-
-    log('Available packages:\n');
-    sortedPackages.forEach((pkg, index) => {
-      log(`- ${formatSlug(pkg.slug)}`);
-      log(`    ${formatLabel('Name:')} ${pkg.name}`);
-      if (urlBuilder) {
-        const url = urlBuilder(pkg.id);
-        log(`    ${formatLabel('Link:')} ${url}`);
-      }
-      if (pkg.description) {
-        const descriptionLines = pkg.description
-          .trim()
-          .split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line.length > 0);
-        const [firstLine, ...restLines] = descriptionLines;
-        log(`    ${formatLabel('Description:')} ${firstLine}`);
-        restLines.forEach((line) => {
-          log(`                 ${line}`);
-        });
-      }
-      // Add blank line between packages (but not after the last one)
-      if (index < sortedPackages.length - 1) {
-        log('');
-      }
-    });
-
-    const exampleSlug = formatSlug(sortedPackages[0].slug);
-    log('\nHow to install a package:\n');
-    log(`  $ packmind install ${exampleSlug}`);
-    exit(0);
-  } catch (err) {
-    error('\n❌ Failed to list packages:');
-    if (err instanceof Error) {
-      error(`   ${err.message}`);
-    } else {
-      error(`   ${String(err)}`);
-    }
-    exit(1);
-  }
-}
-
-export type ShowPackageArgs = {
-  slug: string;
-};
-
-export async function showPackageHandler(
-  args: ShowPackageArgs,
-  deps: InstallHandlerDependencies,
-): Promise<void> {
-  const { packmindCliHexa, exit, log, error } = deps;
-  const { slug } = args;
-
-  try {
-    log(`Fetching package details for '${slug}'...\n`);
-    const pkg = await packmindCliHexa.getPackageBySlug({ slug });
-
-    // Display package name and slug
-    log(`${pkg.name} (${pkg.slug}):\n`);
-
-    // Display description if available
-    if (pkg.description) {
-      log(`${pkg.description}\n`);
-    }
-
-    // Display standards
-    if (pkg.standards && pkg.standards.length > 0) {
-      log('Standards:');
-      pkg.standards.forEach((standard: SummarizedArtifact) => {
-        if (standard.summary) {
-          log(`  - ${standard.name}: ${standard.summary}`);
-        } else {
-          log(`  - ${standard.name}`);
-        }
-      });
-      log('');
-    }
-
-    // Display recipes
-    if (pkg.recipes && pkg.recipes.length > 0) {
-      log('Commands:');
-      pkg.recipes.forEach((recipe: SummarizedArtifact) => {
-        if (recipe.summary) {
-          log(`  - ${recipe.name}: ${recipe.summary}`);
-        } else {
-          log(`  - ${recipe.name}`);
-        }
-      });
-      log('');
-    }
-
-    exit(0);
-  } catch (err) {
-    error('\n❌ Failed to fetch package details:');
-    if (err instanceof Error) {
-      error(`   ${err.message}`);
-    } else {
-      error(`   ${String(err)}`);
-    }
-    exit(1);
   }
 }
 
@@ -372,6 +224,7 @@ export async function statusHandler(
 
 export type InstallPackagesArgs = {
   packagesSlugs: string[];
+  path?: string;
 };
 
 export type InstallPackagesResult = {
@@ -390,7 +243,7 @@ export type UninstallPackagesResult = {
   packagesUninstalled: string[];
 };
 
-export type RecursiveInstallArgs = Record<string, never>;
+export type RecursiveInstallArgs = { path?: string };
 
 export type RecursiveInstallResult = {
   directoriesProcessed: number;
@@ -454,22 +307,25 @@ async function executeInstallForDirectory(
     };
   }
 
+  // Normalize slugs to `@space/pkg` form (fetches default space once if needed)
+  const normalizedConfigPackages =
+    await packmindCliHexa.normalizePackageSlugs(configPackages);
+
   try {
     // Show fetching message
-    const packageCount = configPackages.length;
+    const packageCount = normalizedConfigPackages.length;
     const packageWord = packageCount === 1 ? 'package' : 'packages';
     log(
-      `  Fetching ${packageCount} ${packageWord}: ${configPackages.join(', ')}...`,
+      `  Fetching ${packageCount} ${packageWord}: ${normalizedConfigPackages.join(', ')}...`,
     );
 
     // Execute the install operation
     // Pass previous packages for change detection (same as current since we're pulling existing config)
     const result = await packmindCliHexa.installPackages({
       baseDirectory: directory,
-      packagesSlugs: configPackages,
-      previousPackagesSlugs: configPackages, // Pass for consistency
+      packagesSlugs: normalizedConfigPackages,
+      previousPackagesSlugs: normalizedConfigPackages, // Pass for consistency
       agents: configAgents, // Pass agents from config if present
-      cliVersion: CLI_VERSION,
     });
 
     // Show installation message with counts
@@ -496,6 +352,14 @@ async function executeInstallForDirectory(
       };
     }
 
+    // Rewrite config if slugs were normalized to `@space/pkg` format
+    const configSlugsWereNormalized = configPackages.some(
+      (slug, i) => slug !== normalizedConfigPackages[i],
+    );
+    if (configSlugsWereNormalized) {
+      await packmindCliHexa.writeConfig(directory, normalizedConfigPackages);
+    }
+
     // Notify distribution if files were created, updated or deleted (including skill directories)
     const skillDirsDeleted = result.skillDirectoriesDeleted || 0;
     let notificationSent = false;
@@ -508,7 +372,7 @@ async function executeInstallForDirectory(
       notificationSent = await notifyDistributionIfInGitRepo({
         packmindCliHexa,
         cwd: directory,
-        packages: configPackages,
+        packages: normalizedConfigPackages,
         agents: configAgents,
         log: () => {
           /* empty */
@@ -542,7 +406,43 @@ export async function installPackagesHandler(
 ): Promise<InstallPackagesResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
   const { packagesSlugs } = args;
-  const cwd = getCwd();
+  const rawCwd = getCwd();
+
+  // If --path is provided, resolve it and use as the working directory
+  let cwd = rawCwd;
+  if (args.path) {
+    const resolvedPath = path.resolve(rawCwd, args.path);
+    try {
+      const stat = await fs.stat(resolvedPath);
+      if (!stat.isDirectory()) {
+        logErrorConsole(`Path is not a directory: ${resolvedPath}`);
+        exit(1);
+        return {
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          notificationSent: false,
+        };
+      }
+      cwd = resolvedPath;
+    } catch {
+      logErrorConsole(`Path does not exist: ${resolvedPath}`);
+      exit(1);
+      return {
+        filesCreated: 0,
+        filesUpdated: 0,
+        filesDeleted: 0,
+        notificationSent: false,
+      };
+    }
+
+    // Show which packmind.json is being targeted
+    const relativeToCwd = path.relative(rawCwd, resolvedPath);
+    const displayPath = relativeToCwd
+      ? `./${relativeToCwd}/packmind.json`
+      : `./packmind.json`;
+    log(`Installing in ${displayPath}...`);
+  }
 
   // Read existing config (including agents if present)
   let configPackages: string[];
@@ -583,8 +483,29 @@ export async function installPackagesHandler(
     };
   }
 
-  // Merge config packages with command line args
-  const allPackages = [...new Set([...configPackages, ...packagesSlugs])];
+  // Normalize slugs to `@space/pkg` form (fetches default space once if needed)
+  let normalizedNewSlugs: string[];
+  let normalizedConfigSlugs: string[];
+  try {
+    normalizedNewSlugs =
+      await packmindCliHexa.normalizePackageSlugs(packagesSlugs);
+    normalizedConfigSlugs =
+      await packmindCliHexa.normalizePackageSlugs(configPackages);
+  } catch (err) {
+    error(`ERROR ${err instanceof Error ? err.message : String(err)}`);
+    exit(1);
+    return {
+      filesCreated: 0,
+      filesUpdated: 0,
+      filesDeleted: 0,
+      notificationSent: false,
+    };
+  }
+
+  // Merge config packages with normalized command line args, deduplicating
+  const allPackages = [
+    ...new Set([...normalizedConfigSlugs, ...normalizedNewSlugs]),
+  ];
 
   // Show help if no packages from either source
   if (allPackages.length === 0) {
@@ -656,12 +577,11 @@ export async function installPackagesHandler(
     const result = await packmindCliHexa.installPackages({
       baseDirectory: cwd,
       packagesSlugs: allPackages,
-      previousPackagesSlugs: configPackages, // Pass previous config for change detection
+      previousPackagesSlugs: normalizedConfigSlugs, // Pass previous config for change detection
       gitRemoteUrl,
       gitBranch,
       relativePath,
       agents: configAgents, // Pass agents from config if present (overrides org-level)
-      cliVersion: CLI_VERSION,
     });
 
     // Show installation message with counts
@@ -694,10 +614,17 @@ export async function installPackagesHandler(
     }
 
     // Write config only if there are new packages (preserves property order)
-    const newPackages = packagesSlugs.filter(
-      (slug) => !configPackages.includes(slug),
+    // Use normalized slugs so config always stores `@space/pkg` format
+    const configSlugsWereNormalized = configPackages.some(
+      (slug, i) => slug !== normalizedConfigSlugs[i],
     );
-    if (newPackages.length > 0) {
+    const newPackages = normalizedNewSlugs.filter(
+      (slug) => !normalizedConfigSlugs.includes(slug),
+    );
+    if (configSlugsWereNormalized) {
+      // Rewrite entire packages section to update slugs to normalized format
+      await packmindCliHexa.writeConfig(cwd, allPackages);
+    } else if (newPackages.length > 0) {
       await packmindCliHexa.addPackagesToConfig(cwd, newPackages);
     }
 
@@ -938,7 +865,6 @@ export async function uninstallPackagesHandler(
         packagesSlugs: [],
         previousPackagesSlugs: Object.keys(configPackages),
         agents: configAgents,
-        cliVersion: CLI_VERSION,
       });
 
       // Display results
@@ -966,7 +892,6 @@ export async function uninstallPackagesHandler(
         packagesSlugs: remainingPackages,
         previousPackagesSlugs: Object.keys(configPackages),
         agents: configAgents,
-        cliVersion: CLI_VERSION,
       });
 
       // Show removal message with counts
@@ -1041,7 +966,7 @@ export async function uninstallPackagesHandler(
 }
 
 export async function recursiveInstallHandler(
-  _args: RecursiveInstallArgs,
+  args: RecursiveInstallArgs,
   deps: InstallHandlerDependencies,
 ): Promise<RecursiveInstallResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
@@ -1056,21 +981,42 @@ export async function recursiveInstallHandler(
     errors: [],
   };
 
+  // If --path is provided, resolve it relative to cwd, validate, and handle packmind.json file paths
+  let startDirectory = cwd;
+  if (args.path) {
+    const resolvedPath = path.resolve(cwd, args.path);
+
+    try {
+      const stat = await fs.stat(resolvedPath);
+      if (!stat.isDirectory()) {
+        logErrorConsole(`Path is not a directory: ${resolvedPath}`);
+        exit(1);
+        return result;
+      }
+      startDirectory = resolvedPath;
+    } catch {
+      logErrorConsole(`Path does not exist: ${resolvedPath}`);
+      exit(1);
+      return result;
+    }
+  }
+
   try {
     // Try to get git root, fallback to cwd
     const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-    const basePath = gitRoot ?? cwd;
+    // When --path is provided, scope both ancestor and descendant search to startDirectory
+    const basePath = args.path ? startDirectory : (gitRoot ?? cwd);
 
-    // Find all configs in the tree (current directory + descendants)
+    // Find all configs in the tree (start directory + descendants)
     const allConfigs = await packmindCliHexa.findAllConfigsInTree(
-      cwd,
+      startDirectory,
       basePath,
     );
 
     if (!allConfigs.hasConfigs) {
       log('No packmind.json files found in this repository.');
       log('');
-      log('Usage: packmind install -r');
+      log('Usage: packmind install');
       log('');
       log(
         'This command requires at least one packmind.json file in the repository.',
@@ -1091,7 +1037,16 @@ export async function recursiveInstallHandler(
 
     // Process each directory
     for (const config of sortedConfigs) {
-      const displayPath = computeDisplayPath(config.targetPath);
+      // When --path is provided, show paths relative to cwd for clarity
+      const displayPath = args.path
+        ? computeDisplayPath(
+            config.absoluteTargetPath === cwd
+              ? '/'
+              : config.absoluteTargetPath.startsWith(cwd + '/')
+                ? config.absoluteTargetPath.slice(cwd.length)
+                : config.targetPath,
+          )
+        : computeDisplayPath(config.targetPath);
       log(`Installing in ${displayPath}...`);
 
       const installResult = await executeInstallForDirectory(

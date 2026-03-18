@@ -2,8 +2,8 @@
   "lockfileVersion": 1,
   "packageSlugs": ["e2e"],
   "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-12T10:36:31.702Z",
-  "cliVersion": "0.21.1",
+  "installedAt": "2026-03-16T14:26:19.727Z",
+  "cliVersion": "0.22.0",
   "artifacts": {
     "standard:e2e-page-object": {
       "type": "standard",

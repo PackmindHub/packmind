@@ -32,26 +32,6 @@ export class LockFileRepository implements ILockFileRepository {
     }
   }
 
-  async write(
-    baseDirectory: string,
-    lockFile: PackmindLockFile,
-  ): Promise<void> {
-    const lockFilePath = this.getLockFilePath(baseDirectory);
-    const content = JSON.stringify(lockFile, null, 2) + '\n';
-    await fs.writeFile(lockFilePath, content, 'utf-8');
-  }
-
-  async delete(baseDirectory: string): Promise<void> {
-    const lockFilePath = this.getLockFilePath(baseDirectory);
-    try {
-      await fs.unlink(lockFilePath);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        throw error;
-      }
-    }
-  }
-
   private isValidLockFile(data: unknown): data is PackmindLockFile {
     if (typeof data !== 'object' || data === null || Array.isArray(data)) {
       return false;
@@ -60,7 +40,6 @@ export class LockFileRepository implements ILockFileRepository {
     const obj = data as Record<string, unknown>;
 
     return (
-      typeof obj.cliVersion === 'string' &&
       typeof obj.installedAt === 'string' &&
       Array.isArray(obj.packageSlugs) &&
       Array.isArray(obj.agents) &&

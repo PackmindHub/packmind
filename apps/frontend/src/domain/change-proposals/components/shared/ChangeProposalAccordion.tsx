@@ -1,6 +1,10 @@
 import { ReactNode, useMemo, useCallback } from 'react';
 import { PMAccordion, PMBox, PMVStack } from '@packmind/ui';
-import { ChangeProposalDecision, ChangeProposalId } from '@packmind/types';
+import {
+  ChangeProposalDecision,
+  ChangeProposalId,
+  ChangeProposalType,
+} from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
 import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
@@ -17,13 +21,12 @@ interface ChangeProposalAccordionProps {
   blockedByConflictIds: Set<ChangeProposalId>;
   outdatedProposalIds: Set<ChangeProposalId>;
   expandedCardIds: string[];
-  editingProposalId?: ChangeProposalId | null;
-  showEditButton?: boolean;
+  showEditButton?: boolean | ((proposalType: ChangeProposalType) => boolean);
   userLookup: Map<string, string>;
   onToggleCard: (ids: string[]) => void;
   getViewMode: (proposalId: ChangeProposalId) => ViewMode;
   onViewModeChange: (proposalId: ChangeProposalId, mode: ViewMode) => void;
-  onEdit: (proposalId: ChangeProposalId) => void;
+  onEdit?: (proposalId: ChangeProposalId) => void;
   onAccept: (
     proposalId: ChangeProposalId,
     decision: ChangeProposalDecision,
@@ -57,7 +60,6 @@ export function ChangeProposalAccordion({
   blockedByConflictIds,
   outdatedProposalIds,
   expandedCardIds,
-  editingProposalId,
   showEditButton,
   userLookup,
   onToggleCard,
@@ -148,6 +150,16 @@ export function ChangeProposalAccordion({
     [onToggleCard],
   );
 
+  const resolveShowEditButton = useCallback(
+    (proposalType: ChangeProposalType): boolean | undefined => {
+      if (typeof showEditButton === 'function') {
+        return showEditButton(proposalType);
+      }
+      return showEditButton;
+    },
+    [showEditButton],
+  );
+
   const renderCard = (proposal: ChangeProposalWithConflicts) => {
     const poolStatus = getPoolStatus(
       proposal.id,
@@ -156,7 +168,6 @@ export function ChangeProposalAccordion({
     );
     const viewMode = getViewMode(proposal.id);
     const authorName = userLookup.get(proposal.createdBy) ?? 'Unknown';
-    const isEditing = editingProposalId === proposal.id;
 
     return (
       <ChangeProposalCard
@@ -168,11 +179,13 @@ export function ChangeProposalAccordion({
         viewMode={viewMode}
         isOutdated={outdatedProposalIds.has(proposal.id)}
         isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
-        showToolbar={!isEditing}
-        showEditButton={showEditButton}
+        showToolbar={true}
+        showEditButton={resolveShowEditButton(
+          proposal.type as ChangeProposalType,
+        )}
         decision={getDecisionForProposal?.(proposal)}
         onViewModeChange={(mode) => onViewModeChange(proposal.id, mode)}
-        onEdit={() => onEdit(proposal.id)}
+        onEdit={() => onEdit?.(proposal.id)}
         onAccept={(decision) => handleAccept(proposal.id, decision)}
         onDismiss={() => handleDismiss(proposal.id)}
         onUndo={() => onUndo(proposal.id)}

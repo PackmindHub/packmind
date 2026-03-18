@@ -7,6 +7,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "@packmind/accounts": "*",
+    "@packmind/deployments": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/recipes": "*",
@@ -16,7 +17,6 @@
     "@packmind/test-utils": "0.0.1",
     "@packmind/types": "*",
     "@teppeis/multimaps": "^3.0.0",
-    "tslib": "^2.3.0",
     "typeorm": "0.3.28",
     "uuid": "^11.1.0"
   }

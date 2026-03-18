@@ -34,6 +34,50 @@ import {
 } from '../../accounts/components/LocalEnvironmentSetup/utils';
 
 const DIFF_SUBMIT_COMMAND = `packmind diff --submit -m "<your commit message>"`;
+
+const ARCADE_LOAD_TIMEOUT_MS = 5000;
+
+const ArcadeEmbed = () => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isTimedOut, setIsTimedOut] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsTimedOut(true), ARCADE_LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isTimedOut && !isLoaded) return null;
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        paddingBottom: 'calc(64.94708994708994% + 41px)',
+        height: '0',
+        width: '100%',
+        visibility: isLoaded ? 'visible' : 'hidden',
+      }}
+    >
+      <iframe
+        src="https://demo.arcade.software/wbBeKqYxj18jhRkKMHwo?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
+        title="Review and Approve Accessibility Updates in Design System"
+        frameBorder="0"
+        loading="lazy"
+        allowFullScreen
+        allow="clipboard-write"
+        onLoad={() => setIsLoaded(true)}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          colorScheme: 'light',
+        }}
+      />
+    </div>
+  );
+};
 const SKILL_COMMAND = '/packmind-update-playbook';
 
 interface InstallSectionProps {
@@ -123,7 +167,12 @@ export const ReviewChangesBlankState = () => {
           together.
         </PMText>
 
+        <PMBox mt={8} width="full" maxWidth="640px">
+          <ArcadeEmbed />
+        </PMBox>
+
         <PMVStack alignItems={'flex-start'} width={'full'} mt={8} gap={4}>
+          <PMHeading level="h3">How to start?</PMHeading>
           <PMAccordion.Root collapsible width="full">
             <PMAccordion.Item
               value="install-cli"

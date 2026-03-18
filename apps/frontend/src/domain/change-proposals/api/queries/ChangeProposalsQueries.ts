@@ -27,13 +27,10 @@ import {
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
-  GET_RECIPES_KEY,
-  GET_RECIPE_BY_ID_KEY,
+  getRecipesBySpaceKey,
+  getRecipeByIdKey,
 } from '../../../recipes/api/queryKeys';
-import {
-  GET_SKILLS_KEY,
-  SKILLS_QUERY_SCOPE,
-} from '../../../skills/api/queryKeys';
+import { getSkillsBySpaceKey } from '../../../skills/api/queryKeys';
 import { SPACES_SCOPE } from '../../../spaces/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import {
@@ -226,10 +223,10 @@ export const useApplyRecipeChangeProposalsMutation = (params?: {
           queryKey: GET_CHANGE_PROPOSALS_BY_RECIPE_KEY,
         }),
         queryClient.invalidateQueries({
-          queryKey: GET_RECIPES_KEY,
+          queryKey: getRecipesBySpaceKey(variables.spaceId),
         }),
         queryClient.invalidateQueries({
-          queryKey: GET_RECIPE_BY_ID_KEY,
+          queryKey: getRecipeByIdKey(variables.spaceId, variables.artefactId),
         }),
       ];
 
@@ -399,15 +396,7 @@ export const useApplySkillChangeProposalsMutation = (params?: {
           queryKey: GET_CHANGE_PROPOSALS_BY_SKILL_KEY,
         }),
         queryClient.invalidateQueries({
-          queryKey: GET_SKILLS_KEY,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            ORGANIZATION_QUERY_SCOPE,
-            SPACES_SCOPE,
-            variables.spaceId,
-            SKILLS_QUERY_SCOPE,
-          ],
+          queryKey: getSkillsBySpaceKey(variables.spaceId),
         }),
       ];
 
@@ -496,15 +485,7 @@ export const useApplyCreationChangeProposalsMutation = (params?: {
       if (response.created.skills.length > 0) {
         invalidations.push(
           queryClient.invalidateQueries({
-            queryKey: GET_SKILLS_KEY,
-          }),
-          queryClient.invalidateQueries({
-            queryKey: [
-              ORGANIZATION_QUERY_SCOPE,
-              SPACES_SCOPE,
-              variables.spaceId,
-              SKILLS_QUERY_SCOPE,
-            ],
+            queryKey: getSkillsBySpaceKey(variables.spaceId),
           }),
         );
       }
@@ -512,7 +493,7 @@ export const useApplyCreationChangeProposalsMutation = (params?: {
       if (response.created.commands.length > 0) {
         invalidations.push(
           queryClient.invalidateQueries({
-            queryKey: GET_RECIPES_KEY,
+            queryKey: getRecipesBySpaceKey(variables.spaceId),
           }),
         );
       }

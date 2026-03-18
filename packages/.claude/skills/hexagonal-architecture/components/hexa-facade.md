@@ -38,6 +38,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     const accountsPort = registry.getAdapter<IAccountsPort>(IAccountsPortName);
     const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
     const jobsService = registry.getService(JobsService);
+    // Only needed if the domain emits or handles events
     const eventEmitterService = registry.getService(PackmindEventEmitterService);
 
     // Wire cross-domain ports into services
@@ -52,10 +53,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       jobsService,
       eventEmitterService,
     });
-
-    // Register event listeners
-    const listener = new StandardsListener(this.adapter);
-    eventEmitterService.registerListener(listener);
   }
 
   public getAdapter(): StandardsAdapter {
@@ -70,6 +67,20 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     // Cleanup resources, close connections
   }
 }
+```
+
+## Adding a Listener (optional)
+
+Most domains don't need listeners — only add one if your domain reacts to events from other domains. See [listener.md](listener.md) for details.
+
+```typescript
+// In constructor: create the listener
+this.listener = new DeploymentsListener(
+  this.repositories.getPackageRepository(),
+);
+
+// In initialize(): wire the event emitter
+this.listener.initialize(eventEmitterService);
 ```
 
 ## Lifecycle

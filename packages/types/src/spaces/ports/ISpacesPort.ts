@@ -1,6 +1,14 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { Space } from '../Space';
 import { SpaceId } from '../SpaceId';
+import {
+  GetDefaultSpaceCommand,
+  GetDefaultSpaceResponse,
+} from '../contracts/IGetDefaultSpace';
+import {
+  ListUserSpacesCommand,
+  ListUserSpacesResponse,
+} from '../contracts/IListUserSpaces';
 
 /**
  * Port interface for cross-domain access to Spaces functionality
@@ -35,4 +43,20 @@ export interface ISpacesPort {
    * Returns null if the space doesn't exist
    */
   getSpaceById(spaceId: SpaceId): Promise<Space | null>;
+
+  /**
+   * List spaces for the authenticated user's organization.
+   * Returns all organization spaces; discoverableSpaces is always empty.
+   */
+  listUserSpaces(
+    command: ListUserSpacesCommand,
+  ): Promise<ListUserSpacesResponse>;
+
+  /**
+   * Get the default space for the authenticated user's organization.
+   * Throws DefaultSpaceNotFoundError if no default space exists.
+   */
+  getDefaultSpace(
+    command: GetDefaultSpaceCommand,
+  ): Promise<GetDefaultSpaceResponse>;
 }

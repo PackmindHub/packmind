@@ -2,8 +2,8 @@
   "lockfileVersion": 1,
   "packageSlugs": ["integration-tests"],
   "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-12T10:36:32.835Z",
-  "cliVersion": "0.21.1",
+  "installedAt": "2026-03-16T14:26:20.552Z",
+  "cliVersion": "0.22.0",
   "artifacts": {
     "standard:integration-tests-structure-and-patterns": {
       "type": "standard",

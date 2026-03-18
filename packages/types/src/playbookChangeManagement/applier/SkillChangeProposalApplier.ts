@@ -22,7 +22,7 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
     ) {
       return {
         ...source,
-        name: changeProposal.payload.newValue,
+        name: this.getEffectivePayload(changeProposal).newValue,
       };
     }
 
@@ -36,7 +36,7 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         ...source,
         description: this.applyDiff(
           changeProposal.id,
-          changeProposal.payload,
+          this.getEffectivePayload(changeProposal),
           source.description,
         ),
       };
@@ -52,7 +52,7 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         ...source,
         prompt: this.applyDiff(
           changeProposal.id,
-          changeProposal.payload,
+          this.getEffectivePayload(changeProposal),
           source.prompt,
         ),
       };

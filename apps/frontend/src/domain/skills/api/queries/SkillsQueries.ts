@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
 import { skillsGateway } from '../gateways';
 import {
-  GET_SKILLS_KEY,
+  getSkillsBySpaceKey,
   getSkillByIdKey,
   getSkillBySlugKey,
   getSkillVersionsKey,
@@ -13,12 +13,17 @@ import {
   GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
 } from '../../../deployments/api/queryKeys';
+import {
+  CHANGE_PROPOSALS_QUERY_SCOPE,
+  GET_GROUPED_CHANGE_PROPOSALS_KEY,
+} from '../../../change-proposals/api/queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 
 export const getSkillsBySpaceQueryOptions = (
   organizationId: OrganizationId | undefined,
   spaceId: SpaceId | undefined,
 ) => ({
-  queryKey: GET_SKILLS_KEY,
+  queryKey: getSkillsBySpaceKey(spaceId),
   queryFn: () => {
     if (!organizationId) {
       throw new Error('Organization ID is required to fetch skills');
@@ -148,7 +153,7 @@ export const useDeleteSkillMutation = () => {
     onSuccess: async () => {
       // Invalidate skills list
       await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_KEY,
+        queryKey: getSkillsBySpaceKey(spaceId),
       });
 
       // Invalidate skills deployment overview
@@ -159,6 +164,15 @@ export const useDeleteSkillMutation = () => {
       // Packages containing the deleted skill need to be refreshed
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+
+      // Proposals on the deleted skill are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
       });
     },
     onError: (error) => {
@@ -189,7 +203,7 @@ export const useDeleteSkillsBatchMutation = () => {
     onSuccess: async () => {
       // Invalidate skills list
       await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_KEY,
+        queryKey: getSkillsBySpaceKey(spaceId),
       });
 
       // Invalidate skills deployment overview
@@ -200,6 +214,15 @@ export const useDeleteSkillsBatchMutation = () => {
       // Packages containing deleted skills need to be refreshed
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+
+      // Proposals on the deleted skills are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
       });
     },
     onError: (error) => {

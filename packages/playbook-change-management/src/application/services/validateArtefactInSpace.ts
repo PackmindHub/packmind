@@ -10,19 +10,21 @@ import {
 import { ArtefactNotFoundError } from '../../domain/errors/ArtefactNotFoundError';
 import { ArtefactNotInSpaceError } from '../../domain/errors/ArtefactNotInSpaceError';
 
+export type ArtefactType = 'standard' | 'recipe' | 'skill';
+
 export async function validateArtefactInSpace(
   artefactId: StandardId | RecipeId | SkillId,
   spaceId: SpaceId,
   standardsPort: IStandardsPort,
   recipesPort: IRecipesPort,
   skillsPort: ISkillsPort,
-): Promise<void> {
+): Promise<ArtefactType> {
   const standard = await standardsPort.getStandard(artefactId as StandardId);
   if (standard) {
     if (standard.spaceId !== spaceId) {
       throw new ArtefactNotInSpaceError(artefactId, spaceId);
     }
-    return;
+    return 'standard';
   }
 
   const recipe = await recipesPort.getRecipeByIdInternal(
@@ -32,7 +34,7 @@ export async function validateArtefactInSpace(
     if (recipe.spaceId !== spaceId) {
       throw new ArtefactNotInSpaceError(artefactId, spaceId);
     }
-    return;
+    return 'recipe';
   }
 
   const skill = await skillsPort.getSkill(artefactId as SkillId);
@@ -40,7 +42,7 @@ export async function validateArtefactInSpace(
     if (skill.spaceId !== spaceId) {
       throw new ArtefactNotInSpaceError(artefactId, spaceId);
     }
-    return;
+    return 'skill';
   }
 
   throw new ArtefactNotFoundError(artefactId);

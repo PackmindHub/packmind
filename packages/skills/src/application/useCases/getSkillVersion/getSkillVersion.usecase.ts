@@ -5,6 +5,7 @@ import {
   GetSkillVersionResponse,
   IAccountsPort,
   ISpacesPort,
+  createOrganizationId,
   createSkillId,
   createSpaceId,
 } from '@packmind/types';
@@ -85,9 +86,15 @@ export class GetSkillVersionUsecase
         );
       }
 
+      const spaces = await this.spacesPort.listSpacesByOrganization(
+        createOrganizationId(command.organizationId),
+      );
+      const allowedSpaceIds = spaces.map((s) => s.id);
+
       const skillVersion = await this.skillVersionService.getSkillVersion(
         skillId,
         command.version,
+        allowedSpaceIds,
       );
 
       if (skillVersion) {

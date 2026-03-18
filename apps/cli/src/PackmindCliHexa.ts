@@ -50,12 +50,12 @@ import {
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
 import {
-  IListStandardsCommand,
-  IListStandardsResult,
+  ListStandardsCommand,
+  ListStandardsResult,
 } from './domain/useCases/IListStandardsUseCase';
 import {
-  IListCommandsCommand,
-  IListCommandsResult,
+  ListCommandsCommand,
+  ListCommandsResult,
 } from './domain/useCases/IListCommandsUseCase';
 import {
   IListSkillsCommand,
@@ -83,6 +83,8 @@ import {
 import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
 import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { loadCredentials } from './infra/utils/credentials';
+import { Space } from '@packmind/types';
+import { ISpaceService } from './domain/services/ISpaceService';
 
 const origin = 'PackmindCliHexa';
 
@@ -181,14 +183,14 @@ export class PackmindCliHexa {
   }
 
   public async listStandards(
-    command: IListStandardsCommand,
-  ): Promise<IListStandardsResult> {
+    command: ListStandardsCommand,
+  ): Promise<ListStandardsResult> {
     return this.hexa.useCases.listStandards.execute(command);
   }
 
   public async listCommands(
-    command: IListCommandsCommand,
-  ): Promise<IListCommandsResult> {
+    command: ListCommandsCommand,
+  ): Promise<ListCommandsResult> {
     return this.hexa.useCases.listCommands.execute(command);
   }
 
@@ -372,6 +374,53 @@ export class PackmindCliHexa {
 
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
+  }
+
+  public async getDefaultSpace(): Promise<Space> {
+    return this.hexa.services.spaceService.getDefaultSpace();
+  }
+
+  public async getSpaces(): Promise<Space[]> {
+    return this.hexa.services.spaceService.getSpaces();
+  }
+
+  /**
+   * Normalizes package slugs to the `@space-slug/package-slug` format.
+   * Unprefixed slugs are resolved against the organization's default space.
+   * Already-prefixed slugs (`@space/pkg`) are returned as-is.
+   * Throws if there are multiple spaces and any slug is unprefixed.
+   */
+  public async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
+    if (slugs.length === 0) return [];
+
+    const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
+    if (!hasUnprefixed) return slugs;
+
+    let spaces: Space[];
+    try {
+      spaces = await this.getSpaces();
+    } catch {
+      // Older versions of the Packmind app do not support spaces — return slugs as-is.
+      logWarningConsole(
+        'Your Packmind instance is outdated and needs to be updated. It will not be supported in the v1 release of packmind-cli.',
+      );
+      return slugs;
+    }
+
+    if (spaces.length > 1) {
+      throw new Error(
+        `Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @${spaces[0].slug}/my-package).`,
+      );
+    }
+
+    const defaultSpace = await this.getDefaultSpace();
+    return slugs.map((slug) =>
+      slug.startsWith('@') ? slug : `@${defaultSpace.slug}/${slug}`,
+    );
+  }
+
+  public getSpaceService(): ISpaceService {
+    return this.hexa.services.spaceService;
   }
 
   /**

@@ -464,21 +464,28 @@ This downloads all commands, standards, and skills from the specified packages a
   installed alongside your package contents.
 </Note>
 
+### Lock File (`packmind-lock.json`)
+
+When you install or uninstall packages, the CLI generates a `packmind-lock.json` file alongside your `packmind.json`. This file records the exact versions of all installed artifacts.
+
 ### Recursive Install (Monorepos)
 
-For monorepos or projects with multiple `packmind.json` files, use the recursive flag to install packages across all locations:
+By default, `packmind-cli install` (with no package slugs) finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
 
 ```bash
-packmind install -r
+packmind install
 ```
 
-Or the long form:
+To scope the recursive install to a specific directory, use the `--path` option:
 
 ```bash
-packmind install --recursive
+packmind install --path apps/frontend
 ```
 
-This finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
+<Warning>
+  The `-r` / `--recursive` flag is deprecated. Install is now recursive by
+  default. Using the flag still works but will print a deprecation warning.
+</Warning>
 
 <Tip>
   **AI Agent Rendering** — The files created by the install command depend on
@@ -539,7 +546,7 @@ This command:
 
 ### Specify a Path
 
-Lint a specific directory or file:
+Lint a specific directory:
 
 ```bash
 packmind lint src/
@@ -548,6 +555,18 @@ packmind lint src/
 ```bash
 packmind lint /path/to/your/project
 ```
+
+Lint a single file:
+
+```bash
+packmind-cli lint src/components/Button.tsx
+```
+
+When a single file is passed:
+
+- The CLI verifies the file exists and exits with an error if not
+- `.packmindignore` patterns are checked — if the file matches, it is skipped and the command exits with code 0
+- If the file is not in scope for the requested rule or standard (i.e. its extension doesn't match the rule's configured languages), an informational message is logged and no violations are reported
 
 ### Limiting Scope with `--changed-files` and `--changed-lines`
 

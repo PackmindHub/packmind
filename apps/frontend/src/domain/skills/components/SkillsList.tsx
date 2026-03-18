@@ -13,6 +13,7 @@ import {
   PMAlertDialog,
   PMCheckbox,
   PMInput,
+  PMBadge,
   useTableSort,
 } from '@packmind/ui';
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -32,6 +33,7 @@ import { PackageCountBadge } from '../../deployments/components/PackageCountBadg
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
+import { useGetGroupedChangeProposalsQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
 
 interface ISkillsListProps {
   orgSlug: string;
@@ -46,6 +48,15 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     spaceId,
     organization?.id,
   );
+  const { data: groupedProposals } = useGetGroupedChangeProposalsQuery();
+  const pendingReviewCountBySkillId = React.useMemo(() => {
+    const map = new Map<string, number>();
+    if (!groupedProposals) return map;
+    for (const item of groupedProposals.skills) {
+      map.set(item.artefactId, item.changeProposalCount);
+    }
+    return map;
+  }, [groupedProposals]);
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
     {
       defaultSortKey: 'name',
@@ -140,6 +151,12 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'pendingReviews':
+          return (
+            direction *
+            ((pendingReviewCountBySkillId.get(a.id) ?? 0) -
+              (pendingReviewCountBySkillId.get(b.id) ?? 0))
+          );
         case 'packages':
           return (
             direction *
@@ -193,6 +210,33 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         ) : (
           <span>-</span>
         ),
+        pendingReviews: (() => {
+          const count = pendingReviewCountBySkillId.get(skill.id) ?? 0;
+          if (count > 0 && spaceSlug) {
+            return (
+              <PMLink asChild>
+                <Link
+                  to={routes.space.toReviewChangesArtefact(
+                    orgSlug,
+                    spaceSlug,
+                    'skills',
+                    skill.id,
+                  )}
+                >
+                  <PMBadge colorPalette="yellow" variant="solid" size="sm">
+                    {count}
+                  </PMBadge>
+                </Link>
+              </PMLink>
+            );
+          }
+          return (
+            <PMBadge colorPalette="green" variant="solid" size="sm">
+              0
+            </PMBadge>
+          );
+        })(),
+        pendingReviewsCount: pendingReviewCountBySkillId.get(skill.id) ?? 0,
         packages: (
           <PackageCountBadge
             artifactId={skill.id}
@@ -216,6 +260,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     sortDirection,
     searchQuery,
     packagesResponse,
+    pendingReviewCountBySkillId,
   ]);
 
   const isAllSelected =
@@ -271,6 +316,14 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'pendingReviews',
+      header: 'Pending reviews',
+      width: '150px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('pendingReviews'),
     },
     {
       key: 'packages',

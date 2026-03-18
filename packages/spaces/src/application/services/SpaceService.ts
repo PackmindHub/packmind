@@ -1,5 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { OrganizationId, Space, SpaceId, createSpaceId } from '@packmind/types';
+import {
+  createSpaceId,
+  OrganizationId,
+  Space,
+  SpaceId,
+  SpaceType,
+} from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
 import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
@@ -20,6 +26,7 @@ export class SpaceService {
   async createSpace(
     name: string,
     organizationId: OrganizationId,
+    isDefaultSpace = true,
   ): Promise<Space> {
     this.logger.info('Creating space', { name, organizationId });
 
@@ -38,7 +45,9 @@ export class SpaceService {
         id: createSpaceId(uuidv4()),
         name,
         slug: baseSlug,
+        type: SpaceType.open,
         organizationId,
+        isDefaultSpace,
       };
 
       const createdSpace = await this.spaceRepository.add(space);

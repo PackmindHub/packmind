@@ -2,15 +2,29 @@
 
 ## Added
 
-- Add `.packmindignore` file support to exclude files/folders from linting without modifying CLI source code
+- CLI `install` command is now recursive by default (no `-r` flag needed); the `-r`/`--recursive` flag is deprecated with a warning
+- CLI `install` command now supports `--path <dir>` to scope recursive install to a specific directory
 
 ## Changed
 
 - Renamed CLI executable from `packmind-cli` to `packmind`. The `packmind-cli` command remains available for backward compatibility but displays a deprecation warning
+- Packages are now prefixed with the space slug (eg: `@global/my-package` instead of `my-package`) to support multi-spaces in organizations.
 
 ## Fixed
 
 ## Removed
+
+# [0.22.0] - 2026-03-13
+
+## Added
+
+- The `lint` command now accepts a single file path in addition to a directory
+- Add `.packmindignore` file support to exclude files/folders from linting without modifying CLI source code
+- Generate `packmind-lock` file to track installed package versions and artifact checksums
+
+## Fixed
+
+- Fixed `diff` behavior that did not work properly with sub-directories
 
 # [0.21.1] - 2026-03-11
 
@@ -251,7 +265,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.22.0...HEAD
+[0.22.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.1...release-cli/0.22.0
 [0.21.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.0...release-cli/0.21.1
 [0.21.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.20.0...release-cli/0.21.0
 [0.20.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.19.0...release-cli/0.20.0

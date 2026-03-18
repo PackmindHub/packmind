@@ -34,7 +34,7 @@ module.exports = {
   },
 
   optimization: {
-    minimize: true,
+    minimize: process.env['NODE_ENV'] === 'production',
     minimizer: [
       new (require('terser-webpack-plugin'))({
         terserOptions: {
@@ -55,9 +55,20 @@ module.exports = {
       {
         test: /\.ts$/,
         use: {
-          loader: 'ts-loader',
+          loader: 'swc-loader',
           options: {
-            configFile: join(__dirname, 'tsconfig.app.json'),
+            jsc: {
+              parser: { syntax: 'typescript', decorators: true },
+              transform: {
+                legacyDecorator: true,
+                decoratorMetadata: true,
+                useDefineForClassFields: false,
+              },
+              target: 'es2022',
+              keepClassNames: true,
+            },
+            module: { type: 'commonjs' },
+            sourceMaps: process.env.NODE_ENV !== 'production',
           },
         },
         exclude: /node_modules/,

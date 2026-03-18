@@ -1,14 +1,27 @@
 import { IBaseAdapter } from '@packmind/node-utils';
-import { OrganizationId } from '@packmind/types';
-import { ISpacesPort } from '@packmind/types';
-import { Space, SpaceId } from '@packmind/types';
+import {
+  GetDefaultSpaceCommand,
+  GetDefaultSpaceResponse,
+  IAccountsPort,
+  IAccountsPortName,
+  ISpacesPort,
+  ListUserSpacesCommand,
+  ListUserSpacesResponse,
+  OrganizationId,
+  Space,
+  SpaceId,
+} from '@packmind/types';
 import type { SpacesHexa } from '../../SpacesHexa';
+import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
+import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 
 /**
  * SpacesAdapter - Implements the ISpacesPort interface for cross-domain access
  * Following the Port/Adapter pattern from DDD monorepo architecture standard
  */
 export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
+  private accountsPort!: IAccountsPort;
+
   constructor(private readonly hexa: SpacesHexa) {}
 
   async createSpace(
@@ -39,21 +52,34 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return spaceService.getSpaceById(spaceId);
   }
 
+  async listUserSpaces(
+    command: ListUserSpacesCommand,
+  ): Promise<ListUserSpacesResponse> {
+    const spaceService = this.hexa.getSpaceService();
+    const useCase = new ListUserSpacesUseCase(spaceService);
+    return useCase.execute(command);
+  }
+
+  async getDefaultSpace(
+    command: GetDefaultSpaceCommand,
+  ): Promise<GetDefaultSpaceResponse> {
+    const spaceService = this.hexa.getSpaceService();
+    const useCase = new GetDefaultSpaceUseCase(spaceService, this.accountsPort);
+    return useCase.execute(command);
+  }
+
   /**
    * Initialize the adapter with ports from registry.
-   * SpacesAdapter has no port dependencies, so this is a no-op.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async initialize(_ports: Record<string, unknown>): Promise<void> {
-    // No ports needed for SpacesAdapter
+  public async initialize(ports: Record<string, unknown>): Promise<void> {
+    this.accountsPort = ports[IAccountsPortName] as IAccountsPort;
   }
 
   /**
    * Check if the adapter is ready to use.
-   * SpacesAdapter is always ready as it has no port dependencies.
    */
   public isReady(): boolean {
-    return true;
+    return !!this.accountsPort;
   }
 
   /**

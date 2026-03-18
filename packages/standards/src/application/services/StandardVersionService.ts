@@ -7,6 +7,7 @@ import { OrganizationId } from '@packmind/types';
 import {
   createRuleExampleId,
   RuleExample,
+  SpaceId,
   StandardVersion,
   createStandardVersionId,
   StandardVersionId,
@@ -233,6 +234,7 @@ export class StandardVersionService {
   async getStandardVersion(
     standardId: StandardId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<StandardVersion | null> {
     this.logger.info('Getting standard version', { standardId, version });
 
@@ -241,6 +243,7 @@ export class StandardVersionService {
         await this.standardVersionRepository.findByStandardIdAndVersion(
           standardId,
           version,
+          allowedSpaceIds,
         );
 
       if (standardVersion) {
@@ -330,6 +333,7 @@ export class StandardVersionService {
   async prepareForGitPublishing(
     standardId: StandardId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<{ filePath: string; content: string }> {
     this.logger.info('Preparing standard version for Git publishing', {
       standardId,
@@ -341,6 +345,7 @@ export class StandardVersionService {
         await this.standardVersionRepository.findByStandardIdAndVersion(
           standardId,
           version,
+          allowedSpaceIds,
         );
 
       if (!standardVersion) {

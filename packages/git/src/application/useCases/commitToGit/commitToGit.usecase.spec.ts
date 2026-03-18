@@ -452,5 +452,74 @@ Some content
         });
       });
     });
+
+    describe('when files have skillFilePermissions', () => {
+      const commitDataFromGit = {
+        sha: 'abc123',
+        message: 'Add files with permissions',
+        author: 'test@example.com',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123',
+      };
+
+      beforeEach(() => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          mockGitProvider,
+        );
+        mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
+        mockGitCommitService.addCommit.mockResolvedValue(
+          gitCommitFactory(commitDataFromGit),
+        );
+      });
+
+      describe('when file has full content with permissions', () => {
+        it('preserves permissions in commitFiles call', async () => {
+          const files = [
+            {
+              path: 'scripts/run.sh',
+              content: '#!/bin/bash\necho hello',
+              skillFilePermissions: 'rwxr-xr-x',
+            },
+          ];
+
+          await commitToGit.commitToGit(mockGitRepo, files, 'Add script');
+
+          expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(
+            [
+              {
+                path: 'scripts/run.sh',
+                content: '#!/bin/bash\necho hello',
+                permissions: 'rwxr-xr-x',
+              },
+            ],
+            'Add script',
+            undefined,
+          );
+        });
+      });
+
+      describe('when file has sections with permissions', () => {
+        it('preserves permissions in commitFiles call', async () => {
+          const existingContent = '# Existing content\n';
+          mockGithubRepository.getFileOnRepo.mockResolvedValue({
+            content: Buffer.from(existingContent).toString('base64'),
+            sha: 'existing-sha',
+          });
+
+          const files = [
+            {
+              path: 'CLAUDE.md',
+              sections: [{ key: 'Packmind standards', content: '# Standards' }],
+              skillFilePermissions: 'rwxr-xr-x',
+            },
+          ];
+
+          await commitToGit.commitToGit(mockGitRepo, files, 'Add standards');
+
+          const committedFiles =
+            mockGithubRepository.commitFiles.mock.calls[0][0];
+          expect(committedFiles[0].permissions).toBe('rwxr-xr-x');
+        });
+      });
+    });
   });
 });

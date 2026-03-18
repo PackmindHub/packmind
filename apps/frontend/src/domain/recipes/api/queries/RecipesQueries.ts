@@ -8,20 +8,24 @@ import {
   LIST_PACKAGES_BY_SPACE_KEY,
 } from '../../../deployments/api/queryKeys';
 import {
-  GET_RECIPES_KEY,
-  GET_RECIPE_BY_ID_KEY,
-  GET_RECIPE_VERSIONS_KEY,
+  getRecipesBySpaceKey,
+  getRecipeByIdKey,
+  getRecipeVersionsKey,
   RECIPES_QUERY_SCOPE,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import {
+  CHANGE_PROPOSALS_QUERY_SCOPE,
+  GET_GROUPED_CHANGE_PROPOSALS_KEY,
+} from '../../../change-proposals/api/queryKeys';
 
 export const getRecipesBySpaceQueryOptions = (
   organizationId: OrganizationId | undefined,
   spaceId: SpaceId | undefined,
 ) => ({
-  queryKey: GET_RECIPES_KEY,
+  queryKey: getRecipesBySpaceKey(spaceId),
   queryFn: () => {
     if (!organizationId) {
       throw new Error('Organization ID is required to fetch recipes');
@@ -46,7 +50,7 @@ export const getRecipeByIdOptions = (
   spaceId: SpaceId,
   id: RecipeId,
 ) => ({
-  queryKey: [...GET_RECIPE_BY_ID_KEY, id],
+  queryKey: getRecipeByIdKey(spaceId, id),
   queryFn: () => {
     return recipesGateway.getRecipeById(organizationId, spaceId, id);
   },
@@ -81,6 +85,7 @@ const CREATE_RECIPE_MUTATION_KEY = 'createRecipe';
 
 export const useCreateRecipeMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: [CREATE_RECIPE_MUTATION_KEY],
@@ -98,7 +103,7 @@ export const useCreateRecipeMutation = () => {
     onSuccess: async () => {
       // Invalidate the recipes list to show the new recipe
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_KEY,
+        queryKey: getRecipesBySpaceKey(spaceId),
       });
 
       // Deployments overview may be affected
@@ -119,6 +124,7 @@ const UPDATE_RECIPE_MUTATION_KEY = 'updateRecipe';
 
 export const useUpdateRecipeMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: [UPDATE_RECIPE_MUTATION_KEY],
@@ -142,14 +148,13 @@ export const useUpdateRecipeMutation = () => {
     },
     onSuccess: async (updatedRecipe) => {
       // Invalidate all queries for this specific recipe
-      // This includes: recipe by id, versions (all share the id prefix)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_RECIPE_BY_ID_KEY, updatedRecipe.id],
+        queryKey: getRecipeByIdKey(spaceId, updatedRecipe.id),
       });
 
       // Invalidate the recipes list (name might have changed)
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_KEY,
+        queryKey: getRecipesBySpaceKey(spaceId),
       });
 
       // Deployments overview (updated recipe version affects deployments)
@@ -171,7 +176,7 @@ export const useGetRecipeVersionsQuery = (id: RecipeId) => {
   const { spaceId } = useCurrentSpace();
 
   return useQuery({
-    queryKey: [...GET_RECIPE_VERSIONS_KEY, id],
+    queryKey: getRecipeVersionsKey(spaceId, id),
     queryFn: () => {
       return recipesGateway.getVersionsById(
         organization?.id as OrganizationId,
@@ -187,6 +192,7 @@ const DELETE_RECIPE_MUTATION_KEY = 'deleteRecipe';
 
 export const useDeleteRecipeMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: [DELETE_RECIPE_MUTATION_KEY],
@@ -200,14 +206,14 @@ export const useDeleteRecipeMutation = () => {
     onSuccess: async (_, deletedCommand) => {
       // Remove the deleted recipe's query from cache to prevent 404 refetch
       queryClient.removeQueries({
-        queryKey: [...GET_RECIPE_BY_ID_KEY, deletedCommand.recipeId],
+        queryKey: getRecipeByIdKey(spaceId, deletedCommand.recipeId),
       });
 
       // Optimistically remove the deleted recipe from the list cache
       // This prevents stale cache from causing 404 errors during navigation
       queryClient.setQueryData<
         { id: RecipeId }[] | { recipes: { id: RecipeId }[] } | undefined
-      >(GET_RECIPES_KEY, (oldData) => {
+      >(getRecipesBySpaceKey(spaceId), (oldData) => {
         if (!oldData) return oldData;
         if (Array.isArray(oldData)) {
           return oldData.filter(
@@ -239,6 +245,15 @@ export const useDeleteRecipeMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+
+      // Proposals on the deleted command are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
+      });
     },
     onError: async (error, variables, context) => {
       console.error('Error deleting command');
@@ -253,6 +268,7 @@ const DELETE_RECIPES_BATCH_MUTATION_KEY = 'deleteRecipesBatch';
 
 export const useDeleteRecipesBatchMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: [DELETE_RECIPES_BATCH_MUTATION_KEY],
@@ -276,6 +292,15 @@ export const useDeleteRecipesBatchMutation = () => {
       // Packages containing the deleted recipes need to be refreshed
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+
+      // Proposals on the deleted commands are cancelled server-side — refresh the list
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        refetchType: 'all',
       });
     },
     onError: async (error, variables, context) => {

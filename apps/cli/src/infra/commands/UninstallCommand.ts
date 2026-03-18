@@ -10,6 +10,7 @@ export const uninstallCommand = command({
   name: 'uninstall',
   description:
     'Uninstall packages and remove their commands and standards from the current directory',
+  aliases: ['remove'],
   args: {
     packagesSlugs: restPositionals({
       type: string,

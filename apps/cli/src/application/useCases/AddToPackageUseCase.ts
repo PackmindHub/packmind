@@ -6,6 +6,7 @@ import {
 } from '../../domain/useCases/IAddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ItemNotFoundError } from '../../domain/errors/ItemNotFoundError';
+import { ISpaceService } from '../../domain/services/ISpaceService';
 import {
   AddArtefactsToPackageCommand,
   createRecipeId,
@@ -18,15 +19,22 @@ import {
 } from '@packmind/types';
 
 export class AddToPackageUseCase implements IAddToPackageUseCase {
-  constructor(private readonly gateway: IPackmindGateway) {}
+  constructor(
+    private readonly gateway: IPackmindGateway,
+    private readonly spaceService: ISpaceService,
+  ) {}
 
   async execute(command: IAddToPackageCommand): Promise<IAddToPackageResult> {
-    const { packageSlug, itemType, itemSlugs } = command;
+    const { packageSlug, spaceSlug, itemType, itemSlugs } = command;
 
-    // Get global space ID
-    const space = await this.gateway.spaces.getGlobal();
+    const space = spaceSlug
+      ? await this.resolveSpaceBySlug(spaceSlug)
+      : await this.spaceService.getDefaultSpace();
+
     const packages = await this.gateway.packages.list({});
-    const pkg = packages.packages.find((pkg) => pkg.slug === packageSlug);
+    const pkg = packages.packages.find(
+      (pkg) => pkg.slug === packageSlug && pkg.spaceId === space.id,
+    );
     if (!pkg) {
       throw new ItemNotFoundError('package', packageSlug);
     }
@@ -35,6 +43,8 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     const { ids, idToSlugMap } = await this.resolveSlugsToIds(
       itemType,
       itemSlugs,
+      space.id,
+      spaceSlug,
     );
 
     // Build command based on item type
@@ -72,27 +82,37 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     };
   }
 
+  private async resolveSpaceBySlug(spaceSlug: string) {
+    const spaces = await this.spaceService.getSpaces();
+    const space = spaces.find((s) => s.slug === spaceSlug);
+    if (!space) {
+      throw new Error(`Space '${spaceSlug}' not found`);
+    }
+    return space;
+  }
+
   private async resolveSlugsToIds(
     itemType: ItemType,
     slugs: string[],
+    spaceId: SpaceId,
+    spaceSlug?: string,
   ): Promise<{ ids: string[]; idToSlugMap: Map<string, string> }> {
     const ids: string[] = [];
     const idToSlugMap = new Map<string, string>();
-    const globalSpace = await this.gateway.spaces.getGlobal();
 
     for (const slug of slugs) {
       let item: { id: string } | null = null;
 
       if (itemType === 'standard') {
-        item = await this.findStandardBySlug(slug, globalSpace.id);
+        item = await this.findStandardBySlug(slug, spaceId);
       } else if (itemType === 'command') {
-        item = await this.findCommandBySlug(slug, globalSpace.id);
+        item = await this.findCommandBySlug(slug, spaceId);
       } else if (itemType === 'skill') {
-        item = await this.findSkillBySlug(slug, globalSpace.id);
+        item = await this.findSkillBySlug(slug, spaceId);
       }
 
       if (!item) {
-        throw new ItemNotFoundError(itemType, slug);
+        throw new ItemNotFoundError(itemType, slug, spaceSlug);
       }
 
       ids.push(item.id);

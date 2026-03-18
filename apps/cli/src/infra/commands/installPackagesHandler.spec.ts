@@ -1,21 +1,25 @@
+import * as fs from 'fs/promises';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
-  listPackagesHandler,
-  showPackageHandler,
   installPackagesHandler,
   uninstallPackagesHandler,
   recursiveInstallHandler,
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
-import { createPackageId, createSpaceId, createUserId } from '@packmind/types';
+
+jest.mock('fs/promises');
+const mockFs = fs as jest.Mocked<typeof fs>;
 
 // Mock the consoleLogger module to avoid chalk ESM issues
 jest.mock('../utils/consoleLogger', () => ({
+  logErrorConsole: jest.fn(),
   logWarningConsole: jest.fn(),
   formatSlug: jest.fn((slug: string) => slug),
   formatLabel: jest.fn((label: string) => label),
 }));
+
+import * as consoleLogger from '../utils/consoleLogger';
 
 describe('installPackagesHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
@@ -27,14 +31,15 @@ describe('installPackagesHandler', () => {
 
   beforeEach(() => {
     mockPackmindCliHexa = {
-      listPackages: jest.fn(),
-      getPackageBySlug: jest.fn(),
       configExists: jest.fn(),
       readConfig: jest.fn(),
       readFullConfig: jest.fn(),
       writeConfig: jest.fn(),
       addPackagesToConfig: jest.fn(),
       installPackages: jest.fn(),
+      normalizePackageSlugs: jest
+        .fn()
+        .mockImplementation(async (slugs: string[]) => slugs),
       tryGetGitRepositoryRoot: jest.fn(),
       getGitRemoteUrlFromPath: jest.fn(),
       getCurrentBranch: jest.fn(),
@@ -59,159 +64,6 @@ describe('installPackagesHandler', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('listPackagesHandler', () => {
-    describe('when packages are found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.listPackages.mockResolvedValue([
-          {
-            slug: 'zebra',
-            name: 'Zebra Package',
-            description: 'A zebra package',
-            id: createPackageId('zebra'),
-            spaceId: createSpaceId('my-space'),
-            createdBy: createUserId('my-user'),
-            recipes: [],
-            standards: [],
-          },
-          {
-            slug: 'alpha',
-            name: 'Alpha Package',
-            description: 'An alpha package',
-            id: createPackageId('alpha'),
-            spaceId: createSpaceId('my-space'),
-            createdBy: createUserId('my-user'),
-            recipes: [],
-            standards: [],
-          },
-        ]);
-
-        await listPackagesHandler({}, deps);
-      });
-
-      it('logs fetching message', () => {
-        expect(mockLog).toHaveBeenCalledWith(
-          'Fetching available packages...\n',
-        );
-      });
-
-      it('logs available packages header', () => {
-        expect(mockLog).toHaveBeenCalledWith('Available packages:\n');
-      });
-
-      it('displays packages sorted alphabetically', () => {
-        expect(mockLog).toHaveBeenCalledWith(expect.stringContaining('alpha'));
-      });
-
-      it('exits with 0', () => {
-        expect(mockExit).toHaveBeenCalledWith(0);
-      });
-    });
-
-    describe('when no packages are found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.listPackages.mockResolvedValue([]);
-
-        await listPackagesHandler({}, deps);
-      });
-
-      it('displays no packages message', () => {
-        expect(mockLog).toHaveBeenCalledWith('No packages found.');
-      });
-
-      it('exits with 0', () => {
-        expect(mockExit).toHaveBeenCalledWith(0);
-      });
-    });
-
-    describe('when listing fails', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.listPackages.mockRejectedValue(
-          new Error('Network error'),
-        );
-
-        await listPackagesHandler({}, deps);
-      });
-
-      it('displays error header', () => {
-        expect(mockError).toHaveBeenCalledWith('\n❌ Failed to list packages:');
-      });
-
-      it('displays error message', () => {
-        expect(mockError).toHaveBeenCalledWith('   Network error');
-      });
-
-      it('exits with 1', () => {
-        expect(mockExit).toHaveBeenCalledWith(1);
-      });
-    });
-  });
-
-  describe('showPackageHandler', () => {
-    describe('when package is found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.getPackageBySlug.mockResolvedValue({
-          name: 'Test Package',
-          slug: 'test-package',
-          description: 'A test package',
-          standards: [{ name: 'Standard 1', summary: 'A standard' }],
-          recipes: [{ name: 'Recipe 1', summary: 'A recipe' }],
-        });
-
-        await showPackageHandler({ slug: 'test-package' }, deps);
-      });
-
-      it('logs fetching message', () => {
-        expect(mockLog).toHaveBeenCalledWith(
-          "Fetching package details for 'test-package'...\n",
-        );
-      });
-
-      it('logs package name with slug', () => {
-        expect(mockLog).toHaveBeenCalledWith('Test Package (test-package):\n');
-      });
-
-      it('logs package description', () => {
-        expect(mockLog).toHaveBeenCalledWith('A test package\n');
-      });
-
-      it('logs standards section', () => {
-        expect(mockLog).toHaveBeenCalledWith('Standards:');
-      });
-
-      it('logs commands section', () => {
-        expect(mockLog).toHaveBeenCalledWith('Commands:');
-      });
-
-      it('exits with 0', () => {
-        expect(mockExit).toHaveBeenCalledWith(0);
-      });
-    });
-
-    describe('when package is not found', () => {
-      beforeEach(async () => {
-        mockPackmindCliHexa.getPackageBySlug.mockRejectedValue(
-          new Error('Package not found'),
-        );
-
-        await showPackageHandler({ slug: 'non-existent' }, deps);
-      });
-
-      it('displays error header', () => {
-        expect(mockError).toHaveBeenCalledWith(
-          '\n❌ Failed to fetch package details:',
-        );
-      });
-
-      it('displays error message', () => {
-        expect(mockError).toHaveBeenCalledWith('   Package not found');
-      });
-
-      it('exits with 1', () => {
-        expect(mockExit).toHaveBeenCalledWith(1);
-      });
-    });
   });
 
   describe('installPackagesHandler', () => {
@@ -717,6 +569,65 @@ describe('installPackagesHandler', () => {
         });
       });
 
+      describe('when config has unprefixed package slugs', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.normalizePackageSlugs.mockImplementation(
+            async (slugs: string[]) =>
+              slugs.map((s) => (s.startsWith('@') ? s : `@my-space/${s}`)),
+          );
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+          mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('calls writeConfig with the normalized slugs', () => {
+          expect(mockPackmindCliHexa.writeConfig).toHaveBeenCalledWith(
+            '/project',
+            ['@my-space/backend'],
+          );
+        });
+
+        it('does not call addPackagesToConfig', () => {
+          expect(
+            mockPackmindCliHexa.addPackagesToConfig,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when normalizePackageSlugs throws (e.g. multiple spaces)', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+          mockPackmindCliHexa.normalizePackageSlugs.mockRejectedValue(
+            new Error(
+              'Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @my-space/my-package).',
+            ),
+          );
+
+          await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+        });
+
+        it('calls error with the error message', () => {
+          expect(mockError).toHaveBeenCalledWith(
+            expect.stringContaining('multiple spaces'),
+          );
+        });
+
+        it('calls exit(1)', () => {
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+
+        it('does not call installPackages', () => {
+          expect(mockPackmindCliHexa.installPackages).not.toHaveBeenCalled();
+        });
+      });
+
       describe('when all packages already exist in config', () => {
         beforeEach(async () => {
           mockPackmindCliHexa.configExists.mockResolvedValue(true);
@@ -985,6 +896,114 @@ describe('installPackagesHandler', () => {
         });
       });
     });
+
+    describe('when --path is provided', () => {
+      describe('with a valid directory', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isDirectory: () => true,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { 'existing-pkg': '*' },
+          });
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 1,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 0,
+            standardsCount: 1,
+            skillsCount: 0,
+            errors: [],
+          });
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+          mockPackmindCliHexa.addPackagesToConfig.mockResolvedValue(undefined);
+          mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+            filesCreated: 0,
+            filesUpdated: 0,
+            errors: [],
+          });
+        });
+
+        it('displays the target packmind.json path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['new-pkg'], path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(mockLog).toHaveBeenCalledWith(
+            'Installing in ./apps/frontend/packmind.json...',
+          );
+        });
+
+        it('resolves the path and installs in the target directory', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['new-pkg'], path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              baseDirectory: '/project/apps/frontend',
+            }),
+          );
+        });
+      });
+
+      describe('with a non-existent path', () => {
+        beforeEach(() => {
+          mockFs.stat.mockRejectedValue(new Error('ENOENT'));
+        });
+
+        it('logs error message for non-existent path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'does/not/exist' },
+            deps,
+          );
+
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path does not exist: /project/does/not/exist',
+          );
+        });
+
+        it('exits with code 1 for non-existent path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'does/not/exist' },
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+
+      describe('with a path pointing to a file', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isDirectory: () => false,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+        });
+
+        it('logs error message for non-directory path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path is not a directory: /project/apps/frontend/index.ts',
+          );
+        });
+
+        it('exits with code 1 for non-directory path', async () => {
+          await installPackagesHandler(
+            { packagesSlugs: ['pkg'], path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+    });
   });
 
   describe('uninstallPackagesHandler', () => {
@@ -1090,7 +1109,6 @@ describe('installPackagesHandler', () => {
           packagesSlugs: [],
           previousPackagesSlugs: ['backend'],
           agents: undefined,
-          cliVersion: expect.any(String),
         });
       });
 
@@ -2026,6 +2044,134 @@ describe('installPackagesHandler', () => {
         expect(mockLog).toHaveBeenCalledWith(
           'Summary: 1 directory processed, 1 files added, 0 changed, 0 removed',
         );
+      });
+    });
+
+    describe('when --path is provided', () => {
+      describe('with a valid directory', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isDirectory: () => true,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+            '/project',
+          );
+          mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+            configs: [
+              {
+                targetPath: '/apps/frontend',
+                absoluteTargetPath: '/project/apps/frontend',
+                packages: { frontend: '*' },
+              },
+            ],
+            hasConfigs: true,
+            basePath: '/project/apps/frontend',
+          });
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { frontend: '*' },
+          });
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            skillsCount: 0,
+            errors: [],
+          });
+        });
+
+        it('resolves the path relative to cwd and scopes findAllConfigsInTree to that directory', async () => {
+          await recursiveInstallHandler({ path: 'apps/frontend' }, deps);
+
+          expect(mockPackmindCliHexa.findAllConfigsInTree).toHaveBeenCalledWith(
+            '/project/apps/frontend',
+            '/project/apps/frontend',
+          );
+        });
+
+        it('processes configs found within the scoped path', async () => {
+          const result = await recursiveInstallHandler(
+            { path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(result.directoriesProcessed).toBe(1);
+        });
+
+        it('counts files created from scoped configs', async () => {
+          const result = await recursiveInstallHandler(
+            { path: 'apps/frontend' },
+            deps,
+          );
+
+          expect(result.totalFilesCreated).toBe(2);
+        });
+
+        it('displays paths relative to cwd, not to the scoped path', async () => {
+          await recursiveInstallHandler({ path: 'apps/frontend' }, deps);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            'Installing in ./apps/frontend/packmind.json...',
+          );
+        });
+      });
+
+      describe('with a non-existent path', () => {
+        beforeEach(() => {
+          mockFs.stat.mockRejectedValue(new Error('ENOENT'));
+        });
+
+        it('logs error message for non-existent path', async () => {
+          await recursiveInstallHandler({ path: 'does/not/exist' }, deps);
+
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path does not exist: /project/does/not/exist',
+          );
+        });
+
+        it('exits with code 1 for non-existent path', async () => {
+          await recursiveInstallHandler({ path: 'does/not/exist' }, deps);
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+
+        it('does not call findAllConfigsInTree', async () => {
+          await recursiveInstallHandler({ path: 'does/not/exist' }, deps);
+
+          expect(
+            mockPackmindCliHexa.findAllConfigsInTree,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('with a path pointing to a file', () => {
+        beforeEach(() => {
+          mockFs.stat.mockResolvedValue({
+            isFile: () => false,
+            isDirectory: () => false,
+          } as unknown as Awaited<ReturnType<typeof fs.stat>>);
+        });
+
+        it('logs error message for non-directory path', async () => {
+          await recursiveInstallHandler(
+            { path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+            'Path is not a directory: /project/apps/frontend/index.ts',
+          );
+        });
+
+        it('exits with code 1 for non-directory path', async () => {
+          await recursiveInstallHandler(
+            { path: 'apps/frontend/index.ts' },
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
       });
     });
   });

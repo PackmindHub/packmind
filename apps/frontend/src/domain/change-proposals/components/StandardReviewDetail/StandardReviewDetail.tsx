@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
+import {
+  PMAlertDialog,
+  PMBox,
+  PMSpinner,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  EDIT_CHANGE_PROPOSALS_FEATURE_KEY,
+} from '@packmind/ui';
 import {
   AcceptedChangeProposal,
   ChangeProposalDecision,
@@ -10,6 +17,7 @@ import {
   SpaceId,
   StandardId,
 } from '@packmind/types';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
@@ -30,7 +38,11 @@ import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
 import { useCardReviewState, ViewMode } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
 import { getStandardByIdKey } from '../../../standards/api/queryKeys';
-import { computeStandardOutdatedIds } from '../../utils/computeOutdatedProposalIds';
+import {
+  computeRemovalOutdatedIds,
+  computeStandardOutdatedIds,
+  mergeOutdatedIds,
+} from '../../utils/computeOutdatedProposalIds';
 import { ChangeProposalAccordion } from '../shared/ChangeProposalAccordion';
 import { ReviewHeader } from '../shared/ReviewHeader';
 import { StandardDiffView } from './StandardDiffView';
@@ -52,7 +64,7 @@ export function StandardReviewDetail({
   spaceSlug,
 }: Readonly<StandardReviewDetailProps>) {
   const standardId = artefactId as StandardId;
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const queryClient = useQueryClient();
   const userLookup = useUserLookup();
@@ -66,6 +78,8 @@ export function StandardReviewDetail({
 
   const selectedStandardProposals =
     selectedStandardProposalsData?.changeProposals ?? [];
+  const currentPackageIds =
+    selectedStandardProposalsData?.currentPackageIds ?? [];
 
   const { data: selectedStandardData } = useGetStandardByIdQuery(standardId);
   const selectedStandard = selectedStandardData?.standard ?? undefined;
@@ -114,12 +128,15 @@ export function StandardReviewDetail({
 
   const outdatedProposalIds = useMemo(
     () =>
-      computeStandardOutdatedIds(
-        selectedStandardProposals,
-        selectedStandard,
-        rules,
+      mergeOutdatedIds(
+        computeStandardOutdatedIds(
+          selectedStandardProposals,
+          selectedStandard,
+          rules,
+        ),
+        computeRemovalOutdatedIds(selectedStandardProposals, currentPackageIds),
       ),
-    [selectedStandardProposals, selectedStandard, rules],
+    [selectedStandardProposals, selectedStandard, rules, currentPackageIds],
   );
 
   useBeforeUnload(
@@ -281,14 +298,19 @@ export function StandardReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={false}
+            showEditButton={
+              isFeatureFlagEnabled({
+                featureKeys: [EDIT_CHANGE_PROPOSALS_FEATURE_KEY],
+                featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+                userEmail: user?.email,
+              })
+                ? isEditableProposalType
+                : false
+            }
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={() => {
-              /* Edit mode is out of scope for standards */
-            }}
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
@@ -309,7 +331,7 @@ export function StandardReviewDetail({
           <StandardResultTabContent
             standard={selectedStandard}
             rules={rules}
-            proposals={selectedStandardProposals}
+            proposals={pool.proposalsWithDecisions}
             acceptedProposalIds={pool.acceptedProposalIds}
           />
         )}

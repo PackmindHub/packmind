@@ -5,7 +5,7 @@ import {
   timestampsSchemas,
   uuidSchema,
 } from '@packmind/node-utils';
-import { Space } from '@packmind/types';
+import { Space, SpaceType } from '@packmind/types';
 import { EntitySchema } from 'typeorm';
 
 export const SpaceSchema = new EntitySchema<
@@ -21,6 +21,16 @@ export const SpaceSchema = new EntitySchema<
     slug: {
       type: 'varchar',
       length: 255,
+    },
+    type: {
+      type: 'varchar',
+      length: 50,
+      default: SpaceType.open,
+    },
+    isDefaultSpace: {
+      name: 'is_default_space',
+      type: 'boolean',
+      default: true,
     },
     organizationId: {
       name: 'organization_id',

@@ -7,6 +7,8 @@ import {
   GenerateAgentCleanupUpdatesResponse,
   GenerateRemovalUpdatesCommand,
   GenerateRemovalUpdatesResponse,
+  PreviewArtifactRenderingCommand,
+  PreviewArtifactRenderingResponse,
 } from '../contracts';
 import { ICodingAgentDeployerRegistry } from '../ICodingAgentDeployerRegistry';
 import { CodingAgent } from '../CodingAgent';
@@ -57,4 +59,12 @@ export interface ICodingAgentPort {
   getSkillsFolderPathForAgents(
     agents: CodingAgent[],
   ): Map<CodingAgent, string | undefined>;
+
+  /**
+   * Preview how artifacts render for a specific coding agent.
+   * Returns a zip file (base64-encoded) containing the rendered files.
+   */
+  previewArtifactRendering(
+    command: PreviewArtifactRenderingCommand,
+  ): Promise<PreviewArtifactRenderingResponse>;
 }

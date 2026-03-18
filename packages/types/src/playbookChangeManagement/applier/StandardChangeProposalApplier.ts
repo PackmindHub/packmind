@@ -23,7 +23,7 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
     ) {
       return {
         ...source,
-        name: changeProposal.payload.newValue,
+        name: this.getEffectivePayload(changeProposal).newValue,
       };
     }
 
@@ -35,7 +35,7 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
     ) {
       return {
         ...source,
-        scope: changeProposal.payload.newValue,
+        scope: this.getEffectivePayload(changeProposal).newValue,
       };
     }
 
@@ -49,7 +49,7 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
         ...source,
         description: this.applyDiff(
           changeProposal.id,
-          changeProposal.payload,
+          this.getEffectivePayload(changeProposal),
           source.description,
         ),
       };

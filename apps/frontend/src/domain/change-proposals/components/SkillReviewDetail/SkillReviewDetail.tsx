@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMAlertDialog, PMBox, PMSpinner } from '@packmind/ui';
+import {
+  PMAlertDialog,
+  PMBox,
+  PMSpinner,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  EDIT_CHANGE_PROPOSALS_FEATURE_KEY,
+} from '@packmind/ui';
 import {
   AcceptedChangeProposal,
   ChangeProposalDecision,
@@ -31,7 +38,11 @@ import {
   ViewMode,
 } from '../../hooks/useCardReviewState';
 import { ChangeProposalWithConflicts } from '../../types';
-import { computeSkillOutdatedIds } from '../../utils/computeOutdatedProposalIds';
+import {
+  computeRemovalOutdatedIds,
+  computeSkillOutdatedIds,
+  mergeOutdatedIds,
+} from '../../utils/computeOutdatedProposalIds';
 import {
   filterProposalsByFilePath,
   getFilePathsWithChanges,
@@ -55,6 +66,7 @@ import { SkillResultTabContent } from './SkillResultTabContent';
 import { useBlocker, useBeforeUnload, useSearchParams } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
 import { SKILL_MD_MARKDOWN_TYPES } from '../../constants/skillProposalTypes';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 
 interface SkillReviewDetailProps {
   artefactId: string;
@@ -68,7 +80,7 @@ export function SkillReviewDetail({
   spaceSlug,
 }: Readonly<SkillReviewDetailProps>) {
   const skillId = artefactId as SkillId;
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const queryClient = useQueryClient();
   const userLookup = useUserLookup();
@@ -89,6 +101,7 @@ export function SkillReviewDetail({
 
   const selectedSkillProposals =
     selectedSkillProposalsData?.changeProposals ?? [];
+  const currentPackageIds = selectedSkillProposalsData?.currentPackageIds ?? [];
 
   const pool = useChangeProposalPool(selectedSkillProposals);
   const navigateToNextArtifact = useNavigateAfterApply(artefactId);
@@ -158,8 +171,12 @@ export function SkillReviewDetail({
   }, [filePathFilter]);
 
   const outdatedProposalIds = useMemo(
-    () => computeSkillOutdatedIds(selectedSkillProposals, skill, files),
-    [selectedSkillProposals, skill, files],
+    () =>
+      mergeOutdatedIds(
+        computeSkillOutdatedIds(selectedSkillProposals, skill, files),
+        computeRemovalOutdatedIds(selectedSkillProposals, currentPackageIds),
+      ),
+    [selectedSkillProposals, skill, files, currentPackageIds],
   );
 
   useBeforeUnload(
@@ -330,14 +347,19 @@ export function SkillReviewDetail({
             blockedByConflictIds={pool.blockedByConflictIds}
             outdatedProposalIds={outdatedProposalIds}
             expandedCardIds={reviewState.expandedCardIds}
-            showEditButton={false}
+            showEditButton={
+              isFeatureFlagEnabled({
+                featureKeys: [EDIT_CHANGE_PROPOSALS_FEATURE_KEY],
+                featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+                userEmail: user?.email,
+              })
+                ? isEditableProposalType
+                : false
+            }
             userLookup={userLookup}
             onToggleCard={reviewState.toggleCard}
             getViewMode={reviewState.getViewMode}
             onViewModeChange={reviewState.setViewMode}
-            onEdit={() => {
-              /* Edit mode is out of scope for skills */
-            }}
             onAccept={handleAcceptAndCollapse}
             onDismiss={handleDismissAndCollapse}
             onUndo={pool.handleUndoPool}
@@ -359,7 +381,7 @@ export function SkillReviewDetail({
           <SkillResultTabContent
             skill={skill}
             files={files}
-            proposals={selectedSkillProposals}
+            proposals={pool.proposalsWithDecisions}
             acceptedProposalIds={pool.acceptedProposalIds}
             filePathFilter={filePathFilter}
           />

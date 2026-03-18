@@ -1,27 +1,30 @@
-import { command } from 'cmd-ts';
+import { command, option, optional, string } from 'cmd-ts';
 import {
-  InstallHandlerDependencies,
+  ListHandlerDependencies,
   listPackagesHandler,
-} from './installPackagesHandler';
+} from './packages/listPackagesHandler';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 
 export const listPackagesCommand = command({
   name: 'list',
   description: 'List available packages',
-  args: {},
-  handler: async () => {
+  args: {
+    space: option({
+      type: optional(string),
+      long: 'space',
+      description: 'Filter packages by space slug',
+    }),
+  },
+  handler: async ({ space }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    const deps: InstallHandlerDependencies = {
+    const deps: ListHandlerDependencies = {
       packmindCliHexa,
       exit: process.exit,
-      getCwd: () => process.cwd(),
-      log: console.log,
-      error: console.error,
     };
 
-    await listPackagesHandler({}, deps);
+    await listPackagesHandler({ space }, deps);
   },
 });

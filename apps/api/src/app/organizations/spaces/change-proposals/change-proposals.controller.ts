@@ -7,8 +7,10 @@ import {
   Param,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
@@ -17,6 +19,7 @@ import {
   BatchCreateChangeProposalItem,
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
+  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalType,
   CheckChangeProposalsCommand,
@@ -25,7 +28,12 @@ import {
   CreateChangeProposalResponse,
   ListChangeProposalsBySpaceResponse,
   OrganizationId,
+  PreviewArtifactRenderingCommand,
+  RecomputeConflictsResponse,
+  RecipeId,
+  SkillId,
   SpaceId,
+  StandardId,
 } from '@packmind/types';
 import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -299,5 +307,105 @@ export class OrganizationsSpacesChangeProposalsController {
       );
       throw error;
     }
+  }
+
+  /**
+   * Recompute conflicts for change proposals with optional decisions
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/recompute-conflicts
+   */
+  @Post('recompute-conflicts')
+  async recomputeConflicts(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body()
+    body: {
+      artefactId: StandardId | RecipeId | SkillId;
+      decisions: Record<ChangeProposalId, ChangeProposalDecision>;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RecomputeConflictsResponse> {
+    if (!body.artefactId || !body.decisions) {
+      throw new BadRequestException('artefactId and decisions are required');
+    }
+
+    this.logger.info(
+      'POST .../change-proposals/recompute-conflicts - Recomputing conflicts',
+      {
+        organizationId,
+        spaceId,
+        artefactId: body.artefactId,
+        decisionsCount: Object.keys(body.decisions).length,
+      },
+    );
+
+    try {
+      const result = await this.changeProposalsService.recomputeConflicts({
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+        artefactId: body.artefactId,
+        decisions: body.decisions,
+      });
+
+      this.logger.info(
+        'POST .../change-proposals/recompute-conflicts - Conflicts recomputed successfully',
+        {
+          organizationId,
+          spaceId,
+          artefactId: body.artefactId,
+          conflictsCount: Object.keys(result.conflicts).length,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST .../change-proposals/recompute-conflicts - Failed to recompute conflicts',
+        {
+          organizationId,
+          spaceId,
+          artefactId: body.artefactId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Preview how artifacts render for a coding agent, returned as a zip file
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/preview-rendering
+   */
+  @Post('preview-rendering')
+  async previewArtifactRendering(
+    @Body() body: PreviewArtifactRenderingCommand,
+    @Res() response: Response,
+  ): Promise<void> {
+    if (!body.codingAgent) {
+      throw new BadRequestException('codingAgent is required');
+    }
+
+    this.logger.info(
+      'POST .../change-proposals/preview-rendering - Previewing artifact rendering',
+      {
+        codingAgent: body.codingAgent,
+        recipesCount: body.recipeVersions?.length ?? 0,
+        standardsCount: body.standardVersions?.length ?? 0,
+        skillsCount: body.skillVersions?.length ?? 0,
+      },
+    );
+
+    const result =
+      await this.changeProposalsService.previewArtifactRendering(body);
+
+    response
+      .setHeader('Content-Type', 'application/zip')
+      .setHeader(
+        'Content-Disposition',
+        `attachment; filename="${result.fileName}"`,
+      )
+      .send(Buffer.from(result.fileContent, 'base64'));
   }
 }

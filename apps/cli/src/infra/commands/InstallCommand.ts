@@ -2,13 +2,14 @@ import { command, restPositionals, string, flag, option } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
-  listPackagesHandler,
-  showPackageHandler,
   installPackagesHandler,
   recursiveInstallHandler,
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
+import { listPackagesHandler } from './packages/listPackagesHandler';
+import { showPackageHandler } from './packages/showPackageHandler';
+import { logWarningConsole } from '../utils/consoleLogger';
 
 export const installCommand = command({
   name: 'install',
@@ -29,7 +30,15 @@ export const installCommand = command({
       short: 'r',
       long: 'recursive',
       description:
-        'Install packages for all packmind.json files found in the git repository',
+        '[Deprecated] Install is now recursive by default. This flag will be removed in a future version.',
+    }),
+    path: option({
+      type: string,
+      short: 'p',
+      long: 'path',
+      defaultValue: () => '',
+      description:
+        'Run install in the specified directory (recursive within that path)',
     }),
     show: option({
       type: string,
@@ -43,7 +52,7 @@ export const installCommand = command({
       description: 'Package slugs to install (e.g., backend frontend)',
     }),
   },
-  handler: async ({ list, status, recursive, show, packagesSlugs }) => {
+  handler: async ({ list, status, recursive, path, show, packagesSlugs }) => {
     // Initialize hexa and logger
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -70,17 +79,32 @@ export const installCommand = command({
 
     // Handle --show option
     if (show) {
-      await showPackageHandler({ slug: show }, deps);
+      await showPackageHandler(
+        { slug: show },
+        { packmindCliHexa, exit: process.exit },
+      );
       return;
     }
 
-    // Handle --recursive flag
+    // Handle --recursive flag (deprecated, now default behavior)
     if (recursive) {
-      await recursiveInstallHandler({}, deps);
+      logWarningConsole(
+        '⚠️  The --recursive flag is deprecated. Install is now recursive by default.',
+      );
+      await recursiveInstallHandler({ path: path || undefined }, deps);
       return;
     }
 
-    // Handle pull/install
-    await installPackagesHandler({ packagesSlugs }, deps);
+    // Handle specific package slugs — install in target directory (cwd or --path)
+    if (packagesSlugs.length > 0) {
+      await installPackagesHandler(
+        { packagesSlugs, path: path || undefined },
+        deps,
+      );
+      return;
+    }
+
+    // Default: recursive install (new default behavior)
+    await recursiveInstallHandler({ path: path || undefined }, deps);
   },
 });

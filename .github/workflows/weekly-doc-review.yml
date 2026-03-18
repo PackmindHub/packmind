@@ -1,0 +1,67 @@
+name: Weekly Documentation Audit
+
+on:
+  schedule:
+    - cron: '0 7 * * 1' # Every Monday at 9:00 UTC
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Claude model to use'
+        required: false
+        default: 'claude-sonnet-4-6'
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  doc-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Documentation Audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/doc-audit"
+          settings: |
+            {
+              "permissions": {
+                "allow": [
+                  "Bash(echo *)",
+                  "Bash(git remote *)",
+                  "Bash(mkdir *)",
+                  "Agent",
+                  "Read",
+                  "Write",
+                  "Glob",
+                  "Grep"
+                ]
+              }
+            }
+          claude_args: "--model ${{ inputs.model || 'claude-opus-4-6' }} --max-turns 50"
+
+      - name: Display reports
+        if: always()
+        run: |
+          if [ -f "doc-audit-report.md" ]; then
+            echo "=== Documentation Audit Report ==="
+            cat "doc-audit-report.md"
+            echo "## Documentation Audit Report" >> "$GITHUB_STEP_SUMMARY"
+            cat "doc-audit-report.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No report file found."
+            echo "No report file found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload reports artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-audit-report
+          path: doc-audit-report.md
+          if-no-files-found: warn
+          retention-days: 30

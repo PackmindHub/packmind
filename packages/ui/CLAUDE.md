@@ -10,6 +10,6 @@ Reusable UI components built on Chakra UI v3, providing PM-prefixed components f
 
 ## Commands
 
-- Build: `nx build ui`
-- Test: `nx test ui`
-- Lint: `nx lint ui`
+- Build: `./node_modules/.bin/nx build ui`
+- Test: `./node_modules/.bin/nx test ui`
+- Lint: `./node_modules/.bin/nx lint ui`

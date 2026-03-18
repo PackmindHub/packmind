@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   ChangeProposal,
   ChangeProposalDecision,
@@ -6,10 +7,15 @@ import {
   ChangeProposalType,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { changeProposalsGateway } from '../api/gateways';
+import { RECOMPUTE_CONFLICTS_KEY } from '../api/queryKeys';
 
 export function useChangeProposalPool(
   proposals: ChangeProposalWithConflicts[],
 ) {
+  const { organization } = useAuthContext();
+
   const [reviewingProposalId, setReviewingProposalId] =
     useState<ChangeProposalId | null>(null);
   const [acceptedProposalIds, setAcceptedProposalIds] = useState<
@@ -38,18 +44,46 @@ export function useChangeProposalPool(
     );
   }, [proposals]);
 
+  const hasDecisions = Object.keys(decisionsTaken).length > 0;
+  const artefactId = proposals[0]?.artefactId;
+  const spaceId = proposals[0]?.spaceId;
+
+  const conflictsQuery = useQuery({
+    queryKey: [...RECOMPUTE_CONFLICTS_KEY, artefactId, decisionsTaken],
+    queryFn: () =>
+      changeProposalsGateway.recomputeConflicts({
+        organizationId: organization!.id,
+        spaceId: spaceId!,
+        artefactId: artefactId!,
+        decisions: decisionsTaken,
+      }),
+    enabled: hasDecisions && !!organization?.id && !!artefactId && !!spaceId,
+    placeholderData: keepPreviousData,
+  });
+
   const blockedByConflictIds = useMemo(() => {
+    const recomputedConflicts = hasDecisions
+      ? conflictsQuery.data?.conflicts
+      : undefined;
+
     const blocked = new Set<ChangeProposalId>();
-    for (const id of acceptedProposalIds) {
-      const proposal = proposals.find((p) => p.id === id);
-      if (proposal) {
-        for (const conflictId of proposal.conflictsWith) {
-          blocked.add(conflictId);
+
+    for (const proposal of proposals) {
+      if (acceptedProposalIds.has(proposal.id)) continue;
+
+      const conflictsWith =
+        recomputedConflicts?.[proposal.id] ?? proposal.conflictsWith;
+
+      for (const conflictId of conflictsWith) {
+        if (acceptedProposalIds.has(conflictId)) {
+          blocked.add(proposal.id);
+          break;
         }
       }
     }
+
     return blocked;
-  }, [acceptedProposalIds, proposals]);
+  }, [hasDecisions, conflictsQuery.data, proposals, acceptedProposalIds]);
 
   const hasPooledDecisions =
     acceptedProposalIds.size > 0 || rejectedProposalIds.size > 0;
@@ -124,12 +158,24 @@ export function useChangeProposalPool(
     ] as unknown as ChangeProposalDecision<T>;
   };
 
+  const proposalsWithDecisions = useMemo(
+    () =>
+      proposals.map((p) => {
+        const decision = decisionsTaken[p.id];
+        return decision
+          ? ({ ...p, decision } as ChangeProposalWithConflicts)
+          : p;
+      }),
+    [proposals, decisionsTaken],
+  );
+
   return {
     reviewingProposalId,
     acceptedProposalIds,
     rejectedProposalIds,
     blockedByConflictIds,
     hasPooledDecisions,
+    proposalsWithDecisions,
     getDecisionForChangeProposal,
     handleSelectProposal,
     handlePoolAccept,

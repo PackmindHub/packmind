@@ -1,6 +1,6 @@
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { RecipeId, RecipeVersion } from '@packmind/types';
+import { RecipeId, RecipeVersion, SpaceId } from '@packmind/types';
 
 const origin = 'GetRecipeVersionUsecase';
 
@@ -18,6 +18,7 @@ export class GetRecipeVersionUsecase {
   public async getRecipeVersion(
     recipeId: RecipeId,
     version: number,
+    allowedSpaceIds: SpaceId[],
   ): Promise<RecipeVersion | null> {
     this.logger.info('Getting recipe version', { recipeId, version });
 
@@ -25,6 +26,7 @@ export class GetRecipeVersionUsecase {
       const recipeVersion = await this.recipeVersionService.getRecipeVersion(
         recipeId,
         version,
+        allowedSpaceIds,
       );
       this.logger.info('Recipe version retrieved successfully', {
         recipeId,

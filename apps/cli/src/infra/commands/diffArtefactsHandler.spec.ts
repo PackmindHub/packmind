@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises';
 import {
   diffArtefactsHandler,
   DiffHandlerDependencies,
@@ -5,6 +6,7 @@ import {
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ChangeProposalType, createSkillFileId } from '@packmind/types';
 
+jest.mock('fs/promises');
 jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   logInfoConsole: jest.fn(),
@@ -34,7 +36,6 @@ describe('diffArtefactsHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
   let mockExit: jest.Mock;
   let mockLog: jest.Mock;
-  let mockError: jest.Mock;
   let mockGetCwd: jest.Mock;
   let deps: DiffHandlerDependencies;
 
@@ -48,11 +49,12 @@ describe('diffArtefactsHandler', () => {
       diffArtefacts: jest.fn(),
       submitDiffs: jest.fn(),
       checkDiffs: jest.fn(),
+      readHierarchicalConfig: jest.fn(),
+      findDescendantConfigs: jest.fn(),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
     mockLog = jest.fn();
-    mockError = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/test/project');
 
     deps = {
@@ -60,8 +62,11 @@ describe('diffArtefactsHandler', () => {
       exit: mockExit,
       getCwd: mockGetCwd,
       log: mockLog,
-      error: mockError,
     };
+
+    jest.mocked(fs.stat).mockResolvedValue({
+      isDirectory: () => true,
+    } as unknown as Awaited<ReturnType<typeof fs.stat>>);
 
     mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/test');
     mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
@@ -69,12 +74,24 @@ describe('diffArtefactsHandler', () => {
     );
     mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
 
+    // Default: configExists returns true for cwd, no descendants
+    mockPackmindCliHexa.configExists.mockResolvedValue(true);
+    mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
+
+    // Default: inside a Packmind project
+    mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+      hasConfigs: true,
+      packages: {},
+      configPaths: [],
+    });
+
     // Default: all diffs are unsubmitted
     mockPackmindCliHexa.checkDiffs.mockImplementation(async (groupedDiffs) => ({
       results: groupedDiffs.flat().map((diff) => ({
         diff,
         exists: false,
         createdAt: null,
+        message: null,
       })),
     }));
   });
@@ -863,7 +880,9 @@ describe('diffArtefactsHandler', () => {
     it('displays usage message', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockLog).toHaveBeenCalledWith('Usage: packmind diff');
+      expect(mockLog).toHaveBeenCalledWith(
+        'No packages configured in any target.',
+      );
     });
 
     it('exits with code 0', async () => {
@@ -873,43 +892,75 @@ describe('diffArtefactsHandler', () => {
     });
   });
 
-  describe('when config is null', () => {
+  describe('when config is null (no packmind.json at cwd)', () => {
     beforeEach(() => {
-      mockPackmindCliHexa.readFullConfig.mockResolvedValue(null);
+      // configExists returns false → no target at cwd, no descendants
+      mockPackmindCliHexa.configExists.mockResolvedValue(false);
+      mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
     });
 
-    it('displays usage message', async () => {
+    it('displays no targets message', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockLog).toHaveBeenCalledWith('Usage: packmind diff');
+      expect(mockLog).toHaveBeenCalledWith(
+        'No Packmind targets found under the current directory.',
+      );
     });
 
     it('exits with code 0', async () => {
       await diffArtefactsHandler(deps);
 
       expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when not in a Packmind project', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.configExists.mockResolvedValue(false);
+      mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
+      mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+        hasConfigs: false,
+        packages: {},
+        configPaths: [],
+      });
+    });
+
+    it('displays error about not being in a Packmind project', async () => {
+      await diffArtefactsHandler(deps);
+
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Not inside a Packmind project'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call diffArtefacts', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockPackmindCliHexa.diffArtefacts).not.toHaveBeenCalled();
     });
   });
 
   describe('when config parse fails', () => {
     beforeEach(() => {
+      // configExists returns true, but readFullConfig throws when reading the config
+      mockPackmindCliHexa.configExists.mockResolvedValue(true);
       mockPackmindCliHexa.readFullConfig.mockRejectedValue(
         new Error('Invalid JSON'),
       );
     });
 
-    it('displays error message', async () => {
+    it('displays the error', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith(
-        'ERROR Failed to parse packmind.json',
-      );
-    });
-
-    it('displays the error detail', async () => {
-      await diffArtefactsHandler(deps);
-
-      expect(mockError).toHaveBeenCalledWith('ERROR Invalid JSON');
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith('Invalid JSON');
     });
 
     it('exits with code 1', async () => {
@@ -930,16 +981,11 @@ describe('diffArtefactsHandler', () => {
       );
     });
 
-    it('displays error header', async () => {
-      await diffArtefactsHandler(deps);
-
-      expect(mockError).toHaveBeenCalledWith('\n❌ Failed to diff:');
-    });
-
     it('displays error message', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith('   Network error');
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith('Network error');
     });
 
     it('exits with code 1', async () => {
@@ -993,8 +1039,9 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith(
-        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
     });
 
@@ -1023,8 +1070,9 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockError).toHaveBeenCalledWith(
-        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
     });
 
@@ -1427,11 +1475,12 @@ describe('diffArtefactsHandler', () => {
 
       mockPackmindCliHexa.checkDiffs.mockResolvedValue({
         results: [
-          { diff: commandDiff, exists: false, createdAt: null },
+          { diff: commandDiff, exists: false, createdAt: null, message: null },
           {
             diff: standardDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1506,6 +1555,7 @@ describe('diffArtefactsHandler', () => {
             diff: commandDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1562,11 +1612,12 @@ describe('diffArtefactsHandler', () => {
 
       mockPackmindCliHexa.checkDiffs.mockResolvedValue({
         results: [
-          { diff: commandDiff, exists: false, createdAt: null },
+          { diff: commandDiff, exists: false, createdAt: null, message: null },
           {
             diff: standardDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1646,11 +1697,13 @@ describe('diffArtefactsHandler', () => {
               diff: commandDiff,
               exists: true,
               createdAt: '2025-06-15T10:30:00.000Z',
+              message: null,
             },
             {
               diff: standardDiff,
               exists: true,
               createdAt: '2025-06-15T10:30:00.000Z',
+              message: null,
             },
           ],
         });
@@ -1709,11 +1762,12 @@ describe('diffArtefactsHandler', () => {
 
       mockPackmindCliHexa.checkDiffs.mockResolvedValue({
         results: [
-          { diff: commandDiff, exists: false, createdAt: null },
+          { diff: commandDiff, exists: false, createdAt: null, message: null },
           {
             diff: standardDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1775,6 +1829,7 @@ describe('diffArtefactsHandler', () => {
             diff: commandDiff,
             exists: true,
             createdAt: '2025-06-15T10:30:00.000Z',
+            message: null,
           },
         ],
       });
@@ -1801,6 +1856,183 @@ describe('diffArtefactsHandler', () => {
       expect(logInfoConsole).toHaveBeenCalledWith(
         'All changes already submitted.',
       );
+    });
+  });
+
+  describe('multi-target support', () => {
+    const diff1 = {
+      filePath: '.packmind/commands/cmd.md',
+      type: ChangeProposalType.updateCommandDescription,
+      payload: { oldValue: 'old', newValue: 'new' },
+      artifactName: 'Frontend Command',
+      artifactType: 'command' as const,
+    };
+
+    describe('when multiple targets are found under searchPath', () => {
+      const diff2 = {
+        filePath: '.packmind/commands/cmd.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old', newValue: 'new' },
+        artifactName: 'Backend Command',
+        artifactType: 'command' as const,
+      };
+
+      beforeEach(() => {
+        // No config at cwd, but two descendants
+        mockPackmindCliHexa.configExists.mockResolvedValue(false);
+        mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([
+          '/test/project/src/frontend',
+          '/test/project/src/backend',
+        ]);
+
+        mockPackmindCliHexa.readFullConfig
+          .mockResolvedValueOnce({ packages: { 'frontend-pkg': '*' } })
+          .mockResolvedValueOnce({ packages: { 'backend-pkg': '*' } });
+
+        mockPackmindCliHexa.diffArtefacts
+          .mockResolvedValueOnce([diff1])
+          .mockResolvedValueOnce([diff2]);
+      });
+
+      it('calls diffArtefacts for each target', async () => {
+        await diffArtefactsHandler(deps);
+
+        expect(mockPackmindCliHexa.diffArtefacts).toHaveBeenCalledTimes(2);
+      });
+
+      it('passes correct baseDirectory for frontend target', async () => {
+        await diffArtefactsHandler(deps);
+
+        expect(mockPackmindCliHexa.diffArtefacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            baseDirectory: '/test/project/src/frontend',
+            packagesSlugs: ['frontend-pkg'],
+          }),
+        );
+      });
+
+      it('passes correct baseDirectory for backend target', async () => {
+        await diffArtefactsHandler(deps);
+
+        expect(mockPackmindCliHexa.diffArtefacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            baseDirectory: '/test/project/src/backend',
+            packagesSlugs: ['backend-pkg'],
+          }),
+        );
+      });
+
+      it('merges diffs from all targets', async () => {
+        const result = await diffArtefactsHandler(deps);
+
+        expect(result.diffsFound).toBe(2);
+      });
+
+      it('prefixes frontend file path with target relative path in display output', async () => {
+        await diffArtefactsHandler(deps);
+
+        // cwd = '/test/project', frontend target = '/test/project/src/frontend'
+        // targetRelativePath = nodePath.relative(cwd, target) = 'src/frontend'
+        // diff1.filePath = '.packmind/commands/cmd.md' (relative to baseDirectory)
+        // expected display: 'src/frontend/.packmind/commands/cmd.md'
+        const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
+        const frontendPath = logCalls.find((c: string) =>
+          c.includes('src/frontend/.packmind/commands/cmd.md'),
+        );
+
+        expect(frontendPath).toBeDefined();
+      });
+
+      it('prefixes backend file path with target relative path in display output', async () => {
+        await diffArtefactsHandler(deps);
+
+        // cwd = '/test/project', backend target = '/test/project/src/backend'
+        // targetRelativePath = nodePath.relative(cwd, target) = 'src/backend'
+        // diff2.filePath = '.packmind/commands/cmd.md' (relative to baseDirectory)
+        // expected display: 'src/backend/.packmind/commands/cmd.md'
+        const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
+        const backendPath = logCalls.find((c: string) =>
+          c.includes('src/backend/.packmind/commands/cmd.md'),
+        );
+
+        expect(backendPath).toBeDefined();
+      });
+    });
+
+    describe('single-target: no path prefix applied', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-pkg': '*' },
+        });
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([diff1]);
+      });
+
+      it('shows raw file path without prefix', async () => {
+        await diffArtefactsHandler(deps);
+
+        const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
+        const rawPath = logCalls.find((c: string) =>
+          c.includes('.packmind/commands/cmd.md'),
+        );
+
+        expect(rawPath).toBeDefined();
+      });
+
+      it('does not add target prefix', async () => {
+        await diffArtefactsHandler(deps);
+
+        const logCalls = mockLog.mock.calls.map((c: string[]) => c[0]);
+        const prefixedPath = logCalls.find((c: string) =>
+          c.includes('src/frontend/.packmind/'),
+        );
+
+        expect(prefixedPath).toBeUndefined();
+      });
+    });
+
+    describe('when --path option points to a non-existent directory', () => {
+      beforeEach(() => {
+        jest.mocked(fs.stat).mockRejectedValue(new Error('ENOENT'));
+      });
+
+      it('displays an error with the resolved path', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await diffArtefactsHandler({ ...deps, path: 'non/existent/path' });
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          'Path does not exist: /test/project/non/existent/path',
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await diffArtefactsHandler({ ...deps, path: 'non/existent/path' });
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when --path option scopes the search', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
+
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'frontend-pkg': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([]);
+      });
+
+      it('uses resolved path from --path option', async () => {
+        await diffArtefactsHandler({ ...deps, path: 'src/frontend' });
+
+        expect(mockPackmindCliHexa.configExists).toHaveBeenCalledWith(
+          '/test/project/src/frontend',
+        );
+      });
     });
   });
 });
