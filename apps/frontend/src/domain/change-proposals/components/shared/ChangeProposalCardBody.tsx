@@ -335,7 +335,7 @@ export function ChangeProposalCardBody({
                 </Collapsible.Trigger>
                 <PMButton
                   size="xs"
-                  variant="plain"
+                  variant="ghost"
                   color="blue.400"
                   onClick={onUndo}
                 >
