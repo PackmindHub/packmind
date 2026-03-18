@@ -57,6 +57,20 @@ const commandTypes = new Set<ChangeProposalType>([
   ChangeProposalType.removeCommand,
 ]);
 
+const editableTypes = new Set<ChangeProposalType>([
+  ChangeProposalType.updateStandardName,
+  ChangeProposalType.updateStandardDescription,
+  ChangeProposalType.updateCommandName,
+  ChangeProposalType.updateCommandDescription,
+  ChangeProposalType.updateSkillName,
+  ChangeProposalType.updateSkillDescription,
+  ChangeProposalType.updateSkillPrompt,
+]);
+
+export function isEditableProposalType(type: ChangeProposalType): boolean {
+  return editableTypes.has(type);
+}
+
 export function getItemTypeFromChangeProposalType(
   type: ChangeProposalType,
 ): ChangeProposalItemType {

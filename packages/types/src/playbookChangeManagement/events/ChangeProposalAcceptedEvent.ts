@@ -3,6 +3,7 @@ import { ChangeProposalId } from '../ChangeProposalId';
 import {
   ChangeProposalItemType,
   ChangeProposalType,
+  isEditableProposalType,
 } from '../ChangeProposalType';
 import { ScalarUpdatePayload } from '../ChangeProposalPayload';
 
@@ -19,24 +20,12 @@ export class ChangeProposalAcceptedEvent extends UserEvent<ChangeProposalAccepte
     'change-proposals.change-proposal.accepted';
 }
 
-const EDITABLE_CHANGE_PROPOSAL_TYPES: ReadonlySet<ChangeProposalType> = new Set(
-  [
-    ChangeProposalType.updateStandardName,
-    ChangeProposalType.updateStandardDescription,
-    ChangeProposalType.updateCommandName,
-    ChangeProposalType.updateCommandDescription,
-    ChangeProposalType.updateSkillName,
-    ChangeProposalType.updateSkillDescription,
-    ChangeProposalType.updateSkillPrompt,
-  ],
-);
-
 export function isChangeProposalEdited(
   changeType: ChangeProposalType,
   decision: unknown,
   payload: unknown,
 ): boolean {
-  if (!EDITABLE_CHANGE_PROPOSAL_TYPES.has(changeType)) {
+  if (!isEditableProposalType(changeType)) {
     return false;
   }
   if (decision === null) {
