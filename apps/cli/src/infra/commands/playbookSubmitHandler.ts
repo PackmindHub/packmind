@@ -21,6 +21,7 @@ import {
   logConsole,
   logErrorConsole,
   logSuccessConsole,
+  logWarningConsole,
 } from '../utils/consoleLogger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
@@ -39,7 +40,6 @@ export type PlaybookSubmitHandlerDependencies = {
   exit: (code: number) => void;
   message: string | undefined;
   openEditor: (prefill: string) => string | null;
-  readFile: (path: string) => string;
 };
 
 type ProposalItem = {
@@ -181,12 +181,14 @@ function buildUpdatedStandardProposals(
   artifactId: string | null,
   deployedContent: string | null,
 ): ProposalItem[] {
-  if (!deployedContent || !artifactId) return [];
+  if (!artifactId) return [];
 
-  const serverParsed = parseStandardMd(deployedContent, entry.filePath);
   const localParsed = parseStandardMd(entry.content, entry.filePath);
+  if (!localParsed) return [];
 
-  if (!serverParsed || !localParsed) return [];
+  const serverParsed = deployedContent
+    ? parseStandardMd(deployedContent, entry.filePath)
+    : null;
 
   const proposals: ProposalItem[] = [];
   const base = {
@@ -195,70 +197,72 @@ function buildUpdatedStandardProposals(
     spaceId: entry.spaceId,
   };
 
-  if (
-    serverParsed.frontmatterName &&
-    localParsed.frontmatterName &&
-    serverParsed.frontmatterName !== localParsed.frontmatterName
-  ) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateStandardName,
-      payload: {
-        oldValue: serverParsed.frontmatterName,
-        newValue: localParsed.frontmatterName,
-      },
-    });
+  if (serverParsed) {
+    if (
+      serverParsed.frontmatterName &&
+      localParsed.frontmatterName &&
+      serverParsed.frontmatterName !== localParsed.frontmatterName
+    ) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateStandardName,
+        payload: {
+          oldValue: serverParsed.frontmatterName,
+          newValue: localParsed.frontmatterName,
+        },
+      });
+    }
+
+    if (serverParsed.name !== localParsed.name) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateStandardName,
+        payload: {
+          oldValue: serverParsed.name,
+          newValue: localParsed.name,
+        },
+      });
+    }
+
+    if (
+      serverParsed.frontmatterDescription &&
+      localParsed.frontmatterDescription &&
+      serverParsed.frontmatterDescription !== localParsed.frontmatterDescription
+    ) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateStandardDescription,
+        payload: {
+          oldValue: serverParsed.frontmatterDescription,
+          newValue: localParsed.frontmatterDescription,
+        },
+      });
+    }
+
+    if (serverParsed.description !== localParsed.description) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateStandardDescription,
+        payload: {
+          oldValue: serverParsed.description,
+          newValue: localParsed.description,
+        },
+      });
+    }
+
+    if (serverParsed.scope !== localParsed.scope) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateStandardScope,
+        payload: {
+          oldValue: serverParsed.scope,
+          newValue: localParsed.scope,
+        },
+      });
+    }
   }
 
-  if (serverParsed.name !== localParsed.name) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateStandardName,
-      payload: {
-        oldValue: serverParsed.name,
-        newValue: localParsed.name,
-      },
-    });
-  }
-
-  if (
-    serverParsed.frontmatterDescription &&
-    localParsed.frontmatterDescription &&
-    serverParsed.frontmatterDescription !== localParsed.frontmatterDescription
-  ) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateStandardDescription,
-      payload: {
-        oldValue: serverParsed.frontmatterDescription,
-        newValue: localParsed.frontmatterDescription,
-      },
-    });
-  }
-
-  if (serverParsed.description !== localParsed.description) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateStandardDescription,
-      payload: {
-        oldValue: serverParsed.description,
-        newValue: localParsed.description,
-      },
-    });
-  }
-
-  if (serverParsed.scope !== localParsed.scope) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateStandardScope,
-      payload: {
-        oldValue: serverParsed.scope,
-        newValue: localParsed.scope,
-      },
-    });
-  }
-
-  const serverRules = new Set(serverParsed.rules);
+  const serverRules = new Set(serverParsed?.rules ?? []);
   const localRules = new Set(localParsed.rules);
   const deletedRules = [...serverRules].filter((r) => !localRules.has(r));
   const addedRules = [...localRules].filter((r) => !serverRules.has(r));
@@ -311,12 +315,14 @@ function buildUpdatedCommandProposals(
   artifactId: string | null,
   deployedContent: string | null,
 ): ProposalItem[] {
-  if (!deployedContent || !artifactId) return [];
+  if (!artifactId) return [];
 
-  const serverParsed = parseCommandFile(deployedContent, entry.filePath);
   const localParsed = parseCommandFile(entry.content, entry.filePath);
+  if (!localParsed.success) return [];
 
-  if (!serverParsed.success || !localParsed.success) return [];
+  const serverParsed = deployedContent
+    ? parseCommandFile(deployedContent, entry.filePath)
+    : null;
 
   const proposals: ProposalItem[] = [];
   const base = {
@@ -325,26 +331,28 @@ function buildUpdatedCommandProposals(
     spaceId: entry.spaceId,
   };
 
-  if (serverParsed.parsed.name !== localParsed.parsed.name) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateCommandName,
-      payload: {
-        oldValue: serverParsed.parsed.name,
-        newValue: localParsed.parsed.name,
-      },
-    });
-  }
+  if (serverParsed?.success) {
+    if (serverParsed.parsed.name !== localParsed.parsed.name) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateCommandName,
+        payload: {
+          oldValue: serverParsed.parsed.name,
+          newValue: localParsed.parsed.name,
+        },
+      });
+    }
 
-  if (serverParsed.parsed.content !== localParsed.parsed.content) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateCommandDescription,
-      payload: {
-        oldValue: serverParsed.parsed.content,
-        newValue: localParsed.parsed.content,
-      },
-    });
+    if (serverParsed.parsed.content !== localParsed.parsed.content) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateCommandDescription,
+        payload: {
+          oldValue: serverParsed.parsed.content,
+          newValue: localParsed.parsed.content,
+        },
+      });
+    }
   }
 
   return proposals;
@@ -454,6 +462,14 @@ export async function playbookSubmitHandler(
         entry.filePath,
         lockFile,
       );
+
+      if (!artifactId) {
+        logWarningConsole(
+          `Skipping "${entry.artifactName}" — artifact not found in lock file. Try running a deploy first.`,
+        );
+        continue;
+      }
+
       const deployedContent = findDeployedContentForPath(
         entry.filePath,
         deployedContext,
@@ -479,6 +495,14 @@ export async function playbookSubmitHandler(
           break;
       }
     }
+  }
+
+  // Group file paths by spaceId (for incremental clearing)
+  const filePathsBySpaceId = new Map<string, Set<string>>();
+  for (const entry of changes) {
+    const existing = filePathsBySpaceId.get(entry.spaceId) ?? new Set();
+    existing.add(entry.filePath);
+    filePathsBySpaceId.set(entry.spaceId, existing);
   }
 
   // Group by spaceId
@@ -515,6 +539,11 @@ export async function playbookSubmitHandler(
       for (const error of response.errors) {
         logErrorConsole(`Error: ${error.message}`);
       }
+    } else {
+      const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
+      for (const filePath of filePaths) {
+        playbookLocalRepository.removeChange(filePath);
+      }
     }
   }
 
@@ -524,7 +553,6 @@ export async function playbookSubmitHandler(
     return;
   }
 
-  playbookLocalRepository.clearAll();
   logSuccessConsole(
     `Submitted ${totalCreated} change proposal${totalCreated !== 1 ? 's' : ''}.`,
   );

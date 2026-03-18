@@ -52,7 +52,6 @@ describe('playbookSubmitHandler', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
   let mockOpenEditor: jest.Mock;
-  let mockReadFile: jest.Mock;
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   beforeEach(() => {
@@ -96,7 +95,6 @@ describe('playbookSubmitHandler', () => {
 
     mockExit = jest.fn();
     mockOpenEditor = jest.fn().mockReturnValue('My commit message');
-    mockReadFile = jest.fn().mockReturnValue('');
 
     mockPlaybookLocalRepository = {
       addChange: jest.fn(),
@@ -136,7 +134,6 @@ describe('playbookSubmitHandler', () => {
       exit: mockExit,
       message: undefined,
       openEditor: mockOpenEditor,
-      readFile: mockReadFile,
       ...overrides,
     };
   }
@@ -539,10 +536,18 @@ describe('playbookSubmitHandler', () => {
       mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
     });
 
-    it('calls clearAll', async () => {
+    it('removes submitted entries individually', async () => {
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
-      expect(mockPlaybookLocalRepository.clearAll).toHaveBeenCalled();
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.packmind/standards/my-standard.md',
+      );
+    });
+
+    it('does not call clearAll', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'submit' }));
+
+      expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
     });
 
     it('logs success message', async () => {
@@ -572,10 +577,10 @@ describe('playbookSubmitHandler', () => {
       mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
     });
 
-    it('does NOT clear playbook', async () => {
+    it('does not remove entries', async () => {
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
-      expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
+      expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
     });
 
     it('logs error', async () => {
@@ -590,6 +595,227 @@ describe('playbookSubmitHandler', () => {
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('partial failure across spaces', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({ spaceId: 'space-A', artifactName: 'Std A' }),
+        makeEntry({
+          spaceId: 'space-B',
+          artifactName: 'Std B',
+          filePath: '.packmind/standards/std-b.md',
+        }),
+      ]);
+
+      mockGateway.changeProposals.batchCreate
+        .mockResolvedValueOnce({ created: 1, skipped: 0, errors: [] })
+        .mockResolvedValueOnce({
+          created: 0,
+          skipped: 0,
+          errors: [{ index: 0, message: 'Forbidden' }],
+        });
+    });
+
+    it('removes the successful space entry', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'partial' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.packmind/standards/my-standard.md',
+      );
+    });
+
+    it('removes only one entry', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'partial' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('exits 1', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'partial' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('updated standard without deployed content', () => {
+    const LOCAL_STANDARD_CONTENT = [
+      '# New Standard Name',
+      '',
+      'New description.',
+      '',
+      '## Rules',
+      '',
+      '* Do not use var',
+      '* Always use const',
+    ].join('\n');
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-standard': {
+            name: 'Old Standard Name',
+            type: 'standard',
+            id: 'artifact-std-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      });
+
+      // Deployed content does NOT include the standard file
+      mockGateway.deployment.getDeployed.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          changeType: 'updated',
+          content: LOCAL_STANDARD_CONTENT,
+          artifactName: 'New Standard Name',
+        }),
+      ]);
+    });
+
+    it('does NOT generate updateStandardName proposals', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const proposalTypes = batchCall.proposals.map(
+        (p: { type: ChangeProposalType }) => p.type,
+      );
+
+      expect(proposalTypes).not.toContain(
+        ChangeProposalType.updateStandardName,
+      );
+    });
+
+    it('does NOT generate updateStandardDescription proposals', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const proposalTypes = batchCall.proposals.map(
+        (p: { type: ChangeProposalType }) => p.type,
+      );
+
+      expect(proposalTypes).not.toContain(
+        ChangeProposalType.updateStandardDescription,
+      );
+    });
+
+    it('does NOT generate updateStandardScope proposals', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const proposalTypes = batchCall.proposals.map(
+        (p: { type: ChangeProposalType }) => p.type,
+      );
+
+      expect(proposalTypes).not.toContain(
+        ChangeProposalType.updateStandardScope,
+      );
+    });
+
+    it('still generates addRule proposals', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const proposalTypes = batchCall.proposals.map(
+        (p: { type: ChangeProposalType }) => p.type,
+      );
+
+      expect(proposalTypes).toContain(ChangeProposalType.addRule);
+    });
+  });
+
+  describe('updated command without deployed content', () => {
+    const LOCAL_COMMAND_CONTENT =
+      '---\nname: New Command\n---\nNew description';
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'Old Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/commands/my-command.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+
+      // Deployed content does NOT include the command file
+      mockGateway.deployment.getDeployed.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'New Command',
+          codingAgent: 'claude',
+          changeType: 'updated',
+          content: LOCAL_COMMAND_CONTENT,
+        }),
+      ]);
+    });
+
+    it('does NOT generate updateCommandName proposals', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
+
+      // No proposals are generated at all, so batchCreate should not be called
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+    });
+
+    it('does NOT generate updateCommandDescription proposals', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
+
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
     });
   });
 
