@@ -2,12 +2,14 @@ import {
   Gateway,
   ICaptureRecipeUseCase,
   ICreatePackageUseCase,
+  ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
   PublicGateway,
   Space,
 } from '@packmind/types';
+import { IChangeProposalGateway } from './gateways/ChangeProposalGateway';
 import { IDeploymentsGateway } from './gateways/DeploymentsGateway';
 
 export interface IAuthGateway {
@@ -28,10 +30,16 @@ export interface IPackageGateway {
   create: Gateway<ICreatePackageUseCase>;
 }
 
+export interface IStandardGateway {
+  create: Gateway<ICreateStandardUseCase>;
+}
+
 export interface IPackmindGateway {
   auth: IAuthGateway;
   spaces: ISpaceGateway;
   commands: ICommandGateway;
   packages: IPackageGateway;
+  standards: IStandardGateway;
+  changeProposals: IChangeProposalGateway;
   deployments: IDeploymentsGateway;
 }

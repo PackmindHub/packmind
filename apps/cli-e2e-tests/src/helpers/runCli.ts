@@ -6,6 +6,7 @@ import fs from 'fs';
 export interface RunCliOptions {
   apiKey?: string;
   cwd?: string;
+  home?: string;
 }
 
 export interface RunCliResult {
@@ -60,8 +61,10 @@ export async function runCli(
 
   const args = parseCommandArgs(command);
 
-  // Create a temporary HOME directory to avoid loading existing credentials
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
+  // Use provided HOME or create a temporary one
+  const ownsTempHome = !opts?.home;
+  const tempHome =
+    opts?.home ?? fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
 
   // Build clean environment by filtering out PACKMIND_API_KEY_V3
   const cleanEnv: NodeJS.ProcessEnv = {};
@@ -97,14 +100,18 @@ export async function runCli(
     });
 
     child.on('error', (error) => {
-      // Clean up temporary directory on error
-      fs.rmSync(tempHome, { recursive: true, force: true });
+      // Only clean up if we created the temp directory
+      if (ownsTempHome) {
+        fs.rmSync(tempHome, { recursive: true, force: true });
+      }
       reject(error);
     });
 
     child.on('close', (code, signal) => {
-      // Clean up temporary directory after CLI process completes
-      fs.rmSync(tempHome, { recursive: true, force: true });
+      // Only clean up if we created the temp directory
+      if (ownsTempHome) {
+        fs.rmSync(tempHome, { recursive: true, force: true });
+      }
       resolve({
         returnCode: code ?? (signal ? 1 : 0),
         stdout,
