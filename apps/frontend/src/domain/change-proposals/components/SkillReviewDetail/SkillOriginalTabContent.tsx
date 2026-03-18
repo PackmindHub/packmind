@@ -8,8 +8,7 @@ import {
 } from '@packmind/ui';
 import { Skill, SkillFile } from '@packmind/types';
 import { SKILL_MD_PATH } from '../../utils/groupSkillProposalsByFile';
-import { SkillOptionalField } from './SkillContent/SkillOptionalField';
-import { MetadataKeyValueDisplay } from './SkillContent/MetadataKeyValueDisplay';
+import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { FileContent } from './FileItems/FileContent';
 
 interface SkillOriginalTabContentProps {
@@ -59,7 +58,7 @@ export function SkillOriginalTabContent({
             {skill.name}
           </PMHeading>
 
-          <PMMarkdownViewer content={skill.description} />
+          <SkillFrontmatterInfo skillVersion={skill} />
 
           <PMBox mt={4}>
             <PMText fontSize="sm" fontWeight="semibold" mb={2}>
@@ -67,30 +66,6 @@ export function SkillOriginalTabContent({
             </PMText>
             <PMMarkdownViewer content={skill.prompt} />
           </PMBox>
-
-          {skill.license && (
-            <SkillOptionalField label="License" mt={4}>
-              <PMText fontSize="sm">{skill.license}</PMText>
-            </SkillOptionalField>
-          )}
-
-          {skill.compatibility && (
-            <SkillOptionalField label="Compatibility" mt={4}>
-              <PMText fontSize="sm">{skill.compatibility}</PMText>
-            </SkillOptionalField>
-          )}
-
-          {skill.allowedTools && (
-            <SkillOptionalField label="Allowed Tools" mt={4}>
-              <PMText fontSize="sm">{skill.allowedTools}</PMText>
-            </SkillOptionalField>
-          )}
-
-          {skill.metadata && Object.keys(skill.metadata).length > 0 && (
-            <SkillOptionalField label="Metadata" mt={4}>
-              <MetadataKeyValueDisplay metadata={skill.metadata} />
-            </SkillOptionalField>
-          )}
         </>
       )}
 
