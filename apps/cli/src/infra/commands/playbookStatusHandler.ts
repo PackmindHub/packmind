@@ -153,6 +153,9 @@ export async function playbookStatusHandler(
   const stagedPaths = new Set(
     stagedChanges.map((c) => normalizePath(c.filePath)),
   );
+  const stagedSkillDirPaths = stagedChanges
+    .filter((c) => c.artifactType === 'skill')
+    .map((c) => normalizePath(c.filePath));
 
   const untrackedChanges: UntrackedChange[] = [];
 
@@ -166,7 +169,12 @@ export async function playbookStatusHandler(
       for (const deployedFile of deployedFiles) {
         const normalizedDeployedPath = normalizePath(deployedFile.path);
 
-        if (stagedPaths.has(normalizedDeployedPath)) {
+        if (
+          stagedPaths.has(normalizedDeployedPath) ||
+          stagedSkillDirPaths.some((staged) =>
+            normalizedDeployedPath.startsWith(staged + '/'),
+          )
+        ) {
           continue;
         }
 

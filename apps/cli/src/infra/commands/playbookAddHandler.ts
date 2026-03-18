@@ -18,7 +18,8 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../application/utils/pathUtils';
-import { Space } from '@packmind/types';
+import { ArtifactVersionEntry, FileModification, Space } from '@packmind/types';
+import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
 type SkillFile = {
   path: string;
@@ -40,6 +41,32 @@ export type PlaybookAddHandlerDependencies = {
   playbookLocalRepository: IPlaybookLocalRepository;
   lockFileRepository: ILockFileRepository;
 };
+
+async function fetchDeployedArtifactFiles(
+  packmindCliHexa: PackmindCliHexa,
+  lockFile: PackmindLockFile,
+): Promise<FileModification[]> {
+  try {
+    const artifacts: ArtifactVersionEntry[] = Object.values(
+      lockFile.artifacts,
+    ).map((entry) => ({
+      name: entry.name,
+      type: entry.type,
+      id: entry.id,
+      version: entry.version,
+      spaceId: entry.spaceId,
+    }));
+    const response = await packmindCliHexa
+      .getPackmindGateway()
+      .deployment.getContentByVersions({
+        artifacts,
+        agents: lockFile.agents,
+      });
+    return response.fileUpdates.createOrUpdate;
+  } catch {
+    return [];
+  }
+}
 
 export async function playbookAddHandler(
   deps: PlaybookAddHandlerDependencies,
@@ -174,40 +201,31 @@ export async function playbookAddHandler(
     path.relative(targetDir, absolutePath),
   );
 
-  // Check if content matches deployed
-  if (deployedContext?.deployedContent) {
-    const deployedFile =
-      deployedContext.deployedContent.fileUpdates.createOrUpdate.find(
-        (f) => normalizePath(f.path) === normalizedFilePath,
-      );
-
-    if (deployedFile && deployedFile.content === localContent) {
-      logInfoConsole('Already up to date — local content matches deployed.');
-      exit(0);
-      return;
-    }
-  }
-
-  // Determine changeType: check deployed content first, then fall back to lock file
+  // Determine changeType using lock file
   let changeType: 'created' | 'updated' = 'created';
-  if (deployedContext?.deployedContent) {
-    const existsInDeployed =
-      deployedContext.deployedContent.fileUpdates.createOrUpdate.some(
-        (f) => normalizePath(f.path) === normalizedFilePath,
-      );
-    if (existsInDeployed) {
+  const lockFile = await lockFileRepository.read(targetDir);
+  if (lockFile) {
+    const existsInLockFile = Object.values(lockFile.artifacts).some((entry) =>
+      entry.files.some((f) => normalizePath(f.path) === normalizedFilePath),
+    );
+    if (existsInLockFile) {
       changeType = 'updated';
     }
   }
-  if (changeType === 'created') {
-    const lockFile = await lockFileRepository.read(targetDir);
-    if (lockFile) {
-      const existsInLockFile = Object.values(lockFile.artifacts).some((entry) =>
-        entry.files.some((f) => normalizePath(f.path) === normalizedFilePath),
-      );
-      if (existsInLockFile) {
-        changeType = 'updated';
-      }
+
+  // Check if content matches deployed (via lock file artifact versions)
+  if (changeType === 'updated' && lockFile) {
+    const deployedFiles = await fetchDeployedArtifactFiles(
+      packmindCliHexa,
+      lockFile,
+    );
+    const deployedFile = deployedFiles.find(
+      (f) => normalizePath(f.path) === normalizedFilePath,
+    );
+    if (deployedFile && deployedFile.content?.trim() === localContent.trim()) {
+      logInfoConsole('Already up to date — local content matches deployed.');
+      exit(0);
+      return;
     }
   }
 
