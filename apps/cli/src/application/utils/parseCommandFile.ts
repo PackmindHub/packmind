@@ -33,8 +33,11 @@ export function parseCommandFile(
 
     const frontmatter = contentAfterOpening.slice(0, closingIndex);
     const name = resolveName(frontmatter, filePath);
+    const body = contentAfterOpening
+      .slice(closingIndex + FRONTMATTER_DELIMITER.length + 1)
+      .replace(/^\n+/, '');
 
-    return { success: true, parsed: { name, content } };
+    return { success: true, parsed: { name, content: body } };
   }
 
   const name = humanizeSlug(extractFilenameSlug(filePath));

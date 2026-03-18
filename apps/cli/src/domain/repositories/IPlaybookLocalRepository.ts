@@ -6,6 +6,7 @@ export interface PlaybookChangeEntry {
   changeType?: 'created' | 'updated';
   addedAt: string; // ISO 8601
   spaceId: string;
+  spaceName?: string;
   targetId?: string;
   content: string; // full content snapshot (for skills: serialized payload)
 }

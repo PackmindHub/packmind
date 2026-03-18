@@ -288,7 +288,7 @@ describe('diffAddHandler', () => {
             expect.objectContaining({
               filePath: VALID_COMMAND_PATH,
               type: ChangeProposalType.createCommand,
-              payload: { name: 'My Command', content: VALID_COMMAND_CONTENT },
+              payload: { name: 'My Command', content: 'Do something useful' },
               artifactName: 'My Command',
               artifactType: 'command',
               spaceId: 'space-123',

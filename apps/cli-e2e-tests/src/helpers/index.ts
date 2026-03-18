@@ -11,4 +11,6 @@ export type {
   ISpaceGateway,
   ICommandGateway,
   IPackageGateway,
+  IStandardGateway,
 } from './IPackmindGateway';
+export type { IChangeProposalGateway } from './gateways/ChangeProposalGateway';

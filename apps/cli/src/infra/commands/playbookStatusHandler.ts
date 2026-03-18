@@ -34,6 +34,7 @@ type GroupedChange = {
   artifactName: string;
   artifactType: string;
   changeType?: string;
+  spaceName?: string;
   filePaths: string[];
 };
 
@@ -110,6 +111,7 @@ function groupStagedChanges(changes: PlaybookChangeEntry[]): GroupedChange[] {
         artifactName: change.artifactName,
         artifactType: change.artifactType,
         changeType,
+        spaceName: change.spaceName,
         filePaths: [change.filePath],
       });
     }
@@ -201,8 +203,9 @@ export async function playbookStatusHandler(
   if (groupedStaged.length > 0) {
     logConsole('Changes to be submitted:');
     for (const group of groupedStaged) {
+      const spaceInfo = group.spaceName ? ` in space "${group.spaceName}"` : '';
       logGroupedChange(
-        `${capitalize(group.artifactType)} "${group.artifactName}" (${group.changeType})`,
+        `${capitalize(group.artifactType)} "${group.artifactName}" (${group.changeType})${spaceInfo}`,
         group.filePaths,
       );
     }
