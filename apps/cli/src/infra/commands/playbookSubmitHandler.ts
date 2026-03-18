@@ -1,10 +1,12 @@
 import * as yaml from 'yaml';
 
 import {
+  ArtifactVersionEntry,
   ChangeProposalArtefactId,
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
   ChangeProposalType,
+  FileModification,
   SpaceId,
   TargetId,
   createRuleId,
@@ -16,7 +18,6 @@ import { parseCommandFile } from '../../application/utils/parseCommandFile';
 import { matchUpdatedRules } from '../../application/utils/ruleSimilarity';
 import { normalizePath } from '../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
-import { resolveDeployedContext } from '../../application/utils/resolveDeployedContext';
 import {
   logConsole,
   logErrorConsole,
@@ -30,13 +31,12 @@ import {
 } from '../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
-import { DeployedContext } from '../../application/utils/resolveDeployedContext';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   playbookLocalRepository: IPlaybookLocalRepository;
   lockFileRepository: ILockFileRepository;
-  repoRoot: string;
+  cwd: string;
   exit: (code: number) => void;
   message: string | undefined;
   openEditor: (prefill: string) => string | null;
@@ -82,7 +82,12 @@ function resolveArtifactIdFromLockFile(
   const normalized = normalizePath(filePath);
   for (const entry of Object.values(lockFile.artifacts)) {
     for (const file of entry.files) {
-      if (normalizePath(file.path) === normalized) {
+      const normalizedFilePath = normalizePath(file.path);
+      if (
+        normalizedFilePath === normalized ||
+        (entry.type === 'skill' &&
+          normalizedFilePath.startsWith(normalized + '/'))
+      ) {
         return entry.id;
       }
     }
@@ -379,15 +384,42 @@ function buildUpdatedSkillProposals(
   ];
 }
 
+function lockFileToArtifactVersionEntries(
+  lockFile: PackmindLockFile,
+): ArtifactVersionEntry[] {
+  return Object.values(lockFile.artifacts).map((entry) => ({
+    name: entry.name,
+    type: entry.type,
+    id: entry.id,
+    version: entry.version,
+    spaceId: entry.spaceId,
+  }));
+}
+
+async function fetchDeployedFiles(
+  packmindCliHexa: PackmindCliHexa,
+  lockFile: PackmindLockFile,
+): Promise<FileModification[]> {
+  try {
+    const artifacts = lockFileToArtifactVersionEntries(lockFile);
+    const response = await packmindCliHexa
+      .getPackmindGateway()
+      .deployment.getContentByVersions({
+        artifacts,
+        agents: lockFile.agents,
+      });
+    return response.fileUpdates.createOrUpdate;
+  } catch {
+    return [];
+  }
+}
+
 function findDeployedContentForPath(
   filePath: string,
-  deployedContext: DeployedContext | null,
+  deployedFiles: FileModification[],
 ): string | null {
-  if (!deployedContext?.deployedContent) return null;
   const normalized = normalizePath(filePath);
-  const match = deployedContext.deployedContent.fileUpdates.createOrUpdate.find(
-    (f) => normalizePath(f.path) === normalized,
-  );
+  const match = deployedFiles.find((f) => normalizePath(f.path) === normalized);
   return match?.content ?? null;
 }
 
@@ -398,7 +430,7 @@ export async function playbookSubmitHandler(
     packmindCliHexa,
     playbookLocalRepository,
     lockFileRepository,
-    repoRoot,
+    cwd,
     exit,
     message,
     openEditor,
@@ -432,14 +464,15 @@ export async function playbookSubmitHandler(
     resolvedMessage = stripped;
   }
 
-  // Read lock file and deployed context
-  const projectDir = await findNearestConfigDir(repoRoot, packmindCliHexa);
+  // Read lock file and fetch deployed content by artifact versions
+  const projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
   const lockFile = projectDir
     ? await lockFileRepository.read(projectDir)
     : null;
-  const deployedContext = projectDir
-    ? await resolveDeployedContext(packmindCliHexa, projectDir)
-    : null;
+  const deployedFiles =
+    lockFile && Object.keys(lockFile.artifacts).length > 0
+      ? await fetchDeployedFiles(packmindCliHexa, lockFile)
+      : [];
 
   // Build proposals
   const allProposals: ProposalItem[] = [];
@@ -472,8 +505,18 @@ export async function playbookSubmitHandler(
 
       const deployedContent = findDeployedContentForPath(
         entry.filePath,
-        deployedContext,
+        deployedFiles,
       );
+
+      if (
+        !deployedContent &&
+        (entry.artifactType === 'standard' || entry.artifactType === 'command')
+      ) {
+        logWarningConsole(
+          `Skipping "${entry.artifactName}" — deployed content unavailable. Run \`packmind pull\` to sync before submitting updates.`,
+        );
+        continue;
+      }
 
       switch (entry.artifactType) {
         case 'standard':
@@ -495,6 +538,17 @@ export async function playbookSubmitHandler(
           break;
       }
     }
+  }
+
+  if (allProposals.length === 0) {
+    logConsole(
+      'Nothing to submit — no changes detected compared to deployed versions.',
+    );
+    for (const entry of changes) {
+      playbookLocalRepository.removeChange(entry.filePath);
+    }
+    exit(0);
+    return;
   }
 
   // Group file paths by spaceId (for incremental clearing)

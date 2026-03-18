@@ -62,7 +62,7 @@ describe('playbookSubmitHandler', () => {
       errors: [],
     });
 
-    mockGateway.deployment.getDeployed.mockResolvedValue({
+    mockGateway.deployment.getContentByVersions.mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
       targetId: 'target-456',
@@ -130,7 +130,7 @@ describe('playbookSubmitHandler', () => {
       packmindCliHexa: mockPackmindCliHexa,
       playbookLocalRepository: mockPlaybookLocalRepository,
       lockFileRepository: mockLockFileRepository,
-      repoRoot: '/project',
+      cwd: '/project',
       exit: mockExit,
       message: undefined,
       openEditor: mockOpenEditor,
@@ -394,7 +394,7 @@ describe('playbookSubmitHandler', () => {
         },
       });
 
-      mockGateway.deployment.getDeployed.mockResolvedValue({
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -477,7 +477,7 @@ describe('playbookSubmitHandler', () => {
         },
       });
 
-      mockGateway.deployment.getDeployed.mockResolvedValue({
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -678,7 +678,7 @@ describe('playbookSubmitHandler', () => {
       });
 
       // Deployed content does NOT include the standard file
-      mockGateway.deployment.getDeployed.mockResolvedValue({
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [],
           delete: [],
@@ -697,58 +697,30 @@ describe('playbookSubmitHandler', () => {
       ]);
     });
 
-    it('does NOT generate updateStandardName proposals', async () => {
+    it('skips the entry entirely', async () => {
       await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
-      const batchCall =
-        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-      const proposalTypes = batchCall.proposals.map(
-        (p: { type: ChangeProposalType }) => p.type,
-      );
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+    });
 
-      expect(proposalTypes).not.toContain(
-        ChangeProposalType.updateStandardName,
+    it('warns about missing deployed content', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('deployed content unavailable'),
       );
     });
 
-    it('does NOT generate updateStandardDescription proposals', async () => {
+    it('suggests running packmind pull', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
       await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
-      const batchCall =
-        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-      const proposalTypes = batchCall.proposals.map(
-        (p: { type: ChangeProposalType }) => p.type,
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('packmind pull'),
       );
-
-      expect(proposalTypes).not.toContain(
-        ChangeProposalType.updateStandardDescription,
-      );
-    });
-
-    it('does NOT generate updateStandardScope proposals', async () => {
-      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
-
-      const batchCall =
-        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-      const proposalTypes = batchCall.proposals.map(
-        (p: { type: ChangeProposalType }) => p.type,
-      );
-
-      expect(proposalTypes).not.toContain(
-        ChangeProposalType.updateStandardScope,
-      );
-    });
-
-    it('still generates addRule proposals', async () => {
-      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
-
-      const batchCall =
-        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
-      const proposalTypes = batchCall.proposals.map(
-        (p: { type: ChangeProposalType }) => p.type,
-      );
-
-      expect(proposalTypes).toContain(ChangeProposalType.addRule);
     });
   });
 
@@ -783,7 +755,7 @@ describe('playbookSubmitHandler', () => {
       });
 
       // Deployed content does NOT include the command file
-      mockGateway.deployment.getDeployed.mockResolvedValue({
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [],
           delete: [],
@@ -805,17 +777,116 @@ describe('playbookSubmitHandler', () => {
       ]);
     });
 
-    it('does NOT generate updateCommandName proposals', async () => {
+    it('skips the entry entirely', async () => {
       await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
-      // No proposals are generated at all, so batchCreate should not be called
       expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
     });
 
-    it('does NOT generate updateCommandDescription proposals', async () => {
+    it('warns about missing deployed content', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
       await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('deployed content unavailable'),
+      );
+    });
+
+    it('suggests running packmind pull', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('packmind pull'),
+      );
+    });
+  });
+
+  describe('when staged entries produce zero proposals', () => {
+    beforeEach(() => {
+      // Updated command whose content matches deployed — produces 0 proposals
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/commands/my-command.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: COMMAND_CONTENT,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          codingAgent: 'claude',
+          changeType: 'updated',
+          content: COMMAND_CONTENT,
+        }),
+      ]);
+    });
+
+    it('does not call batchCreate', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
       expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+    });
+
+    it('logs informative message', async () => {
+      const { logConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+      expect(logConsole).toHaveBeenCalledWith(
+        expect.stringContaining('no changes detected'),
+      );
+    });
+
+    it('cleans up staged entries', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.claude/commands/my-command.md',
+      );
+    });
+
+    it('exits 0', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 
