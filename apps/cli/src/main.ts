@@ -104,7 +104,6 @@ const app = subcommands({
     logout: logoutCommand,
     packages: packagesCommand,
     playbook: playbookCommand,
-    remove: uninstallCommand, // Alias for uninstall
     'setup-mcp': setupMcpCommand,
     skills: skillsCommand,
     standards: standardsCommand,
