@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useState } from 'react';
 import {
   PMBadge,
+  PMButton,
   PMHStack,
   PMInput,
   PMSeparator,
@@ -8,7 +9,9 @@ import {
   PMTextArea,
   PMVStack,
 } from '@packmind/ui';
+import { LuCheck, LuChevronDown, LuChevronUp, LuX } from 'react-icons/lu';
 import { LuFolder, LuGitBranch, LuPackage } from 'react-icons/lu';
+import { Collapsible, useCollapsibleContext } from '@chakra-ui/react';
 import {
   ChangeProposalDecision,
   ChangeProposalType,
@@ -35,6 +38,11 @@ import {
   useGetTargetsByOrganizationQuery,
   useListPackagesBySpaceQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
+
+const CollapsibleChevron = () => {
+  const { open } = useCollapsibleContext();
+  return open ? <LuChevronUp size={12} /> : <LuChevronDown size={12} />;
+};
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -184,6 +192,13 @@ export function ChangeProposalCardBody({
 
   const editable = isEditableProposalType(proposal.type);
   const singleLine = isSingleLineProposalType(proposal.type);
+  const isEdited =
+    editable &&
+    decision != null &&
+    (decision as ScalarUpdatePayload).newValue !== newValue;
+  const editedNewValue = isEdited
+    ? (decision as ScalarUpdatePayload).newValue
+    : null;
   const [isEditing, setIsEditing] = useState(false);
   const [editedValue, setEditedValue] = useState(newValue);
   const isEditValid = editedValue.trim().length > 0;
@@ -227,7 +242,7 @@ export function ChangeProposalCardBody({
 
   return (
     <PMVStack gap={0} alignItems="stretch">
-      {showToolbar && (
+      {showToolbar && !isEditing && (
         <>
           <PMSeparator borderColor="border.tertiary" />
           <PMVStack p={4} alignItems="stretch">
@@ -238,8 +253,6 @@ export function ChangeProposalCardBody({
               spaceId={proposal.spaceId}
               isOutdated={isOutdated}
               isBlockedByConflict={isBlockedByConflict}
-              isEditing={isEditing}
-              isEditValid={isEditValid}
               viewMode={viewMode}
               showEditButton={resolvedShowEditButton}
               onViewModeChange={onViewModeChange}
@@ -247,8 +260,6 @@ export function ChangeProposalCardBody({
               onAccept={handleAccept}
               onDismiss={onDismiss}
               onUndo={onUndo}
-              onCancelEdit={handleCancelEdit}
-              onAcceptEdit={handleAcceptEdit}
             />
           </PMVStack>
         </>
@@ -266,22 +277,42 @@ export function ChangeProposalCardBody({
       <PMSeparator borderColor="border.tertiary" />
       <PMVStack p={4} alignItems="stretch">
         {isEditing ? (
-          singleLine ? (
-            <PMInput
-              value={editedValue}
-              onChange={(e) => setEditedValue(e.target.value)}
-              size="sm"
-              autoFocus
-            />
-          ) : (
-            <PMTextArea
-              value={editedValue}
-              onChange={(e) => setEditedValue(e.target.value)}
-              size="sm"
-              rows={10}
-              autoFocus
-            />
-          )
+          <PMVStack gap={3} alignItems="stretch">
+            {singleLine ? (
+              <PMInput
+                value={editedValue}
+                onChange={(e) => setEditedValue(e.target.value)}
+                size="sm"
+                autoFocus
+              />
+            ) : (
+              <PMTextArea
+                value={editedValue}
+                onChange={(e) => setEditedValue(e.target.value)}
+                size="sm"
+                rows={10}
+                autoFocus
+              />
+            )}
+            <PMHStack gap={2} justifyContent="flex-end">
+              <PMButton size="xs" variant="outline" onClick={handleCancelEdit}>
+                <LuX />
+                Cancel
+              </PMButton>
+              <PMButton
+                size="xs"
+                variant="outline"
+                onClick={handleAcceptEdit}
+                disabled={!isEditValid}
+                color="green.300"
+                borderColor="green.300"
+                opacity={isEditValid ? 1 : 0.5}
+              >
+                <LuCheck />
+                Save & Accept
+              </PMButton>
+            </PMHStack>
+          </PMVStack>
         ) : isRemoveType ? (
           <RemoveProposalContent
             spaceId={proposal.spaceId}
@@ -290,6 +321,49 @@ export function ChangeProposalCardBody({
             poolStatus={poolStatus}
             decision={removeDecision}
           />
+        ) : isEdited ? (
+          <PMVStack gap={4} alignItems="stretch">
+            <Collapsible.Root>
+              <PMHStack alignItems="center" justifyContent="space-between">
+                <Collapsible.Trigger cursor="pointer" textAlign="left">
+                  <PMHStack gap={1} alignItems="center">
+                    <PMText fontSize="xs" color="secondary" fontWeight="medium">
+                      Original proposal
+                    </PMText>
+                    <CollapsibleChevron />
+                  </PMHStack>
+                </Collapsible.Trigger>
+                <PMButton
+                  size="xs"
+                  variant="ghost"
+                  color="blue.400"
+                  onClick={onUndo}
+                >
+                  Reset to original
+                </PMButton>
+              </PMHStack>
+              <Collapsible.Content>
+                <PMVStack gap={1} alignItems="stretch" opacity={0.6} pt={2}>
+                  <FocusedView
+                    oldValue={oldValue}
+                    newValue={newValue}
+                    isMarkdownContent={markdown}
+                  />
+                </PMVStack>
+              </Collapsible.Content>
+            </Collapsible.Root>
+            <PMSeparator borderColor="border.tertiary" />
+            <PMVStack gap={1} alignItems="stretch">
+              <PMText fontSize="xs" color="secondary" fontWeight="medium">
+                Edited
+              </PMText>
+              <FocusedView
+                oldValue={oldValue}
+                newValue={editedNewValue!}
+                isMarkdownContent={markdown}
+              />
+            </PMVStack>
+          </PMVStack>
         ) : !showToolbar && renderExpandedView ? (
           renderExpandedView(viewMode, proposal)
         ) : viewMode === 'focused' ? (

@@ -26,6 +26,10 @@ import {
   ApplyCreationChangeProposalsCommand,
   ApplyCreationChangeProposalsResponse,
 } from '../contracts/IApplyCreationChangeProposalsUseCase';
+import {
+  RecomputeConflictsCommand,
+  RecomputeConflictsResponse,
+} from '../contracts/IRecomputeConflicts';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { RecipeId } from '../../recipes/RecipeId';
 import { SkillId } from '../../skills/SkillId';
@@ -62,4 +66,8 @@ export interface IPlaybookChangeManagementPort {
   applyCreationChangeProposals(
     command: ApplyCreationChangeProposalsCommand,
   ): Promise<ApplyCreationChangeProposalsResponse>;
+
+  recomputeConflicts(
+    command: RecomputeConflictsCommand,
+  ): Promise<RecomputeConflictsResponse>;
 }

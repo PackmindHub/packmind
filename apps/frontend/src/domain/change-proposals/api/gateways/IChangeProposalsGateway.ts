@@ -9,6 +9,7 @@ import {
   IListChangeProposalsByArtefact,
   IApplyChangeProposalsUseCase,
   IApplyCreationChangeProposalsUseCase,
+  IRecomputeConflictsUseCase,
   NewGateway,
   RecipeId,
   StandardId,
@@ -46,6 +47,8 @@ export interface IChangeProposalsGateway {
   applySkillChangeProposals: NewGateway<IApplyChangeProposalsUseCase<SkillId>>;
 
   applyCreationChangeProposals: NewGateway<IApplyCreationChangeProposalsUseCase>;
+
+  recomputeConflicts: NewGateway<IRecomputeConflictsUseCase>;
 
   createChangeProposal<T extends ChangeProposalType>(
     params: CreateChangeProposalParams<T>,

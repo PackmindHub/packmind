@@ -381,7 +381,7 @@ export function SkillReviewDetail({
           <SkillResultTabContent
             skill={skill}
             files={files}
-            proposals={selectedSkillProposals}
+            proposals={pool.proposalsWithDecisions}
             acceptedProposalIds={pool.acceptedProposalIds}
             filePathFilter={filePathFilter}
           />

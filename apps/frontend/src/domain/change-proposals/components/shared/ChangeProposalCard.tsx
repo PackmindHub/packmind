@@ -1,8 +1,13 @@
 import { ReactNode } from 'react';
 import { PMAccordion } from '@packmind/ui';
-import { ChangeProposalDecision, ChangeProposalType } from '@packmind/types';
+import {
+  ChangeProposalDecision,
+  ChangeProposalType,
+  ScalarUpdatePayload,
+} from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ViewMode } from '../../hooks/useCardReviewState';
+import { isEditableProposalType } from '../../utils/editableProposalTypes';
 import { ChangeProposalCardHeader } from './ChangeProposalCardHeader';
 import { ChangeProposalCardBody } from './ChangeProposalCardBody';
 
@@ -59,6 +64,12 @@ export function ChangeProposalCard({
   renderExpandedView,
 }: Readonly<ChangeProposalCardProps>) {
   const isRemoval = isRemoveProposal(proposal.type as ChangeProposalType);
+  const proposalType = proposal.type as ChangeProposalType;
+  const isEdited =
+    isEditableProposalType(proposalType) &&
+    decision != null &&
+    (decision as ScalarUpdatePayload).newValue !==
+      (proposal.payload as ScalarUpdatePayload).newValue;
 
   return (
     <PMAccordion.Item
@@ -70,9 +81,10 @@ export function ChangeProposalCard({
     >
       <ChangeProposalCardHeader
         proposalNumber={proposalNumber}
-        proposalType={proposal.type as ChangeProposalType}
+        proposalType={proposalType}
         poolStatus={poolStatus}
         isOutdated={isOutdated}
+        isEdited={isEdited}
         authorName={authorName}
         createdAt={proposal.createdAt}
         artefactVersion={proposal.artefactVersion}

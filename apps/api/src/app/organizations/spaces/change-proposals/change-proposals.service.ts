@@ -16,6 +16,8 @@ import {
   ListChangeProposalsBySpaceResponse,
   PreviewArtifactRenderingCommand,
   PreviewArtifactRenderingResponse,
+  RecomputeConflictsCommand,
+  RecomputeConflictsResponse,
 } from '@packmind/types';
 import {
   InjectCodingAgentAdapter,
@@ -65,6 +67,12 @@ export class ChangeProposalsService {
     return this.playbookChangeManagementAdapter.listChangeProposalsBySpace(
       command,
     );
+  }
+
+  async recomputeConflicts(
+    command: RecomputeConflictsCommand,
+  ): Promise<RecomputeConflictsResponse> {
+    return this.playbookChangeManagementAdapter.recomputeConflicts(command);
   }
 
   async previewArtifactRendering(

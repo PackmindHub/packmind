@@ -10,7 +10,7 @@ import {
   ChangeProposalType,
   getItemTypeFromChangeProposalType,
 } from '@packmind/types';
-import { LuCircleAlert, LuTrash2 } from 'react-icons/lu';
+import { LuCircleAlert, LuPencil, LuTrash2 } from 'react-icons/lu';
 import { ProposalLabel } from './ProposalLabel';
 import { StatusDot } from './StatusDot';
 import { ProposalMeta } from './ProposalMeta';
@@ -31,6 +31,7 @@ interface ChangeProposalCardHeaderProps {
   proposalType: ChangeProposalType;
   poolStatus: PoolStatus;
   isOutdated: boolean;
+  isEdited: boolean;
   authorName: string;
   createdAt: Date;
   artefactVersion: number;
@@ -42,6 +43,7 @@ export function ChangeProposalCardHeader({
   proposalType,
   poolStatus,
   isOutdated,
+  isEdited,
   authorName,
   createdAt,
   artefactVersion,
@@ -81,6 +83,16 @@ export function ChangeProposalCardHeader({
                 <LuCircleAlert />
               </PMIcon>
               Outdated
+            </PMBadge>
+          </PMTooltip>
+        )}
+        {isEdited && (
+          <PMTooltip label="This proposal was edited before acceptance">
+            <PMBadge colorPalette="blue" variant="subtle" size="sm">
+              <PMIcon>
+                <LuPencil />
+              </PMIcon>
+              Edited
             </PMBadge>
           </PMTooltip>
         )}

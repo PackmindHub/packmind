@@ -331,7 +331,7 @@ export function StandardReviewDetail({
           <StandardResultTabContent
             standard={selectedStandard}
             rules={rules}
-            proposals={selectedStandardProposals}
+            proposals={pool.proposalsWithDecisions}
             acceptedProposalIds={pool.acceptedProposalIds}
           />
         )}
