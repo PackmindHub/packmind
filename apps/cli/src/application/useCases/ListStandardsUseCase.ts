@@ -1,5 +1,6 @@
 import {
-  IListStandardsResult,
+  ListStandardsCommand,
+  ListStandardsResult,
   IListStandardsUseCase,
 } from '../../domain/useCases/IListStandardsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
@@ -11,12 +12,29 @@ export class ListStandardsUseCase implements IListStandardsUseCase {
     private readonly spaceService: ISpaceService,
   ) {}
 
-  public async execute(): Promise<IListStandardsResult> {
-    const globalSpace = await this.spaceService.getDefaultSpace();
-    const listStandardsResponse = await this.packmindGateway.standards.list({
-      spaceId: globalSpace.id,
-    });
+  public async execute(
+    command: ListStandardsCommand,
+  ): Promise<ListStandardsResult> {
+    if (command.spaceId) {
+      const response = await this.packmindGateway.standards.list({
+        spaceId: command.spaceId,
+      });
+      return response.standards.map((s) => ({
+        ...s,
+        spaceId: command.spaceId as string,
+      }));
+    }
 
-    return listStandardsResponse.standards;
+    const spaces = await this.spaceService.getSpaces();
+    const results = await Promise.all(
+      spaces.map((space) =>
+        this.packmindGateway.standards
+          .list({ spaceId: space.id })
+          .then((r) =>
+            r.standards.map((s) => ({ ...s, spaceId: space.id as string })),
+          ),
+      ),
+    );
+    return results.flat();
   }
 }

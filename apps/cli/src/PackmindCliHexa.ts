@@ -50,8 +50,8 @@ import {
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
 import {
-  IListStandardsCommand,
-  IListStandardsResult,
+  ListStandardsCommand,
+  ListStandardsResult,
 } from './domain/useCases/IListStandardsUseCase';
 import {
   ListCommandsCommand,
@@ -183,8 +183,8 @@ export class PackmindCliHexa {
   }
 
   public async listStandards(
-    command: IListStandardsCommand,
-  ): Promise<IListStandardsResult> {
+    command: ListStandardsCommand,
+  ): Promise<ListStandardsResult> {
     return this.hexa.useCases.listStandards.execute(command);
   }
 
