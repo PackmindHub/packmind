@@ -141,8 +141,13 @@ async function executeAddToPackage(
     const message = error instanceof Error ? error.message : String(error);
     logErrorConsole(message);
     if (error instanceof ItemNotFoundError) {
+      const spaceFlag = error.spaceSlug ? ` --space ${error.spaceSlug}` : '';
+      const command = formatCommand(
+        `packmind-cli ${error.itemType}s list${spaceFlag}`,
+      );
+
       logInfoConsole(
-        `Run \`packmind-cli ${error.itemType}s list\` to display available ${error.itemType}s`,
+        `Run \`${command}\` to display available ${error.itemType}s`,
       );
     }
     return { success: false, error: message };

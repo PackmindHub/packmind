@@ -3,6 +3,7 @@ import {
   AddToPackageHandlerArgs,
   AddToPackageHandlerDeps,
 } from './addToPackageHandler';
+import { ItemNotFoundError } from '../../../domain/errors/ItemNotFoundError';
 import {
   logErrorConsole,
   logInfoConsole,
@@ -219,6 +220,69 @@ describe('addToPackageHandler', () => {
 
       await addToPackageHandler(makeArgs(), deps);
       expect(deps.mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when an ItemNotFoundError is thrown', () => {
+    describe('with a spaceSlug', () => {
+      let deps: ReturnType<typeof makeDeps>;
+
+      beforeEach(async () => {
+        deps = makeDeps();
+        const { AddToPackageUseCase } = jest.requireMock(
+          '../../../application/useCases/AddToPackageUseCase',
+        );
+        AddToPackageUseCase.mockImplementationOnce(() => ({
+          execute: jest
+            .fn()
+            .mockRejectedValue(
+              new ItemNotFoundError('standard', 'missing-std', 'global'),
+            ),
+        }));
+        await addToPackageHandler(makeArgs(), deps);
+      });
+
+      it('hints to run the list command with --space flag', () => {
+        expect(mockLogInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('packmind-cli standards list --space global'),
+        );
+      });
+
+      it('calls exit(1)', () => {
+        expect(deps.mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('without a spaceSlug', () => {
+      let deps: ReturnType<typeof makeDeps>;
+
+      beforeEach(async () => {
+        deps = makeDeps();
+        const { AddToPackageUseCase } = jest.requireMock(
+          '../../../application/useCases/AddToPackageUseCase',
+        );
+        AddToPackageUseCase.mockImplementationOnce(() => ({
+          execute: jest
+            .fn()
+            .mockRejectedValue(
+              new ItemNotFoundError('standard', 'missing-std'),
+            ),
+        }));
+        await addToPackageHandler(makeArgs(), deps);
+      });
+
+      it('hints to run the list command without --space flag', () => {
+        expect(mockLogInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('packmind-cli standards list'),
+        );
+        expect(mockLogInfoConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('--space'),
+        );
+      });
+
+      it('calls exit(1)', () => {
+        expect(deps.mockExit).toHaveBeenCalledWith(1);
+      });
     });
   });
 });
