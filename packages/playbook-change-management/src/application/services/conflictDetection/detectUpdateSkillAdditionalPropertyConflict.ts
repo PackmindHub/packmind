@@ -1,4 +1,4 @@
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposal, ChangeProposalType } from '@packmind/types';
 import { ConflictDetector } from './ConflictDetector';
 import { sameProposal } from './sameProposal';
 import { sameArtefact } from './sameArtefact';
@@ -12,14 +12,17 @@ import { sameSubTarget } from './sameSubTarget';
  */
 export const detectUpdateSkillAdditionalPropertyConflict: ConflictDetector<
   ChangeProposalType.updateSkillAdditionalProperty
-> = (cp1, cp2) => {
+> = (cp1, cp2, diffService) => {
   if (sameProposal(cp1, cp2) || !sameArtefact(cp1, cp2)) return false;
 
   if (cp2.type !== ChangeProposalType.updateSkillAdditionalProperty) {
     return false;
   }
 
-  if (!sameSubTarget(cp1, cp2)) return false;
+  const narrowedCp2 =
+    cp2 as ChangeProposal<ChangeProposalType.updateSkillAdditionalProperty>;
 
-  return cp1.payload.newValue !== cp2.payload.newValue;
+  if (!sameSubTarget(cp1, narrowedCp2, diffService)) return false;
+
+  return cp1.payload.newValue !== narrowedCp2.payload.newValue;
 };
