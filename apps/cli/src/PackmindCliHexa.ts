@@ -54,8 +54,8 @@ import {
   IListStandardsResult,
 } from './domain/useCases/IListStandardsUseCase';
 import {
-  IListCommandsCommand,
-  IListCommandsResult,
+  ListCommandsCommand,
+  ListCommandsResult,
 } from './domain/useCases/IListCommandsUseCase';
 import {
   IListSkillsCommand,
@@ -189,8 +189,8 @@ export class PackmindCliHexa {
   }
 
   public async listCommands(
-    command: IListCommandsCommand,
-  ): Promise<IListCommandsResult> {
+    command: ListCommandsCommand,
+  ): Promise<ListCommandsResult> {
     return this.hexa.useCases.listCommands.execute(command);
   }
 
