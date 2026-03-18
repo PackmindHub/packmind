@@ -18,6 +18,7 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../application/utils/pathUtils';
+import { Space } from '@packmind/types';
 
 type SkillFile = {
   path: string;
@@ -31,6 +32,7 @@ type SkillFile = {
 export type PlaybookAddHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   filePath: string | undefined;
+  spaceSlug?: string;
   exit: (code: number) => void;
   getCwd: () => string;
   readFile: (path: string) => string;
@@ -45,6 +47,7 @@ export async function playbookAddHandler(
   const {
     packmindCliHexa,
     filePath,
+    spaceSlug,
     exit,
     getCwd,
     readFile,
@@ -163,8 +166,6 @@ export async function playbookAddHandler(
     targetDir,
   );
 
-  const spaceId =
-    deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
   const targetId = deployedContext?.targetId;
 
   // Deployed content and lock file paths are relative to the project directory
@@ -210,6 +211,35 @@ export async function playbookAddHandler(
     }
   }
 
+  // Resolve space ID
+  let spaceId: string;
+  if (changeType === 'updated') {
+    spaceId =
+      deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
+  } else {
+    const allSpaces = await packmindCliHexa.getSpaces();
+
+    if (spaceSlug) {
+      const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
+      if (!matchedSpace) {
+        logErrorConsole(
+          `Space "${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
+        );
+        exit(1);
+        return;
+      }
+      spaceId = matchedSpace.id;
+    } else if (allSpaces.length === 1) {
+      spaceId = allSpaces[0].id;
+    } else {
+      logErrorConsole(
+        `Multiple spaces found. Use --space to specify the target space:\n${formatSpaceList(allSpaces)}\n\nExample: packmind-cli playbook add --space ${allSpaces[0].slug} <path>`,
+      );
+      exit(1);
+      return;
+    }
+  }
+
   playbookLocalRepository.addChange({
     filePath: normalizedFilePath,
     artifactType,
@@ -226,4 +256,11 @@ export async function playbookAddHandler(
     `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook. ${formatLabel(codingAgent)}`,
   );
   exit(0);
+}
+
+export function formatSpaceList(spaces: Space[]): string {
+  const maxSlugLength = Math.max(...spaces.map((s) => s.slug.length));
+  return spaces
+    .map((s) => `  ${s.slug.padEnd(maxSlugLength)}  (${s.name})`)
+    .join('\n');
 }

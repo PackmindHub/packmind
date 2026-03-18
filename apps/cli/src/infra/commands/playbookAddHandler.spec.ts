@@ -62,6 +62,15 @@ describe('playbookAddHandler', () => {
         slug: 'global',
         organizationId: 'org-1',
       }),
+      getSpaces: jest.fn().mockResolvedValue([
+        {
+          id: 'space-123',
+          name: 'Global',
+          slug: 'global',
+          isDefaultSpace: true,
+          organizationId: 'org-1',
+        },
+      ]),
       configExists: jest
         .fn()
         .mockImplementation((dir: string) =>
@@ -122,6 +131,7 @@ describe('playbookAddHandler', () => {
       readSkillDirectory: mockReadSkillDirectory,
       playbookLocalRepository: mockPlaybookLocalRepository,
       lockFileRepository: mockLockFileRepository,
+      spaceSlug: undefined,
       ...overrides,
     };
   }
@@ -605,6 +615,172 @@ describe('playbookAddHandler', () => {
 
         const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
         expect(callArg.changeType).toBe('created');
+      });
+    });
+  });
+
+  describe('space resolution for new artifacts', () => {
+    const MULTI_SPACE_LIST = [
+      {
+        id: 'space-123',
+        name: 'Global',
+        slug: 'global',
+        isDefaultSpace: true,
+        organizationId: 'org-1',
+      },
+      {
+        id: 'space-456',
+        name: 'Team Backend',
+        slug: 'team-backend',
+        isDefaultSpace: false,
+        organizationId: 'org-1',
+      },
+    ];
+
+    describe('when creating in multi-space org without --space flag', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+      });
+
+      it('logs error mentioning --space flag', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('--space'),
+        );
+      });
+
+      it('logs error listing global space', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('global'),
+        );
+      });
+
+      it('logs error listing team-backend space', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('team-backend'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not add to playbook', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when creating in multi-space org with valid --space flag', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+      });
+
+      it('uses the specified space', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-456',
+          }),
+        );
+      });
+    });
+
+    describe('when creating in multi-space org with invalid --space flag', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+      });
+
+      it('logs error listing available spaces', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps({ spaceSlug: 'nonexistent' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('nonexistent'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'nonexistent' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when creating in single-space org', () => {
+      it('auto-selects the only space', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-123',
+          }),
+        );
+      });
+
+      it('accepts explicit --space flag', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'global' }));
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-123',
+          }),
+        );
+      });
+    });
+
+    describe('when updating existing artifact in multi-space org', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+        mockGetDeployed.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/commands/my-command.md',
+                content: 'old content',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+      });
+
+      it('uses deployed context space regardless of --space flag', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-123',
+            changeType: 'updated',
+          }),
+        );
       });
     });
   });
