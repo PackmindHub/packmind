@@ -12,6 +12,7 @@ import {
   PMAlertDialog,
   PMCheckbox,
   PMInput,
+  PMBadge,
   useTableSort,
 } from '@packmind/ui';
 
@@ -34,6 +35,7 @@ import { PackageCountBadge } from '../../deployments/components/PackageCountBadg
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
+import { useGetGroupedChangeProposalsQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -56,6 +58,15 @@ export const StandardsList = ({
     spaceId,
     organization?.id,
   );
+  const { data: groupedProposals } = useGetGroupedChangeProposalsQuery();
+  const pendingReviewCountByStandardId = React.useMemo(() => {
+    const map = new Map<string, number>();
+    if (!groupedProposals) return map;
+    for (const item of groupedProposals.standards) {
+      map.set(item.artefactId, item.changeProposalCount);
+    }
+    return map;
+  }, [groupedProposals]);
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = React.useState<
     StandardId[]
@@ -173,6 +184,12 @@ export const StandardsList = ({
         }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
+        case 'pendingReviews':
+          return (
+            direction *
+            ((pendingReviewCountByStandardId.get(a.id) ?? 0) -
+              (pendingReviewCountByStandardId.get(b.id) ?? 0))
+          );
         case 'packages':
           return (
             direction *
@@ -230,6 +247,34 @@ export const StandardsList = ({
           </>
         ),
         version: standard.version,
+        pendingReviews: (() => {
+          const count = pendingReviewCountByStandardId.get(standard.id) ?? 0;
+          if (count > 0 && orgSlug && spaceSlug) {
+            return (
+              <PMLink asChild>
+                <Link
+                  to={routes.space.toReviewChangesArtefact(
+                    orgSlug,
+                    spaceSlug,
+                    'standards',
+                    standard.id,
+                  )}
+                >
+                  <PMBadge colorPalette="yellow" variant="solid" size="sm">
+                    {count}
+                  </PMBadge>
+                </Link>
+              </PMLink>
+            );
+          }
+          return (
+            <PMBadge colorPalette="green" variant="solid" size="sm">
+              0
+            </PMBadge>
+          );
+        })(),
+        pendingReviewsCount:
+          pendingReviewCountByStandardId.get(standard.id) ?? 0,
         packages: (
           <PackageCountBadge
             artifactId={standard.id}
@@ -253,6 +298,7 @@ export const StandardsList = ({
     sortDirection,
     searchQuery,
     packagesResponse,
+    pendingReviewCountByStandardId,
   ]);
 
   const isAllSelected =
@@ -309,6 +355,14 @@ export const StandardsList = ({
       align: 'center',
       sortable: true,
       sortDirection: getSortDirection('version'),
+    },
+    {
+      key: 'pendingReviews',
+      header: 'Pending reviews',
+      width: '150px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('pendingReviews'),
     },
     {
       key: 'packages',
