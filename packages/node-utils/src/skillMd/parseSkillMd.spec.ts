@@ -122,6 +122,8 @@ argument-hint: '<query>'
 disable-model-invocation: true
 user-invocable: true
 model: opus
+context: fork
+agent: plan
 hooks:
   preToolCall: echo hello
 ---
@@ -152,6 +154,18 @@ Body.`;
       const result = parseSkillMd(content);
 
       expect(result?.additionalProperties['model']).toBe('"opus"');
+    });
+
+    it('extracts context field', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.additionalProperties['context']).toBe('"fork"');
+    });
+
+    it('extracts agent field', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.additionalProperties['agent']).toBe('"plan"');
     });
 
     it('extracts nested objects as JSON', () => {

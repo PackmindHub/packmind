@@ -266,13 +266,19 @@ describe('parseSkillDirectory', () => {
   });
 
   describe('when SKILL.md has Claude Code additional properties', () => {
-    it('populates additionalProperties with camelCase keys', () => {
+    it('populates additionalProperties with all supported camelCase keys', () => {
       const content = [
         '---',
         'name: My Skill',
         'description: A useful skill',
         'model: opus',
         'user-invocable: true',
+        'argument-hint: "<query>"',
+        'disable-model-invocation: true',
+        'context: fork',
+        'agent: plan',
+        'hooks:',
+        '  preToolCall: echo hello',
         '---',
         'The prompt.',
       ].join('\n');
@@ -286,7 +292,15 @@ describe('parseSkillDirectory', () => {
           description: 'A useful skill',
           prompt: 'The prompt.',
           skillMdPermissions: 'rw-r--r--',
-          additionalProperties: { model: 'opus', userInvocable: true },
+          additionalProperties: {
+            model: 'opus',
+            userInvocable: true,
+            argumentHint: '<query>',
+            disableModelInvocation: true,
+            context: 'fork',
+            agent: 'plan',
+            hooks: { preToolCall: 'echo hello' },
+          },
           files: [],
         },
       });
