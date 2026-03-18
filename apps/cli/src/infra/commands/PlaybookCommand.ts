@@ -98,7 +98,7 @@ Subcommands:
         packmindCliHexa,
         playbookLocalRepository,
         lockFileRepository,
-        repoRoot,
+        cwd: process.cwd(),
         exit: process.exit,
         message,
         openEditor: (prefill: string) => openEditorForMessage(prefill),

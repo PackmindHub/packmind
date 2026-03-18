@@ -46,9 +46,17 @@ describe('playbookAddHandler', () => {
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   let mockGetDeployed: jest.Mock;
+  let mockGetContentByVersions: jest.Mock;
 
   beforeEach(() => {
     mockGetDeployed = jest.fn().mockResolvedValue({
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skillFolders: [],
+      targetId: 'target-456',
+      resolvedAgents: [],
+    });
+
+    mockGetContentByVersions = jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
       targetId: 'target-456',
@@ -91,7 +99,10 @@ describe('playbookAddHandler', () => {
         .mockReturnValue('git@github.com:org/repo.git'),
       getCurrentBranch: jest.fn().mockReturnValue('main'),
       getPackmindGateway: () => ({
-        deployment: { getDeployed: mockGetDeployed },
+        deployment: {
+          getDeployed: mockGetDeployed,
+          getContentByVersions: mockGetContentByVersions,
+        },
       }),
     } as unknown as PackmindCliHexa;
 
@@ -232,7 +243,28 @@ describe('playbookAddHandler', () => {
 
   describe('when local content matches deployed content', () => {
     beforeEach(() => {
-      mockGetDeployed.mockResolvedValue({
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -271,9 +303,87 @@ describe('playbookAddHandler', () => {
     });
   });
 
+  describe('when local content matches deployed content with trailing whitespace difference', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: VALID_COMMAND_CONTENT,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue(VALID_COMMAND_CONTENT + '\n');
+    });
+
+    it('logs already up to date', async () => {
+      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when command content differs from deployed', () => {
     beforeEach(() => {
-      mockGetDeployed.mockResolvedValue({
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -551,9 +661,30 @@ describe('playbookAddHandler', () => {
   });
 
   describe('changeType field', () => {
-    describe('when file path exists in deployed content', () => {
+    describe('when file path exists in lock file', () => {
       beforeEach(() => {
-        mockGetDeployed.mockResolvedValue({
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+        mockGetContentByVersions.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -577,24 +708,7 @@ describe('playbookAddHandler', () => {
       });
     });
 
-    describe('when file path does not exist in deployed content', () => {
-      beforeEach(() => {
-        mockGetDeployed.mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: '.packmind/standards/other-standard.md',
-                content: 'something else',
-              },
-            ],
-            delete: [],
-          },
-          skillFolders: [],
-          targetId: 'target-456',
-          resolvedAgents: [],
-        });
-      });
-
+    describe('when file path does not exist in lock file', () => {
       it('sets changeType to "created"', async () => {
         await playbookAddHandler(buildDeps());
 
@@ -603,11 +717,9 @@ describe('playbookAddHandler', () => {
       });
     });
 
-    describe('when deployed context is unavailable', () => {
+    describe('when lock file is unavailable', () => {
       beforeEach(() => {
-        (
-          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
-        ).mockResolvedValue(null);
+        mockLockFileRepository.read.mockResolvedValue(null);
       });
 
       it('defaults changeType to "created"', async () => {
@@ -770,7 +882,28 @@ describe('playbookAddHandler', () => {
         (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
           MULTI_SPACE_LIST,
         );
-        mockGetDeployed.mockResolvedValue({
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+        mockGetContentByVersions.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
