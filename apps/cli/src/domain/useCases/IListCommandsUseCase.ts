@@ -1,9 +1,14 @@
-import { IPublicUseCase, Recipe } from '@packmind/types';
-export type IListCommandsCommand = Record<string, never>;
+import { IPublicUseCase, Recipe, SpaceId } from '@packmind/types';
+export type ListCommandsCommand = {
+  spaceId?: SpaceId;
+};
 
-export type IListCommandsResult = Pick<Recipe, 'id' | 'slug' | 'name'>[];
+export type ListCommandsResult = Pick<
+  Recipe,
+  'id' | 'slug' | 'name' | 'spaceId'
+>[];
 
 export type IListCommandsUseCase = IPublicUseCase<
-  IListCommandsCommand,
-  IListCommandsResult
+  ListCommandsCommand,
+  ListCommandsResult
 >;

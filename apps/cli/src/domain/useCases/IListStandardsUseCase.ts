@@ -1,11 +1,11 @@
-import { IPublicUseCase } from '@packmind/types';
+import { IPublicUseCase, SpaceId } from '@packmind/types';
 import { ListedStandard } from '../repositories/IPackmindGateway';
 
-export type IListStandardsCommand = Record<string, never>;
+export type ListStandardsCommand = { spaceId?: SpaceId };
 
-export type IListStandardsResult = ListedStandard[];
+export type ListStandardsResult = ListedStandard[];
 
 export type IListStandardsUseCase = IPublicUseCase<
-  IListStandardsCommand,
-  IListStandardsResult
+  ListStandardsCommand,
+  ListStandardsResult
 >;

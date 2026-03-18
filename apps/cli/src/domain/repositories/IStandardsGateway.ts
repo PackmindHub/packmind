@@ -38,6 +38,7 @@ export type ListedStandard = {
   slug: string;
   name: string;
   description: string;
+  spaceId: string;
 };
 
 export type ListStandardsResult = ListedStandard[];

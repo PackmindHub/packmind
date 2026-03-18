@@ -50,12 +50,12 @@ import {
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
 import {
-  IListStandardsCommand,
-  IListStandardsResult,
+  ListStandardsCommand,
+  ListStandardsResult,
 } from './domain/useCases/IListStandardsUseCase';
 import {
-  IListCommandsCommand,
-  IListCommandsResult,
+  ListCommandsCommand,
+  ListCommandsResult,
 } from './domain/useCases/IListCommandsUseCase';
 import {
   IListSkillsCommand,
@@ -183,14 +183,14 @@ export class PackmindCliHexa {
   }
 
   public async listStandards(
-    command: IListStandardsCommand,
-  ): Promise<IListStandardsResult> {
+    command: ListStandardsCommand,
+  ): Promise<ListStandardsResult> {
     return this.hexa.useCases.listStandards.execute(command);
   }
 
   public async listCommands(
-    command: IListCommandsCommand,
-  ): Promise<IListCommandsResult> {
+    command: ListCommandsCommand,
+  ): Promise<ListCommandsResult> {
     return this.hexa.useCases.listCommands.execute(command);
   }
 
