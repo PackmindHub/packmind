@@ -103,7 +103,7 @@ export const playbookCommand = command({
       logErrorConsole(`Unknown subcommand: ${positionals[0]}`);
     }
 
-    logConsole('Usage: packmind-cli playbook <subcommand>');
+    logConsole('Usage: packmind playbook <subcommand>');
     logConsole('');
     logConsole('Subcommands:');
     logConsole('  add <path>       Stage a local artifact change');

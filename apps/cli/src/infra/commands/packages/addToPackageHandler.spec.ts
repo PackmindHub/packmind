@@ -113,7 +113,7 @@ describe('addToPackageHandler', () => {
 
       it('hints to run packages list', () => {
         expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli packages list'),
+          expect.stringContaining('packmind packages list'),
         );
       });
 
@@ -195,7 +195,7 @@ describe('addToPackageHandler', () => {
 
     it('shows the install hint with the full @space/package slug', () => {
       expect(mockLogSuccessConsole).toHaveBeenCalledWith(
-        expect.stringContaining('packmind-cli install @global/my-pkg'),
+        expect.stringContaining('packmind install @global/my-pkg'),
       );
     });
   });
@@ -244,7 +244,7 @@ describe('addToPackageHandler', () => {
 
       it('hints to run the list command with --space flag', () => {
         expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli standards list --space global'),
+          expect.stringContaining('packmind standards list --space global'),
         );
       });
 
@@ -273,7 +273,7 @@ describe('addToPackageHandler', () => {
 
       it('hints to run the list command without --space flag', () => {
         expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli standards list'),
+          expect.stringContaining('packmind standards list'),
         );
         expect(mockLogInfoConsole).not.toHaveBeenCalledWith(
           expect.stringContaining('--space'),

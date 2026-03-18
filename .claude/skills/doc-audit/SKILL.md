@@ -112,7 +112,7 @@ Generated: {date} | Pages audited: {count}
 [... more findings]
 
 ### [B] Outdated CLI Commands
-- **{page}** (line ~{N}): References `packmind-cli {cmd}` — command not found in CLI source
+- **{page}** (line ~{N}): References `packmind {cmd}` — command not found in CLI source
 [... more findings]
 
 ### [C] Non-Existent Concepts

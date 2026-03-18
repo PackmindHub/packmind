@@ -470,7 +470,7 @@ When you install or uninstall packages, the CLI generates a `packmind-lock.json`
 
 ### Recursive Install (Monorepos)
 
-By default, `packmind-cli install` (with no package slugs) finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
+By default, `packmind install` (with no package slugs) finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
 
 ```bash
 packmind install
@@ -559,7 +559,7 @@ packmind lint /path/to/your/project
 Lint a single file:
 
 ```bash
-packmind-cli lint src/components/Button.tsx
+packmind lint src/components/Button.tsx
 ```
 
 When a single file is passed:

@@ -170,7 +170,7 @@ CLI messages provide feedback to developers running commands in the terminal. Th
 ```
 Progress:  "Fetching available packages..."
 Success:   "Package 'frontend' installed successfully"
-Error:     "Error: Unable to connect to the Packmind API. Verify your API key with `packmind-cli auth status`"
+Error:     "Error: Unable to connect to the Packmind API. Verify your API key with `packmind auth status`"
 Warning:   "Warning: 2 standards were skipped — they already exist in the target package"
 ```
 

@@ -91,7 +91,7 @@ const AVAILABLE_TARGETS: BuildTarget[] = [
   // Windows arm64
   {
     target: 'bun-windows-arm64',
-    outputName: 'packmind-cli-windows-arm64.exe',
+    outputName: 'packmind-windows-arm64.exe',
     os: 'win32',
     arch: 'arm64',
   },

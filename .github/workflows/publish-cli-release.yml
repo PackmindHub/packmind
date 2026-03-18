@@ -243,8 +243,8 @@ jobs:
           fi
           
           # Rename and copy Windows arm64
-          if [ -f "executables/packmind-cli-windows-arm64.exe" ]; then
-            cp "executables/packmind-cli-windows-arm64.exe" "release-assets/packmind-cli-windows-arm64-${VERSION}.exe"
+          if [ -f "executables/packmind-windows-arm64.exe" ]; then
+            cp "executables/packmind-windows-arm64.exe" "release-assets/packmind-windows-arm64-${VERSION}.exe"
             echo "✅ Prepared Windows arm64 executable"
           else
             echo "❌ Error: Windows arm64 executable not found"

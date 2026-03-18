@@ -27,13 +27,13 @@ You are auditing a section of the Packmind end-user documentation. Your job is t
 
 ### Category B: Outdated CLI Commands (ERROR)
 
-**What to check:** References to `packmind-cli <command>` or CLI command names in the documentation.
+**What to check:** References to `packmind <command>` or CLI command names in the documentation.
 
 **How to verify:** Start with the CLI commands ground truth list, then **read the actual command source file** to verify. Command files follow the pattern `*Command.ts` or `*Handler.ts` in `apps/cli/src/infra/commands/`. When a doc references a specific command, open the corresponding source file to confirm the command name, subcommands, and described behavior match.
 
 **Valid finding:**
-- Doc references `packmind-cli migrate` but no `MigrateCommand.ts` or `migrateHandler.ts` exists in CLI source
-- Doc says `packmind-cli lint --fix` supports auto-fix but reading `LintCommand.ts` shows no `--fix` option
+- Doc references `packmind migrate` but no `MigrateCommand.ts` or `migrateHandler.ts` exists in CLI source
+- Doc says `packmind lint --fix` supports auto-fix but reading `LintCommand.ts` shows no `--fix` option
 
 **Not a finding (false positive):**
 - CLI flags or options that DO exist in the source when you read the file
@@ -104,7 +104,7 @@ Where:
 
 ```
 [ERROR] [A] **getting-started/gs-onboarding.mdx** (line ~45): Link to `/concepts/workflow-management` — no matching MDX file exists in apps/doc/concepts/
-[ERROR] [B] **tools/cli.mdx** (line ~120): References `packmind-cli migrate` — no MigrateCommand.ts found in CLI source
+[ERROR] [B] **tools/cli.mdx** (line ~120): References `packmind migrate` — no MigrateCommand.ts found in CLI source
 [ERROR] [D] **concepts/standards-management.mdx** (line ~30): "Coming in Q2 2024" — date has passed (current date: 2026-03-12)
 [WARNING] [E] **N/A**: CLI command `SyncCommand.ts` has no documentation coverage
 ```
