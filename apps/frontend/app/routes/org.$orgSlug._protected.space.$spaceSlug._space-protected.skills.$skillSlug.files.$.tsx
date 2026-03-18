@@ -75,6 +75,11 @@ export default function SkillFilesRouteModule() {
                 ? skillMdClipboardContent
                 : undefined
             }
+            rawContent={
+              selectedFile?.path === SKILL_MD_FILENAME
+                ? skillMdClipboardContent
+                : undefined
+            }
           />
         </PMVStack>
       </PMVStack>
