@@ -189,7 +189,11 @@ export class ApplyCreationChangeProposalsUseCase
           itemType: getItemTypeFromChangeProposalType(proposal.type),
           itemId: createdArtefactId,
           changeType: proposal.type,
-          edited: isChangeProposalEdited(proposal.type, proposal.decision),
+          edited: isChangeProposalEdited(
+            proposal.type,
+            proposal.decision,
+            proposal.payload,
+          ),
         }),
       );
     }

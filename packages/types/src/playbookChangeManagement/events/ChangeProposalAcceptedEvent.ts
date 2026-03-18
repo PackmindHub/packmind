@@ -4,6 +4,7 @@ import {
   ChangeProposalItemType,
   ChangeProposalType,
 } from '../ChangeProposalType';
+import { ScalarUpdatePayload } from '../ChangeProposalPayload';
 
 export interface ChangeProposalAcceptedPayload {
   changeProposalId: ChangeProposalId;
@@ -33,9 +34,16 @@ const EDITABLE_CHANGE_PROPOSAL_TYPES: ReadonlySet<ChangeProposalType> = new Set(
 export function isChangeProposalEdited(
   changeType: ChangeProposalType,
   decision: unknown,
+  payload: unknown,
 ): boolean {
   if (!EDITABLE_CHANGE_PROPOSAL_TYPES.has(changeType)) {
     return false;
   }
-  return decision !== null;
+  if (decision === null) {
+    return false;
+  }
+  return (
+    (decision as ScalarUpdatePayload).newValue !==
+    (payload as ScalarUpdatePayload).newValue
+  );
 }
