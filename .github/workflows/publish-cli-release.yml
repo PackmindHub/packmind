@@ -78,8 +78,8 @@ jobs:
         run: |
           echo "✍️  Signing macOS arm64 executable..."
           
-          EXECUTABLE="cli-executables/packmind-macos-arm64"
-          SIGNED_EXECUTABLE="cli-executables/packmind-macos-arm64-${VERSION}"
+          EXECUTABLE="cli-executables/packmind-cli-macos-arm64"
+          SIGNED_EXECUTABLE="cli-executables/packmind-cli-macos-arm64-${VERSION}"
           
           if [ -f "$EXECUTABLE" ]; then
             cp "$EXECUTABLE" "$SIGNED_EXECUTABLE"
@@ -108,8 +108,8 @@ jobs:
         run: |
           echo "📤 Notarizing macOS executable..."
           
-          SIGNED_EXECUTABLE="cli-executables/packmind-macos-arm64-${VERSION}"
-          ZIP_FILE="cli-executables/packmind-macos-arm64-${VERSION}.zip"
+          SIGNED_EXECUTABLE="cli-executables/packmind-cli-macos-arm64-${VERSION}"
+          ZIP_FILE="cli-executables/packmind-cli-macos-arm64-${VERSION}.zip"
           
           ditto -c -k --keepParent "$SIGNED_EXECUTABLE" "$ZIP_FILE"
           
@@ -125,7 +125,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cli-macos-arm64-signed-${{ steps.get-version.outputs.version }}
-          path: cli-executables/packmind-macos-arm64-${{ steps.get-version.outputs.version }}
+          path: cli-executables/packmind-cli-macos-arm64-${{ steps.get-version.outputs.version }}
 
   publish-npm:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
@@ -216,35 +216,35 @@ jobs:
           mkdir -p release-assets
           
           # Rename and copy Linux x64
-          if [ -f "executables/packmind-linux-x64" ]; then
-            cp "executables/packmind-linux-x64" "release-assets/packmind-linux-x64-${VERSION}"
+          if [ -f "executables/packmind-cli-linux-x64" ]; then
+            cp "executables/packmind-cli-linux-x64" "release-assets/packmind-cli-linux-x64-${VERSION}"
             echo "✅ Prepared Linux x64 executable"
           else
             echo "❌ Error: Linux x64 executable not found"
             exit 1
           fi
-          
+
           # Rename and copy Linux arm64
-          if [ -f "executables/packmind-linux-arm64" ]; then
-            cp "executables/packmind-linux-arm64" "release-assets/packmind-linux-arm64-${VERSION}"
+          if [ -f "executables/packmind-cli-linux-arm64" ]; then
+            cp "executables/packmind-cli-linux-arm64" "release-assets/packmind-cli-linux-arm64-${VERSION}"
             echo "✅ Prepared Linux arm64 executable"
           else
             echo "❌ Error: Linux arm64 executable not found"
             exit 1
           fi
-          
+
           # Rename and copy Windows x64
-          if [ -f "executables/packmind-windows-x64.exe" ]; then
-            cp "executables/packmind-windows-x64.exe" "release-assets/packmind-windows-x64-${VERSION}.exe"
+          if [ -f "executables/packmind-cli-windows-x64.exe" ]; then
+            cp "executables/packmind-cli-windows-x64.exe" "release-assets/packmind-cli-windows-x64-${VERSION}.exe"
             echo "✅ Prepared Windows x64 executable"
           else
             echo "❌ Error: Windows x64 executable not found"
             exit 1
           fi
-          
+
           # Rename and copy Windows arm64
-          if [ -f "executables/packmind-windows-arm64.exe" ]; then
-            cp "executables/packmind-windows-arm64.exe" "release-assets/packmind-windows-arm64-${VERSION}.exe"
+          if [ -f "executables/packmind-cli-windows-arm64.exe" ]; then
+            cp "executables/packmind-cli-windows-arm64.exe" "release-assets/packmind-cli-windows-arm64-${VERSION}.exe"
             echo "✅ Prepared Windows arm64 executable"
           else
             echo "❌ Error: Windows arm64 executable not found"
@@ -252,8 +252,8 @@ jobs:
           fi
 
           # Copy signed macOS arm64 (already versioned) - must be signed
-          if [ -f "executables-signed/packmind-macos-arm64-${VERSION}" ]; then
-            cp "executables-signed/packmind-macos-arm64-${VERSION}" "release-assets/packmind-macos-arm64-${VERSION}"
+          if [ -f "executables-signed/packmind-cli-macos-arm64-${VERSION}" ]; then
+            cp "executables-signed/packmind-cli-macos-arm64-${VERSION}" "release-assets/packmind-cli-macos-arm64-${VERSION}"
             echo "✅ Prepared signed macOS arm64 executable"
           else
             echo "❌ Error: Signed macOS arm64 executable not found"
@@ -281,15 +281,15 @@ jobs:
             
             #### Standalone Executables
             Download the appropriate executable for your platform:
-            - **Linux x64**: `packmind-linux-x64-${{ needs.sign-macos-cli.outputs.version }}`
-            - **Linux arm64**: `packmind-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}`
-            - **macOS arm64**: `packmind-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}`
-            - **Windows x64**: `packmind-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe`
-            - **Windows arm64**: `packmind-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe`
-            
+            - **Linux x64**: `packmind-cli-linux-x64-${{ needs.sign-macos-cli.outputs.version }}`
+            - **Linux arm64**: `packmind-cli-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}`
+            - **macOS arm64**: `packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}`
+            - **Windows x64**: `packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe`
+            - **Windows arm64**: `packmind-cli-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe`
+
             Make the executable runnable (Linux/macOS):
             ```bash
-            chmod +x packmind-*-${{ needs.sign-macos-cli.outputs.version }}
+            chmod +x packmind-cli-*-${{ needs.sign-macos-cli.outputs.version }}
             ```
             
             ### Changes
@@ -297,11 +297,11 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            release-assets/packmind-linux-x64-${{ needs.sign-macos-cli.outputs.version }}
-            release-assets/packmind-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}
-            release-assets/packmind-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}
-            release-assets/packmind-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe
-            release-assets/packmind-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe
+            release-assets/packmind-cli-linux-x64-${{ needs.sign-macos-cli.outputs.version }}
+            release-assets/packmind-cli-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}
+            release-assets/packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}
+            release-assets/packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe
+            release-assets/packmind-cli-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe
       
       - name: Summary
         env:
@@ -313,11 +313,11 @@ jobs:
           echo "✅ Successfully created GitHub release: CLI ${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Release Assets" >> $GITHUB_STEP_SUMMARY
-          echo "- packmind-linux-x64-${VERSION}" >> $GITHUB_STEP_SUMMARY
-          echo "- packmind-linux-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
-          echo "- packmind-macos-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
-          echo "- packmind-windows-x64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
-          echo "- packmind-windows-arm64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-linux-x64-${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-linux-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-macos-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-windows-x64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-windows-arm64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [View Release](https://github.com/${REPOSITORY}/releases/tag/${REF})" >> $GITHUB_STEP_SUMMARY
 

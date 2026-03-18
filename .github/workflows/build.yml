@@ -270,18 +270,18 @@ jobs:
       - name: Test executables
         run: |
           node dist/apps/cli/main.cjs --version
-          ./dist/apps/cli-executables/packmind-linux-x64 --version
+          ./dist/apps/cli-executables/packmind-cli-linux-x64 --version
 
       - name: Upload CLI executables
         uses: actions/upload-artifact@v4
         with:
           name: cli-executables-${{ steps.get-version.outputs.version }}
           path: |
-            dist/apps/cli-executables/packmind-linux-x64
-            dist/apps/cli-executables/packmind-linux-arm64
-            dist/apps/cli-executables/packmind-macos-arm64
-            dist/apps/cli-executables/packmind-windows-x64.exe
-            dist/apps/cli-executables/packmind-windows-arm64.exe
+            dist/apps/cli-executables/packmind-cli-linux-x64
+            dist/apps/cli-executables/packmind-cli-linux-arm64
+            dist/apps/cli-executables/packmind-cli-macos-arm64
+            dist/apps/cli-executables/packmind-cli-windows-x64.exe
+            dist/apps/cli-executables/packmind-cli-windows-arm64.exe
           retention-days: 30
 
   cli-e2e-tests:

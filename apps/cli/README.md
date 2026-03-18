@@ -95,11 +95,11 @@ nx run packmind-cli:build-executable-all
 
 **Output**: Multiple executables in `dist/apps/cli-executables/`:
 
-- `packmind-linux-x64` / `packmind-linux-x64-baseline`
-- `packmind-linux-arm64`
-- `packmind-windows-x64.exe` / `packmind-windows-x64-baseline.exe`
-- `packmind-macos-x64`
-- `packmind-macos-arm64`
+- `packmind-cli-linux-x64` / `packmind-cli-linux-x64-baseline`
+- `packmind-cli-linux-arm64`
+- `packmind-cli-windows-x64.exe` / `packmind-cli-windows-x64-baseline.exe`
+- `packmind-cli-macos-x64`
+- `packmind-cli-macos-arm64`
 
 > **Note**: Baseline versions support older CPUs (pre-2013). Use these for maximum compatibility.
 
@@ -107,10 +107,10 @@ nx run packmind-cli:build-executable-all
 
 ```bash
 # Test the executable
-./dist/apps/cli-executables/packmind-macos-arm64 lint --help
+./dist/apps/cli-executables/packmind-cli-macos-arm64 lint --help
 
 # Run a lint
-./dist/apps/cli-executables/packmind-macos-arm64 lint .
+./dist/apps/cli-executables/packmind-cli-macos-arm64 lint .
 ```
 
 ### Cross-Platform Building
@@ -173,13 +173,13 @@ These permissions allow the CLI to:
 ```bash
 # Ad-hoc signing with entitlements (for local testing)
 codesign --sign - --force --entitlements apps/cli/entitlements.plist \
-  dist/apps/cli-executables/packmind-macos-arm64
+  dist/apps/cli-executables/packmind-cli-macos-arm64
 
 # Verify signature
-codesign --verify --verbose dist/apps/cli-executables/packmind-macos-arm64
+codesign --verify --verbose dist/apps/cli-executables/packmind-cli-macos-arm64
 
 # Check entitlements
-codesign -d --entitlements - dist/apps/cli-executables/packmind-macos-arm64
+codesign -d --entitlements - dist/apps/cli-executables/packmind-cli-macos-arm64
 ```
 
 #### Production Signing (CI/CD)

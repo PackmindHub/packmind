@@ -38,60 +38,60 @@ const AVAILABLE_TARGETS: BuildTarget[] = [
   // Linux x64
   {
     target: 'bun-linux-x64',
-    outputName: 'packmind-linux-x64',
+    outputName: 'packmind-cli-linux-x64',
     os: 'linux',
     arch: 'x64',
   },
   {
     target: 'bun-linux-x64-baseline',
-    outputName: 'packmind-linux-x64-baseline',
+    outputName: 'packmind-cli-linux-x64-baseline',
     os: 'linux',
     arch: 'x64',
   },
   // Linux arm64
   {
     target: 'bun-linux-arm64',
-    outputName: 'packmind-linux-arm64',
+    outputName: 'packmind-cli-linux-arm64',
     os: 'linux',
     arch: 'arm64',
   },
   // macOS x64
   {
     target: 'bun-darwin-x64',
-    outputName: 'packmind-macos-x64',
+    outputName: 'packmind-cli-macos-x64',
     os: 'darwin',
     arch: 'x64',
   },
   {
     target: 'bun-darwin-x64-baseline',
-    outputName: 'packmind-macos-x64-baseline',
+    outputName: 'packmind-cli-macos-x64-baseline',
     os: 'darwin',
     arch: 'x64',
   },
   // macOS arm64
   {
     target: 'bun-darwin-arm64',
-    outputName: 'packmind-macos-arm64',
+    outputName: 'packmind-cli-macos-arm64',
     os: 'darwin',
     arch: 'arm64',
   },
   // Windows x64
   {
     target: 'bun-windows-x64',
-    outputName: 'packmind-windows-x64.exe',
+    outputName: 'packmind-cli-windows-x64.exe',
     os: 'win32',
     arch: 'x64',
   },
   {
     target: 'bun-windows-x64-baseline',
-    outputName: 'packmind-windows-x64-baseline.exe',
+    outputName: 'packmind-cli-windows-x64-baseline.exe',
     os: 'win32',
     arch: 'x64',
   },
   // Windows arm64
   {
     target: 'bun-windows-arm64',
-    outputName: 'packmind-windows-arm64.exe',
+    outputName: 'packmind-cli-windows-arm64.exe',
     os: 'win32',
     arch: 'arm64',
   },

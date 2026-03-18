@@ -12,6 +12,7 @@ set -eu
 
 # Configuration
 REPO="PackmindHub/packmind"
+ARTIFACT_NAME="packmind-cli"
 BINARY_NAME="packmind"
 DEFAULT_INSTALL_DIR="$HOME/.packmind/bin"
 DEFAULT_HOST="https://app.packmind.ai"
@@ -176,10 +177,10 @@ download_binary() {
     # Construct filename based on platform
     case "$PLATFORM" in
         windows-*)
-            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}.exe"
+            filename="${ARTIFACT_NAME}-${PLATFORM}-${VERSION}.exe"
             ;;
         *)
-            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}"
+            filename="${ARTIFACT_NAME}-${PLATFORM}-${VERSION}"
             ;;
     esac
 

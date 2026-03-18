@@ -91,22 +91,22 @@ Download the appropriate pre-built executable for your platform from the [GitHub
 
 **Available platforms:**
 
-- **Linux x64**: `packmind-linux-x64-{version}`
-- **Linux arm64**: `packmind-linux-arm64-{version}`
-- **macOS arm64**: `packmind-macos-arm64-{version}` (signed and notarized)
-- **Windows x64**: `packmind-windows-x64-{version}.exe`
+- **Linux x64**: `packmind-cli-linux-x64-{version}`
+- **Linux arm64**: `packmind-cli-linux-arm64-{version}`
+- **macOS arm64**: `packmind-cli-macos-arm64-{version}` (signed and notarized)
+- **Windows x64**: `packmind-cli-windows-x64-{version}.exe`
 
 **For Linux/macOS**, make the executable runnable:
 
 ```bash
-chmod +x packmind-*-{version}
+chmod +x packmind-cli-*-{version}
 ```
 
 **Optional**: Move to a directory in your PATH for easy access:
 
 ```bash
 # Linux/macOS
-sudo mv packmind-*-{version} /usr/local/bin/packmind
+sudo mv packmind-cli-*-{version} /usr/local/bin/packmind
 
 # Windows: Move to a directory in your PATH or run directly
 ```
@@ -1222,7 +1222,7 @@ This checks for a newer version and updates the CLI in place:
 ```
 Current version: 1.2.0 (standalone executable)
 New version available: 1.2.0 -> 1.3.0
-Downloading packmind-macos-arm64...
+Downloading packmind-cli-macos-arm64...
 Downloaded successfully (12.4 MB)
 
 Updated to v1.3.0
