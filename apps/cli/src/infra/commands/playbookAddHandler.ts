@@ -213,6 +213,7 @@ export async function playbookAddHandler(
 
   // Resolve space ID
   let spaceId: string;
+  let spaceName: string | undefined;
   if (changeType === 'updated') {
     spaceId =
       deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
@@ -229,8 +230,10 @@ export async function playbookAddHandler(
         return;
       }
       spaceId = matchedSpace.id;
+      spaceName = matchedSpace.name;
     } else if (allSpaces.length === 1) {
       spaceId = allSpaces[0].id;
+      spaceName = allSpaces[0].name;
     } else {
       logErrorConsole(
         `Multiple spaces found. Use --space to specify the target space:\n${formatSpaceList(allSpaces)}\n\nExample: packmind-cli playbook add --space ${allSpaces[0].slug} <path>`,
@@ -248,6 +251,7 @@ export async function playbookAddHandler(
     changeType,
     content: serializedContent,
     spaceId,
+    spaceName,
     targetId,
     addedAt: new Date().toISOString(),
   });

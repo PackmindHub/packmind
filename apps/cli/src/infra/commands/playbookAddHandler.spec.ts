@@ -703,6 +703,13 @@ describe('playbookAddHandler', () => {
           }),
         );
       });
+
+      it('stores spaceName from the matched space', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.spaceName).toBe('Team Backend');
+      });
     });
 
     describe('when creating in multi-space org with invalid --space flag', () => {
@@ -738,6 +745,13 @@ describe('playbookAddHandler', () => {
             spaceId: 'space-123',
           }),
         );
+      });
+
+      it('stores spaceName from the auto-selected space', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.spaceName).toBe('Global');
       });
 
       it('accepts explicit --space flag', async () => {
@@ -781,6 +795,13 @@ describe('playbookAddHandler', () => {
             changeType: 'updated',
           }),
         );
+      });
+
+      it('does not store spaceName for updated artifacts', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.spaceName).toBeUndefined();
       });
     });
   });

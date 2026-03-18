@@ -3,7 +3,10 @@ import {
   PlaybookStatusHandlerDependencies,
 } from './playbookStatusHandler';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
+import {
+  IPlaybookLocalRepository,
+  PlaybookChangeEntry,
+} from '../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
@@ -131,11 +134,47 @@ describe('playbookStatusHandler', () => {
       );
     });
 
+    it('does not display space info for updated artifacts', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const standardLine = allCalls.find(
+        (msg: string) => typeof msg === 'string' && msg.includes('My standard'),
+      );
+      expect(standardLine).not.toContain('in space');
+    });
+
     it('displays submit hint', async () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith(
         'Use `packmind playbook submit` to send them',
+      );
+    });
+  });
+
+  describe('when a created artifact has spaceName', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.packmind/standards/react-router.md',
+          artifactType: 'standard',
+          artifactName: 'React router',
+          codingAgent: 'packmind',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-456',
+          spaceName: 'Frontend',
+          content: 'content',
+          changeType: 'created',
+        } as PlaybookChangeEntry,
+      ]);
+    });
+
+    it('displays space name suffix for created artifact', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "React router" (created) in space "Frontend" .packmind/standards/react-router.md',
       );
     });
   });
