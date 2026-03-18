@@ -10,7 +10,7 @@ import {
   ChangeProposalType,
   getItemTypeFromChangeProposalType,
 } from '@packmind/types';
-import { LuCircleAlert, LuPencil, LuTrash2 } from 'react-icons/lu';
+import { LuCircleAlert, LuGitBranch, LuPencil, LuTrash2 } from 'react-icons/lu';
 import { ProposalLabel } from './ProposalLabel';
 import { StatusDot } from './StatusDot';
 import { ProposalMeta } from './ProposalMeta';
@@ -32,6 +32,7 @@ interface ChangeProposalCardHeaderProps {
   poolStatus: PoolStatus;
   isOutdated: boolean;
   isEdited: boolean;
+  isConflicting: boolean;
   authorName: string;
   createdAt: Date;
   artefactVersion: number;
@@ -44,6 +45,7 @@ export function ChangeProposalCardHeader({
   poolStatus,
   isOutdated,
   isEdited,
+  isConflicting,
   authorName,
   createdAt,
   artefactVersion,
@@ -93,6 +95,16 @@ export function ChangeProposalCardHeader({
                 <LuPencil />
               </PMIcon>
               Edited
+            </PMBadge>
+          </PMTooltip>
+        )}
+        {isConflicting && (
+          <PMTooltip label="This proposal conflicts with another accepted proposal">
+            <PMBadge colorPalette="yellow" variant="subtle" size="sm">
+              <PMIcon>
+                <LuGitBranch />
+              </PMIcon>
+              Conflicting
             </PMBadge>
           </PMTooltip>
         )}
