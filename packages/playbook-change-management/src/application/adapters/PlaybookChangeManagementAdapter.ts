@@ -32,6 +32,8 @@ import {
   ListChangeProposalsByArtefactResponse,
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
+  RecomputeConflictsCommand,
+  RecomputeConflictsResponse,
   RecipeId,
   SkillId,
   StandardId,
@@ -44,6 +46,7 @@ import { ListChangeProposalsByArtefactUseCase } from '../useCases/listChangeProp
 import { ListChangeProposalsBySpaceUseCase } from '../useCases/listChangeProposalsBySpace/ListChangeProposalsBySpaceUseCase';
 import { BatchCreateChangeProposalsUseCase } from '../useCases/batchCreateChangeProposals/BatchCreateChangeProposalsUseCase';
 import { CheckChangeProposalsUseCase } from '../useCases/checkChangeProposals/CheckChangeProposalsUseCase';
+import { RecomputeConflictsUseCase } from '../useCases/recomputeConflicts/RecomputeConflictsUseCase';
 import { IChangeProposalValidator } from '../validators/IChangeProposalValidator';
 import { CommandChangeProposalValidator } from '../validators/CommandChangeProposalValidator';
 import { SkillChangeProposalValidator } from '../validators/SkillChangeProposalValidator';
@@ -68,6 +71,7 @@ export class PlaybookChangeManagementAdapter
     StandardId | RecipeId | SkillId
   >;
   private _listChangeProposalsBySpace!: ListChangeProposalsBySpaceUseCase;
+  private _recomputeConflicts!: RecomputeConflictsUseCase;
 
   constructor(
     private readonly services: PlaybookChangeManagementServices,
@@ -118,6 +122,12 @@ export class PlaybookChangeManagementAdapter
     command: ListChangeProposalsBySpaceCommand,
   ): Promise<ListChangeProposalsBySpaceResponse> {
     return this._listChangeProposalsBySpace.execute(command);
+  }
+
+  async recomputeConflicts(
+    command: RecomputeConflictsCommand,
+  ): Promise<RecomputeConflictsResponse> {
+    return this._recomputeConflicts.execute(command);
   }
 
   public async initialize(ports: {
@@ -265,6 +275,13 @@ export class PlaybookChangeManagementAdapter
       changeProposalService,
     );
 
+    this._recomputeConflicts = new RecomputeConflictsUseCase(
+      accountsPort,
+      spacesPort,
+      changeProposalService,
+      conflictDetectionService,
+    );
+
     this.logger.info(
       'PlaybookChangeManagementAdapter initialized successfully',
     );
@@ -278,7 +295,8 @@ export class PlaybookChangeManagementAdapter
       this._checkChangeProposals !== undefined &&
       this._createChangeProposal !== undefined &&
       this._listChangeProposalsByArtefact !== undefined &&
-      this._listChangeProposalsBySpace !== undefined
+      this._listChangeProposalsBySpace !== undefined &&
+      this._recomputeConflicts !== undefined
     );
   }
 

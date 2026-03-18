@@ -19,6 +19,7 @@ import {
   BatchCreateChangeProposalItem,
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
+  ChangeProposalDecision,
   ChangeProposalId,
   ChangeProposalType,
   CheckChangeProposalsCommand,
@@ -28,7 +29,11 @@ import {
   ListChangeProposalsBySpaceResponse,
   OrganizationId,
   PreviewArtifactRenderingCommand,
+  RecomputeConflictsResponse,
+  RecipeId,
+  SkillId,
   SpaceId,
+  StandardId,
 } from '@packmind/types';
 import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -297,6 +302,71 @@ export class OrganizationsSpacesChangeProposalsController {
         {
           organizationId,
           spaceId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Recompute conflicts for change proposals with optional decisions
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/recompute-conflicts
+   */
+  @Post('recompute-conflicts')
+  async recomputeConflicts(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body()
+    body: {
+      artefactId: StandardId | RecipeId | SkillId;
+      decisions: Record<ChangeProposalId, ChangeProposalDecision>;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RecomputeConflictsResponse> {
+    if (!body.artefactId || !body.decisions) {
+      throw new BadRequestException('artefactId and decisions are required');
+    }
+
+    this.logger.info(
+      'POST .../change-proposals/recompute-conflicts - Recomputing conflicts',
+      {
+        organizationId,
+        spaceId,
+        artefactId: body.artefactId,
+        decisionsCount: Object.keys(body.decisions).length,
+      },
+    );
+
+    try {
+      const result = await this.changeProposalsService.recomputeConflicts({
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+        artefactId: body.artefactId,
+        decisions: body.decisions,
+      });
+
+      this.logger.info(
+        'POST .../change-proposals/recompute-conflicts - Conflicts recomputed successfully',
+        {
+          organizationId,
+          spaceId,
+          artefactId: body.artefactId,
+          conflictsCount: Object.keys(result.conflicts).length,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST .../change-proposals/recompute-conflicts - Failed to recompute conflicts',
+        {
+          organizationId,
+          spaceId,
+          artefactId: body.artefactId,
           error: errorMessage,
         },
       );

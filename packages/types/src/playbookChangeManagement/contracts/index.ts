@@ -8,3 +8,4 @@ export * from './IListChangeProposalsBySpace';
 export * from './IListChangeProposalsByArtefact';
 export * from './ICheckChangeProposalsUseCase';
 export * from './IApplyCreationChangeProposalsUseCase';
+export * from './IRecomputeConflicts';

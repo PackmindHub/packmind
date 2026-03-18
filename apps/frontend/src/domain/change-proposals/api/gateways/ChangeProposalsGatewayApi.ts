@@ -4,6 +4,7 @@ import {
   IApplyCreationChangeProposalsUseCase,
   IListChangeProposalsBySpace,
   IListChangeProposalsByArtefact,
+  IRecomputeConflictsUseCase,
   NewGateway,
   RecipeId,
   StandardId,
@@ -99,4 +100,16 @@ export class ChangeProposalsGatewayApi
         { accepted, rejected },
       );
     };
+
+  recomputeConflicts: NewGateway<IRecomputeConflictsUseCase> = async ({
+    organizationId,
+    spaceId,
+    artefactId,
+    decisions,
+  }) => {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/recompute-conflicts`,
+      { artefactId, decisions },
+    );
+  };
 }
