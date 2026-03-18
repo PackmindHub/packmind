@@ -85,6 +85,7 @@ export function ChangeProposalCard({
         poolStatus={poolStatus}
         isOutdated={isOutdated}
         isEdited={isEdited}
+        isConflicting={isBlockedByConflict}
         authorName={authorName}
         createdAt={proposal.createdAt}
         artefactVersion={proposal.artefactVersion}
