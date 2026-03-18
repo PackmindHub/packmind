@@ -16,6 +16,7 @@ import {
   detectDeleteSkillFileConflict,
 } from './detectSubItemDeleteConflict';
 import { detectRemoveConflict } from './detectRemoveConflict';
+import { detectUpdateSkillAdditionalPropertyConflict } from './detectUpdateSkillAdditionalPropertyConflict';
 
 type ConflictDetectorMap = {
   [K in ChangeProposalType]: ConflictDetector<K>;
@@ -43,6 +44,8 @@ const conflictDetectors: ConflictDetectorMap = {
   [ChangeProposalType.updateSkillFilePermissions]:
     detectUpdateSkillPermissionsContentConflict,
   [ChangeProposalType.deleteSkillFile]: detectDeleteSkillFileConflict,
+  [ChangeProposalType.updateSkillAdditionalProperty]:
+    detectUpdateSkillAdditionalPropertyConflict,
   [ChangeProposalType.createStandard]: () => false,
   [ChangeProposalType.createCommand]: () => false,
   [ChangeProposalType.createSkill]: () => false,

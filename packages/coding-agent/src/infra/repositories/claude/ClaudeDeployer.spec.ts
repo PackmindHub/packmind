@@ -4285,4 +4285,141 @@ describe('ClaudeDeployer', () => {
       });
     });
   });
+
+  describe('when skill has additional properties', () => {
+    describe('when additional property is a boolean', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { disableModelInvocation: true },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders boolean value in kebab-case YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('disable-model-invocation: true');
+      });
+    });
+
+    describe('when additional property is a string', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { model: 'opus' },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders string value with single quotes in YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("model: 'opus'");
+      });
+    });
+
+    describe('when additional property is a nested object', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              hooks: { preToolCall: 'validate-input' },
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders nested object with indented YAML keys', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("hooks:\n  preToolCall: 'validate-input'");
+      });
+    });
+
+    describe('when additional property is an array', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              allowedTools: ['read', 'write', 'execute'],
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders array values with YAML list syntax', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(
+          "allowed-tools:\n- 'read'\n- 'write'\n- 'execute'",
+        );
+      });
+    });
+
+    describe('when additional property has deep nesting with arrays', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              hooks: {
+                PreToolUse: [
+                  {
+                    matcher: 'Bash',
+                    hooks: [
+                      {
+                        type: 'command',
+                        command: './scripts/security-check.sh',
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders hooks key in frontmatter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('hooks:');
+      });
+
+      it('renders nested PreToolUse key', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('PreToolUse:');
+      });
+
+      it('does not produce [object Object] for nested values', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('[object Object]');
+      });
+    });
+  });
 });

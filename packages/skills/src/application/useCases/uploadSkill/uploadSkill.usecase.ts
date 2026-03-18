@@ -127,6 +127,7 @@ export class UploadSkillUseCase
         compatibility,
         metadata,
         allowedTools,
+        additionalProperties,
       } = parsedSkill.metadata;
       const prompt = parsedSkill.body;
 
@@ -169,6 +170,7 @@ export class UploadSkillUseCase
               compatibility,
               metadata,
               allowedTools,
+              additionalProperties,
             },
             files,
           );
@@ -209,6 +211,7 @@ export class UploadSkillUseCase
             license,
             compatibility,
             metadata,
+            additionalProperties,
           },
         );
         this.logger.info('Skill entity updated successfully', {
@@ -229,6 +232,7 @@ export class UploadSkillUseCase
           license,
           compatibility,
           metadata,
+          additionalProperties,
         });
         this.logger.info('New skill version created successfully', {
           skillId: existingSkill.id,
@@ -297,6 +301,7 @@ export class UploadSkillUseCase
         license,
         compatibility,
         metadata,
+        additionalProperties,
       });
       this.logger.info('Skill entity created successfully', {
         skillId: skill.id,
@@ -317,6 +322,7 @@ export class UploadSkillUseCase
         license,
         compatibility,
         metadata,
+        additionalProperties,
       });
       this.logger.info('Initial skill version created successfully', {
         skillId: skill.id,
@@ -391,6 +397,7 @@ export class UploadSkillUseCase
       compatibility?: string;
       metadata?: Record<string, string>;
       allowedTools?: string;
+      additionalProperties?: Record<string, unknown>;
     },
     newFiles: UploadSkillFileInput[],
   ): Promise<boolean> {
@@ -428,6 +435,14 @@ export class UploadSkillUseCase
     if (
       JSON.stringify(latestMetadata, sortedLatest) !==
       JSON.stringify(newMetadata, sortedNew)
+    ) {
+      return false;
+    }
+
+    // Compare additionalProperties (deep equality)
+    if (
+      JSON.stringify(latestVersion.additionalProperties ?? {}) !==
+      JSON.stringify(newContent.additionalProperties ?? {})
     ) {
       return false;
     }

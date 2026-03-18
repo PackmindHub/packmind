@@ -63,6 +63,7 @@ export function SkillResultTabContent({
           compatibility: applied.compatibility,
           metadata: applied.metadata,
           allowedTools: applied.allowedTools,
+          additionalProperties: applied.additionalProperties,
           files: applied.files,
         },
       ],
@@ -140,6 +141,19 @@ export function SkillResultTabContent({
                   <MetadataKeyValueDisplay metadata={applied.metadata} />
                 </SkillOptionalField>
               )}
+
+              {applied.additionalProperties &&
+                Object.keys(applied.additionalProperties).length > 0 && (
+                  <SkillOptionalField label="Additional Properties" mt={4}>
+                    <MetadataKeyValueDisplay
+                      metadata={Object.fromEntries(
+                        Object.entries(applied.additionalProperties).map(
+                          ([key, value]) => [key, JSON.stringify(value)],
+                        ),
+                      )}
+                    />
+                  </SkillOptionalField>
+                )}
             </>
           )}
 

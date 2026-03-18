@@ -39,6 +39,7 @@ const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
   ChangeProposalType.updateSkillFileContent,
   ChangeProposalType.updateSkillFilePermissions,
   ChangeProposalType.deleteSkillFile,
+  ChangeProposalType.updateSkillAdditionalProperty,
 ]);
 
 const SKILL_FIELD_BY_TYPE: Record<ScalarSkillType, (skill: Skill) => string> = {
@@ -108,6 +109,22 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
 
     if (command.type === ChangeProposalType.deleteSkillFile) {
       await this.validateDeleteFile(skill, command);
+    }
+
+    if (command.type === ChangeProposalType.updateSkillAdditionalProperty) {
+      const payload = command.payload as CollectionItemUpdatePayload<string>;
+      // DB stores raw values; JSON.stringify to match the JSON-encoded format used by the diff pipeline
+      const currentValue = JSON.stringify(
+        skill.additionalProperties?.[payload.targetId] ?? null,
+      );
+      const expectedOld = payload.oldValue ?? 'null';
+      if (expectedOld !== currentValue) {
+        throw new ChangeProposalPayloadMismatchError(
+          command.type,
+          expectedOld,
+          currentValue,
+        );
+      }
     }
 
     return { artefactVersion: skill.version };

@@ -200,6 +200,29 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
       };
     }
 
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillAdditionalProperty,
+      )
+    ) {
+      const { targetId: key, newValue } = changeProposal.payload;
+      const currentProps = { ...(source.additionalProperties ?? {}) };
+
+      if (newValue === '') {
+        delete currentProps[key];
+      } else {
+        // newValue is JSON-encoded (e.g. '"opus"', 'true'); parse back to raw for DB storage
+        currentProps[key] = JSON.parse(newValue);
+      }
+
+      return {
+        ...source,
+        additionalProperties:
+          Object.keys(currentProps).length > 0 ? currentProps : undefined,
+      };
+    }
+
     return source;
   }
 }

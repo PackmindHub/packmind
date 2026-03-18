@@ -41,5 +41,6 @@ export const SKILL_CHANGE_TYPES = [
   ChangeProposalType.updateSkillFileContent,
   ChangeProposalType.updateSkillFilePermissions,
   ChangeProposalType.deleteSkillFile,
+  ChangeProposalType.updateSkillAdditionalProperty,
   ChangeProposalType.removeSkill,
 ];

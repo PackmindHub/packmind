@@ -91,6 +91,19 @@ export function SkillOriginalTabContent({
               <MetadataKeyValueDisplay metadata={skill.metadata} />
             </SkillOptionalField>
           )}
+
+          {skill.additionalProperties &&
+            Object.keys(skill.additionalProperties).length > 0 && (
+              <SkillOptionalField label="Additional Properties" mt={4}>
+                <MetadataKeyValueDisplay
+                  metadata={Object.fromEntries(
+                    Object.entries(skill.additionalProperties).map(
+                      ([key, value]) => [key, JSON.stringify(value)],
+                    ),
+                  )}
+                />
+              </SkillOptionalField>
+            )}
         </>
       )}
 

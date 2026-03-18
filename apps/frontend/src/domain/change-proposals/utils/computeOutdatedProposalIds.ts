@@ -162,6 +162,18 @@ export function computeSkillOutdatedIds(
       continue;
     }
 
+    if (proposal.type === ChangeProposalType.updateSkillAdditionalProperty) {
+      const payload = proposal.payload as CollectionItemUpdatePayload<string>;
+      const currentValue = JSON.stringify(
+        skill.additionalProperties?.[payload.targetId] ?? null,
+      );
+      const expectedOld = payload.oldValue ?? 'null';
+      if (expectedOld !== currentValue) {
+        outdated.add(proposal.id);
+      }
+      continue;
+    }
+
     // addSkillFile → never outdated
   }
 

@@ -31,6 +31,7 @@ const collectionUpdateTypes = new Set<ChangeProposalType>([
   ChangeProposalType.updateRule,
   ChangeProposalType.updateSkillFileContent,
   ChangeProposalType.updateSkillFilePermissions,
+  ChangeProposalType.updateSkillAdditionalProperty,
 ]);
 
 const collectionAddTypes = new Set<ChangeProposalType>([

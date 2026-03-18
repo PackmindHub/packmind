@@ -154,6 +154,11 @@ export class SkillDiffStrategy implements IDiffStrategy {
       this.checkUpdateSkillLicense(serverParsed, localParsed, baseDiff),
       this.checkUpdateSkillCompatibility(serverParsed, localParsed, baseDiff),
       this.checkUpdateSkillAllowedTools(serverParsed, localParsed, baseDiff),
+      ...this.checkUpdateSkillAdditionalProperties(
+        serverParsed,
+        localParsed,
+        baseDiff,
+      ),
     ];
     return checks.filter((d): d is ArtefactDiff => d !== null);
   }
@@ -339,6 +344,41 @@ export class SkillDiffStrategy implements IDiffStrategy {
         newValue: localParsed.allowedTools,
       },
     };
+  }
+
+  private checkUpdateSkillAdditionalProperties(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff[] {
+    const diffs: ArtefactDiff[] = [];
+    const serverProps = serverParsed.additionalProperties;
+    const localProps = localParsed.additionalProperties;
+
+    // Collect all keys from both sides
+    const allKeys = new Set([
+      ...Object.keys(serverProps),
+      ...Object.keys(localProps),
+    ]);
+
+    for (const key of allKeys) {
+      const serverValue = serverProps[key] ?? '';
+      const localValue = localProps[key] ?? '';
+
+      if (serverValue !== localValue) {
+        diffs.push({
+          ...baseDiff,
+          type: ChangeProposalType.updateSkillAdditionalProperty,
+          payload: {
+            targetId: key,
+            oldValue: serverValue,
+            newValue: localValue,
+          },
+        });
+      }
+    }
+
+    return diffs;
   }
 
   private checkUpdateSkillFileContent(
