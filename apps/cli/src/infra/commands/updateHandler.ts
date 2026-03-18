@@ -7,6 +7,7 @@ import {
   unlinkSync,
   statSync,
   realpathSync,
+  symlinkSync,
 } from 'fs';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
@@ -108,7 +109,7 @@ async function downloadExecutable(
   platformSuffix: string,
   targetPath: string,
 ): Promise<void> {
-  const assetName = `packmind-${platformSuffix}-${version}`;
+  const assetName = `packmind-cli-${platformSuffix}-${version}`;
   const url = `https://github.com/${GITHUB_REPO}/releases/download/release-cli/${version}/${assetName}`;
 
   logInfoConsole(`Downloading ${assetName}...`);
@@ -141,6 +142,45 @@ async function downloadExecutable(
   );
 }
 
+export function createBackwardCompatSymlink(
+  currentPath: string,
+  platform: string,
+): void {
+  const dir = path.dirname(currentPath);
+  const ext = platform === 'win32' ? '.exe' : '';
+  const primaryName = `packmind${ext}`;
+  const deprecatedName = `packmind-cli${ext}`;
+  const currentBasename = path.basename(currentPath);
+
+  let symlinkName: string;
+  let targetName: string;
+
+  if (currentBasename === primaryName) {
+    targetName = primaryName;
+    symlinkName = deprecatedName;
+  } else if (currentBasename === deprecatedName) {
+    targetName = deprecatedName;
+    symlinkName = primaryName;
+  } else {
+    return;
+  }
+
+  const symlinkPath = path.join(dir, symlinkName);
+  try {
+    unlinkSync(symlinkPath);
+  } catch {
+    // May not exist
+  }
+  try {
+    symlinkSync(targetName, symlinkPath);
+    logInfoConsole(
+      `Created backward-compatible symlink: ${symlinkPath} -> ${targetName}`,
+    );
+  } catch {
+    // Non-critical: symlink creation may fail (e.g., Windows without admin)
+  }
+}
+
 function updateViaNpm(version: string): void {
   logInfoConsole(`Updating via npm to version ${version}...`);
   execSync(`npm install -g ${NPM_PACKAGE}@${version}`, {
@@ -166,6 +206,9 @@ async function updateViaExecutableReplace(
     if (deps.platform !== 'win32') {
       chmodSync(currentPath, 0o755);
     }
+
+    // Create backward-compatible symlink (mirrors install.sh behavior)
+    createBackwardCompatSymlink(currentPath, deps.platform);
   } catch (error) {
     // Clean up temp file on failure
     try {
