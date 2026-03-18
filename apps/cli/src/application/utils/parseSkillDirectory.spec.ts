@@ -265,6 +265,51 @@ describe('parseSkillDirectory', () => {
     });
   });
 
+  describe('when SKILL.md has Claude Code additional properties', () => {
+    it('populates additionalProperties with camelCase keys', () => {
+      const content = [
+        '---',
+        'name: My Skill',
+        'description: A useful skill',
+        'model: opus',
+        'user-invocable: true',
+        '---',
+        'The prompt.',
+      ].join('\n');
+
+      const result = parseSkillDirectory([buildSkillMdFile(content)]);
+
+      expect(result).toEqual({
+        success: true,
+        payload: {
+          name: 'My Skill',
+          description: 'A useful skill',
+          prompt: 'The prompt.',
+          skillMdPermissions: 'rw-r--r--',
+          additionalProperties: { model: 'opus', userInvocable: true },
+          files: [],
+        },
+      });
+    });
+  });
+
+  describe('when SKILL.md has no Claude Code additional properties', () => {
+    it('does not include additionalProperties', () => {
+      const result = parseSkillDirectory([buildSkillMdFile()]);
+
+      expect(result).toEqual({
+        success: true,
+        payload: {
+          name: 'My Skill',
+          description: 'A useful skill',
+          prompt: 'This is the prompt body.',
+          skillMdPermissions: 'rw-r--r--',
+          files: [],
+        },
+      });
+    });
+  });
+
   describe('when name and description have whitespace', () => {
     it('trims them', () => {
       const content = [

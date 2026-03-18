@@ -29,6 +29,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       compatibility,
       metadata,
       allowedTools,
+      additionalProperties,
       files,
     } = changeProposal.payload;
 
@@ -41,6 +42,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       compatibility,
       metadata,
       allowedTools,
+      additionalProperties,
     });
 
     // Prepare files array with SKILL.md
@@ -77,6 +79,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
     compatibility?: string;
     metadata?: Record<string, string>;
     allowedTools?: string;
+    additionalProperties?: Record<string, unknown>;
   }): string {
     const frontmatter = [
       `name: ${JSON.stringify(metadata.name)}`,
@@ -100,6 +103,17 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       frontmatter.push(
         `allowed-tools: ${JSON.stringify(metadata.allowedTools)}`,
       );
+    }
+    if (metadata.additionalProperties) {
+      for (const [camelKey, value] of Object.entries(
+        metadata.additionalProperties,
+      )) {
+        const kebabKey = camelKey.replace(
+          /[A-Z]/g,
+          (letter) => `-${letter.toLowerCase()}`,
+        );
+        frontmatter.push(`${kebabKey}: ${JSON.stringify(value)}`);
+      }
     }
 
     return `---\n${frontmatter.join('\n')}\n---\n\n${metadata.prompt}`;
