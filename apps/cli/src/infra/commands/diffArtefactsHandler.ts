@@ -128,6 +128,19 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
     return;
   }
 
+  if (diff.type === ChangeProposalType.updateSkillAdditionalProperty) {
+    const targetId = payload.targetId as string;
+    const oldValue = payload.oldValue as string;
+    const newValue = payload.newValue as string;
+    if (oldValue) {
+      log(chalk.red(`    - ${targetId}: ${oldValue}`));
+    }
+    if (newValue) {
+      log(chalk.green(`    + ${targetId}: ${newValue}`));
+    }
+    return;
+  }
+
   // ScalarUpdatePayload and CollectionItemUpdatePayload both have oldValue/newValue
   const oldValue = payload.oldValue as string;
   const newValue = payload.newValue as string;
