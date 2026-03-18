@@ -36,8 +36,13 @@ Subcommands:
       short: 'm',
       description: 'Submit message (used with submit subcommand)',
     }),
+    space: option({
+      type: optional(string),
+      long: 'space',
+      description: 'Target space slug (used with add subcommand)',
+    }),
   },
-  handler: async ({ positionals, message }) => {
+  handler: async ({ positionals, message, space }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -48,20 +53,11 @@ Subcommands:
     const playbookLocalRepository = new PlaybookLocalRepository(repoRoot);
 
     if (positionals[0] === 'add') {
-      const args = positionals.slice(1);
-      const spaceIndex = args.indexOf('--space');
-      let spaceSlug: string | undefined;
-      if (spaceIndex !== -1 && spaceIndex + 1 < args.length) {
-        spaceSlug = args[spaceIndex + 1];
-        args.splice(spaceIndex, 2);
-      }
-      const filePath = args[0];
-
       const lockFileRepository = new LockFileRepository();
       await playbookAddHandler({
         packmindCliHexa,
-        filePath,
-        spaceSlug,
+        filePath: positionals[1],
+        spaceSlug: space,
         exit: process.exit,
         getCwd: () => process.cwd(),
         readFile: (p) => readFileSync(p, 'utf-8'),
@@ -106,7 +102,6 @@ Subcommands:
         exit: process.exit,
         message,
         openEditor: (prefill: string) => openEditorForMessage(prefill),
-        readFile: (p) => readFileSync(p, 'utf-8'),
       });
       return;
     }
