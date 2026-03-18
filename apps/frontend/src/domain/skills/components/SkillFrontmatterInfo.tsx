@@ -1,5 +1,11 @@
 import { useMemo } from 'react';
-import { PMHStack, PMSeparator, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMHeading,
+  PMHStack,
+  PMSeparator,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
 import type { SkillVersion } from '@packmind/types';
 
 interface SkillFrontmatterInfoProps {
@@ -31,6 +37,9 @@ export function SkillFrontmatterInfo({
       bg="background.tertiary"
       p={4}
     >
+      <PMHeading as="h3" size="sm">
+        Frontmatter
+      </PMHeading>
       <PMVStack gap={2} align="flex-start">
         <PMText color="secondary" fontSize="sm">
           Description:
@@ -41,7 +50,7 @@ export function SkillFrontmatterInfo({
         <>
           <PMSeparator my={2} borderColor="border.secondary" />
           {skillVersion.license && (
-            <PMHStack gap={2}>
+            <PMHStack gap={2} align="baseline">
               <PMText color="secondary" fontSize="sm">
                 License:
               </PMText>
@@ -49,7 +58,7 @@ export function SkillFrontmatterInfo({
             </PMHStack>
           )}
           {skillVersion.compatibility && (
-            <PMHStack gap={2}>
+            <PMHStack gap={2} align="baseline">
               <PMText color="secondary" fontSize="sm">
                 Compatibility:
               </PMText>
@@ -57,7 +66,7 @@ export function SkillFrontmatterInfo({
             </PMHStack>
           )}
           {skillVersion.allowedTools && (
-            <PMHStack gap={2}>
+            <PMHStack gap={2} align="baseline">
               <PMText color="secondary" fontSize="sm">
                 Allowed Tools:
               </PMText>
@@ -76,7 +85,11 @@ export function SkillFrontmatterInfo({
                       <PMText color="secondary" fontSize="sm">
                         - {key}:
                       </PMText>
-                      <PMText fontSize="sm">{value}</PMText>
+                      <PMText fontSize="sm">
+                        {typeof value === 'object'
+                          ? JSON.stringify(value)
+                          : String(value)}
+                      </PMText>
                     </PMHStack>
                   ))}
                 </PMVStack>
