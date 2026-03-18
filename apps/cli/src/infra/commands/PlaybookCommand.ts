@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { execSync } from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { command, restPositionals, string } from 'cmd-ts';
+import { command, option, optional, restPositionals, string } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PlaybookLocalRepository } from '../repositories/PlaybookLocalRepository';
@@ -16,7 +16,13 @@ import { logConsole, logErrorConsole } from '../utils/consoleLogger';
 
 export const playbookCommand = command({
   name: 'playbook',
-  description: 'Track local changes to deployed Packmind artifacts',
+  description: `Track local changes to deployed Packmind artifacts
+
+Subcommands:
+  add [--space <slug>] <path>   Stage a local artifact change
+  unstage <path>   Remove a staged change
+  status           Show staged and untracked changes
+  submit [-m msg]  Submit staged changes as proposals`,
   args: {
     positionals: restPositionals({
       type: string,
@@ -24,8 +30,14 @@ export const playbookCommand = command({
       description:
         'Subcommand and arguments (e.g., add <path>, unstage <path>)',
     }),
+    message: option({
+      type: optional(string),
+      long: 'message',
+      short: 'm',
+      description: 'Submit message (used with submit subcommand)',
+    }),
   },
-  handler: async ({ positionals }) => {
+  handler: async ({ positionals, message }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -36,10 +48,20 @@ export const playbookCommand = command({
     const playbookLocalRepository = new PlaybookLocalRepository(repoRoot);
 
     if (positionals[0] === 'add') {
+      const args = positionals.slice(1);
+      const spaceIndex = args.indexOf('--space');
+      let spaceSlug: string | undefined;
+      if (spaceIndex !== -1 && spaceIndex + 1 < args.length) {
+        spaceSlug = args[spaceIndex + 1];
+        args.splice(spaceIndex, 2);
+      }
+      const filePath = args[0];
+
       const lockFileRepository = new LockFileRepository();
       await playbookAddHandler({
         packmindCliHexa,
-        filePath: positionals[1],
+        filePath,
+        spaceSlug,
         exit: process.exit,
         getCwd: () => process.cwd(),
         readFile: (p) => readFileSync(p, 'utf-8'),
@@ -76,16 +98,6 @@ export const playbookCommand = command({
     if (positionals[0] === 'submit') {
       const lockFileRepository = new LockFileRepository();
 
-      // Parse -m/--message from remaining positionals
-      const messageIndex =
-        positionals.indexOf('-m') !== -1
-          ? positionals.indexOf('-m')
-          : positionals.indexOf('--message');
-      const message =
-        messageIndex !== -1 && messageIndex + 1 < positionals.length
-          ? positionals[messageIndex + 1]
-          : undefined;
-
       await playbookSubmitHandler({
         packmindCliHexa,
         playbookLocalRepository,
@@ -106,7 +118,7 @@ export const playbookCommand = command({
     logConsole('Usage: packmind-cli playbook <subcommand>');
     logConsole('');
     logConsole('Subcommands:');
-    logConsole('  add <path>       Stage a local artifact change');
+    logConsole('  add [--space <slug>] <path>   Stage a local artifact change');
     logConsole('  unstage <path>   Remove a staged change');
     logConsole('  status           Show staged and untracked changes');
     logConsole('  submit [-m msg]  Submit staged changes as proposals');
