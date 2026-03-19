@@ -1,6 +1,6 @@
-export function parsePackageSlug(
-  slug: string,
-): { spaceSlug: string; pkgSlug: string } | null {
+export type ParsedPackageSlug = { spaceSlug: string; pkgSlug: string };
+
+export function parsePackageSlug(slug: string): ParsedPackageSlug | null {
   if (!slug.startsWith('@')) return null;
   const slash = slug.indexOf('/', 1);
   if (slash === -1) return null;
