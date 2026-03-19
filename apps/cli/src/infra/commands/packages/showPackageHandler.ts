@@ -41,7 +41,7 @@ async function resolvePackage(
 
     const found = allSpaces.find((s) => s.slug === spaceSlug);
     if (!found) {
-      throw new Error(`Space '${spaceSlug}' not found.`);
+      throw new Error(`Space '@${spaceSlug}' not found.`);
     }
     matchedSpace = found;
   } else {
@@ -63,7 +63,7 @@ async function resolvePackage(
   );
 
   if (!matchedPackage) {
-    throw new Error(`Package '${pkgSlug}' not found in space '${spaceSlug}'.`);
+    throw new Error(`Package '${pkgSlug}' not found in space '@${spaceSlug}'.`);
   }
 
   return { spaceSlug, pkgSlug, matchedPackage };

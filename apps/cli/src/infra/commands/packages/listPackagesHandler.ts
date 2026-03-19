@@ -147,7 +147,10 @@ export async function listPackagesHandler(
     if (spaceFilter) {
       const matchedSpace = allSpaces.find((s) => s.slug === spaceFilter);
       if (!matchedSpace) {
-        logErrorConsole(`Space "${spaceFilter}" not found.`);
+        logErrorConsole(`Space '@${spaceFilter}' not found.`);
+        logInfoConsole(
+          `Available spaces: ${allSpaces.map((s) => `@${s.slug}`).join(', ')}`,
+        );
         exit(1);
         return;
       }
@@ -158,7 +161,7 @@ export async function listPackagesHandler(
     if (packages.length === 0) {
       logConsole(
         spaceFilter
-          ? `No packages found in space "${spaceFilter}".`
+          ? `No packages found in space '@${spaceFilter}'.`
           : 'No packages found.',
       );
       exit(0);

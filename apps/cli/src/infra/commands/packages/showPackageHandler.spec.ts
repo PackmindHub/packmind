@@ -95,7 +95,7 @@ describe('showPackageHandler', () => {
 
       it('displays a space-not-found error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining("Space 'unknown-space' not found"),
+          expect.stringContaining("Space '@unknown-space' not found"),
         );
       });
 
@@ -118,7 +118,7 @@ describe('showPackageHandler', () => {
       it('displays a package-not-in-space error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Package 'backend' not found in space 'frontend'",
+            "Package 'backend' not found in space '@frontend'",
           ),
         );
       });
@@ -207,7 +207,7 @@ describe('showPackageHandler', () => {
       it('displays a package-not-found error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Package 'backend' not found in space 'global'",
+            "Package 'backend' not found in space '@global'",
           ),
         );
       });

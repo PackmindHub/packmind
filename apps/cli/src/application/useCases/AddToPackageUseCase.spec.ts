@@ -350,7 +350,7 @@ describe('AddToPackageUseCase', () => {
           itemType: 'standard',
           itemSlugs: ['std-1'],
         }),
-      ).rejects.toThrow("Space 'unknown' not found");
+      ).rejects.toThrow("Space '@unknown' not found");
     });
   });
 

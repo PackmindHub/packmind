@@ -86,7 +86,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     const spaces = await this.spaceService.getSpaces();
     const space = spaces.find((s) => s.slug === spaceSlug);
     if (!space) {
-      throw new Error(`Space '${spaceSlug}' not found`);
+      throw new Error(`Space '@${spaceSlug}' not found`);
     }
     return space;
   }
