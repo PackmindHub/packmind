@@ -89,6 +89,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci --no-audit --no-fund
+
+      - name: Prepare SonarQube Cloud Scan
+        run: cp private/sonar-project.properties .
+
       - name: Generate Proprietary tsconfig
         env:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
