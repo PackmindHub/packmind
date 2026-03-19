@@ -5,6 +5,7 @@ import {
   logInfoConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
+import { parsePackageSlug } from '../../utils/packageSlugUtils';
 
 export type ShowPackageArgs = {
   slug: string;
@@ -14,23 +15,6 @@ export type ShowPackageHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   exit: (code: number) => void;
 };
-
-type ResolvedPackageRef = {
-  spaceSlug: string;
-  pkgSlug: string;
-};
-
-/**
- * Parses a slug into its space and package parts.
- * `@global/backend` → `{ spaceSlug: 'global', pkgSlug: 'backend' }`
- * `backend` → needs space resolution
- */
-function parseSlug(slug: string): ResolvedPackageRef | null {
-  if (!slug.startsWith('@')) return null;
-  const slash = slug.indexOf('/', 1);
-  if (slash === -1) return null;
-  return { spaceSlug: slug.slice(1, slash), pkgSlug: slug.slice(slash + 1) };
-}
 
 /**
  * Resolves the space and package slugs, fetching spaces/packages as needed.
@@ -45,7 +29,7 @@ async function resolvePackage(
     packmindCliHexa.getSpaces(),
   ]);
 
-  const parsed = parseSlug(slug);
+  const parsed = parsePackageSlug(slug);
 
   let spaceSlug: string;
   let pkgSlug: string;

@@ -127,7 +127,9 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     spaceId: SpaceId,
   ): Promise<Standard | null> {
     const standards = await this.gateway.standards.list({ spaceId });
-    return standards.standards.find((skill) => skill.slug === slug) ?? null;
+    return (
+      standards.standards.find((standard) => standard.slug === slug) ?? null
+    );
   }
 
   private async findCommandBySlug(
