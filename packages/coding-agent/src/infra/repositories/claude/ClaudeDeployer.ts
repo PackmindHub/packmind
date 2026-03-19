@@ -832,7 +832,7 @@ function formatEntryValue(
   indent: number,
   prefix: string,
 ): string {
-  if ((value !== null && typeof value === 'object') || Array.isArray(value)) {
+  if (value !== null && typeof value === 'object') {
     const nested = formatAdditionalPropertyYaml(key, value, indent);
     // Replace the leading whitespace with the provided prefix for the first line
     return `${prefix}${nested.trimStart()}`;

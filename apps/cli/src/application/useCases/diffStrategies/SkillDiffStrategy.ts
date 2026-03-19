@@ -362,7 +362,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
     ]);
 
     for (const key of allKeys) {
-      const serverValue = serverProps[key] ?? '';
+      const serverValue = serverProps[key] ?? 'null';
       const localValue = localProps[key] ?? '';
 
       if (serverValue !== localValue) {
