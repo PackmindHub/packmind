@@ -11,12 +11,13 @@ export type CodingAgentArtefactPaths = {
 
 /**
  * Coding agents that deploy artefacts as discrete files in separate directories.
- * Single-file agents (junie, agents_md, gitlab_duo) embed everything in one file
+ * Single-file agents (junie, agents_md) embed everything in one file
  * and are intentionally excluded.
+ * gitlab_duo is a hybrid: standards/commands use single-file, skills use multi-file.
  */
 export type MultiFileCodingAgent = Extract<
   CodingAgent,
-  'claude' | 'cursor' | 'copilot' | 'continue' | 'packmind'
+  'claude' | 'cursor' | 'copilot' | 'continue' | 'packmind' | 'gitlab_duo'
 >;
 
 /**
@@ -57,5 +58,10 @@ export const CODING_AGENT_ARTEFACT_PATHS: Record<
     command: '.packmind/commands/',
     standard: '.packmind/standards/',
     skill: '',
+  },
+  gitlab_duo: {
+    command: '',
+    standard: '',
+    skill: '.gitlab/duo/skills/',
   },
 };

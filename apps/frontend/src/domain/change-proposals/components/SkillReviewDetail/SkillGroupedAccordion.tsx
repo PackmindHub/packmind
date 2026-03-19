@@ -1,4 +1,5 @@
 import { ReactNode, useMemo, useCallback } from 'react';
+import { LuSettings, LuFileText } from 'react-icons/lu';
 import { PMAccordion, PMBox, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalDecision,
@@ -7,16 +8,19 @@ import {
   SkillFile,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
+import { FRONTMATTER_SKILL_TYPES } from '../../constants/skillProposalTypes';
 import { ViewMode } from '../../hooks/useCardReviewState';
-import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
 import {
+  getProposalFilePath,
   groupSkillProposalsByFile,
   REMOVAL_GROUP_PATH,
+  SKILL_MD_PATH,
 } from '../../utils/groupSkillProposalsByFile';
 import { ChangesSummaryBar } from '../shared/ChangesSummaryBar';
 import { ChangeProposalCard } from '../shared/ChangeProposalCard';
 import { ReviewedSectionDivider } from '../shared/ReviewedSectionDivider';
 import { FileGroupHeader } from '../shared/FileGroupHeader';
+import { SubSectionHeader } from '../shared/SubSectionHeader';
 
 type PoolStatus = 'pending' | 'accepted' | 'dismissed';
 
@@ -81,10 +85,43 @@ export function SkillGroupedAccordion({
   onExpandCard,
   renderExpandedView,
 }: Readonly<SkillGroupedAccordionProps>) {
-  const proposalNumberMap = useMemo(
-    () => buildProposalNumberMap(proposals),
-    [proposals],
-  );
+  const proposalNumberMap = useMemo(() => {
+    const map = new Map<ChangeProposalId, number>();
+
+    const groupedByFile = new Map<string, ChangeProposalWithConflicts[]>();
+    for (const p of proposals) {
+      const filePath = getProposalFilePath(p, files);
+      const list = groupedByFile.get(filePath) ?? [];
+      list.push(p);
+      groupedByFile.set(filePath, list);
+    }
+
+    for (const [filePath, groupProposals] of groupedByFile) {
+      if (filePath === SKILL_MD_PATH) {
+        const frontmatter = groupProposals.filter((p) =>
+          FRONTMATTER_SKILL_TYPES.has(p.type),
+        );
+        const prompt = groupProposals.filter(
+          (p) => !FRONTMATTER_SKILL_TYPES.has(p.type),
+        );
+        for (const subGroup of [frontmatter, prompt]) {
+          const sorted = [...subGroup].sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          );
+          sorted.forEach((p, i) => map.set(p.id, i + 1));
+        }
+      } else {
+        const sorted = [...groupProposals].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+        sorted.forEach((p, i) => map.set(p.id, i + 1));
+      }
+    }
+
+    return map;
+  }, [proposals, files]);
 
   const fileGroups = useMemo(
     () =>
@@ -209,6 +246,34 @@ export function SkillGroupedAccordion({
     [showEditButton],
   );
 
+  const renderSkillMdSubSections = (
+    proposals: ChangeProposalWithConflicts[],
+  ) => {
+    const frontmatter = proposals.filter((p) =>
+      FRONTMATTER_SKILL_TYPES.has(p.type),
+    );
+    const prompt = proposals.filter(
+      (p) => !FRONTMATTER_SKILL_TYPES.has(p.type),
+    );
+
+    return (
+      <>
+        {frontmatter.length > 0 && (
+          <PMVStack gap={3} width="full" align="stretch">
+            <SubSectionHeader label="Frontmatter" icon={<LuSettings />} />
+            {frontmatter.map(renderCard)}
+          </PMVStack>
+        )}
+        {prompt.length > 0 && (
+          <PMVStack gap={3} width="full" align="stretch">
+            <SubSectionHeader label="Prompt" icon={<LuFileText />} />
+            {prompt.map(renderCard)}
+          </PMVStack>
+        )}
+      </>
+    );
+  };
+
   const renderCard = (proposal: ChangeProposalWithConflicts) => {
     const poolStatus = getPoolStatus(
       proposal.id,
@@ -268,7 +333,9 @@ export function SkillGroupedAccordion({
                     pendingCount={group.pendingCount}
                   />
                 )}
-                {group.proposals.map(renderCard)}
+                {group.filePath === SKILL_MD_PATH
+                  ? renderSkillMdSubSections(group.proposals)
+                  : group.proposals.map(renderCard)}
               </PMVStack>
             ))}
             {totalReviewedCount > 0 && (
@@ -287,7 +354,9 @@ export function SkillGroupedAccordion({
                         pendingCount={0}
                       />
                     )}
-                    {group.proposals.map(renderCard)}
+                    {group.filePath === SKILL_MD_PATH
+                      ? renderSkillMdSubSections(group.proposals)
+                      : group.proposals.map(renderCard)}
                   </PMVStack>
                 ))}
               </>

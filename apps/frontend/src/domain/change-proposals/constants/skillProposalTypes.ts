@@ -11,6 +11,15 @@ export const SCALAR_SKILL_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.updateSkillAdditionalProperty,
 ]);
 
+export const FRONTMATTER_SKILL_TYPES = new Set<ChangeProposalType>([
+  ChangeProposalType.updateSkillName,
+  ChangeProposalType.updateSkillDescription,
+  ChangeProposalType.updateSkillMetadata,
+  ChangeProposalType.updateSkillLicense,
+  ChangeProposalType.updateSkillCompatibility,
+  ChangeProposalType.updateSkillAllowedTools,
+]);
+
 export const SKILL_MD_MARKDOWN_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.updateSkillDescription,
   ChangeProposalType.updateSkillPrompt,

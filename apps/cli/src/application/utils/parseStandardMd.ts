@@ -47,6 +47,7 @@ const AGENT_PARSERS: Record<
   cursor: parseCursorStandard,
   continue: parseContinueStandard,
   copilot: parseCopilotStandard,
+  gitlab_duo: () => null, // single-file agent: standards can't be parsed individually
 };
 
 /**

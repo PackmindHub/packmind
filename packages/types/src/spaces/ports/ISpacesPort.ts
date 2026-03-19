@@ -22,7 +22,11 @@ export interface ISpacesPort {
    * This is called when a new organization is created (with name "Global")
    * or when users create additional spaces
    */
-  createSpace(name: string, organizationId: OrganizationId): Promise<Space>;
+  createSpace(
+    name: string,
+    organizationId: OrganizationId,
+    isDefaultSpace?: boolean,
+  ): Promise<Space>;
 
   /**
    * List all spaces for a given organization
