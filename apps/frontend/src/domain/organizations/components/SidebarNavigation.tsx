@@ -38,6 +38,10 @@ import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   SPACES_MANAGEMENT_FEATURE_KEY,
 } from '@packmind/ui';
+import {
+  SidebarAccountsMenuDataTestIds,
+  SidebarNavigationDataTestId,
+} from '@packmind/frontend';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 
@@ -230,6 +234,7 @@ export const SidebarNavigation: React.FunctionComponent<
                   ml="-1px"
                   borderLeftRadius="none"
                   onClick={() => navigate(routes.org.toSettings(orgSlug))}
+                  data-testid={SidebarNavigationDataTestId.SettingsLink}
                 >
                   <PMIcon color="text.tertiary">
                     <LuSettings />
@@ -312,7 +317,11 @@ export const SidebarNavigation: React.FunctionComponent<
             <PMBox display="flex" justifyContent="center" py={2}>
               <PMMenu.Root positioning={{ placement: 'right-start' }}>
                 <PMMenu.Trigger asChild>
-                  <PMBox as="button" cursor="pointer">
+                  <PMBox
+                    as="button"
+                    cursor="pointer"
+                    data-testid={SidebarAccountsMenuDataTestIds.OpenSubMenuCTA}
+                  >
                     <PMAvatar.Root
                       size="xs"
                       backgroundColor="background.secondary"
@@ -325,6 +334,21 @@ export const SidebarNavigation: React.FunctionComponent<
                 <PMPortal>
                   <PMMenu.Positioner>
                     <PMMenu.Content>
+                      <PMMenu.Item
+                        value="account-settings"
+                        onClick={() =>
+                          navigate(routes.org.toAccountSettings(orgSlug))
+                        }
+                        cursor="pointer"
+                        data-testid={
+                          SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA
+                        }
+                      >
+                        <PMIcon marginRight={2}>
+                          <LuSettings />
+                        </PMIcon>
+                        Account settings
+                      </PMMenu.Item>
                       <PMMenu.Item
                         value="integrations"
                         onClick={() => navigate(routes.org.toSetup(orgSlug))}
@@ -352,6 +376,7 @@ export const SidebarNavigation: React.FunctionComponent<
                         value="sign-out"
                         onClick={handleSignOut}
                         cursor="pointer"
+                        data-testid={SidebarAccountsMenuDataTestIds.SignoutCTA}
                       >
                         <PMIcon marginRight={2}>
                           <LuLogOut />
@@ -379,6 +404,15 @@ export const SidebarNavigation: React.FunctionComponent<
               <PMVerticalNavSection
                 navEntries={[
                   <SidebarNavigationLink
+                    key="account-settings"
+                    url={routes.org.toAccountSettings(orgSlug)}
+                    label="Account settings"
+                    icon={<LuSettings />}
+                    data-testid={
+                      SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA
+                    }
+                  />,
+                  <SidebarNavigationLink
                     key="setup"
                     url={routes.org.toSetup(orgSlug)}
                     label="Integrations"
@@ -401,6 +435,7 @@ export const SidebarNavigation: React.FunctionComponent<
                     transition="background-color 0.15s"
                     textAlign="left"
                     onClick={handleSignOut}
+                    data-testid={SidebarAccountsMenuDataTestIds.SignoutCTA}
                   >
                     <PMIcon mr={2}>
                       <LuLogOut />
