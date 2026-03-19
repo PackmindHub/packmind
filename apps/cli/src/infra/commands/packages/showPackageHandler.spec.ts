@@ -27,9 +27,6 @@ const PACKAGE_IN_GLOBAL = {
   slug: 'backend',
   name: 'Backend',
   spaceId: 'space-1',
-  description: 'A backend package',
-  standards: [{ name: 'Standard 1', summary: 'A standard' }],
-  recipes: [{ name: 'Recipe 1', summary: 'A recipe' }],
 };
 
 const PACKAGE_IN_FRONTEND = {
@@ -37,6 +34,19 @@ const PACKAGE_IN_FRONTEND = {
   slug: 'backend',
   name: 'Backend Frontend',
   spaceId: 'space-2',
+};
+
+const PACKAGE_SUMMARY_GLOBAL = {
+  name: 'Backend',
+  slug: 'backend',
+  description: 'A backend package',
+  standards: [{ name: 'Standard 1', summary: 'A standard' }],
+  recipes: [{ name: 'Recipe 1', summary: 'A recipe' }],
+};
+
+const PACKAGE_SUMMARY_FRONTEND = {
+  name: 'Backend Frontend',
+  slug: 'backend',
   description: 'A frontend backend package',
   standards: [{ name: 'Frontend Standard', summary: 'A frontend standard' }],
   recipes: [{ name: 'Frontend Recipe', summary: 'A frontend recipe' }],
@@ -51,6 +61,7 @@ describe('showPackageHandler', () => {
     mockPackmindCliHexa = {
       getSpaces: jest.fn(),
       listPackages: jest.fn(),
+      getPackageBySlug: jest.fn().mockResolvedValue(PACKAGE_SUMMARY_GLOBAL),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -138,8 +149,17 @@ describe('showPackageHandler', () => {
           PACKAGE_IN_GLOBAL,
           PACKAGE_IN_FRONTEND,
         ]);
+        mockPackmindCliHexa.getPackageBySlug.mockResolvedValue(
+          PACKAGE_SUMMARY_FRONTEND,
+        );
 
         await showPackageHandler({ slug: '@frontend/backend' }, deps);
+      });
+
+      it('calls getPackageBySlug with the full space-qualified slug', () => {
+        expect(mockPackmindCliHexa.getPackageBySlug).toHaveBeenCalledWith({
+          slug: '@frontend/backend',
+        });
       });
 
       it('displays the package from the requested space', () => {

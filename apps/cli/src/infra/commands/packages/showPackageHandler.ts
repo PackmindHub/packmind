@@ -1,4 +1,4 @@
-import { Package, Space } from '@packmind/types';
+import { Space } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   logConsole,
@@ -23,7 +23,7 @@ export type ShowPackageHandlerDependencies = {
 async function resolvePackage(
   slug: string,
   packmindCliHexa: PackmindCliHexa,
-): Promise<{ spaceSlug: string; pkgSlug: string; matchedPackage: Package }> {
+): Promise<{ spaceSlug: string; pkgSlug: string }> {
   const [allPackages, allSpaces] = await Promise.all([
     packmindCliHexa.listPackages({}),
     packmindCliHexa.getSpaces(),
@@ -66,7 +66,7 @@ async function resolvePackage(
     throw new Error(`Package '${pkgSlug}' not found in space '@${spaceSlug}'.`);
   }
 
-  return { spaceSlug, pkgSlug, matchedPackage };
+  return { spaceSlug, pkgSlug };
 }
 
 export async function showPackageHandler(
@@ -78,13 +78,13 @@ export async function showPackageHandler(
   try {
     logInfoConsole(`Fetching package details for '${args.slug}'...`);
 
-    const {
-      spaceSlug,
-      pkgSlug,
-      matchedPackage: pkg,
-    } = await resolvePackage(args.slug, packmindCliHexa);
+    const { spaceSlug, pkgSlug } = await resolvePackage(
+      args.slug,
+      packmindCliHexa,
+    );
 
     const fullSlug = `@${spaceSlug}/${pkgSlug}`;
+    const pkg = await packmindCliHexa.getPackageBySlug({ slug: fullSlug });
 
     logConsole(`\n${pkg.name} (${fullSlug}):\n`);
 
