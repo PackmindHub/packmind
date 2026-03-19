@@ -1,6 +1,6 @@
-import { PMBox, PMHeading, PMMarkdownViewer, PMText } from '@packmind/ui';
+import { PMBox, PMText } from '@packmind/ui';
 import { Recipe } from '@packmind/types';
-import { stripFrontmatter } from '../../utils/stripFrontmatter';
+import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
 
 interface OriginalTabContentProps {
   recipe: Recipe;
@@ -11,20 +11,19 @@ export function OriginalTabContent({
 }: Readonly<OriginalTabContentProps>) {
   return (
     <PMBox p={6}>
-      <PMBox mb={6}>
-        <PMText
-          fontSize="2xs"
-          fontWeight="medium"
-          textTransform="uppercase"
-          color="faded"
-        >
-          Original Version
-        </PMText>
-      </PMBox>
-      <PMHeading size="md" mb={4}>
-        {recipe.name}
-      </PMHeading>
-      <PMMarkdownViewer content={stripFrontmatter(recipe.content)} />
+      <PMText
+        fontSize="2xs"
+        fontWeight="medium"
+        textTransform="uppercase"
+        color="faded"
+        mb={6}
+      >
+        Original Version
+      </PMText>
+      <ArtifactResultFilePreview
+        fileName={`${recipe.slug}.md`}
+        markdown={recipe.content}
+      />
     </PMBox>
   );
 }

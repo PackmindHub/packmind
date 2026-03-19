@@ -1,17 +1,10 @@
-import {
-  PMBox,
-  PMHeading,
-  PMHStack,
-  PMMarkdownViewer,
-  PMText,
-} from '@packmind/ui';
+import { PMBox, PMText } from '@packmind/ui';
 import { useCallback, useMemo } from 'react';
-import { ChangeProposalId, Recipe } from '@packmind/types';
+import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { applyRecipeProposals } from '../../utils/applyRecipeProposals';
-import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { PREVIEW_RECIPE_VERSION_ID } from '../../utils/changeProposalHelpers';
-import { DownloadAsAgentButton } from '../shared/DownloadAsAgentButton';
+import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
 
 interface ResultTabContentProps {
   recipe: Recipe;
@@ -30,6 +23,12 @@ export function ResultTabContent({
   );
 
   const hasAccepted = acceptedProposalIds.size > 0;
+
+  const hasAcceptedRemoval = proposals.some(
+    (p) =>
+      acceptedProposalIds.has(p.id) &&
+      p.type === ChangeProposalType.removeCommand,
+  );
 
   const getPreviewCommand = useCallback(
     () => ({
@@ -52,29 +51,22 @@ export function ResultTabContent({
 
   return (
     <PMBox p={6}>
-      <PMHStack mb={6} justifyContent="space-between" alignItems="center">
-        <PMText
-          fontSize="2xs"
-          fontWeight="medium"
-          textTransform="uppercase"
-          color="faded"
-        >
-          Version with accepted changes
-        </PMText>
-        {hasAccepted && (
-          <DownloadAsAgentButton
-            getPreviewCommand={getPreviewCommand}
-            label="Try with agent"
-          />
-        )}
-      </PMHStack>
+      <PMText
+        fontSize="2xs"
+        fontWeight="medium"
+        textTransform="uppercase"
+        color="faded"
+        mb={6}
+      >
+        Version with accepted changes
+      </PMText>
       {hasAccepted ? (
-        <>
-          <PMHeading size="md" mb={4}>
-            {applied.name}
-          </PMHeading>
-          <PMMarkdownViewer content={stripFrontmatter(applied.content)} />
-        </>
+        <ArtifactResultFilePreview
+          fileName={`${recipe.slug}.md`}
+          markdown={applied.content}
+          hideActions={hasAcceptedRemoval}
+          getPreviewCommand={getPreviewCommand}
+        />
       ) : (
         <PMBox py={12} textAlign="center">
           <PMText color="faded" fontStyle="italic">
