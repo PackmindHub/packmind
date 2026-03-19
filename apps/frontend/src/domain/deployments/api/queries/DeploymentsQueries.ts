@@ -15,6 +15,7 @@ import {
   UpdatePackageCommand,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
+  createSpaceId,
 } from '@packmind/types';
 import { pmToaster } from '@packmind/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -246,7 +247,7 @@ export const useGetRecipesDeploymentOverviewQuery = (spaceId: string) => {
       }
       return deploymentsGateways.getRecipesDeploymentOverview({
         organizationId: organization.id,
-        spaceId,
+        spaceId: createSpaceId(spaceId),
       });
     },
     enabled: !!organization?.id && !!spaceId,
@@ -266,7 +267,7 @@ export const useGetStandardsDeploymentOverviewQuery = (spaceId: string) => {
       }
       return deploymentsGateways.getStandardsDeploymentOverview({
         organizationId: organization.id,
-        spaceId,
+        spaceId: createSpaceId(spaceId),
       });
     },
     enabled: !!organization?.id && !!spaceId,
@@ -286,7 +287,7 @@ export const useGetSkillsDeploymentOverviewQuery = (spaceId: string) => {
       }
       return deploymentsGateways.getSkillsDeploymentOverview({
         organizationId: organization.id,
-        spaceId,
+        spaceId: createSpaceId(spaceId),
       });
     },
     enabled: !!organization?.id && !!spaceId,
