@@ -3,8 +3,10 @@ import {
   PMButton,
   PMHStack,
   PMIcon,
+  PMIconButton,
   PMPopover,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import { CodingAgent, PreviewArtifactRenderingCommand } from '@packmind/types';
@@ -30,13 +32,11 @@ const AGENT_OPTIONS: AgentOption[] = [
 interface DownloadAsAgentButtonProps {
   getPreviewCommand: () => Omit<PreviewArtifactRenderingCommand, 'codingAgent'>;
   size?: 'xs' | 'sm';
-  label?: string;
 }
 
 export function DownloadAsAgentButton({
   getPreviewCommand,
   size = 'sm',
-  label = 'Download for agent',
 }: Readonly<DownloadAsAgentButtonProps>) {
   const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
     null,
@@ -80,14 +80,17 @@ export function DownloadAsAgentButton({
 
   return (
     <PMPopover.Root positioning={{ placement: 'bottom-end' }}>
-      <PMPopover.Trigger asChild>
-        <PMButton variant="outline" size={size}>
-          <PMIcon>
+      <PMTooltip label="Download for agent">
+        <PMPopover.Trigger asChild>
+          <PMIconButton
+            aria-label="Download for agent"
+            variant="tertiary"
+            size={size}
+          >
             <LuDownload />
-          </PMIcon>
-          {label}
-        </PMButton>
-      </PMPopover.Trigger>
+          </PMIconButton>
+        </PMPopover.Trigger>
+      </PMTooltip>
       <PMPopover.Positioner>
         <PMPopover.Content width="380px">
           <PMPopover.Arrow>

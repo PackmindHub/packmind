@@ -9,6 +9,9 @@
       "@packmind/plugins": ["packages/plugins/src/index.ts"],
       "@packmind/import-practices-legacy": [
         "packages/import-practices-legacy/src/index.ts"
+      ],
+      "@packmind/spaces-management": [
+        "apps/api/src/app/organizations/spaces-management/index.ts"
       ]
     }
   }
