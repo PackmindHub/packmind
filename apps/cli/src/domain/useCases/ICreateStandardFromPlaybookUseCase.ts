@@ -11,6 +11,7 @@ export interface IPlaybookInput {
     };
   }>;
   originSkill?: string;
+  spaceSlug?: string;
 }
 
 export interface ICreateStandardResult {
