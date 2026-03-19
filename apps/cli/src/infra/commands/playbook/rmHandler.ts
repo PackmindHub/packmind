@@ -1,13 +1,13 @@
 import * as path from 'path';
 
-import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
-import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
-import { findLockFileEntryForPath } from '../../application/utils/lockFileUtils';
-import { normalizePath } from '../../application/utils/pathUtils';
-import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
+import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
+import { findLockFileEntryForPath } from '../../../application/utils/lockFileUtils';
+import { normalizePath } from '../../../application/utils/pathUtils';
+import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 
 export type PlaybookRmHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;

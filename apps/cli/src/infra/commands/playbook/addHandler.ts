@@ -1,26 +1,26 @@
 import * as path from 'path';
 import * as yaml from 'yaml';
 
-import { resolveArtefactFromPath } from '../../application/utils/resolveArtefactFromPath';
-import { parseCommandFile } from '../../application/utils/parseCommandFile';
-import { parseStandardMdForAgent } from '../../application/utils/parseStandardMd';
-import { parseLenientStandard } from '../../application/utils/parseLenientStandard';
-import { parseSkillDirectory } from '../../application/utils/parseSkillDirectory';
-import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
-import { resolveDeployedContext } from '../../application/utils/resolveDeployedContext';
+import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
+import { parseCommandFile } from '../../../application/utils/parseCommandFile';
+import { parseStandardMdForAgent } from '../../../application/utils/parseStandardMd';
+import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
+import { parseSkillDirectory } from '../../../application/utils/parseSkillDirectory';
+import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
+import { resolveDeployedContext } from '../../../application/utils/resolveDeployedContext';
 import {
   formatLabel,
   logErrorConsole,
   logInfoConsole,
   logSuccessConsole,
-} from '../utils/consoleLogger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { normalizePath } from '../../application/utils/pathUtils';
+} from '../../utils/consoleLogger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { normalizePath } from '../../../application/utils/pathUtils';
 import { ArtifactVersionEntry, FileModification, Space } from '@packmind/types';
-import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
-import { findLockFileEntryForPath } from '../../application/utils/lockFileUtils';
+import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
+import { findLockFileEntryForPath } from '../../../application/utils/lockFileUtils';
 
 type SkillFile = {
   path: string;

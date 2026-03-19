@@ -1,16 +1,16 @@
 import {
   playbookStatusHandler,
   PlaybookStatusHandlerDependencies,
-} from './playbookStatusHandler';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+} from './statusHandler';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
   PlaybookChangeEntry,
-} from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
+} from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
@@ -31,7 +31,7 @@ describe('playbookStatusHandler', () => {
   const repoRoot = '/project';
 
   beforeEach(() => {
-    mockLogConsole = jest.requireMock('../utils/consoleLogger').logConsole;
+    mockLogConsole = jest.requireMock('../../utils/consoleLogger').logConsole;
 
     mockGetContentByVersions = jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },

@@ -1,11 +1,11 @@
 import {
   playbookUnstageHandler,
   PlaybookUnstageHandlerDependencies,
-} from './playbookUnstageHandler';
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
-import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
+} from './unstageHandler';
+import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
 }));

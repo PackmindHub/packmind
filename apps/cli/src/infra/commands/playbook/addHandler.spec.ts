@@ -1,12 +1,12 @@
 import {
   playbookAddHandler,
   PlaybookAddHandlerDependencies,
-} from './playbookAddHandler';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+} from './addHandler';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
@@ -14,7 +14,7 @@ jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
 }));
 
-jest.mock('../../application/utils/parseLenientStandard');
+jest.mock('../../../application/utils/parseLenientStandard');
 
 const VALID_COMMAND_CONTENT = '---\nname: My Command\n---\nDo something useful';
 
@@ -149,7 +149,7 @@ describe('playbookAddHandler', () => {
 
   describe('when filePath is missing', () => {
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(buildDeps({ filePath: undefined }));
 
@@ -173,7 +173,7 @@ describe('playbookAddHandler', () => {
 
   describe('when file path is unsupported', () => {
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(buildDeps({ filePath: 'src/index.ts' }));
 
@@ -203,7 +203,7 @@ describe('playbookAddHandler', () => {
     });
 
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(buildDeps());
 
@@ -225,7 +225,7 @@ describe('playbookAddHandler', () => {
     });
 
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(buildDeps());
 
@@ -281,7 +281,7 @@ describe('playbookAddHandler', () => {
     });
 
     it('logs already up to date', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(buildDeps());
 
@@ -344,7 +344,7 @@ describe('playbookAddHandler', () => {
     });
 
     it('logs already up to date', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(buildDeps());
 
@@ -422,7 +422,9 @@ describe('playbookAddHandler', () => {
     });
 
     it('logs confirmation', async () => {
-      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logSuccessConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookAddHandler(buildDeps());
 
@@ -558,7 +560,7 @@ describe('playbookAddHandler', () => {
     });
 
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(
         buildDeps({ filePath: '.claude/skills/missing/SKILL.md' }),
@@ -593,7 +595,7 @@ describe('playbookAddHandler', () => {
     });
 
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookAddHandler(
         buildDeps({ filePath: '.claude/skills/bad/SKILL.md' }),
@@ -757,7 +759,9 @@ describe('playbookAddHandler', () => {
       });
 
       it('logs error mentioning --space flag', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookAddHandler(buildDeps());
 
@@ -767,7 +771,9 @@ describe('playbookAddHandler', () => {
       });
 
       it('logs error listing global space', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookAddHandler(buildDeps());
 
@@ -777,7 +783,9 @@ describe('playbookAddHandler', () => {
       });
 
       it('logs error listing team-backend space', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookAddHandler(buildDeps());
 
@@ -832,7 +840,9 @@ describe('playbookAddHandler', () => {
       });
 
       it('logs error listing available spaces', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookAddHandler(buildDeps({ spaceSlug: 'nonexistent' }));
 
@@ -947,7 +957,7 @@ describe('playbookAddHandler', () => {
       beforeEach(() => {
         mockReadFile.mockReturnValue(HEADING_ONLY_CONTENT);
         const { parseLenientStandard } = jest.requireMock(
-          '../../application/utils/parseLenientStandard',
+          '../../../application/utils/parseLenientStandard',
         );
         parseLenientStandard.mockReturnValue({
           name: 'My Lenient Standard',
@@ -973,7 +983,7 @@ describe('playbookAddHandler', () => {
       beforeEach(() => {
         mockReadFile.mockReturnValue(NO_HEADING_CONTENT);
         const { parseLenientStandard } = jest.requireMock(
-          '../../application/utils/parseLenientStandard',
+          '../../../application/utils/parseLenientStandard',
         );
         parseLenientStandard.mockReturnValue({
           name: 'my-lenient',
@@ -999,13 +1009,15 @@ describe('playbookAddHandler', () => {
       beforeEach(() => {
         mockReadFile.mockReturnValue('   ');
         const { parseLenientStandard } = jest.requireMock(
-          '../../application/utils/parseLenientStandard',
+          '../../../application/utils/parseLenientStandard',
         );
         parseLenientStandard.mockReturnValue(null);
       });
 
       it('logs "File is empty."', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookAddHandler(
           buildDeps({ filePath: '.packmind/standards/empty.md' }),
@@ -1082,7 +1094,7 @@ describe('playbookAddHandler', () => {
 
       it('logs success', async () => {
         const { logSuccessConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
 
         await playbookAddHandler(buildDeps());
@@ -1102,7 +1114,9 @@ describe('playbookAddHandler', () => {
       });
 
       it('logs error about failed read', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookAddHandler(buildDeps());
 
