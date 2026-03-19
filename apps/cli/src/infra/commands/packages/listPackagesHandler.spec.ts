@@ -177,7 +177,7 @@ describe('listPackagesHandler', () => {
       await listPackagesHandler({ space: 'unknown' }, deps);
 
       expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        'Space "unknown" not found.',
+        "Space '@unknown' not found.",
       );
       expect(mockExit).toHaveBeenCalledWith(1);
     });
@@ -190,9 +190,37 @@ describe('listPackagesHandler', () => {
       await listPackagesHandler({ space: 'backend' }, deps);
 
       expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-        'No packages found in space "backend".',
+        "No packages found in space '@backend'.",
       );
       expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when filtering by an unknown space', () => {
+    beforeEach(async () => {
+      mockPackmindCliHexa.getSpaces.mockResolvedValue([
+        spaceFactory({ slug: 'global', name: 'Global' }),
+        spaceFactory({ slug: 'backend', name: 'Backend' }),
+      ]);
+      mockPackmindCliHexa.listPackages.mockResolvedValue([]);
+
+      await listPackagesHandler({ space: 'unknown' }, deps);
+    });
+
+    it('logs space not found with @ prefix', () => {
+      expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        "Space '@unknown' not found.",
+      );
+    });
+
+    it('lists available spaces with @ prefix', () => {
+      expect(consoleLogger.logInfoConsole).toHaveBeenCalledWith(
+        'Available spaces: @global, @backend',
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
 

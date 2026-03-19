@@ -8,6 +8,7 @@ import {
   logInfoConsole,
   formatCommand,
 } from '../../utils/consoleLogger';
+import { parsePackageSlug } from '../../utils/packageSlugUtils';
 import {
   IAddToPackageUseCase,
   ItemType,
@@ -50,15 +51,6 @@ function formatItemType(itemType: ItemType, count: number): string {
 
 function formatItemList(items: string[]): string {
   return items.map((item) => `"${item}"`).join(', ');
-}
-
-function parsePackageSlug(
-  slug: string,
-): { spaceSlug: string; pkgSlug: string } | null {
-  if (!slug.startsWith('@')) return null;
-  const slash = slug.indexOf('/', 1);
-  if (slash === -1) return null;
-  return { spaceSlug: slug.slice(1, slash), pkgSlug: slug.slice(slash + 1) };
 }
 
 function resolvePackageRef(

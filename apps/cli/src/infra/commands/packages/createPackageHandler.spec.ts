@@ -150,6 +150,46 @@ describe('createPackageHandler', () => {
     });
   });
 
+  describe('when server returns a deduplicated slug', () => {
+    let result: Awaited<ReturnType<typeof createPackageHandler>>;
+
+    beforeEach(async () => {
+      mockUseCase.execute.mockResolvedValue({
+        packageId: 'pkg-999',
+        name: 'My Package',
+        slug: 'my-package-1',
+        spaceSlug: 'global',
+      });
+      result = await createPackageHandler('My Package', undefined, mockUseCase);
+    });
+
+    it('returns deduplicated: true', () => {
+      expect(result.deduplicated).toBe(true);
+    });
+
+    it('returns success: true', () => {
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('when server returns the expected slug', () => {
+    let result: Awaited<ReturnType<typeof createPackageHandler>>;
+
+    beforeEach(async () => {
+      mockUseCase.execute.mockResolvedValue({
+        packageId: 'pkg-001',
+        name: 'My Package',
+        slug: 'my-package',
+        spaceSlug: 'global',
+      });
+      result = await createPackageHandler('My Package', undefined, mockUseCase);
+    });
+
+    it('returns deduplicated as falsy', () => {
+      expect(result.deduplicated).toBeFalsy();
+    });
+  });
+
   describe('when name is whitespace only', () => {
     let result: Awaited<ReturnType<typeof createPackageHandler>>;
 

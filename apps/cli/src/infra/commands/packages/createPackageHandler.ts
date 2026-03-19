@@ -7,7 +7,16 @@ export interface ICreatePackageHandlerResult {
   packageName?: string;
   packageId?: string;
   webappUrl?: string;
+  deduplicated?: boolean;
   error?: string;
+}
+
+function toExpectedSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
 }
 
 function buildWebappUrl(
@@ -54,12 +63,15 @@ export async function createPackageHandler(
       }
     }
 
+    const deduplicated = result.slug !== toExpectedSlug(trimmedName);
+
     return {
       success: true,
       slug: `@${result.spaceSlug}/${result.slug}`,
       packageName: result.name,
       packageId: result.packageId,
       webappUrl,
+      deduplicated,
     };
   } catch (e) {
     return {
