@@ -1,4 +1,4 @@
-import { Package, Space, SummarizedArtifact } from '@packmind/types';
+import { Package, Space } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   logConsole,
@@ -78,13 +78,13 @@ export async function showPackageHandler(
   try {
     logInfoConsole(`Fetching package details for '${args.slug}'...`);
 
-    const { spaceSlug, pkgSlug } = await resolvePackage(
-      args.slug,
-      packmindCliHexa,
-    );
+    const {
+      spaceSlug,
+      pkgSlug,
+      matchedPackage: pkg,
+    } = await resolvePackage(args.slug, packmindCliHexa);
 
     const fullSlug = `@${spaceSlug}/${pkgSlug}`;
-    const pkg = await packmindCliHexa.getPackageBySlug({ slug: pkgSlug });
 
     logConsole(`\n${pkg.name} (${fullSlug}):\n`);
 
@@ -94,7 +94,7 @@ export async function showPackageHandler(
 
     if (pkg.standards && pkg.standards.length > 0) {
       logConsole('Standards:');
-      pkg.standards.forEach((standard: SummarizedArtifact) => {
+      pkg.standards.forEach((standard) => {
         if (standard.summary) {
           logConsole(`  - ${standard.name}: ${standard.summary}`);
         } else {
@@ -106,7 +106,7 @@ export async function showPackageHandler(
 
     if (pkg.recipes && pkg.recipes.length > 0) {
       logConsole('Commands:');
-      pkg.recipes.forEach((recipe: SummarizedArtifact) => {
+      pkg.recipes.forEach((recipe) => {
         if (recipe.summary) {
           logConsole(`  - ${recipe.name}: ${recipe.summary}`);
         } else {
