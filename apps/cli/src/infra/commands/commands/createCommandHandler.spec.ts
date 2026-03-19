@@ -1,20 +1,20 @@
 import { createCommandHandler } from './createCommandHandler';
-import { ICreateCommandFromPlaybookUseCase } from '../../domain/useCases/ICreateCommandFromPlaybookUseCase';
+import { ICreateCommandFromPlaybookUseCase } from '../../../domain/useCases/ICreateCommandFromPlaybookUseCase';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 
 // Mock the credentials module
-jest.mock('../utils/credentials', () => ({
+jest.mock('../../utils/credentials', () => ({
   loadApiKey: jest.fn(),
   decodeApiKey: jest.fn(),
 }));
 
-jest.mock('../utils/readStdin');
-import { readStdin } from '../utils/readStdin';
+jest.mock('../../utils/readStdin');
+import { readStdin } from '../../utils/readStdin';
 const mockReadStdin = readStdin as jest.MockedFunction<typeof readStdin>;
 
-import { loadApiKey, decodeApiKey } from '../utils/credentials';
+import { loadApiKey, decodeApiKey } from '../../utils/credentials';
 
 const mockLoadApiKey = loadApiKey as jest.MockedFunction<typeof loadApiKey>;
 const mockDecodeApiKey = decodeApiKey as jest.MockedFunction<
@@ -82,6 +82,40 @@ describe('createCommandHandler', () => {
           contextValidationCheckpoints: ['Is valid?'],
           steps: [{ name: 'Step 1', description: 'Do something' }],
         }),
+      );
+    });
+  });
+
+  describe('when --space flag is provided', () => {
+    let result: Awaited<ReturnType<typeof createCommandHandler>>;
+
+    beforeEach(async () => {
+      const playbook = {
+        name: 'Test Command',
+        summary: 'Test summary',
+        whenToUse: ['When testing'],
+        contextValidationCheckpoints: ['Is valid?'],
+        steps: [{ name: 'Step 1', description: 'Do something' }],
+      };
+
+      const filePath = path.join(tempDir, 'command-playbook.json');
+      await fs.writeFile(filePath, JSON.stringify(playbook));
+
+      result = await createCommandHandler(
+        filePath,
+        mockUseCase,
+        undefined,
+        'my-space',
+      );
+    });
+
+    it('returns success', () => {
+      expect(result.success).toBe(true);
+    });
+
+    it('passes spaceSlug to the use case', () => {
+      expect(mockUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ spaceSlug: 'my-space' }),
       );
     });
   });
