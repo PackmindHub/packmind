@@ -209,18 +209,18 @@ describe('AgentArtifactDetectionService', () => {
       });
     });
 
-    describe('when .gitlab/ directory exists', () => {
+    describe('when .gitlab/duo/ directory exists', () => {
       let result: DetectedAgentArtifact[];
 
       beforeEach(async () => {
-        await fs.mkdir(path.join(tempDir, '.gitlab'));
+        await fs.mkdir(path.join(tempDir, '.gitlab/duo'), { recursive: true });
         result = await service.detectAgentArtifacts(tempDir);
       });
 
       it('returns gitlab_duo agent', () => {
         expect(result).toContainEqual({
           agent: 'gitlab_duo',
-          artifactPath: path.join(tempDir, '.gitlab'),
+          artifactPath: path.join(tempDir, '.gitlab/duo'),
         });
       });
     });

@@ -225,6 +225,16 @@ describe('resolveArtefactFromPath', () => {
       );
       expect(result).toBeNull();
     });
+
+    it('returns skill for GitLab Duo (.gitlab/duo/skills/)', () => {
+      const result = resolveArtefactFromPath(
+        '.gitlab/duo/skills/some-skill/SKILL.md',
+      );
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'gitlab_duo',
+      });
+    });
   });
 
   describe('when skill path is absolute', () => {
@@ -246,6 +256,22 @@ describe('resolveArtefactFromPath', () => {
         artifactType: 'skill',
         codingAgent: 'cursor',
       });
+    });
+  });
+
+  describe('when gitlab_duo has empty command/standard paths', () => {
+    it('does not match gitlab_duo for commands', () => {
+      const result = resolveArtefactFromPath(
+        '.gitlab/duo/commands/some-command.md',
+      );
+      expect(result).toBeNull();
+    });
+
+    it('does not match gitlab_duo for standards', () => {
+      const result = resolveArtefactFromPath(
+        '.gitlab/duo/standards/some-standard.md',
+      );
+      expect(result).toBeNull();
     });
   });
 

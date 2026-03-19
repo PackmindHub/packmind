@@ -477,8 +477,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     return `---\n${frontmatter}\n---\n\n${skillVersion.prompt}`;
   }
 
-  getSkillsFolderPath(): undefined {
-    // Skills not supported for single-file deployers
+  getSkillsFolderPath(): string | undefined {
+    // Skills not supported for single-file deployers by default
     return undefined;
   }
 }

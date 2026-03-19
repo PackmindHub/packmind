@@ -1,5 +1,5 @@
 import { GitlabDuoDeployer } from './GitlabDuoDeployer';
-import { createUserId } from '@packmind/types';
+import { createUserId, DeleteItemType } from '@packmind/types';
 import {
   GitRepo,
   createGitRepoId,
@@ -15,6 +15,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { recipeFactory } from '@packmind/recipes/test';
 import { standardFactory } from '@packmind/standards/test';
+import { skillVersionFactory } from '@packmind/skills/test';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('GitlabDuoDeployer', () => {
   let deployer: GitlabDuoDeployer;
@@ -317,6 +319,223 @@ describe('GitlabDuoDeployer', () => {
         expect(sectionContent).toContain(
           GenericStandardSectionWriter.standardsIntroduction,
         );
+      });
+    });
+  });
+
+  describe('getSkillsFolderPath', () => {
+    it('returns the gitlab duo skills directory', () => {
+      expect(deployer.getSkillsFolderPath()).toBe('.gitlab/duo/skills/');
+    });
+  });
+
+  describe('deploySkills', () => {
+    describe('with a single skill', () => {
+      let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
+      let skillVersion: ReturnType<typeof skillVersionFactory>;
+
+      beforeEach(async () => {
+        skillVersion = skillVersionFactory({
+          name: 'My Skill',
+          slug: 'my-skill',
+          description: 'A test skill',
+          prompt: 'Skill prompt content',
+        });
+
+        result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('creates a SKILL.md file', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('places skill at the correct path', () => {
+        expect(result.createOrUpdate[0].path).toBe(
+          '.gitlab/duo/skills/my-skill/SKILL.md',
+        );
+      });
+
+      it('includes YAML frontmatter with name', () => {
+        expect(result.createOrUpdate[0].content).toContain("name: 'My Skill'");
+      });
+
+      it('includes YAML frontmatter with description', () => {
+        expect(result.createOrUpdate[0].content).toContain(
+          "description: 'A test skill'",
+        );
+      });
+
+      it('includes skill prompt content', () => {
+        expect(result.createOrUpdate[0].content).toContain(
+          'Skill prompt content',
+        );
+      });
+
+      it('has no files to delete', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when target has a non-root path', () => {
+      let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
+
+      beforeEach(async () => {
+        const targetWithPath: Target = {
+          ...mockTarget,
+          path: '/packages/app/',
+        };
+
+        const skillVersion = skillVersionFactory({ slug: 'prefixed-skill' });
+
+        result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          targetWithPath,
+        );
+      });
+
+      it('prefixes the skill path with the target path', () => {
+        expect(result.createOrUpdate[0].path).toBe(
+          'packages/app/.gitlab/duo/skills/prefixed-skill/SKILL.md',
+        );
+      });
+    });
+  });
+
+  describe('deployArtifacts', () => {
+    describe('with standards and skills', () => {
+      let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+      beforeEach(async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: 'backend',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('sv-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: 'desc',
+          version: 1,
+          summary: 'summary',
+          userId: createUserId('user-1'),
+          scope: 'backend',
+        };
+
+        const skillVersion = skillVersionFactory({
+          name: 'Deploy Skill',
+          slug: 'deploy-skill',
+        });
+
+        result = await deployer.deployArtifacts(
+          [],
+          [standardVersion],
+          [skillVersion],
+        );
+      });
+
+      it('includes single-file standard update', () => {
+        const standardUpdate = result.createOrUpdate.find(
+          (f) => f.path === '.gitlab/duo/chat-rules.md',
+        );
+        expect(standardUpdate).toBeDefined();
+      });
+
+      it('includes multi-file skill update', () => {
+        const skillUpdate = result.createOrUpdate.find((f) =>
+          f.path.includes('.gitlab/duo/skills/deploy-skill/SKILL.md'),
+        );
+        expect(skillUpdate).toBeDefined();
+      });
+    });
+  });
+
+  describe('generateRemovalFileUpdates', () => {
+    describe('when skills are removed', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateRemovalFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        const removedSkill = skillVersionFactory({ slug: 'removed-skill' });
+
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [removedSkill],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+        );
+      });
+
+      it('deletes the skill directory', () => {
+        const skillDeletion = result.delete.find(
+          (d) => d.path === '.gitlab/duo/skills/removed-skill',
+        );
+        expect(skillDeletion).toBeDefined();
+      });
+
+      it('marks skill deletion as directory type', () => {
+        const skillDeletion = result.delete.find(
+          (d) => d.path === '.gitlab/duo/skills/removed-skill',
+        );
+        expect(skillDeletion?.type).toBe(DeleteItemType.Directory);
+      });
+    });
+  });
+
+  describe('generateAgentCleanupFileUpdates', () => {
+    describe('when cleaning up all artifacts', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        const skillVersion = skillVersionFactory({ slug: 'package-skill' });
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [skillVersion],
+        });
+      });
+
+      it('deletes default skill directories', () => {
+        const defaultSlugs = DefaultSkillsDeployer.getDefaultSkillSlugs();
+        for (const slug of defaultSlugs) {
+          const deletion = result.delete.find(
+            (d) => d.path === `.gitlab/duo/skills/${slug}`,
+          );
+          expect(deletion).toBeDefined();
+        }
+      });
+
+      it('deletes package skill directories', () => {
+        const deletion = result.delete.find(
+          (d) => d.path === '.gitlab/duo/skills/package-skill',
+        );
+        expect(deletion).toBeDefined();
+      });
+
+      it('marks all skill deletions as directory type', () => {
+        const skillDeletions = result.delete.filter((d) =>
+          d.path.startsWith('.gitlab/duo/skills/'),
+        );
+        for (const deletion of skillDeletions) {
+          expect(deletion.type).toBe(DeleteItemType.Directory);
+        }
       });
     });
   });

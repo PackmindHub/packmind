@@ -26,7 +26,7 @@ const AGENT_ARTIFACT_CHECKS: ArtifactCheck[] = [
   { agent: 'continue', paths: ['.continue'] },
   { agent: 'junie', paths: ['.junie', '.junie.md'] },
   { agent: 'agents_md', paths: ['AGENTS.md'] },
-  { agent: 'gitlab_duo', paths: ['.gitlab'] },
+  { agent: 'gitlab_duo', paths: ['.gitlab/duo'] },
 ];
 
 export class AgentArtifactDetectionService implements IAgentArtifactDetectionService {
