@@ -808,12 +808,41 @@ export async function uninstallPackagesHandler(
     };
   }
 
-  // Check which packages to uninstall are actually installed
-  const packagesToUninstall = packagesSlugs.filter(
-    (slug) => slug in configPackages,
-  );
+  // Normalize slugs for space-aware matching (handles @space/pkg vs pkg forms)
+  let normalizedRequestedSlugs: string[];
+  let normalizedConfigSlugs: string[];
+  try {
+    normalizedRequestedSlugs =
+      await packmindCliHexa.normalizePackageSlugs(packagesSlugs);
+    normalizedConfigSlugs = await packmindCliHexa.normalizePackageSlugs(
+      Object.keys(configPackages),
+    );
+  } catch (err) {
+    error(`❌ ${err instanceof Error ? err.message : String(err)}`);
+    exit(1);
+    return {
+      filesDeleted: 0,
+      packagesUninstalled: [],
+    };
+  }
+
+  // Build a map: normalized config key → original config key
+  const normalizedToOriginalConfigKey = new Map<string, string>();
+  Object.keys(configPackages).forEach((originalKey, index) => {
+    normalizedToOriginalConfigKey.set(
+      normalizedConfigSlugs[index],
+      originalKey,
+    );
+  });
+
+  // Find which requested slugs exist in config (matching by normalized form)
+  const packagesToUninstall = normalizedRequestedSlugs
+    .filter((slug) => normalizedToOriginalConfigKey.has(slug))
+    .map((slug) => normalizedToOriginalConfigKey.get(slug)!);
+
+  // Find which requested slugs are NOT in config (for warning display)
   const notInstalledPackages = packagesSlugs.filter(
-    (slug) => !(slug in configPackages),
+    (_, i) => !normalizedToOriginalConfigKey.has(normalizedRequestedSlugs[i]),
   );
 
   // Warn about packages that aren't installed
