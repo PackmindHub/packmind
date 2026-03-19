@@ -51,10 +51,9 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
           DistributionStatus.success, // Filter only successful distributions for overview
         );
 
-      // Get all spaces for the organization
-      const spaces = await this.spacesPort.listSpacesByOrganization(
-        command.organizationId as OrganizationId,
-      );
+      // Get the requested space
+      const space = await this.spacesPort.getSpaceById(command.spaceId);
+      const spaces = space ? [space] : [];
 
       // Get all skills across all spaces (active only for the base list)
       const [activeSkillsPerSpace, gitRepos] = await Promise.all([
