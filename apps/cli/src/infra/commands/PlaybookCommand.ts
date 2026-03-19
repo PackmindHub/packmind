@@ -11,6 +11,7 @@ import { playbookAddHandler } from './playbookAddHandler';
 import { playbookUnstageHandler } from './playbookUnstageHandler';
 import { playbookStatusHandler } from './playbookStatusHandler';
 import { playbookSubmitHandler } from './playbookSubmitHandler';
+import { playbookRmHandler } from './playbookRmHandler';
 import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { logConsole, logErrorConsole } from '../utils/consoleLogger';
 
@@ -20,6 +21,7 @@ export const playbookCommand = command({
 
 Subcommands:
   add [--space <slug>] <path>   Stage a local artifact change
+  rm <path>        Stage an artifact for removal
   unstage <path>   Remove a staged change
   status           Show staged and untracked changes
   submit [-m msg]  Submit staged changes as proposals`,
@@ -68,6 +70,19 @@ Subcommands:
       return;
     }
 
+    if (positionals[0] === 'rm') {
+      const lockFileRepository = new LockFileRepository();
+      await playbookRmHandler({
+        packmindCliHexa,
+        filePath: positionals[1],
+        exit: process.exit,
+        getCwd: () => process.cwd(),
+        playbookLocalRepository,
+        lockFileRepository,
+      });
+      return;
+    }
+
     if (positionals[0] === 'unstage') {
       await playbookUnstageHandler({
         filePath: positionals[1],
@@ -102,6 +117,7 @@ Subcommands:
         exit: process.exit,
         message,
         openEditor: (prefill: string) => openEditorForMessage(prefill),
+        unlinkFile: (p: string) => unlinkSync(p),
       });
       return;
     }
@@ -114,6 +130,7 @@ Subcommands:
     logConsole('');
     logConsole('Subcommands:');
     logConsole('  add [--space <slug>] <path>   Stage a local artifact change');
+    logConsole('  rm <path>        Stage an artifact for removal');
     logConsole('  unstage <path>   Remove a staged change');
     logConsole('  status           Show staged and untracked changes');
     logConsole('  submit [-m msg]  Submit staged changes as proposals');
