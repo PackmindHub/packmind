@@ -48,7 +48,7 @@ export const getGroupedChangeProposalsOptions = (
   organizationId: OrganizationId | undefined,
   spaceId: SpaceId | undefined,
 ) => ({
-  queryKey: [...GET_GROUPED_CHANGE_PROPOSALS_KEY],
+  queryKey: [...GET_GROUPED_CHANGE_PROPOSALS_KEY, spaceId],
   queryFn: () => {
     if (!organizationId) {
       throw new Error(
