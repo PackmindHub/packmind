@@ -17,6 +17,7 @@ import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDep
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
+import { CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER } from '@packmind/node-utils';
 
 const origin = 'ClaudeDeployer';
 
@@ -713,7 +714,7 @@ ${instructionContent}`;
       skillVersion.additionalProperties &&
       Object.keys(skillVersion.additionalProperties).length > 0
     ) {
-      for (const [camelKey, value] of Object.entries(
+      for (const [camelKey, value] of sortAdditionalPropertiesKeys(
         skillVersion.additionalProperties,
       )) {
         const yamlKey = camelToKebab(camelKey);
@@ -734,6 +735,27 @@ ${skillVersion.prompt}`;
   getSkillsFolderPath(): string {
     return ClaudeDeployer.ARTEFACT_PATHS.skill;
   }
+}
+
+/**
+ * Sorts additional properties entries: known fields first (in canonical order),
+ * then unknown fields alphabetically.
+ */
+function sortAdditionalPropertiesKeys(
+  props: Record<string, unknown>,
+): [string, unknown][] {
+  const entries = Object.entries(props);
+  const orderIndex = new Map(
+    CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]),
+  );
+  return entries.sort(([a], [b]) => {
+    const aIdx = orderIndex.get(a);
+    const bIdx = orderIndex.get(b);
+    if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
+    if (aIdx !== undefined) return -1;
+    if (bIdx !== undefined) return 1;
+    return a.localeCompare(b);
+  });
 }
 
 /**
@@ -758,7 +780,9 @@ function formatAdditionalPropertyYaml(
     const items = value
       .map((item) => {
         if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
-          const entries = Object.entries(item as Record<string, unknown>);
+          const entries = Object.entries(item as Record<string, unknown>).sort(
+            ([a], [b]) => a.localeCompare(b),
+          );
           if (entries.length === 0) return `${pad}- {}`;
           const [firstKey, firstVal] = entries[0];
           const firstLine = formatEntryValue(
@@ -780,6 +804,7 @@ function formatAdditionalPropertyYaml(
   }
   if (value !== null && typeof value === 'object') {
     const nestedYaml = Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => formatAdditionalPropertyYaml(k, v, indent + 2))
       .join('\n');
     return `${pad}${key}:\n${nestedYaml}`;

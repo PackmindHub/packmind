@@ -15,6 +15,20 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
   hooks: 'hooks',
 };
 
+/**
+ * Canonical ordering of Claude Code additional properties (camelCase storage keys).
+ * Used to ensure deterministic YAML frontmatter rendering regardless of JSONB key order.
+ */
+export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
+  'argumentHint',
+  'disableModelInvocation',
+  'userInvocable',
+  'model',
+  'context',
+  'agent',
+  'hooks',
+];
+
 /** Known Agent Skills spec fields (post-normalization). */
 const SPEC_FIELDS = new Set([
   'name',
