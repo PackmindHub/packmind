@@ -31,7 +31,6 @@ const collectionUpdateTypes = new Set<ChangeProposalType>([
   ChangeProposalType.updateRule,
   ChangeProposalType.updateSkillFileContent,
   ChangeProposalType.updateSkillFilePermissions,
-  ChangeProposalType.updateSkillAdditionalProperty,
 ]);
 
 const collectionAddTypes = new Set<ChangeProposalType>([
@@ -58,6 +57,19 @@ export function extractProposalDiffValues(
     return {
       oldValue: scalarPayload.oldValue,
       newValue: scalarPayload.newValue,
+    };
+  }
+
+  if (type === ChangeProposalType.updateSkillAdditionalProperty) {
+    const updatePayload = payload as CollectionItemUpdatePayload<string>;
+    const key = updatePayload.targetId;
+    return {
+      oldValue: updatePayload.oldValue
+        ? `${key}: ${updatePayload.oldValue}`
+        : '',
+      newValue: updatePayload.newValue
+        ? `${key}: ${updatePayload.newValue}`
+        : '',
     };
   }
 
