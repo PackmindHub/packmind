@@ -1,12 +1,9 @@
-import {
-  playbookRmHandler,
-  PlaybookRmHandlerDependencies,
-} from './playbookRmHandler';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+import { playbookRmHandler, PlaybookRmHandlerDependencies } from './rmHandler';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
   logErrorConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
@@ -128,7 +125,7 @@ describe('playbookRmHandler', () => {
 
   describe('when filePath is missing', () => {
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookRmHandler(buildDeps({ filePath: undefined }));
 
@@ -152,7 +149,7 @@ describe('playbookRmHandler', () => {
 
   describe('when file path is unsupported', () => {
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookRmHandler(buildDeps({ filePath: 'src/index.ts' }));
 
@@ -183,7 +180,7 @@ describe('playbookRmHandler', () => {
     });
 
     it('logs error about non-packmind file', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookRmHandler(buildDeps());
 
@@ -211,7 +208,7 @@ describe('playbookRmHandler', () => {
     });
 
     it('logs error about non-packmind file', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookRmHandler(buildDeps());
 
@@ -251,7 +248,9 @@ describe('playbookRmHandler', () => {
     });
 
     it('logs success', async () => {
-      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logSuccessConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookRmHandler(buildDeps());
 
@@ -354,7 +353,7 @@ describe('playbookRmHandler', () => {
     });
 
     it('logs error with guidance', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookRmHandler(
         buildDeps({

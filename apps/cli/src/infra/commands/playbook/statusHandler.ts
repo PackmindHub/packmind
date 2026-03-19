@@ -1,18 +1,18 @@
 import * as path from 'path';
 
-import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
-import { normalizePath } from '../../application/utils/pathUtils';
-import { formatLabel, logConsole } from '../utils/consoleLogger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
+import { normalizePath } from '../../../application/utils/pathUtils';
+import { formatLabel, logConsole } from '../../utils/consoleLogger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
   PlaybookChangeEntry,
-} from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+} from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import {
   PackmindLockFile,
   PackmindLockFileEntry,
-} from '../../domain/repositories/PackmindLockFile';
+} from '../../../domain/repositories/PackmindLockFile';
 import { ArtifactVersionEntry, FileModification } from '@packmind/types';
 
 export type PlaybookStatusHandlerDependencies = {

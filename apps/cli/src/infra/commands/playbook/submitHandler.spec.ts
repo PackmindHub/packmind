@@ -1,15 +1,15 @@
 import {
   playbookSubmitHandler,
   PlaybookSubmitHandlerDependencies,
-} from './playbookSubmitHandler';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { PlaybookChangeEntry } from '../../domain/repositories/IPlaybookLocalRepository';
-import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+} from './submitHandler';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { PlaybookChangeEntry } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { createMockPackmindGateway } from '../../../mocks/createMockGateways';
 import { ChangeProposalType, ChangeProposalCaptureMode } from '@packmind/types';
 
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logInfoConsole: jest.fn(),
@@ -141,7 +141,7 @@ describe('playbookSubmitHandler', () => {
 
   describe('when playbook is empty', () => {
     it('logs "Nothing to submit."', async () => {
-      const { logConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookSubmitHandler(buildDeps());
 
@@ -216,7 +216,9 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookSubmitHandler(buildDeps());
 
@@ -239,7 +241,9 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookSubmitHandler(buildDeps());
 
@@ -264,7 +268,9 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await playbookSubmitHandler(buildDeps());
 
@@ -552,7 +558,9 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs success message', async () => {
-      const { logSuccessConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logSuccessConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
@@ -585,7 +593,7 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs error', async () => {
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
@@ -705,7 +713,9 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('warns about missing deployed content', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
@@ -715,7 +725,9 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('suggests running packmind pull', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
@@ -785,7 +797,9 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('warns about missing deployed content', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
@@ -795,7 +809,9 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('suggests running packmind pull', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
@@ -867,7 +883,7 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs informative message', async () => {
-      const { logConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logConsole } = jest.requireMock('../../utils/consoleLogger');
 
       await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
 
@@ -1117,7 +1133,9 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs warning', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
 
       await playbookSubmitHandler(buildDeps({ message: 'remove missing' }));
 

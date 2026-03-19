@@ -1,5 +1,5 @@
-import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
-import { logErrorConsole, logSuccessConsole } from '../utils/consoleLogger';
+import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
+import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 
 export type PlaybookUnstageHandlerDependencies = {
   filePath: string | undefined;
