@@ -156,10 +156,8 @@ describe('CliAuthentication', () => {
       ).toBeInTheDocument();
     });
 
-    it('displays packmind-cli login command', () => {
-      expect(
-        screen.getByDisplayValue(/packmind-cli login/),
-      ).toBeInTheDocument();
+    it('displays packmind login command', () => {
+      expect(screen.getByDisplayValue(/packmind login/)).toBeInTheDocument();
     });
   });
 

@@ -402,7 +402,7 @@ export class PackmindCliHexa {
     } catch {
       // Older versions of the Packmind app do not support spaces — return slugs as-is.
       logWarningConsole(
-        'Your Packmind instance is outdated and needs to be updated. It will not be supported in the v1 release of packmind-cli.',
+        'Your Packmind instance is outdated and needs to be updated. It will not be supported in the v1 release of packmind.',
       );
       return slugs;
     }

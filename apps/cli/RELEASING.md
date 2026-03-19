@@ -1,4 +1,4 @@
-# Releasing packmind-cli
+# Releasing packmind
 
 Update the [CHANGELOG](./CHANGELOG.MD) file:
 

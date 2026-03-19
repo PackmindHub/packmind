@@ -70,7 +70,7 @@ nx run packmind-cli:build-executable
 # or: bun run apps/cli/bun-build.ts
 ```
 
-**Output**: `dist/apps/cli-executables/packmind-cli-<platform>-<arch>`
+**Output**: `dist/apps/cli-executables/packmind-<platform>-<arch>`
 
 #### Build for Specific Platforms
 
@@ -119,10 +119,10 @@ Bun supports true cross-compilation - you can build for any platform from any pl
 
 ```bash
 # Build for Linux from macOS
-bun build --compile --target=bun-linux-x64 apps/cli/src/main.ts --outfile dist/packmind-cli-linux
+bun build --compile --target=bun-linux-x64 apps/cli/src/main.ts --outfile dist/packmind-linux
 
 # Build for Windows from macOS
-bun build --compile --target=bun-windows-x64 apps/cli/src/main.ts --outfile dist/packmind-cli-windows.exe
+bun build --compile --target=bun-windows-x64 apps/cli/src/main.ts --outfile dist/packmind-windows.exe
 ```
 
 ### How It Works
@@ -192,45 +192,45 @@ For production distribution, the GitHub Actions workflow automatically signs mac
 
 ```bash
 # Login via browser (recommended)
-packmind-cli login
+packmind login
 
 # Login to self-hosted instance
-packmind-cli login --host https://your-instance.com
+packmind login --host https://your-instance.com
 
 # Login with manual code
-packmind-cli login --code YOUR_CODE
+packmind login --code YOUR_CODE
 
 # Check authentication status
-packmind-cli whoami
+packmind whoami
 
 # Logout (clear credentials)
-packmind-cli logout
+packmind logout
 ```
 
 ### Basic Commands
 
 ```bash
 # Show help
-packmind-cli --help
+packmind --help
 
 # Lint current directory
-packmind-cli lint .
+packmind lint .
 
 # Lint specific path
-packmind-cli lint src/
+packmind lint src/
 
 # Show lint command help
-packmind-cli lint --help
+packmind lint --help
 ```
 
 ### Output Formats
 
 ```bash
 # Human-readable output (default)
-packmind-cli lint .
+packmind lint .
 
 # IDE-friendly output
-packmind-cli lint . --logger=ide
+packmind lint . --logger=ide
 ```
 
 ### Draft Mode
@@ -239,10 +239,10 @@ Test detection programs before they're in production:
 
 ```bash
 # Run draft detection for a specific rule
-packmind-cli lint . --draft --rule=@standard-slug/ruleId
+packmind lint . --draft --rule=@standard-slug/ruleId
 
 # Specify language
-packmind-cli lint . --draft --rule=@standard-slug/ruleId --language=typescript
+packmind lint . --draft --rule=@standard-slug/ruleId --language=typescript
 ```
 
 ## Architecture

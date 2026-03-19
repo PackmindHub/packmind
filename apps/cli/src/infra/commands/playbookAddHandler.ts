@@ -84,9 +84,7 @@ export async function playbookAddHandler(
   } = deps;
 
   if (!filePath) {
-    logErrorConsole(
-      'Missing file path. Usage: packmind-cli playbook add <path>',
-    );
+    logErrorConsole('Missing file path. Usage: packmind playbook add <path>');
     exit(1);
     return;
   }

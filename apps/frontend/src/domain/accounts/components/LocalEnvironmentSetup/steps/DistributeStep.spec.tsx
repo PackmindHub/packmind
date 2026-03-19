@@ -63,7 +63,7 @@ describe('DistributeStep', () => {
         renderWithProviders(<DistributeStep packages={packages} />);
 
         expect(
-          screen.getByDisplayValue('packmind-cli install package-1'),
+          screen.getByDisplayValue('packmind install package-1'),
         ).toBeInTheDocument();
       });
 
@@ -71,7 +71,7 @@ describe('DistributeStep', () => {
         renderWithProviders(<DistributeStep packages={packages} />);
 
         expect(
-          screen.getByDisplayValue('packmind-cli install package-2'),
+          screen.getByDisplayValue('packmind install package-2'),
         ).toBeInTheDocument();
       });
     });

@@ -16,7 +16,7 @@ For the complete format specification (frontmatter fields, naming rules, directo
 
 ### Step 1: List Skills
 
-Run \`packmind-cli skills list\` to get slugs, names, and descriptions. Do NOT read SKILL.md bodies or reference files yet.
+Run \`packmind skills list\` to get slugs, names, and descriptions. Do NOT read SKILL.md bodies or reference files yet.
 
 ### Step 2: Filter Relevant Skills
 

@@ -1,6 +1,6 @@
 # Create Skill Procedure
 
-Write a new skill directory locally in an agent skills directory. Do NOT call any CLI commands — Phase 4 handles submission via `packmind-cli diff add`.
+Write a new skill directory locally in an agent skills directory. Do NOT call any CLI commands — Phase 4 handles submission via `packmind diff add`.
 
 ## Write Path Selection
 

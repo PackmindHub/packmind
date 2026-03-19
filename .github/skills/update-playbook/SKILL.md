@@ -118,26 +118,26 @@ For each approved change from the Phase 4 report, edit the local installed files
 - **Commands**: `.packmind/commands/<slug>.md`
 - **Skills**: `.claude/skills/<skill-name>/` (SKILL.md, references/, etc.)
 
-Edit only one instance of each artifact — `packmind-cli diff` compares the local copy against the server version.
+Edit only one instance of each artifact — `packmind diff` compares the local copy against the server version.
 
 For **new** artifacts, delegate to the corresponding creation skill (`packmind-create-standard`, `packmind-create-command`, `packmind-create-skill`).
 
 #### Step 1: Preview
 
-Run `packmind-cli diff` and present the output to the user. Verify the diff matches the intended changes — no unrelated modifications should be included.
+Run `packmind diff` and present the output to the user. Verify the diff matches the intended changes — no unrelated modifications should be included.
 
 If unrelated changes appear in the diff (e.g., from a previous session), inform the user and proceed only with the intended changes.
 
 #### Step 2: Submit
 
-Run `packmind-cli diff --submit -m "<concise summary of all changes>"` to submit the changes as proposals for human review on Packmind.
+Run `packmind diff --submit -m "<concise summary of all changes>"` to submit the changes as proposals for human review on Packmind.
 
 #### Step 3: Propagate
 
 Ask the user whether they have validated the submitted changes on Packmind and wish to propagate them locally. If yes, run:
 
 ```bash
-packmind-cli install --recursive
+packmind install --recursive
 ```
 
 ## Reference Files

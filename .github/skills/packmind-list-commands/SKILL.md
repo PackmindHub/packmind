@@ -1,5 +1,5 @@
 ---
-name: 'packmind-cli-list-commands'
+name: 'packmind-list-commands'
 description: 'Reference for Packmind CLI listing commands. This skill should be used when an agent needs to discover available standards, commands, or skills in the Packmind organization.'
 license: 'Complete terms in LICENSE.txt'
 ---
@@ -33,21 +33,21 @@ Example output format to show the user:
 
 | Command | Purpose |
 |---------|---------|
-| `packmind-cli standards list` | List coding standards |
-| `packmind-cli commands list` | List reusable commands |
-| `packmind-cli skills list` | List available skills |
-| `packmind-cli install --list` | List available packages |
+| `packmind standards list` | List coding standards |
+| `packmind commands list` | List reusable commands |
+| `packmind skills list` | List available skills |
+| `packmind install --list` | List available packages |
 
 ## Prerequisites
 
-Ensure packmind-cli is authenticated before running commands:
+Ensure packmind is authenticated before running commands:
 
 ```bash
-packmind-cli whoami
+packmind whoami
 ```
 
 If not logged in, authenticate first:
 
 ```bash
-packmind-cli login
+packmind login
 ```

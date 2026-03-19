@@ -7,7 +7,7 @@ const { version: CLI_VERSION } = require('../../../package.json');
 
 export const updateCommand = command({
   name: 'update',
-  description: 'Update packmind-cli to the latest version',
+  description: 'Update packmind to the latest version',
   args: {
     check: flag({
       long: 'check',

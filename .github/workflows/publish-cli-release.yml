@@ -223,7 +223,7 @@ jobs:
             echo "❌ Error: Linux x64 executable not found"
             exit 1
           fi
-          
+
           # Rename and copy Linux arm64
           if [ -f "executables/packmind-cli-linux-arm64" ]; then
             cp "executables/packmind-cli-linux-arm64" "release-assets/packmind-cli-linux-arm64-${VERSION}"
@@ -232,7 +232,7 @@ jobs:
             echo "❌ Error: Linux arm64 executable not found"
             exit 1
           fi
-          
+
           # Rename and copy Windows x64
           if [ -f "executables/packmind-cli-windows-x64.exe" ]; then
             cp "executables/packmind-cli-windows-x64.exe" "release-assets/packmind-cli-windows-x64-${VERSION}.exe"
@@ -241,7 +241,7 @@ jobs:
             echo "❌ Error: Windows x64 executable not found"
             exit 1
           fi
-          
+
           # Rename and copy Windows arm64
           if [ -f "executables/packmind-cli-windows-arm64.exe" ]; then
             cp "executables/packmind-cli-windows-arm64.exe" "release-assets/packmind-cli-windows-arm64-${VERSION}.exe"
@@ -286,7 +286,7 @@ jobs:
             - **macOS arm64**: `packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}`
             - **Windows x64**: `packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe`
             - **Windows arm64**: `packmind-cli-windows-arm64-${{ needs.sign-macos-cli.outputs.version }}.exe`
-            
+
             Make the executable runnable (Linux/macOS):
             ```bash
             chmod +x packmind-cli-*-${{ needs.sign-macos-cli.outputs.version }}

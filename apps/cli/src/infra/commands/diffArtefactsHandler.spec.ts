@@ -1313,7 +1313,7 @@ describe('diffArtefactsHandler', () => {
         });
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          'Failed to submit "My Command": command is outdated, please run `packmind-cli install` to update it',
+          'Failed to submit "My Command": command is outdated, please run `packmind install` to update it',
         );
       });
     });
@@ -1522,7 +1522,7 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('run `packmind-cli diff --include-submitted`'),
+        expect.stringContaining('run `packmind diff --include-submitted`'),
       );
     });
 

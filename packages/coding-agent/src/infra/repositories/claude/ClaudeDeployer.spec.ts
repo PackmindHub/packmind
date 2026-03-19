@@ -4203,11 +4203,11 @@ describe('ClaudeDeployer', () => {
         ).toBe(true);
       });
 
-      it('deletes packmind-cli-list-commands default skill', () => {
+      it('deletes packmind-list-commands default skill', () => {
         expect(
           result.delete.some(
             (item) =>
-              item.path === '.claude/skills/packmind-cli-list-commands' &&
+              item.path === '.claude/skills/packmind-list-commands' &&
               item.type === DeleteItemType.Directory,
           ),
         ).toBe(true);

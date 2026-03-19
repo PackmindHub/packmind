@@ -6,6 +6,7 @@ import {
   fetchLatestVersionFromGitHub,
   isLocalNpmPackage,
   isHomebrewInstall,
+  createBackwardCompatSymlink,
 } from './updateHandler';
 import * as consoleLogger from '../utils/consoleLogger';
 import * as fs from 'fs';
@@ -20,6 +21,8 @@ jest.mock('../utils/consoleLogger', () => ({
 jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
   realpathSync: jest.fn((p: string) => p),
+  symlinkSync: jest.fn(),
+  unlinkSync: jest.fn(),
 }));
 
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
@@ -239,7 +242,7 @@ describe('updateHandler', () => {
     it('logs the brew upgrade message', () => {
       expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
         'This CLI was installed via Homebrew.\n' +
-          'To update, run: brew upgrade packmind-cli',
+          'To update, run: brew upgrade packmind',
       );
     });
 
@@ -445,6 +448,64 @@ describe('updateHandler', () => {
           'Already up to date (v0.19.0)',
         );
       });
+    });
+  });
+
+  describe('createBackwardCompatSymlink', () => {
+    beforeEach(() => {
+      (fs.unlinkSync as jest.Mock).mockReset();
+      (fs.symlinkSync as jest.Mock).mockReset();
+    });
+
+    it('creates packmind-cli symlink when running as packmind', () => {
+      createBackwardCompatSymlink('/usr/local/bin/packmind', 'linux');
+
+      expect(fs.symlinkSync).toHaveBeenCalledWith(
+        'packmind',
+        '/usr/local/bin/packmind-cli',
+      );
+    });
+
+    it('creates packmind symlink when running as packmind-cli', () => {
+      createBackwardCompatSymlink('/usr/local/bin/packmind-cli', 'linux');
+
+      expect(fs.symlinkSync).toHaveBeenCalledWith(
+        'packmind-cli',
+        '/usr/local/bin/packmind',
+      );
+    });
+
+    it('uses .exe extension on Windows', () => {
+      createBackwardCompatSymlink('C:/bin/packmind.exe', 'win32');
+
+      expect(fs.symlinkSync).toHaveBeenCalledWith(
+        'packmind.exe',
+        'C:/bin/packmind-cli.exe',
+      );
+    });
+
+    it('does nothing for an unknown binary name', () => {
+      createBackwardCompatSymlink('/usr/local/bin/custom-cli', 'linux');
+
+      expect(fs.symlinkSync).not.toHaveBeenCalled();
+    });
+
+    it('removes existing symlink before creating new one', () => {
+      createBackwardCompatSymlink('/usr/local/bin/packmind', 'linux');
+
+      expect(fs.unlinkSync).toHaveBeenCalledWith('/usr/local/bin/packmind-cli');
+      expect(fs.symlinkSync).toHaveBeenCalled();
+    });
+
+    it('does not fail if unlink throws (symlink does not exist)', () => {
+      (fs.unlinkSync as jest.Mock).mockImplementation(() => {
+        throw new Error('ENOENT');
+      });
+
+      expect(() =>
+        createBackwardCompatSymlink('/usr/local/bin/packmind', 'linux'),
+      ).not.toThrow();
+      expect(fs.symlinkSync).toHaveBeenCalled();
     });
   });
 

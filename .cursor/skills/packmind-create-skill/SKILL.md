@@ -103,16 +103,16 @@ If not available, install it:
 
 ### Packmind CLI
 
-Check if packmind-cli is installed:
+Check if packmind is installed:
 
 ```bash
-packmind-cli --version
+packmind --version
 ```
 
 If not available, install it:
 
 ```bash
-npm install -g packmind-cli
+npm install -g packmind
 ```
 
 ## Skill Creation Process
@@ -166,7 +166,7 @@ At this point, it is time to actually create the skill.
 
 Skip this step only if the skill being developed already exists, and iteration or packaging is needed. In this case, continue to the next step.
 
-**Before running the script**, verify that python3 and packmind-cli are available (see Prerequisites section). If not installed, install them first.
+**Before running the script**, verify that python3 and packmind are available (see Prerequisites section). If not installed, install them first.
 
 When creating a new skill from scratch, always run the `init_skill.py` script. The script conveniently generates a new template skill directory that automatically includes everything a skill requires, making the skill creation process much more efficient and reliable.
 
@@ -249,12 +249,12 @@ After testing the skill, users may request improvements. Often this happens righ
 
 **After successful validation, always run the distribution command** to register the skill with Packmind. Do not skip this step.
 
-**Before running the command**, verify that packmind-cli is available (see Prerequisites section). If not installed, install it first.
+**Before running the command**, verify that packmind is available (see Prerequisites section). If not installed, install it first.
 
 Run the following command with the actual skill path:
 
 ```bash
-packmind-cli skills add <path/to/skill-folder>
+packmind skills add <path/to/skill-folder>
 ```
 
 This registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents.
@@ -263,7 +263,7 @@ This registers the skill with Packmind, making it available for deployment to ta
 
 After successful distribution, check if the skill fits an existing package:
 
-1. Run `packmind-cli install --list` to get available packages
+1. Run `packmind install --list` to get available packages
 2. If no packages exist, skip this step silently and end the workflow
 3. Analyze the created skill's name and description against each package's name and description
 4. If a package is a clear semantic fit (the skill's domain/technology aligns with the package's purpose):
@@ -274,6 +274,6 @@ After successful distribution, check if the skill fits an existing package:
      - Skip
 5. If no clear fit is found, skip silently (do not mention packages)
 6. If user chooses to add:
-   - Run: `packmind-cli packages add --to <package-slug> --skill <skill-slug>`
-   - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
-   - If yes, run: `packmind-cli install`
+   - Run: `packmind packages add --to <package-slug> --skill <skill-slug>`
+   - Ask: "Would you like me to run `packmind install` to sync the changes?"
+   - If yes, run: `packmind install`

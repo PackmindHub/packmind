@@ -33,7 +33,7 @@ import {
   detectUserOs,
 } from '../../accounts/components/LocalEnvironmentSetup/utils';
 
-const DIFF_SUBMIT_COMMAND = `packmind-cli diff --submit -m "<your commit message>"`;
+const DIFF_SUBMIT_COMMAND = `packmind diff --submit -m "<your commit message>"`;
 
 const ARCADE_LOAD_TIMEOUT_MS = 5000;
 
@@ -395,14 +395,14 @@ export const ReviewChangesBlankState = () => {
                 <PMVStack align="flex-start" gap={4} width="full">
                   <PMBox width="full">
                     <CopiableTextField
-                      value="packmind-cli init"
+                      value="packmind init"
                       readOnly
                       label="New repo"
                     />
                   </PMBox>
                   <PMBox width="full">
                     <CopiableTextField
-                      value="packmind-cli skills init"
+                      value="packmind skills init"
                       readOnly
                       label="Existing repo"
                     />

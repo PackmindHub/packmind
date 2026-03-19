@@ -47,7 +47,7 @@ function displayAuthInfo(
   logInfoConsole(`Source: ${result.source}`);
 
   if (result.isExpired) {
-    logConsole('\nRun `packmind-cli login` to re-authenticate.');
+    logConsole('\nRun `packmind login` to re-authenticate.');
   }
 }
 
@@ -64,7 +64,7 @@ export const whoamiCommand = command({
     if (!result.isAuthenticated) {
       logErrorConsole('Not authenticated');
       logConsole(
-        `\nNo credentials found. Run \`packmind-cli login\` to authenticate.`,
+        `\nNo credentials found. Run \`packmind login\` to authenticate.`,
       );
       logConsole(`\nCredentials are loaded from (in order of priority):`);
       logConsole(`  1. PACKMIND_API_KEY_V3 environment variable`);

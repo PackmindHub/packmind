@@ -101,7 +101,7 @@ describe('installPackagesHandler', () => {
 
       it('displays usage help', () => {
         expect(mockLog).toHaveBeenCalledWith(
-          'Usage: packmind-cli install <package-slug> [package-slug...]',
+          'Usage: packmind install <package-slug> [package-slug...]',
         );
       });
 
@@ -120,7 +120,7 @@ describe('installPackagesHandler', () => {
 
       it('displays usage help', () => {
         expect(mockLog).toHaveBeenCalledWith(
-          'Usage: packmind-cli install <package-slug> [package-slug...]',
+          'Usage: packmind install <package-slug> [package-slug...]',
         );
       });
 
@@ -1018,7 +1018,7 @@ describe('installPackagesHandler', () => {
 
       it('displays usage help', () => {
         expect(mockLog).toHaveBeenCalledWith(
-          'Usage: packmind-cli uninstall <package-slug> [package-slug...]',
+          'Usage: packmind uninstall <package-slug> [package-slug...]',
         );
       });
 

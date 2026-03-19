@@ -46,7 +46,7 @@ export const DistributeStep: React.FC<IDistributeStepProps> = ({
                     label={
                       'Run this command in your terminal to install the package'
                     }
-                    value={`packmind-cli install ${pkg.slug}`}
+                    value={`packmind install ${pkg.slug}`}
                   />
                 </PMBox>
               </PMVStack>

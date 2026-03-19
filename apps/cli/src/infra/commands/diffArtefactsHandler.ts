@@ -157,7 +157,7 @@ function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
   const proposalWord =
     proposalCount === 1 ? 'change proposal' : 'change proposals';
 
-  return `${proposalCount} ${proposalWord} ignored, run \`packmind-cli diff --include-submitted\` to see what's waiting for validation`;
+  return `${proposalCount} ${proposalWord} ignored, run \`packmind diff --include-submitted\` to see what's waiting for validation`;
 }
 
 /**
@@ -267,7 +267,7 @@ async function handleSubmission(params: {
     message = validation.message;
   } else {
     logErrorConsole(
-      'Non-interactive mode requires -m flag. Use: packmind-cli diff --submit -m "your message"',
+      'Non-interactive mode requires -m flag. Use: packmind diff --submit -m "your message"',
     );
     exit(1);
     return true;
@@ -281,7 +281,7 @@ async function handleSubmission(params: {
   for (const err of result.errors) {
     if (err.code === 'ChangeProposalPayloadMismatchError') {
       logErrorConsole(
-        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
+        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind install\` to update it`,
       );
     } else {
       logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);

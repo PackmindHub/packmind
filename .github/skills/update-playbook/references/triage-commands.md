@@ -15,7 +15,7 @@ Commands are managed org-wide via the Packmind CLI and installed via `packmind.j
 
 ### Step 1: List All Commands via CLI
 
-Run `packmind-cli commands list` to get the full catalog. The output provides slug and name for each command.
+Run `packmind commands list` to get the full catalog. The output provides slug and name for each command.
 
 Do NOT read individual command files at this stage.
 

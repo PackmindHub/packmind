@@ -9,7 +9,7 @@ import { apiStandardFactory } from '../../domain/apiDataFactories/apiStandardFac
 import { apiPackageFactory } from '../../domain/apiDataFactories/apiPackageFactory';
 import { expect } from '@playwright/test';
 
-testWithApi.describe('packmind-cli install', () => {
+testWithApi.describe('packmind install', () => {
   let standard: Standard;
   let defaultPackage: Package;
   let notifyDistributionCommand: PackmindCommandBody<NotifyDistributionCommand>;

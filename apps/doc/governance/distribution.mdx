@@ -30,7 +30,7 @@ For a detailed breakdown of where standards, commands, and skills appear for eac
 There are two ways to distribute packages to your repositories:
 
 1. **Using the Packmind app** - Distribute packages through the web interface with full control over targets and repositories
-2. **Using packmind-cli** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
+2. **Using packmind** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
 
 ### Distribution Methods Overview
 
@@ -65,18 +65,18 @@ This approach is useful when you want to:
 
 For more information on creating and managing packages, see [Packages Management](/concepts/packages-management).
 
-## Distribute via packmind-cli
+## Distribute via packmind
 
-You can also distribute packages directly from your terminal using the `packmind-cli` command:
+You can also distribute packages directly from your terminal using the `packmind` command:
 
 ```bash
-packmind-cli install <package-slug>
+packmind install <package-slug>
 ```
 
 For example:
 
 ```bash
-packmind-cli install backend-standards frontend-react
+packmind install backend-standards frontend-react
 ```
 
 This will:
@@ -106,7 +106,7 @@ The CLI approach is ideal for:
 
 - **CI/CD pipelines** - Automate distribution as part of your deployment process
 - **Local development** - Quickly install packages without leaving your terminal
-- **Monorepos** - Use `packmind-cli install --recursive` to install packages for all `packmind.json` files in the repository
+- **Monorepos** - Use `packmind install --recursive` to install packages for all `packmind.json` files in the repository
 - **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
 
 ## Removing Packages
@@ -128,13 +128,13 @@ There are two ways to remove packages using the CLI:
 **Option 1: Use the remove command**
 
 ```bash
-packmind-cli remove <package-slug>
+packmind remove <package-slug>
 ```
 
 For example:
 
 ```bash
-packmind-cli remove backend-standards
+packmind remove backend-standards
 ```
 
 **Option 2: Edit packmind.json and reinstall**
@@ -144,7 +144,7 @@ packmind-cli remove backend-standards
 3. Run the install command to update your repository:
 
 ```bash
-packmind-cli install
+packmind install
 ```
 
 This approach is useful when you want to make multiple changes to your package configuration at once.

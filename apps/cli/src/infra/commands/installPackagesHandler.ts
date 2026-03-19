@@ -516,13 +516,13 @@ export async function installPackagesHandler(
     } else {
       logWarningConsole('config packmind.json not found');
     }
-    log('Usage: packmind-cli install <package-slug> [package-slug...]');
-    log('       packmind-cli install --list');
+    log('Usage: packmind install <package-slug> [package-slug...]');
+    log('       packmind install --list');
     log('');
     log('Examples:');
-    log('  packmind-cli install backend');
-    log('  packmind-cli install backend frontend');
-    log('  packmind-cli install --list  # Show available packages');
+    log('  packmind install backend');
+    log('  packmind install backend frontend');
+    log('  packmind install --list  # Show available packages');
     log('');
     log('Install commands and standards from the specified packages.');
     exit(0);
@@ -750,12 +750,12 @@ export async function uninstallPackagesHandler(
   if (!packagesSlugs || packagesSlugs.length === 0) {
     error('❌ No packages specified.');
     log('');
-    log('Usage: packmind-cli uninstall <package-slug> [package-slug...]');
-    log('       packmind-cli remove <package-slug> [package-slug...]');
+    log('Usage: packmind uninstall <package-slug> [package-slug...]');
+    log('       packmind remove <package-slug> [package-slug...]');
     log('');
     log('Examples:');
-    log('  packmind-cli uninstall backend');
-    log('  packmind-cli remove backend frontend');
+    log('  packmind uninstall backend');
+    log('  packmind remove backend frontend');
     exit(1);
     return {
       filesDeleted: 0,
@@ -800,7 +800,7 @@ export async function uninstallPackagesHandler(
     }
     log('');
     log('💡 There are no packages to uninstall.');
-    log('   To install packages, run: packmind-cli install <package-slug>');
+    log('   To install packages, run: packmind install <package-slug>');
     exit(1);
     return {
       filesDeleted: 0,
@@ -1016,14 +1016,14 @@ export async function recursiveInstallHandler(
     if (!allConfigs.hasConfigs) {
       log('No packmind.json files found in this repository.');
       log('');
-      log('Usage: packmind-cli install');
+      log('Usage: packmind install');
       log('');
       log(
         'This command requires at least one packmind.json file in the repository.',
       );
       log('Create a packmind.json file first:');
       log('');
-      log('  packmind-cli install <package-slug>');
+      log('  packmind install <package-slug>');
       exit(0);
       return result;
     }

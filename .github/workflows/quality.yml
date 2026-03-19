@@ -25,7 +25,7 @@ on:
         description: 'Token for SonarCloud code quality analysis'
       PACKMIND_API_KEY_V3:
         required: false
-        description: 'API key to run new packmind-cli'
+        description: 'API key to run new packmind'
 
 jobs:
   gitguardian-scan:

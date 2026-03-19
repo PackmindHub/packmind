@@ -130,7 +130,7 @@ describe('listPackagesHandler', () => {
 
     it('uses @space/slug format in install example', () => {
       expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-        expect.stringContaining('packmind-cli install @global/alpha'),
+        expect.stringContaining('packmind install @global/alpha'),
       );
     });
 

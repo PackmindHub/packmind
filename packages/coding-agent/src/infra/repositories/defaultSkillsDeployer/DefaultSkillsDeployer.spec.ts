@@ -44,10 +44,10 @@ describe('DefaultSkillsDeployer', () => {
         );
       });
 
-      it('includes packmind-cli-list-commands', () => {
-        expect(
-          paths.some((p) => p.includes('packmind-cli-list-commands')),
-        ).toBe(true);
+      it('includes packmind-list-commands', () => {
+        expect(paths.some((p) => p.includes('packmind-list-commands'))).toBe(
+          true,
+        );
       });
 
       it('includes packmind-update-playbook', () => {
@@ -193,10 +193,10 @@ describe('DefaultSkillsDeployer', () => {
           );
         });
 
-        it('includes packmind-cli-list-commands', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-cli-list-commands')),
-          ).toBe(true);
+        it('includes packmind-list-commands', () => {
+          expect(paths.some((p) => p.includes('packmind-list-commands'))).toBe(
+            true,
+          );
         });
 
         it('includes packmind-update-playbook', () => {

@@ -418,7 +418,7 @@ export interface IDeploymentPort {
   ): Promise<AddArtefactsToPackageResponse>;
 
   /**
-   * Notifies about a distribution from external sources (e.g., packmind-cli)
+   * Notifies about a distribution from external sources (e.g., packmind)
    *
    * This use case handles the notification of a distribution that happened outside
    * of the Packmind UI. It:

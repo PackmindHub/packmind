@@ -16,7 +16,7 @@ Skills are managed org-wide via the Packmind CLI and installed locally in `.clau
 
 ### Step 1: List All Skills via CLI
 
-Run `packmind-cli skills list` to get the full catalog. The output provides slug, name, and description (auto-load trigger text) for each skill.
+Run `packmind skills list` to get the full catalog. The output provides slug, name, and description (auto-load trigger text) for each skill.
 
 Do NOT read SKILL.md bodies or reference files at this stage.
 

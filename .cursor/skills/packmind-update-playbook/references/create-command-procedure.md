@@ -1,6 +1,6 @@
 # Create Command Procedure
 
-Write a new command file locally at `.packmind/commands/<slug>.md`. Do NOT call any CLI commands — Phase 4 handles submission via `packmind-cli diff add`.
+Write a new command file locally at `.packmind/commands/<slug>.md`. Do NOT call any CLI commands — Phase 4 handles submission via `packmind diff add`.
 
 ## Slug Derivation
 

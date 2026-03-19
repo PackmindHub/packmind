@@ -7,6 +7,7 @@
 
 ## Changed
 
+- Renamed CLI executable from `packmind-cli` to `packmind`. The `packmind-cli` command remains available for backward compatibility but displays a deprecation warning
 - Packages are now prefixed with the space slug (eg: `@global/my-package` instead of `my-package`) to support multi-spaces in organizations.
 
 ## Fixed

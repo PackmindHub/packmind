@@ -40,7 +40,7 @@ Simply copy the provided command and paste it into your terminal. The script han
 npm install -g @packmind/cli
 ```
 
-After installation, the `packmind-cli` command will be available globally.
+After installation, the `packmind` command will be available globally.
 
 **npx** (no installation required):
 
@@ -56,10 +56,10 @@ Available on macOS and Linux.
 
 ```bash
 brew tap PackmindHub/cli
-brew install packmind-cli
+brew install packmind
 ```
 
-After installation, the `packmind-cli` command will be available globally.
+After installation, the `packmind` command will be available globally.
 
 ### Alternative: Standalone Executables
 
@@ -82,7 +82,7 @@ chmod +x packmind-cli-*-{version}
 
 ```bash
 # Linux/macOS
-sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
+sudo mv packmind-cli-*-{version} /usr/local/bin/packmind
 
 # Windows: Move to a directory in your PATH or run directly
 ```
@@ -90,11 +90,11 @@ sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
 <Tip>
   **Choosing an Installation Method** — Use **one-click install** for the
   simplest experience with automatic authentication. Use **npm global** if you
-  want `packmind-cli` always available system-wide. Use **npx** for
-  project-specific usage or testing without installation. Use **Homebrew** if
-  you prefer managing packages through your system package manager
-  (macOS/Linux). Use **standalone executables** if you don't have Node.js
-  installed or need a specific binary for your environment.
+  want `packmind` always available system-wide. Use **npx** for project-specific
+  usage or testing without installation. Use **Homebrew** if you prefer managing
+  packages through your system package manager (macOS/Linux). Use **standalone
+  executables** if you don't have Node.js installed or need a specific binary
+  for your environment.
 </Tip>
 
 ## Authentication
@@ -106,7 +106,7 @@ The CLI requires authentication to communicate with your Packmind instance.
 The easiest way to authenticate is using the `login` command:
 
 ```bash
-packmind-cli login
+packmind login
 ```
 
 This will:
@@ -118,7 +118,7 @@ This will:
 **For self-hosted instances**, specify your host:
 
 ```bash
-packmind-cli login --host https://your-packmind-instance.com
+packmind login --host https://your-packmind-instance.com
 ```
 
 **Manual code entry** (if browser flow doesn't work):
@@ -126,7 +126,7 @@ packmind-cli login --host https://your-packmind-instance.com
 You can also enter a login code manually from the web interface:
 
 ```bash
-packmind-cli login --code YOUR_CODE_HERE
+packmind login --code YOUR_CODE_HERE
 ```
 
 ### Verify Authentication
@@ -134,7 +134,7 @@ packmind-cli login --code YOUR_CODE_HERE
 Check your current authentication status:
 
 ```bash
-packmind-cli whoami
+packmind whoami
 ```
 
 This displays:
@@ -209,6 +209,5 @@ Each command provides step-by-step guidance to ensure high-quality artifacts.
 - **[CLI Reference](/tools/cli)** — Explore all available CLI commands
 
 <Note>
-  Need help? Run `packmind-cli --help` to see all available commands and
-  options.
+  Need help? Run `packmind --help` to see all available commands and options.
 </Note>

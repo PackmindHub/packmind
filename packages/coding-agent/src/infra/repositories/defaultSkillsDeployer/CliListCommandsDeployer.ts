@@ -1,15 +1,15 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
-import { getSkillMd } from './skills/packmind-cli-list-commands/skill';
-import { README } from './skills/packmind-cli-list-commands/readme';
+import { getSkillMd } from './skills/packmind-list-commands/skill';
+import { README } from './skills/packmind-list-commands/readme';
 
 export class CliListCommandsDeployer implements ISkillDeployer {
-  public readonly slug = 'packmind-cli-list-commands';
+  public readonly slug = 'packmind-list-commands';
   public readonly minimumVersion = '0.15.0';
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
-    const basePath = `${skillsFolderPath}packmind-cli-list-commands`;
+    const basePath = `${skillsFolderPath}packmind-list-commands`;
 
     return {
       createOrUpdate: [

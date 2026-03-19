@@ -102,7 +102,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       if (d.isDeleted) {
         statusNode = (
           <PMTooltip
-            label="The command deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
+            label="The command deletion will be effective on the repository after a `packmind install` or git distribution from web app"
             placement="top"
           >
             <PMBadge colorPalette="red" size="sm">
@@ -184,7 +184,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       if (d.isDeleted) {
         statusNode = (
           <PMTooltip
-            label="The standard deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
+            label="The standard deletion will be effective on the repository after a `packmind install` or git distribution from web app"
             placement="top"
           >
             <PMBadge colorPalette="red" size="sm">
@@ -270,7 +270,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       if (d.isDeleted) {
         statusNode = (
           <PMTooltip
-            label="The skill deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
+            label="The skill deletion will be effective on the repository after a `packmind install` or git distribution from web app"
             placement="top"
           >
             <PMBadge colorPalette="red" size="sm">

@@ -171,7 +171,7 @@ export async function listPackagesHandler(
 
     const exampleSlug = displayGroupedPackages(packages, spaces, buildUrl);
     logConsole('How to install a package:\n');
-    logConsole(`  ${formatCommand(`packmind-cli install ${exampleSlug}`)}`);
+    logConsole(`  ${formatCommand(`packmind install ${exampleSlug}`)}`);
     exit(0);
   } catch (err) {
     logErrorConsole('Failed to list packages:');

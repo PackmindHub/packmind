@@ -27,7 +27,7 @@ labels: bug
 <!-- Critical information for reproducibility -->
 
 - Packmind version:
-- packmind-cli version (if relevant):
+- packmind version (if relevant):
 - Browser/OS (if frontend issue):
 - Environment (open-source/cloud/on-prem):
 

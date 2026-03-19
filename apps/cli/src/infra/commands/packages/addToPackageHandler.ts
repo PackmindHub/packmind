@@ -89,7 +89,7 @@ function resolvePackageRef(
       logInfoConsole(`  --to @${s.slug}/${to}`);
     });
     logInfoConsole(
-      `Run \`packmind-cli packages list\` to see available packages per space.`,
+      `Run \`packmind packages list\` to see available packages per space.`,
     );
     exit(1);
   }
@@ -126,7 +126,7 @@ async function executeAddToPackage(
         `${formatItemType(itemType, result.added.length)} ${formatItemList(result.added)} added to "${fullPackageSlug}"`,
       );
       logSuccessConsole(
-        `Run ${formatCommand(`packmind-cli install ${fullPackageSlug}`)} to install the ${pluralize(itemType, result.added.length)}`,
+        `Run ${formatCommand(`packmind install ${fullPackageSlug}`)} to install the ${pluralize(itemType, result.added.length)}`,
       );
     }
 
@@ -143,7 +143,7 @@ async function executeAddToPackage(
     if (error instanceof ItemNotFoundError) {
       const spaceFlag = error.spaceSlug ? ` --space ${error.spaceSlug}` : '';
       const command = formatCommand(
-        `packmind-cli ${error.itemType}s list${spaceFlag}`,
+        `packmind ${error.itemType}s list${spaceFlag}`,
       );
 
       logInfoConsole(

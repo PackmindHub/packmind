@@ -5,10 +5,10 @@ A reference skill that helps AI coding agents discover available standards, comm
 ## What This Skill Provides
 
 Quick reference for all CLI listing commands:
-- \`packmind-cli standards list\` - List coding standards
-- \`packmind-cli commands list\` - List reusable commands
-- \`packmind-cli skills list\` - List available skills
-- \`packmind-cli install --list\` - List available packages
+- \`packmind standards list\` - List coding standards
+- \`packmind commands list\` - List reusable commands
+- \`packmind skills list\` - List available skills
+- \`packmind install --list\` - List available packages
 
 ## How to Use
 
@@ -18,8 +18,8 @@ The AI agent will automatically use this skill when it needs to discover availab
 
 Before using these commands, ensure you have:
 
-- **packmind-cli**: Required for all commands
-- **Packmind account**: Login via \`packmind-cli login\`
+- **packmind**: Required for all commands
+- **Packmind account**: Login via \`packmind login\`
 
 ## License
 
