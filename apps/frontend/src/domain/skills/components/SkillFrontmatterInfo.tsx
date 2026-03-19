@@ -6,6 +6,8 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
+import { Collapsible, useCollapsibleContext } from '@chakra-ui/react';
+import { LuChevronDown, LuChevronUp } from 'react-icons/lu';
 interface SkillFrontmatterData {
   description: string;
   license?: string;
@@ -17,6 +19,11 @@ interface SkillFrontmatterData {
 interface SkillFrontmatterInfoProps {
   skillVersion: SkillFrontmatterData;
 }
+
+const CollapsibleIcon = () => {
+  const { open } = useCollapsibleContext();
+  return open ? <LuChevronUp /> : <LuChevronDown />;
+};
 
 export function SkillFrontmatterInfo({
   skillVersion,
@@ -53,55 +60,69 @@ export function SkillFrontmatterInfo({
         <PMText>{skillVersion.description}</PMText>
       </PMVStack>
       {hasInfoFields && (
-        <>
+        <Collapsible.Root>
           <PMSeparator my={2} borderColor="border.secondary" />
-          {skillVersion.license && (
-            <PMHStack gap={2} align="baseline">
+          <Collapsible.Trigger cursor="pointer" textAlign="left">
+            <PMHStack gap={1} align="center">
               <PMText color="secondary" fontSize="sm">
-                License:
+                More details
               </PMText>
-              <PMText fontSize="sm">{skillVersion.license}</PMText>
+              <CollapsibleIcon />
             </PMHStack>
-          )}
-          {skillVersion.compatibility && (
-            <PMHStack gap={2} align="baseline">
-              <PMText color="secondary" fontSize="sm">
-                Compatibility:
-              </PMText>
-              <PMText fontSize="sm">{skillVersion.compatibility}</PMText>
-            </PMHStack>
-          )}
-          {skillVersion.allowedTools && (
-            <PMHStack gap={2} align="baseline">
-              <PMText color="secondary" fontSize="sm">
-                Allowed Tools:
-              </PMText>
-              <PMText fontSize="sm">{skillVersion.allowedTools}</PMText>
-            </PMHStack>
-          )}
-          {skillVersion.metadata &&
-            Object.keys(skillVersion.metadata).length > 0 && (
-              <PMVStack gap={1} align="stretch">
-                <PMText color="secondary" fontSize="sm">
-                  Metadata:
-                </PMText>
-                <PMVStack gap={1} pl={4} align="flex-start">
-                  {Object.entries(skillVersion.metadata).map(([key, value]) => (
-                    <PMHStack key={key} gap={2}>
-                      <PMText color="secondary" fontSize="sm">
-                        - {key}:
-                      </PMText>
-                      <PMText fontSize="sm">
-                        {typeof value === 'object'
-                          ? JSON.stringify(value)
-                          : String(value)}
-                      </PMText>
-                    </PMHStack>
-                  ))}
-                </PMVStack>
-              </PMVStack>
-            )}
-        </>
+          </Collapsible.Trigger>
+          <Collapsible.Content>
+            <PMVStack gap={2} align="stretch" pt={2}>
+              {skillVersion.license && (
+                <PMHStack gap={2} align="baseline">
+                  <PMText color="secondary" fontSize="sm">
+                    License:
+                  </PMText>
+                  <PMText fontSize="sm">{skillVersion.license}</PMText>
+                </PMHStack>
+              )}
+              {skillVersion.compatibility && (
+                <PMHStack gap={2} align="baseline">
+                  <PMText color="secondary" fontSize="sm">
+                    Compatibility:
+                  </PMText>
+                  <PMText fontSize="sm">{skillVersion.compatibility}</PMText>
+                </PMHStack>
+              )}
+              {skillVersion.allowedTools && (
+                <PMHStack gap={2} align="baseline">
+                  <PMText color="secondary" fontSize="sm">
+                    Allowed Tools:
+                  </PMText>
+                  <PMText fontSize="sm">{skillVersion.allowedTools}</PMText>
+                </PMHStack>
+              )}
+              {skillVersion.metadata &&
+                Object.keys(skillVersion.metadata).length > 0 && (
+                  <PMVStack gap={1} align="stretch">
+                    <PMText color="secondary" fontSize="sm">
+                      Metadata:
+                    </PMText>
+                    <PMVStack gap={1} pl={4} align="flex-start">
+                      {Object.entries(skillVersion.metadata).map(
+                        ([key, value]) => (
+                          <PMHStack key={key} gap={2}>
+                            <PMText color="secondary" fontSize="sm">
+                              - {key}:
+                            </PMText>
+                            <PMText fontSize="sm">
+                              {typeof value === 'object'
+                                ? JSON.stringify(value)
+                                : String(value)}
+                            </PMText>
+                          </PMHStack>
+                        ),
+                      )}
+                    </PMVStack>
+                  </PMVStack>
+                )}
+            </PMVStack>
+          </Collapsible.Content>
+        </Collapsible.Root>
       )}
     </PMVStack>
   );
