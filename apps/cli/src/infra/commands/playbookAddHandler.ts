@@ -20,6 +20,7 @@ import { ILockFileRepository } from '../../domain/repositories/ILockFileReposito
 import { normalizePath } from '../../application/utils/pathUtils';
 import { ArtifactVersionEntry, FileModification, Space } from '@packmind/types';
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
+import { findLockFileEntryForPath } from '../../application/utils/lockFileUtils';
 
 type SkillFile = {
   path: string;
@@ -41,6 +42,54 @@ export type PlaybookAddHandlerDependencies = {
   playbookLocalRepository: IPlaybookLocalRepository;
   lockFileRepository: ILockFileRepository;
 };
+
+type StageRemovedDependencies = {
+  packmindCliHexa: PackmindCliHexa;
+  lockFileRepository: ILockFileRepository;
+  playbookLocalRepository: IPlaybookLocalRepository;
+  codingAgent: string;
+  exit: (code: number) => void;
+};
+
+async function tryStageRemovedFromLockFile(
+  resolvedPath: string,
+  deps: StageRemovedDependencies,
+): Promise<boolean> {
+  const fileDir = path.dirname(resolvedPath);
+  const targetDir = await findNearestConfigDir(fileDir, deps.packmindCliHexa);
+  if (!targetDir) return false;
+
+  const lockFile = await deps.lockFileRepository.read(targetDir);
+  if (!lockFile) return false;
+
+  const normalizedPath = normalizePath(path.relative(targetDir, resolvedPath));
+  const lockEntry = findLockFileEntryForPath(
+    normalizedPath,
+    lockFile.artifacts,
+  );
+  if (!lockEntry) return false;
+
+  const deployedContext = await resolveDeployedContext(
+    deps.packmindCliHexa,
+    targetDir,
+  );
+  deps.playbookLocalRepository.addChange({
+    filePath: normalizedPath,
+    artifactType: lockEntry.type,
+    artifactName: lockEntry.name,
+    codingAgent: deps.codingAgent,
+    changeType: 'removed',
+    content: '',
+    spaceId: lockEntry.spaceId,
+    targetId: deployedContext?.targetId,
+    addedAt: new Date().toISOString(),
+  });
+  logSuccessConsole(
+    `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook.`,
+  );
+  deps.exit(0);
+  return true;
+}
 
 async function fetchDeployedArtifactFiles(
   packmindCliHexa: PackmindCliHexa,
@@ -118,6 +167,14 @@ export async function playbookAddHandler(
     try {
       files = await readSkillDirectory(dirPath);
     } catch (err) {
+      const staged = await tryStageRemovedFromLockFile(dirPath, {
+        packmindCliHexa,
+        lockFileRepository,
+        playbookLocalRepository,
+        codingAgent,
+        exit,
+      });
+      if (staged) return;
       const errorMessage = err instanceof Error ? err.message : String(err);
       logErrorConsole(`Failed to read skill directory: ${errorMessage}`);
       exit(1);
@@ -138,6 +195,14 @@ export async function playbookAddHandler(
     try {
       localContent = readFile(absolutePath);
     } catch (err) {
+      const staged = await tryStageRemovedFromLockFile(absolutePath, {
+        packmindCliHexa,
+        lockFileRepository,
+        playbookLocalRepository,
+        codingAgent,
+        exit,
+      });
+      if (staged) return;
       const errorMessage = err instanceof Error ? err.message : String(err);
       logErrorConsole(`Failed to read file: ${errorMessage}`);
       exit(1);
