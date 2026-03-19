@@ -1,5 +1,8 @@
 import { parseSkillMdContent } from './parseSkillMdContent';
-import { serializeSkillMetadata } from './parseSkillMdContent';
+import {
+  canonicalJsonStringify,
+  serializeSkillMetadata,
+} from './parseSkillMdContent';
 
 /**
  * Claude Code-specific frontmatter fields that are not part of the Agent Skills spec.
@@ -108,7 +111,7 @@ export function parseSkillMd(content: string): ParsedSkillMd | null {
     if (SPEC_FIELDS.has(key)) continue;
     const camelKey = CLAUDE_CODE_ADDITIONAL_FIELDS[key];
     if (!camelKey) continue;
-    additionalProperties[camelKey] = JSON.stringify(value);
+    additionalProperties[camelKey] = canonicalJsonStringify(value);
   }
 
   return {

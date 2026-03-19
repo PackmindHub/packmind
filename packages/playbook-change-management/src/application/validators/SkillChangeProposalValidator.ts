@@ -11,7 +11,11 @@ import {
   SkillVersionId,
   ScalarUpdatePayload,
 } from '@packmind/types';
-import { MemberContext, serializeSkillMetadata } from '@packmind/node-utils';
+import {
+  MemberContext,
+  canonicalJsonStringify,
+  serializeSkillMetadata,
+} from '@packmind/node-utils';
 import { IChangeProposalValidator } from './IChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 import { SkillVersionNotFoundError } from '../errors/SkillVersionNotFoundError';
@@ -123,8 +127,8 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
         ? latestVersion.additionalProperties
         : skill.additionalProperties;
 
-      // DB stores raw values; JSON.stringify to match the JSON-encoded format used by the diff pipeline
-      const currentValue = JSON.stringify(
+      // DB stores raw values; canonical stringify to match the JSON-encoded format used by the diff pipeline
+      const currentValue = canonicalJsonStringify(
         additionalProps?.[payload.targetId] ?? null,
       );
       const expectedOld = payload.oldValue ?? 'null';
