@@ -1145,6 +1145,114 @@ describe('installPackagesHandler', () => {
         );
       });
     });
+
+    describe('space-aware slug matching', () => {
+      const installPackagesSuccess = {
+        filesCreated: 0,
+        filesUpdated: 0,
+        filesDeleted: 3,
+        recipesCount: 0,
+        standardsCount: 0,
+        errors: [],
+      };
+
+      beforeEach(() => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+        mockPackmindCliHexa.installPackages.mockResolvedValue(
+          installPackagesSuccess,
+        );
+      });
+
+      describe('when config has unprefixed slug and user provides prefixed slug', () => {
+        beforeEach(() => {
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+          // Simulate single-space org: normalizes 'backend' → '@my-space/backend'
+          mockPackmindCliHexa.normalizePackageSlugs.mockImplementation(
+            async (slugs: string[]) =>
+              slugs.map((s) => (s.startsWith('@') ? s : `@my-space/${s}`)),
+          );
+        });
+
+        it('removes the unprefixed config entry', async () => {
+          await uninstallPackagesHandler(
+            { packagesSlugs: ['@my-space/backend'] },
+            deps,
+          );
+
+          expect(mockPackmindCliHexa.writeConfig).toHaveBeenCalledWith(
+            '/project',
+            [],
+          );
+        });
+
+        it('does not exit with error', async () => {
+          await uninstallPackagesHandler(
+            { packagesSlugs: ['@my-space/backend'] },
+            deps,
+          );
+
+          expect(mockExit).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when config has prefixed slug and user provides unprefixed slug', () => {
+        beforeEach(() => {
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { '@my-space/backend': '*' },
+          });
+          // Simulate single-space org: normalizes 'backend' → '@my-space/backend'
+          mockPackmindCliHexa.normalizePackageSlugs.mockImplementation(
+            async (slugs: string[]) =>
+              slugs.map((s) => (s.startsWith('@') ? s : `@my-space/${s}`)),
+          );
+        });
+
+        it('removes the prefixed config entry', async () => {
+          await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+          expect(mockPackmindCliHexa.writeConfig).toHaveBeenCalledWith(
+            '/project',
+            [],
+          );
+        });
+
+        it('does not exit with error', async () => {
+          await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+          expect(mockExit).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when organization has multiple spaces and user provides unprefixed slug', () => {
+        beforeEach(() => {
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+          mockPackmindCliHexa.normalizePackageSlugs.mockRejectedValue(
+            new Error(
+              'Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @space-a/my-package).',
+            ),
+          );
+        });
+
+        it('displays the multi-space error', async () => {
+          await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+          expect(mockError).toHaveBeenCalledWith(
+            expect.stringContaining('multiple spaces'),
+          );
+        });
+
+        it('exits with 1', async () => {
+          await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+    });
   });
 
   describe('statusHandler', () => {
