@@ -134,6 +134,7 @@ describe('playbookSubmitHandler', () => {
       exit: mockExit,
       message: undefined,
       openEditor: mockOpenEditor,
+      unlinkFile: jest.fn(),
       ...overrides,
     };
   }
@@ -904,6 +905,231 @@ describe('playbookSubmitHandler', () => {
       await playbookSubmitHandler(buildDeps({ message: 'multi-space' }));
 
       expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('removed command', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          codingAgent: 'claude',
+          changeType: 'removed',
+          content: '',
+        }),
+      ]);
+    });
+
+    it('generates removeCommand proposal', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove cmd' }));
+
+      expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposals: expect.arrayContaining([
+            expect.objectContaining({
+              type: ChangeProposalType.removeCommand,
+              artefactId: 'artifact-cmd-1',
+              payload: { packageIds: ['pkg-1'] },
+            }),
+          ]),
+        }),
+      );
+    });
+
+    it('deletes the local file after successful submit', async () => {
+      const mockUnlinkFile = jest.fn();
+
+      await playbookSubmitHandler(
+        buildDeps({ message: 'remove cmd', unlinkFile: mockUnlinkFile }),
+      );
+
+      expect(mockUnlinkFile).toHaveBeenCalledWith(
+        expect.stringContaining('.claude/commands/my-command.md'),
+      );
+    });
+
+    it('removes staged entry after successful submit', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove cmd' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.claude/commands/my-command.md',
+      );
+    });
+
+    it('exits 0', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove cmd' }));
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('removed standard', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'artifact-std-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          changeType: 'removed',
+          content: '',
+        }),
+      ]);
+    });
+
+    it('generates removeStandard proposal', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove std' }));
+
+      expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposals: expect.arrayContaining([
+            expect.objectContaining({
+              type: ChangeProposalType.removeStandard,
+              artefactId: 'artifact-std-1',
+              payload: { packageIds: ['pkg-1'] },
+            }),
+          ]),
+        }),
+      );
+    });
+  });
+
+  describe('removed skill', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          changeType: 'removed',
+          content: '',
+        }),
+      ]);
+    });
+
+    it('generates removeSkill proposal', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove skill' }));
+
+      expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposals: expect.arrayContaining([
+            expect.objectContaining({
+              type: ChangeProposalType.removeSkill,
+              artefactId: 'artifact-skill-1',
+              payload: { packageIds: ['pkg-1'] },
+            }),
+          ]),
+        }),
+      );
+    });
+  });
+
+  describe('removed entry not found in lock file', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {},
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/commands/missing.md',
+          artifactType: 'command',
+          artifactName: 'Missing',
+          codingAgent: 'claude',
+          changeType: 'removed',
+          content: '',
+        }),
+      ]);
+    });
+
+    it('logs warning', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'remove missing' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Missing'),
+      );
+    });
+
+    it('does not call batchCreate', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove missing' }));
+
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
     });
   });
 });
