@@ -18,6 +18,10 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
       __dirname,
       '../../packages/import-practices-legacy/src',
     ),
+    '@packmind/spaces-management': join(
+      __dirname,
+      'src/app/organizations/spaces-management',
+    ),
     // Add other proprietary-specific overrides here as needed
   };
 };
