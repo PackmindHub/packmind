@@ -2,9 +2,9 @@ import {
   readPlaybookFile,
   parseAndValidatePlaybook,
   ReadPlaybookResult,
-} from '../utils/readPlaybookFile';
-import { readStdin } from '../utils/readStdin';
-import { ICreateStandardFromPlaybookUseCase } from '../../domain/useCases/ICreateStandardFromPlaybookUseCase';
+} from '../../utils/readPlaybookFile';
+import { readStdin } from '../../utils/readStdin';
+import { ICreateStandardFromPlaybookUseCase } from '../../../domain/useCases/ICreateStandardFromPlaybookUseCase';
 
 export interface ICreateStandardHandlerResult {
   success: boolean;
@@ -17,6 +17,7 @@ export async function createStandardHandler(
   filePath: string | undefined,
   useCase: ICreateStandardFromPlaybookUseCase,
   originSkill?: string,
+  spaceSlug?: string,
 ): Promise<ICreateStandardHandlerResult> {
   let readResult: ReadPlaybookResult;
 
@@ -52,6 +53,7 @@ export async function createStandardHandler(
     const result = await useCase.execute({
       ...readResult.data,
       originSkill,
+      spaceSlug,
     });
 
     return {

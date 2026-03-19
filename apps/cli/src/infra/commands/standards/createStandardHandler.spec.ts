@@ -1,11 +1,11 @@
 import { createStandardHandler } from './createStandardHandler';
-import { ICreateStandardFromPlaybookUseCase } from '../../domain/useCases/ICreateStandardFromPlaybookUseCase';
+import { ICreateStandardFromPlaybookUseCase } from '../../../domain/useCases/ICreateStandardFromPlaybookUseCase';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 
-jest.mock('../utils/readStdin');
-import { readStdin } from '../utils/readStdin';
+jest.mock('../../utils/readStdin');
+import { readStdin } from '../../utils/readStdin';
 const mockReadStdin = readStdin as jest.MockedFunction<typeof readStdin>;
 
 describe('createStandardHandler', () => {
@@ -64,6 +64,39 @@ describe('createStandardHandler', () => {
           scope: 'Test',
           rules: [{ content: 'Use something' }],
         }),
+      );
+    });
+  });
+
+  describe('when --space flag is provided', () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
+      const playbook = {
+        name: 'Test Standard',
+        description: 'Test',
+        scope: 'Test',
+        rules: [{ content: 'Use something' }],
+      };
+
+      const filePath = path.join(tempDir, 'playbook.json');
+      await fs.writeFile(filePath, JSON.stringify(playbook));
+
+      result = await createStandardHandler(
+        filePath,
+        mockUseCase,
+        undefined,
+        'my-space',
+      );
+    });
+
+    it('returns success', () => {
+      expect(result.success).toBe(true);
+    });
+
+    it('passes spaceSlug to the use case', () => {
+      expect(mockUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ spaceSlug: 'my-space' }),
       );
     });
   });

@@ -2,10 +2,10 @@ import {
   readCommandPlaybookFile,
   parseAndValidateCommandPlaybook,
   ReadCommandPlaybookResult,
-} from '../utils/readCommandPlaybookFile';
-import { readStdin } from '../utils/readStdin';
-import { ICreateCommandFromPlaybookUseCase } from '../../domain/useCases/ICreateCommandFromPlaybookUseCase';
-import { loadApiKey, decodeApiKey } from '../utils/credentials';
+} from '../../utils/readCommandPlaybookFile';
+import { readStdin } from '../../utils/readStdin';
+import { ICreateCommandFromPlaybookUseCase } from '../../../domain/useCases/ICreateCommandFromPlaybookUseCase';
+import { loadApiKey, decodeApiKey } from '../../utils/credentials';
 
 export interface ICreateCommandHandlerResult {
   success: boolean;
@@ -27,6 +27,7 @@ export async function createCommandHandler(
   filePath: string | undefined,
   useCase: ICreateCommandFromPlaybookUseCase,
   originSkill?: string,
+  spaceSlug?: string,
 ): Promise<ICreateCommandHandlerResult> {
   let readResult: ReadCommandPlaybookResult;
 
@@ -62,6 +63,7 @@ export async function createCommandHandler(
     const result = await useCase.execute({
       ...readResult.data,
       originSkill,
+      spaceSlug,
     });
 
     // Try to build webapp URL from credentials

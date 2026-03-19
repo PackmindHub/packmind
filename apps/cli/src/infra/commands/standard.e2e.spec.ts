@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import { ICreateStandardFromPlaybookUseCase } from '../../domain/useCases/ICreateStandardFromPlaybookUseCase';
-import { createStandardHandler } from './createStandardHandler';
+import { createStandardHandler } from './standards/createStandardHandler';
 
 describe('Standard Create E2E', () => {
   let tempDir: string;

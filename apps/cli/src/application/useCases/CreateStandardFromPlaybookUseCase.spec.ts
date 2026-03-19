@@ -12,6 +12,22 @@ describe('CreateStandardFromPlaybookUseCase', () => {
   let mockStandardsGateway: jest.Mocked<IStandardsGateway>;
   let mockGateway: jest.Mocked<Pick<IPackmindGateway, 'standards'>>;
 
+  const basePlaybook = {
+    name: 'Test Standard',
+    description: 'Desc',
+    scope: 'test',
+    rules: [{ content: 'Rule 1' }],
+  };
+
+  const globalSpace = spaceFactory({
+    id: createSpaceId('space-1'),
+    slug: 'global',
+  });
+  const teamSpace = spaceFactory({
+    id: createSpaceId('space-2'),
+    slug: 'team',
+  });
+
   beforeEach(() => {
     mockSpaceService = createMockSpaceService();
     mockStandardsGateway = {
@@ -27,218 +43,138 @@ describe('CreateStandardFromPlaybookUseCase', () => {
       mockGateway as unknown as IPackmindGateway,
       mockSpaceService,
     );
+    mockStandardsGateway.create.mockResolvedValue({
+      id: 'std-1',
+      name: 'Test Standard',
+    });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('when executing', () => {
-    it('gets the global space first', async () => {
-      mockSpaceService.getDefaultSpace.mockResolvedValue(
-        spaceFactory({
-          id: createSpaceId('space-1'),
-          slug: 'global',
-        }),
-      );
-      mockStandardsGateway.create.mockResolvedValue({
-        id: 'std-1',
-        name: 'Test Standard',
-      });
-
-      await useCase.execute({
-        name: 'Test Standard',
-        description: 'Desc',
-        scope: 'test',
-        rules: [{ content: 'Rule 1' }],
-      });
-
-      expect(mockSpaceService.getDefaultSpace).toHaveBeenCalled();
+  describe('when organization has a single space', () => {
+    beforeEach(() => {
+      mockSpaceService.getSpaces.mockResolvedValue([globalSpace]);
     });
 
-    it('creates standard in space with rules', async () => {
-      mockSpaceService.getDefaultSpace.mockResolvedValue(
-        spaceFactory({
-          id: createSpaceId('space-1'),
-          slug: 'global',
-        }),
+    it('uses the only available space', async () => {
+      await useCase.execute(basePlaybook);
+
+      expect(mockStandardsGateway.create).toHaveBeenCalledWith(
+        'space-1',
+        expect.objectContaining({ name: 'Test Standard' }),
       );
-      mockStandardsGateway.create.mockResolvedValue({
-        id: 'std-1',
-        name: 'Test Standard',
-      });
-
-      await useCase.execute({
-        name: 'Test Standard',
-        description: 'Desc',
-        scope: 'test',
-        rules: [{ content: 'Rule 1' }],
-      });
-
-      expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
-        name: 'Test Standard',
-        description: 'Desc',
-        scope: 'test',
-        rules: [{ content: 'Rule 1', examples: undefined }],
-      });
     });
 
-    it('returns standardId and name from gateway result', async () => {
-      mockSpaceService.getDefaultSpace.mockResolvedValue(
-        spaceFactory({
-          id: createSpaceId('space-1'),
-          slug: 'global',
-        }),
-      );
-      mockStandardsGateway.create.mockResolvedValue({
-        id: 'std-1',
-        name: 'Test Standard',
-      });
-
-      const result = await useCase.execute({
-        name: 'Test Standard',
-        description: 'Desc',
-        scope: 'test',
-        rules: [{ content: 'Rule 1' }],
-      });
+    it('returns standardId and name', async () => {
+      const result = await useCase.execute(basePlaybook);
 
       expect(result).toEqual({ standardId: 'std-1', name: 'Test Standard' });
     });
 
     describe('when rules have no examples', () => {
-      beforeEach(async () => {
-        mockSpaceService.getDefaultSpace.mockResolvedValue(
-          spaceFactory({
-            id: createSpaceId('space-1'),
-            slug: 'global',
-          }),
-        );
-        mockStandardsGateway.create.mockResolvedValue({
-          id: 'std-1',
-          name: 'Test',
-        });
-
+      it('creates standard with rules without examples', async () => {
         await useCase.execute({
-          name: 'Test',
-          description: 'Desc',
-          scope: 'test',
+          ...basePlaybook,
           rules: [{ content: 'Rule 1' }, { content: 'Rule 2' }],
         });
-      });
 
-      it('creates standard with rules without examples', () => {
         expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
-          name: 'Test',
+          name: 'Test Standard',
           description: 'Desc',
           scope: 'test',
           rules: [
             { content: 'Rule 1', examples: undefined },
             { content: 'Rule 2', examples: undefined },
           ],
+          originSkill: undefined,
         });
       });
     });
 
     describe('when rules have examples', () => {
-      beforeEach(() => {
-        mockSpaceService.getDefaultSpace.mockResolvedValue(
-          spaceFactory({
-            id: createSpaceId('space-1'),
-            slug: 'global',
-          }),
+      it('includes examples in the create call', async () => {
+        await useCase.execute({
+          ...basePlaybook,
+          rules: [
+            {
+              content: 'Rule 1',
+              examples: {
+                positive: 'good',
+                negative: 'bad',
+                language: 'TYPESCRIPT',
+              },
+            },
+          ],
+        });
+
+        expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
+          name: 'Test Standard',
+          description: 'Desc',
+          scope: 'test',
+          rules: [
+            {
+              content: 'Rule 1',
+              examples: [
+                { lang: 'TYPESCRIPT', positive: 'good', negative: 'bad' },
+              ],
+            },
+          ],
+          originSkill: undefined,
+        });
+      });
+    });
+  });
+
+  describe('when organization has multiple spaces', () => {
+    beforeEach(() => {
+      mockSpaceService.getSpaces.mockResolvedValue([globalSpace, teamSpace]);
+    });
+
+    describe('and no --space flag is provided', () => {
+      it('throws an error listing available spaces', async () => {
+        await expect(useCase.execute(basePlaybook)).rejects.toThrow(
+          'Multiple spaces found',
         );
-        mockStandardsGateway.create.mockResolvedValue({
-          id: 'std-1',
-          name: 'Test',
-        });
       });
 
-      describe('when only first rule has examples', () => {
-        beforeEach(async () => {
-          await useCase.execute({
-            name: 'Test',
-            description: 'Desc',
-            scope: 'test',
-            rules: [
-              {
-                content: 'Rule 1',
-                examples: {
-                  positive: 'good',
-                  negative: 'bad',
-                  language: 'TYPESCRIPT',
-                },
-              },
-              { content: 'Rule 2' },
-            ],
-          });
-        });
+      it('lists available space slugs in the error', async () => {
+        await expect(useCase.execute(basePlaybook)).rejects.toThrow('global');
+      });
+    });
 
-        it('includes examples in the create call', () => {
-          expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
-            name: 'Test',
-            description: 'Desc',
-            scope: 'test',
-            rules: [
-              {
-                content: 'Rule 1',
-                examples: [
-                  { lang: 'TYPESCRIPT', positive: 'good', negative: 'bad' },
-                ],
-              },
-              { content: 'Rule 2', examples: undefined },
-            ],
-          });
-        });
+    describe('and a valid --space slug is provided', () => {
+      it('uses the matching space', async () => {
+        await useCase.execute({ ...basePlaybook, spaceSlug: 'team' });
+
+        expect(mockStandardsGateway.create).toHaveBeenCalledWith(
+          'space-2',
+          expect.anything(),
+        );
       });
 
-      describe('when multiple rules have examples', () => {
-        beforeEach(async () => {
-          await useCase.execute({
-            name: 'Test',
-            description: 'Desc',
-            scope: 'test',
-            rules: [
-              {
-                content: 'Rule 1',
-                examples: {
-                  positive: 'good1',
-                  negative: 'bad1',
-                  language: 'TYPESCRIPT',
-                },
-              },
-              {
-                content: 'Rule 2',
-                examples: {
-                  positive: 'good2',
-                  negative: 'bad2',
-                  language: 'PYTHON',
-                },
-              },
-            ],
-          });
-        });
+      it('accepts slug with a leading @ prefix', async () => {
+        await useCase.execute({ ...basePlaybook, spaceSlug: '@team' });
 
-        it('includes all examples in the create call', () => {
-          expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
-            name: 'Test',
-            description: 'Desc',
-            scope: 'test',
-            rules: [
-              {
-                content: 'Rule 1',
-                examples: [
-                  { lang: 'TYPESCRIPT', positive: 'good1', negative: 'bad1' },
-                ],
-              },
-              {
-                content: 'Rule 2',
-                examples: [
-                  { lang: 'PYTHON', positive: 'good2', negative: 'bad2' },
-                ],
-              },
-            ],
-          });
-        });
+        expect(mockStandardsGateway.create).toHaveBeenCalledWith(
+          'space-2',
+          expect.anything(),
+        );
+      });
+    });
+
+    describe('and an invalid --space slug is provided', () => {
+      it('throws an error indicating the space was not found', async () => {
+        await expect(
+          useCase.execute({ ...basePlaybook, spaceSlug: 'unknown' }),
+        ).rejects.toThrow('Space "unknown" not found');
+      });
+
+      it('lists available spaces in the error', async () => {
+        await expect(
+          useCase.execute({ ...basePlaybook, spaceSlug: 'unknown' }),
+        ).rejects.toThrow('global');
       });
     });
   });

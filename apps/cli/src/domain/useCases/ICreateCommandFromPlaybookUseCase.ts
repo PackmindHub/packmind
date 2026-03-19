@@ -11,6 +11,7 @@ export interface ICommandPlaybookInput {
   contextValidationCheckpoints: string[];
   steps: ICommandStep[];
   originSkill?: string;
+  spaceSlug?: string;
 }
 
 export interface ICreateCommandResult {

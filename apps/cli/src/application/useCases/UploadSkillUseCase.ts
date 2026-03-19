@@ -5,7 +5,7 @@ import {
 } from '../../domain/useCases/IUploadSkillUseCase';
 import { readSkillDirectory } from '../../infra/utils/readSkillDirectory';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { createSpaceId } from '@packmind/types';
+import { createSpaceId, Space } from '@packmind/types';
 import { ISpaceService } from '../../domain/services/ISpaceService';
 
 type IIUploadSkillDependencies = {
@@ -39,7 +39,7 @@ export class UploadSkillUseCase implements IUploadSkillUseCase {
       throw new Error(`Skill size (${totalSize} bytes) exceeds 10MB limit`);
     }
 
-    const space = await this.deps.spaceService.getDefaultSpace();
+    const space = await this.getSpace(command.spaceSlug);
     const payload = {
       files: files.map((f) => ({
         path: f.relativePath,
@@ -63,5 +63,34 @@ export class UploadSkillUseCase implements IUploadSkillUseCase {
       fileCount: files.length,
       totalSize,
     };
+  }
+
+  private async getSpace(spaceSlug?: string): Promise<Space> {
+    const spaces = await this.deps.spaceService.getSpaces();
+    const normalizedSlug = spaceSlug?.replace(/^@/, '');
+
+    if (normalizedSlug) {
+      const found = spaces.find((s) => s.slug === normalizedSlug);
+      if (!found) {
+        const spaceList = spaces
+          .map((s) => `  - ${s.slug}  (${s.name})`)
+          .join('\n');
+        throw new Error(
+          `Space "${normalizedSlug}" not found. Available spaces:\n${spaceList}`,
+        );
+      }
+      return found;
+    }
+
+    if (spaces.length > 1) {
+      const spaceList = spaces
+        .map((s) => `  - ${s.slug}  (${s.name})`)
+        .join('\n');
+      throw new Error(
+        `Multiple spaces found. Please specify one using --space:\n${spaceList}`,
+      );
+    }
+
+    return spaces[0];
   }
 }
