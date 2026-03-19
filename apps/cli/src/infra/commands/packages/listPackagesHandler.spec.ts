@@ -196,6 +196,36 @@ describe('listPackagesHandler', () => {
     });
   });
 
+  describe('when filtering by space using @ prefix', () => {
+    const globalSpace = spaceFactory({ slug: 'global', name: 'Global' });
+    const backendSpace = spaceFactory({ slug: 'backend', name: 'Backend' });
+
+    beforeEach(async () => {
+      mockPackmindCliHexa.getSpaces.mockResolvedValue([
+        globalSpace,
+        backendSpace,
+      ]);
+      mockPackmindCliHexa.listPackages.mockResolvedValue([
+        packageFactory({ slug: 'global-pkg', spaceId: globalSpace.id }),
+        packageFactory({ slug: 'backend-pkg', spaceId: backendSpace.id }),
+      ]);
+
+      await listPackagesHandler({ space: '@global' }, deps);
+    });
+
+    it('displays packages from the requested space', () => {
+      expect(consoleLogger.logConsole).toHaveBeenCalledWith(
+        expect.stringContaining('global-pkg'),
+      );
+    });
+
+    it('does not display packages from other spaces', () => {
+      expect(consoleLogger.logConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('backend-pkg'),
+      );
+    });
+  });
+
   describe('when spaces cannot be fetched', () => {
     beforeEach(async () => {
       mockPackmindCliHexa.getSpaces.mockResolvedValue([]);

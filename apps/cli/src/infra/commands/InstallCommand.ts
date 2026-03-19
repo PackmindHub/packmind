@@ -1,4 +1,11 @@
-import { command, restPositionals, string, flag, option } from 'cmd-ts';
+import {
+  command,
+  restPositionals,
+  string,
+  flag,
+  option,
+  optional,
+} from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
@@ -46,13 +53,26 @@ export const installCommand = command({
       description: 'Show details of a specific package',
       defaultValue: () => '',
     }),
+    space: option({
+      type: optional(string),
+      long: 'space',
+      description: 'Filter packages by space (used with --list)',
+    }),
     packagesSlugs: restPositionals({
       type: string,
       displayName: 'packages',
       description: 'Package slugs to install (e.g., backend frontend)',
     }),
   },
-  handler: async ({ list, status, recursive, path, show, packagesSlugs }) => {
+  handler: async ({
+    list,
+    status,
+    recursive,
+    path,
+    show,
+    space,
+    packagesSlugs,
+  }) => {
     // Initialize hexa and logger
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -67,7 +87,7 @@ export const installCommand = command({
 
     // Handle --list flag
     if (list) {
-      await listPackagesHandler({}, deps);
+      await listPackagesHandler({ space }, deps);
       return;
     }
 
