@@ -46,6 +46,9 @@ import {
   LIST_SKILL_DISTRIBUTIONS_KEY,
   REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
+  getRecipesDeploymentOverviewKey,
+  getStandardsDeploymentOverviewKey,
+  getSkillsDeploymentOverviewKey,
 } from '../queryKeys';
 
 export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
@@ -230,11 +233,11 @@ export const useGetPackageByIdQuery = (
   });
 };
 
-export const useGetRecipesDeploymentOverviewQuery = () => {
+export const useGetRecipesDeploymentOverviewQuery = (spaceId: string) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+    queryKey: getRecipesDeploymentOverviewKey(spaceId),
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -243,17 +246,18 @@ export const useGetRecipesDeploymentOverviewQuery = () => {
       }
       return deploymentsGateways.getRecipesDeploymentOverview({
         organizationId: organization.id,
+        spaceId,
       });
     },
-    enabled: !!organization?.id,
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 
-export const useGetStandardsDeploymentOverviewQuery = () => {
+export const useGetStandardsDeploymentOverviewQuery = (spaceId: string) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+    queryKey: getStandardsDeploymentOverviewKey(spaceId),
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -262,17 +266,18 @@ export const useGetStandardsDeploymentOverviewQuery = () => {
       }
       return deploymentsGateways.getStandardsDeploymentOverview({
         organizationId: organization.id,
+        spaceId,
       });
     },
-    enabled: !!organization?.id,
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 
-export const useGetSkillsDeploymentOverviewQuery = () => {
+export const useGetSkillsDeploymentOverviewQuery = (spaceId: string) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+    queryKey: getSkillsDeploymentOverviewKey(spaceId),
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -281,9 +286,10 @@ export const useGetSkillsDeploymentOverviewQuery = () => {
       }
       return deploymentsGateways.getSkillsDeploymentOverview({
         organizationId: organization.id,
+        spaceId,
       });
     },
-    enabled: !!organization?.id,
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 

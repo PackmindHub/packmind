@@ -32,6 +32,10 @@ export const routes = {
    * Space-scoped routes (includes space slug)
    */
   space: {
+    toDashboard: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}`,
+    toDeployments: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/deployments`,
     toCommands: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/commands`,
     toCommand: (orgSlug: string, spaceSlug: string, commandId: string) =>

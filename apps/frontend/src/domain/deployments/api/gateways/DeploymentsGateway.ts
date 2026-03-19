@@ -165,27 +165,33 @@ export class DeploymentsGatewayApi
 
   getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview> = async ({
     organizationId,
+    spaceId,
   }: NewPackmindCommandBody<GetDeploymentOverviewCommand>) => {
     return this._api.get(
       `${this._endpoint}/${organizationId}/deployments/recipes/overview`,
+      { params: { spaceId } },
     );
   };
 
   getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview> =
     async ({
       organizationId,
+      spaceId,
     }: NewPackmindCommandBody<GetStandardDeploymentOverviewCommand>) => {
       return this._api.get(
         `${this._endpoint}/${organizationId}/deployments/standards/overview`,
+        { params: { spaceId } },
       );
     };
 
   getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview> =
     async ({
       organizationId,
+      spaceId,
     }: NewPackmindCommandBody<GetSkillDeploymentOverviewCommand>) => {
       return this._api.get(
         `${this._endpoint}/${organizationId}/deployments/skills/overview`,
+        { params: { spaceId } },
       );
     };
 

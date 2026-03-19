@@ -27,7 +27,7 @@ export function SpaceNavSections({
   return (
     <>
       <SpaceNavItemLink
-        url={routes.org.toDashboard(orgSlug)}
+        url={routes.space.toDashboard(orgSlug, spaceSlug)}
         label="Dashboard"
         exact
         icon={<LuHouse />}
@@ -60,7 +60,7 @@ export function SpaceNavSections({
         data-testid={SidebarNavigationDataTestId.PackagesLink}
       />
       <SpaceNavItemLink
-        url={routes.org.toDeployments(orgSlug)}
+        url={routes.space.toDeployments(orgSlug, spaceSlug)}
         label="Overview"
         icon={<LuEye />}
         badge={{

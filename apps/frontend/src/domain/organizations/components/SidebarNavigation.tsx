@@ -5,26 +5,34 @@ import {
   PMLink,
   PMIcon,
   PMIconButton,
+  PMButton,
   PMSeparator,
   PMBadge,
   PMTooltip,
   PMBox,
+  PMHStack,
   PMText,
+  PMMenu,
+  PMPortal,
+  PMAvatar,
 } from '@packmind/ui';
-import { NavLink, useLocation, useParams } from 'react-router';
+import { NavLink, useLocation, useNavigate, useParams } from 'react-router';
 import {
   AuthContextOrganization,
   useAuthContext,
 } from '../../accounts/hooks/useAuthContext';
-import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
+import { useSignOutMutation } from '../../accounts/api/queries/AuthQueries';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
 import {
+  LuCircleHelp,
+  LuLogOut,
   LuPanelLeftClose,
   LuPanelLeftOpen,
   LuSettings,
   LuWrench,
 } from 'react-icons/lu';
+import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
 import {
   PMFeatureFlag,
   DEFAULT_FEATURE_DOMAIN_MAP,
@@ -32,7 +40,7 @@ import {
 } from '@packmind/ui';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
-import { SidebarNavigationDataTestId } from '@packmind/frontend';
+
 import { useSidebarCollapse } from './SidebarCollapseContext';
 import { SpaceNavBlock } from './sidebar/SpaceNavBlock';
 import { SpaceNavPanel } from './sidebar/SpaceNavPanel';
@@ -71,6 +79,8 @@ export function SidebarNavigationLink(
       {({ isActive }) => (
         <PMLink
           variant="navbar"
+          fontSize="xs"
+          fontWeight="normal"
           data-active={isActive ? 'true' : undefined}
           as="span"
           data-testid={props['data-testid']}
@@ -148,6 +158,8 @@ export const SidebarNavigation: React.FunctionComponent<
   const { user } = useAuthContext();
   const [activeSpacePanel, setActiveSpacePanel] = useState<string | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const signOutMutation = useSignOutMutation();
 
   useEffect(() => {
     setActiveSpacePanel(null);
@@ -162,6 +174,23 @@ export const SidebarNavigation: React.FunctionComponent<
     : SIDEBAR_WIDTH_EXPANDED;
 
   const panelSpace = spaces?.find((s) => s.id === activeSpacePanel);
+
+  const handleSignOut = () => {
+    const redirectPath = '/sign-in';
+    signOutMutation.mutate(undefined, {
+      onSuccess: () => {
+        try {
+          Analytics.reset();
+        } catch {
+          // ignore analytics reset error
+        }
+        navigate(redirectPath);
+      },
+      onError: () => {
+        navigate(redirectPath);
+      },
+    });
+  };
 
   if (!organization) {
     return;
@@ -184,10 +213,32 @@ export const SidebarNavigation: React.FunctionComponent<
       <PMVerticalNav
         headerNav={
           isCollapsed ? undefined : (
-            <SidebarOrgaSelector currentOrganization={organization} />
+            <PMHStack gap={0} w="full">
+              <PMBox flex={1} minW={0}>
+                <SidebarOrgaSelector
+                  currentOrganization={organization}
+                  hasOrgaSettings={organization.role === 'admin'}
+                />
+              </PMBox>
+              {organization.role === 'admin' && (
+                <PMButton
+                  aria-label="Settings"
+                  variant="secondary"
+                  paddingX="2"
+                  paddingY="3"
+                  minW="auto"
+                  ml="-1px"
+                  borderLeftRadius="none"
+                  onClick={() => navigate(routes.org.toSettings(orgSlug))}
+                >
+                  <PMIcon color="text.tertiary">
+                    <LuSettings />
+                  </PMIcon>
+                </PMButton>
+              )}
+            </PMHStack>
           )
         }
-        footerNav={isCollapsed ? undefined : <SidebarAccountMenu />}
         width={sidebarWidth}
         logo={!isCollapsed}
         logoAction={<SidebarCollapseToggle />}
@@ -204,7 +255,8 @@ export const SidebarNavigation: React.FunctionComponent<
           >
             {!isCollapsed && (
               <PMBox
-                paddingX={2}
+                pl={2}
+                pr={4}
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
@@ -256,34 +308,109 @@ export const SidebarNavigation: React.FunctionComponent<
 
           {/* Bottom section -- pinned at bottom */}
           <PMSeparator borderColor={'border.tertiary'} />
-          {(() => {
-            const lastEntries: React.ReactElement[] = [];
-
-            lastEntries.push(
-              <SidebarNavigationLink
-                key="setup"
-                url={routes.org.toSetup(orgSlug)}
-                label="Integrations"
-                icon={<LuWrench />}
-              />,
-            );
-
-            if (organization.role === 'admin') {
-              lastEntries.push(
-                <SidebarNavigationLink
-                  key="settings"
-                  url={routes.org.toSettings(orgSlug)}
-                  label="Settings"
-                  icon={<LuSettings />}
-                  data-testid={SidebarNavigationDataTestId.SettingsLink}
-                />,
-              );
-            }
-            if (!isCollapsed) {
-              lastEntries.push(<SidebarHelpMenu key="help" />);
-            }
-            return <PMVerticalNavSection navEntries={lastEntries} />;
-          })()}
+          {isCollapsed ? (
+            <PMBox display="flex" justifyContent="center" py={2}>
+              <PMMenu.Root positioning={{ placement: 'right-start' }}>
+                <PMMenu.Trigger asChild>
+                  <PMBox as="button" cursor="pointer">
+                    <PMAvatar.Root
+                      size="xs"
+                      backgroundColor="background.secondary"
+                      color="text.primary"
+                    >
+                      <PMAvatar.Fallback name={user?.email} />
+                    </PMAvatar.Root>
+                  </PMBox>
+                </PMMenu.Trigger>
+                <PMPortal>
+                  <PMMenu.Positioner>
+                    <PMMenu.Content>
+                      <PMMenu.Item
+                        value="integrations"
+                        onClick={() => navigate(routes.org.toSetup(orgSlug))}
+                        cursor="pointer"
+                      >
+                        <PMIcon marginRight={2}>
+                          <LuWrench />
+                        </PMIcon>
+                        Integrations
+                      </PMMenu.Item>
+                      <PMMenu.Item
+                        value="help"
+                        onClick={() =>
+                          window.open('https://docs.packmind.com', '_blank')
+                        }
+                        cursor="pointer"
+                      >
+                        <PMIcon marginRight={2}>
+                          <LuCircleHelp />
+                        </PMIcon>
+                        Help
+                      </PMMenu.Item>
+                      <PMMenu.Separator borderColor="border.tertiary" />
+                      <PMMenu.Item
+                        value="sign-out"
+                        onClick={handleSignOut}
+                        cursor="pointer"
+                      >
+                        <PMIcon marginRight={2}>
+                          <LuLogOut />
+                        </PMIcon>
+                        Log out
+                      </PMMenu.Item>
+                    </PMMenu.Content>
+                  </PMMenu.Positioner>
+                </PMPortal>
+              </PMMenu.Root>
+            </PMBox>
+          ) : (
+            <PMBox>
+              <PMBox pl={2} pr={4} py={1}>
+                <PMText
+                  fontSize="10px"
+                  fontWeight="semibold"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="faded"
+                >
+                  You
+                </PMText>
+              </PMBox>
+              <PMVerticalNavSection
+                navEntries={[
+                  <SidebarNavigationLink
+                    key="setup"
+                    url={routes.org.toSetup(orgSlug)}
+                    label="Integrations"
+                    icon={<LuWrench />}
+                  />,
+                  <SidebarHelpMenu key="help" />,
+                  <PMBox
+                    key="logout"
+                    as="button"
+                    display="flex"
+                    alignItems="center"
+                    w="full"
+                    px={2}
+                    py={1}
+                    fontSize="xs"
+                    borderRadius="sm"
+                    cursor="pointer"
+                    color="text.secondary"
+                    _hover={{ bg: 'blue.800', color: 'text.primary' }}
+                    transition="background-color 0.15s"
+                    textAlign="left"
+                    onClick={handleSignOut}
+                  >
+                    <PMIcon mr={2}>
+                      <LuLogOut />
+                    </PMIcon>
+                    Log out
+                  </PMBox>,
+                ]}
+              />
+            </PMBox>
+          )}
         </PMBox>
       </PMVerticalNav>
 
