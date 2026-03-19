@@ -4,6 +4,8 @@ import { AuthGateway } from './AuthGateway';
 import { SpaceGateway } from './SpaceGateway';
 import { CommandGateway } from './CommandGateway';
 import { PackageGateway } from './PackageGateway';
+import { StandardGateway } from './StandardGateway';
+import { ChangeProposalGateway } from './ChangeProposalGateway';
 import { DeploymentsGateway } from './DeploymentsGateway';
 
 export class PackmindGateway implements IPackmindGateway {
@@ -12,6 +14,8 @@ export class PackmindGateway implements IPackmindGateway {
   private _spaces?: SpaceGateway;
   private _commands?: CommandGateway;
   private _packages?: PackageGateway;
+  private _standards?: StandardGateway;
+  private _changeProposals?: ChangeProposalGateway;
   private _deployments?: DeploymentsGateway;
 
   constructor(
@@ -43,6 +47,16 @@ export class PackmindGateway implements IPackmindGateway {
     return this._packages;
   }
 
+  get standards(): StandardGateway {
+    this._standards ??= new StandardGateway(this.getHttpClient());
+    return this._standards;
+  }
+
+  get changeProposals(): ChangeProposalGateway {
+    this._changeProposals ??= new ChangeProposalGateway(this.getHttpClient());
+    return this._changeProposals;
+  }
+
   get deployments(): DeploymentsGateway {
     this._deployments ??= new DeploymentsGateway(this.getHttpClient());
     return this._deployments;
@@ -57,6 +71,8 @@ export class PackmindGateway implements IPackmindGateway {
     this._spaces = undefined;
     this._commands = undefined;
     this._packages = undefined;
+    this._standards = undefined;
+    this._changeProposals = undefined;
     this._deployments = undefined;
   }
 

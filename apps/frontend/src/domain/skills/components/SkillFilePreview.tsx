@@ -23,11 +23,13 @@ import {
 interface ISkillFilePreviewProps {
   file: SkillFile | null;
   clipboardContent?: string;
+  rawContent?: string;
 }
 
 export const SkillFilePreview = ({
   file,
   clipboardContent,
+  rawContent,
 }: ISkillFilePreviewProps) => {
   if (!file) {
     return (
@@ -78,7 +80,11 @@ export const SkillFilePreview = ({
   );
 
   const renderCodeContent = () => (
-    <PMCodeMirror value={file.content} language={language} readOnly />
+    <PMCodeMirror
+      value={rawContent ?? file.content}
+      language={language}
+      readOnly
+    />
   );
 
   const renderNonPreviewableContent = () => (

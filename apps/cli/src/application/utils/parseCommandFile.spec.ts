@@ -63,7 +63,7 @@ describe('parseCommandFile', () => {
         success: true,
         parsed: {
           name: 'My Custom Command',
-          content,
+          content: 'Body content',
         },
       });
     });
@@ -77,7 +77,7 @@ describe('parseCommandFile', () => {
         success: true,
         parsed: {
           name: 'My Command',
-          content,
+          content: 'Body content',
         },
       });
     });
@@ -91,7 +91,7 @@ describe('parseCommandFile', () => {
         success: true,
         parsed: {
           name: 'My Command',
-          content,
+          content: 'Body content',
         },
       });
     });
@@ -108,7 +108,7 @@ describe('parseCommandFile', () => {
         success: true,
         parsed: {
           name: 'Some file',
-          content,
+          content: 'Body content',
         },
       });
     });
@@ -127,7 +127,7 @@ describe('parseCommandFile', () => {
         success: true,
         parsed: {
           name: 'Conventional commits',
-          content,
+          content: 'Body content',
         },
       });
     });
@@ -204,7 +204,7 @@ describe('parseCommandFile', () => {
         success: true,
         parsed: {
           name: 'My Command',
-          content: '---\nname: My Command\n---\n\nBody content',
+          content: 'Body content',
         },
       });
     });
@@ -221,8 +221,8 @@ describe('parseCommandFile', () => {
     });
   });
 
-  describe('content preservation', () => {
-    it('returns the full raw content including frontmatter', () => {
+  describe('content stripping', () => {
+    it('returns body without frontmatter', () => {
       const content = "---\nname: 'My Command'\n---\n\nBody with instructions";
 
       const result = parseCommandFile(content, 'commands/test.md');
@@ -231,7 +231,21 @@ describe('parseCommandFile', () => {
         success: true,
         parsed: {
           name: 'My Command',
-          content,
+          content: 'Body with instructions',
+        },
+      });
+    });
+
+    it('strips leading newlines between frontmatter and body', () => {
+      const content = "---\nname: 'My Command'\n---\n\n\n\nBody after gaps";
+
+      const result = parseCommandFile(content, 'commands/test.md');
+
+      expect(result).toEqual({
+        success: true,
+        parsed: {
+          name: 'My Command',
+          content: 'Body after gaps',
         },
       });
     });

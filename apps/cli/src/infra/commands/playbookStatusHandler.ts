@@ -34,6 +34,7 @@ type GroupedChange = {
   artifactName: string;
   artifactType: string;
   changeType?: string;
+  spaceName?: string;
   filePaths: string[];
 };
 
@@ -110,6 +111,7 @@ function groupStagedChanges(changes: PlaybookChangeEntry[]): GroupedChange[] {
         artifactName: change.artifactName,
         artifactType: change.artifactType,
         changeType,
+        spaceName: change.spaceName,
         filePaths: [change.filePath],
       });
     }
@@ -151,6 +153,9 @@ export async function playbookStatusHandler(
   const stagedPaths = new Set(
     stagedChanges.map((c) => normalizePath(c.filePath)),
   );
+  const stagedSkillDirPaths = stagedChanges
+    .filter((c) => c.artifactType === 'skill')
+    .map((c) => normalizePath(c.filePath));
 
   const untrackedChanges: UntrackedChange[] = [];
 
@@ -164,7 +169,12 @@ export async function playbookStatusHandler(
       for (const deployedFile of deployedFiles) {
         const normalizedDeployedPath = normalizePath(deployedFile.path);
 
-        if (stagedPaths.has(normalizedDeployedPath)) {
+        if (
+          stagedPaths.has(normalizedDeployedPath) ||
+          stagedSkillDirPaths.some((staged) =>
+            normalizedDeployedPath.startsWith(staged + '/'),
+          )
+        ) {
           continue;
         }
 
@@ -201,8 +211,9 @@ export async function playbookStatusHandler(
   if (groupedStaged.length > 0) {
     logConsole('Changes to be submitted:');
     for (const group of groupedStaged) {
+      const spaceInfo = group.spaceName ? ` in space "${group.spaceName}"` : '';
       logGroupedChange(
-        `${capitalize(group.artifactType)} "${group.artifactName}" (${group.changeType})`,
+        `${capitalize(group.artifactType)} "${group.artifactName}" (${group.changeType})${spaceInfo}`,
         group.filePaths,
       );
     }

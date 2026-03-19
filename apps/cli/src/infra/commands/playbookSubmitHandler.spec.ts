@@ -52,7 +52,6 @@ describe('playbookSubmitHandler', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
   let mockOpenEditor: jest.Mock;
-  let mockReadFile: jest.Mock;
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   beforeEach(() => {
@@ -63,7 +62,7 @@ describe('playbookSubmitHandler', () => {
       errors: [],
     });
 
-    mockGateway.deployment.getDeployed.mockResolvedValue({
+    mockGateway.deployment.getContentByVersions.mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
       targetId: 'target-456',
@@ -96,7 +95,6 @@ describe('playbookSubmitHandler', () => {
 
     mockExit = jest.fn();
     mockOpenEditor = jest.fn().mockReturnValue('My commit message');
-    mockReadFile = jest.fn().mockReturnValue('');
 
     mockPlaybookLocalRepository = {
       addChange: jest.fn(),
@@ -132,11 +130,10 @@ describe('playbookSubmitHandler', () => {
       packmindCliHexa: mockPackmindCliHexa,
       playbookLocalRepository: mockPlaybookLocalRepository,
       lockFileRepository: mockLockFileRepository,
-      repoRoot: '/project',
+      cwd: '/project',
       exit: mockExit,
       message: undefined,
       openEditor: mockOpenEditor,
-      readFile: mockReadFile,
       ...overrides,
     };
   }
@@ -339,7 +336,7 @@ describe('playbookSubmitHandler', () => {
               artefactId: null,
               payload: {
                 name: 'My Command',
-                content: COMMAND_CONTENT,
+                content: 'Do something useful',
               },
             }),
           ]),
@@ -397,7 +394,7 @@ describe('playbookSubmitHandler', () => {
         },
       });
 
-      mockGateway.deployment.getDeployed.mockResolvedValue({
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -480,7 +477,7 @@ describe('playbookSubmitHandler', () => {
         },
       });
 
-      mockGateway.deployment.getDeployed.mockResolvedValue({
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -539,10 +536,18 @@ describe('playbookSubmitHandler', () => {
       mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
     });
 
-    it('calls clearAll', async () => {
+    it('removes submitted entries individually', async () => {
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
-      expect(mockPlaybookLocalRepository.clearAll).toHaveBeenCalled();
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.packmind/standards/my-standard.md',
+      );
+    });
+
+    it('does not call clearAll', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'submit' }));
+
+      expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
     });
 
     it('logs success message', async () => {
@@ -572,10 +577,10 @@ describe('playbookSubmitHandler', () => {
       mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
     });
 
-    it('does NOT clear playbook', async () => {
+    it('does not remove entries', async () => {
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
-      expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
+      expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
     });
 
     it('logs error', async () => {
@@ -590,6 +595,298 @@ describe('playbookSubmitHandler', () => {
       await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('partial failure across spaces', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({ spaceId: 'space-A', artifactName: 'Std A' }),
+        makeEntry({
+          spaceId: 'space-B',
+          artifactName: 'Std B',
+          filePath: '.packmind/standards/std-b.md',
+        }),
+      ]);
+
+      mockGateway.changeProposals.batchCreate
+        .mockResolvedValueOnce({ created: 1, skipped: 0, errors: [] })
+        .mockResolvedValueOnce({
+          created: 0,
+          skipped: 0,
+          errors: [{ index: 0, message: 'Forbidden' }],
+        });
+    });
+
+    it('removes the successful space entry', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'partial' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.packmind/standards/my-standard.md',
+      );
+    });
+
+    it('removes only one entry', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'partial' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('exits 1', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'partial' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('updated standard without deployed content', () => {
+    const LOCAL_STANDARD_CONTENT = [
+      '# New Standard Name',
+      '',
+      'New description.',
+      '',
+      '## Rules',
+      '',
+      '* Do not use var',
+      '* Always use const',
+    ].join('\n');
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-standard': {
+            name: 'Old Standard Name',
+            type: 'standard',
+            id: 'artifact-std-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      });
+
+      // Deployed content does NOT include the standard file
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          changeType: 'updated',
+          content: LOCAL_STANDARD_CONTENT,
+          artifactName: 'New Standard Name',
+        }),
+      ]);
+    });
+
+    it('skips the entry entirely', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+    });
+
+    it('warns about missing deployed content', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('deployed content unavailable'),
+      );
+    });
+
+    it('suggests running packmind pull', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'update std' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('packmind pull'),
+      );
+    });
+  });
+
+  describe('updated command without deployed content', () => {
+    const LOCAL_COMMAND_CONTENT =
+      '---\nname: New Command\n---\nNew description';
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'Old Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/commands/my-command.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+
+      // Deployed content does NOT include the command file
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'New Command',
+          codingAgent: 'claude',
+          changeType: 'updated',
+          content: LOCAL_COMMAND_CONTENT,
+        }),
+      ]);
+    });
+
+    it('skips the entry entirely', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
+
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+    });
+
+    it('warns about missing deployed content', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('deployed content unavailable'),
+      );
+    });
+
+    it('suggests running packmind pull', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('packmind pull'),
+      );
+    });
+  });
+
+  describe('when staged entries produce zero proposals', () => {
+    beforeEach(() => {
+      // Updated command whose content matches deployed — produces 0 proposals
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/commands/my-command.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: COMMAND_CONTENT,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          codingAgent: 'claude',
+          changeType: 'updated',
+          content: COMMAND_CONTENT,
+        }),
+      ]);
+    });
+
+    it('does not call batchCreate', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+    });
+
+    it('logs informative message', async () => {
+      const { logConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+      expect(logConsole).toHaveBeenCalledWith(
+        expect.stringContaining('no changes detected'),
+      );
+    });
+
+    it('cleans up staged entries', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.claude/commands/my-command.md',
+      );
+    });
+
+    it('exits 0', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 

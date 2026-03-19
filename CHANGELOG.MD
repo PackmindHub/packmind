@@ -2,6 +2,7 @@
 
 ## Added
 
+- Reviewers can now edit change proposals before accepting them — edited proposals show both the original and edited diffs, with an "Edited" badge and a "Reset to original" option
 - Add Dart programming language support: `.dart` file recognition, syntax highlighting, and language selection (#183)
 - Show package inclusion on artifact list and detail pages with improved dropdown UX (#188)
 - Rules can now be linted with severity error (default) or warning - Enterprise version only

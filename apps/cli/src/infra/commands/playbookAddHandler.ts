@@ -18,6 +18,8 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../application/utils/pathUtils';
+import { ArtifactVersionEntry, FileModification, Space } from '@packmind/types';
+import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
 type SkillFile = {
   path: string;
@@ -31,6 +33,7 @@ type SkillFile = {
 export type PlaybookAddHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   filePath: string | undefined;
+  spaceSlug?: string;
   exit: (code: number) => void;
   getCwd: () => string;
   readFile: (path: string) => string;
@@ -39,12 +42,39 @@ export type PlaybookAddHandlerDependencies = {
   lockFileRepository: ILockFileRepository;
 };
 
+async function fetchDeployedArtifactFiles(
+  packmindCliHexa: PackmindCliHexa,
+  lockFile: PackmindLockFile,
+): Promise<FileModification[]> {
+  try {
+    const artifacts: ArtifactVersionEntry[] = Object.values(
+      lockFile.artifacts,
+    ).map((entry) => ({
+      name: entry.name,
+      type: entry.type,
+      id: entry.id,
+      version: entry.version,
+      spaceId: entry.spaceId,
+    }));
+    const response = await packmindCliHexa
+      .getPackmindGateway()
+      .deployment.getContentByVersions({
+        artifacts,
+        agents: lockFile.agents,
+      });
+    return response.fileUpdates.createOrUpdate;
+  } catch {
+    return [];
+  }
+}
+
 export async function playbookAddHandler(
   deps: PlaybookAddHandlerDependencies,
 ): Promise<void> {
   const {
     packmindCliHexa,
     filePath,
+    spaceSlug,
     exit,
     getCwd,
     readFile,
@@ -163,8 +193,6 @@ export async function playbookAddHandler(
     targetDir,
   );
 
-  const spaceId =
-    deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
   const targetId = deployedContext?.targetId;
 
   // Deployed content and lock file paths are relative to the project directory
@@ -173,40 +201,63 @@ export async function playbookAddHandler(
     path.relative(targetDir, absolutePath),
   );
 
-  // Check if content matches deployed
-  if (deployedContext?.deployedContent) {
-    const deployedFile =
-      deployedContext.deployedContent.fileUpdates.createOrUpdate.find(
-        (f) => normalizePath(f.path) === normalizedFilePath,
-      );
+  // Determine changeType using lock file
+  let changeType: 'created' | 'updated' = 'created';
+  const lockFile = await lockFileRepository.read(targetDir);
+  if (lockFile) {
+    const existsInLockFile = Object.values(lockFile.artifacts).some((entry) =>
+      entry.files.some((f) => normalizePath(f.path) === normalizedFilePath),
+    );
+    if (existsInLockFile) {
+      changeType = 'updated';
+    }
+  }
 
-    if (deployedFile && deployedFile.content === localContent) {
+  // Check if content matches deployed (via lock file artifact versions)
+  if (changeType === 'updated' && lockFile) {
+    const deployedFiles = await fetchDeployedArtifactFiles(
+      packmindCliHexa,
+      lockFile,
+    );
+    const deployedFile = deployedFiles.find(
+      (f) => normalizePath(f.path) === normalizedFilePath,
+    );
+    if (deployedFile && deployedFile.content?.trim() === localContent.trim()) {
       logInfoConsole('Already up to date — local content matches deployed.');
       exit(0);
       return;
     }
   }
 
-  // Determine changeType: check deployed content first, then fall back to lock file
-  let changeType: 'created' | 'updated' = 'created';
-  if (deployedContext?.deployedContent) {
-    const existsInDeployed =
-      deployedContext.deployedContent.fileUpdates.createOrUpdate.some(
-        (f) => normalizePath(f.path) === normalizedFilePath,
-      );
-    if (existsInDeployed) {
-      changeType = 'updated';
-    }
-  }
-  if (changeType === 'created') {
-    const lockFile = await lockFileRepository.read(targetDir);
-    if (lockFile) {
-      const existsInLockFile = Object.values(lockFile.artifacts).some((entry) =>
-        entry.files.some((f) => normalizePath(f.path) === normalizedFilePath),
-      );
-      if (existsInLockFile) {
-        changeType = 'updated';
+  // Resolve space ID
+  let spaceId: string;
+  let spaceName: string | undefined;
+  if (changeType === 'updated') {
+    spaceId =
+      deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
+  } else {
+    const allSpaces = await packmindCliHexa.getSpaces();
+
+    if (spaceSlug) {
+      const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
+      if (!matchedSpace) {
+        logErrorConsole(
+          `Space "${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
+        );
+        exit(1);
+        return;
       }
+      spaceId = matchedSpace.id;
+      spaceName = matchedSpace.name;
+    } else if (allSpaces.length === 1) {
+      spaceId = allSpaces[0].id;
+      spaceName = allSpaces[0].name;
+    } else {
+      logErrorConsole(
+        `Multiple spaces found. Use --space to specify the target space:\n${formatSpaceList(allSpaces)}\n\nExample: packmind-cli playbook add --space ${allSpaces[0].slug} <path>`,
+      );
+      exit(1);
+      return;
     }
   }
 
@@ -218,6 +269,7 @@ export async function playbookAddHandler(
     changeType,
     content: serializedContent,
     spaceId,
+    spaceName,
     targetId,
     addedAt: new Date().toISOString(),
   });
@@ -226,4 +278,11 @@ export async function playbookAddHandler(
     `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook. ${formatLabel(codingAgent)}`,
   );
   exit(0);
+}
+
+export function formatSpaceList(spaces: Space[]): string {
+  const maxSlugLength = Math.max(...spaces.map((s) => s.slug.length));
+  return spaces
+    .map((s) => `  ${s.slug.padEnd(maxSlugLength)}  (${s.name})`)
+    .join('\n');
 }

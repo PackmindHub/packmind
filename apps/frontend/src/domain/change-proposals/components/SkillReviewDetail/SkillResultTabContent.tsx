@@ -13,8 +13,7 @@ import { applySkillProposals } from '../../utils/applySkillProposals';
 import { PREVIEW_SKILL_VERSION_ID } from '../../utils/changeProposalHelpers';
 import { DownloadAsAgentButton } from '../shared/DownloadAsAgentButton';
 import { SKILL_MD_PATH } from '../../utils/groupSkillProposalsByFile';
-import { SkillOptionalField } from './SkillContent/SkillOptionalField';
-import { MetadataKeyValueDisplay } from './SkillContent/MetadataKeyValueDisplay';
+import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { FileContent } from './FileItems/FileContent';
 
 interface SkillResultTabContentProps {
@@ -63,7 +62,6 @@ export function SkillResultTabContent({
           compatibility: applied.compatibility,
           metadata: applied.metadata,
           allowedTools: applied.allowedTools,
-          additionalProperties: applied.additionalProperties,
           files: applied.files,
         },
       ],
@@ -109,7 +107,7 @@ export function SkillResultTabContent({
                 {applied.name}
               </PMHeading>
 
-              <PMMarkdownViewer content={applied.description} />
+              <SkillFrontmatterInfo skillVersion={applied} />
 
               <PMBox mt={4}>
                 <PMText fontSize="sm" fontWeight="semibold" mb={2}>
@@ -117,43 +115,6 @@ export function SkillResultTabContent({
                 </PMText>
                 <PMMarkdownViewer content={applied.prompt} />
               </PMBox>
-
-              {applied.license && (
-                <SkillOptionalField label="License" mt={4}>
-                  <PMText fontSize="sm">{applied.license}</PMText>
-                </SkillOptionalField>
-              )}
-
-              {applied.compatibility && (
-                <SkillOptionalField label="Compatibility" mt={4}>
-                  <PMText fontSize="sm">{applied.compatibility}</PMText>
-                </SkillOptionalField>
-              )}
-
-              {applied.allowedTools && (
-                <SkillOptionalField label="Allowed Tools" mt={4}>
-                  <PMText fontSize="sm">{applied.allowedTools}</PMText>
-                </SkillOptionalField>
-              )}
-
-              {applied.metadata && Object.keys(applied.metadata).length > 0 && (
-                <SkillOptionalField label="Metadata" mt={4}>
-                  <MetadataKeyValueDisplay metadata={applied.metadata} />
-                </SkillOptionalField>
-              )}
-
-              {applied.additionalProperties &&
-                Object.keys(applied.additionalProperties).length > 0 && (
-                  <SkillOptionalField label="Additional Properties" mt={4}>
-                    <MetadataKeyValueDisplay
-                      metadata={Object.fromEntries(
-                        Object.entries(applied.additionalProperties).map(
-                          ([key, value]) => [key, JSON.stringify(value)],
-                        ),
-                      )}
-                    />
-                  </SkillOptionalField>
-                )}
             </>
           )}
 

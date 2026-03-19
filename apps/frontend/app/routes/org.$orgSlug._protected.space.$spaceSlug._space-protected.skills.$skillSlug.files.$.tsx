@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useOutletContext, useParams } from 'react-router';
-import { PMHStack, PMSeparator, PMText, PMVStack } from '@packmind/ui';
+import { PMVStack } from '@packmind/ui';
 import { createSkillFileId, SkillFile } from '@packmind/types';
 
 import { SkillFilePreview } from '../../src/domain/skills/components/SkillFilePreview';
+import { SkillFrontmatterInfo } from '../../src/domain/skills/components/SkillFrontmatterInfo';
 import { buildSkillMdContent } from '../../src/domain/skills/utils/skillMdUtils';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
 
@@ -50,89 +51,13 @@ export default function SkillFilesRouteModule() {
     return files.find((f) => f.path === selectedFilePath) ?? skillMdFile;
   }, [selectedFilePath, files, skillMdFile]);
 
-  const hasInfoFields = useMemo(
-    () =>
-      Boolean(
-        latestVersion.license ||
-        latestVersion.compatibility ||
-        latestVersion.allowedTools ||
-        (latestVersion.metadata &&
-          Object.keys(latestVersion.metadata).length > 0),
-      ),
-    [latestVersion],
-  );
-
   const showDescriptionBox = selectedFile?.path === SKILL_MD_FILENAME;
 
   return (
     <div ref={topRef}>
       <PMVStack align="stretch" gap={6}>
         {showDescriptionBox && (
-          <PMVStack
-            align="stretch"
-            gap={2}
-            border="solid 1px"
-            borderColor="border.tertiary"
-            borderRadius="md"
-            bg="background.tertiary"
-            p={4}
-          >
-            <PMVStack gap={2} align="flex-start">
-              <PMText color="secondary" fontSize="sm">
-                Description:
-              </PMText>
-              <PMText>{latestVersion.description}</PMText>
-            </PMVStack>
-            {hasInfoFields && (
-              <>
-                <PMSeparator my={2} borderColor="border.secondary" />
-                {latestVersion.license && (
-                  <PMHStack gap={2}>
-                    <PMText color="secondary" fontSize="sm">
-                      License:
-                    </PMText>
-                    <PMText fontSize="sm">{latestVersion.license}</PMText>
-                  </PMHStack>
-                )}
-                {latestVersion.compatibility && (
-                  <PMHStack gap={2}>
-                    <PMText color="secondary" fontSize="sm">
-                      Compatibility:
-                    </PMText>
-                    <PMText fontSize="sm">{latestVersion.compatibility}</PMText>
-                  </PMHStack>
-                )}
-                {latestVersion.allowedTools && (
-                  <PMHStack gap={2}>
-                    <PMText color="secondary" fontSize="sm">
-                      Allowed Tools:
-                    </PMText>
-                    <PMText fontSize="sm">{latestVersion.allowedTools}</PMText>
-                  </PMHStack>
-                )}
-                {latestVersion.metadata &&
-                  Object.keys(latestVersion.metadata).length > 0 && (
-                    <PMVStack gap={1} align="stretch">
-                      <PMText color="secondary" fontSize="sm">
-                        Metadata:
-                      </PMText>
-                      <PMVStack gap={1} pl={4} align="flex-start">
-                        {Object.entries(latestVersion.metadata).map(
-                          ([key, value]) => (
-                            <PMHStack key={key} gap={2}>
-                              <PMText color="secondary" fontSize="sm">
-                                - {key}:
-                              </PMText>
-                              <PMText fontSize="sm">{value}</PMText>
-                            </PMHStack>
-                          ),
-                        )}
-                      </PMVStack>
-                    </PMVStack>
-                  )}
-              </>
-            )}
-          </PMVStack>
+          <SkillFrontmatterInfo skillVersion={latestVersion} />
         )}
         <PMVStack
           align="stretch"
@@ -146,6 +71,11 @@ export default function SkillFilesRouteModule() {
           <SkillFilePreview
             file={selectedFile}
             clipboardContent={
+              selectedFile?.path === SKILL_MD_FILENAME
+                ? skillMdClipboardContent
+                : undefined
+            }
+            rawContent={
               selectedFile?.path === SKILL_MD_FILENAME
                 ? skillMdClipboardContent
                 : undefined

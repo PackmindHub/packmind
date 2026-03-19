@@ -46,9 +46,17 @@ describe('playbookAddHandler', () => {
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   let mockGetDeployed: jest.Mock;
+  let mockGetContentByVersions: jest.Mock;
 
   beforeEach(() => {
     mockGetDeployed = jest.fn().mockResolvedValue({
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skillFolders: [],
+      targetId: 'target-456',
+      resolvedAgents: [],
+    });
+
+    mockGetContentByVersions = jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
       targetId: 'target-456',
@@ -62,6 +70,15 @@ describe('playbookAddHandler', () => {
         slug: 'global',
         organizationId: 'org-1',
       }),
+      getSpaces: jest.fn().mockResolvedValue([
+        {
+          id: 'space-123',
+          name: 'Global',
+          slug: 'global',
+          isDefaultSpace: true,
+          organizationId: 'org-1',
+        },
+      ]),
       configExists: jest
         .fn()
         .mockImplementation((dir: string) =>
@@ -82,7 +99,10 @@ describe('playbookAddHandler', () => {
         .mockReturnValue('git@github.com:org/repo.git'),
       getCurrentBranch: jest.fn().mockReturnValue('main'),
       getPackmindGateway: () => ({
-        deployment: { getDeployed: mockGetDeployed },
+        deployment: {
+          getDeployed: mockGetDeployed,
+          getContentByVersions: mockGetContentByVersions,
+        },
       }),
     } as unknown as PackmindCliHexa;
 
@@ -122,6 +142,7 @@ describe('playbookAddHandler', () => {
       readSkillDirectory: mockReadSkillDirectory,
       playbookLocalRepository: mockPlaybookLocalRepository,
       lockFileRepository: mockLockFileRepository,
+      spaceSlug: undefined,
       ...overrides,
     };
   }
@@ -222,7 +243,28 @@ describe('playbookAddHandler', () => {
 
   describe('when local content matches deployed content', () => {
     beforeEach(() => {
-      mockGetDeployed.mockResolvedValue({
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -261,9 +303,87 @@ describe('playbookAddHandler', () => {
     });
   });
 
+  describe('when local content matches deployed content with trailing whitespace difference', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: VALID_COMMAND_CONTENT,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue(VALID_COMMAND_CONTENT + '\n');
+    });
+
+    it('logs already up to date', async () => {
+      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when command content differs from deployed', () => {
     beforeEach(() => {
-      mockGetDeployed.mockResolvedValue({
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -541,9 +661,30 @@ describe('playbookAddHandler', () => {
   });
 
   describe('changeType field', () => {
-    describe('when file path exists in deployed content', () => {
+    describe('when file path exists in lock file', () => {
       beforeEach(() => {
-        mockGetDeployed.mockResolvedValue({
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+        mockGetContentByVersions.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -567,14 +708,207 @@ describe('playbookAddHandler', () => {
       });
     });
 
-    describe('when file path does not exist in deployed content', () => {
+    describe('when file path does not exist in lock file', () => {
+      it('sets changeType to "created"', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.changeType).toBe('created');
+      });
+    });
+
+    describe('when lock file is unavailable', () => {
       beforeEach(() => {
-        mockGetDeployed.mockResolvedValue({
+        mockLockFileRepository.read.mockResolvedValue(null);
+      });
+
+      it('defaults changeType to "created"', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.changeType).toBe('created');
+      });
+    });
+  });
+
+  describe('space resolution for new artifacts', () => {
+    const MULTI_SPACE_LIST = [
+      {
+        id: 'space-123',
+        name: 'Global',
+        slug: 'global',
+        isDefaultSpace: true,
+        organizationId: 'org-1',
+      },
+      {
+        id: 'space-456',
+        name: 'Team Backend',
+        slug: 'team-backend',
+        isDefaultSpace: false,
+        organizationId: 'org-1',
+      },
+    ];
+
+    describe('when creating in multi-space org without --space flag', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+      });
+
+      it('logs error mentioning --space flag', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('--space'),
+        );
+      });
+
+      it('logs error listing global space', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('global'),
+        );
+      });
+
+      it('logs error listing team-backend space', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('team-backend'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not add to playbook', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when creating in multi-space org with valid --space flag', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+      });
+
+      it('uses the specified space', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-456',
+          }),
+        );
+      });
+
+      it('stores spaceName from the matched space', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.spaceName).toBe('Team Backend');
+      });
+    });
+
+    describe('when creating in multi-space org with invalid --space flag', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+      });
+
+      it('logs error listing available spaces', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps({ spaceSlug: 'nonexistent' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('nonexistent'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'nonexistent' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when creating in single-space org', () => {
+      it('auto-selects the only space', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-123',
+          }),
+        );
+      });
+
+      it('stores spaceName from the auto-selected space', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.spaceName).toBe('Global');
+      });
+
+      it('accepts explicit --space flag', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'global' }));
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-123',
+          }),
+        );
+      });
+    });
+
+    describe('when updating existing artifact in multi-space org', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+        mockGetContentByVersions.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
-                path: '.packmind/standards/other-standard.md',
-                content: 'something else',
+                path: '.claude/commands/my-command.md',
+                content: 'old content',
               },
             ],
             delete: [],
@@ -585,26 +919,22 @@ describe('playbookAddHandler', () => {
         });
       });
 
-      it('sets changeType to "created"', async () => {
+      it('uses deployed context space regardless of --space flag', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-123',
+            changeType: 'updated',
+          }),
+        );
+      });
+
+      it('does not store spaceName for updated artifacts', async () => {
         await playbookAddHandler(buildDeps());
 
         const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
-        expect(callArg.changeType).toBe('created');
-      });
-    });
-
-    describe('when deployed context is unavailable', () => {
-      beforeEach(() => {
-        (
-          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
-        ).mockResolvedValue(null);
-      });
-
-      it('defaults changeType to "created"', async () => {
-        await playbookAddHandler(buildDeps());
-
-        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
-        expect(callArg.changeType).toBe('created');
+        expect(callArg.spaceName).toBeUndefined();
       });
     });
   });
