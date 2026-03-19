@@ -86,6 +86,15 @@ jest.mock('../../api/queries/DeploymentsQueries', () => ({
   useGetSkillsDeploymentOverviewQuery: jest.fn(),
 }));
 
+// Mock useCurrentSpace hook
+jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: () => ({
+    spaceId: 'space-id-1',
+    spaceSlug: 'test-space',
+    spaceName: 'Test Space',
+  }),
+}));
+
 // Mock PMTable to avoid internal hook/state issues during tests
 jest.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');

@@ -14,6 +14,7 @@ import {
   useGetRecipesDeploymentOverviewQuery,
   useGetStandardsDeploymentOverviewQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   TargetId,
   DeploymentOverview,
@@ -52,19 +53,20 @@ type RepoResult = {
 
 export const OutdatedTargetsSection: React.FC = () => {
   const { orgSlug } = useParams() as { orgSlug?: string };
+  const { spaceId } = useCurrentSpace();
   const {
     data: recipesOverview,
     isLoading: isRecipesLoading,
     isError: isRecipesError,
     error: recipesError,
-  } = useGetRecipesDeploymentOverviewQuery();
+  } = useGetRecipesDeploymentOverviewQuery(spaceId ?? '');
 
   const {
     data: standardsOverview,
     isLoading: isStandardsLoading,
     isError: isStandardsError,
     error: standardsError,
-  } = useGetStandardsDeploymentOverviewQuery();
+  } = useGetStandardsDeploymentOverviewQuery(spaceId ?? '');
 
   const isLoading = isRecipesLoading || isStandardsLoading;
   const isError = isRecipesError || isStandardsError;

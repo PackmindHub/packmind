@@ -1,16 +1,27 @@
-import { PMPage } from '@packmind/ui';
-import { PMVStack } from '@packmind/ui';
-import { DeploymentsPage } from '../../src/domain/deployments/components/DeploymentsPage';
+import { redirect } from 'react-router';
+import type { LoaderFunctionArgs } from 'react-router';
+import { queryClient } from '../../src/shared/data/queryClient';
+import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
+import { getSpacesQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 
-export default function DeploymentsOverviewRouteModule() {
-  return (
-    <PMPage
-      title="Overview"
-      subtitle="Monitor distributions across your repositories"
-    >
-      <PMVStack align="stretch" gap={6}>
-        <DeploymentsPage />
-      </PMVStack>
-    </PMPage>
+export async function clientLoader({ params }: LoaderFunctionArgs) {
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
+  if (!me?.organization) throw redirect('/sign-in');
+
+  const spaces = await queryClient.ensureQueryData(
+    getSpacesQueryOptions(me.organization.id),
   );
+  const defaultSpace = spaces?.find((s) => s.isDefaultSpace) || spaces?.[0];
+
+  if (defaultSpace) {
+    throw redirect(
+      `/org/${params.orgSlug}/space/${defaultSpace.slug}/deployments`,
+    );
+  }
+
+  throw redirect(`/org/${params.orgSlug}/settings`);
+}
+
+export default function OrgDeploymentsRedirect() {
+  return null;
 }

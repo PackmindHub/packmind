@@ -11,7 +11,7 @@ export const SidebarHelpMenu: React.FunctionComponent = () => {
   return (
     <PMMenu.Root positioning={{ placement: 'right-start' }}>
       <PMMenu.Trigger asChild>
-        <PMLink variant="navbar" as="span">
+        <PMLink variant="navbar" as="span" fontSize="xs" fontWeight="normal">
           <PMIcon mr={2}>
             <LuCircleHelp />
           </PMIcon>

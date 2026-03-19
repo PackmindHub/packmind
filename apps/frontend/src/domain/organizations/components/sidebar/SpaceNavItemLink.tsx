@@ -28,8 +28,7 @@ export function SpaceNavItemLink(
           alignItems="center"
           gap={2}
           w="full"
-          pl={3}
-          pr={2}
+          p={4}
           py={1}
           fontSize="xs"
           borderRadius="sm"

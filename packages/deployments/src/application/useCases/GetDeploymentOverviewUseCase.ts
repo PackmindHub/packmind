@@ -51,9 +51,9 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     this.logger.info('Fetching deployment overview', { organizationId });
 
     try {
-      // Get all spaces for the organization
-      const spaces =
-        await this.spacesPort.listSpacesByOrganization(organizationId);
+      // Get the requested space
+      const space = await this.spacesPort.getSpaceById(command.spaceId);
+      const spaces = space ? [space] : [];
 
       // Fetch all required data - only successful deployments for overview
       if (!this.recipesPort.listRecipesBySpace) {

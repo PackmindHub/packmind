@@ -113,6 +113,7 @@ describe('GetDeploymentOverviewUseCase', () => {
     const command: GetDeploymentOverviewCommand = {
       organizationId,
       userId: createUserId('whatever'),
+      spaceId: createSpaceId('space-1'),
     };
 
     describe('when no data exists', () => {
@@ -130,7 +131,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
-        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        spacesPort.getSpaceById.mockResolvedValue(space);
         recipesPort.listRecipesBySpace.mockResolvedValue([]);
         gitPort.getOrganizationRepositories.mockResolvedValue([]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
@@ -156,9 +157,9 @@ describe('GetDeploymentOverviewUseCase', () => {
         ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
       });
 
-      it('calls spaces port to get spaces', () => {
-        expect(spacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
-          organizationId,
+      it('calls spaces port to get space by id', () => {
+        expect(spacesPort.getSpaceById).toHaveBeenCalledWith(
+          createSpaceId('space-1'),
         );
       });
 
@@ -170,6 +171,33 @@ describe('GetDeploymentOverviewUseCase', () => {
         expect(gitPort.getOrganizationRepositories).toHaveBeenCalledWith(
           organizationId,
         );
+      });
+    });
+
+    describe('when space is not found', () => {
+      let result: DeploymentOverview;
+
+      beforeEach(async () => {
+        spacesPort.getSpaceById.mockResolvedValue(null);
+        distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+          [],
+        );
+        gitPort.getOrganizationRepositories.mockResolvedValue([]);
+        getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns empty repositories array', () => {
+        expect(result.repositories).toEqual([]);
+      });
+
+      it('returns empty targets array', () => {
+        expect(result.targets).toEqual([]);
+      });
+
+      it('returns empty recipes array', () => {
+        expect(result.recipes).toEqual([]);
       });
     });
 
@@ -188,7 +216,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
-        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        spacesPort.getSpaceById.mockResolvedValue(space);
         recipesPort.listRecipesBySpace.mockResolvedValue([]);
         gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
@@ -226,7 +254,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
-        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        spacesPort.getSpaceById.mockResolvedValue(space);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
@@ -308,7 +336,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [mockDistribution],
         );
-        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        spacesPort.getSpaceById.mockResolvedValue(space);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([
@@ -439,7 +467,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [mockDistribution1, mockDistribution2],
         );
-        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        spacesPort.getSpaceById.mockResolvedValue(space);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([
@@ -673,7 +701,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [mockDistribution],
         );
-        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        spacesPort.getSpaceById.mockResolvedValue(space);
 
         // First call returns only active recipes
         // Second call (with includeDeleted) returns all recipes

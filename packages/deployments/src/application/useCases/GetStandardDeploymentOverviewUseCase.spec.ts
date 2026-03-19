@@ -132,12 +132,13 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         mockDistributions,
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue(mockStandards);
       mockGitPort.getOrganizationRepositories.mockResolvedValue(mockGitRepos);
 
@@ -154,9 +155,9 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
     });
 
-    it('fetches spaces for organization', () => {
-      expect(mockSpacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
-        organizationId,
+    it('calls spaces port to get space by id', () => {
+      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(
+        createSpaceId('space-1'),
       );
     });
 
@@ -175,11 +176,44 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
     });
   });
 
+  describe('when space is not found', () => {
+    let result: StandardDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetStandardDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+        spaceId: createSpaceId('space-1'),
+      };
+
+      mockSpacesPort.getSpaceById.mockResolvedValue(null);
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('returns empty repositories array', () => {
+      expect(result.repositories).toEqual([]);
+    });
+
+    it('returns empty targets array', () => {
+      expect(result.targets).toEqual([]);
+    });
+
+    it('returns empty standards array', () => {
+      expect(result.standards).toEqual([]);
+    });
+  });
+
   describe('when repository throws an error', () => {
     it('logs error and re-throws', async () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const error = new Error('Repository error');
@@ -198,13 +232,14 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const error = 'String error';
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [],
       );
-      mockSpacesPort.listSpacesByOrganization.mockRejectedValue(error);
+      mockSpacesPort.getSpaceById.mockRejectedValue(error);
 
       await expect(useCase.execute(command)).rejects.toBe('String error');
     });
@@ -247,12 +282,13 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         mockDistributions,
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue(mockStandards);
       mockGitPort.getOrganizationRepositories.mockResolvedValue(mockGitRepos);
 
@@ -301,6 +337,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const mockStandardVersion = createMockStandardVersion({
@@ -319,7 +356,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [mockDistribution],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
       mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
@@ -419,6 +456,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const mockStandardVersion = createMockStandardVersion({
@@ -450,7 +488,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [mockDistribution1, mockDistribution2],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
       mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
@@ -508,6 +546,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const mockSpace: Space = {
@@ -520,7 +559,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
       mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
@@ -783,6 +822,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const command: GetStandardDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const activeStandardVersion = createMockStandardVersion({
@@ -805,7 +845,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [mockDistribution],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
       // First call returns only active standards
       // Second call (with includeDeleted) returns all standards

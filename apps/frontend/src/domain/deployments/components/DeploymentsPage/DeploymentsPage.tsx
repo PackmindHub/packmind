@@ -20,6 +20,7 @@ import {
   useGetStandardsDeploymentOverviewQuery,
   useGetSkillsDeploymentOverviewQuery,
 } from '../../api/queries/DeploymentsQueries';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   Target,
   TargetDeploymentStatus,
@@ -64,6 +65,7 @@ const extractAvailableTargets = (
 export const DeploymentsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { orgSlug } = useParams() as { orgSlug?: string };
+  const { spaceId } = useCurrentSpace();
 
   // URL-synchronized state for viewMode
   const rawView = searchParams.get('view');
@@ -194,17 +196,17 @@ export const DeploymentsPage: React.FC = () => {
     data: recipesData,
     isLoading,
     error,
-  } = useGetRecipesDeploymentOverviewQuery();
+  } = useGetRecipesDeploymentOverviewQuery(spaceId ?? '');
   const {
     data: standardData,
     isLoading: standardIsLoading,
     error: standardError,
-  } = useGetStandardsDeploymentOverviewQuery();
+  } = useGetStandardsDeploymentOverviewQuery(spaceId ?? '');
   const {
     data: skillsData,
     isLoading: skillsIsLoading,
     error: skillsError,
-  } = useGetSkillsDeploymentOverviewQuery();
+  } = useGetSkillsDeploymentOverviewQuery(spaceId ?? '');
 
   // Filter targets by selected repositories (if any), then extract available targets
   const filteredRecipeTargets = useMemo(() => {

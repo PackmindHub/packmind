@@ -67,7 +67,7 @@ function CollapsedSpaceNavItems({
   return (
     <>
       <SidebarNavigationLink
-        url={routes.org.toDashboard(orgSlug)}
+        url={routes.space.toDashboard(orgSlug, space.slug)}
         label="Dashboard"
         exact
         icon={<LuHouse />}
@@ -95,7 +95,7 @@ function CollapsedSpaceNavItems({
         data-testid={SidebarNavigationDataTestId.PackagesLink}
       />
       <SidebarNavigationLink
-        url={routes.org.toDeployments(orgSlug)}
+        url={routes.space.toDeployments(orgSlug, space.slug)}
         label="Overview"
         icon={<LuEye />}
       />

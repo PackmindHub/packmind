@@ -3,10 +3,12 @@ import { OrganizationId } from '../../accounts/Organization';
 import { GitRepo } from '../../git/GitRepo';
 import { Recipe } from '../../recipes/Recipe';
 import { RecipeVersion } from '../../recipes/RecipeVersion';
+import { SpaceId } from '../../spaces/SpaceId';
 import { Target } from '../Target';
 
 export type GetDeploymentOverviewCommand = PackmindCommand & {
   organizationId: OrganizationId;
+  spaceId: SpaceId;
 };
 
 export interface DeploymentOverview {

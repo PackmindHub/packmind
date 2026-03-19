@@ -128,12 +128,13 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         mockDistributions,
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue(mockSkills);
       mockGitPort.getOrganizationRepositories.mockResolvedValue(mockGitRepos);
 
@@ -154,9 +155,9 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
     });
 
-    it('fetches spaces for organization', () => {
-      expect(mockSpacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
-        organizationId,
+    it('calls spaces port to get space by id', () => {
+      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(
+        createSpaceId('space-1'),
       );
     });
 
@@ -172,6 +173,38 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
         organizationId,
       );
+    });
+  });
+
+  describe('when space is not found', () => {
+    let result: SkillDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetSkillDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+        spaceId: createSpaceId('space-1'),
+      };
+
+      mockSpacesPort.getSpaceById.mockResolvedValue(null);
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('returns empty repositories array', () => {
+      expect(result.repositories).toEqual([]);
+    });
+
+    it('returns empty targets array', () => {
+      expect(result.targets).toEqual([]);
+    });
+
+    it('returns empty skills array', () => {
+      expect(result.skills).toEqual([]);
     });
   });
 
@@ -196,6 +229,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const mockSkillVersion = skillVersionFactory({
@@ -214,7 +248,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [mockDistribution],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([mockSkill]);
       mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
@@ -299,6 +333,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const activeSkillVersion = skillVersionFactory({
@@ -321,7 +356,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [mockDistribution],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
       // First call returns only active skills
       // Second call (with includeDeleted) returns all skills
@@ -390,6 +425,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const skillVersion = skillVersionFactory({
@@ -430,7 +466,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [packageAFirstDist, packageBDist, packageASecondDist],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
       // The skill is deleted (not active) and Package A was redistributed without it,
       // so the skill should NOT appear at all (no need to fetch deleted skills)
@@ -488,6 +524,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const skillVersion = skillVersionFactory({
@@ -543,7 +580,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
           packageBSecondDist,
         ],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
       // The skill is deleted (not active), so only returns active skills
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([]);
@@ -601,6 +638,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const skillVersion = skillVersionFactory({
@@ -631,7 +669,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [firstDistribution, secondDistribution],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([mockSkill]);
       mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
@@ -677,6 +715,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const skillVersion = skillVersionFactory({
@@ -716,7 +755,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [packageAFirstDist, packageASecondDist, packageBDist],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([mockSkill]);
       mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
@@ -761,6 +800,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const skillVersionV1 = skillVersionFactory({
@@ -796,7 +836,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [firstDistribution, secondDistribution],
       );
-      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([mockSkillV1]);
       mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
@@ -825,6 +865,7 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
       const command: GetSkillDeploymentOverviewCommand = {
         organizationId,
         userId,
+        spaceId: createSpaceId('space-1'),
       };
 
       const error = new Error('Repository error');

@@ -18,11 +18,12 @@ import { routes } from '../../../shared/utils/routes';
 
 interface ISidebarOrgaSelectorProps {
   currentOrganization: AuthContextOrganization;
+  hasOrgaSettings: boolean;
 }
 
 export const SidebarOrgaSelector: React.FunctionComponent<
   ISidebarOrgaSelectorProps
-> = ({ currentOrganization }) => {
+> = ({ currentOrganization, hasOrgaSettings = false }) => {
   const [createOrgaDialogOpen, setCreateOrgaDialogOpen] = React.useState(false);
   const navigate = useNavigate();
   const selectOrganizationMutation = useSelectOrganizationMutation();
@@ -57,9 +58,10 @@ export const SidebarOrgaSelector: React.FunctionComponent<
         <PMMenu.Trigger asChild>
           <PMButton
             variant="secondary"
+            borderRightRadius={hasOrgaSettings ? 'none' : 'sm'}
             width={'full'}
             justifyContent={'flex-start'}
-            paddingY={'6'}
+            paddingY={'3'}
             paddingX={'2'}
           >
             <PMHStack overflow="hidden">
