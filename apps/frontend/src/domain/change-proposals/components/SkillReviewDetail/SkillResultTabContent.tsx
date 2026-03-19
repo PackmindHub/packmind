@@ -6,6 +6,9 @@ import {
   PMMarkdownViewer,
   PMText,
   PMVStack,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SKILL_EVALUATION_FEATURE_KEY,
 } from '@packmind/ui';
 import { ChangeProposalId, Skill, SkillFile } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
@@ -14,6 +17,14 @@ import { PREVIEW_SKILL_VERSION_ID } from '../../utils/changeProposalHelpers';
 import { DownloadAsAgentButton } from '../shared/DownloadAsAgentButton';
 import { SKILL_MD_PATH } from '../../utils/groupSkillProposalsByFile';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
+import { SkillReviewKPIComparison } from '../../../skills/components/SkillReview/SkillReviewKPIComparison';
+import {
+  SKILL_REVIEW_MOCK_DATA,
+  SKILL_REVIEW_IMPROVED_MOCK_DATA,
+} from '../../../skills/components/SkillReview/skillReviewMockData';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { SkillOptionalField } from './SkillContent/SkillOptionalField';
+import { MetadataKeyValueDisplay } from './SkillContent/MetadataKeyValueDisplay';
 import { FileContent } from './FileItems/FileContent';
 
 interface SkillResultTabContentProps {
@@ -37,6 +48,14 @@ export function SkillResultTabContent({
   acceptedProposalIds,
   filePathFilter = '',
 }: Readonly<SkillResultTabContentProps>) {
+  const { user } = useAuthContext();
+
+  const isEvaluationEnabled = isFeatureFlagEnabled({
+    featureKeys: [SKILL_EVALUATION_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
+
   const applied = useMemo(
     () => applySkillProposals(skill, files, proposals, acceptedProposalIds),
     [skill, files, proposals, acceptedProposalIds],
@@ -98,6 +117,15 @@ export function SkillResultTabContent({
           />
         )}
       </PMHStack>
+
+      {hasAccepted && isEvaluationEnabled && (
+        <PMBox mb={6}>
+          <SkillReviewKPIComparison
+            originalData={SKILL_REVIEW_MOCK_DATA}
+            newData={SKILL_REVIEW_IMPROVED_MOCK_DATA}
+          />
+        </PMBox>
+      )}
 
       {hasAccepted ? (
         <>

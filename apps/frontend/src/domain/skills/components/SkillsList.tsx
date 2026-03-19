@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import {
+  PMBadge,
   PMBox,
   PMLink,
   PMTable,
@@ -13,8 +14,10 @@ import {
   PMAlertDialog,
   PMCheckbox,
   PMInput,
-  PMBadge,
   useTableSort,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SKILL_EVALUATION_FEATURE_KEY,
 } from '@packmind/ui';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { SkillId } from '@packmind/types';
@@ -41,7 +44,13 @@ interface ISkillsListProps {
 
 export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   const { spaceSlug, spaceId } = useCurrentSpace();
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
+
+  const isEvaluationEnabled = isFeatureFlagEnabled({
+    featureKeys: [SKILL_EVALUATION_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
   const { data: skills, isLoading, isError } = useGetSkillsQuery();
   const deleteBatchMutation = useDeleteSkillsBatchMutation();
   const { data: packagesResponse } = useListPackagesBySpaceQuery(
@@ -164,6 +173,8 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
               packageNamesById?.get(b.id) ?? '',
             )
           );
+        case 'score':
+          return 0;
         default:
           return 0;
       }
@@ -202,6 +213,15 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
           addSuffix: true,
         }),
         version: skill.version,
+        ...(isEvaluationEnabled
+          ? {
+              score: (
+                <PMBadge colorPalette="green" variant="solid" size="sm">
+                  {Math.floor(Math.random() * 40 + 60)}%
+                </PMBadge>
+              ),
+            }
+          : {}),
         createdBy: skill.createdBy?.displayName ? (
           <UserAvatarWithInitials
             displayName={skill.createdBy.displayName}
@@ -333,6 +353,18 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       sortable: true,
       sortDirection: getSortDirection('packages'),
     },
+    ...(isEvaluationEnabled
+      ? [
+          {
+            key: 'score',
+            header: 'Score',
+            width: '100px',
+            align: 'center' as const,
+            sortable: true,
+            sortDirection: getSortDirection('score'),
+          },
+        ]
+      : []),
   ];
 
   if (isLoading) return <PMText>Loading...</PMText>;

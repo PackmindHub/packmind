@@ -36,7 +36,10 @@ export const RuleSummaryStatus = ({
       });
     }
 
-    return { groupedStatuses: groups, ruleStatus: foundRuleStatus };
+    return {
+      groupedStatuses: groups,
+      ruleStatus: foundRuleStatus,
+    };
   }, [statusData, ruleId]);
 
   if (isLoading) {
@@ -69,13 +72,13 @@ export const RuleSummaryStatus = ({
     },
   };
 
-  const orderedStatuses: RuleLanguageDetectionStatus[] = [
-    RuleLanguageDetectionStatus.OK,
-    RuleLanguageDetectionStatus.WIP,
-    RuleLanguageDetectionStatus.NONE,
-  ];
-
-  const statusNodes = orderedStatuses
+  const statusNodes = (
+    [
+      RuleLanguageDetectionStatus.OK,
+      RuleLanguageDetectionStatus.WIP,
+      RuleLanguageDetectionStatus.NONE,
+    ] as const
+  )
     .filter((status) => groupedStatuses[status].length > 0)
     .map((status) => {
       const languagesForStatus = groupedStatuses[status]
@@ -102,7 +105,7 @@ export const RuleSummaryStatus = ({
     });
 
   return (
-    <PMText fontSize="sm" display="inline-flex" gap={2}>
+    <PMText fontSize="sm" display="inline-flex" gap={2} flexWrap="wrap">
       {statusNodes}
     </PMText>
   );
