@@ -113,9 +113,19 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
 
     if (command.type === ChangeProposalType.updateSkillAdditionalProperty) {
       const payload = command.payload as CollectionItemUpdatePayload<string>;
+
+      // Use latest SkillVersion (same source as deployment rendering)
+      // to avoid mismatch when Skill and SkillVersion are out of sync
+      const latestVersion = await this.skillsPort.getLatestSkillVersion(
+        skill.id,
+      );
+      const additionalProps = latestVersion
+        ? latestVersion.additionalProperties
+        : skill.additionalProperties;
+
       // DB stores raw values; JSON.stringify to match the JSON-encoded format used by the diff pipeline
       const currentValue = JSON.stringify(
-        skill.additionalProperties?.[payload.targetId] ?? null,
+        additionalProps?.[payload.targetId] ?? null,
       );
       const expectedOld = payload.oldValue ?? 'null';
       if (expectedOld !== currentValue) {

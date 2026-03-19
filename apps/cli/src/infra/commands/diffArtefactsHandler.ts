@@ -294,7 +294,7 @@ async function handleSubmission(params: {
   for (const err of result.errors) {
     if (err.code === 'ChangeProposalPayloadMismatchError') {
       logErrorConsole(
-        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
+        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it (${err.message})`,
       );
     } else {
       logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);

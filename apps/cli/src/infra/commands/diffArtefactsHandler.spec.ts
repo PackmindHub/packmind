@@ -1313,7 +1313,7 @@ describe('diffArtefactsHandler', () => {
         });
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          'Failed to submit "My Command": command is outdated, please run `packmind-cli install` to update it',
+          'Failed to submit "My Command": command is outdated, please run `packmind-cli install` to update it (Payload mismatch)',
         );
       });
     });
