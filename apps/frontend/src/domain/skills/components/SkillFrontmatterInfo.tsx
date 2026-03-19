@@ -6,10 +6,16 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import type { SkillVersion } from '@packmind/types';
+interface SkillFrontmatterData {
+  description: string;
+  license?: string;
+  compatibility?: string;
+  allowedTools?: string;
+  metadata?: Record<string, string>;
+}
 
 interface SkillFrontmatterInfoProps {
-  skillVersion: SkillVersion;
+  skillVersion: SkillFrontmatterData;
 }
 
 export function SkillFrontmatterInfo({

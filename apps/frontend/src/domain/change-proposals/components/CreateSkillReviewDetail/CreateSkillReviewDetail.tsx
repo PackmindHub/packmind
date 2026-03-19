@@ -6,8 +6,6 @@ import {
   PMBox,
   PMHStack,
   PMIcon,
-  PMMarkdownViewer,
-  PMSeparator,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -28,6 +26,7 @@ import {
   ProposalDetailEmpty,
   ProposalDetailLoading,
 } from '../ProposalDetailPlaceholder';
+import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { FileContent } from '../SkillReviewDetail/FileItems/FileContent';
 
 interface CreateSkillReviewDetailProps {
@@ -86,18 +85,6 @@ export function CreateSkillReviewDetail({
       (f) => f.path === fileFilter || f.path.startsWith(fileFilter + '/'),
     );
   }, [allFiles, fileFilter]);
-
-  const hasInfoFields = useMemo(
-    () =>
-      Boolean(
-        displayedProposal?.payload?.license ||
-        displayedProposal?.payload?.compatibility ||
-        displayedProposal?.payload?.allowedTools ||
-        (displayedProposal?.payload?.metadata &&
-          Object.keys(displayedProposal.payload.metadata).length > 0),
-      ),
-    [displayedProposal],
-  );
 
   const showDescription = !fileFilter || fileFilter === '/SKILL.md';
 
@@ -180,79 +167,7 @@ export function CreateSkillReviewDetail({
         )}
 
         {showDescription && (
-          <PMVStack
-            align="stretch"
-            gap={2}
-            border="solid 1px"
-            borderColor="border.tertiary"
-            borderRadius="md"
-            p={4}
-          >
-            <PMVStack gap={2} align="flex-start">
-              <PMText color="secondary" fontSize="sm">
-                Description:
-              </PMText>
-              <PMMarkdownViewer
-                content={displayedProposal.payload.description}
-              />
-            </PMVStack>
-            {hasInfoFields && (
-              <>
-                <PMSeparator my={2} borderColor="border.tertiary" />
-                {displayedProposal.payload.license && (
-                  <PMHStack gap={2}>
-                    <PMText color="secondary" fontSize="sm">
-                      License:
-                    </PMText>
-                    <PMText fontSize="sm">
-                      {displayedProposal.payload.license}
-                    </PMText>
-                  </PMHStack>
-                )}
-                {displayedProposal.payload.compatibility && (
-                  <PMHStack gap={2}>
-                    <PMText color="secondary" fontSize="sm">
-                      Compatibility:
-                    </PMText>
-                    <PMText fontSize="sm">
-                      {displayedProposal.payload.compatibility}
-                    </PMText>
-                  </PMHStack>
-                )}
-                {displayedProposal.payload.allowedTools && (
-                  <PMHStack gap={2}>
-                    <PMText color="secondary" fontSize="sm">
-                      Allowed Tools:
-                    </PMText>
-                    <PMText fontSize="sm">
-                      {displayedProposal.payload.allowedTools}
-                    </PMText>
-                  </PMHStack>
-                )}
-                {displayedProposal.payload.metadata &&
-                  Object.keys(displayedProposal.payload.metadata).length >
-                    0 && (
-                    <PMVStack gap={1} align="stretch">
-                      <PMText color="secondary" fontSize="sm">
-                        Metadata:
-                      </PMText>
-                      <PMVStack gap={1} pl={4} align="flex-start">
-                        {Object.entries(displayedProposal.payload.metadata).map(
-                          ([key, value]) => (
-                            <PMHStack key={key} gap={2}>
-                              <PMText color="secondary" fontSize="sm">
-                                - {key}:
-                              </PMText>
-                              <PMText fontSize="sm">{value}</PMText>
-                            </PMHStack>
-                          ),
-                        )}
-                      </PMVStack>
-                    </PMVStack>
-                  )}
-              </>
-            )}
-          </PMVStack>
+          <SkillFrontmatterInfo skillVersion={displayedProposal.payload} />
         )}
 
         {filteredFiles.length > 0 && (

@@ -27,9 +27,10 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   async createSpace(
     name: string,
     organizationId: OrganizationId,
+    isDefaultSpace = true,
   ): Promise<Space> {
     const spaceService = this.hexa.getSpaceService();
-    return spaceService.createSpace(name, organizationId);
+    return spaceService.createSpace(name, organizationId, isDefaultSpace);
   }
 
   async listSpacesByOrganization(
