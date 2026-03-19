@@ -1,9 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { PMBox, PMMarkdownViewer, PMText, PMVStack } from '@packmind/ui';
 import {
   PMBox,
-  PMHeading,
-  PMHStack,
   PMMarkdownViewer,
   PMText,
   PMVStack,
@@ -11,7 +8,12 @@ import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   SKILL_EVALUATION_FEATURE_KEY,
 } from '@packmind/ui';
-import { ChangeProposalId, Skill, SkillFile } from '@packmind/types';
+import {
+  ChangeProposalId,
+  ChangeProposalType,
+  Skill,
+  SkillFile,
+} from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { applySkillProposals } from '../../utils/applySkillProposals';
 import { PREVIEW_SKILL_VERSION_ID } from '../../utils/changeProposalHelpers';
@@ -26,9 +28,6 @@ import {
   SKILL_REVIEW_IMPROVED_MOCK_DATA,
 } from '../../../skills/components/SkillReview/skillReviewMockData';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { SkillOptionalField } from './SkillContent/SkillOptionalField';
-import { MetadataKeyValueDisplay } from './SkillContent/MetadataKeyValueDisplay';
-import { FileContent } from './FileItems/FileContent';
 
 interface SkillResultTabContentProps {
   skill: Skill;
