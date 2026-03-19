@@ -3,7 +3,7 @@ export interface PlaybookChangeEntry {
   artifactType: 'standard' | 'command' | 'skill';
   artifactName: string;
   codingAgent: string;
-  changeType?: 'created' | 'updated';
+  changeType?: 'created' | 'updated' | 'removed';
   addedAt: string; // ISO 8601
   spaceId: string;
   spaceName?: string;

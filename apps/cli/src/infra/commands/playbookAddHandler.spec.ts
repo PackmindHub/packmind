@@ -1031,4 +1031,143 @@ describe('playbookAddHandler', () => {
       });
     });
   });
+
+  describe('when file has been manually deleted', () => {
+    describe('when command file is in lock file', () => {
+      beforeEach(() => {
+        mockReadFile.mockImplementation(() => {
+          throw new Error('ENOENT: no such file or directory');
+        });
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+      });
+
+      it('stages as removed', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            changeType: 'removed',
+            artifactName: 'My Command',
+            artifactType: 'command',
+            content: '',
+          }),
+        );
+      });
+
+      it('exits with 0', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+
+      it('logs success', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('My Command'),
+        );
+      });
+    });
+
+    describe('when command file is not in lock file', () => {
+      beforeEach(() => {
+        mockReadFile.mockImplementation(() => {
+          throw new Error('ENOENT: no such file or directory');
+        });
+        mockLockFileRepository.read.mockResolvedValue(null);
+      });
+
+      it('logs error about failed read', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+
+        await playbookAddHandler(buildDeps());
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to read file'),
+        );
+      });
+
+      it('exits with 1', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when skill directory has been deleted and is in lock file', () => {
+      beforeEach(() => {
+        mockReadSkillDirectory.mockRejectedValue(
+          new Error('ENOENT: no such file or directory'),
+        );
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-skill': {
+              name: 'My Skill',
+              type: 'skill',
+              id: 'artifact-skill-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+      });
+
+      it('stages as removed', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.claude/skills/my-skill' }),
+        );
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            changeType: 'removed',
+            artifactName: 'My Skill',
+            artifactType: 'skill',
+            content: '',
+          }),
+        );
+      });
+
+      it('exits with 0', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.claude/skills/my-skill' }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+  });
 });

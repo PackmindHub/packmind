@@ -752,4 +752,43 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith('No changes detected.');
     });
   });
+
+  describe('when a staged change has changeType removed', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My command',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: '',
+          changeType: 'removed',
+        } as PlaybookChangeEntry,
+      ]);
+    });
+
+    it('displays the removed label', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Command "My command" (removed) .claude/commands/my-command.md',
+      );
+    });
+
+    it('displays the staged header', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes to be submitted:');
+    });
+
+    it('displays submit hint', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        'Use `packmind playbook submit` to send them',
+      );
+    });
+  });
 });
