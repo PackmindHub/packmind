@@ -64,12 +64,14 @@ export function extractProposalDiffValues(
     const updatePayload = payload as CollectionItemUpdatePayload<string>;
     const key = updatePayload.targetId;
     return {
-      oldValue: updatePayload.oldValue
-        ? `${key}: ${updatePayload.oldValue}`
-        : '',
-      newValue: updatePayload.newValue
-        ? `${key}: ${updatePayload.newValue}`
-        : '',
+      oldValue:
+        updatePayload.oldValue && updatePayload.oldValue !== 'null'
+          ? `${key}: ${updatePayload.oldValue}`
+          : '',
+      newValue:
+        updatePayload.newValue && updatePayload.newValue !== 'null'
+          ? `${key}: ${updatePayload.newValue}`
+          : '',
     };
   }
 

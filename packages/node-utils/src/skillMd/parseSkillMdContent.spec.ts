@@ -173,8 +173,8 @@ describe('canonicalJsonStringify', () => {
     expect(canonicalJsonStringify(null)).toBe('null');
   });
 
-  it('handles undefined', () => {
-    expect(canonicalJsonStringify(undefined)).toBe(undefined);
+  it('coerces undefined to null', () => {
+    expect(canonicalJsonStringify(undefined)).toBe('null');
   });
 });
 

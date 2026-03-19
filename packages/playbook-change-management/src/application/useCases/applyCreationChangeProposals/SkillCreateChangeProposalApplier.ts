@@ -10,7 +10,10 @@ import {
   Skill,
   SpaceId,
 } from '@packmind/types';
-import { serializeSkillMetadata } from '@packmind/node-utils';
+import {
+  serializeSkillMetadata,
+  sortAdditionalPropertiesKeys,
+} from '@packmind/node-utils';
 
 export class SkillCreateChangeProposalApplier implements ICreateChangeProposalApplier<ChangeProposalType.createSkill> {
   constructor(private readonly skillsPort: ISkillsPort) {}
@@ -105,7 +108,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       );
     }
     if (metadata.additionalProperties) {
-      for (const [camelKey, value] of Object.entries(
+      for (const [camelKey, value] of sortAdditionalPropertiesKeys(
         metadata.additionalProperties,
       )) {
         const kebabKey = camelKey.replace(

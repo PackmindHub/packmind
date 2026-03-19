@@ -17,7 +17,7 @@ import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDep
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
-import { CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER } from '@packmind/node-utils';
+import { sortAdditionalPropertiesKeys } from '@packmind/node-utils';
 
 const origin = 'ClaudeDeployer';
 
@@ -735,27 +735,6 @@ ${skillVersion.prompt}`;
   getSkillsFolderPath(): string {
     return ClaudeDeployer.ARTEFACT_PATHS.skill;
   }
-}
-
-/**
- * Sorts additional properties entries: known fields first (in canonical order),
- * then unknown fields alphabetically.
- */
-function sortAdditionalPropertiesKeys(
-  props: Record<string, unknown>,
-): [string, unknown][] {
-  const entries = Object.entries(props);
-  const orderIndex = new Map(
-    CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]),
-  );
-  return entries.sort(([a], [b]) => {
-    const aIdx = orderIndex.get(a);
-    const bIdx = orderIndex.get(b);
-    if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
-    if (aIdx !== undefined) return -1;
-    if (bIdx !== undefined) return 1;
-    return a.localeCompare(b);
-  });
 }
 
 /**

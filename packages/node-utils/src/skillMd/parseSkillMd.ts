@@ -32,6 +32,27 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'hooks',
 ];
 
+/**
+ * Sorts additional properties entries: known fields first (in canonical order),
+ * then unknown fields alphabetically.
+ */
+export function sortAdditionalPropertiesKeys(
+  props: Record<string, unknown>,
+): [string, unknown][] {
+  const entries = Object.entries(props);
+  const orderIndex = new Map(
+    CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]),
+  );
+  return entries.sort(([a], [b]) => {
+    const aIdx = orderIndex.get(a);
+    const bIdx = orderIndex.get(b);
+    if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
+    if (aIdx !== undefined) return -1;
+    if (bIdx !== undefined) return 1;
+    return a.localeCompare(b);
+  });
+}
+
 /** Known Agent Skills spec fields (post-normalization). */
 const SPEC_FIELDS = new Set([
   'name',

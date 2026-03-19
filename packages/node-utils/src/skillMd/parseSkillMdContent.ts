@@ -58,7 +58,7 @@ function deepSortKeys(value: unknown): unknown {
  * @returns Deterministic JSON string
  */
 export function canonicalJsonStringify(value: unknown): string {
-  return JSON.stringify(deepSortKeys(value));
+  return JSON.stringify(deepSortKeys(value ?? null));
 }
 
 /**

@@ -3,6 +3,7 @@ import {
   AbstractMemberUseCase,
   MemberContext,
   PackmindEventEmitterService,
+  canonicalJsonStringify,
 } from '@packmind/node-utils';
 import {
   UploadSkillCommand,
@@ -441,8 +442,8 @@ export class UploadSkillUseCase
 
     // Compare additionalProperties (deep equality)
     if (
-      JSON.stringify(latestVersion.additionalProperties ?? {}) !==
-      JSON.stringify(newContent.additionalProperties ?? {})
+      canonicalJsonStringify(latestVersion.additionalProperties ?? {}) !==
+      canonicalJsonStringify(newContent.additionalProperties ?? {})
     ) {
       return false;
     }
