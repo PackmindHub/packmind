@@ -27,7 +27,7 @@ import {
   RecipeVersion,
   createRecipeVersionId,
 } from '@packmind/types';
-import assert from 'assert';
+
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 
 const origin = 'GetDeploymentOverviewUseCase';
@@ -53,7 +53,10 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     try {
       // Get the requested space
       const space = await this.spacesPort.getSpaceById(command.spaceId);
-      const spaces = space ? [space] : [];
+      if (!space) {
+        return { repositories: [], targets: [], recipes: [] };
+      }
+      const spaces = [space];
 
       // Fetch all required data - only successful deployments for overview
       if (!this.recipesPort.listRecipesBySpace) {
@@ -251,6 +254,9 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
 
           // Find the latest version of this recipe
           const latestRecipeVersion = this.getLatestRecipe(recipe.id, recipes);
+          if (!latestRecipeVersion) {
+            return null;
+          }
 
           // Convert the latest recipe to a RecipeVersion structure
           const latestVersion: RecipeVersion = {
@@ -302,16 +308,27 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       const latestRecipeVersion = this.getLatestRecipe(recipe.id, recipes);
 
       // Convert the latest recipe to a RecipeVersion structure
-      const latestVersion: RecipeVersion = {
-        id: createRecipeVersionId(latestRecipeVersion.id),
-        recipeId: latestRecipeVersion.id,
-        name: latestRecipeVersion.name,
-        slug: latestRecipeVersion.slug,
-        version: latestRecipeVersion.version,
-        content: latestRecipeVersion.content,
-        gitCommit: latestRecipeVersion.gitCommit,
-        userId: latestRecipeVersion.userId,
-      };
+      const latestVersion: RecipeVersion = latestRecipeVersion
+        ? {
+            id: createRecipeVersionId(latestRecipeVersion.id),
+            recipeId: latestRecipeVersion.id,
+            name: latestRecipeVersion.name,
+            slug: latestRecipeVersion.slug,
+            version: latestRecipeVersion.version,
+            content: latestRecipeVersion.content,
+            gitCommit: latestRecipeVersion.gitCommit,
+            userId: latestRecipeVersion.userId,
+          }
+        : {
+            id: createRecipeVersionId(recipe.id),
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            version: recipe.version,
+            content: recipe.content,
+            gitCommit: recipe.gitCommit,
+            userId: recipe.userId,
+          };
 
       // Find all repositories that have this recipe deployed
       for (const gitRepo of gitRepos) {
@@ -470,8 +487,11 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     return targetDeployments;
   }
 
-  private getLatestRecipe(recipeId: RecipeId, recipes: Recipe[]) {
-    const latestRecipeVersion = recipes
+  private getLatestRecipe(
+    recipeId: RecipeId,
+    recipes: Recipe[],
+  ): Recipe | null {
+    return recipes
       .filter((r) => r.id === recipeId)
       .reduce(
         (latest, current) => {
@@ -480,8 +500,6 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         },
         null as Recipe | null,
       );
-    assert(latestRecipeVersion);
-    return latestRecipeVersion;
   }
 
   public async getTargetDeploymentStatus(
@@ -601,6 +619,11 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       // Convert to DeployedRecipeTargetInfo format
       for (const [recipeId, deployedVersion] of recipeVersionsMap.entries()) {
         const recipe = this.getLatestRecipe(recipeId, recipes);
+
+        // Skip recipes that belong to a different space
+        if (!recipe) {
+          continue;
+        }
 
         // Convert recipe to RecipeVersion format
         const latestVersion: RecipeVersion = {
