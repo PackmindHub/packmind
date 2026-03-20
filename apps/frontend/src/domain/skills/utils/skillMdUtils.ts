@@ -1,34 +1,11 @@
 import { stringify } from 'yaml';
 
 import type { SkillVersion } from '@packmind/types';
-
-function camelToKebab(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-}
-
-/**
- * Maps camelCase storage key → YAML kebab-case key for Claude Code additional fields.
- * Mirrors CLAUDE_CODE_ADDITIONAL_FIELDS from @packmind/node-utils (reversed).
- */
-const CAMEL_TO_YAML_KEY: Record<string, string> = {
-  argumentHint: 'argument-hint',
-  disableModelInvocation: 'disable-model-invocation',
-  userInvocable: 'user-invocable',
-  model: 'model',
-  context: 'context',
-  agent: 'agent',
-  hooks: 'hooks',
-};
-
-const ADDITIONAL_FIELDS_ORDER = [
-  'argumentHint',
-  'disableModelInvocation',
-  'userInvocable',
-  'model',
-  'context',
-  'agent',
-  'hooks',
-];
+import {
+  camelToKebab,
+  CAMEL_TO_YAML_KEY,
+  CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER,
+} from '@packmind/types';
 
 /**
  * Reconstructs the full SKILL.md file content from a SkillVersion.
@@ -68,7 +45,7 @@ export function buildSkillMdContent(version: SkillVersion): string {
     Object.keys(version.additionalProperties).length > 0
   ) {
     const orderIndex = new Map(
-      ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]),
+      CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]),
     );
     const sorted = Object.entries(version.additionalProperties).sort(
       ([a], [b]) => {
