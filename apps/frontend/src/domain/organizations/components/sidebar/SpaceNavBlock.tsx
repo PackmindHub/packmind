@@ -3,6 +3,7 @@ import { PMAvatar, PMBox, PMText, PMTooltip } from '@packmind/ui';
 import {
   LuBookCheck,
   LuEye,
+  LuGitPullRequestArrow,
   LuHouse,
   LuPackage,
   LuTerminal,
@@ -87,6 +88,11 @@ function CollapsedSpaceNavItems({
         label="Skills"
         icon={<LuWandSparkles />}
         data-testid={SidebarNavigationDataTestId.SkillsLink}
+      />
+      <SidebarNavigationLink
+        url={routes.space.toReviewChanges(orgSlug, space.slug)}
+        label="Review changes"
+        icon={<LuGitPullRequestArrow />}
       />
       <SidebarNavigationLink
         url={routes.space.toPackages(orgSlug, space.slug)}
