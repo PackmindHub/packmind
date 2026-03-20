@@ -10,15 +10,21 @@ jest.mock('../../utils/consoleLogger', () => ({
   logSuccessConsole: jest.fn(),
 }));
 
+jest.mock('../../../application/utils/findNearestConfigDir', () => ({
+  findNearestConfigDir: jest.fn().mockResolvedValue('/project'),
+}));
+
 describe('playbookUnstageHandler', () => {
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
+  let mockPackmindCliHexa: { configExists: jest.Mock };
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockExit = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/project');
+    mockPackmindCliHexa = { configExists: jest.fn() };
     mockPlaybookLocalRepository = {
       addChange: jest.fn(),
       removeChange: jest.fn(),
@@ -31,6 +37,7 @@ describe('playbookUnstageHandler', () => {
     overrides: Partial<PlaybookUnstageHandlerDependencies> = {},
   ): PlaybookUnstageHandlerDependencies {
     return {
+      packmindCliHexa: mockPackmindCliHexa as never,
       filePath: 'path/to/file.md',
       exit: mockExit,
       getCwd: mockGetCwd,
@@ -108,7 +115,7 @@ describe('playbookUnstageHandler', () => {
       mockPlaybookLocalRepository.removeChange.mockReturnValue(true);
     });
 
-    it('normalizes by stripping the ./ prefix', async () => {
+    it('normalizes by resolving against cwd', async () => {
       await playbookUnstageHandler(
         buildDeps({ filePath: './path/to/file.md' }),
       );
