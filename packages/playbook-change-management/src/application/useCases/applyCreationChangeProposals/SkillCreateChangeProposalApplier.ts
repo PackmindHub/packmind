@@ -9,6 +9,7 @@ import {
   OrganizationId,
   Skill,
   SpaceId,
+  toYamlLike,
 } from '@packmind/types';
 import {
   serializeSkillMetadata,
@@ -115,7 +116,11 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
           /[A-Z]/g,
           (letter) => `-${letter.toLowerCase()}`,
         );
-        frontmatter.push(`${kebabKey}: ${JSON.stringify(value)}`);
+        if (typeof value === 'object' && value !== null) {
+          frontmatter.push(`${kebabKey}:\n${toYamlLike(value, 1)}`);
+        } else {
+          frontmatter.push(`${kebabKey}: ${toYamlLike(value, 0)}`);
+        }
       }
     }
 
