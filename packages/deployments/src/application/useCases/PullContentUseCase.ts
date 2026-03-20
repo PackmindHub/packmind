@@ -26,6 +26,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { parsePackageSlug } from '../services/packageSlugHelpers';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
@@ -715,26 +716,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }
 
   /**
-   * Parses a package slug to extract optional space prefix.
-   * Format: "@space-slug/package-slug" or "package-slug"
-   */
-  private parsePackageSlug(slug: string): {
-    spaceSlug: string | null;
-    packageSlug: string;
-  } {
-    if (slug.startsWith('@')) {
-      const slashIndex = slug.indexOf('/', 1);
-      if (slashIndex !== -1) {
-        return {
-          spaceSlug: slug.slice(1, slashIndex),
-          packageSlug: slug.slice(slashIndex + 1),
-        };
-      }
-    }
-    return { spaceSlug: null, packageSlug: slug };
-  }
-
-  /**
    * Resolves packages by slugs, respecting space prefixes.
    * Slugs prefixed with "@space-slug/" are resolved within that specific space.
    * Unprefixed slugs are resolved within the organization's default space.
@@ -750,7 +731,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }> {
     const parsedSlugs = slugs.map((slug) => ({
       originalSlug: slug,
-      ...this.parsePackageSlug(slug),
+      ...parsePackageSlug(slug),
     }));
 
     // Group by space slug (null = default space)

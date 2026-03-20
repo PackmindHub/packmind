@@ -28,6 +28,7 @@ import {
   TargetId,
   UserId,
 } from '@packmind/types';
+import { parsePackageSlug } from '../../services/packageSlugHelpers';
 import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
@@ -150,8 +151,11 @@ export class NotifyDistributionUseCase
     const orgPackages =
       await this.packageRepository.findByOrganizationId(organizationId);
 
+    const normalizedSlugs = packageSlugs.map(
+      (slug) => parsePackageSlug(slug).packageSlug,
+    );
     const matchingPackages = orgPackages.filter((pkg) =>
-      packageSlugs.includes(pkg.slug),
+      normalizedSlugs.includes(pkg.slug),
     );
 
     this.logger.info('Found matching packages', {
