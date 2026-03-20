@@ -132,10 +132,10 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
     const targetId = payload.targetId as string;
     const oldValue = payload.oldValue as string;
     const newValue = payload.newValue as string;
-    if (oldValue) {
+    if (oldValue && oldValue !== 'null') {
       log(chalk.red(`    - ${targetId}: ${oldValue}`));
     }
-    if (newValue) {
+    if (newValue && newValue !== 'null') {
       log(chalk.green(`    + ${targetId}: ${newValue}`));
     }
     return;
