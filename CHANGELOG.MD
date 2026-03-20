@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- Distribution analytics were broken because `@space/package` slug format from the CLI was not matched against bare `package` slugs in the database, resulting in no `distributed_packages` or artifact version associations being created
+
 ## Removed
 
 # [1.11.0] - 2026-03-20
