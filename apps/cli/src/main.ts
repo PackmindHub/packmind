@@ -22,6 +22,7 @@ import { initCommand } from './infra/commands/InitCommand';
 import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
+import { unifiedOutputCommand } from './infra/commands/unifiedOutputCommand';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -110,6 +111,7 @@ const app = subcommands({
     uninstall: uninstallCommand,
     update: updateCommand,
     whoami: whoamiCommand,
+    output: unifiedOutputCommand,
   },
 });
 
