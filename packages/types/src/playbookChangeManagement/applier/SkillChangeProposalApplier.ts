@@ -65,7 +65,7 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         ChangeProposalType.updateSkillMetadata,
       )
     ) {
-      let parsedMetadata: Record<string, unknown> | undefined;
+      let parsedMetadata: Record<string, string> | undefined;
       if (changeProposal.payload.newValue) {
         try {
           parsedMetadata = JSON.parse(changeProposal.payload.newValue);
