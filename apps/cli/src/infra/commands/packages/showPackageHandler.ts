@@ -5,6 +5,7 @@ import {
   logErrorConsole,
 } from '../../utils/consoleLogger';
 import { parsePackageSlug } from '../../utils/packageSlugUtils';
+import { IGetPackageSummaryResult } from '../../../domain/useCases/IGetPackageSummaryUseCase';
 
 export type ShowPackageArgs = {
   slug: string;
@@ -16,20 +17,24 @@ export type ShowPackageHandlerDependencies = {
 };
 
 /**
- * Validates the slug against available spaces and packages, then returns
- * the fully-qualified @space/package slug ready for API use.
+ * Resolves the slug to a package summary and its fully-qualified display slug.
  *
- * When no space is specified, auto-resolves if the package exists in exactly
- * one space. Throws if the package exists in multiple spaces (ambiguous) or none.
+ * For qualified slugs (@space/pkg): validates the space exists, then fetches the
+ * package from that specific space.
+ *
+ * For unqualified slugs: probes each space in parallel via getPackageBySlug.
+ * Auto-resolves when the package exists in exactly one space. Throws if ambiguous
+ * (multiple spaces) or not found.
  */
-async function resolveFullSlug(
+function isNotFoundError(err: unknown): boolean {
+  return err instanceof Error && err.message.includes('does not exist');
+}
+
+async function resolvePackage(
   slug: string,
   packmindCliHexa: PackmindCliHexa,
-): Promise<string> {
-  const [allPackages, allSpaces] = await Promise.all([
-    packmindCliHexa.listPackages({}),
-    packmindCliHexa.getSpaces(),
-  ]);
+): Promise<{ pkg: IGetPackageSummaryResult; fullSlug: string }> {
+  const allSpaces = await packmindCliHexa.getSpaces();
 
   const parsed = parsePackageSlug(slug);
 
@@ -41,35 +46,67 @@ async function resolveFullSlug(
       throw new Error(`Space '@${spaceSlug}' not found.`);
     }
 
-    const matchedPackage = allPackages.find(
-      (p) => p.slug === pkgSlug && p.spaceId === matchedSpace.id,
-    );
-    if (!matchedPackage) {
-      throw new Error(
-        `Package '${pkgSlug}' not found in space '@${spaceSlug}'.`,
-      );
+    let pkg: IGetPackageSummaryResult;
+    try {
+      pkg = await packmindCliHexa.getPackageBySlug({
+        slug: pkgSlug,
+        spaceId: matchedSpace.id,
+      });
+    } catch (err) {
+      if (isNotFoundError(err)) {
+        throw new Error(
+          `Package '${pkgSlug}' not found in space '@${spaceSlug}'.`,
+        );
+      }
+      throw err;
     }
 
-    return `@${spaceSlug}/${pkgSlug}`;
+    return { pkg, fullSlug: `@${spaceSlug}/${pkgSlug}` };
   }
 
-  // No space specified — find all spaces that have this package
-  const matches = allSpaces.filter((space) =>
-    allPackages.some((p) => p.slug === slug && p.spaceId === space.id),
+  // Unqualified slug — probe each space in parallel
+  const results = await Promise.allSettled(
+    allSpaces.map(async (space) => ({
+      pkg: await packmindCliHexa.getPackageBySlug({
+        slug,
+        spaceId: space.id,
+      }),
+      spaceSlug: space.slug,
+    })),
   );
 
+  const matches = results
+    .filter(
+      (
+        r,
+      ): r is PromiseFulfilledResult<{
+        pkg: IGetPackageSummaryResult;
+        spaceSlug: string;
+      }> => r.status === 'fulfilled',
+    )
+    .map((r) => r.value);
+
   if (matches.length === 0) {
+    const realError = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .find((r) => !isNotFoundError(r.reason));
+    if (realError) {
+      throw realError.reason;
+    }
     throw new Error(`Package '${slug}' not found in any space.`);
   }
 
   if (matches.length > 1) {
-    const example = `@${matches[0].slug}/${slug}`;
+    const example = `@${matches[0].spaceSlug}/${slug}`;
     throw new Error(
-      `Package '${slug}' exists in multiple spaces (${matches.map((s) => `@${s.slug}`).join(', ')}). Please specify the space using the @space/package format (e.g. ${example}).`,
+      `Package '${slug}' exists in multiple spaces (${matches.map((m) => `@${m.spaceSlug}`).join(', ')}). Please specify the space using the @space/package format (e.g. ${example}).`,
     );
   }
 
-  return `@${matches[0].slug}/${slug}`;
+  return {
+    pkg: matches[0].pkg,
+    fullSlug: `@${matches[0].spaceSlug}/${slug}`,
+  };
 }
 
 export async function showPackageHandler(
@@ -81,8 +118,7 @@ export async function showPackageHandler(
   try {
     logInfoConsole(`Fetching package details for '${args.slug}'...`);
 
-    const fullSlug = await resolveFullSlug(args.slug, packmindCliHexa);
-    const pkg = await packmindCliHexa.getPackageBySlug({ slug: fullSlug });
+    const { pkg, fullSlug } = await resolvePackage(args.slug, packmindCliHexa);
 
     logConsole(`\n${pkg.name} (${fullSlug}):\n`);
 
