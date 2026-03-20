@@ -50,9 +50,7 @@ describe('formatAdditionalPropertyDiff', () => {
     it('converts disableModelInvocation to kebab-case', () => {
       expect(
         formatAdditionalPropertyDiff('disableModelInvocation', 'null', 'true'),
-      ).toEqual([
-        { type: 'added', text: 'disable-model-invocation: true' },
-      ]);
+      ).toEqual([{ type: 'added', text: 'disable-model-invocation: true' }]);
     });
   });
 });
