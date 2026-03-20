@@ -1,4 +1,3 @@
-import { Space } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   logConsole,
@@ -17,13 +16,16 @@ export type ShowPackageHandlerDependencies = {
 };
 
 /**
- * Resolves the space and package slugs, fetching spaces/packages as needed.
- * Returns { spaceSlug, pkgSlug, matchedSpace, matchedPackage }.
+ * Validates the slug against available spaces and packages, then returns
+ * the fully-qualified @space/package slug ready for API use.
+ *
+ * When no space is specified, auto-resolves if the package exists in exactly
+ * one space. Throws if the package exists in multiple spaces (ambiguous) or none.
  */
-async function resolvePackage(
+async function resolveFullSlug(
   slug: string,
   packmindCliHexa: PackmindCliHexa,
-): Promise<{ spaceSlug: string; pkgSlug: string }> {
+): Promise<string> {
   const [allPackages, allSpaces] = await Promise.all([
     packmindCliHexa.listPackages({}),
     packmindCliHexa.getSpaces(),
@@ -31,42 +33,43 @@ async function resolvePackage(
 
   const parsed = parsePackageSlug(slug);
 
-  let spaceSlug: string;
-  let pkgSlug: string;
-  let matchedSpace: Space;
-
   if (parsed) {
-    spaceSlug = parsed.spaceSlug;
-    pkgSlug = parsed.pkgSlug;
+    const { spaceSlug, pkgSlug } = parsed;
 
-    const found = allSpaces.find((s) => s.slug === spaceSlug);
-    if (!found) {
+    const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
+    if (!matchedSpace) {
       throw new Error(`Space '@${spaceSlug}' not found.`);
     }
-    matchedSpace = found;
-  } else {
-    pkgSlug = slug;
 
-    if (allSpaces.length > 1) {
-      const example = `@${allSpaces[0].slug}/${slug}`;
+    const matchedPackage = allPackages.find(
+      (p) => p.slug === pkgSlug && p.spaceId === matchedSpace.id,
+    );
+    if (!matchedPackage) {
       throw new Error(
-        `Your organization has multiple spaces. Please specify the space using the @space/package format (e.g. ${example}).`,
+        `Package '${pkgSlug}' not found in space '@${spaceSlug}'.`,
       );
     }
 
-    matchedSpace = allSpaces[0];
-    spaceSlug = matchedSpace.slug;
+    return `@${spaceSlug}/${pkgSlug}`;
   }
 
-  const matchedPackage = allPackages.find(
-    (p) => p.slug === pkgSlug && p.spaceId === matchedSpace.id,
+  // No space specified — find all spaces that have this package
+  const matches = allSpaces.filter((space) =>
+    allPackages.some((p) => p.slug === slug && p.spaceId === space.id),
   );
 
-  if (!matchedPackage) {
-    throw new Error(`Package '${pkgSlug}' not found in space '@${spaceSlug}'.`);
+  if (matches.length === 0) {
+    throw new Error(`Package '${slug}' not found in any space.`);
   }
 
-  return { spaceSlug, pkgSlug };
+  if (matches.length > 1) {
+    const example = `@${matches[0].slug}/${slug}`;
+    throw new Error(
+      `Package '${slug}' exists in multiple spaces (${matches.map((s) => `@${s.slug}`).join(', ')}). Please specify the space using the @space/package format (e.g. ${example}).`,
+    );
+  }
+
+  return `@${matches[0].slug}/${slug}`;
 }
 
 export async function showPackageHandler(
@@ -78,12 +81,7 @@ export async function showPackageHandler(
   try {
     logInfoConsole(`Fetching package details for '${args.slug}'...`);
 
-    const { spaceSlug, pkgSlug } = await resolvePackage(
-      args.slug,
-      packmindCliHexa,
-    );
-
-    const fullSlug = `@${spaceSlug}/${pkgSlug}`;
+    const fullSlug = await resolveFullSlug(args.slug, packmindCliHexa);
     const pkg = await packmindCliHexa.getPackageBySlug({ slug: fullSlug });
 
     logConsole(`\n${pkg.name} (${fullSlug}):\n`);

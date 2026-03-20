@@ -194,13 +194,38 @@ describe('showPackageHandler', () => {
       });
     });
 
-    describe('and multiple spaces exist', () => {
+    describe('and multiple spaces exist but the package is only in one', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([
           SPACE_GLOBAL,
           SPACE_FRONTEND,
         ]);
         mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
+
+        await showPackageHandler({ slug: 'backend' }, deps);
+      });
+
+      it('auto-resolves to the single matching space', () => {
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '\nBackend (@global/backend):\n',
+        );
+      });
+
+      it('exits with 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('and the package exists in multiple spaces', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.getSpaces.mockResolvedValue([
+          SPACE_GLOBAL,
+          SPACE_FRONTEND,
+        ]);
+        mockPackmindCliHexa.listPackages.mockResolvedValue([
+          PACKAGE_IN_GLOBAL,
+          PACKAGE_IN_FRONTEND,
+        ]);
 
         await showPackageHandler({ slug: 'backend' }, deps);
       });
@@ -216,7 +241,7 @@ describe('showPackageHandler', () => {
       });
     });
 
-    describe('and the package does not exist in the single space', () => {
+    describe('and the package does not exist in any space', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
         mockPackmindCliHexa.listPackages.mockResolvedValue([]);
@@ -226,9 +251,7 @@ describe('showPackageHandler', () => {
 
       it('displays a package-not-found error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Package 'backend' not found in space '@global'",
-          ),
+          expect.stringContaining("Package 'backend' not found in any space."),
         );
       });
 
