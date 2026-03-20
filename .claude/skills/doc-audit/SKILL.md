@@ -1,11 +1,11 @@
 ---
 name: doc-audit
-description: 'Audit Packmind end-user documentation (apps/doc/) for broken links, outdated CLI references, non-existent concepts, misleading information, and missing coverage. Produces a structured markdown report at project root. Use when docs may have drifted from the codebase, before a release, or on a regular cadence.'
+description: 'Audit Packmind end-user documentation (apps/doc/) for broken links, outdated CLI references, non-existent concepts, misleading information, missing coverage, and undocumented feature areas. Produces a structured markdown report at project root. Use when docs may have drifted from the codebase, before a release, or on a regular cadence.'
 ---
 
 # Documentation Audit
 
-Detect outdated, broken, or misleading documentation by cross-referencing MDX pages against the actual codebase. Produces a structured `doc-audit-report.md` at the project root.
+Detect outdated, broken, or misleading documentation and identify undocumented feature areas by cross-referencing MDX pages against the actual codebase. Produces a structured `doc-audit-report.md` at the project root.
 
 **This skill only detects issues — it does not fix them.**
 
@@ -133,7 +133,39 @@ Generated: {date} | Pages audited: {count}
 
 **Omit any category section that has zero findings.** Only include sections with actual results.
 
-After writing the report, print a brief summary:
+After writing the report, proceed to Phase 6 before printing the summary.
+
+## Phase 6: Detect Opportunities
+
+After Phase 5, launch a **single general-purpose sub-agent** (`subagent_type: general-purpose`) to identify higher-level functional areas with no documentation coverage.
+
+### Agent Prompt
+
+The agent's prompt should use the template from `references/opportunities-agent-prompt.md`, with the `{ground truth summary from Phase 1}` placeholder filled in from Phase 1.
+
+### Sequential Fallback
+
+If the Agent tool is unavailable, perform the opportunity detection yourself: scan the four codebase sources listed in the prompt template, cross-reference against docs, and compile findings directly.
+
+### Append to Report
+
+After the agent completes, append an `## Opportunities` section to the existing `doc-audit-report.md`:
+
+```markdown
+## Opportunities
+
+Functional areas discovered in the codebase with no documentation coverage:
+
+### {Feature Area Name}
+- {Brief description of undocumented capability}
+```
+
+**Omit the Opportunities section entirely if no undocumented areas are found.**
+
+### Print Summary
+
+After Phase 6, print a brief summary:
 - Total issues found per severity
+- Number of undocumented feature areas (opportunities) found
 - Top 3 most problematic pages (by issue count)
 - The report file path
