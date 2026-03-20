@@ -19,6 +19,7 @@ import {
   logSuccessConsole,
 } from '../utils/consoleLogger';
 import { formatContentDiff } from '../utils/diffFormatter';
+import { formatAdditionalPropertyDiff } from './formatAdditionalPropertyDiff';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 import chalk from 'chalk';
 
@@ -129,14 +130,17 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
   }
 
   if (diff.type === ChangeProposalType.updateSkillAdditionalProperty) {
-    const targetId = payload.targetId as string;
-    const oldValue = payload.oldValue as string;
-    const newValue = payload.newValue as string;
-    if (oldValue && oldValue !== 'null') {
-      log(chalk.red(`    - ${targetId}: ${oldValue}`));
-    }
-    if (newValue && newValue !== 'null') {
-      log(chalk.green(`    + ${targetId}: ${newValue}`));
+    const lines = formatAdditionalPropertyDiff(
+      payload.targetId as string,
+      payload.oldValue as string,
+      payload.newValue as string,
+    );
+    for (const line of lines) {
+      log(
+        line.type === 'removed'
+          ? chalk.red(`    - ${line.text}`)
+          : chalk.green(`    + ${line.text}`),
+      );
     }
     return;
   }
