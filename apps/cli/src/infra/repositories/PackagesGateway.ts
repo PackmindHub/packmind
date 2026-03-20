@@ -28,14 +28,8 @@ export class PackagesGateway implements IPackagesGateway {
   }) => {
     const { organizationId } = this.httpClient.getAuthContext();
 
-    const queryParams = new URLSearchParams();
-    if (spaceId) {
-      queryParams.append('spaceId', spaceId);
-    }
-    const query = queryParams.toString();
-
     return this.httpClient.request(
-      `/api/v0/organizations/${organizationId}/packages/${encodeURIComponent(slug)}${query ? `?${query}` : ''}`,
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/summary/${encodeURIComponent(slug)}`,
     );
   };
 
