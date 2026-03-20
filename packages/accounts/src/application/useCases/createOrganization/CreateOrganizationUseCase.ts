@@ -81,7 +81,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
           organizationId: organization.id,
         });
         try {
-          await this.spacesPort.createSpace('Global', organization.id);
+          await this.spacesPort.createDefaultSpace(organization.id);
           this.logger.info('Default Global space created successfully', {
             organizationId: organization.id,
           });

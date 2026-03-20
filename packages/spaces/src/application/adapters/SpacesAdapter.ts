@@ -1,5 +1,7 @@
 import { IBaseAdapter } from '@packmind/node-utils';
 import {
+  CreateSpaceCommand,
+  CreateSpaceResponse,
   GetDefaultSpaceCommand,
   GetDefaultSpaceResponse,
   IAccountsPort,
@@ -12,6 +14,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import type { SpacesHexa } from '../../SpacesHexa';
+import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
 import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 
@@ -24,13 +27,15 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
 
   constructor(private readonly hexa: SpacesHexa) {}
 
-  async createSpace(
-    name: string,
-    organizationId: OrganizationId,
-    isDefaultSpace = true,
-  ): Promise<Space> {
+  async createDefaultSpace(organizationId: OrganizationId): Promise<Space> {
     const spaceService = this.hexa.getSpaceService();
-    return spaceService.createSpace(name, organizationId, isDefaultSpace);
+    return spaceService.createDefaultSpace(organizationId);
+  }
+
+  async createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
+    const spaceService = this.hexa.getSpaceService();
+    const useCase = new CreateSpaceUseCase(spaceService, this.accountsPort);
+    return useCase.execute(command);
   }
 
   async listSpacesByOrganization(

@@ -55,7 +55,7 @@ export class StartTrialUseCase implements IStartTrial {
           },
         );
         try {
-          await this.spacesPort.createSpace('Global', organization.id);
+          await this.spacesPort.createDefaultSpace(organization.id);
         } catch (error) {
           this.logger.error('Failed to create default Global space for trial', {
             organizationId: organization.id,
