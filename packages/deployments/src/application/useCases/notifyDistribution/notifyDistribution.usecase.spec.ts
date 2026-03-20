@@ -205,10 +205,10 @@ describe('NotifyDistributionUseCase', () => {
     } as unknown as jest.Mocked<TargetResolutionService>;
 
     mockSpacesPort = {
-      getSpaceBySlug: jest.fn().mockImplementation((slug: string) => {
-        if (slug === 'global') return Promise.resolve(buildGlobalSpace());
-        return Promise.resolve(null);
-      }),
+      getSpaceBySlug: jest.fn().mockResolvedValue(null),
+      getDefaultSpace: jest
+        .fn()
+        .mockResolvedValue({ defaultSpace: buildGlobalSpace() }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     useCase = new NotifyDistributionUseCase(
@@ -536,11 +536,7 @@ describe('NotifyDistributionUseCase', () => {
           const skillVersion = buildSkillVersion();
           const pkg = buildPackage('my-package', mySpace.id);
 
-          mockSpacesPort.getSpaceBySlug.mockImplementation((slug: string) => {
-            if (slug === 'my-space') return Promise.resolve(mySpace);
-            if (slug === 'global') return Promise.resolve(buildGlobalSpace());
-            return Promise.resolve(null);
-          });
+          mockSpacesPort.getSpaceBySlug.mockResolvedValue(mySpace);
 
           mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
           mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
@@ -623,7 +619,6 @@ describe('NotifyDistributionUseCase', () => {
           mockSpacesPort.getSpaceBySlug.mockImplementation((slug: string) => {
             if (slug === 'my-space') return Promise.resolve(mySpace);
             if (slug === 'other-space') return Promise.resolve(otherSpace);
-            if (slug === 'global') return Promise.resolve(buildGlobalSpace());
             return Promise.resolve(null);
           });
 
@@ -698,7 +693,7 @@ describe('NotifyDistributionUseCase', () => {
         });
       });
 
-      describe('when bare slug resolves via the global space', () => {
+      describe('when bare slug resolves via the default space', () => {
         beforeEach(async () => {
           const recipeVersion = buildRecipeVersion();
           const standardVersion = buildStandardVersion();
@@ -730,14 +725,14 @@ describe('NotifyDistributionUseCase', () => {
           await useCase.execute(command);
         });
 
-        it('resolves the global space by slug', () => {
-          expect(mockSpacesPort.getSpaceBySlug).toHaveBeenCalledWith(
-            'global',
+        it('calls getDefaultSpace to resolve the default space', () => {
+          expect(mockSpacesPort.getDefaultSpace).toHaveBeenCalledWith({
+            userId,
             organizationId,
-          );
+          });
         });
 
-        it('matches the package in the global space', () => {
+        it('matches the package in the default space', () => {
           expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
             expect.objectContaining({
               packageId,
@@ -759,11 +754,7 @@ describe('NotifyDistributionUseCase', () => {
             id: createPackageId(uuidv4()),
           };
 
-          mockSpacesPort.getSpaceBySlug.mockImplementation((slug: string) => {
-            if (slug === 'my-space') return Promise.resolve(mySpace);
-            if (slug === 'global') return Promise.resolve(buildGlobalSpace());
-            return Promise.resolve(null);
-          });
+          mockSpacesPort.getSpaceBySlug.mockResolvedValue(mySpace);
 
           mockPackageRepository.findByOrganizationId.mockResolvedValue([
             pkg1,

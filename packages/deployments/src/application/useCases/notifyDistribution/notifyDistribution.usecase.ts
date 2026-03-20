@@ -103,6 +103,7 @@ export class NotifyDistributionUseCase
     );
 
     const matchingPackages = await this.findMatchingPackages({
+      userId,
       organizationId,
       packageSlugs,
     });
@@ -145,22 +146,37 @@ export class NotifyDistributionUseCase
   }
 
   private async findMatchingPackages(params: {
+    userId: UserId;
     organizationId: OrganizationId;
     packageSlugs: string[];
   }): Promise<Package[]> {
-    const { organizationId, packageSlugs } = params;
+    const { userId, organizationId, packageSlugs } = params;
 
     const orgPackages =
       await this.packageRepository.findByOrganizationId(organizationId);
 
     const parsedSlugs = packageSlugs.map((slug) => parsePackageSlug(slug));
 
-    const uniqueSpaceSlugs = [
-      ...new Set(parsedSlugs.map((parsed) => parsed.spaceSlug ?? 'global')),
+    const hasBareSlugs = parsedSlugs.some((p) => p.spaceSlug === null);
+    const explicitSpaceSlugs = [
+      ...new Set(
+        parsedSlugs
+          .filter((p) => p.spaceSlug !== null)
+          .map((p) => p.spaceSlug as string),
+      ),
     ];
 
+    let defaultSpaceId: string | null = null;
+    if (hasBareSlugs) {
+      const { defaultSpace } = await this.spacesPort.getDefaultSpace({
+        userId,
+        organizationId,
+      });
+      defaultSpaceId = defaultSpace.id;
+    }
+
     const spaceSlugToId = new Map<string, string>();
-    for (const spaceSlug of uniqueSpaceSlugs) {
+    for (const spaceSlug of explicitSpaceSlugs) {
       const space = await this.spacesPort.getSpaceBySlug(
         spaceSlug,
         organizationId,
@@ -180,12 +196,14 @@ export class NotifyDistributionUseCase
 
     const matchingPackages = orgPackages.filter((pkg) =>
       parsedSlugs.some((parsed) => {
-        const resolvedSpaceSlug = parsed.spaceSlug ?? 'global';
-        const spaceId = spaceSlugToId.get(resolvedSpaceSlug);
+        const resolvedSpaceId = parsed.spaceSlug
+          ? spaceSlugToId.get(parsed.spaceSlug)
+          : defaultSpaceId;
         return (
-          spaceId !== undefined &&
+          resolvedSpaceId !== undefined &&
+          resolvedSpaceId !== null &&
           pkg.slug === parsed.packageSlug &&
-          pkg.spaceId === spaceId
+          pkg.spaceId === resolvedSpaceId
         );
       }),
     );
