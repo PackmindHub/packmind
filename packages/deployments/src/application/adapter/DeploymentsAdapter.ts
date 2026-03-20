@@ -415,7 +415,6 @@ export class DeploymentsAdapter
     this._getPackageSummaryUseCase = new GetPackageSummaryUsecase(
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
     );
 
     this._createPackageUseCase = new CreatePackageUsecase(

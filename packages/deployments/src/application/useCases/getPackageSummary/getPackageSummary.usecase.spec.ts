@@ -1,9 +1,7 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
   IAccountsPort,
-  ISpacesPort,
   Organization,
-  Space,
   User,
   UserOrganizationMembership,
   createOrganizationId,
@@ -25,13 +23,6 @@ const organization: Organization = {
   id: ORG_ID,
   name: 'Acme',
   slug: 'acme',
-};
-
-const space: Space = {
-  id: SPACE_ID,
-  organizationId: ORG_ID,
-  name: 'Global',
-  slug: 'global',
 };
 
 function makeMembership(userId: string): UserOrganizationMembership {
@@ -58,7 +49,6 @@ describe('GetPackageSummaryUsecase', () => {
   let accountsPort: jest.Mocked<
     Pick<IAccountsPort, 'getUserById' | 'getOrganizationById'>
   >;
-  let spacesPort: jest.Mocked<Pick<ISpacesPort, 'getSpaceBySlug'>>;
   let packageService: jest.Mocked<
     Pick<
       PackageService,
@@ -80,10 +70,6 @@ describe('GetPackageSummaryUsecase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     };
 
-    spacesPort = {
-      getSpaceBySlug: jest.fn().mockResolvedValue(space),
-    };
-
     packageService = {
       getPackagesBySlugsWithArtefacts: jest.fn(),
       getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
@@ -96,24 +82,31 @@ describe('GetPackageSummaryUsecase', () => {
     useCase = new GetPackageSummaryUsecase(
       accountsPort as unknown as IAccountsPort,
       deploymentsServices,
-      spacesPort as unknown as ISpacesPort,
       stubLogger(),
     );
   });
 
-  describe('when slug is unqualified', () => {
+  describe('when spaceId is not provided', () => {
     beforeEach(() => {
       packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
         packageFactory({ slug: 'backend', spaceId: SPACE_ID }),
       ]);
     });
 
-    it('calls getPackagesBySlugsWithArtefacts with the raw slug', async () => {
+    it('calls getPackagesBySlugsWithArtefacts with the slug and organizationId', async () => {
       await useCase.execute({ ...baseCommand, slug: 'backend' });
 
       expect(
         packageService.getPackagesBySlugsWithArtefacts,
       ).toHaveBeenCalledWith(['backend'], ORG_ID);
+    });
+
+    it('does not call getPackagesBySlugsAndSpaceWithArtefacts', async () => {
+      await useCase.execute({ ...baseCommand, slug: 'backend' });
+
+      expect(
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts,
+      ).not.toHaveBeenCalled();
     });
 
     it('returns the package summary', async () => {
@@ -123,58 +116,77 @@ describe('GetPackageSummaryUsecase', () => {
     });
   });
 
-  describe('when slug is qualified (@space/package)', () => {
+  describe('when spaceId is provided', () => {
     beforeEach(() => {
       packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         packageFactory({ slug: 'backend', spaceId: SPACE_ID }),
       ]);
     });
 
-    it('resolves the space by slug', async () => {
-      await useCase.execute({ ...baseCommand, slug: '@global/backend' });
-
-      expect(spacesPort.getSpaceBySlug).toHaveBeenCalledWith('global', ORG_ID);
-    });
-
-    it('calls getPackagesBySlugsAndSpaceWithArtefacts with pkgSlug and spaceId', async () => {
-      await useCase.execute({ ...baseCommand, slug: '@global/backend' });
+    it('calls getPackagesBySlugsAndSpaceWithArtefacts with the slug and spaceId', async () => {
+      await useCase.execute({
+        ...baseCommand,
+        slug: 'backend',
+        spaceId: SPACE_ID,
+      });
 
       expect(
         packageService.getPackagesBySlugsAndSpaceWithArtefacts,
       ).toHaveBeenCalledWith(['backend'], SPACE_ID);
     });
 
+    it('does not call getPackagesBySlugsWithArtefacts', async () => {
+      await useCase.execute({
+        ...baseCommand,
+        slug: 'backend',
+        spaceId: SPACE_ID,
+      });
+
+      expect(
+        packageService.getPackagesBySlugsWithArtefacts,
+      ).not.toHaveBeenCalled();
+    });
+
     it('returns the package summary', async () => {
       const result = await useCase.execute({
         ...baseCommand,
-        slug: '@global/backend',
+        slug: 'backend',
+        spaceId: SPACE_ID,
       });
 
       expect(result.slug).toEqual('backend');
     });
   });
 
-  describe('when space is not found', () => {
-    beforeEach(() => {
-      spacesPort.getSpaceBySlug.mockResolvedValue(null);
-    });
-
-    it('throws a space-not-found error', async () => {
-      await expect(
-        useCase.execute({ ...baseCommand, slug: '@unknown/backend' }),
-      ).rejects.toThrow("Space '@unknown' not found.");
-    });
-  });
-
   describe('when package is not found', () => {
-    beforeEach(() => {
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([]);
+    describe('and spaceId is not provided', () => {
+      beforeEach(() => {
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([]);
+      });
+
+      it('throws a package-not-found error', async () => {
+        await expect(
+          useCase.execute({ ...baseCommand, slug: 'nonexistent' }),
+        ).rejects.toThrow("Package 'nonexistent' does not exist");
+      });
     });
 
-    it('throws a package-not-found error', async () => {
-      await expect(
-        useCase.execute({ ...baseCommand, slug: 'nonexistent' }),
-      ).rejects.toThrow("Package 'nonexistent' does not exist");
+    describe('and spaceId is provided', () => {
+      beforeEach(() => {
+        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
+          [],
+        );
+      });
+
+      it('throws a package-not-found error', async () => {
+        await expect(
+          useCase.execute({
+            ...baseCommand,
+            slug: 'nonexistent',
+            spaceId: SPACE_ID,
+          }),
+        ).rejects.toThrow("Package 'nonexistent' does not exist");
+      });
     });
   });
 });
