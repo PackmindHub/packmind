@@ -235,13 +235,12 @@ export async function playbookAddHandler(
     serializedContent = localContent;
   }
 
-  // Find target directory
-  const fileDir =
-    artifactType === 'skill'
-      ? absolutePath.endsWith('SKILL.md')
-        ? path.dirname(path.dirname(absolutePath))
-        : path.dirname(absolutePath)
-      : path.dirname(absolutePath);
+  // Find target directory — for skills, normalize SKILL.md to its parent directory first
+  const resolvedPathForConfigSearch =
+    artifactType === 'skill' && absolutePath.endsWith('SKILL.md')
+      ? path.dirname(absolutePath)
+      : absolutePath;
+  const fileDir = path.dirname(resolvedPathForConfigSearch);
 
   const targetDir = await findNearestConfigDir(fileDir, packmindCliHexa);
   if (!targetDir) {
