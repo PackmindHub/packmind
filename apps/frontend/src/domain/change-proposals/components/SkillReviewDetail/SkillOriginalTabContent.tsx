@@ -1,15 +1,11 @@
 import { useMemo } from 'react';
-import {
-  PMBox,
-  PMHeading,
-  PMMarkdownViewer,
-  PMText,
-  PMVStack,
-} from '@packmind/ui';
+import { PMBox, PMMarkdownViewer, PMText, PMVStack } from '@packmind/ui';
 import { Skill, SkillFile } from '@packmind/types';
 import { SKILL_MD_PATH } from '../../utils/groupSkillProposalsByFile';
+import { serializeSkillToMarkdown } from '../../utils/serializeArtifactToMarkdown';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
-import { FileContent } from './FileItems/FileContent';
+import { SkillFilePreview } from '../../../skills/components/SkillFilePreview';
+import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
 
 interface SkillOriginalTabContentProps {
   skill: Skill;
@@ -39,61 +35,63 @@ export function SkillOriginalTabContent({
     return [...filtered].sort((a, b) => a.path.localeCompare(b.path));
   }, [files, filePathFilter]);
 
+  const markdown = useMemo(() => serializeSkillToMarkdown(skill), [skill]);
+
+  const skillMdPreview = (
+    <PMVStack align="stretch" gap={4}>
+      <SkillFrontmatterInfo skillVersion={skill} />
+      <PMBox
+        border="solid 1px"
+        borderColor="border.primary"
+        borderRadius="md"
+        padding={4}
+        backgroundColor="background.primary"
+      >
+        <PMMarkdownViewer content={skill.prompt} />
+      </PMBox>
+    </PMVStack>
+  );
+
   return (
     <PMBox p={6}>
-      <PMBox mb={6}>
-        <PMText
-          fontSize="2xs"
-          fontWeight="medium"
-          textTransform="uppercase"
-          color="faded"
-        >
-          Original Version
-        </PMText>
-      </PMBox>
+      <PMText
+        fontSize="2xs"
+        fontWeight="medium"
+        textTransform="uppercase"
+        color="faded"
+        mb={6}
+      >
+        Original Version
+      </PMText>
 
-      {showScalarFields && (
-        <>
-          <PMHeading size="md" mb={4}>
-            {skill.name}
-          </PMHeading>
+      <PMVStack gap={6} align="stretch">
+        {showScalarFields && (
+          <ArtifactResultFilePreview
+            fileName={SKILL_MD_PATH}
+            markdown={markdown}
+            previewContent={skillMdPreview}
+          />
+        )}
 
-          <SkillFrontmatterInfo skillVersion={skill} />
-
-          <PMBox mt={4}>
-            <PMText fontSize="sm" fontWeight="semibold" mb={2}>
-              Prompt
+        {showFiles && displayFiles.length > 0 && (
+          <PMVStack gap={4} align="stretch">
+            <PMText fontSize="md" fontWeight="semibold">
+              Files
             </PMText>
-            <PMMarkdownViewer content={skill.prompt} />
-          </PMBox>
-        </>
-      )}
-
-      {showFiles && displayFiles.length > 0 && (
-        <PMVStack gap={4} align="stretch" mt={showScalarFields ? 6 : 0}>
-          <PMText fontSize="md" fontWeight="semibold">
-            Files
-          </PMText>
-          {displayFiles.map((file) => (
-            <PMBox
-              key={file.id}
-              border="1px solid"
-              borderColor="border.tertiary"
-              borderRadius="md"
-              overflow="hidden"
-            >
-              <PMBox px={3} py={2} bg="background.secondary">
-                <PMText fontSize="sm" fontWeight="semibold" fontFamily="mono">
-                  {file.path}
-                </PMText>
+            {displayFiles.map((file) => (
+              <PMBox
+                key={file.id}
+                border="solid 1px"
+                borderColor="border.tertiary"
+                borderRadius="md"
+                p={4}
+              >
+                <SkillFilePreview file={file} />
               </PMBox>
-              <PMBox p={3}>
-                <FileContent file={file} />
-              </PMBox>
-            </PMBox>
-          ))}
-        </PMVStack>
-      )}
+            ))}
+          </PMVStack>
+        )}
+      </PMVStack>
     </PMBox>
   );
 }

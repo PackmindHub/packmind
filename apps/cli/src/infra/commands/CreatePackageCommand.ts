@@ -4,6 +4,8 @@ import { createPackageHandler } from './packages/createPackageHandler';
 import {
   logErrorConsole,
   logConsole,
+  logSuccessConsole,
+  logWarningConsole,
   formatSlug,
   formatLabel,
   formatCommand,
@@ -52,7 +54,7 @@ export const createPackageCommand = command({
 
       if (result.success) {
         logConsole('');
-        logConsole(formatHeader(`✅ Package created successfully\n`));
+        logSuccessConsole('Package created successfully');
         logConsole(`  ${formatLabel('Name:')}  ${result.packageName}`);
         logConsole(
           `  ${formatLabel('Slug:')}  ${formatSlug(result.slug ?? '')}`,
@@ -65,6 +67,11 @@ export const createPackageCommand = command({
         logConsole(
           `  ${formatLabel('Install:')}  ${formatCommand(`packmind-cli packages install ${result.slug}`)}`,
         );
+        if (result.deduplicated) {
+          logWarningConsole(
+            `A package with a similar name already existed. Created with slug '${result.slug}'.`,
+          );
+        }
         logConsole('');
         process.exit(0);
       } else {

@@ -122,6 +122,7 @@ export const SkillFilePreview = ({
           defaultValue="preview"
           variant="enclosed"
           size="sm"
+          css={{ '& [role="tablist"]': { marginBottom: '0.75rem' } }}
         />
       );
     }

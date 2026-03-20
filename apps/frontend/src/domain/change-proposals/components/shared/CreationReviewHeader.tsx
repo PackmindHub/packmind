@@ -57,7 +57,6 @@ export function CreationReviewHeader({
               <DownloadAsAgentButton
                 getPreviewCommand={getPreviewCommand}
                 size="xs"
-                label="Try with agent"
               />
             )}
             <ReviewActionButtons

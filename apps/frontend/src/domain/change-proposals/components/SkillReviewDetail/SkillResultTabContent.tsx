@@ -1,20 +1,19 @@
 import { useCallback, useMemo } from 'react';
+import { PMBox, PMMarkdownViewer, PMText, PMVStack } from '@packmind/ui';
 import {
-  PMBox,
-  PMHeading,
-  PMHStack,
-  PMMarkdownViewer,
-  PMText,
-  PMVStack,
-} from '@packmind/ui';
-import { ChangeProposalId, Skill, SkillFile } from '@packmind/types';
+  ChangeProposalId,
+  ChangeProposalType,
+  Skill,
+  SkillFile,
+} from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { applySkillProposals } from '../../utils/applySkillProposals';
 import { PREVIEW_SKILL_VERSION_ID } from '../../utils/changeProposalHelpers';
-import { DownloadAsAgentButton } from '../shared/DownloadAsAgentButton';
 import { SKILL_MD_PATH } from '../../utils/groupSkillProposalsByFile';
+import { serializeSkillToMarkdown } from '../../utils/serializeArtifactToMarkdown';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
-import { FileContent } from './FileItems/FileContent';
+import { SkillFilePreview } from '../../../skills/components/SkillFilePreview';
+import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
 
 interface SkillResultTabContentProps {
   skill: Skill;
@@ -43,6 +42,12 @@ export function SkillResultTabContent({
   );
 
   const hasAccepted = acceptedProposalIds.size > 0;
+
+  const hasAcceptedRemoval = proposals.some(
+    (p) =>
+      acceptedProposalIds.has(p.id) &&
+      p.type === ChangeProposalType.removeSkill,
+  );
 
   const getPreviewCommand = useCallback(
     () => ({
@@ -80,74 +85,66 @@ export function SkillResultTabContent({
     return [...filtered].sort((a, b) => a.path.localeCompare(b.path));
   }, [applied.files, filePathFilter]);
 
+  const markdown = useMemo(() => serializeSkillToMarkdown(applied), [applied]);
+
+  const skillMdPreview = (
+    <PMVStack align="stretch" gap={4}>
+      <SkillFrontmatterInfo skillVersion={applied} />
+      <PMBox
+        border="solid 1px"
+        borderColor="border.primary"
+        borderRadius="md"
+        padding={4}
+        backgroundColor="background.primary"
+      >
+        <PMMarkdownViewer content={applied.prompt} />
+      </PMBox>
+    </PMVStack>
+  );
+
   return (
     <PMBox p={6}>
-      <PMHStack mb={6} justifyContent="space-between" alignItems="center">
-        <PMText
-          fontSize="2xs"
-          fontWeight="medium"
-          textTransform="uppercase"
-          color="faded"
-        >
-          Version with accepted changes
-        </PMText>
-        {hasAccepted && (
-          <DownloadAsAgentButton
-            getPreviewCommand={getPreviewCommand}
-            label="Try with agent"
-          />
-        )}
-      </PMHStack>
+      <PMText
+        fontSize="2xs"
+        fontWeight="medium"
+        textTransform="uppercase"
+        color="faded"
+        mb={6}
+      >
+        Version with accepted changes
+      </PMText>
 
       {hasAccepted ? (
-        <>
+        <PMVStack gap={6} align="stretch">
           {showScalarFields && (
-            <>
-              <PMHeading size="md" mb={4}>
-                {applied.name}
-              </PMHeading>
-
-              <SkillFrontmatterInfo skillVersion={applied} />
-
-              <PMBox mt={4}>
-                <PMText fontSize="sm" fontWeight="semibold" mb={2}>
-                  Prompt
-                </PMText>
-                <PMMarkdownViewer content={applied.prompt} />
-              </PMBox>
-            </>
+            <ArtifactResultFilePreview
+              fileName={SKILL_MD_PATH}
+              markdown={markdown}
+              previewContent={skillMdPreview}
+              hideActions={hasAcceptedRemoval}
+              getPreviewCommand={getPreviewCommand}
+            />
           )}
 
           {showFiles && sortedFiles.length > 0 && (
-            <PMVStack gap={4} align="stretch" mt={showScalarFields ? 6 : 0}>
+            <PMVStack gap={4} align="stretch">
               <PMText fontSize="md" fontWeight="semibold">
                 Files
               </PMText>
               {sortedFiles.map((file) => (
                 <PMBox
                   key={file.id}
-                  border="1px solid"
+                  border="solid 1px"
                   borderColor="border.tertiary"
                   borderRadius="md"
-                  overflow="hidden"
+                  p={4}
                 >
-                  <PMBox px={3} py={2} bg="background.secondary">
-                    <PMText
-                      fontSize="sm"
-                      fontWeight="semibold"
-                      fontFamily="mono"
-                    >
-                      {file.path}
-                    </PMText>
-                  </PMBox>
-                  <PMBox p={3}>
-                    <FileContent file={file} />
-                  </PMBox>
+                  <SkillFilePreview file={file} />
                 </PMBox>
               ))}
             </PMVStack>
           )}
-        </>
+        </PMVStack>
       ) : (
         <PMBox py={12} textAlign="center">
           <PMText color="faded" fontStyle="italic">

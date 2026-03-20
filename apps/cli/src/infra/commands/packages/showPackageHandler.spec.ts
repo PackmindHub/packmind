@@ -29,12 +29,27 @@ const PACKAGE_IN_GLOBAL = {
   spaceId: 'space-1',
 };
 
-const PACKAGE_SUMMARY = {
+const PACKAGE_IN_FRONTEND = {
+  id: 'pkg-2',
+  slug: 'backend',
+  name: 'Backend Frontend',
+  spaceId: 'space-2',
+};
+
+const PACKAGE_SUMMARY_GLOBAL = {
   name: 'Backend',
   slug: 'backend',
   description: 'A backend package',
   standards: [{ name: 'Standard 1', summary: 'A standard' }],
   recipes: [{ name: 'Recipe 1', summary: 'A recipe' }],
+};
+
+const PACKAGE_SUMMARY_FRONTEND = {
+  name: 'Backend Frontend',
+  slug: 'backend',
+  description: 'A frontend backend package',
+  standards: [{ name: 'Frontend Standard', summary: 'A frontend standard' }],
+  recipes: [{ name: 'Frontend Recipe', summary: 'A frontend recipe' }],
 };
 
 describe('showPackageHandler', () => {
@@ -44,9 +59,9 @@ describe('showPackageHandler', () => {
 
   beforeEach(() => {
     mockPackmindCliHexa = {
-      getPackageBySlug: jest.fn(),
       getSpaces: jest.fn(),
       listPackages: jest.fn(),
+      getPackageBySlug: jest.fn().mockResolvedValue(PACKAGE_SUMMARY_GLOBAL),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -66,15 +81,8 @@ describe('showPackageHandler', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
         mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
-        mockPackmindCliHexa.getPackageBySlug.mockResolvedValue(PACKAGE_SUMMARY);
 
         await showPackageHandler({ slug: '@global/backend' }, deps);
-      });
-
-      it('calls getPackageBySlug with the simple slug', () => {
-        expect(mockPackmindCliHexa.getPackageBySlug).toHaveBeenCalledWith({
-          slug: 'backend',
-        });
       });
 
       it('displays name with full slug', () => {
@@ -96,13 +104,9 @@ describe('showPackageHandler', () => {
         await showPackageHandler({ slug: '@unknown-space/backend' }, deps);
       });
 
-      it('does not call getPackageBySlug', () => {
-        expect(mockPackmindCliHexa.getPackageBySlug).not.toHaveBeenCalled();
-      });
-
       it('displays a space-not-found error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining("Space 'unknown-space' not found"),
+          expect.stringContaining("Space '@unknown-space' not found"),
         );
       });
 
@@ -122,20 +126,50 @@ describe('showPackageHandler', () => {
         await showPackageHandler({ slug: '@frontend/backend' }, deps);
       });
 
-      it('does not call getPackageBySlug', () => {
-        expect(mockPackmindCliHexa.getPackageBySlug).not.toHaveBeenCalled();
-      });
-
       it('displays a package-not-in-space error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Package 'backend' not found in space 'frontend'",
+            "Package 'backend' not found in space '@frontend'",
           ),
         );
       });
 
       it('exits with 1', () => {
         expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('and two spaces have a package with the same slug', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.getSpaces.mockResolvedValue([
+          SPACE_GLOBAL,
+          SPACE_FRONTEND,
+        ]);
+        mockPackmindCliHexa.listPackages.mockResolvedValue([
+          PACKAGE_IN_GLOBAL,
+          PACKAGE_IN_FRONTEND,
+        ]);
+        mockPackmindCliHexa.getPackageBySlug.mockResolvedValue(
+          PACKAGE_SUMMARY_FRONTEND,
+        );
+
+        await showPackageHandler({ slug: '@frontend/backend' }, deps);
+      });
+
+      it('calls getPackageBySlug with the full space-qualified slug', () => {
+        expect(mockPackmindCliHexa.getPackageBySlug).toHaveBeenCalledWith({
+          slug: '@frontend/backend',
+        });
+      });
+
+      it('displays the package from the requested space', () => {
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '\nBackend Frontend (@frontend/backend):\n',
+        );
+      });
+
+      it('exits with 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
       });
     });
   });
@@ -145,15 +179,8 @@ describe('showPackageHandler', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
         mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
-        mockPackmindCliHexa.getPackageBySlug.mockResolvedValue(PACKAGE_SUMMARY);
 
         await showPackageHandler({ slug: 'backend' }, deps);
-      });
-
-      it('calls getPackageBySlug with the simple slug', () => {
-        expect(mockPackmindCliHexa.getPackageBySlug).toHaveBeenCalledWith({
-          slug: 'backend',
-        });
       });
 
       it('displays name with resolved full slug', () => {
@@ -178,10 +205,6 @@ describe('showPackageHandler', () => {
         await showPackageHandler({ slug: 'backend' }, deps);
       });
 
-      it('does not call getPackageBySlug', () => {
-        expect(mockPackmindCliHexa.getPackageBySlug).not.toHaveBeenCalled();
-      });
-
       it('displays a disambiguation error with an example', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining('@global/backend'),
@@ -204,7 +227,7 @@ describe('showPackageHandler', () => {
       it('displays a package-not-found error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Package 'backend' not found in space 'global'",
+            "Package 'backend' not found in space '@global'",
           ),
         );
       });
@@ -219,7 +242,6 @@ describe('showPackageHandler', () => {
     beforeEach(async () => {
       mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
       mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
-      mockPackmindCliHexa.getPackageBySlug.mockResolvedValue(PACKAGE_SUMMARY);
 
       await showPackageHandler({ slug: '@global/backend' }, deps);
     });

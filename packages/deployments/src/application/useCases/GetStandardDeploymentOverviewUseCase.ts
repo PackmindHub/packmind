@@ -51,10 +51,9 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
           DistributionStatus.success, // Filter only successful distributions for overview
         );
 
-      // Get all spaces for the organization
-      const spaces = await this.spacesPort.listSpacesByOrganization(
-        command.organizationId as OrganizationId,
-      );
+      // Get the requested space
+      const space = await this.spacesPort.getSpaceById(command.spaceId);
+      const spaces = space ? [space] : [];
 
       // Get all active standards across all spaces
       const [activeStandardsPerSpace, gitRepos] = await Promise.all([

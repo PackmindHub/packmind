@@ -50,6 +50,7 @@ import { OrganizationGitRepositoriesModule } from './organizations/git/repositor
 import { OrganizationLlmModule } from './organizations/llm/llm.module';
 import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
 import { OrganizationSkillsModule } from './organizations/skills/skills.module';
+import { SpacesManagementModule } from '@packmind/spaces-management';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
@@ -177,6 +178,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'skills',
             module: OrganizationSkillsModule,
+          },
+          {
+            path: 'spaces-management',
+            module: SpacesManagementModule,
           },
           {
             path: 'spaces',

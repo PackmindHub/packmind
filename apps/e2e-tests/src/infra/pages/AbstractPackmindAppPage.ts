@@ -41,10 +41,6 @@ export abstract class AbstractPackmindAppPage
 
   async openUserSettings() {
     await this.page
-      .getByTestId(SidebarAccountsMenuDataTestIds.OpenSubMenuCTA)
-      .click();
-
-    await this.page
       .getByTestId(SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA)
       .click();
 
@@ -52,10 +48,6 @@ export abstract class AbstractPackmindAppPage
   }
 
   async signOut(): Promise<void> {
-    await this.page
-      .getByTestId(SidebarAccountsMenuDataTestIds.OpenSubMenuCTA)
-      .click();
-
     await this.page
       .getByTestId(SidebarAccountsMenuDataTestIds.SignoutCTA)
       .click();

@@ -1,10 +1,11 @@
-import { Package, Space, SummarizedArtifact } from '@packmind/types';
+import { Space } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   logConsole,
   logInfoConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
+import { parsePackageSlug } from '../../utils/packageSlugUtils';
 
 export type ShowPackageArgs = {
   slug: string;
@@ -15,23 +16,6 @@ export type ShowPackageHandlerDependencies = {
   exit: (code: number) => void;
 };
 
-type ResolvedPackageRef = {
-  spaceSlug: string;
-  pkgSlug: string;
-};
-
-/**
- * Parses a slug into its space and package parts.
- * `@global/backend` → `{ spaceSlug: 'global', pkgSlug: 'backend' }`
- * `backend` → needs space resolution
- */
-function parseSlug(slug: string): ResolvedPackageRef | null {
-  if (!slug.startsWith('@')) return null;
-  const slash = slug.indexOf('/', 1);
-  if (slash === -1) return null;
-  return { spaceSlug: slug.slice(1, slash), pkgSlug: slug.slice(slash + 1) };
-}
-
 /**
  * Resolves the space and package slugs, fetching spaces/packages as needed.
  * Returns { spaceSlug, pkgSlug, matchedSpace, matchedPackage }.
@@ -39,13 +23,13 @@ function parseSlug(slug: string): ResolvedPackageRef | null {
 async function resolvePackage(
   slug: string,
   packmindCliHexa: PackmindCliHexa,
-): Promise<{ spaceSlug: string; pkgSlug: string; matchedPackage: Package }> {
+): Promise<{ spaceSlug: string; pkgSlug: string }> {
   const [allPackages, allSpaces] = await Promise.all([
     packmindCliHexa.listPackages({}),
     packmindCliHexa.getSpaces(),
   ]);
 
-  const parsed = parseSlug(slug);
+  const parsed = parsePackageSlug(slug);
 
   let spaceSlug: string;
   let pkgSlug: string;
@@ -57,7 +41,7 @@ async function resolvePackage(
 
     const found = allSpaces.find((s) => s.slug === spaceSlug);
     if (!found) {
-      throw new Error(`Space '${spaceSlug}' not found.`);
+      throw new Error(`Space '@${spaceSlug}' not found.`);
     }
     matchedSpace = found;
   } else {
@@ -79,10 +63,10 @@ async function resolvePackage(
   );
 
   if (!matchedPackage) {
-    throw new Error(`Package '${pkgSlug}' not found in space '${spaceSlug}'.`);
+    throw new Error(`Package '${pkgSlug}' not found in space '@${spaceSlug}'.`);
   }
 
-  return { spaceSlug, pkgSlug, matchedPackage };
+  return { spaceSlug, pkgSlug };
 }
 
 export async function showPackageHandler(
@@ -100,7 +84,7 @@ export async function showPackageHandler(
     );
 
     const fullSlug = `@${spaceSlug}/${pkgSlug}`;
-    const pkg = await packmindCliHexa.getPackageBySlug({ slug: pkgSlug });
+    const pkg = await packmindCliHexa.getPackageBySlug({ slug: fullSlug });
 
     logConsole(`\n${pkg.name} (${fullSlug}):\n`);
 
@@ -110,7 +94,7 @@ export async function showPackageHandler(
 
     if (pkg.standards && pkg.standards.length > 0) {
       logConsole('Standards:');
-      pkg.standards.forEach((standard: SummarizedArtifact) => {
+      pkg.standards.forEach((standard) => {
         if (standard.summary) {
           logConsole(`  - ${standard.name}: ${standard.summary}`);
         } else {
@@ -122,7 +106,7 @@ export async function showPackageHandler(
 
     if (pkg.recipes && pkg.recipes.length > 0) {
       logConsole('Commands:');
-      pkg.recipes.forEach((recipe: SummarizedArtifact) => {
+      pkg.recipes.forEach((recipe) => {
         if (recipe.summary) {
           logConsole(`  - ${recipe.name}: ${recipe.summary}`);
         } else {

@@ -8,6 +8,13 @@ import { BrowserRouter } from 'react-router';
 
 jest.mock('../../../deployments/api/queries/DeploymentsQueries');
 jest.mock('../../../spaces/api/queries/SpacesQueries');
+jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: () => ({
+    spaceId: 'space-id-1',
+    spaceSlug: 'test-space',
+    spaceName: 'Test Space',
+  }),
+}));
 jest.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({
     organization: {

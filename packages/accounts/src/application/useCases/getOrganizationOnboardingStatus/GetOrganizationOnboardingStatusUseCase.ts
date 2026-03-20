@@ -85,17 +85,26 @@ export class GetOrganizationOnboardingStatusUseCase
       hasCreatedStandard = allStandards.length > 0;
     }
 
-    // Check deployments
+    // Check deployments across all spaces
     let hasDeployed = false;
-    if (this.deploymentPort) {
-      const deploymentOverview =
-        await this.deploymentPort.getDeploymentOverview({
-          userId,
-          organizationId: organization.id,
-        });
-      hasDeployed =
-        deploymentOverview.repositories.length > 0 ||
-        deploymentOverview.recipes.length > 0;
+    if (this.deploymentPort && this.spacesPort) {
+      const spaces = await this.spacesPort.listSpacesByOrganization(
+        organization.id,
+      );
+      const deploymentPort = this.deploymentPort;
+      const overviews = await Promise.all(
+        spaces.map((space) =>
+          deploymentPort.getDeploymentOverview({
+            userId,
+            organizationId: organization.id,
+            spaceId: space.id,
+          }),
+        ),
+      );
+      hasDeployed = overviews.some(
+        (overview) =>
+          overview.repositories.length > 0 || overview.recipes.length > 0,
+      );
     }
 
     const status: OrganizationOnboardingStatus = {

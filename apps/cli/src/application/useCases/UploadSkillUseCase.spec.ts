@@ -67,7 +67,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpaceService.getDefaultSpace).not.toHaveBeenCalled();
+      expect(mockSpaceService.getSpaces).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -115,7 +115,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpaceService.getDefaultSpace).not.toHaveBeenCalled();
+      expect(mockSpaceService.getSpaces).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -167,7 +167,7 @@ describe('UploadSkillUseCase', () => {
         // Expected to throw
       }
 
-      expect(mockSpaceService.getDefaultSpace).not.toHaveBeenCalled();
+      expect(mockSpaceService.getSpaces).not.toHaveBeenCalled();
     });
 
     it('does not call skills gateway', async () => {
@@ -201,10 +201,12 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpaceService.getDefaultSpace.mockResolvedValue({
-        id: 'space-123',
-        slug: 'global',
-      });
+      mockSpaceService.getSpaces.mockResolvedValue([
+        {
+          id: 'space-123',
+          slug: 'global',
+        },
+      ]);
       mockSkillsGateway.upload.mockResolvedValue({
         skill: {
           id: 'skill-456',
@@ -221,10 +223,10 @@ describe('UploadSkillUseCase', () => {
       expect(mockedReadSkillDirectory).toHaveBeenCalledWith('/skills/my-skill');
     });
 
-    it('gets the global space', async () => {
+    it('gets the available spaces', async () => {
       await useCase.execute({ skillPath: '/skills/my-skill' });
 
-      expect(mockSpaceService.getDefaultSpace).toHaveBeenCalled();
+      expect(mockSpaceService.getSpaces).toHaveBeenCalled();
     });
 
     it('uploads skill with correct spaceId', async () => {
@@ -315,10 +317,12 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpaceService.getDefaultSpace.mockResolvedValue({
-        id: 'space-123',
-        slug: 'global',
-      });
+      mockSpaceService.getSpaces.mockResolvedValue([
+        {
+          id: 'space-123',
+          slug: 'global',
+        },
+      ]);
       mockSkillsGateway.upload.mockResolvedValue({
         skill: {
           id: createSkillId('skill-456'),
@@ -356,10 +360,12 @@ describe('UploadSkillUseCase', () => {
           isBase64: false,
         },
       ]);
-      mockSpaceService.getDefaultSpace.mockResolvedValue({
-        id: 'space-123',
-        slug: 'global',
-      });
+      mockSpaceService.getSpaces.mockResolvedValue([
+        {
+          id: 'space-123',
+          slug: 'global',
+        },
+      ]);
       mockSkillsGateway.upload.mockResolvedValue({
         skill: {
           id: 'skill-456',
@@ -409,10 +415,12 @@ describe('UploadSkillUseCase', () => {
           isBase64: true,
         },
       ]);
-      mockSpaceService.getDefaultSpace.mockResolvedValue({
-        id: 'space-123',
-        slug: 'global',
-      });
+      mockSpaceService.getSpaces.mockResolvedValue([
+        {
+          id: 'space-123',
+          slug: 'global',
+        },
+      ]);
       mockSkillsGateway.upload.mockResolvedValue({
         skill: {
           id: 'skill-456',
@@ -458,10 +466,12 @@ describe('UploadSkillUseCase', () => {
         isBase64: false,
       });
       mockedReadSkillDirectory.mockResolvedValue(files);
-      mockSpaceService.getDefaultSpace.mockResolvedValue({
-        id: 'space-123',
-        slug: 'global',
-      });
+      mockSpaceService.getSpaces.mockResolvedValue([
+        {
+          id: 'space-123',
+          slug: 'global',
+        },
+      ]);
       mockSkillsGateway.upload.mockResolvedValue({
         skill: {
           id: 'skill-456',
@@ -500,10 +510,12 @@ describe('UploadSkillUseCase', () => {
           isBase64: true,
         },
       ]);
-      mockSpaceService.getDefaultSpace.mockResolvedValue({
-        id: 'space-123',
-        slug: 'global',
-      });
+      mockSpaceService.getSpaces.mockResolvedValue([
+        {
+          id: 'space-123',
+          slug: 'global',
+        },
+      ]);
       mockSkillsGateway.upload.mockResolvedValue({
         skill: {
           id: 'skill-456',
@@ -518,6 +530,97 @@ describe('UploadSkillUseCase', () => {
       const result = await useCase.execute({ skillPath: '/skills/my-skill' });
 
       expect(result.totalSize).toBe(10 * 1024 * 1024);
+    });
+  });
+
+  describe('when organization has multiple spaces', () => {
+    const validFiles = [
+      {
+        path: '/skills/my-skill/SKILL.md',
+        relativePath: 'SKILL.md',
+        content: '# Skill',
+        size: 7,
+        permissions: 'rw-r--r--',
+        isBase64: false,
+      },
+    ];
+
+    beforeEach(() => {
+      mockedReadSkillDirectory.mockResolvedValue(validFiles);
+      mockSkillsGateway.upload.mockResolvedValue({
+        skill: { id: 'skill-1', name: 'my-skill', version: 1 },
+        versionCreated: true,
+      });
+    });
+
+    describe('and no --space flag is provided', () => {
+      beforeEach(() => {
+        mockSpaceService.getSpaces.mockResolvedValue([
+          { id: 'space-1', slug: 'global' },
+          { id: 'space-2', slug: 'team' },
+        ]);
+      });
+
+      it('throws an error listing available spaces', async () => {
+        await expect(
+          useCase.execute({ skillPath: '/skills/my-skill' }),
+        ).rejects.toThrow('Multiple spaces found');
+      });
+
+      it('lists available space slugs in the error', async () => {
+        await expect(
+          useCase.execute({ skillPath: '/skills/my-skill' }),
+        ).rejects.toThrow('global');
+      });
+    });
+
+    describe('and a valid --space slug is provided', () => {
+      beforeEach(() => {
+        mockSpaceService.getSpaces.mockResolvedValue([
+          { id: 'space-1', slug: 'global' },
+          { id: 'space-2', slug: 'team' },
+        ]);
+      });
+
+      it('uses the matching space', async () => {
+        await useCase.execute({
+          skillPath: '/skills/my-skill',
+          spaceSlug: 'team',
+        });
+
+        expect(mockSkillsGateway.upload).toHaveBeenCalledWith(
+          expect.objectContaining({ spaceId: 'space-2' }),
+        );
+      });
+
+      it('accepts slug with a leading @ prefix', async () => {
+        await useCase.execute({
+          skillPath: '/skills/my-skill',
+          spaceSlug: '@team',
+        });
+
+        expect(mockSkillsGateway.upload).toHaveBeenCalledWith(
+          expect.objectContaining({ spaceId: 'space-2' }),
+        );
+      });
+    });
+
+    describe('and an invalid --space slug is provided', () => {
+      beforeEach(() => {
+        mockSpaceService.getSpaces.mockResolvedValue([
+          { id: 'space-1', slug: 'global' },
+          { id: 'space-2', slug: 'team' },
+        ]);
+      });
+
+      it('throws an error indicating the space was not found', async () => {
+        await expect(
+          useCase.execute({
+            skillPath: '/skills/my-skill',
+            spaceSlug: 'unknown',
+          }),
+        ).rejects.toThrow('Space "unknown" not found');
+      });
     });
   });
 });
