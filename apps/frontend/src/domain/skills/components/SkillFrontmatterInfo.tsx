@@ -10,17 +10,10 @@ import { Collapsible, useCollapsibleContext } from '@chakra-ui/react';
 import { LuChevronDown, LuChevronUp } from 'react-icons/lu';
 import {
   camelToKebab,
+  isDeepValue,
   sortAdditionalPropertiesKeys,
   toYamlLike,
 } from '@packmind/types';
-
-function isDeepValue(value: unknown): boolean {
-  if (typeof value !== 'object' || value === null) return false;
-  if (Array.isArray(value)) {
-    return value.some((item) => typeof item === 'object' && item !== null);
-  }
-  return true;
-}
 
 interface SkillFrontmatterData {
   description: string;

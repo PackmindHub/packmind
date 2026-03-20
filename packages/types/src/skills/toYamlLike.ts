@@ -1,4 +1,4 @@
-function isDeepValue(value: unknown): boolean {
+export function isDeepValue(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false;
   if (Array.isArray(value)) {
     return value.some((item) => typeof item === 'object' && item !== null);
