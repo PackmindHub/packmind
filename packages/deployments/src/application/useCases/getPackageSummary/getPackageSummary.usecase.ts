@@ -59,12 +59,18 @@ export class GetPackageSummaryUsecase
       summary: standard.summary,
     }));
 
+    const skills: SummarizedArtifact[] = pkg.skills.map((skill) => ({
+      name: skill.name,
+      summary: skill.description,
+    }));
+
     return {
       name: pkg.name,
       slug: pkg.slug,
       description: pkg.description,
       recipes,
       standards,
+      skills,
     };
   }
 }

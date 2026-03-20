@@ -19,6 +19,7 @@ export type GetPackageSummaryResponse = {
   description: string;
   recipes: SummarizedArtifact[];
   standards: SummarizedArtifact[];
+  skills: SummarizedArtifact[];
 };
 
 export type IGetPackageSummaryUseCase = IUseCase<
