@@ -13,48 +13,8 @@ import {
   SkillFile,
   SkillFileId,
   Standard,
+  canonicalJsonStringify,
 } from '@packmind/types';
-
-/**
- * Returns a deep copy of `value` with all object keys sorted recursively.
- * Keep in sync with packages/node-utils/src/skillMd/parseSkillMdContent.ts#deepSortKeys
- */
-function deepSortKeys(value: unknown): unknown {
-  if (value === null || value === undefined || typeof value !== 'object') {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(deepSortKeys);
-  }
-
-  const obj = value as Record<string, unknown>;
-  return Object.keys(obj)
-    .sort((a, b) => a.localeCompare(b))
-    .reduce(
-      (acc, key) => {
-        acc[key] = deepSortKeys(obj[key]);
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
-}
-
-/**
- * Deterministic JSON serialization that recursively sorts object keys.
- * Keep in sync with packages/node-utils/src/skillMd/parseSkillMdContent.ts#canonicalJsonStringify
- */
-function canonicalJsonStringify(value: unknown): string {
-  return JSON.stringify(deepSortKeys(value));
-}
-
-/**
- * Deterministic JSON serialization of skill metadata.
- * Keep in sync with packages/node-utils/src/skillMd/parseSkillMdContent.ts#serializeSkillMetadata
- */
-function serializeSkillMetadata(fields: Record<string, unknown>): string {
-  return canonicalJsonStringify(fields);
-}
 
 // --- Skill field mappings (mirrors backend SkillChangeProposalValidator) ---
 
@@ -72,7 +32,7 @@ const SKILL_FIELD_BY_TYPE: Record<ScalarSkillType, (skill: Skill) => string> = {
   [ChangeProposalType.updateSkillDescription]: (skill) => skill.description,
   [ChangeProposalType.updateSkillPrompt]: (skill) => skill.prompt,
   [ChangeProposalType.updateSkillMetadata]: (skill) =>
-    skill.metadata != null ? serializeSkillMetadata(skill.metadata) : '{}',
+    skill.metadata != null ? canonicalJsonStringify(skill.metadata) : '{}',
   [ChangeProposalType.updateSkillLicense]: (skill) => skill.license ?? '',
   [ChangeProposalType.updateSkillCompatibility]: (skill) =>
     skill.compatibility ?? '',
