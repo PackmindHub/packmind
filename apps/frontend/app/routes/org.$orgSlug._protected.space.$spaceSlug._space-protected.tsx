@@ -2,8 +2,6 @@ import { Outlet, redirect } from 'react-router';
 import { ChangeProposalUpdateSubscription } from '../../src/domain/change-proposals/components/ChangeProposalUpdateSubscription';
 import type { LoaderFunctionArgs, Params } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
-import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
-import { GET_ME_KEY } from '../../src/domain/accounts/api/queryKeys';
 import {
   getSpaceBySlugQueryOptions,
   getSpacesQueryOptions,
@@ -13,6 +11,7 @@ import { pmToaster } from '@packmind/ui';
 import { AuthService } from '../../src/services/auth/AuthService';
 import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 import { OrganizationId, UserOrganizationRole } from '@packmind/types';
+import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
 
 // Type for authenticated user with guaranteed organization
 type AuthenticatedMeWithOrganization = Extract<
@@ -34,34 +33,9 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     return { space: null };
   }
 
-  // Ensure auth data is loaded - uses cache if available, fetches otherwise
-  // This is critical for page refreshes where cache is empty
-  const me = await queryClient.ensureQueryData(getMeQueryOptions());
-
-  if (!me?.organization) {
-    throw redirect('/sign-in');
-  }
-
-  // Validate cached me matches URL org - if not, the cache is stale
-  if (me.organization.slug !== params.orgSlug) {
-    // Force refetch to get fresh data after org switch
-    queryClient.removeQueries({ queryKey: GET_ME_KEY });
-    const freshMe = await queryClient.fetchQuery(getMeQueryOptions());
-
-    if (
-      !freshMe?.organization ||
-      freshMe.organization.slug !== params.orgSlug
-    ) {
-      // Still mismatched - redirect to parent to handle the switch
-      throw redirect(`/org/${params.orgSlug}`);
-    }
-
-    // Use fresh data for subsequent queries
-    return clientLoaderWithMe(
-      params,
-      freshMe as AuthenticatedMeWithOrganization,
-    );
-  }
+  // Ensure auth data is loaded and org context matches URL
+  // If mismatched, performs the org switch before returning
+  const me = await ensureOrgContext(params.orgSlug!);
 
   return clientLoaderWithMe(params, me as AuthenticatedMeWithOrganization);
 }
