@@ -1,5 +1,8 @@
 import { parse as parseYaml } from 'yaml';
 
+export { canonicalJsonStringify, deepSortKeys } from '@packmind/types';
+import { canonicalJsonStringify } from '@packmind/types';
+
 const FRONTMATTER_DELIMITER = '---';
 
 /**
@@ -18,48 +21,6 @@ export type ParsedSkillMdContent = {
   /** Markdown body after the closing `---` */
   body: string;
 };
-
-/**
- * Returns a deep copy of `value` with all object keys sorted recursively.
- *
- * - Plain objects: keys are sorted with `localeCompare`.
- * - Arrays: each element is sorted recursively (order preserved).
- * - Primitives / nulls: returned as-is.
- */
-function deepSortKeys(value: unknown): unknown {
-  if (value === null || value === undefined || typeof value !== 'object') {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(deepSortKeys);
-  }
-
-  const obj = value as Record<string, unknown>;
-  return Object.keys(obj)
-    .sort((a, b) => a.localeCompare(b))
-    .reduce(
-      (acc, key) => {
-        acc[key] = deepSortKeys(obj[key]);
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
-}
-
-/**
- * Deterministic JSON serialization that recursively sorts object keys.
- *
- * Use this instead of `JSON.stringify` whenever two values must compare
- * equal regardless of key insertion order (e.g. YAML parse order vs
- * PostgreSQL JSONB retrieval order).
- *
- * @param value - Any JSON-serializable value
- * @returns Deterministic JSON string
- */
-export function canonicalJsonStringify(value: unknown): string {
-  return JSON.stringify(deepSortKeys(value ?? null));
-}
 
 /**
  * Serializes skill metadata fields into a deterministic JSON string.

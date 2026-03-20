@@ -3,55 +3,13 @@ import {
   canonicalJsonStringify,
   serializeSkillMetadata,
 } from './parseSkillMdContent';
+import { CLAUDE_CODE_ADDITIONAL_FIELDS } from '@packmind/types';
 
-/**
- * Claude Code-specific frontmatter fields that are not part of the Agent Skills spec.
- * Maps YAML kebab-case key → camelCase storage key.
- */
-export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
-  'argument-hint': 'argumentHint',
-  'disable-model-invocation': 'disableModelInvocation',
-  'user-invocable': 'userInvocable',
-  model: 'model',
-  context: 'context',
-  agent: 'agent',
-  hooks: 'hooks',
-};
-
-/**
- * Canonical ordering of Claude Code additional properties (camelCase storage keys).
- * Used to ensure deterministic YAML frontmatter rendering regardless of JSONB key order.
- */
-export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
-  'argumentHint',
-  'disableModelInvocation',
-  'userInvocable',
-  'model',
-  'context',
-  'agent',
-  'hooks',
-];
-
-/**
- * Sorts additional properties entries: known fields first (in canonical order),
- * then unknown fields alphabetically.
- */
-export function sortAdditionalPropertiesKeys(
-  props: Record<string, unknown>,
-): [string, unknown][] {
-  const entries = Object.entries(props);
-  const orderIndex = new Map(
-    CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]),
-  );
-  return entries.sort(([a], [b]) => {
-    const aIdx = orderIndex.get(a);
-    const bIdx = orderIndex.get(b);
-    if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
-    if (aIdx !== undefined) return -1;
-    if (bIdx !== undefined) return 1;
-    return a.localeCompare(b);
-  });
-}
+export {
+  CLAUDE_CODE_ADDITIONAL_FIELDS,
+  CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER,
+  sortAdditionalPropertiesKeys,
+} from '@packmind/types';
 
 /** Known Agent Skills spec fields (post-normalization). */
 const SPEC_FIELDS = new Set([
