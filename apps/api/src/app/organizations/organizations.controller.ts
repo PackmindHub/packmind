@@ -24,7 +24,7 @@ import {
   ISpacesPort,
   ListUserSpacesResponse,
 } from '@packmind/types';
-import { OrganizationId, SpaceId } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   NoPackageSlugsProvidedError,
@@ -452,7 +452,6 @@ export class OrganizationsController {
   async getPackageSummary(
     @Param('orgId') organizationId: OrganizationId,
     @Param('slug') slug: string,
-    @Query('spaceId') spaceId: SpaceId | undefined,
     @Req() request: AuthenticatedRequest,
   ): Promise<GetPackageSummaryResponse> {
     const userId = request.user.userId;
@@ -463,7 +462,6 @@ export class OrganizationsController {
         organizationId,
         userId,
         slug,
-        spaceId,
       },
     );
 
@@ -472,7 +470,6 @@ export class OrganizationsController {
         userId,
         organizationId,
         slug,
-        spaceId,
         source: request.clientSource,
       });
     } catch (error) {
