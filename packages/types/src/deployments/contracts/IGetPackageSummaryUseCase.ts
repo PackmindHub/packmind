@@ -1,9 +1,11 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { OrganizationId } from '../../accounts/Organization';
+import { SpaceId } from '../../spaces';
 
 export type GetPackageSummaryCommand = PackmindCommand & {
   organizationId: OrganizationId;
   slug: string;
+  spaceId?: SpaceId;
 };
 
 export type SummarizedArtifact = {

@@ -29,9 +29,19 @@ export class GetPackageSummaryUsecase
   async executeForMembers(
     command: GetPackageSummaryCommand & MemberContext,
   ): Promise<GetPackageSummaryResponse> {
-    const packages = await this.services
-      .getPackageService()
-      .getPackagesBySlugsWithArtefacts([command.slug], command.organizationId);
+    const packages = command.spaceId
+      ? await this.services
+          .getPackageService()
+          .getPackagesBySlugsAndSpaceWithArtefacts(
+            [command.slug],
+            command.spaceId,
+          )
+      : await this.services
+          .getPackageService()
+          .getPackagesBySlugsWithArtefacts(
+            [command.slug],
+            command.organizationId,
+          );
 
     if (packages.length === 0) {
       throw new Error(`Package '${command.slug}' does not exist`);
@@ -41,12 +51,12 @@ export class GetPackageSummaryUsecase
 
     const recipes: SummarizedArtifact[] = pkg.recipes.map((recipe) => ({
       name: recipe.name,
-      summary: undefined, // Recipe type doesn't have a summary field
+      summary: undefined,
     }));
 
     const standards: SummarizedArtifact[] = pkg.standards.map((standard) => ({
       name: standard.name,
-      summary: standard.summary || undefined,
+      summary: standard.summary,
     }));
 
     return {

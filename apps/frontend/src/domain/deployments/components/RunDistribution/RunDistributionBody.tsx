@@ -20,6 +20,7 @@ import {
 import { useRunDistribution } from './RunDistribution';
 import { RenderMode, TargetId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useNavigate } from 'react-router';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
 import { routes } from '../../../../shared/utils/routes';
@@ -53,6 +54,7 @@ export const RunDistributionBodyImpl: React.FC = () => {
   }, [activeRenderModes]);
 
   const { organization } = useAuthContext();
+  const { spaceSlug } = useCurrentSpace();
   const [selectedRepo, setSelectedRepo] = React.useState<string>('');
   const navigate = useNavigate();
 
@@ -69,9 +71,11 @@ export const RunDistributionBodyImpl: React.FC = () => {
     if (selectedPackages.length === 0) {
       return 'packmind-cli install';
     }
-    const slugs = selectedPackages.map((pkg) => pkg.slug).join(' ');
+    const slugs = selectedPackages
+      .map((pkg) => (spaceSlug ? `@${spaceSlug}/${pkg.slug}` : pkg.slug))
+      .join(' ');
     return `packmind-cli install ${slugs}`;
-  }, [selectedPackages]);
+  }, [selectedPackages, spaceSlug]);
 
   const groupedTargets = React.useMemo(() => {
     return [...targetsList].reduce(

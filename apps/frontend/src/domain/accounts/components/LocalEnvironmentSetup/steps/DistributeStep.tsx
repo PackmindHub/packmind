@@ -16,11 +16,13 @@ interface IDistributeStepProps {
     name: string;
     slug: string;
   }>;
+  spaceSlug?: string;
   isLoading?: boolean;
 }
 
 export const DistributeStep: React.FC<IDistributeStepProps> = ({
   packages = [],
+  spaceSlug,
   isLoading = false,
 }) => {
   let content: React.ReactNode;
@@ -46,7 +48,7 @@ export const DistributeStep: React.FC<IDistributeStepProps> = ({
                     label={
                       'Run this command in your terminal to install the package'
                     }
-                    value={`packmind-cli install ${pkg.slug}`}
+                    value={`packmind-cli install ${spaceSlug ? `@${spaceSlug}/` : ''}${pkg.slug}`}
                   />
                 </PMBox>
               </PMVStack>

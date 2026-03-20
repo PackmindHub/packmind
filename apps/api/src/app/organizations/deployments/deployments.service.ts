@@ -27,6 +27,8 @@ import {
   UpdatePackageResponse,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
+  GetPackageSummaryCommand,
+  GetPackageSummaryResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   ListPackagesBySpaceCommand,
@@ -182,5 +184,11 @@ export class DeploymentsService {
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse> {
     return this.deploymentAdapter.addArtefactsToPackage(command);
+  }
+
+  async getPackageSummary(
+    command: GetPackageSummaryCommand,
+  ): Promise<GetPackageSummaryResponse> {
+    return this.deploymentAdapter.getPackageSummary(command);
   }
 }

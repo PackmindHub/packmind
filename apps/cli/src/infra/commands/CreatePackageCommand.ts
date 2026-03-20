@@ -65,7 +65,7 @@ export const createPackageCommand = command({
           logConsole(`  ${formatLabel('Link:')}  ${result.webappUrl}`);
         }
         logConsole(
-          `  ${formatLabel('Install:')}  ${formatCommand(`packmind-cli packages install ${result.slug}`)}`,
+          `  ${formatLabel('Install:')}  ${formatCommand(`packmind-cli install ${result.slug}`)}`,
         );
         if (result.deduplicated) {
           logWarningConsole(

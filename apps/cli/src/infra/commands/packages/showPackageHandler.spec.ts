@@ -22,20 +22,6 @@ const mockLogErrorConsole = logErrorConsole as jest.Mock;
 const SPACE_GLOBAL = { id: 'space-1', slug: 'global', name: 'Global' };
 const SPACE_FRONTEND = { id: 'space-2', slug: 'frontend', name: 'Frontend' };
 
-const PACKAGE_IN_GLOBAL = {
-  id: 'pkg-1',
-  slug: 'backend',
-  name: 'Backend',
-  spaceId: 'space-1',
-};
-
-const PACKAGE_IN_FRONTEND = {
-  id: 'pkg-2',
-  slug: 'backend',
-  name: 'Backend Frontend',
-  spaceId: 'space-2',
-};
-
 const PACKAGE_SUMMARY_GLOBAL = {
   name: 'Backend',
   slug: 'backend',
@@ -60,7 +46,6 @@ describe('showPackageHandler', () => {
   beforeEach(() => {
     mockPackmindCliHexa = {
       getSpaces: jest.fn(),
-      listPackages: jest.fn(),
       getPackageBySlug: jest.fn().mockResolvedValue(PACKAGE_SUMMARY_GLOBAL),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
@@ -80,9 +65,15 @@ describe('showPackageHandler', () => {
     describe('and the package exists in the given space', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
-        mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
 
         await showPackageHandler({ slug: '@global/backend' }, deps);
+      });
+
+      it('calls getPackageBySlug with the slug and spaceId', () => {
+        expect(mockPackmindCliHexa.getPackageBySlug).toHaveBeenCalledWith({
+          slug: 'backend',
+          spaceId: 'space-1',
+        });
       });
 
       it('displays name with full slug', () => {
@@ -99,7 +90,6 @@ describe('showPackageHandler', () => {
     describe('and the space does not exist', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
-        mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
 
         await showPackageHandler({ slug: '@unknown-space/backend' }, deps);
       });
@@ -121,7 +111,9 @@ describe('showPackageHandler', () => {
           SPACE_GLOBAL,
           SPACE_FRONTEND,
         ]);
-        mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
+        mockPackmindCliHexa.getPackageBySlug.mockRejectedValue(
+          new Error('Package does not exist'),
+        );
 
         await showPackageHandler({ slug: '@frontend/backend' }, deps);
       });
@@ -139,15 +131,32 @@ describe('showPackageHandler', () => {
       });
     });
 
+    describe('and a non-not-found error occurs', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
+        mockPackmindCliHexa.getPackageBySlug.mockRejectedValue(
+          new Error('Network error'),
+        );
+
+        await showPackageHandler({ slug: '@global/backend' }, deps);
+      });
+
+      it('surfaces the original error message', () => {
+        expect(mockLogErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Network error'),
+        );
+      });
+
+      it('exits with 1', () => {
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
     describe('and two spaces have a package with the same slug', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([
           SPACE_GLOBAL,
           SPACE_FRONTEND,
-        ]);
-        mockPackmindCliHexa.listPackages.mockResolvedValue([
-          PACKAGE_IN_GLOBAL,
-          PACKAGE_IN_FRONTEND,
         ]);
         mockPackmindCliHexa.getPackageBySlug.mockResolvedValue(
           PACKAGE_SUMMARY_FRONTEND,
@@ -156,9 +165,10 @@ describe('showPackageHandler', () => {
         await showPackageHandler({ slug: '@frontend/backend' }, deps);
       });
 
-      it('calls getPackageBySlug with the full space-qualified slug', () => {
+      it('calls getPackageBySlug with the slug and spaceId for the requested space', () => {
         expect(mockPackmindCliHexa.getPackageBySlug).toHaveBeenCalledWith({
-          slug: '@frontend/backend',
+          slug: 'backend',
+          spaceId: 'space-2',
         });
       });
 
@@ -178,9 +188,15 @@ describe('showPackageHandler', () => {
     describe('and a single space exists', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
-        mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
 
         await showPackageHandler({ slug: 'backend' }, deps);
+      });
+
+      it('calls getPackageBySlug with the correct spaceId', () => {
+        expect(mockPackmindCliHexa.getPackageBySlug).toHaveBeenCalledWith({
+          slug: 'backend',
+          spaceId: 'space-1',
+        });
       });
 
       it('displays name with resolved full slug', () => {
@@ -194,20 +210,16 @@ describe('showPackageHandler', () => {
       });
     });
 
-    describe('and multiple spaces exist', () => {
+    describe('and no spaces exist', () => {
       beforeEach(async () => {
-        mockPackmindCliHexa.getSpaces.mockResolvedValue([
-          SPACE_GLOBAL,
-          SPACE_FRONTEND,
-        ]);
-        mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
+        mockPackmindCliHexa.getSpaces.mockResolvedValue([]);
 
         await showPackageHandler({ slug: 'backend' }, deps);
       });
 
-      it('displays a disambiguation error with an example', () => {
+      it('displays a package-not-found error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining('@global/backend'),
+          expect.stringContaining("Package 'backend' not found in any space."),
         );
       });
 
@@ -216,19 +228,94 @@ describe('showPackageHandler', () => {
       });
     });
 
-    describe('and the package does not exist in the single space', () => {
+    describe('and multiple spaces exist but the package is only in one', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.getSpaces.mockResolvedValue([
+          SPACE_GLOBAL,
+          SPACE_FRONTEND,
+        ]);
+        mockPackmindCliHexa.getPackageBySlug.mockImplementation(
+          async ({ spaceId }) => {
+            if (spaceId === 'space-1') return PACKAGE_SUMMARY_GLOBAL;
+            throw new Error('Package does not exist');
+          },
+        );
+
+        await showPackageHandler({ slug: 'backend' }, deps);
+      });
+
+      it('auto-resolves to the single matching space', () => {
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '\nBackend (@global/backend):\n',
+        );
+      });
+
+      it('exits with 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('and the package exists in multiple spaces', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.getSpaces.mockResolvedValue([
+          SPACE_GLOBAL,
+          SPACE_FRONTEND,
+        ]);
+        mockPackmindCliHexa.getPackageBySlug.mockImplementation(
+          async ({ spaceId }) => {
+            if (spaceId === 'space-2') return PACKAGE_SUMMARY_FRONTEND;
+            return PACKAGE_SUMMARY_GLOBAL;
+          },
+        );
+
+        await showPackageHandler({ slug: 'backend' }, deps);
+      });
+
+      it('displays a disambiguation error listing both spaces', () => {
+        expect(mockLogErrorConsole).toHaveBeenCalledWith(
+          expect.stringMatching(/@global.*@frontend|@frontend.*@global/),
+        );
+      });
+
+      it('exits with 1', () => {
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('and a real error occurs during space probing', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
-        mockPackmindCliHexa.listPackages.mockResolvedValue([]);
+        mockPackmindCliHexa.getPackageBySlug.mockRejectedValue(
+          new Error('Network error'),
+        );
+
+        await showPackageHandler({ slug: 'backend' }, deps);
+      });
+
+      it('surfaces the original error message', () => {
+        expect(mockLogErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Network error'),
+        );
+      });
+
+      it('exits with 1', () => {
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('and the package does not exist in any space', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
+        mockPackmindCliHexa.getPackageBySlug.mockRejectedValue(
+          new Error('Package does not exist'),
+        );
 
         await showPackageHandler({ slug: 'backend' }, deps);
       });
 
       it('displays a package-not-found error', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Package 'backend' not found in space '@global'",
-          ),
+          expect.stringContaining("Package 'backend' not found in any space."),
         );
       });
 
@@ -241,7 +328,6 @@ describe('showPackageHandler', () => {
   describe('package details display', () => {
     beforeEach(async () => {
       mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
-      mockPackmindCliHexa.listPackages.mockResolvedValue([PACKAGE_IN_GLOBAL]);
 
       await showPackageHandler({ slug: '@global/backend' }, deps);
     });
