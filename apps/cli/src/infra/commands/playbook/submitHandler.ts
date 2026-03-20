@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as yaml from 'yaml';
 
 import {
@@ -12,25 +13,25 @@ import {
   createRuleId,
 } from '@packmind/types';
 
-import { parseStandardMd } from '../../application/utils/parseStandardMd';
-import { parseLenientStandard } from '../../application/utils/parseLenientStandard';
-import { parseCommandFile } from '../../application/utils/parseCommandFile';
-import { matchUpdatedRules } from '../../application/utils/ruleSimilarity';
-import { normalizePath } from '../../application/utils/pathUtils';
-import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
+import { parseStandardMd } from '../../../application/utils/parseStandardMd';
+import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
+import { parseCommandFile } from '../../../application/utils/parseCommandFile';
+import { matchUpdatedRules } from '../../../application/utils/ruleSimilarity';
+import { normalizePath } from '../../../application/utils/pathUtils';
+import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import {
   logConsole,
   logErrorConsole,
   logSuccessConsole,
   logWarningConsole,
-} from '../utils/consoleLogger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+} from '../../utils/consoleLogger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
   PlaybookChangeEntry,
-} from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
+} from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -40,6 +41,7 @@ export type PlaybookSubmitHandlerDependencies = {
   exit: (code: number) => void;
   message: string | undefined;
   openEditor: (prefill: string) => string | null;
+  unlinkFile: (filePath: string) => void;
 };
 
 type ProposalItem = {
@@ -387,6 +389,36 @@ function buildUpdatedSkillProposals(
   ];
 }
 
+function buildRemovedProposals(
+  entry: PlaybookChangeEntry,
+  artifactId: string,
+  lockFile: PackmindLockFile | null,
+): ProposalItem[] {
+  const typeMap: Record<string, ChangeProposalType> = {
+    standard: ChangeProposalType.removeStandard,
+    command: ChangeProposalType.removeCommand,
+    skill: ChangeProposalType.removeSkill,
+  };
+
+  const proposalType = typeMap[entry.artifactType];
+  if (!proposalType) return [];
+
+  const lockEntry = lockFile
+    ? Object.values(lockFile.artifacts).find((e) => e.id === artifactId)
+    : undefined;
+  const packageIds = lockEntry?.packageIds ?? [];
+
+  return [
+    {
+      type: proposalType,
+      artefactId: artifactId,
+      payload: { packageIds },
+      targetId: entry.targetId,
+      spaceId: entry.spaceId,
+    },
+  ];
+}
+
 function lockFileToArtifactVersionEntries(
   lockFile: PackmindLockFile,
 ): ArtifactVersionEntry[] {
@@ -493,6 +525,18 @@ export async function playbookSubmitHandler(
           allProposals.push(...buildCreatedSkillProposals(entry));
           break;
       }
+    } else if (entry.changeType === 'removed') {
+      const artifactId = resolveArtifactIdFromLockFile(
+        entry.filePath,
+        lockFile,
+      );
+      if (!artifactId) {
+        logWarningConsole(
+          `Skipping "${entry.artifactName}" — artifact not found in lock file.`,
+        );
+        continue;
+      }
+      allProposals.push(...buildRemovedProposals(entry, artifactId, lockFile));
     } else {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
@@ -600,6 +644,20 @@ export async function playbookSubmitHandler(
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
       for (const filePath of filePaths) {
         playbookLocalRepository.removeChange(filePath);
+      }
+
+      // Delete local files for removed entries
+      if (projectDir) {
+        const removedEntries = changes.filter(
+          (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
+        );
+        for (const entry of removedEntries) {
+          try {
+            deps.unlinkFile(path.join(projectDir, entry.filePath));
+          } catch {
+            // File may already be deleted (manual deletion case)
+          }
+        }
       }
     }
   }

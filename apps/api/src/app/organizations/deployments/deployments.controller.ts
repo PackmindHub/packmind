@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Body,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -39,6 +40,7 @@ import {
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   SkillId,
+  SpaceId,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   RemovePackageFromTargetsCommand,
@@ -366,6 +368,7 @@ export class DeploymentsController {
   @Get('standards/overview')
   async getStandardDeploymentOverview(
     @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
   ): Promise<StandardDeploymentOverview> {
     this.logger.info(
@@ -379,6 +382,7 @@ export class DeploymentsController {
       const command: GetStandardDeploymentOverviewCommand = {
         userId: request.user.userId,
         organizationId,
+        spaceId,
       };
 
       const overview =
@@ -411,6 +415,7 @@ export class DeploymentsController {
   @Get('skills/overview')
   async getSkillsDeploymentOverview(
     @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
   ): Promise<SkillDeploymentOverview> {
     this.logger.info(
@@ -424,6 +429,7 @@ export class DeploymentsController {
       const command: GetSkillDeploymentOverviewCommand = {
         userId: request.user.userId,
         organizationId,
+        spaceId,
       };
 
       const overview =
@@ -456,6 +462,7 @@ export class DeploymentsController {
   @Get('recipes/overview')
   async getRecipesDeploymentOverview(
     @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
   ): Promise<DeploymentOverview> {
     this.logger.info(
@@ -469,6 +476,7 @@ export class DeploymentsController {
       const command: GetDeploymentOverviewCommand = {
         userId: request.user.userId,
         organizationId,
+        spaceId,
       };
 
       const overview =

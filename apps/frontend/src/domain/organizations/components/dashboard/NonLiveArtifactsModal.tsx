@@ -18,6 +18,7 @@ import {
   useGetStandardsDeploymentOverviewQuery,
   useGetSkillsDeploymentOverviewQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetSpacesQuery } from '../../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -46,13 +47,20 @@ export const NonLiveArtifactsModal = ({
     }
   }, [open, defaultTab]);
 
+  const { spaceId } = useCurrentSpace();
   const { data: spaces } = useGetSpacesQuery();
   const defaultSpaceSlug = spaces?.[0]?.slug;
   const effectiveSpaceSlug = spaceSlug || defaultSpaceSlug;
 
-  const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery();
-  const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
-  const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery();
+  const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery(
+    spaceId ?? '',
+  );
+  const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery(
+    spaceId ?? '',
+  );
+  const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery(
+    spaceId ?? '',
+  );
 
   const nonLiveStandards =
     standardsOverview?.standards

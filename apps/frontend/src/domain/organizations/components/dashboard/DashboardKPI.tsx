@@ -14,20 +14,28 @@ import {
   useGetStandardsDeploymentOverviewQuery,
   useGetSkillsDeploymentOverviewQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { LuInfo, LuRadio } from 'react-icons/lu';
 import { NonLiveArtifactsModal, ArtifactTab } from './NonLiveArtifactsModal';
 
 export const DashboardKPI = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<ArtifactTab>('standards');
+  const { spaceId } = useCurrentSpace();
 
   const openModalOnTab = (tab: ArtifactTab) => {
     setSelectedTab(tab);
     setIsModalOpen(true);
   };
-  const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery();
-  const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
-  const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery();
+  const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery(
+    spaceId ?? '',
+  );
+  const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery(
+    spaceId ?? '',
+  );
+  const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery(
+    spaceId ?? '',
+  );
 
   const totalRecipes =
     recipesOverview?.recipes.filter((r) => !r.isDeleted).length ?? 0;

@@ -1,18 +1,18 @@
 import * as path from 'path';
 
-import { findNearestConfigDir } from '../../application/utils/findNearestConfigDir';
-import { normalizePath } from '../../application/utils/pathUtils';
-import { formatLabel, logConsole } from '../utils/consoleLogger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
+import { normalizePath } from '../../../application/utils/pathUtils';
+import { formatLabel, logConsole } from '../../utils/consoleLogger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
   PlaybookChangeEntry,
-} from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
+} from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import {
   PackmindLockFile,
   PackmindLockFileEntry,
-} from '../../domain/repositories/PackmindLockFile';
+} from '../../../domain/repositories/PackmindLockFile';
 import { ArtifactVersionEntry, FileModification } from '@packmind/types';
 
 export type PlaybookStatusHandlerDependencies = {
@@ -28,6 +28,7 @@ type UntrackedChange = {
   artifactName: string;
   artifactType: string;
   filePath: string;
+  changeType?: string;
 };
 
 type GroupedChange = {
@@ -122,7 +123,7 @@ function groupStagedChanges(changes: PlaybookChangeEntry[]): GroupedChange[] {
 function groupUntrackedChanges(changes: UntrackedChange[]): GroupedChange[] {
   const groups = new Map<string, GroupedChange>();
   for (const change of changes) {
-    const key = `${change.artifactType}:${change.artifactName}`;
+    const key = `${change.artifactType}:${change.artifactName}:${change.changeType ?? ''}`;
     const existing = groups.get(key);
     if (existing) {
       existing.filePaths.push(change.filePath);
@@ -130,6 +131,7 @@ function groupUntrackedChanges(changes: UntrackedChange[]): GroupedChange[] {
       groups.set(key, {
         artifactName: change.artifactName,
         artifactType: change.artifactType,
+        changeType: change.changeType,
         filePaths: [change.filePath],
       });
     }
@@ -182,6 +184,18 @@ export async function playbookStatusHandler(
         try {
           localContent = readFile(path.join(projectDir, deployedFile.path));
         } catch {
+          const artifact = findArtifactForFile(
+            deployedFile.path,
+            lockFile.artifacts,
+          );
+          if (artifact) {
+            untrackedChanges.push({
+              artifactName: artifact.name,
+              artifactType: artifact.type,
+              filePath: deployedFile.path,
+              changeType: 'deleted',
+            });
+          }
           continue;
         }
 
@@ -227,8 +241,9 @@ export async function playbookStatusHandler(
     }
     logConsole('Changes not tracked:');
     for (const group of groupedUntracked) {
+      const changeInfo = group.changeType ? ` (${group.changeType})` : '';
       logGroupedChange(
-        `${capitalize(group.artifactType)} "${group.artifactName}"`,
+        `${capitalize(group.artifactType)} "${group.artifactName}"${changeInfo}`,
         group.filePaths,
       );
     }

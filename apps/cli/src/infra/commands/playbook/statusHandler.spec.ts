@@ -1,16 +1,16 @@
 import {
   playbookStatusHandler,
   PlaybookStatusHandlerDependencies,
-} from './playbookStatusHandler';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+} from './statusHandler';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
   PlaybookChangeEntry,
-} from '../../domain/repositories/IPlaybookLocalRepository';
-import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
-import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
+} from '../../../domain/repositories/IPlaybookLocalRepository';
+import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
@@ -31,7 +31,7 @@ describe('playbookStatusHandler', () => {
   const repoRoot = '/project';
 
   beforeEach(() => {
-    mockLogConsole = jest.requireMock('../utils/consoleLogger').logConsole;
+    mockLogConsole = jest.requireMock('../../utils/consoleLogger').logConsole;
 
     mockGetContentByVersions = jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
@@ -547,10 +547,12 @@ describe('playbookStatusHandler', () => {
       });
     });
 
-    it('skips the file and shows no untracked changes', async () => {
+    it('shows the file as an untracked deletion', async () => {
       await playbookStatusHandler(buildDeps());
 
-      expect(mockLogConsole).toHaveBeenCalledWith('No changes detected.');
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "Missing standard" (deleted) .packmind/standards/missing.md',
+      );
     });
   });
 
@@ -750,6 +752,114 @@ describe('playbookStatusHandler', () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith('No changes detected.');
+    });
+  });
+
+  describe('when a staged change has changeType removed', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My command',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: '',
+          changeType: 'removed',
+        } as PlaybookChangeEntry,
+      ]);
+    });
+
+    it('displays the removed label', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Command "My command" (removed) .claude/commands/my-command.md',
+      );
+    });
+
+    it('displays the staged header', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes to be submitted:');
+    });
+
+    it('displays submit hint', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        'Use `packmind playbook submit` to send them',
+      );
+    });
+  });
+
+  describe('when a deployed file has been manually deleted', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['packmind'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'artifact-1': {
+          name: 'Deleted standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.packmind/standards/deleted-standard.md',
+              agent: 'packmind',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/deleted-standard.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
+    });
+
+    it('displays the untracked header', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
+    });
+
+    it('displays the deleted artifact with (deleted) label', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "Deleted standard" (deleted) .packmind/standards/deleted-standard.md',
+      );
+    });
+
+    it('displays add hint', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        'Use `packmind playbook add <path>` to track them',
+      );
     });
   });
 });
