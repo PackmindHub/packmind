@@ -29,7 +29,10 @@ export async function playbookUnstageHandler(
   }
 
   const absolutePath = path.resolve(getCwd(), filePath);
-  const configDir = await findNearestConfigDir(absolutePath, packmindCliHexa);
+  const configDir = await findNearestConfigDir(
+    path.dirname(absolutePath),
+    packmindCliHexa,
+  );
   const normalizedFilePath = configDir
     ? normalizePath(path.relative(configDir, absolutePath))
     : normalizePath(filePath);
