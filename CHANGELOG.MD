@@ -2,6 +2,16 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.11.0] - 2026-03-20
+
+## Added
+
 - Reviewers can now edit change proposals before accepting them — edited proposals show both the original and edited diffs, with an "Edited" badge and a "Reset to original" option
 - Add Dart programming language support: `.dart` file recognition, syntax highlighting, and language selection (#183)
 - Show package inclusion on artifact list and detail pages with improved dropdown UX (#188)
@@ -21,8 +31,6 @@
 - Claude Code scope paths are now correctly rendered as YAML block sequences (#282)
 - `packmind-create-standard` skill now documents scope as comma-separated glob patterns instead of natural language, preventing standards from never matching files (#181)
 - File permissions are now correctly preserved during Git deployments to GitHub and GitLab, preventing spurious commits and mode resets (#218)
-
-## Removed
 
 # [1.10.0] - 2026-02-24
 
@@ -236,7 +244,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.10.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.11.0...HEAD
+[1.11.0]: https://github.com/PackmindHub/packmind/compare/release/1.10.0...release/1.11.0
 [1.10.0]: https://github.com/PackmindHub/packmind/compare/release/1.9.0...release/1.10.0
 [1.9.0]: https://github.com/PackmindHub/packmind/compare/release/1.8.0...release/1.9.0
 [1.8.0]: https://github.com/PackmindHub/packmind/compare/release/1.7.0...release/1.8.0
