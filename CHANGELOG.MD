@@ -7,7 +7,7 @@
 ## Fixed
 
 - Fixed navigation issues across organizations
-- Distribution analytics were broken because `@space/package` slug format from the CLI was not matched against bare `package` slugs in the database, resulting in no `distributed_packages` or artifact version associations being created
+- Distribution analytics were broken because `@space/package` slug format from the CLI was not matched against bare `package` slugs in the database, resulting in no `distributed_packages` or artifact version associations being created. Package matching is now space-aware: `@space/slug` resolves via `ISpacesPort.getSpaceBySlug()` and bare slugs default to the `global` space, preventing wrong matches when two packages share the same slug across different spaces (#344)
 
 ## Removed
 
