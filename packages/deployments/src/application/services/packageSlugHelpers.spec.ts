@@ -8,10 +8,12 @@ describe('parsePackageSlug', () => {
     });
   });
 
-  it('returns bare slug with null space when no prefix', () => {
-    expect(parsePackageSlug('my-package')).toEqual({
-      spaceSlug: null,
-      packageSlug: 'my-package',
+  describe('when no prefix', () => {
+    it('returns bare slug with null space', () => {
+      expect(parsePackageSlug('my-package')).toEqual({
+        spaceSlug: null,
+        packageSlug: 'my-package',
+      });
     });
   });
 

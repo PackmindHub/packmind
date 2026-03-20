@@ -492,121 +492,106 @@ describe('NotifyDistributionUseCase', () => {
     });
 
     describe('with @space/ prefixed package slugs', () => {
-      it('matches packages when slugs use @space/pkg format', async () => {
-        const recipeVersion = buildRecipeVersion();
-        const standardVersion = buildStandardVersion();
-        const skillVersion = buildSkillVersion();
-        const pkg = buildPackage('my-package');
+      describe('when slugs use @space/pkg format', () => {
+        beforeEach(async () => {
+          const recipeVersion = buildRecipeVersion();
+          const standardVersion = buildStandardVersion();
+          const skillVersion = buildSkillVersion();
+          const pkg = buildPackage('my-package');
 
-        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
-        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
-          standardVersion,
-        );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
-        mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
-        mockDistributionRepository.add.mockImplementation((d) =>
-          Promise.resolve(d),
-        );
-        mockDistributedPackageRepository.add.mockImplementation((d) =>
-          Promise.resolve(d),
-        );
+          mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+          mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+            standardVersion,
+          );
+          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+          mockDistributionRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+          mockDistributedPackageRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
 
-        const command: NotifyDistributionCommand = {
-          userId,
-          organizationId,
-          distributedPackages: ['@my-space/my-package'],
-          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
-          gitBranch: 'main',
-          relativePath: '/',
-        };
+          const command: NotifyDistributionCommand = {
+            userId,
+            organizationId,
+            distributedPackages: ['@my-space/my-package'],
+            gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
 
-        await useCase.execute(command);
+          await useCase.execute(command);
+        });
 
-        expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            packageId,
-            operation: 'add',
-          }),
-        );
+        it('matches packages by slug', () => {
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              packageId,
+              operation: 'add',
+            }),
+          );
+        });
+
+        it('adds standard versions', () => {
+          expect(
+            mockDistributedPackageRepository.addStandardVersions,
+          ).toHaveBeenCalledWith(expect.any(String), expect.any(Array));
+        });
+
+        it('adds recipe versions', () => {
+          expect(
+            mockDistributedPackageRepository.addRecipeVersions,
+          ).toHaveBeenCalledWith(expect.any(String), expect.any(Array));
+        });
+
+        it('adds skill versions', () => {
+          expect(
+            mockDistributedPackageRepository.addSkillVersions,
+          ).toHaveBeenCalledWith(expect.any(String), expect.any(Array));
+        });
       });
 
-      it('matches packages with mixed prefixed and bare formats', async () => {
-        const recipeVersion = buildRecipeVersion();
-        const standardVersion = buildStandardVersion();
-        const pkg1 = buildPackage('package-1');
-        const pkg2 = {
-          ...buildPackage('package-2'),
-          id: createPackageId(uuidv4()),
-        };
+      describe('when mixing prefixed and bare formats', () => {
+        beforeEach(async () => {
+          const recipeVersion = buildRecipeVersion();
+          const standardVersion = buildStandardVersion();
+          const pkg1 = buildPackage('package-1');
+          const pkg2 = {
+            ...buildPackage('package-2'),
+            id: createPackageId(uuidv4()),
+          };
 
-        mockPackageRepository.findByOrganizationId.mockResolvedValue([
-          pkg1,
-          pkg2,
-        ]);
-        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
-          standardVersion,
-        );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
-        mockDistributionRepository.add.mockImplementation((d) =>
-          Promise.resolve(d),
-        );
-        mockDistributedPackageRepository.add.mockImplementation((d) =>
-          Promise.resolve(d),
-        );
+          mockPackageRepository.findByOrganizationId.mockResolvedValue([
+            pkg1,
+            pkg2,
+          ]);
+          mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+            standardVersion,
+          );
+          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockDistributionRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+          mockDistributedPackageRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
 
-        const command: NotifyDistributionCommand = {
-          userId,
-          organizationId,
-          distributedPackages: ['@my-space/package-1', 'package-2'],
-          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
-          gitBranch: 'main',
-          relativePath: '/',
-        };
+          const command: NotifyDistributionCommand = {
+            userId,
+            organizationId,
+            distributedPackages: ['@my-space/package-1', 'package-2'],
+            gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
 
-        await useCase.execute(command);
+          await useCase.execute(command);
+        });
 
-        expect(mockDistributedPackageRepository.add).toHaveBeenCalledTimes(2);
-      });
-
-      it('creates distributed packages with correct artifact version associations when using prefixed slugs', async () => {
-        const recipeVersion = buildRecipeVersion();
-        const standardVersion = buildStandardVersion();
-        const skillVersion = buildSkillVersion();
-        const pkg = buildPackage('my-package');
-
-        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
-        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
-          standardVersion,
-        );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
-        mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
-        mockDistributionRepository.add.mockImplementation((d) =>
-          Promise.resolve(d),
-        );
-        mockDistributedPackageRepository.add.mockImplementation((d) =>
-          Promise.resolve(d),
-        );
-
-        const command: NotifyDistributionCommand = {
-          userId,
-          organizationId,
-          distributedPackages: ['@my-space/my-package'],
-          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
-          gitBranch: 'main',
-          relativePath: '/',
-        };
-
-        await useCase.execute(command);
-
-        expect(
-          mockDistributedPackageRepository.addStandardVersions,
-        ).toHaveBeenCalledWith(expect.any(String), [standardVersion.id]);
-        expect(
-          mockDistributedPackageRepository.addRecipeVersions,
-        ).toHaveBeenCalledWith(expect.any(String), [recipeVersion.id]);
-        expect(
-          mockDistributedPackageRepository.addSkillVersions,
-        ).toHaveBeenCalledWith(expect.any(String), [skillVersion.id]);
+        it('matches both packages', () => {
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledTimes(2);
+        });
       });
     });
 
