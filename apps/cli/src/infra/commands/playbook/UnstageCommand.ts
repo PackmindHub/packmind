@@ -24,6 +24,7 @@ export const unstagePlaybookCommand = command({
     const playbookLocalRepository = new PlaybookLocalRepository(repoRoot);
 
     await playbookUnstageHandler({
+      packmindCliHexa,
       filePath,
       exit: process.exit,
       getCwd: () => process.cwd(),
