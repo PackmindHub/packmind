@@ -14,7 +14,6 @@ import {
   SELECTABLE_AGENTS,
   AGENT_DISPLAY_NAMES,
 } from './configAgentsHandler';
-import * as consoleLogger from '../../utils/consoleLogger';
 import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
 import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
 import {
@@ -44,7 +43,6 @@ jest.mock('../../utils/consoleLogger', () => ({
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockReadline = readline as jest.Mocked<typeof readline>;
-const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 
 describe('configAgentsHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
@@ -700,21 +698,13 @@ describe('configAgentsHandler', () => {
           );
         });
 
-        it('displays Claude Code in success message', () => {
-          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
-            expect.stringContaining('Claude Code'),
-          );
-        });
-
-        it('displays Cursor in success message', () => {
-          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
-            expect.stringContaining('Cursor'),
-          );
-        });
-
-        it('displays GitHub Copilot in success message', () => {
-          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
-            expect.stringContaining('GitHub Copilot'),
+        it('displays the selected agents in success message', () => {
+          expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+            'Configuration saved',
+            {
+              content:
+                'Artifacts will be generated for: Claude Code, Cursor, GitHub Copilot',
+            },
           );
         });
       });
@@ -741,14 +731,8 @@ describe('configAgentsHandler', () => {
         });
 
         it('displays no agents selected message', () => {
-          expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-            expect.stringContaining('No agents selected'),
-          );
-        });
-
-        it('displays packmind artifacts message', () => {
-          expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-            expect.stringContaining('packmind artifacts'),
+          expect(mockOutput.notifyWarning).toHaveBeenCalledWith(
+            'No agents selected. Only packmind artifacts will be generated.',
           );
         });
       });
@@ -775,8 +759,11 @@ describe('configAgentsHandler', () => {
         });
 
         it('displays GitLab Duo in success message', () => {
-          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
-            expect.stringContaining('GitLab Duo'),
+          expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+            'Configuration saved',
+            {
+              content: 'Artifacts will be generated for: GitLab Duo',
+            },
           );
         });
       });

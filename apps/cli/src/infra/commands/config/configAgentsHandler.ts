@@ -96,9 +96,9 @@ export async function configAgentsHandler(
       'No agents selected. Only packmind artifacts will be generated.',
     );
   } else {
-    output.notifySuccess(
-      `Configuration saved. Artifacts will be generated for: ${agentNames.join(', ')}`,
-    );
+    output.notifySuccess(`Configuration saved`, {
+      content: `Artifacts will be generated for: ${agentNames.join(', ')}`,
+    });
   }
 }
 
