@@ -6,7 +6,8 @@ type WithSubTargetTypes =
   | ChangeProposalType.deleteRule
   | ChangeProposalType.updateSkillFileContent
   | ChangeProposalType.updateSkillFilePermissions
-  | ChangeProposalType.deleteSkillFile;
+  | ChangeProposalType.deleteSkillFile
+  | ChangeProposalType.updateSkillAdditionalProperty;
 
 export const sameSubTarget: ConflictDetector<
   WithSubTargetTypes,

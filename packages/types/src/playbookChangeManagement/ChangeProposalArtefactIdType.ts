@@ -29,6 +29,7 @@ type SkillChangeProposalArtefactIdMap = {
   [ChangeProposalType.updateSkillFileContent]: SkillId;
   [ChangeProposalType.updateSkillFilePermissions]: SkillId;
   [ChangeProposalType.deleteSkillFile]: SkillId;
+  [ChangeProposalType.updateSkillAdditionalProperty]: SkillId;
 };
 
 type CreationChangeProposalArtefactIdMap = {

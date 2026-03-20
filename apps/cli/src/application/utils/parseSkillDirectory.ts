@@ -1,5 +1,8 @@
 import { NewSkillPayload } from '@packmind/types';
-import { parseSkillMdContent } from '@packmind/node-utils';
+import {
+  parseSkillMdContent,
+  CLAUDE_CODE_ADDITIONAL_FIELDS,
+} from '@packmind/node-utils';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
 
@@ -98,6 +101,17 @@ export function parseSkillDirectory(
 
   if (properties.metadata != null && typeof properties.metadata === 'object') {
     payload.metadata = properties.metadata as Record<string, string>;
+  }
+
+  const additionalProperties: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(properties)) {
+    const camelKey = CLAUDE_CODE_ADDITIONAL_FIELDS[key];
+    if (camelKey) {
+      additionalProperties[camelKey] = value;
+    }
+  }
+  if (Object.keys(additionalProperties).length > 0) {
+    payload.additionalProperties = additionalProperties;
   }
 
   const supportingFiles = files.filter(

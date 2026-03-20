@@ -8,12 +8,20 @@ import {
 } from '@packmind/ui';
 import { Collapsible, useCollapsibleContext } from '@chakra-ui/react';
 import { LuChevronDown, LuChevronUp } from 'react-icons/lu';
+import {
+  camelToKebab,
+  isDeepValue,
+  sortAdditionalPropertiesKeys,
+  toYamlLike,
+} from '@packmind/types';
+
 interface SkillFrontmatterData {
   description: string;
   license?: string;
   compatibility?: string;
   allowedTools?: string;
   metadata?: Record<string, string>;
+  additionalProperties?: Record<string, unknown>;
 }
 
 interface SkillFrontmatterInfoProps {
@@ -35,7 +43,9 @@ export function SkillFrontmatterInfo({
         skillVersion.compatibility ||
         skillVersion.allowedTools ||
         (skillVersion.metadata &&
-          Object.keys(skillVersion.metadata).length > 0),
+          Object.keys(skillVersion.metadata).length > 0) ||
+        (skillVersion.additionalProperties &&
+          Object.keys(skillVersion.additionalProperties).length > 0),
       ),
     [skillVersion],
   );
@@ -119,6 +129,29 @@ export function SkillFrontmatterInfo({
                       )}
                     </PMVStack>
                   </PMVStack>
+                )}
+              {skillVersion.additionalProperties &&
+                Object.keys(skillVersion.additionalProperties).length > 0 &&
+                sortAdditionalPropertiesKeys(
+                  skillVersion.additionalProperties,
+                ).map(([key, value]) =>
+                  isDeepValue(value) ? (
+                    <PMVStack key={key} gap={0} align="stretch">
+                      <PMText color="secondary" fontSize="sm">
+                        {camelToKebab(key)}:
+                      </PMText>
+                      <PMText fontSize="sm" whiteSpace="pre-wrap" pl={4}>
+                        {toYamlLike(value, 0)}
+                      </PMText>
+                    </PMVStack>
+                  ) : (
+                    <PMHStack key={key} gap={2} align="baseline">
+                      <PMText color="secondary" fontSize="sm">
+                        {camelToKebab(key)}:
+                      </PMText>
+                      <PMText fontSize="sm">{String(value)}</PMText>
+                    </PMHStack>
+                  ),
                 )}
             </PMVStack>
           </Collapsible.Content>

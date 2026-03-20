@@ -164,6 +164,58 @@ describe('SkillCreateChangeProposalApplier', () => {
     });
   });
 
+  describe('generateSkillMd — additionalProperties', () => {
+    describe('when payload has additionalProperties', () => {
+      let parsed: ReturnType<typeof parseSkillMdContent>;
+
+      beforeEach(async () => {
+        const proposal = changeProposalFactory({
+          type: ChangeProposalType.createSkill,
+          createdBy: userId,
+          payload: {
+            name: 'test-skill',
+            description: 'A description',
+            prompt: 'Do something',
+            additionalProperties: { model: 'opus', userInvocable: true },
+          },
+        });
+        await applier.apply(proposal, spaceId, organizationId);
+        parsed = parseSkillMdContent(capturedSkillMdContent);
+      });
+
+      it('includes model in frontmatter as kebab-case', () => {
+        expect(parsed?.properties['model']).toBe('opus');
+      });
+
+      it('includes user-invocable in frontmatter as kebab-case', () => {
+        expect(parsed?.properties['user-invocable']).toBe(true);
+      });
+    });
+
+    describe('when payload has no additionalProperties', () => {
+      let parsed: ReturnType<typeof parseSkillMdContent>;
+
+      beforeEach(async () => {
+        const proposal = changeProposalFactory({
+          type: ChangeProposalType.createSkill,
+          createdBy: userId,
+          payload: {
+            name: 'test-skill',
+            description: 'A description',
+            prompt: 'Do something',
+          },
+        });
+        await applier.apply(proposal, spaceId, organizationId);
+        parsed = parseSkillMdContent(capturedSkillMdContent);
+      });
+
+      it('does not include extra fields in frontmatter', () => {
+        const keys = Object.keys(parsed?.properties ?? {});
+        expect(keys).toEqual(['name', 'description']);
+      });
+    });
+  });
+
   describe('generateSkillMd — happy path', () => {
     let parsed: ReturnType<typeof parseSkillMdContent>;
 

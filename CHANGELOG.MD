@@ -22,6 +22,7 @@
 - The `diff` command now detects updated rules using similarity matching: when a rule is modified rather than deleted and re-added, it is submitted as an `updateRule` change proposal
 - Add API support for `packmind-lock` file generation and version tracking
 - Render skills for GitLab Duo in `.gitlab/duo/skills/` using multi-file deployment with YAML frontmatter
+- Support custom additional properties in skills (e.g. Claude Code fields like `argument-hint`, `model`, `hooks`) stored as JSONB and tracked via change proposals (#206)
 
 ## Changed
 

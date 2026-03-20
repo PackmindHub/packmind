@@ -1,6 +1,7 @@
 import { SkillChangeProposalApplier } from './SkillChangeProposalApplier';
 import { DiffService } from './DiffService';
 import { ChangeProposalConflictError } from './ChangeProposalConflictError';
+import { ChangeProposalPayloadParseError } from './ChangeProposalPayloadParseError';
 import { SkillVersionWithFiles } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { createChangeProposalFactory } from './testHelpers';
@@ -186,6 +187,25 @@ describe('SkillChangeProposalApplier', () => {
         ]);
 
         expect(result.version.metadata).toEqual({ key: 'new-value' });
+      });
+
+      describe('when newValue is malformed JSON', () => {
+        it('throws ChangeProposalPayloadParseError', () => {
+          const source = skillVersionFactory({
+            metadata: { key: 'old-value' },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillMetadata,
+            payload: {
+              oldValue: JSON.stringify({ key: 'old-value' }),
+              newValue: '{not valid json',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalPayloadParseError);
+        });
       });
 
       describe('when newValue is empty', () => {
@@ -544,6 +564,131 @@ describe('SkillChangeProposalApplier', () => {
 
         it('keeps the other file', () => {
           expect(result.version.files[0].id).toBe(fileToKeep.id);
+        });
+      });
+    });
+
+    describe('updateSkillAdditionalProperty', () => {
+      let source: SkillVersionWithFiles;
+      let result: { version: SkillVersionWithFiles };
+
+      describe('when setting a new additional property', () => {
+        beforeEach(() => {
+          source = skillVersionFactory({ additionalProperties: undefined });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillAdditionalProperty,
+            payload: {
+              targetId: 'maxTokens',
+              oldValue: '',
+              newValue: JSON.stringify(4096),
+            },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+        });
+
+        it('sets the additional property on the result', () => {
+          expect(result.version.additionalProperties).toEqual({
+            maxTokens: 4096,
+          });
+        });
+      });
+
+      describe('when updating an existing additional property', () => {
+        beforeEach(() => {
+          source = skillVersionFactory({
+            additionalProperties: { maxTokens: 4096 },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillAdditionalProperty,
+            payload: {
+              targetId: 'maxTokens',
+              oldValue: JSON.stringify(4096),
+              newValue: JSON.stringify(8192),
+            },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+        });
+
+        it('updates the additional property value', () => {
+          expect(result.version.additionalProperties).toEqual({
+            maxTokens: 8192,
+          });
+        });
+      });
+
+      describe('when removing a property via empty string newValue', () => {
+        beforeEach(() => {
+          source = skillVersionFactory({
+            additionalProperties: { maxTokens: 4096, temperature: 0.7 },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillAdditionalProperty,
+            payload: {
+              targetId: 'maxTokens',
+              oldValue: JSON.stringify(4096),
+              newValue: '',
+            },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+        });
+
+        it('removes the specified property', () => {
+          expect(result.version.additionalProperties).toEqual({
+            temperature: 0.7,
+          });
+        });
+      });
+
+      describe('when newValue is malformed JSON', () => {
+        it('throws ChangeProposalPayloadParseError', () => {
+          const source = skillVersionFactory({
+            additionalProperties: { maxTokens: 4096 },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillAdditionalProperty,
+            payload: {
+              targetId: 'maxTokens',
+              oldValue: JSON.stringify(4096),
+              newValue: 'not-valid-json{',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalPayloadParseError);
+        });
+      });
+
+      describe('when removing the last remaining property', () => {
+        beforeEach(() => {
+          source = skillVersionFactory({
+            additionalProperties: { maxTokens: 4096 },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillAdditionalProperty,
+            payload: {
+              targetId: 'maxTokens',
+              oldValue: JSON.stringify(4096),
+              newValue: '',
+            },
+          });
+
+          result = applier.applyChangeProposals(source, [
+            proposal as ChangeProposal,
+          ]);
+        });
+
+        it('clears additionalProperties to undefined', () => {
+          expect(result.version.additionalProperties).toBeUndefined();
         });
       });
     });
