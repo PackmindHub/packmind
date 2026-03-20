@@ -21,6 +21,7 @@ export const configAgentsCommand = command({
       agentDetectionService,
       packmindGateway: packmindCliHexa.getPackmindGateway(),
       baseDirectory,
+      output: packmindCliHexa.output,
     });
   },
 });

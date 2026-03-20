@@ -21,6 +21,8 @@ import {
   createMockDeploymentGateway,
   createMockPackmindGateway,
 } from '../../../mocks/createMockGateways';
+import { IOutput } from '../../../domain/repositories/IOutput';
+import { createMockOutputRepository } from '../../../mocks/createMockRepositories';
 
 // Create mock functions before jest.mock to avoid hoisting issues
 const mockInquirerPrompt = jest.fn();
@@ -49,6 +51,7 @@ describe('configAgentsHandler', () => {
   let mockAgentDetectionService: jest.Mocked<IAgentArtifactDetectionService>;
   let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
   let mockDeploymentGateway: jest.Mocked<IDeploymentGateway>;
+  let mockOutput: jest.Mocked<IOutput>;
   let deps: ConfigAgentsHandlerDependencies;
   let originalStdoutWrite: typeof process.stdout.write;
 
@@ -74,12 +77,15 @@ describe('configAgentsHandler', () => {
       deployment: mockDeploymentGateway,
     });
 
+    mockOutput = createMockOutputRepository();
+
     deps = {
       configRepository: mockConfigRepository,
       agentDetectionService: mockAgentDetectionService,
       packmindGateway: mockPackmindGateway,
       baseDirectory: '/project',
       isTTY: true,
+      output: mockOutput,
     };
 
     // Capture stdout to prevent test output pollution

@@ -8,6 +8,8 @@ import {
 import * as consoleLogger from '../utils/consoleLogger';
 import * as configAgentsHandlerModule from './config/configAgentsHandler';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { IOutput } from '../../domain/repositories/IOutput';
+import { createMockOutputRepository } from '../../mocks/createMockRepositories';
 
 jest.mock('../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
@@ -30,6 +32,7 @@ describe('initHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
   let mockAgentDetectionService: jest.Mocked<IAgentArtifactDetectionService>;
   let mockInstallDefaultSkills: jest.MockedFunction<InstallDefaultSkillsFunction>;
+  let mockOutput: jest.Mocked<IOutput>;
   let deps: InitHandlerDependencies;
 
   beforeEach(() => {
@@ -51,6 +54,8 @@ describe('initHandler', () => {
 
     mockInstallDefaultSkills = jest.fn();
 
+    mockOutput = createMockOutputRepository();
+
     deps = {
       configRepository: mockConfigRepository,
       agentDetectionService: mockAgentDetectionService,
@@ -59,6 +64,7 @@ describe('initHandler', () => {
       installDefaultSkills: mockInstallDefaultSkills,
       cliVersion: '1.2.3',
       isTTY: true,
+      output: mockOutput,
     };
 
     mockConfigAgentsHandler.mockResolvedValue(undefined);

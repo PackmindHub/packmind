@@ -12,6 +12,7 @@ import {
 } from '../utils/consoleLogger';
 import { IInstallDefaultSkillsResult } from '../../domain/useCases/IInstallDefaultSkillsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { IOutput } from '../../domain/repositories/IOutput';
 
 export type InstallDefaultSkillsFunction = (options: {
   includeBeta: boolean;
@@ -25,6 +26,7 @@ export type InitHandlerDependencies = {
   baseDirectory: string;
   installDefaultSkills: InstallDefaultSkillsFunction;
   cliVersion: string;
+  output: IOutput;
   isTTY?: boolean;
 };
 
@@ -48,6 +50,7 @@ export async function initHandler(
     installDefaultSkills,
     cliVersion,
     isTTY,
+    output,
   } = deps;
 
   // Step 1: Run config agents flow
@@ -57,6 +60,7 @@ export async function initHandler(
     packmindGateway,
     baseDirectory,
     isTTY,
+    output,
   };
 
   await configAgentsHandler(configAgentsDeps);

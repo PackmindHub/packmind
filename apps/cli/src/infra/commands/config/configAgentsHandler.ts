@@ -3,8 +3,8 @@ import * as inquirer from 'inquirer';
 import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../../application/services/AgentArtifactDetectionService';
-import { logInfoConsole, logSuccessConsole } from '../../utils/consoleLogger';
 import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
+import { IOutput } from '../../../domain/repositories/IOutput';
 
 /**
  * Agents available for selection (packmind excluded - always active)
@@ -41,6 +41,7 @@ export type ConfigAgentsHandlerDependencies = {
   agentDetectionService: IAgentArtifactDetectionService;
   packmindGateway: IPackmindGateway;
   baseDirectory: string;
+  output: IOutput;
   stdin?: NodeJS.ReadableStream;
   stdout?: NodeJS.WritableStream;
   isTTY?: boolean;
@@ -53,7 +54,7 @@ export type ConfigAgentsHandlerDependencies = {
 export async function configAgentsHandler(
   deps: ConfigAgentsHandlerDependencies,
 ): Promise<void> {
-  const { configRepository, baseDirectory } = deps;
+  const { configRepository, baseDirectory, output } = deps;
   const isTTY = deps.isTTY ?? process.stdin.isTTY;
   const useSimplePrompt = process.env.PACKMIND_SIMPLE_PROMPT === '1' || !isTTY;
 
@@ -91,11 +92,11 @@ export async function configAgentsHandler(
 
   const agentNames = selectedAgents.map((a) => AGENT_DISPLAY_NAMES[a]);
   if (selectedAgents.length === 0) {
-    logInfoConsole(
+    output.notifyWarning(
       'No agents selected. Only packmind artifacts will be generated.',
     );
   } else {
-    logSuccessConsole(
+    output.notifySuccess(
       `Configuration saved. Artifacts will be generated for: ${agentNames.join(', ')}`,
     );
   }
