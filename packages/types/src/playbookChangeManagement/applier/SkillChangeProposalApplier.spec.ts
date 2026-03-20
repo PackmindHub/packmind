@@ -203,9 +203,7 @@ describe('SkillChangeProposalApplier', () => {
           });
 
           expect(() =>
-            applier.applyChangeProposals(source, [
-              proposal as ChangeProposal,
-            ]),
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
           ).toThrow(ChangeProposalPayloadParseError);
         });
       });
@@ -665,9 +663,7 @@ describe('SkillChangeProposalApplier', () => {
           });
 
           expect(() =>
-            applier.applyChangeProposals(source, [
-              proposal as ChangeProposal,
-            ]),
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
           ).toThrow(ChangeProposalPayloadParseError);
         });
       });
