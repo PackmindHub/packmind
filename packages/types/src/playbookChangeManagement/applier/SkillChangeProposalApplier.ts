@@ -3,6 +3,7 @@ import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { createSkillFileId } from '../../skills/SkillFileId';
 import { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
+import { ChangeProposalPayloadParseError } from './ChangeProposalPayloadParseError';
 import { SkillVersionWithFiles, SKILL_CHANGE_TYPES } from './types';
 
 export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<SkillVersionWithFiles> {
@@ -64,11 +65,20 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         ChangeProposalType.updateSkillMetadata,
       )
     ) {
+      let parsedMetadata: Record<string, unknown> | undefined;
+      if (changeProposal.payload.newValue) {
+        try {
+          parsedMetadata = JSON.parse(changeProposal.payload.newValue);
+        } catch (err) {
+          throw new ChangeProposalPayloadParseError(
+            changeProposal.id,
+            (err as Error).message,
+          );
+        }
+      }
       return {
         ...source,
-        metadata: changeProposal.payload.newValue
-          ? JSON.parse(changeProposal.payload.newValue)
-          : undefined,
+        metadata: parsedMetadata,
       };
     }
 
@@ -213,7 +223,14 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         delete currentProps[key];
       } else {
         // newValue is JSON-encoded (e.g. '"opus"', 'true'); parse back to raw for DB storage
-        currentProps[key] = JSON.parse(newValue);
+        try {
+          currentProps[key] = JSON.parse(newValue);
+        } catch (err) {
+          throw new ChangeProposalPayloadParseError(
+            changeProposal.id,
+            (err as Error).message,
+          );
+        }
       }
 
       return {

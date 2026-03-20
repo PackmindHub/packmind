@@ -1,6 +1,7 @@
 import { SkillChangeProposalApplier } from './SkillChangeProposalApplier';
 import { DiffService } from './DiffService';
 import { ChangeProposalConflictError } from './ChangeProposalConflictError';
+import { ChangeProposalPayloadParseError } from './ChangeProposalPayloadParseError';
 import { SkillVersionWithFiles } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { createChangeProposalFactory } from './testHelpers';
@@ -186,6 +187,27 @@ describe('SkillChangeProposalApplier', () => {
         ]);
 
         expect(result.version.metadata).toEqual({ key: 'new-value' });
+      });
+
+      describe('when newValue is malformed JSON', () => {
+        it('throws ChangeProposalPayloadParseError', () => {
+          const source = skillVersionFactory({
+            metadata: { key: 'old-value' },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillMetadata,
+            payload: {
+              oldValue: JSON.stringify({ key: 'old-value' }),
+              newValue: '{not valid json',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [
+              proposal as ChangeProposal,
+            ]),
+          ).toThrow(ChangeProposalPayloadParseError);
+        });
       });
 
       describe('when newValue is empty', () => {
@@ -625,6 +647,28 @@ describe('SkillChangeProposalApplier', () => {
           expect(result.version.additionalProperties).toEqual({
             temperature: 0.7,
           });
+        });
+      });
+
+      describe('when newValue is malformed JSON', () => {
+        it('throws ChangeProposalPayloadParseError', () => {
+          const source = skillVersionFactory({
+            additionalProperties: { maxTokens: 4096 },
+          });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillAdditionalProperty,
+            payload: {
+              targetId: 'maxTokens',
+              oldValue: JSON.stringify(4096),
+              newValue: 'not-valid-json{',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [
+              proposal as ChangeProposal,
+            ]),
+          ).toThrow(ChangeProposalPayloadParseError);
         });
       });
 
