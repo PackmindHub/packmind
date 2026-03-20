@@ -750,6 +750,13 @@ function formatAdditionalPropertyYaml(
 ): string {
   const pad = ' '.repeat(indent);
   if (Array.isArray(value)) {
+    const isSimpleArray = value.every(
+      (item) => item === null || typeof item !== 'object',
+    );
+    if (isSimpleArray) {
+      const inlineItems = value.map(formatYamlScalar).join(', ');
+      return `${pad}${key}: [${inlineItems}]`;
+    }
     const items = value
       .map((item) => {
         if (item !== null && typeof item === 'object' && !Array.isArray(item)) {

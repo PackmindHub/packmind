@@ -4369,10 +4369,10 @@ describe('ClaudeDeployer', () => {
           await deployer.generateFileUpdatesForSkills(skillVersions);
       });
 
-      it('renders array values with YAML list syntax', () => {
+      it('renders simple array values with inline flow syntax', () => {
         const content = fileUpdates.createOrUpdate[0].content;
         expect(content).toContain(
-          "allowed-tools:\n- 'read'\n- 'write'\n- 'execute'",
+          "allowed-tools: ['read', 'write', 'execute']",
         );
       });
     });
@@ -4474,6 +4474,29 @@ describe('ClaudeDeployer', () => {
         expect(content.indexOf('middle:')).toBeLessThan(
           content.indexOf('zebra:'),
         );
+      });
+    });
+
+    describe('when additional property is a simple array', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              argumentHint: ['issue-number'],
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders as inline flow sequence', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("argument-hint: ['issue-number']");
       });
     });
 
