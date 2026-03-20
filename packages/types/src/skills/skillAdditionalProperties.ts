@@ -58,6 +58,7 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
   model: 'model',
   context: 'context',
   agent: 'agent',
+  effort: 'effort',
   hooks: 'hooks',
 };
 
@@ -72,6 +73,7 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'model',
   'context',
   'agent',
+  'effort',
   'hooks',
 ];
 

@@ -124,6 +124,7 @@ user-invocable: true
 model: opus
 context: fork
 agent: plan
+effort: high
 hooks:
   preToolCall: echo hello
 ---
@@ -166,6 +167,12 @@ Body.`;
       const result = parseSkillMd(content);
 
       expect(result?.additionalProperties['agent']).toBe('"plan"');
+    });
+
+    it('extracts effort field', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.additionalProperties['effort']).toBe('"high"');
     });
 
     it('extracts nested objects as JSON', () => {

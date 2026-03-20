@@ -81,6 +81,7 @@ describe('CAMEL_TO_YAML_KEY', () => {
       model: 'model',
       context: 'context',
       agent: 'agent',
+      effort: 'effort',
       hooks: 'hooks',
     });
   });
