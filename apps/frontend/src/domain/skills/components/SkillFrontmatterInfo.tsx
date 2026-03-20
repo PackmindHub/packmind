@@ -8,35 +8,7 @@ import {
 } from '@packmind/ui';
 import { Collapsible, useCollapsibleContext } from '@chakra-ui/react';
 import { LuChevronDown, LuChevronUp } from 'react-icons/lu';
-
-const ADDITIONAL_FIELDS_ORDER = [
-  'argumentHint',
-  'disableModelInvocation',
-  'userInvocable',
-  'model',
-  'context',
-  'agent',
-  'hooks',
-];
-
-function camelToKebab(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-}
-
-function sortAdditionalPropertiesEntries(
-  props: Record<string, unknown>,
-): [string, unknown][] {
-  const entries = Object.entries(props);
-  const orderIndex = new Map(ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]));
-  return entries.sort(([a], [b]) => {
-    const aIdx = orderIndex.get(a);
-    const bIdx = orderIndex.get(b);
-    if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
-    if (aIdx !== undefined) return -1;
-    if (bIdx !== undefined) return 1;
-    return a.localeCompare(b);
-  });
-}
+import { camelToKebab, sortAdditionalPropertiesKeys } from '@packmind/types';
 
 function isDeepValue(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false;
@@ -209,7 +181,7 @@ export function SkillFrontmatterInfo({
                 )}
               {skillVersion.additionalProperties &&
                 Object.keys(skillVersion.additionalProperties).length > 0 &&
-                sortAdditionalPropertiesEntries(
+                sortAdditionalPropertiesKeys(
                   skillVersion.additionalProperties,
                 ).map(([key, value]) =>
                   isDeepValue(value) ? (
