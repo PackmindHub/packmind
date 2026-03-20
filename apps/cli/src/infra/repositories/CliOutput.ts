@@ -4,6 +4,7 @@ import {
   HelpMessage,
   Artefact,
 } from '../../domain/repositories/IOutput';
+import logUpdate from 'log-update';
 
 const CLI_PREFIX = 'packmind-cli';
 
@@ -22,6 +23,10 @@ class CliFormatter {
 
   public static command(command: string) {
     return chalk.yellow(command);
+  }
+
+  public static loader(text: string) {
+    return chalk.dim.italic(text);
   }
 
   public static header(title: string) {
@@ -68,6 +73,20 @@ export class CliOutput implements IOutput {
     );
   }
 
+  showLoader(message: string) {
+    this.logger.log(CliFormatter.loader(message));
+  }
+
+  async withLoader<T>(message: string, loader: () => Promise<T>): Promise<T> {
+    logUpdate(CliFormatter.loader(message));
+
+    try {
+      return loader();
+    } finally {
+      logUpdate.clear();
+    }
+  }
+
   showArtefact(artefact: Artefact, help?: HelpMessage) {
     this.logger.log(CliFormatter.label(artefact.slug));
     this.logger.log(CliFormatter.header(artefact.title));
@@ -108,7 +127,7 @@ export class CliOutput implements IOutput {
     this.displayHelp(help);
   }
 
-  notifyMessage(
+  private notifyMessage(
     message: string,
     output: (message: string) => void,
     help?: HelpMessage,
@@ -117,7 +136,7 @@ export class CliOutput implements IOutput {
     this.displayHelp(help);
   }
 
-  displayList(artefacts: Artefact[]) {
+  private displayList(artefacts: Artefact[]) {
     for (const artefact of artefacts) {
       this.logger.log(`- ${CliFormatter.label(artefact.slug)}`);
       this.logger.log(` Name: ${CliFormatter.header(artefact.title)}`);
@@ -128,7 +147,7 @@ export class CliOutput implements IOutput {
     }
   }
 
-  displayHelp(help?: HelpMessage) {
+  private displayHelp(help?: HelpMessage) {
     if (help) {
       this.logger.log(help.content);
 

@@ -8,7 +8,7 @@ export type Artefact = {
   title: string;
   slug: string;
   description?: string;
-  url?: string;
+  url?: string | null;
 };
 
 export interface IOutput {
@@ -17,6 +17,10 @@ export interface IOutput {
   notifyWarning(message: string, help?: HelpMessage): void;
 
   notifyError(message: string, help?: HelpMessage): void;
+
+  showLoader(message: string): void;
+
+  withLoader<T>(message: string, loader: () => Promise<T>): Promise<T>;
 
   showArtefact(artefact: Artefact, help?: HelpMessage): void;
 
@@ -27,14 +31,4 @@ export interface IOutput {
     scopedArtefacts: { title: string; artefacts: Artefact[] }[],
     help?: HelpMessage,
   ): void;
-
-  notifyMessage(
-    message: string,
-    output: (message: string) => void,
-    help?: HelpMessage,
-  ): void;
-
-  displayList(artefacts: Artefact[]): void;
-
-  displayHelp(help?: HelpMessage): void;
 }
