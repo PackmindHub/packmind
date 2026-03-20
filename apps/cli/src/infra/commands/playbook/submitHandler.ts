@@ -41,7 +41,8 @@ export type PlaybookSubmitHandlerDependencies = {
   exit: (code: number) => void;
   message: string | undefined;
   openEditor: (prefill: string) => string | null;
-  unlinkFile: (filePath: string) => void;
+  unlinkSync: (filePath: string) => void;
+  rmSync: (dirPath: string, options?: { recursive?: boolean }) => void;
 };
 
 type ProposalItem = {
@@ -636,9 +637,44 @@ export async function playbookSubmitHandler(
     totalCreated += response.created;
 
     if (response.errors.length > 0) {
-      hasErrors = true;
-      for (const error of response.errors) {
-        logErrorConsole(`Error: ${error.message}`);
+      const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
+      const spaceChanges = changes.filter((c) => filePaths.has(c.filePath));
+      const allRemovals =
+        spaceChanges.length > 0 &&
+        spaceChanges.every((c) => c.changeType === 'removed');
+      const allSpaceNotFound = response.errors.every(
+        (e) => e.code === 'SpaceNotFoundError',
+      );
+
+      if (allRemovals && allSpaceNotFound) {
+        logWarningConsole(
+          `Space ${spaceId} no longer exists — cleaning up local files.`,
+        );
+        for (const filePath of filePaths) {
+          playbookLocalRepository.removeChange(filePath);
+        }
+        if (projectDir) {
+          const removedEntries = spaceChanges.filter(
+            (c) => c.changeType === 'removed',
+          );
+          for (const entry of removedEntries) {
+            try {
+              const fullPath = path.join(projectDir, entry.filePath);
+              if (entry.artifactType === 'skill') {
+                deps.rmSync(fullPath, { recursive: true });
+              } else {
+                deps.unlinkSync(fullPath);
+              }
+            } catch {
+              // File may already be deleted (manual deletion case)
+            }
+          }
+        }
+      } else {
+        hasErrors = true;
+        for (const error of response.errors) {
+          logErrorConsole(`Error: ${error.message}`);
+        }
       }
     } else {
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
@@ -653,7 +689,12 @@ export async function playbookSubmitHandler(
         );
         for (const entry of removedEntries) {
           try {
-            deps.unlinkFile(path.join(projectDir, entry.filePath));
+            const fullPath = path.join(projectDir, entry.filePath);
+            if (entry.artifactType === 'skill') {
+              deps.rmSync(fullPath, { recursive: true });
+            } else {
+              deps.unlinkSync(fullPath);
+            }
           } catch {
             // File may already be deleted (manual deletion case)
           }

@@ -150,6 +150,18 @@ export async function showPackageHandler(
       logConsole('');
     }
 
+    if (pkg.skills && pkg.skills.length > 0) {
+      logConsole('Skills:');
+      pkg.skills.forEach((skill) => {
+        if (skill.summary) {
+          logConsole(`  - ${skill.name}: ${skill.summary}`);
+        } else {
+          logConsole(`  - ${skill.name}`);
+        }
+      });
+      logConsole('');
+    }
+
     exit(0);
   } catch (err) {
     logErrorConsole('Failed to fetch package details:');

@@ -2,12 +2,14 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   IAccountsPort,
   Organization,
+  PackageWithArtefacts,
   User,
   UserOrganizationMembership,
   createOrganizationId,
   createSpaceId,
   createUserId,
 } from '@packmind/types';
+import { skillFactory } from '@packmind/skills/test';
 import { v4 as uuidv4 } from 'uuid';
 import { packageFactory } from '../../../../test';
 import { PackageService } from '../services/PackageService';
@@ -113,6 +115,35 @@ describe('GetPackageSummaryUsecase', () => {
       const result = await useCase.execute({ ...baseCommand, slug: 'backend' });
 
       expect(result.slug).toEqual('backend');
+    });
+
+    describe('when the package has skills', () => {
+      beforeEach(() => {
+        const pkgWithSkill = {
+          ...packageFactory({ slug: 'backend', spaceId: SPACE_ID }),
+          skills: [
+            skillFactory({
+              name: 'My Skill',
+              description: 'Skill description',
+            }),
+          ],
+        } as unknown as PackageWithArtefacts;
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          pkgWithSkill,
+        ]);
+      });
+
+      it('returns skills with name and description as summary', async () => {
+        const result = await useCase.execute({
+          ...baseCommand,
+          slug: 'backend',
+        });
+
+        expect(result.skills).toEqual([
+          { name: 'My Skill', summary: 'Skill description' },
+        ]);
+      });
     });
   });
 

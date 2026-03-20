@@ -134,7 +134,8 @@ describe('playbookSubmitHandler', () => {
       exit: mockExit,
       message: undefined,
       openEditor: mockOpenEditor,
-      unlinkFile: jest.fn(),
+      unlinkSync: jest.fn(),
+      rmSync: jest.fn(),
       ...overrides,
     };
   }
@@ -977,13 +978,13 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('deletes the local file after successful submit', async () => {
-      const mockUnlinkFile = jest.fn();
+      const mockUnlinkSync = jest.fn();
 
       await playbookSubmitHandler(
-        buildDeps({ message: 'remove cmd', unlinkFile: mockUnlinkFile }),
+        buildDeps({ message: 'remove cmd', unlinkSync: mockUnlinkSync }),
       );
 
-      expect(mockUnlinkFile).toHaveBeenCalledWith(
+      expect(mockUnlinkSync).toHaveBeenCalledWith(
         expect.stringContaining('.claude/commands/my-command.md'),
       );
     });
@@ -1105,6 +1106,276 @@ describe('playbookSubmitHandler', () => {
           ]),
         }),
       );
+    });
+  });
+
+  describe('when space is not found for removed entries', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude' as const],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill' as const,
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                agent: 'claude' as const,
+              },
+            ],
+          },
+        },
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          changeType: 'removed',
+          spaceId: 'space-123',
+          content: '',
+        }),
+      ]);
+
+      mockGateway.changeProposals.batchCreate.mockResolvedValue({
+        created: 0,
+        skipped: 0,
+        errors: [
+          {
+            index: 0,
+            message: 'Space space-123 not found',
+            code: 'SpaceNotFoundError',
+          },
+        ],
+      });
+    });
+
+    it('cleans up local staged changes', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove skill' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.claude/skills/my-skill',
+      );
+    });
+
+    it('deletes local skill directory for removed entries', async () => {
+      const mockRmSync = jest.fn();
+
+      await playbookSubmitHandler(
+        buildDeps({ message: 'remove skill', rmSync: mockRmSync }),
+      );
+
+      expect(mockRmSync).toHaveBeenCalledWith(
+        '/project/.claude/skills/my-skill',
+        { recursive: true },
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'remove skill' }));
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('logs a warning about the missing space', async () => {
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
+
+      await playbookSubmitHandler(buildDeps({ message: 'remove skill' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('space-123'),
+      );
+    });
+  });
+
+  describe('when space is not found for non-removal entries', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({ changeType: 'created' }),
+      ]);
+
+      mockGateway.changeProposals.batchCreate.mockResolvedValue({
+        created: 0,
+        skipped: 0,
+        errors: [
+          {
+            index: 0,
+            message: 'Space space-123 not found',
+            code: 'SpaceNotFoundError',
+          },
+        ],
+      });
+    });
+
+    it('does not clean up local staged changes', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'create std' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+    });
+
+    it('exits with 1', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'create std' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('logs the error', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookSubmitHandler(buildDeps({ message: 'create std' }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Space space-123 not found'),
+      );
+    });
+  });
+
+  describe('when space is not found for mixed removal and non-removal entries', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude' as const],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill' as const,
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                agent: 'claude' as const,
+              },
+            ],
+          },
+        },
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          changeType: 'removed',
+          spaceId: 'space-123',
+          content: '',
+        }),
+        makeEntry({
+          changeType: 'created',
+          spaceId: 'space-123',
+        }),
+      ]);
+
+      mockGateway.changeProposals.batchCreate.mockResolvedValue({
+        created: 0,
+        skipped: 0,
+        errors: [
+          {
+            index: 0,
+            message: 'Space space-123 not found',
+            code: 'SpaceNotFoundError',
+          },
+        ],
+      });
+    });
+
+    it('does not clean up local staged changes', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+    });
+
+    it('exits with 1', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when errors include non-SpaceNotFoundError codes for removed entries', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude' as const],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill' as const,
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                agent: 'claude' as const,
+              },
+            ],
+          },
+        },
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          changeType: 'removed',
+          spaceId: 'space-123',
+          content: '',
+        }),
+      ]);
+
+      mockGateway.changeProposals.batchCreate.mockResolvedValue({
+        created: 0,
+        skipped: 0,
+        errors: [
+          {
+            index: 0,
+            message: 'Space space-123 not found',
+            code: 'SpaceNotFoundError',
+          },
+          {
+            index: 1,
+            message: 'Validation failed',
+            code: 'ValidationError',
+          },
+        ],
+      });
+    });
+
+    it('does not clean up local staged changes', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'mixed errors' }));
+
+      expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+    });
+
+    it('exits with 1', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'mixed errors' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
 
