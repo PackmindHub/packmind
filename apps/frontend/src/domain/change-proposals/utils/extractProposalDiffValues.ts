@@ -1,10 +1,12 @@
 import {
+  CAMEL_TO_YAML_KEY,
   ChangeProposal,
   ChangeProposalType,
   ScalarUpdatePayload,
   CollectionItemUpdatePayload,
   CollectionItemAddPayload,
   CollectionItemDeletePayload,
+  camelToKebab,
 } from '@packmind/types';
 
 export interface DiffValues {
@@ -62,15 +64,17 @@ export function extractProposalDiffValues(
 
   if (type === ChangeProposalType.updateSkillAdditionalProperty) {
     const updatePayload = payload as CollectionItemUpdatePayload<string>;
-    const key = updatePayload.targetId;
+    const displayKey =
+      CAMEL_TO_YAML_KEY[updatePayload.targetId] ??
+      camelToKebab(updatePayload.targetId);
     return {
       oldValue:
         updatePayload.oldValue && updatePayload.oldValue !== 'null'
-          ? `${key}: ${updatePayload.oldValue}`
+          ? `${displayKey}: ${updatePayload.oldValue}`
           : '',
       newValue:
         updatePayload.newValue && updatePayload.newValue !== 'null'
-          ? `${key}: ${updatePayload.newValue}`
+          ? `${displayKey}: ${updatePayload.newValue}`
           : '',
     };
   }

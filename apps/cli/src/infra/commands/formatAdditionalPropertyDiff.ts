@@ -1,3 +1,5 @@
+import { CAMEL_TO_YAML_KEY, camelToKebab } from '@packmind/types';
+
 export interface AdditionalPropertyDiffLine {
   type: 'removed' | 'added';
   text: string;
@@ -15,14 +17,15 @@ export function formatAdditionalPropertyDiff(
   oldValue: string,
   newValue: string,
 ): AdditionalPropertyDiffLine[] {
+  const displayKey = CAMEL_TO_YAML_KEY[targetId] ?? camelToKebab(targetId);
   const lines: AdditionalPropertyDiffLine[] = [];
 
   if (oldValue && oldValue !== 'null') {
-    lines.push({ type: 'removed', text: `${targetId}: ${oldValue}` });
+    lines.push({ type: 'removed', text: `${displayKey}: ${oldValue}` });
   }
 
   if (newValue && newValue !== 'null') {
-    lines.push({ type: 'added', text: `${targetId}: ${newValue}` });
+    lines.push({ type: 'added', text: `${displayKey}: ${newValue}` });
   }
 
   return lines;

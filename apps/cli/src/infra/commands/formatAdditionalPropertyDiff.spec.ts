@@ -39,4 +39,20 @@ describe('formatAdditionalPropertyDiff', () => {
       expect(formatAdditionalPropertyDiff('model', 'null', 'null')).toEqual([]);
     });
   });
+
+  describe('camelCase to kebab-case conversion', () => {
+    it('converts camelCase targetId to kebab-case in output', () => {
+      expect(
+        formatAdditionalPropertyDiff('userInvocable', 'null', 'true'),
+      ).toEqual([{ type: 'added', text: 'user-invocable: true' }]);
+    });
+
+    it('converts disableModelInvocation to kebab-case', () => {
+      expect(
+        formatAdditionalPropertyDiff('disableModelInvocation', 'null', 'true'),
+      ).toEqual([
+        { type: 'added', text: 'disable-model-invocation: true' },
+      ]);
+    });
+  });
 });

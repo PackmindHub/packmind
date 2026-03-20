@@ -31,7 +31,7 @@ describe('extractProposalDiffValues', () => {
       const proposal = makeProposal(
         ChangeProposalType.updateSkillAdditionalProperty,
         {
-          targetId: 'user-invocable',
+          targetId: 'userInvocable',
           oldValue: 'false',
           newValue: 'true',
         },
@@ -40,6 +40,22 @@ describe('extractProposalDiffValues', () => {
       expect(extractProposalDiffValues(proposal)).toEqual({
         oldValue: 'user-invocable: false',
         newValue: 'user-invocable: true',
+      });
+    });
+
+    it('converts disableModelInvocation to kebab-case', () => {
+      const proposal = makeProposal(
+        ChangeProposalType.updateSkillAdditionalProperty,
+        {
+          targetId: 'disableModelInvocation',
+          oldValue: 'null',
+          newValue: 'true',
+        },
+      );
+
+      expect(extractProposalDiffValues(proposal)).toEqual({
+        oldValue: '',
+        newValue: 'disable-model-invocation: true',
       });
     });
 

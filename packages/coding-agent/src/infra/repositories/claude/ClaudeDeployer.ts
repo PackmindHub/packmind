@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CAMEL_TO_YAML_KEY,
   CODING_AGENT_ARTEFACT_PATHS,
   DeleteItem,
   DeleteItemType,
@@ -12,6 +13,7 @@ import {
   SkillVersion,
   StandardVersion,
   Target,
+  camelToKebab,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
@@ -717,7 +719,7 @@ ${instructionContent}`;
       for (const [camelKey, value] of sortAdditionalPropertiesKeys(
         skillVersion.additionalProperties,
       )) {
-        const yamlKey = camelToKebab(camelKey);
+        const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
         frontmatterFields.push(formatAdditionalPropertyYaml(yamlKey, value));
       }
     }
@@ -735,14 +737,6 @@ ${skillVersion.prompt}`;
   getSkillsFolderPath(): string {
     return ClaudeDeployer.ARTEFACT_PATHS.skill;
   }
-}
-
-/**
- * Converts a camelCase string to kebab-case.
- * e.g. "disableModelInvocation" -> "disable-model-invocation"
- */
-function camelToKebab(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
 /**
@@ -792,6 +786,9 @@ function formatAdditionalPropertyYaml(
 }
 
 function formatYamlScalar(value: unknown): string {
+  if (value === null || value === undefined) {
+    return 'null';
+  }
   if (typeof value === 'string') {
     return `'${escapeSingleQuotes(value)}'`;
   }

@@ -3,12 +3,14 @@ import {
   ICreateChangeProposalApplier,
 } from './ICreateChangeProposalApplier';
 import {
+  CAMEL_TO_YAML_KEY,
   ChangeProposal,
   ChangeProposalType,
   ISkillsPort,
   OrganizationId,
   Skill,
   SpaceId,
+  camelToKebab,
   toYamlLike,
 } from '@packmind/types';
 import {
@@ -112,10 +114,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       for (const [camelKey, value] of sortAdditionalPropertiesKeys(
         metadata.additionalProperties,
       )) {
-        const kebabKey = camelKey.replace(
-          /[A-Z]/g,
-          (letter) => `-${letter.toLowerCase()}`,
-        );
+        const kebabKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
         if (typeof value === 'object' && value !== null) {
           frontmatter.push(`${kebabKey}:\n${toYamlLike(value, 1)}`);
         } else {
