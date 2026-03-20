@@ -10,6 +10,7 @@ import {
   INotifyDistributionUseCase,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
@@ -61,6 +62,7 @@ export class NotifyDistributionUseCase
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly targetResolutionService: TargetResolutionService,
+    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -151,11 +153,41 @@ export class NotifyDistributionUseCase
     const orgPackages =
       await this.packageRepository.findByOrganizationId(organizationId);
 
-    const normalizedSlugs = packageSlugs.map(
-      (slug) => parsePackageSlug(slug).packageSlug,
-    );
+    const parsedSlugs = packageSlugs.map((slug) => parsePackageSlug(slug));
+
+    const uniqueSpaceSlugs = [
+      ...new Set(parsedSlugs.map((parsed) => parsed.spaceSlug ?? 'global')),
+    ];
+
+    const spaceSlugToId = new Map<string, string>();
+    for (const spaceSlug of uniqueSpaceSlugs) {
+      const space = await this.spacesPort.getSpaceBySlug(
+        spaceSlug,
+        organizationId,
+      );
+      if (space) {
+        spaceSlugToId.set(spaceSlug, space.id);
+      } else {
+        this.logger.warn(
+          `Space slug "${spaceSlug}" not found, skipping associated packages`,
+          {
+            spaceSlug,
+            organizationId,
+          },
+        );
+      }
+    }
+
     const matchingPackages = orgPackages.filter((pkg) =>
-      normalizedSlugs.includes(pkg.slug),
+      parsedSlugs.some((parsed) => {
+        const resolvedSpaceSlug = parsed.spaceSlug ?? 'global';
+        const spaceId = spaceSlugToId.get(resolvedSpaceSlug);
+        return (
+          spaceId !== undefined &&
+          pkg.slug === parsed.packageSlug &&
+          pkg.spaceId === spaceId
+        );
+      }),
     );
 
     this.logger.info('Found matching packages', {
