@@ -59,6 +59,28 @@ describe('extractProposalDiffValues', () => {
       });
     });
 
+    it('returns empty string when old value is null sentinel (property added)', () => {
+      const proposal = makeProposal(
+        ChangeProposalType.updateSkillAdditionalProperty,
+        { targetId: 'model', oldValue: 'null', newValue: 'sonnet' },
+      );
+      expect(extractProposalDiffValues(proposal)).toEqual({
+        oldValue: '',
+        newValue: 'model: sonnet',
+      });
+    });
+
+    it('returns empty string when new value is null sentinel (property removed)', () => {
+      const proposal = makeProposal(
+        ChangeProposalType.updateSkillAdditionalProperty,
+        { targetId: 'model', oldValue: 'sonnet', newValue: 'null' },
+      );
+      expect(extractProposalDiffValues(proposal)).toEqual({
+        oldValue: 'model: sonnet',
+        newValue: '',
+      });
+    });
+
     it('returns empty string when new value is empty (property removed)', () => {
       const proposal = makeProposal(
         ChangeProposalType.updateSkillAdditionalProperty,
