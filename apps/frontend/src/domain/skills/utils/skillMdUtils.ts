@@ -4,7 +4,7 @@ import type { SkillVersion } from '@packmind/types';
 import {
   camelToKebab,
   CAMEL_TO_YAML_KEY,
-  CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER,
+  sortAdditionalPropertiesKeys,
 } from '@packmind/types';
 
 /**
@@ -44,18 +44,9 @@ export function buildSkillMdContent(version: SkillVersion): string {
     version.additionalProperties &&
     Object.keys(version.additionalProperties).length > 0
   ) {
-    const orderIndex = new Map(
-      CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.map((key, i) => [key, i]),
-    );
-    const sorted = Object.entries(version.additionalProperties).sort(
-      ([a], [b]) => {
-        const aIdx = orderIndex.get(a) ?? Infinity;
-        const bIdx = orderIndex.get(b) ?? Infinity;
-        if (aIdx !== bIdx) return aIdx - bIdx;
-        return a.localeCompare(b);
-      },
-    );
-    for (const [camelKey, value] of sorted) {
+    for (const [camelKey, value] of sortAdditionalPropertiesKeys(
+      version.additionalProperties,
+    )) {
       const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
       frontmatter[yamlKey] = value;
     }
