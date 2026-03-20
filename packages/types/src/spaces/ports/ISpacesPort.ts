@@ -2,6 +2,10 @@ import { OrganizationId } from '../../accounts/Organization';
 import { Space } from '../Space';
 import { SpaceId } from '../SpaceId';
 import {
+  CreateSpaceCommand,
+  CreateSpaceResponse,
+} from '../contracts/ICreateSpaceUseCase';
+import {
   GetDefaultSpaceCommand,
   GetDefaultSpaceResponse,
 } from '../contracts/IGetDefaultSpace';
@@ -18,15 +22,16 @@ export const ISpacesPortName = 'ISpacesPort' as const;
 
 export interface ISpacesPort {
   /**
-   * Create a space for an organization
-   * This is called when a new organization is created (with name "Global")
-   * or when users create additional spaces
+   * Create the default "Global" space for a new organization.
+   * System-level operation, no user context required.
    */
-  createSpace(
-    name: string,
-    organizationId: OrganizationId,
-    isDefaultSpace?: boolean,
-  ): Promise<Space>;
+  createDefaultSpace(organizationId: OrganizationId): Promise<Space>;
+
+  /**
+   * Create a space for an organization (user-initiated).
+   * Requires admin privileges.
+   */
+  createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse>;
 
   /**
    * List all spaces for a given organization

@@ -154,7 +154,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
     });
 
     try {
-      await this.spacesPort.createSpace('Global', organizationId);
+      await this.spacesPort.createDefaultSpace(organizationId);
       this.logger.info('Default Global space created successfully', {
         organizationId,
       });
