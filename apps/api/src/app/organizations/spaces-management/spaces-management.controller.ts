@@ -56,10 +56,11 @@ export class SpacesManagementController {
     );
 
     try {
-      return await this.spacesManagementService.createSpace(
+      return await this.spacesManagementService.createSpace({
         name,
         organizationId,
-      );
+        userId,
+      });
     } catch (error) {
       if (error instanceof SpaceSlugConflictError) {
         this.logger.warn(

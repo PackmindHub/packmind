@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort, OrganizationId, Space } from '@packmind/types';
+import {
+  CreateSpaceCommand,
+  CreateSpaceResponse,
+  ISpacesPort,
+} from '@packmind/types';
 import { InjectSpacesAdapter } from '../../shared/HexaInjection';
 
 @Injectable()
@@ -10,11 +14,10 @@ export class SpacesManagementService {
     private readonly logger: PackmindLogger,
   ) {}
 
-  async createSpace(
-    name: string,
-    organizationId: OrganizationId,
-  ): Promise<Space> {
-    this.logger.info('Creating space', { organizationId });
-    return this.spacesAdapter.createSpace(name, organizationId, false);
+  async createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
+    this.logger.info('Creating space', {
+      organizationId: command.organizationId,
+    });
+    return this.spacesAdapter.createSpace(command);
   }
 }
