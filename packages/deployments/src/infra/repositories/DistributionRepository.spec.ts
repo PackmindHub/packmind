@@ -7,6 +7,7 @@ import {
   createPackageId,
   createRecipeId,
   createRecipeVersionId,
+  createSpaceId,
   createStandardId,
   createStandardVersionId,
   createTargetId,
@@ -37,6 +38,7 @@ describe('DistributionRepository', () => {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
+      setParameters: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
     } as unknown as jest.Mocked<SelectQueryBuilder<Distribution>>;
@@ -56,6 +58,55 @@ describe('DistributionRepository', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('listByOrganizationIdWithStatus', () => {
+    describe('when spaceId is provided', () => {
+      const spaceId = createSpaceId('space-1');
+
+      beforeEach(async () => {
+        mockQueryBuilder.getMany.mockResolvedValue([]);
+
+        await repository.listByOrganizationIdWithStatus(
+          organizationId,
+          DistributionStatus.success,
+          spaceId,
+        );
+      });
+
+      it('adds spaceId subquery filter via callback', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          expect.any(Function),
+        );
+      });
+
+      it('sets spaceId parameter', () => {
+        expect(mockQueryBuilder.setParameters).toHaveBeenCalledWith({
+          spaceId,
+        });
+      });
+    });
+
+    describe('when spaceId is not provided', () => {
+      beforeEach(async () => {
+        mockQueryBuilder.getMany.mockResolvedValue([]);
+
+        await repository.listByOrganizationIdWithStatus(
+          organizationId,
+          DistributionStatus.success,
+        );
+      });
+
+      it('does not add spaceId subquery filter', () => {
+        expect(mockQueryBuilder.andWhere).not.toHaveBeenCalledWith(
+          expect.any(Function),
+        );
+      });
+
+      it('does not set spaceId parameter', () => {
+        expect(mockQueryBuilder.setParameters).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('findActiveStandardVersionsByTarget', () => {
