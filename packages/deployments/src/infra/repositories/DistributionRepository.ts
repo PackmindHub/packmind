@@ -378,7 +378,7 @@ export class DistributionRepository implements IDistributionRepository {
               .getQuery();
             return `distribution.id IN ${subQuery}`;
           })
-          .setParameters({ spaceId });
+          .setParameter('spaceId', spaceId);
       }
 
       queryBuilder.orderBy('distribution.createdAt', 'DESC');

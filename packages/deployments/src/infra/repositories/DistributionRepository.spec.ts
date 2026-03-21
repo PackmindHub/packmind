@@ -38,7 +38,7 @@ describe('DistributionRepository', () => {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
-      setParameters: jest.fn().mockReturnThis(),
+      setParameter: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
     } as unknown as jest.Mocked<SelectQueryBuilder<Distribution>>;
@@ -81,9 +81,10 @@ describe('DistributionRepository', () => {
       });
 
       it('sets spaceId parameter', () => {
-        expect(mockQueryBuilder.setParameters).toHaveBeenCalledWith({
+        expect(mockQueryBuilder.setParameter).toHaveBeenCalledWith(
+          'spaceId',
           spaceId,
-        });
+        );
       });
     });
 
@@ -104,7 +105,7 @@ describe('DistributionRepository', () => {
       });
 
       it('does not set spaceId parameter', () => {
-        expect(mockQueryBuilder.setParameters).not.toHaveBeenCalled();
+        expect(mockQueryBuilder.setParameter).not.toHaveBeenCalled();
       });
     });
   });
