@@ -168,7 +168,7 @@ describe('playbookRmHandler', () => {
       await playbookRmHandler(buildDeps({ filePath: 'src/index.ts' }));
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Unsupported file path'),
+        'This file was not distributed using packmind',
       );
     });
 
