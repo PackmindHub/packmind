@@ -13,6 +13,10 @@ class CliFormatter {
     return `${chalk.bgGreen.bold(CLI_PREFIX)} ${chalk.green.bold(message)}`;
   }
 
+  public static info(message: string) {
+    return `${chalk.bgBlue.bold(CLI_PREFIX)} ${chalk.blue(message)}`;
+  }
+
   public static warning(message: string) {
     return `${chalk.bgYellow.bold(CLI_PREFIX)} ${chalk.yellow.bold(message)}`;
   }
@@ -52,6 +56,14 @@ export class CliOutput implements IOutput {
   notifySuccess(message: string, help?: HelpMessage) {
     this.notifyMessage(
       CliFormatter.success(message),
+      (msg) => this.logger.log(msg),
+      help,
+    );
+  }
+
+  notifyInfo(message: string, help?: HelpMessage) {
+    this.notifyMessage(
+      CliFormatter.info(message),
       (msg) => this.logger.log(msg),
       help,
     );

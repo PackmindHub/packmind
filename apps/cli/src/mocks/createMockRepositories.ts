@@ -55,6 +55,7 @@ export function createMockOutputRepository(
 ): jest.Mocked<IOutput> {
   return {
     notifyError: jest.fn(),
+    notifyInfo: jest.fn(),
     notifyWarning: jest.fn(),
     notifySuccess: jest.fn(),
     showLoader: jest.fn(),

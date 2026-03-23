@@ -14,6 +14,8 @@ export type Artefact = {
 export interface IOutput {
   notifySuccess(message: string, help?: HelpMessage): void;
 
+  notifyInfo(message: string, help?: HelpMessage): void;
+
   notifyWarning(message: string, help?: HelpMessage): void;
 
   notifyError(message: string, help?: HelpMessage): void;
