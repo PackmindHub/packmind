@@ -6,6 +6,7 @@ import {
   CreateSpaceResponse,
   IAccountsPort,
 } from '@packmind/types';
+import { SpaceName } from '../../domain/SpaceName';
 import { SpaceService } from '../services/SpaceService';
 
 const origin = 'CreateSpaceUseCase';
@@ -25,8 +26,10 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
   protected async executeForAdmins(
     command: CreateSpaceCommand & AdminContext,
   ): Promise<CreateSpaceResponse> {
+    const spaceName = new SpaceName(command.name);
+
     return this.spaceService.createSpace(
-      command.name,
+      spaceName.value,
       createOrganizationId(command.organizationId),
       false,
     );

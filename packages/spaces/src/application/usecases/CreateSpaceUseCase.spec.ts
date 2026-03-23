@@ -122,5 +122,35 @@ describe('CreateSpaceUseCase', () => {
         );
       });
     });
+
+    describe('when the name is empty', () => {
+      it('throws InvalidSpaceNameError with empty message', async () => {
+        await expect(
+          useCase.execute(buildCommand({ name: '' })),
+        ).rejects.toThrow('Invalid space name: name cannot be empty');
+      });
+    });
+
+    describe('when the name has leading and trailing whitespace', () => {
+      const createdSpace = spaceFactory({
+        organizationId,
+        name: 'My Space',
+        isDefaultSpace: false,
+      });
+
+      beforeEach(() => {
+        spaceService.createSpace.mockResolvedValue(createdSpace);
+      });
+
+      it('trims the name before passing it to the service', async () => {
+        await useCase.execute(buildCommand({ name: '  My Space  ' }));
+
+        expect(spaceService.createSpace).toHaveBeenCalledWith(
+          'My Space',
+          organizationId,
+          false,
+        );
+      });
+    });
   });
 });
