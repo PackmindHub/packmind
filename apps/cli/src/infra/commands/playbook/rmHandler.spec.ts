@@ -96,6 +96,11 @@ describe('playbookRmHandler', () => {
         packages: { 'my-package': '*' },
         agents: [],
       }),
+      getSpaces: jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'space-123', name: 'My Space', slug: 'my-space' },
+        ]),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();

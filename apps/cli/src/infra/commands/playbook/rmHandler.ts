@@ -112,6 +112,9 @@ export async function playbookRmHandler(
     return;
   }
 
+  const allSpaces = await packmindCliHexa.getSpaces();
+  const spaceName = allSpaces.find((s) => s.id === lockEntry.spaceId)?.name;
+
   playbookLocalRepository.addChange({
     filePath: normalizedFilePath,
     artifactType: lockEntry.type,
@@ -120,12 +123,14 @@ export async function playbookRmHandler(
     changeType: 'removed',
     content: '',
     spaceId: lockEntry.spaceId,
+    spaceName,
     targetId: lockFile.targetId,
     addedAt: new Date().toISOString(),
   });
 
+  const spaceInfo = spaceName ? ` in space "${spaceName}"` : '';
   logSuccessConsole(
-    `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook.`,
+    `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook${spaceInfo}`,
   );
   exit(0);
 }
