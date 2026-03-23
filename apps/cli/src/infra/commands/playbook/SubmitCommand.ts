@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync, rmSync } from 'fs';
 import { execSync } from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -65,7 +65,8 @@ export const submitPlaybookCommand = command({
       exit: process.exit,
       message,
       openEditor: (prefill: string) => openEditorForMessage(prefill),
-      unlinkFile: (p: string) => unlinkSync(p),
+      unlinkSync: (p: string) => unlinkSync(p),
+      rmSync: (p: string, opts?: { recursive?: boolean }) => rmSync(p, opts),
     });
   },
 });
