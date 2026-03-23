@@ -549,6 +549,7 @@ describe('playbookSubmitHandler', () => {
 
       expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
         '.packmind/standards/my-standard.md',
+        'space-123',
       );
     });
 
@@ -633,6 +634,7 @@ describe('playbookSubmitHandler', () => {
 
       expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
         '.packmind/standards/my-standard.md',
+        'space-A',
       );
     });
 
@@ -898,6 +900,7 @@ describe('playbookSubmitHandler', () => {
 
       expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
         '.claude/commands/my-command.md',
+        'space-123',
       );
     });
 
@@ -994,6 +997,7 @@ describe('playbookSubmitHandler', () => {
 
       expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
         '.claude/commands/my-command.md',
+        'space-123',
       );
     });
 
@@ -1165,6 +1169,7 @@ describe('playbookSubmitHandler', () => {
 
       expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
         '.claude/skills/my-skill',
+        'space-123',
       );
     });
 

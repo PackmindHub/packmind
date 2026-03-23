@@ -593,7 +593,7 @@ export async function playbookSubmitHandler(
       'Nothing to submit — no changes detected compared to deployed versions.',
     );
     for (const entry of changes) {
-      playbookLocalRepository.removeChange(entry.filePath);
+      playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
     }
     exit(0);
     return;
@@ -651,7 +651,7 @@ export async function playbookSubmitHandler(
           `Space ${spaceId} no longer exists — cleaning up local files.`,
         );
         for (const filePath of filePaths) {
-          playbookLocalRepository.removeChange(filePath);
+          playbookLocalRepository.removeChange(filePath, spaceId);
         }
         if (projectDir) {
           const removedEntries = spaceChanges.filter(
@@ -679,7 +679,7 @@ export async function playbookSubmitHandler(
     } else {
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
       for (const filePath of filePaths) {
-        playbookLocalRepository.removeChange(filePath);
+        playbookLocalRepository.removeChange(filePath, spaceId);
       }
 
       // Delete local files for removed entries
