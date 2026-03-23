@@ -129,11 +129,13 @@ describe('filterAdditionalProperties', () => {
     });
   });
 
-  it('returns empty object when no properties match', () => {
-    const props = { model: 'opus', effort: 'high' };
-    expect(filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS)).toEqual(
-      {},
-    );
+  describe('when no properties match', () => {
+    it('returns empty object', () => {
+      const props = { model: 'opus', effort: 'high' };
+      expect(
+        filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS),
+      ).toEqual({});
+    });
   });
 
   it('filters correctly for Cursor supported fields', () => {
@@ -149,12 +151,14 @@ describe('filterAdditionalProperties', () => {
     );
   });
 
-  it('returns all properties when all match the supported list', () => {
-    const props = { disableModelInvocation: false };
-    expect(
-      filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
-    ).toEqual({
-      disableModelInvocation: false,
+  describe('when all properties match the supported list', () => {
+    it('returns all properties', () => {
+      const props = { disableModelInvocation: false };
+      expect(
+        filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
+      ).toEqual({
+        disableModelInvocation: false,
+      });
     });
   });
 });
