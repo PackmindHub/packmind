@@ -37,7 +37,6 @@ import {
 } from '@packmind/types';
 import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../guards/space-access.guard';
 import {
   ChangeProposalPayloadMismatchError,
   UnsupportedChangeProposalTypeError,
@@ -50,7 +49,7 @@ const origin = 'OrganizationsSpacesChangeProposalsController';
  * Actual path: /organizations/:orgId/spaces/:spaceId/change-proposals (inherited via RouterModule in AppModule)
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesChangeProposalsController {
   constructor(
     private readonly changeProposalsService: ChangeProposalsService,

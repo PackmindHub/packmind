@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { OrganizationsSpacesRecipesChangeProposalsController } from './recipes-change-proposals.controller';
 import { RecipesChangeProposalsService } from './recipes-change-proposals.service';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
@@ -16,7 +15,6 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
   providers: [
     RecipesChangeProposalsService,
     OrganizationAccessGuard,
-    SpaceAccessGuard,
     {
       provide: PackmindLogger,
       useFactory: () =>
