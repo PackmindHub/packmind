@@ -194,6 +194,53 @@ describe('buildSkillMdContent', () => {
         expect(content).not.toContain('metadata');
       });
     });
+
+    describe('when additionalProperties is set', () => {
+      it('includes a simple scalar property with kebab-case key', () => {
+        const content = buildSkillMdContent(
+          makeVersion({
+            additionalProperties: { argumentHint: '<url>' },
+          }),
+        );
+
+        expect(content).toContain('argument-hint');
+        expect(content).toContain('<url>');
+      });
+
+      it('includes a boolean additional property', () => {
+        const content = buildSkillMdContent(
+          makeVersion({
+            additionalProperties: { userInvocable: true },
+          }),
+        );
+
+        expect(content).toContain('user-invocable');
+      });
+
+      it('includes a complex nested additional property', () => {
+        const content = buildSkillMdContent(
+          makeVersion({
+            additionalProperties: {
+              hooks: { preToolUse: [{ matcher: 'Bash', command: 'echo hi' }] },
+            },
+          }),
+        );
+
+        expect(content).toContain('hooks');
+        expect(content).toContain('preToolUse');
+      });
+    });
+
+    describe('when additionalProperties is not set', () => {
+      it('omits additional properties from the frontmatter', () => {
+        const content = buildSkillMdContent(
+          makeVersion({ additionalProperties: undefined }),
+        );
+
+        expect(content).not.toContain('argument-hint');
+        expect(content).not.toContain('user-invocable');
+      });
+    });
   });
 
   describe('body', () => {

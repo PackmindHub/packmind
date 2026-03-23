@@ -9,3 +9,5 @@ export * from './contracts';
 export * from './ports/ISkillsPort';
 export * from './events';
 export * from './errors';
+export * from './skillAdditionalProperties';
+export { isDeepValue, toYamlLike } from './toYamlLike';

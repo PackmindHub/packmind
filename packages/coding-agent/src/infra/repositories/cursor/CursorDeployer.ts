@@ -1,6 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CAMEL_TO_YAML_KEY,
   CODING_AGENT_ARTEFACT_PATHS,
+  CURSOR_ADDITIONAL_FIELDS,
   DeleteItem,
   DeleteItemType,
   FileUpdates,
@@ -12,10 +14,14 @@ import {
   SkillVersion,
   StandardVersion,
   Target,
+  camelToKebab,
+  filterAdditionalProperties,
+  sortAdditionalPropertiesKeys,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { formatAdditionalPropertyYaml } from '../utils/YamlFrontmatterUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const origin = 'CursorDeployer';
@@ -634,6 +640,21 @@ ${instructionContent}`;
         )
         .join('\n');
       frontmatterFields.push(`metadata:\n${metadataYaml}`);
+    }
+
+    // Emit supported additional properties
+    if (
+      skillVersion.additionalProperties &&
+      Object.keys(skillVersion.additionalProperties).length > 0
+    ) {
+      const filtered = filterAdditionalProperties(
+        skillVersion.additionalProperties,
+        CURSOR_ADDITIONAL_FIELDS,
+      );
+      for (const [camelKey, value] of sortAdditionalPropertiesKeys(filtered)) {
+        const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
+        frontmatterFields.push(formatAdditionalPropertyYaml(yamlKey, value));
+      }
     }
 
     const frontmatter = `---

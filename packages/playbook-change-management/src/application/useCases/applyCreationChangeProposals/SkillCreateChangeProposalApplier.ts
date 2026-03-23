@@ -3,14 +3,20 @@ import {
   ICreateChangeProposalApplier,
 } from './ICreateChangeProposalApplier';
 import {
+  CAMEL_TO_YAML_KEY,
   ChangeProposal,
   ChangeProposalType,
   ISkillsPort,
   OrganizationId,
   Skill,
   SpaceId,
+  camelToKebab,
+  toYamlLike,
 } from '@packmind/types';
-import { serializeSkillMetadata } from '@packmind/node-utils';
+import {
+  serializeSkillMetadata,
+  sortAdditionalPropertiesKeys,
+} from '@packmind/node-utils';
 
 export class SkillCreateChangeProposalApplier implements ICreateChangeProposalApplier<ChangeProposalType.createSkill> {
   constructor(private readonly skillsPort: ISkillsPort) {}
@@ -29,6 +35,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       compatibility,
       metadata,
       allowedTools,
+      additionalProperties,
       files,
     } = changeProposal.payload;
 
@@ -41,6 +48,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       compatibility,
       metadata,
       allowedTools,
+      additionalProperties,
     });
 
     // Prepare files array with SKILL.md
@@ -77,6 +85,7 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
     compatibility?: string;
     metadata?: Record<string, string>;
     allowedTools?: string;
+    additionalProperties?: Record<string, unknown>;
   }): string {
     const frontmatter = [
       `name: ${JSON.stringify(metadata.name)}`,
@@ -100,6 +109,18 @@ export class SkillCreateChangeProposalApplier implements ICreateChangeProposalAp
       frontmatter.push(
         `allowed-tools: ${JSON.stringify(metadata.allowedTools)}`,
       );
+    }
+    if (metadata.additionalProperties) {
+      for (const [camelKey, value] of sortAdditionalPropertiesKeys(
+        metadata.additionalProperties,
+      )) {
+        const kebabKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
+        if (typeof value === 'object' && value !== null) {
+          frontmatter.push(`${kebabKey}:\n${toYamlLike(value, 1)}`);
+        } else {
+          frontmatter.push(`${kebabKey}: ${toYamlLike(value, 0)}`);
+        }
+      }
     }
 
     return `---\n${frontmatter.join('\n')}\n---\n\n${metadata.prompt}`;

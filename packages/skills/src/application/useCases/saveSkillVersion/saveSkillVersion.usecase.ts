@@ -115,6 +115,7 @@ export class SaveSkillVersionUsecase
         license: skillVersion.license,
         compatibility: skillVersion.compatibility,
         metadata: skillVersion.metadata,
+        additionalProperties: skillVersion.additionalProperties,
         version: newVersionNumber,
       });
 
@@ -152,6 +153,7 @@ export class SaveSkillVersionUsecase
         license: skillVersion.license,
         compatibility: skillVersion.compatibility,
         metadata: skillVersion.metadata,
+        additionalProperties: skillVersion.additionalProperties,
         version: newVersionNumber,
         userId: skillVersion.userId,
       });
