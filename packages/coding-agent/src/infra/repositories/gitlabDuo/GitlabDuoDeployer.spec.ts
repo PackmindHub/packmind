@@ -405,6 +405,27 @@ describe('GitlabDuoDeployer', () => {
       });
     });
 
+    describe('when skill has empty metadata', () => {
+      let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
+
+      beforeEach(async () => {
+        const skillVersion = skillVersionFactory({
+          slug: 'no-metadata-skill',
+          metadata: {},
+        });
+
+        result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('does not include metadata field in frontmatter', () => {
+        expect(result.createOrUpdate[0].content).not.toContain('metadata:');
+      });
+    });
+
     describe('allowed-tools frontmatter key', () => {
       let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
 
