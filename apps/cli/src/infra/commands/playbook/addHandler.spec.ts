@@ -40,7 +40,6 @@ const VALID_SKILL_MD_CONTENT = [
 describe('playbookAddHandler', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
-  let mockGetCwd: jest.Mock;
   let mockReadFile: jest.Mock;
   let mockReadSkillDirectory: jest.Mock;
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
@@ -107,7 +106,6 @@ describe('playbookAddHandler', () => {
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
-    mockGetCwd = jest.fn().mockReturnValue('/project');
     mockReadFile = jest.fn().mockReturnValue(VALID_COMMAND_CONTENT);
     mockReadSkillDirectory = jest.fn().mockResolvedValue([]);
 
@@ -137,7 +135,7 @@ describe('playbookAddHandler', () => {
       packmindCliHexa: mockPackmindCliHexa,
       filePath: '.claude/commands/my-command.md',
       exit: mockExit,
-      getCwd: mockGetCwd,
+      cwd: '/project',
       readFile: mockReadFile,
       readSkillDirectory: mockReadSkillDirectory,
       playbookLocalRepository: mockPlaybookLocalRepository,
