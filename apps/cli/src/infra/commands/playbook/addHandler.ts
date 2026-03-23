@@ -22,6 +22,7 @@ import {
   ArtifactType,
   ArtifactVersionEntry,
   FileModification,
+  MultiFileCodingAgent,
   Space,
 } from '@packmind/types';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
@@ -158,7 +159,7 @@ export async function playbookAddHandler(
   // Try resolving artifact type and agent from the lock file first (source of truth),
   // then fall back to path-based pattern matching for new artifacts.
   let artifactType: ArtifactType;
-  let codingAgent: string;
+  let codingAgent: MultiFileCodingAgent;
 
   const earlyTargetDir = await findNearestConfigDir(
     path.dirname(absolutePath),
