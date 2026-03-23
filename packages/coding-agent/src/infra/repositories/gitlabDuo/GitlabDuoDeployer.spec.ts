@@ -384,6 +384,27 @@ describe('GitlabDuoDeployer', () => {
       });
     });
 
+    describe('when metadata contains non-string values', () => {
+      it('coerces values to strings without crashing', async () => {
+        const skillVersion = skillVersionFactory({
+          metadata: {
+            category: 'test',
+            disableModelInvocation: true,
+          } as unknown as Record<string, string>,
+        });
+
+        const result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(result.createOrUpdate[0].content).toContain(
+          "disableModelInvocation: 'true'",
+        );
+      });
+    });
+
     describe('allowed-tools frontmatter key', () => {
       it('renders in kebab-case', async () => {
         const skillVersion = skillVersionFactory({
