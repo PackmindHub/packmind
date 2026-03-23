@@ -16,5 +16,6 @@ export type SkillVersion = {
   compatibility?: string;
   metadata?: Record<string, string>;
   allowedTools?: string;
+  additionalProperties?: Record<string, unknown>;
   files?: SkillFile[];
 };

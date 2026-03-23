@@ -4285,4 +4285,285 @@ describe('ClaudeDeployer', () => {
       });
     });
   });
+
+  describe('when skill has additional properties', () => {
+    describe('when additional property is a boolean', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { disableModelInvocation: true },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders boolean value in kebab-case YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('disable-model-invocation: true');
+      });
+    });
+
+    describe('when additional property is a string', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { model: 'opus' },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders string value with single quotes in YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("model: 'opus'");
+      });
+    });
+
+    describe('when additional property is effort', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { effort: 'high' },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders effort value with single quotes in YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("effort: 'high'");
+      });
+    });
+
+    describe('when additional property is a nested object', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              hooks: { preToolCall: 'validate-input' },
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders nested object with indented YAML keys', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("hooks:\n  preToolCall: 'validate-input'");
+      });
+    });
+
+    describe('when additional property is an array', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              allowedTools: ['read', 'write', 'execute'],
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders simple array values with inline flow syntax', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(
+          "allowed-tools: ['read', 'write', 'execute']",
+        );
+      });
+    });
+
+    describe('when multiple additional properties are provided in reversed order', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              hooks: { preToolCall: 'validate' },
+              model: 'opus',
+              argumentHint: 'my hint',
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders argument-hint before model', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('argument-hint:')).toBeLessThan(
+          content.indexOf('model:'),
+        );
+      });
+
+      it('renders model before hooks', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('model:')).toBeLessThan(
+          content.indexOf('hooks:'),
+        );
+      });
+    });
+
+    describe('when mixing known and unknown additional properties', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              zebra: 'z-value',
+              model: 'opus',
+              alpha: 'a-value',
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders known properties before unknown ones', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('model:')).toBeLessThan(
+          content.indexOf('alpha:'),
+        );
+      });
+
+      it('renders unknown properties in alphabetical order', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('alpha:')).toBeLessThan(
+          content.indexOf('zebra:'),
+        );
+      });
+    });
+
+    describe('when additional property has unordered nested object keys', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              hooks: { zebra: 'z', alpha: 'a', middle: 'm' },
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders nested alpha before middle', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('alpha:')).toBeLessThan(
+          content.indexOf('middle:'),
+        );
+      });
+
+      it('renders nested middle before zebra', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('middle:')).toBeLessThan(
+          content.indexOf('zebra:'),
+        );
+      });
+    });
+
+    describe('when additional property is a simple array', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              argumentHint: ['issue-number'],
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders as inline flow sequence', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("argument-hint: ['issue-number']");
+      });
+    });
+
+    describe('when additional property has deep nesting with arrays', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              hooks: {
+                PreToolUse: [
+                  {
+                    matcher: 'Bash',
+                    hooks: [
+                      {
+                        type: 'command',
+                        command: './scripts/security-check.sh',
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders hooks key in frontmatter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('hooks:');
+      });
+
+      it('renders nested PreToolUse key', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('PreToolUse:');
+      });
+
+      it('does not produce [object Object] for nested values', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('[object Object]');
+      });
+    });
+  });
 });

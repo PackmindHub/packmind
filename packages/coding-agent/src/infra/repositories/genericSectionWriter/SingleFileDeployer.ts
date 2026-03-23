@@ -240,8 +240,24 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         artifactId: skillVersion.skillId as string,
       });
 
-      // Deploy additional skill files if provided
-      if (skillFilesMap) {
+      // Deploy additional skill files from skillVersion.files first, fallback to skillFilesMap
+      if (skillVersion.files && skillVersion.files.length > 0) {
+        for (const file of skillVersion.files) {
+          if (file.path.toUpperCase() === 'SKILL.MD') {
+            continue;
+          }
+          fileUpdates.createOrUpdate.push({
+            path: `${basePath}/${file.path}`,
+            content: file.content,
+            isBase64: file.isBase64,
+            skillFileId: file.id,
+            skillFilePermissions: file.permissions,
+            artifactType: 'skill',
+            artifactName: skillVersion.name,
+            artifactId: skillVersion.skillId as string,
+          });
+        }
+      } else if (skillFilesMap) {
         const skillFiles = skillFilesMap.get(skillVersion.id);
         if (skillFiles) {
           for (const skillFile of skillFiles) {
@@ -462,14 +478,16 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
     if (skillVersion.allowedTools) {
       frontmatterLines.push(
-        `allowedTools: '${this.escapeSingleQuotes(skillVersion.allowedTools)}'`,
+        `allowed-tools: '${this.escapeSingleQuotes(skillVersion.allowedTools)}'`,
       );
     }
 
     if (skillVersion.metadata) {
       frontmatterLines.push('metadata:');
       for (const [key, value] of Object.entries(skillVersion.metadata)) {
-        frontmatterLines.push(`  ${key}: '${this.escapeSingleQuotes(value)}'`);
+        frontmatterLines.push(
+          `  ${key}: '${this.escapeSingleQuotes(String(value))}'`,
+        );
       }
     }
 

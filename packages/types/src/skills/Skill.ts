@@ -16,6 +16,7 @@ export type Skill = WithCreator<{
   compatibility?: string;
   metadata?: Record<string, string>;
   allowedTools?: string;
+  additionalProperties?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }>;

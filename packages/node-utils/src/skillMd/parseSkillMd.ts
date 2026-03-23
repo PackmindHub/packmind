@@ -1,5 +1,25 @@
 import { parseSkillMdContent } from './parseSkillMdContent';
-import { serializeSkillMetadata } from './parseSkillMdContent';
+import {
+  canonicalJsonStringify,
+  serializeSkillMetadata,
+} from './parseSkillMdContent';
+import { CLAUDE_CODE_ADDITIONAL_FIELDS } from '@packmind/types';
+
+export {
+  CLAUDE_CODE_ADDITIONAL_FIELDS,
+  CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER,
+  sortAdditionalPropertiesKeys,
+} from '@packmind/types';
+
+/** Known Agent Skills spec fields (post-normalization). */
+const SPEC_FIELDS = new Set([
+  'name',
+  'description',
+  'license',
+  'compatibility',
+  'allowedTools',
+  'metadata',
+]);
 
 /**
  * Typed representation of a parsed SKILL.md file with individual
@@ -15,6 +35,17 @@ export type ParsedSkillMd = {
   compatibility: string;
   allowedTools: string;
   metadataJson: string;
+  /**
+   * Claude Code additional properties, keyed by camelCase name.
+   *
+   * Serialization contract:
+   * - DB stores raw values (JSONB) — e.g. `"opus"`, `true`, `{ preToolCall: "echo hello" }`.
+   * - The diff pipeline (CLI → API) uses `JSON.stringify(rawValue)` so values
+   *   are transported as JSON-encoded strings.
+   * - The applier uses `JSON.parse(newValue)` to recover the raw value before
+   *   persisting it back to the DB.
+   */
+  additionalProperties: Record<string, string>;
 };
 
 /**
@@ -26,6 +57,9 @@ export type ParsedSkillMd = {
  * Individual spec fields (`license`, `compatibility`, `allowedTools`) are
  * extracted as strings. The generic `metadata` record is serialized as
  * deterministic JSON in `metadataJson`.
+ *
+ * Claude Code-specific fields are extracted into `additionalProperties`
+ * with camelCase keys and JSON-serialized values.
  *
  * @param content - Raw SKILL.md file content
  * @returns Parsed fields and body, or `null` on failure
@@ -50,6 +84,15 @@ export function parseSkillMd(content: string): ParsedSkillMd | null {
       ? serializeSkillMetadata(metadata as Record<string, unknown>)
       : '{}';
 
+  // Extract Claude Code additional properties
+  const additionalProperties: Record<string, string> = {};
+  for (const [key, value] of Object.entries(properties)) {
+    if (SPEC_FIELDS.has(key)) continue;
+    const camelKey = CLAUDE_CODE_ADDITIONAL_FIELDS[key];
+    if (!camelKey) continue;
+    additionalProperties[camelKey] = canonicalJsonStringify(value);
+  }
+
   return {
     name,
     description,
@@ -58,5 +101,6 @@ export function parseSkillMd(content: string): ParsedSkillMd | null {
     compatibility,
     allowedTools,
     metadataJson,
+    additionalProperties,
   };
 }

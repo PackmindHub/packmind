@@ -1,7 +1,11 @@
 import { parseSkillMdContent } from '@packmind/node-utils';
 
 import { SkillParseError } from '../errors/SkillParseError';
-import { ParsedSkill, SkillProperties } from '../../domain/SkillProperties';
+import {
+  CLAUDE_CODE_ADDITIONAL_FIELDS,
+  ParsedSkill,
+  SkillProperties,
+} from '../../domain/SkillProperties';
 
 const FRONTMATTER_DELIMITER = '---';
 
@@ -31,10 +35,37 @@ export class SkillParser {
       );
     }
 
+    const { properties, additionalProperties } =
+      this.extractAdditionalProperties(result.properties);
+
     return {
-      metadata: result.properties as SkillProperties,
+      metadata: {
+        ...properties,
+        ...(Object.keys(additionalProperties).length > 0 && {
+          additionalProperties,
+        }),
+      } as SkillProperties,
       body: result.body,
     };
+  }
+
+  private extractAdditionalProperties(properties: Record<string, unknown>): {
+    properties: Record<string, unknown>;
+    additionalProperties: Record<string, unknown>;
+  } {
+    const additionalProperties: Record<string, unknown> = {};
+    const remaining: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(properties)) {
+      const camelCaseKey = CLAUDE_CODE_ADDITIONAL_FIELDS[key];
+      if (camelCaseKey) {
+        additionalProperties[camelCaseKey] = value;
+      } else {
+        remaining[key] = value;
+      }
+    }
+
+    return { properties: remaining, additionalProperties };
   }
 
   private validateFrontmatterStructure(content: string): void {

@@ -746,6 +746,162 @@ Content`,
 
       expect(result.skill.allowedTools).toBe('Bash Read Write');
     });
+
+    it('creates skill with additionalProperties', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: skill-with-props
+description: Skill with additional properties
+model: opus
+user-invocable: false
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const mockSkill: Skill = {
+        id: createSkillId('skill-456'),
+        name: 'skill-with-props',
+        slug: 'skill-with-props',
+        description: 'Skill with additional properties',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        additionalProperties: { model: 'opus', userInvocable: false },
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-456'),
+        skillId: mockSkill.id,
+        userId,
+        name: 'skill-with-props',
+        slug: 'skill-with-props',
+        description: 'Skill with additional properties',
+        prompt: 'Content',
+        version: 1,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        additionalProperties: { model: 'opus', userInvocable: false },
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([]);
+      mockSkillService.addSkill.mockResolvedValue(mockSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+      await usecase.execute(command);
+
+      expect(mockSkillService.addSkill).toHaveBeenCalledWith(
+        expect.objectContaining({
+          additionalProperties: { model: 'opus', userInvocable: false },
+        }),
+      );
+    });
+
+    it('passes additionalProperties to skill version', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: skill-with-props
+description: Skill with additional properties
+model: opus
+user-invocable: false
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const mockSkill: Skill = {
+        id: createSkillId('skill-456'),
+        name: 'skill-with-props',
+        slug: 'skill-with-props',
+        description: 'Skill with additional properties',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        additionalProperties: { model: 'opus', userInvocable: false },
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-456'),
+        skillId: mockSkill.id,
+        userId,
+        name: 'skill-with-props',
+        slug: 'skill-with-props',
+        description: 'Skill with additional properties',
+        prompt: 'Content',
+        version: 1,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        additionalProperties: { model: 'opus', userInvocable: false },
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([]);
+      mockSkillService.addSkill.mockResolvedValue(mockSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+      await usecase.execute(command);
+
+      expect(mockSkillVersionService.addSkillVersion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          additionalProperties: { model: 'opus', userInvocable: false },
+        }),
+      );
+    });
   });
 
   describe('when skill slug already exists', () => {
@@ -1442,6 +1598,104 @@ Same content`,
 
           const result = await usecase.execute({
             files: filesWithDifferentMetadata,
+            organizationId,
+            userId,
+            spaceId,
+          });
+
+          expect(result.versionCreated).toBe(true);
+        });
+      });
+    });
+
+    describe('with additionalProperties', () => {
+      describe('when additionalProperties match', () => {
+        it('detects identical content', async () => {
+          const filesWithAdditionalProps: UploadSkillFileInput[] = [
+            {
+              path: 'SKILL.md',
+              content: `---
+name: existing-skill
+description: A test skill
+model: opus
+user-invocable: false
+---
+
+Same content`,
+              permissions: 'rw-r--r--',
+            },
+          ];
+
+          const skillWithAdditionalProps = {
+            ...existingSkill,
+            additionalProperties: { model: 'opus', userInvocable: false },
+          };
+          const versionWithAdditionalProps = {
+            ...latestSkillVersion,
+            additionalProperties: { model: 'opus', userInvocable: false },
+          };
+
+          mockSkillService.listSkillsBySpace.mockResolvedValue([
+            skillWithAdditionalProps,
+          ]);
+          mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
+            versionWithAdditionalProps,
+          );
+
+          const result = await usecase.execute({
+            files: filesWithAdditionalProps,
+            organizationId,
+            userId,
+            spaceId,
+          });
+
+          expect(result.versionCreated).toBe(false);
+        });
+      });
+
+      describe('when additionalProperties differ', () => {
+        it('creates new version', async () => {
+          const filesWithDifferentProps: UploadSkillFileInput[] = [
+            {
+              path: 'SKILL.md',
+              content: `---
+name: existing-skill
+description: A test skill
+model: sonnet
+---
+
+Same content`,
+              permissions: 'rw-r--r--',
+            },
+          ];
+
+          const skillWithAdditionalProps = {
+            ...existingSkill,
+            additionalProperties: { model: 'opus' },
+          };
+          const versionWithAdditionalProps = {
+            ...latestSkillVersion,
+            additionalProperties: { model: 'opus' },
+          };
+
+          mockSkillService.listSkillsBySpace.mockResolvedValue([
+            skillWithAdditionalProps,
+          ]);
+          mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
+            versionWithAdditionalProps,
+          );
+
+          const updatedSkill = { ...skillWithAdditionalProps, version: 2 };
+          mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+          mockSkillVersionService.addSkillVersion.mockResolvedValue({
+            ...versionWithAdditionalProps,
+            id: createSkillVersionId('version-2'),
+            version: 2,
+          });
+          mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+          const result = await usecase.execute({
+            files: filesWithDifferentProps,
             organizationId,
             userId,
             spaceId,

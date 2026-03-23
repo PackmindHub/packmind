@@ -111,6 +111,114 @@ description: A sample skill.
     });
   });
 
+  describe('with Claude Code additional fields', () => {
+    it('extracts kebab-case Claude fields into additionalProperties', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+argument-hint: "<query>"
+disable-model-invocation: true
+user-invocable: true
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        argumentHint: '<query>',
+        disableModelInvocation: true,
+        userInvocable: true,
+      });
+    });
+
+    it('extracts non-kebab-case Claude fields into additionalProperties', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+model: opus
+context: file
+agent: true
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        model: 'opus',
+        context: 'file',
+        agent: true,
+      });
+    });
+
+    it('extracts nested hooks object into additionalProperties', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+hooks:
+  preToolCall: echo hello
+  postToolCall: echo bye
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        hooks: {
+          preToolCall: 'echo hello',
+          postToolCall: 'echo bye',
+        },
+      });
+    });
+
+    describe('when no Claude fields are present', () => {
+      it('does not include additionalProperties', () => {
+        const content = `---
+name: my-skill
+description: A sample skill.
+---
+
+# My Skill
+`;
+
+        const result = parser.parse(content);
+
+        expect(result.metadata.additionalProperties).toBeUndefined();
+      });
+    });
+
+    describe('when standard fields are alongside Claude fields', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+license: MIT
+argument-hint: "<query>"
+---
+
+# My Skill
+`;
+
+      it('preserves standard fields', () => {
+        const result = parser.parse(content);
+
+        expect(result.metadata.license).toBe('MIT');
+      });
+
+      it('extracts Claude fields into additionalProperties', () => {
+        const result = parser.parse(content);
+
+        expect(result.metadata.additionalProperties).toEqual({
+          argumentHint: '<query>',
+        });
+      });
+    });
+  });
+
   describe('with missing frontmatter', () => {
     it('throws SkillParseError for content without opening delimiter', () => {
       const content = `# My Skill

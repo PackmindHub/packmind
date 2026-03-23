@@ -1,5 +1,6 @@
 export { DiffService } from './DiffService';
 export { ChangeProposalConflictError } from './ChangeProposalConflictError';
+export { ChangeProposalPayloadParseError } from './ChangeProposalPayloadParseError';
 export { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
 export * from './AbstractChangeProposalApplier';
 export { StandardChangeProposalApplier } from './StandardChangeProposalApplier';

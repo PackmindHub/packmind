@@ -28,7 +28,10 @@ import {
   GET_CHANGE_PROPOSALS_BY_SKILL_KEY,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
 } from '../../api/queryKeys';
-import { getSkillByIdKey } from '../../../skills/api/queryKeys';
+import {
+  getSkillByIdKey,
+  getSkillBySlugKey,
+} from '../../../skills/api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
 import { useNavigateAfterApply } from '../../hooks/useNavigateAfterApply';
@@ -225,6 +228,9 @@ export function SkillReviewDetail({
         }),
         queryClient.invalidateQueries({
           queryKey: getSkillByIdKey(spaceId, skillId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getSkillBySlugKey(spaceId, skillSlug),
         }),
       ]);
 

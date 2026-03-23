@@ -375,4 +375,144 @@ describe('CopilotDeployer', () => {
       });
     });
   });
+
+  describe('when skill has additional properties', () => {
+    describe('when additional property is a supported boolean (disableModelInvocation)', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { disableModelInvocation: true },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders boolean value in kebab-case YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('disable-model-invocation: true');
+      });
+    });
+
+    describe('when additional property is a supported string (argumentHint)', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { argumentHint: 'Provide a file path' },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders string value with single quotes in YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("argument-hint: 'Provide a file path'");
+      });
+    });
+
+    describe('when additional property is a supported boolean (userInvocable)', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { userInvocable: true },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders user-invocable boolean in YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('user-invocable: true');
+      });
+    });
+
+    describe('when additional properties include unsupported fields', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              disableModelInvocation: true,
+              model: 'opus',
+              effort: 'high',
+              context: 'some-context',
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders supported disable-model-invocation property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('disable-model-invocation: true');
+      });
+
+      it('does not render unsupported model property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('model:');
+      });
+
+      it('does not render unsupported effort property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('effort:');
+      });
+
+      it('does not render unsupported context property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('context:');
+      });
+    });
+
+    describe('when multiple supported properties are provided', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              userInvocable: true,
+              argumentHint: 'hint',
+              disableModelInvocation: false,
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders argument-hint before disable-model-invocation', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('argument-hint:')).toBeLessThan(
+          content.indexOf('disable-model-invocation:'),
+        );
+      });
+
+      it('renders disable-model-invocation before user-invocable', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('disable-model-invocation:')).toBeLessThan(
+          content.indexOf('user-invocable:'),
+        );
+      });
+    });
+  });
 });

@@ -3,6 +3,7 @@ import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { createSkillFileId } from '../../skills/SkillFileId';
 import { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
+import { ChangeProposalPayloadParseError } from './ChangeProposalPayloadParseError';
 import { SkillVersionWithFiles, SKILL_CHANGE_TYPES } from './types';
 
 export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<SkillVersionWithFiles> {
@@ -64,11 +65,20 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
         ChangeProposalType.updateSkillMetadata,
       )
     ) {
+      let parsedMetadata: Record<string, string> | undefined;
+      if (changeProposal.payload.newValue) {
+        try {
+          parsedMetadata = JSON.parse(changeProposal.payload.newValue);
+        } catch (err) {
+          throw new ChangeProposalPayloadParseError(
+            changeProposal.id,
+            (err as Error).message,
+          );
+        }
+      }
       return {
         ...source,
-        metadata: changeProposal.payload.newValue
-          ? JSON.parse(changeProposal.payload.newValue)
-          : undefined,
+        metadata: parsedMetadata,
       };
     }
 
@@ -197,6 +207,36 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
       return {
         ...source,
         files: filteredFiles,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillAdditionalProperty,
+      )
+    ) {
+      const { targetId: key, newValue } = changeProposal.payload;
+      const currentProps = { ...(source.additionalProperties ?? {}) };
+
+      if (newValue === '') {
+        delete currentProps[key];
+      } else {
+        // newValue is JSON-encoded (e.g. '"opus"', 'true'); parse back to raw for DB storage
+        try {
+          currentProps[key] = JSON.parse(newValue);
+        } catch (err) {
+          throw new ChangeProposalPayloadParseError(
+            changeProposal.id,
+            (err as Error).message,
+          );
+        }
+      }
+
+      return {
+        ...source,
+        additionalProperties:
+          Object.keys(currentProps).length > 0 ? currentProps : undefined,
       };
     }
 

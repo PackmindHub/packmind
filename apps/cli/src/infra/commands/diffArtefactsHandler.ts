@@ -19,6 +19,7 @@ import {
   logSuccessConsole,
 } from '../utils/consoleLogger';
 import { formatContentDiff } from '../utils/diffFormatter';
+import { formatAdditionalPropertyDiff } from './formatAdditionalPropertyDiff';
 import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
 import chalk from 'chalk';
 
@@ -125,6 +126,22 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
   if (diff.type === ChangeProposalType.deleteRule) {
     const item = payload.item as { content: string };
     log(chalk.red(`    - ${item.content}`));
+    return;
+  }
+
+  if (diff.type === ChangeProposalType.updateSkillAdditionalProperty) {
+    const lines = formatAdditionalPropertyDiff(
+      payload.targetId as string,
+      payload.oldValue as string,
+      payload.newValue as string,
+    );
+    for (const line of lines) {
+      log(
+        line.type === 'removed'
+          ? chalk.red(`    - ${line.text}`)
+          : chalk.green(`    + ${line.text}`),
+      );
+    }
     return;
   }
 
@@ -281,7 +298,7 @@ async function handleSubmission(params: {
   for (const err of result.errors) {
     if (err.code === 'ChangeProposalPayloadMismatchError') {
       logErrorConsole(
-        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
+        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it (${err.message})`,
       );
     } else {
       logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);

@@ -18,6 +18,7 @@ export interface AppliedSkill {
   compatibility: string | undefined;
   allowedTools: string | undefined;
   metadata: Record<string, string> | undefined;
+  additionalProperties: Record<string, unknown> | undefined;
   files: SkillFile[];
 }
 
@@ -53,6 +54,7 @@ export function applySkillProposals(
     compatibility: skill.compatibility,
     metadata: skill.metadata,
     allowedTools: skill.allowedTools,
+    additionalProperties: skill.additionalProperties,
     files: [...files],
   };
 
@@ -70,6 +72,7 @@ export function applySkillProposals(
       compatibility: appliedResult.version.compatibility,
       allowedTools: appliedResult.version.allowedTools,
       metadata: appliedResult.version.metadata,
+      additionalProperties: appliedResult.version.additionalProperties,
     };
   } catch (error) {
     if (error instanceof ChangeProposalConflictError) {
@@ -81,6 +84,7 @@ export function applySkillProposals(
         compatibility: skill.compatibility,
         allowedTools: skill.allowedTools,
         metadata: skill.metadata,
+        additionalProperties: skill.additionalProperties,
         files: [...files],
       };
     }

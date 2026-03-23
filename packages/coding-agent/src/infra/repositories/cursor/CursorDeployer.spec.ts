@@ -1038,4 +1038,74 @@ describe('CursorDeployer', () => {
       });
     });
   });
+
+  describe('when skill has additional properties', () => {
+    describe('when additional property is disable-model-invocation', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { disableModelInvocation: true },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders boolean value in kebab-case YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('disable-model-invocation: true');
+      });
+    });
+
+    describe('when additional properties include unsupported fields', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              disableModelInvocation: true,
+              argumentHint: 'hint',
+              userInvocable: true,
+              model: 'opus',
+              effort: 'high',
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders supported disable-model-invocation property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('disable-model-invocation: true');
+      });
+
+      it('does not render unsupported argument-hint property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('argument-hint:');
+      });
+
+      it('does not render unsupported user-invocable property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('user-invocable:');
+      });
+
+      it('does not render unsupported model property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('model:');
+      });
+
+      it('does not render unsupported effort property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).not.toContain('effort:');
+      });
+    });
+  });
 });

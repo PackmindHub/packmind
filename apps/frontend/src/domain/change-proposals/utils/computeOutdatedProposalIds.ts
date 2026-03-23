@@ -13,24 +13,8 @@ import {
   SkillFile,
   SkillFileId,
   Standard,
+  canonicalJsonStringify,
 } from '@packmind/types';
-
-/**
- * Deterministic JSON serialization of skill metadata.
- * Keep in sync with packages/node-utils/src/skillMd/parseSkillMdContent.ts#serializeSkillMetadata
- */
-function serializeSkillMetadata(fields: Record<string, unknown>): string {
-  const sorted = Object.keys(fields)
-    .sort((a, b) => a.localeCompare(b))
-    .reduce(
-      (acc, key) => {
-        acc[key] = fields[key];
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
-  return JSON.stringify(sorted);
-}
 
 // --- Skill field mappings (mirrors backend SkillChangeProposalValidator) ---
 
@@ -48,7 +32,7 @@ const SKILL_FIELD_BY_TYPE: Record<ScalarSkillType, (skill: Skill) => string> = {
   [ChangeProposalType.updateSkillDescription]: (skill) => skill.description,
   [ChangeProposalType.updateSkillPrompt]: (skill) => skill.prompt,
   [ChangeProposalType.updateSkillMetadata]: (skill) =>
-    skill.metadata != null ? serializeSkillMetadata(skill.metadata) : '{}',
+    skill.metadata != null ? canonicalJsonStringify(skill.metadata) : '{}',
   [ChangeProposalType.updateSkillLicense]: (skill) => skill.license ?? '',
   [ChangeProposalType.updateSkillCompatibility]: (skill) =>
     skill.compatibility ?? '',
@@ -157,6 +141,18 @@ export function computeSkillOutdatedIds(
       >;
       const file = files.find((f) => f.id === payload.targetId);
       if (!file || file.content !== payload.item.content) {
+        outdated.add(proposal.id);
+      }
+      continue;
+    }
+
+    if (proposal.type === ChangeProposalType.updateSkillAdditionalProperty) {
+      const payload = proposal.payload as CollectionItemUpdatePayload<string>;
+      const currentValue = canonicalJsonStringify(
+        skill.additionalProperties?.[payload.targetId] ?? null,
+      );
+      const expectedOld = payload.oldValue ?? 'null';
+      if (expectedOld !== currentValue) {
         outdated.add(proposal.id);
       }
       continue;

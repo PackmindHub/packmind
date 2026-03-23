@@ -1,5 +1,8 @@
 import { parse as parseYaml } from 'yaml';
 
+export { canonicalJsonStringify, deepSortKeys } from '@packmind/types';
+import { canonicalJsonStringify } from '@packmind/types';
+
 const FRONTMATTER_DELIMITER = '---';
 
 /**
@@ -22,7 +25,7 @@ export type ParsedSkillMdContent = {
 /**
  * Serializes skill metadata fields into a deterministic JSON string.
  *
- * Keys are sorted alphabetically before serialization so that
+ * Keys are sorted alphabetically (recursively) before serialization so that
  * two records with the same entries always produce the same output
  * regardless of insertion order.
  *
@@ -32,17 +35,7 @@ export type ParsedSkillMdContent = {
 export function serializeSkillMetadata(
   fields: Record<string, unknown>,
 ): string {
-  const sorted = Object.keys(fields)
-    .sort((a, b) => a.localeCompare(b))
-    .reduce(
-      (acc, key) => {
-        acc[key] = fields[key];
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
-
-  return JSON.stringify(sorted);
+  return canonicalJsonStringify(fields);
 }
 
 /**

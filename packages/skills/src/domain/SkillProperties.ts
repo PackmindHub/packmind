@@ -1,4 +1,7 @@
 import { Skill } from '@packmind/types';
+import { CLAUDE_CODE_ADDITIONAL_FIELDS } from '@packmind/node-utils';
+
+export { CLAUDE_CODE_ADDITIONAL_FIELDS };
 
 /**
  * The filename for skill definition files according to the Agent Skills specification.
@@ -17,6 +20,7 @@ export const ALLOWED_FRONTMATTER_FIELDS = [
   'compatibility',
   'metadata',
   'allowedTools',
+  'additionalProperties',
 ] as const;
 
 export type AllowedFrontmatterField =

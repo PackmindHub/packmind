@@ -64,6 +64,7 @@ export type SkillChangeProposalPayloadMap = {
   [ChangeProposalType.deleteSkillFile]: CollectionItemDeletePayload<
     Omit<SkillFile, 'skillVersionId'>
   >;
+  [ChangeProposalType.updateSkillAdditionalProperty]: CollectionItemUpdatePayload<string>;
 };
 
 /*
@@ -94,6 +95,7 @@ export type NewSkillPayload = {
   compatibility?: string;
   metadata?: Record<string, string>;
   allowedTools?: string;
+  additionalProperties?: Record<string, unknown>;
   files?: Array<Omit<SkillFile, 'id' | 'skillVersionId'>>;
 };
 

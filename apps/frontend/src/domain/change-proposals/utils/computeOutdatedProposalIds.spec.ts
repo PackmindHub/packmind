@@ -537,6 +537,86 @@ describe('computeSkillOutdatedIds', () => {
     });
   });
 
+  describe('updateSkillAdditionalProperty', () => {
+    describe('when oldValue matches current serialized value', () => {
+      it('is NOT outdated', () => {
+        const skill = makeSkill({
+          additionalProperties: { model: 'opus' },
+        });
+        const proposal = makeProposal({
+          type: ChangeProposalType.updateSkillAdditionalProperty,
+          artefactVersion: 1,
+          payload: {
+            targetId: 'model',
+            oldValue: '"opus"',
+            newValue: '"sonnet"',
+          },
+        });
+
+        const result = computeSkillOutdatedIds([proposal], skill, []);
+        expect(result.size).toBe(0);
+      });
+    });
+
+    describe('when oldValue does not match current serialized value', () => {
+      it('IS outdated', () => {
+        const skill = makeSkill({
+          additionalProperties: { model: 'opus' },
+        });
+        const proposal = makeProposal({
+          type: ChangeProposalType.updateSkillAdditionalProperty,
+          artefactVersion: 1,
+          payload: {
+            targetId: 'model',
+            oldValue: '"haiku"',
+            newValue: '"sonnet"',
+          },
+        });
+
+        const result = computeSkillOutdatedIds([proposal], skill, []);
+        expect(result.has(proposal.id)).toBe(true);
+      });
+    });
+
+    describe('when property does not exist on skill', () => {
+      it('matches when oldValue is "null"', () => {
+        const skill = makeSkill({ additionalProperties: undefined });
+        const proposal = makeProposal({
+          type: ChangeProposalType.updateSkillAdditionalProperty,
+          artefactVersion: 1,
+          payload: {
+            targetId: 'model',
+            oldValue: 'null',
+            newValue: '"opus"',
+          },
+        });
+
+        const result = computeSkillOutdatedIds([proposal], skill, []);
+        expect(result.size).toBe(0);
+      });
+    });
+
+    describe('when oldValue is empty string', () => {
+      it('uses empty string as-is with ?? operator', () => {
+        const skill = makeSkill({
+          additionalProperties: { model: null },
+        });
+        const proposal = makeProposal({
+          type: ChangeProposalType.updateSkillAdditionalProperty,
+          artefactVersion: 1,
+          payload: {
+            targetId: 'model',
+            oldValue: '',
+            newValue: '"opus"',
+          },
+        });
+
+        const result = computeSkillOutdatedIds([proposal], skill, []);
+        expect(result.has(proposal.id)).toBe(true);
+      });
+    });
+  });
+
   describe('multiple proposals', () => {
     let result: Set<ChangeProposalId>;
     let fresh: ChangeProposal;

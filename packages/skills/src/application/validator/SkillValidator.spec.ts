@@ -53,6 +53,26 @@ allowed-tools: Bash(git:*) Read
     });
   });
 
+  describe('with Claude Code additional properties', () => {
+    it('returns empty errors array for skill with additionalProperties', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+argument-hint: "<query>"
+disable-model-invocation: true
+model: opus
+---
+
+# My Skill
+`;
+      const { metadata } = parser.parse(content);
+
+      const errors = validator.validate(metadata);
+
+      expect(errors).toEqual([]);
+    });
+  });
+
   describe('with missing name field', () => {
     const content = `---
 description: A sample skill without a name.

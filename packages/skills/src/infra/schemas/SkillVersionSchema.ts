@@ -62,6 +62,11 @@ export const SkillVersionSchema = new EntitySchema<
       type: 'text',
       nullable: true,
     },
+    additionalProperties: {
+      name: 'additional_properties',
+      type: 'jsonb',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
   },

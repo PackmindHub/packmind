@@ -513,4 +513,125 @@ describe('SkillChangeProposalValidator', () => {
       );
     });
   });
+
+  describe('when updateSkillAdditionalProperty', () => {
+    const buildAdditionalPropertyCommand = (oldValue: string | undefined) =>
+      buildCommand({
+        type: ChangeProposalType.updateSkillAdditionalProperty,
+        payload: {
+          targetId: 'hooks',
+          oldValue,
+          newValue: '{"PreToolUse":["allowed"]}',
+        } as CollectionItemUpdatePayload<string>,
+      });
+
+    describe('when both Skill and SkillVersion have no additionalProperties', () => {
+      it('validates with oldValue null', async () => {
+        const result = await validator.validate(
+          buildAdditionalPropertyCommand('null'),
+        );
+
+        expect(result).toEqual({ artefactVersion: 2 });
+      });
+    });
+
+    describe('when Skill has additionalProperties but SkillVersion does not', () => {
+      beforeEach(() => {
+        skillsPort.getSkill.mockResolvedValue({
+          ...skill,
+          additionalProperties: {
+            hooks: { PreToolUse: ['blocked'] },
+          },
+        } as Skill);
+      });
+
+      it('uses SkillVersion data and validates with oldValue null', async () => {
+        const result = await validator.validate(
+          buildAdditionalPropertyCommand('null'),
+        );
+
+        expect(result).toEqual({ artefactVersion: 2 });
+      });
+    });
+
+    describe('when both have matching additionalProperties', () => {
+      beforeEach(() => {
+        const additionalProperties = {
+          hooks: { PreToolUse: ['allowed'] },
+        };
+        skillsPort.getSkill.mockResolvedValue({
+          ...skill,
+          additionalProperties,
+        } as Skill);
+        skillsPort.getLatestSkillVersion.mockResolvedValue({
+          id: latestVersionId,
+          skillId,
+          version: 2,
+          userId,
+          name: 'My Skill',
+          slug: 'my-skill',
+          description: 'desc',
+          prompt: 'prompt',
+          additionalProperties,
+        });
+      });
+
+      it('validates successfully', async () => {
+        const result = await validator.validate(
+          buildAdditionalPropertyCommand(
+            JSON.stringify({ PreToolUse: ['allowed'] }),
+          ),
+        );
+
+        expect(result).toEqual({ artefactVersion: 2 });
+      });
+    });
+
+    describe('when oldValue does not match current value', () => {
+      beforeEach(() => {
+        const additionalProperties = {
+          hooks: { PreToolUse: ['blocked'] },
+        };
+        skillsPort.getLatestSkillVersion.mockResolvedValue({
+          id: latestVersionId,
+          skillId,
+          version: 2,
+          userId,
+          name: 'My Skill',
+          slug: 'my-skill',
+          description: 'desc',
+          prompt: 'prompt',
+          additionalProperties,
+        });
+      });
+
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        await expect(
+          validator.validate(buildAdditionalPropertyCommand('null')),
+        ).rejects.toBeInstanceOf(ChangeProposalPayloadMismatchError);
+      });
+    });
+
+    describe('when no SkillVersion exists', () => {
+      beforeEach(() => {
+        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+        skillsPort.getSkill.mockResolvedValue({
+          ...skill,
+          additionalProperties: {
+            hooks: { PreToolUse: ['allowed'] },
+          },
+        } as Skill);
+      });
+
+      it('falls back to Skill additionalProperties', async () => {
+        const result = await validator.validate(
+          buildAdditionalPropertyCommand(
+            JSON.stringify({ PreToolUse: ['allowed'] }),
+          ),
+        );
+
+        expect(result).toEqual({ artefactVersion: 2 });
+      });
+    });
+  });
 });

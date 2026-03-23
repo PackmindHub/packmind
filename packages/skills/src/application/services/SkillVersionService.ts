@@ -23,6 +23,7 @@ export type CreateSkillVersionData = {
   license?: string;
   compatibility?: string;
   metadata?: Record<string, string>;
+  additionalProperties?: Record<string, unknown>;
   version: number;
 };
 
@@ -57,6 +58,7 @@ export class SkillVersionService {
         license: skillVersionData.license,
         compatibility: skillVersionData.compatibility,
         metadata: skillVersionData.metadata || {},
+        additionalProperties: skillVersionData.additionalProperties,
         version: skillVersionData.version,
       };
 
