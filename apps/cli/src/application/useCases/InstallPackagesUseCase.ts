@@ -11,6 +11,10 @@ import {
   parsePermissionString,
   supportsUnixPermissions,
 } from '../../infra/utils/permissions';
+import {
+  deleteFileOrDirectory,
+  removeEmptyParentDirectories,
+} from '../utils/fileOperations';
 
 export class InstallPackagesUseCase implements IInstallPackagesUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
@@ -111,7 +115,10 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       // Process delete files
       for (const file of response.fileUpdates.delete) {
         try {
-          await this.deleteFile(baseDirectory, file.path, result);
+          const deleted = await deleteFileOrDirectory(baseDirectory, file.path);
+          if (deleted) {
+            result.filesDeleted++;
+          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -248,7 +255,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         // File is empty after section removal - delete it instead of writing empty content
         await fs.unlink(fullPath);
         result.filesDeleted++;
-        await this.removeEmptyParentDirectories(fullPath, baseDirectory);
+        await removeEmptyParentDirectories(fullPath, baseDirectory);
       } else {
         await fs.writeFile(fullPath, mergedContent, 'utf-8');
 
@@ -258,25 +265,6 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
           result.filesCreated++;
         }
       }
-    }
-  }
-
-  private async deleteFile(
-    baseDirectory: string,
-    filePath: string,
-    result: IInstallPackagesResult,
-  ): Promise<void> {
-    const fullPath = path.join(baseDirectory, filePath);
-    const stat = await fs.stat(fullPath).catch(() => null);
-
-    if (stat?.isDirectory()) {
-      await fs.rm(fullPath, { recursive: true, force: true });
-      result.filesDeleted++;
-      await this.removeEmptyParentDirectories(fullPath, baseDirectory);
-    } else if (stat?.isFile()) {
-      await fs.unlink(fullPath);
-      result.filesDeleted++;
-      await this.removeEmptyParentDirectories(fullPath, baseDirectory);
     }
   }
 
@@ -378,7 +366,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         const fileCount = await this.countFilesInDirectory(fullPath);
         await fs.rm(fullPath, { recursive: true, force: true });
         deletedFilesCount += fileCount;
-        await this.removeEmptyParentDirectories(fullPath, baseDirectory);
+        await removeEmptyParentDirectories(fullPath, baseDirectory);
       } catch {
         // Ignore errors if folder doesn't exist or can't be deleted
       }
@@ -404,44 +392,5 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     }
 
     return count;
-  }
-
-  /**
-   * Checks if a directory is empty (has no entries).
-   */
-  private async isDirectoryEmpty(dirPath: string): Promise<boolean> {
-    try {
-      const entries = await fs.readdir(dirPath);
-      return entries.length === 0;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Removes empty parent directories from fullPath up to (but not including) baseDirectory.
-   * Stops when encountering a non-empty directory or reaching baseDirectory.
-   */
-  private async removeEmptyParentDirectories(
-    fullPath: string,
-    baseDirectory: string,
-  ): Promise<void> {
-    const normalizedBase = path.resolve(baseDirectory);
-    let currentDir = path.dirname(path.resolve(fullPath));
-
-    while (
-      currentDir.startsWith(normalizedBase + path.sep) &&
-      currentDir !== normalizedBase
-    ) {
-      const isEmpty = await this.isDirectoryEmpty(currentDir);
-      if (!isEmpty) break;
-
-      try {
-        await fs.rmdir(currentDir);
-      } catch {
-        break;
-      }
-      currentDir = path.dirname(currentDir);
-    }
   }
 }

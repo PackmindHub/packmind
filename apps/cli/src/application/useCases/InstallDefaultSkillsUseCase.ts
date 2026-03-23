@@ -6,6 +6,7 @@ import {
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { deleteFileOrDirectory } from '../utils/fileOperations';
 
 export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase {
   constructor(private readonly repositories: IPackmindRepositories) {}
@@ -18,6 +19,7 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     const result: IInstallDefaultSkillsResult = {
       filesCreated: 0,
       filesUpdated: 0,
+      filesDeleted: 0,
       errors: [],
     };
 
@@ -49,6 +51,20 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
           result.errors.push(
             `Failed to create/update ${file.path}: ${errorMsg}`,
           );
+        }
+      }
+
+      // Process delete files
+      for (const file of response.fileUpdates.delete) {
+        try {
+          const deleted = await deleteFileOrDirectory(baseDirectory, file.path);
+          if (deleted) {
+            result.filesDeleted++;
+          }
+        } catch (error) {
+          const errorMsg =
+            error instanceof Error ? error.message : String(error);
+          result.errors.push(`Failed to delete ${file.path}: ${errorMsg}`);
         }
       }
     } catch (error) {

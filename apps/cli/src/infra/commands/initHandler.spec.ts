@@ -73,6 +73,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 0,
         filesUpdated: 0,
+        filesDeleted: 0,
         errors: [],
       });
 
@@ -117,6 +118,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 0,
         filesUpdated: 0,
+        filesDeleted: 0,
         errors: [],
       });
 
@@ -147,6 +149,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 3,
         filesUpdated: 2,
+        filesDeleted: 0,
         errors: [],
       });
 
@@ -203,6 +206,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 5,
         filesUpdated: 0,
+        filesDeleted: 0,
         errors: [],
       });
 
@@ -227,6 +231,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 0,
         filesUpdated: 4,
+        filesDeleted: 0,
         errors: [],
       });
 
@@ -253,6 +258,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 0,
         filesUpdated: 0,
+        filesDeleted: 0,
         errors: [],
       });
 
@@ -303,6 +309,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 0,
         filesUpdated: 0,
+        filesDeleted: 0,
         errors: skillErrors,
       });
 
@@ -342,6 +349,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 0,
         filesUpdated: 0,
+        filesDeleted: 0,
         errors: [],
       });
 
@@ -363,6 +371,7 @@ describe('initHandler', () => {
       mockInstallDefaultSkills.mockResolvedValue({
         filesCreated: 0,
         filesUpdated: 0,
+        filesDeleted: 0,
         errors: [],
       });
 

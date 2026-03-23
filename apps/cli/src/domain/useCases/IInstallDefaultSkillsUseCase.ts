@@ -9,6 +9,7 @@ export type IInstallDefaultSkillsCommand = {
 export type IInstallDefaultSkillsResult = {
   filesCreated: number;
   filesUpdated: number;
+  filesDeleted: number;
   errors: string[];
 };
 

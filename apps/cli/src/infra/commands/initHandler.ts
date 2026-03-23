@@ -76,7 +76,8 @@ export async function initHandler(
     };
   }
 
-  const totalFiles = result.filesCreated + result.filesUpdated;
+  const totalFiles =
+    result.filesCreated + result.filesUpdated + result.filesDeleted;
 
   if (totalFiles === 0) {
     logInfoConsole('Default skills are already up to date.');
@@ -87,6 +88,9 @@ export async function initHandler(
     }
     if (result.filesUpdated > 0) {
       logInfoConsole(`  Files updated: ${result.filesUpdated}`);
+    }
+    if (result.filesDeleted > 0) {
+      logInfoConsole(`  Files deleted: ${result.filesDeleted}`);
     }
   }
 
