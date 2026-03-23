@@ -9,6 +9,7 @@ import { IPackmindGateway } from './IPackmindGateway';
 import { Organization, Space, SpaceId, User } from '@packmind/types';
 import { PackmindGateway } from './gateways/PackmindGateway';
 import { getPackmindInstanceUrl } from './config';
+import { runCli, RunCliOptions, RunCliResult } from './runCli';
 
 export type UserSignedUpContext = WithTempSpaceContext & {
   gateway: IPackmindGateway;
@@ -20,6 +21,7 @@ export type UserSignedUpContext = WithTempSpaceContext & {
    * @deprecated use context.space.id instead
    */
   spaceId: SpaceId;
+  runCli: (command: string, opts?: RunCliOptions) => Promise<RunCliResult>;
 };
 
 export type UserSignedUpOptions = {
@@ -74,6 +76,7 @@ export function describeWithUserSignedUp(
     stage(
       async ({
         testDir,
+        testHome,
       }: WithTempSpaceContext): Promise<UserSignedUpContext> => {
         options = { ...getDefaultOptions(), ...userOptions };
         const gateway = new PackmindGateway(options.baseUrl);
@@ -103,6 +106,9 @@ export function describeWithUserSignedUp(
           space: globalSpace,
           spaceId: globalSpace.id,
           testDir,
+          testHome,
+          runCli: (command, opts) =>
+            runCli(command, { apiKey, cwd: testDir, home: testHome, ...opts }),
         };
       },
     );

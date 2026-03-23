@@ -36,7 +36,7 @@ export type PlaybookAddHandlerDependencies = {
   filePath: string | undefined;
   spaceSlug?: string;
   exit: (code: number) => void;
-  getCwd: () => string;
+  cwd: string;
   readFile: (path: string) => string;
   readSkillDirectory: (dirPath: string) => Promise<SkillFile[]>;
   playbookLocalRepository: IPlaybookLocalRepository;
@@ -130,7 +130,7 @@ export async function playbookAddHandler(
     filePath,
     spaceSlug,
     exit,
-    getCwd,
+    cwd,
     readFile,
     readSkillDirectory,
     playbookLocalRepository,
@@ -145,7 +145,7 @@ export async function playbookAddHandler(
     return;
   }
 
-  const absolutePath = path.resolve(getCwd(), filePath);
+  const absolutePath = path.resolve(cwd, filePath);
 
   const artefactResult = resolveArtefactFromPath(absolutePath);
   if (!artefactResult) {

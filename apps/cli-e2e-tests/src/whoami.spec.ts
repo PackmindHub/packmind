@@ -15,10 +15,7 @@ describe('whoami command', () => {
 
     beforeEach(async () => {
       context = await getContext();
-      const result = await runCli('whoami', {
-        apiKey: context.apiKey,
-        cwd: context.testDir,
-      });
+      const result = await context.runCli('whoami');
 
       returnCode = result.returnCode;
       stdout = result.stdout;

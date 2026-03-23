@@ -37,7 +37,7 @@ export const addPlaybookCommand = command({
       filePath,
       spaceSlug: space,
       exit: process.exit,
-      getCwd: () => process.cwd(),
+      cwd: process.cwd(),
       readFile: (p) => readFileSync(p, 'utf-8'),
       readSkillDirectory,
       playbookLocalRepository,
