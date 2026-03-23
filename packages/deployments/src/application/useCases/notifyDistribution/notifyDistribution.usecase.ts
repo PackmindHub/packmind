@@ -10,6 +10,7 @@ import {
   INotifyDistributionUseCase,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
@@ -61,6 +62,7 @@ export class NotifyDistributionUseCase
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly targetResolutionService: TargetResolutionService,
+    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -101,6 +103,7 @@ export class NotifyDistributionUseCase
     );
 
     const matchingPackages = await this.findMatchingPackages({
+      userId,
       organizationId,
       packageSlugs,
     });
@@ -143,19 +146,66 @@ export class NotifyDistributionUseCase
   }
 
   private async findMatchingPackages(params: {
+    userId: UserId;
     organizationId: OrganizationId;
     packageSlugs: string[];
   }): Promise<Package[]> {
-    const { organizationId, packageSlugs } = params;
+    const { userId, organizationId, packageSlugs } = params;
 
     const orgPackages =
       await this.packageRepository.findByOrganizationId(organizationId);
 
-    const normalizedSlugs = packageSlugs.map(
-      (slug) => parsePackageSlug(slug).packageSlug,
-    );
+    const parsedSlugs = packageSlugs.map((slug) => parsePackageSlug(slug));
+
+    const hasBareSlugs = parsedSlugs.some((p) => p.spaceSlug === null);
+    const explicitSpaceSlugs = [
+      ...new Set(
+        parsedSlugs
+          .filter((p) => p.spaceSlug !== null)
+          .map((p) => p.spaceSlug as string),
+      ),
+    ];
+
+    let defaultSpaceId: string | null = null;
+    if (hasBareSlugs) {
+      const { defaultSpace } = await this.spacesPort.getDefaultSpace({
+        userId,
+        organizationId,
+      });
+      defaultSpaceId = defaultSpace.id;
+    }
+
+    const spaceSlugToId = new Map<string, string>();
+    for (const spaceSlug of explicitSpaceSlugs) {
+      const space = await this.spacesPort.getSpaceBySlug(
+        spaceSlug,
+        organizationId,
+      );
+      if (space) {
+        spaceSlugToId.set(spaceSlug, space.id);
+      } else {
+        this.logger.warn(
+          `Space slug "${spaceSlug}" not found, skipping associated packages`,
+          {
+            spaceSlug,
+            organizationId,
+          },
+        );
+      }
+    }
+
     const matchingPackages = orgPackages.filter((pkg) =>
-      normalizedSlugs.includes(pkg.slug),
+      parsedSlugs.some((parsed) => {
+        const resolvedSpaceId = parsed.spaceSlug
+          ? spaceSlugToId.get(parsed.spaceSlug)
+          : defaultSpaceId;
+        return (
+          resolvedSpaceId !== undefined &&
+          resolvedSpaceId !== null &&
+          pkg.slug === parsed.packageSlug &&
+          pkg.spaceId === resolvedSpaceId
+        );
+      }),
     );
 
     this.logger.info('Found matching packages', {
