@@ -482,7 +482,10 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       );
     }
 
-    if (skillVersion.metadata) {
+    if (
+      skillVersion.metadata &&
+      Object.keys(skillVersion.metadata).length > 0
+    ) {
       frontmatterLines.push('metadata:');
       for (const [key, value] of Object.entries(skillVersion.metadata)) {
         frontmatterLines.push(
