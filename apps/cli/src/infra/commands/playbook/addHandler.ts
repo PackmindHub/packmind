@@ -270,14 +270,48 @@ export async function playbookAddHandler(
     path.relative(targetDir, absolutePath),
   );
 
+  // Resolve space ID
+  let spaceId: string;
+  let spaceName: string | undefined;
+  const allSpaces = await packmindCliHexa.getSpaces();
+
+  if (spaceSlug) {
+    const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
+    if (!matchedSpace) {
+      logErrorConsole(
+        `Space "${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
+      );
+      exit(1);
+      return;
+    }
+    spaceId = matchedSpace.id;
+    spaceName = matchedSpace.name;
+  } else if (allSpaces.length === 1) {
+    spaceId = allSpaces[0].id;
+    spaceName = allSpaces[0].name;
+  } else {
+    // For updates, use the deployed context space as default
+    const deployedSpaceId = deployedContext?.spaceId;
+    if (deployedSpaceId) {
+      spaceId = deployedSpaceId;
+      spaceName = allSpaces.find((s) => s.id === spaceId)?.name;
+    } else {
+      logErrorConsole(
+        `Multiple spaces found. Use --space to specify the target space:\n${formatSpaceList(allSpaces)}\n\nExample: packmind-cli playbook add --space ${allSpaces[0].slug} <path>`,
+      );
+      exit(1);
+      return;
+    }
+  }
+
   // Determine changeType using lock file
   let changeType: 'created' | 'updated' = 'created';
   const lockFile = await lockFileRepository.read(targetDir);
   if (lockFile) {
-    const existsInLockFile = Object.values(lockFile.artifacts).some((entry) =>
+    const matchingEntry = Object.values(lockFile.artifacts).find((entry) =>
       entry.files.some((f) => normalizePath(f.path) === normalizedFilePath),
     );
-    if (existsInLockFile) {
+    if (matchingEntry && matchingEntry.spaceId === spaceId) {
       changeType = 'updated';
     }
   }
@@ -294,40 +328,6 @@ export async function playbookAddHandler(
     if (deployedFile && deployedFile.content?.trim() === localContent.trim()) {
       logInfoConsole('Already up to date — local content matches deployed.');
       exit(0);
-      return;
-    }
-  }
-
-  // Resolve space ID
-  let spaceId: string;
-  let spaceName: string | undefined;
-  if (changeType === 'updated') {
-    spaceId =
-      deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
-    const allSpaces = await packmindCliHexa.getSpaces();
-    spaceName = allSpaces.find((s) => s.id === spaceId)?.name;
-  } else {
-    const allSpaces = await packmindCliHexa.getSpaces();
-
-    if (spaceSlug) {
-      const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
-      if (!matchedSpace) {
-        logErrorConsole(
-          `Space "${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
-        );
-        exit(1);
-        return;
-      }
-      spaceId = matchedSpace.id;
-      spaceName = matchedSpace.name;
-    } else if (allSpaces.length === 1) {
-      spaceId = allSpaces[0].id;
-      spaceName = allSpaces[0].name;
-    } else {
-      logErrorConsole(
-        `Multiple spaces found. Use --space to specify the target space:\n${formatSpaceList(allSpaces)}\n\nExample: packmind-cli playbook add --space ${allSpaces[0].slug} <path>`,
-      );
-      exit(1);
       return;
     }
   }

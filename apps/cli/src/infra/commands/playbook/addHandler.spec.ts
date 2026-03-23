@@ -751,11 +751,14 @@ describe('playbookAddHandler', () => {
       },
     ];
 
-    describe('when creating in multi-space org without --space flag', () => {
+    describe('when creating in multi-space org without --space flag and no deployed context', () => {
       beforeEach(() => {
         (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
           MULTI_SPACE_LIST,
         );
+        (
+          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+        ).mockResolvedValue(null);
       });
 
       it('logs error mentioning --space flag', async () => {
@@ -929,22 +932,28 @@ describe('playbookAddHandler', () => {
         });
       });
 
-      it('uses deployed context space regardless of --space flag', async () => {
+      it('uses deployed context space when no --space flag is provided', async () => {
         await playbookAddHandler(buildDeps());
 
         expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
           expect.objectContaining({
             spaceId: 'space-123',
+            spaceName: 'Global',
             changeType: 'updated',
           }),
         );
       });
 
-      it('stores spaceName resolved from getSpaces for updated artifacts', async () => {
-        await playbookAddHandler(buildDeps());
+      it('treats as creation when --space targets a different space', async () => {
+        await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
 
-        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
-        expect(callArg.spaceName).toBe('Global');
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            spaceId: 'space-456',
+            spaceName: 'Team Backend',
+            changeType: 'created',
+          }),
+        );
       });
     });
   });
