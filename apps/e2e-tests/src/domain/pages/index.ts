@@ -10,7 +10,7 @@ export interface IPackmindAppPage extends IPackmindPage {
   openCommands(): Promise<ICommandsPage>;
   openPackages(): Promise<IPackagesPage>;
   openSettings(): Promise<ISettingsPage>;
-  openUserSettings(): Promise<IUserSettingsPage>;
+  openIntegrations(): Promise<ICliSetupPage>;
   signOut(): Promise<void>;
 }
 
@@ -69,8 +69,7 @@ export interface IGitSettingsPage extends IPackmindAppPage {
   >;
 }
 
-export interface IUserSettingsPage extends IPackmindAppPage {
-  getMcpToken(): Promise<string>;
+export interface ICliSetupPage extends IPackmindAppPage {
   getApiKey(): Promise<string>;
 }
 
@@ -109,7 +108,7 @@ export interface IPageFactory {
   getSignupPage(): Promise<ISignUpPage>;
   getSignupFormPage(): Promise<ISignUpPage>;
   getDashboardPage(): Promise<IDashboardPage>;
-  getUserSettingsPage(): Promise<IUserSettingsPage>;
+  getCliSetupPage(): Promise<ICliSetupPage>;
   getUsersSettingsPage(): Promise<IUsersSettingsPage>;
   getPackagesPage(): Promise<IPackagesPage>;
   getPackagePage(): Promise<IPackagePage>;

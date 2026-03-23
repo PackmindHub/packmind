@@ -339,24 +339,12 @@ export const SidebarNavigation: React.FunctionComponent<
                   <PMMenu.Positioner>
                     <PMMenu.Content>
                       <PMMenu.Item
-                        value="account-settings"
-                        onClick={() =>
-                          navigate(routes.org.toAccountSettings(orgSlug))
-                        }
-                        cursor="pointer"
-                        data-testid={
-                          SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA
-                        }
-                      >
-                        <PMIcon marginRight={2}>
-                          <LuSettings />
-                        </PMIcon>
-                        Account settings
-                      </PMMenu.Item>
-                      <PMMenu.Item
                         value="integrations"
                         onClick={() => navigate(routes.org.toSetup(orgSlug))}
                         cursor="pointer"
+                        data-testid={
+                          SidebarNavigationDataTestId.IntegrationsLink
+                        }
                       >
                         <PMIcon marginRight={2}>
                           <LuWrench />
@@ -408,19 +396,11 @@ export const SidebarNavigation: React.FunctionComponent<
               <PMVerticalNavSection
                 navEntries={[
                   <SidebarNavigationLink
-                    key="account-settings"
-                    url={routes.org.toAccountSettings(orgSlug)}
-                    label="Account settings"
-                    icon={<LuSettings />}
-                    data-testid={
-                      SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA
-                    }
-                  />,
-                  <SidebarNavigationLink
                     key="setup"
                     url={routes.org.toSetup(orgSlug)}
                     label="Integrations"
                     icon={<LuWrench />}
+                    data-testid={SidebarNavigationDataTestId.IntegrationsLink}
                   />,
                   <SidebarHelpMenu key="help" />,
                   <PMBox

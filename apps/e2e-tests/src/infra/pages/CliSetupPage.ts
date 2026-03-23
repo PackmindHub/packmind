@@ -1,22 +1,16 @@
-import { IUserSettingsPage } from '../../domain/pages';
+import { ICliSetupPage } from '../../domain/pages';
 import { AbstractPackmindAppPage } from './AbstractPackmindAppPage';
 import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 
-export class UserSettingsPage
+export class CliSetupPage
   extends AbstractPackmindAppPage
-  implements IUserSettingsPage
+  implements ICliSetupPage
 {
-  expectedUrl(): string {
-    return '/org/**/account-settings';
-  }
-
-  getMcpToken(): Promise<string> {
-    throw new Error('Method not implemented.');
+  expectedUrl(): RegExp {
+    return /\/org\/.*\/setup\/cli/;
   }
 
   async getApiKey(): Promise<string> {
-    // Navigate to Authenticate tab
-    await this.page.getByRole('tab', { name: '2. Authenticate' }).click();
     // Select API key auth method
     await this.page.getByText('API key', { exact: true }).click();
     // Generate API key

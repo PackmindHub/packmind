@@ -10,15 +10,14 @@ import {
 import { useSignOutMutation } from '../api/queries/AuthQueries';
 import { useNavigate } from 'react-router';
 import { useAuthContext } from '../hooks/useAuthContext';
-import { LuLogOut, LuSettings } from 'react-icons/lu';
+import { LuLogOut } from 'react-icons/lu';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
-import { routes } from '../../../shared/utils/routes';
 import { SidebarAccountsMenuDataTestIds } from '@packmind/frontend';
 
 export const SidebarAccountMenu: React.FunctionComponent = () => {
   const signOutMutation = useSignOutMutation();
   const navigate = useNavigate();
-  const { user, organization } = useAuthContext();
+  const { user } = useAuthContext();
 
   const handleSignOut = () => {
     // Capture organization slug before logout clears context
@@ -38,15 +37,6 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
         navigate(redirectPath);
       },
     });
-  };
-
-  const handleSettings = () => {
-    const orgSlug = organization?.slug;
-    const redirectPath = orgSlug
-      ? routes.org.toAccountSettings(orgSlug)
-      : routes.auth.toSignIn();
-
-    navigate(redirectPath);
   };
 
   return (
@@ -79,22 +69,6 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
       <PMPortal>
         <PMMenu.Positioner>
           <PMMenu.Content>
-            <PMMenu.Item
-              value="settings"
-              onClick={handleSettings}
-              cursor={'pointer'}
-              data-testid={SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA}
-            >
-              <PMText color="secondary">
-                <PMIcon marginRight={2}>
-                  <LuSettings></LuSettings>
-                </PMIcon>
-                Account settings
-              </PMText>
-            </PMMenu.Item>
-
-            <PMMenu.Separator borderColor={'border.tertiary'} />
-
             <PMMenu.Item
               value="sign-out"
               onClick={handleSignOut}

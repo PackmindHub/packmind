@@ -1,4 +1,5 @@
 import {
+  ICliSetupPage,
   IPackagesPage,
   IPackmindAppPage,
   ICommandsPage,
@@ -39,12 +40,12 @@ export abstract class AbstractPackmindAppPage
     return this.pageFactory.getSettingsPage();
   }
 
-  async openUserSettings() {
+  async openIntegrations(): Promise<ICliSetupPage> {
     await this.page
-      .getByTestId(SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA)
+      .getByTestId(SidebarNavigationDataTestId.IntegrationsLink)
       .click();
 
-    return this.pageFactory.getUserSettingsPage();
+    return this.pageFactory.getCliSetupPage();
   }
 
   async signOut(): Promise<void> {

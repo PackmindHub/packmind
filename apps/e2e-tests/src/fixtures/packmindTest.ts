@@ -39,8 +39,8 @@ export const testWithApi = testWithUserSignedUp.extend<{
   packmindApi: IPackmindApi;
 }>({
   packmindApi: async ({ dashboardPage, request }, use) => {
-    const userSettingsPage = await dashboardPage.openUserSettings();
-    const apiKey = await userSettingsPage.getApiKey();
+    const cliSetupPage = await dashboardPage.openIntegrations();
+    const apiKey = await cliSetupPage.getApiKey();
     const publicApi = new PackmindApi(request, apiKey);
 
     await use(publicApi);

@@ -1,5 +1,6 @@
 import {
   IActivateAccountPage,
+  ICliSetupPage,
   IDashboardPage,
   IGitSettingsPage,
   IInvitationPage,
@@ -12,13 +13,12 @@ import {
   IStartTrialAgentPage,
   IStartTrialAgentSelectorPage,
   IStartTrialPage,
-  IUserSettingsPage,
   IUsersSettingsPage,
 } from '../domain/pages';
 import { Page } from '@playwright/test';
 import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { UserSettingsPage } from './pages/UserSettingsPage';
+import { CliSetupPage } from './pages/CliSetupPage';
 import { UsersSettingsPage } from './pages/UsersSettingsPage';
 import { PackagesPage } from './pages/PackagesPage';
 import { PackagePage } from './pages/PackagePage';
@@ -48,8 +48,8 @@ export class PageFactory implements IPageFactory {
     return this.getPageInstance(DashboardPage);
   }
 
-  async getUserSettingsPage(): Promise<IUserSettingsPage> {
-    return this.getPageInstance(UserSettingsPage);
+  async getCliSetupPage(): Promise<ICliSetupPage> {
+    return this.getPageInstance(CliSetupPage);
   }
 
   async getUsersSettingsPage(): Promise<IUsersSettingsPage> {
