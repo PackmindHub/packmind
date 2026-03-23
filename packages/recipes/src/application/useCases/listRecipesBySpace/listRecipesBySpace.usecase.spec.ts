@@ -78,10 +78,6 @@ describe('ListRecipesBySpaceUsecase', () => {
         };
 
         spaceRecipes = [recipeFactory({ spaceId }), recipeFactory({ spaceId })];
-        const orgLevelRecipe = recipeFactory({
-          spaceId: createSpaceId('space-1'),
-        });
-        const organizationRecipes = [...spaceRecipes, orgLevelRecipe];
 
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
@@ -275,9 +271,6 @@ describe('ListRecipesBySpaceUsecase', () => {
         };
 
         const recipeInSpace = recipeFactory({ spaceId });
-        const orgLevelRecipe = recipeFactory({
-          spaceId: createSpaceId('space-1'),
-        });
 
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
