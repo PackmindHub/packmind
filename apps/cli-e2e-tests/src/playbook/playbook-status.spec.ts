@@ -1,38 +1,17 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import {
   describeWithUserSignedUp,
-  runCli,
   readFile,
   updateFile,
   setupGitRepo,
-  IPackmindGateway,
+  UserSignedUpContext,
 } from '../helpers';
-import { Space, Standard } from '@packmind/types';
+import { Standard } from '@packmind/types';
 
 describeWithUserSignedUp('playbook status command', (getContext) => {
-  let gateway: IPackmindGateway;
-  let apiKey: string;
-  let testDir: string;
-  let space: Space;
-  let sharedHome: string;
-
+  let context: UserSignedUpContext;
   beforeEach(async () => {
-    const context = await getContext();
+    context = await getContext();
     await setupGitRepo(context.testDir);
-
-    apiKey = context.apiKey;
-    testDir = context.testDir;
-    space = context.space;
-    gateway = context.gateway;
-    sharedHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-home-'));
-  });
-
-  afterEach(() => {
-    if (sharedHome && fs.existsSync(sharedHome)) {
-      fs.rmSync(sharedHome, { recursive: true, force: true });
-    }
   });
 
   describe('when a deployed standard is modified and staged with playbook add', () => {
@@ -41,27 +20,26 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
 
     beforeEach(async () => {
       // Create a standard via API
-      standard = (await gateway.standards.create({
+      standard = (await context.gateway.standards.create({
         name: 'My standard',
         description: 'A test standard description.',
         rules: [{ content: 'Always use const' }],
         scope: null,
-        spaceId: space.id,
+        spaceId: context.space.id,
       })) as unknown as Standard;
 
       // Create a package containing the standard
-      const createPackageResponse = await gateway.packages.create({
+      const createPackageResponse = await context.gateway.packages.create({
         name: 'My package',
         description: 'Test package for playbook',
         recipeIds: [],
         standardIds: [standard.id],
-        spaceId: space.id,
+        spaceId: context.space.id,
       });
 
       // Install the package locally (deploys the standard file)
-      const installResult = await runCli(
+      const installResult = await context.runCli(
         `install ${createPackageResponse.package.slug}`,
-        { apiKey, cwd: testDir, home: sharedHome },
       );
 
       if (installResult.returnCode !== 0) {
@@ -73,7 +51,7 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
       // Find the deployed standard file
       const { execSync } = await import('child_process');
       const files = execSync(
-        `find ${testDir} -name "*.md" -not -path "*/.git/*"`,
+        `find ${context.testDir} -name "*.md" -not -path "*/.git/*"`,
       )
         .toString()
         .trim()
@@ -86,18 +64,18 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
           `Standard file not found after install. Files: ${files.join(', ')}`,
         );
       }
-      const standardPath = standardFile.replace(`${testDir}/`, '');
+      const standardPath = standardFile.replace(`${context.testDir}/`, '');
 
       // Modify the deployed standard file
-      const originalContent = readFile(standardPath, testDir);
-      updateFile(standardPath, `${originalContent}\n* Never use var`, testDir);
+      const originalContent = readFile(standardPath, context.testDir);
+      updateFile(
+        standardPath,
+        `${originalContent}\n* Never use var`,
+        context.testDir,
+      );
 
       // Stage the change
-      const addResult = await runCli(`playbook add ${standardPath}`, {
-        apiKey,
-        cwd: testDir,
-        home: sharedHome,
-      });
+      const addResult = await context.runCli(`playbook add ${standardPath}`);
 
       if (addResult.returnCode !== 0) {
         throw new Error(
@@ -106,11 +84,7 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
       }
 
       // Run playbook status
-      statusResult = await runCli('playbook status', {
-        apiKey,
-        cwd: testDir,
-        home: sharedHome,
-      });
+      statusResult = await context.runCli('playbook status');
     });
 
     it('succeeds', () => {
@@ -139,25 +113,24 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
 
     beforeEach(async () => {
       // Create a standard and package to establish the project (packmind.json)
-      const bootstrapStandard = (await gateway.standards.create({
+      const bootstrapStandard = (await context.gateway.standards.create({
         name: 'Existing standard',
         description: 'Used only to bootstrap the project.',
         rules: [],
         scope: null,
-        spaceId: space.id,
+        spaceId: context.space.id,
       })) as unknown as Standard;
 
-      const createPackageResponse = await gateway.packages.create({
+      const createPackageResponse = await context.gateway.packages.create({
         name: 'Bootstrap package',
         description: 'Bootstrap package for project setup',
         recipeIds: [],
         standardIds: [bootstrapStandard.id],
-        spaceId: space.id,
+        spaceId: context.space.id,
       });
 
-      const installResult = await runCli(
+      const installResult = await context.runCli(
         `install ${createPackageResponse.package.slug}`,
-        { apiKey, cwd: testDir, home: sharedHome },
       );
 
       if (installResult.returnCode !== 0) {
@@ -170,13 +143,12 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
       updateFile(
         '.packmind/standards/react-router.md',
         '# React router\n\nBest practices for React Router usage.',
-        testDir,
+        context.testDir,
       );
 
       // Stage the new standard
-      const addResult = await runCli(
+      const addResult = await context.runCli(
         'playbook add .packmind/standards/react-router.md',
-        { apiKey, cwd: testDir, home: sharedHome },
       );
 
       if (addResult.returnCode !== 0) {
@@ -186,11 +158,7 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
       }
 
       // Run playbook status
-      statusResult = await runCli('playbook status', {
-        apiKey,
-        cwd: testDir,
-        home: sharedHome,
-      });
+      statusResult = await context.runCli('playbook status');
     });
 
     it('succeeds', () => {

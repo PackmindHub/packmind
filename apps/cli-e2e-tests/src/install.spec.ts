@@ -1,40 +1,31 @@
 import {
   describeWithUserSignedUp,
-  runCli,
   setupGitRepo,
-  IPackmindGateway,
   RunCliResult,
   readFile,
   updateFile,
   fileExists,
+  UserSignedUpContext,
 } from './helpers';
-import { Package, Space } from '@packmind/types';
+import { Package } from '@packmind/types';
 import fs from 'fs';
 
 describeWithUserSignedUp('install command', (getContext) => {
-  let gateway: IPackmindGateway;
-  let apiKey: string;
-  let testDir: string;
-  let space: Space;
+  let context: UserSignedUpContext;
   let pkg: Package;
   let installResult: RunCliResult;
 
   beforeEach(async () => {
-    const context = await getContext();
+    context = await getContext();
     await setupGitRepo(context.testDir);
 
-    apiKey = context.apiKey;
-    testDir = context.testDir;
-    space = context.space;
-    gateway = context.gateway;
-
     // Create a package with both commands
-    const createPackageResponse = await gateway.packages.create({
+    const createPackageResponse = await context.gateway.packages.create({
       name: 'My package',
       description: 'Test package for diff command',
       recipeIds: [],
       standardIds: [],
-      spaceId: space.id,
+      spaceId: context.space.id,
     });
     pkg = createPackageResponse.package;
   });
@@ -42,10 +33,7 @@ describeWithUserSignedUp('install command', (getContext) => {
   describe('when user specifies the packages to install in the command line', () => {
     describe('when user does not specify the space slug', () => {
       beforeEach(async () => {
-        installResult = await runCli(`install ${pkg.slug}`, {
-          apiKey,
-          cwd: testDir,
-        });
+        installResult = await context.runCli(`install ${pkg.slug}`);
       });
 
       it('succeeds', () => {
@@ -53,18 +41,17 @@ describeWithUserSignedUp('install command', (getContext) => {
       });
 
       it('references the space slug in the packmind.json file', () => {
-        const packmindJson = readFile('packmind.json', testDir);
+        const packmindJson = readFile('packmind.json', context.testDir);
 
-        expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+        expect(packmindJson).toContain(`@${context.space.slug}/${pkg.slug}`);
       });
     });
 
     describe('when user specifies the space slug', () => {
       beforeEach(async () => {
-        installResult = await runCli(`install @${space.slug}/${pkg.slug}`, {
-          apiKey,
-          cwd: testDir,
-        });
+        installResult = await context.runCli(
+          `install @${context.space.slug}/${pkg.slug}`,
+        );
       });
 
       it('succeeds', () => {
@@ -72,9 +59,9 @@ describeWithUserSignedUp('install command', (getContext) => {
       });
 
       it('references the space slug in the packmind.json file', () => {
-        const packmindJson = readFile('packmind.json', testDir);
+        const packmindJson = readFile('packmind.json', context.testDir);
 
-        expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+        expect(packmindJson).toContain(`@${context.space.slug}/${pkg.slug}`);
       });
     });
   });
@@ -85,13 +72,10 @@ describeWithUserSignedUp('install command', (getContext) => {
         updateFile(
           'packmind.json',
           JSON.stringify({ packages: { [pkg.slug]: '*' } }),
-          testDir,
+          context.testDir,
         );
 
-        installResult = await runCli(`install`, {
-          apiKey,
-          cwd: testDir,
-        });
+        installResult = await context.runCli(`install`);
       });
 
       it('succeeds', () => {
@@ -99,21 +83,20 @@ describeWithUserSignedUp('install command', (getContext) => {
       });
 
       it('updates the packmind.json file with a prefixed label of the package', () => {
-        const packmindJson = readFile('packmind.json', testDir);
+        const packmindJson = readFile('packmind.json', context.testDir);
 
-        expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+        expect(packmindJson).toContain(`@${context.space.slug}/${pkg.slug}`);
       });
     });
   });
 
   describe('when using --path to scope install to a subdirectory', () => {
     beforeEach(async () => {
-      fs.mkdirSync(`${testDir}/apps/frontend`, { recursive: true });
+      fs.mkdirSync(`${context.testDir}/apps/frontend`, { recursive: true });
 
-      installResult = await runCli(`install ${pkg.slug} --path apps/frontend`, {
-        apiKey,
-        cwd: testDir,
-      });
+      installResult = await context.runCli(
+        `install ${pkg.slug} --path apps/frontend`,
+      );
     });
 
     it('succeeds', () => {
@@ -121,13 +104,16 @@ describeWithUserSignedUp('install command', (getContext) => {
     });
 
     it('creates packmind.json in the target directory with normalized slug', () => {
-      const packmindJson = readFile('apps/frontend/packmind.json', testDir);
+      const packmindJson = readFile(
+        'apps/frontend/packmind.json',
+        context.testDir,
+      );
 
-      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+      expect(packmindJson).toContain(`@${context.space.slug}/${pkg.slug}`);
     });
 
     it('does not create packmind.json at the root', () => {
-      expect(fileExists('packmind.json', testDir)).toBe(false);
+      expect(fileExists('packmind.json', context.testDir)).toBe(false);
     });
   });
 
@@ -137,19 +123,16 @@ describeWithUserSignedUp('install command', (getContext) => {
       updateFile(
         'packmind.json',
         JSON.stringify({ packages: { [pkg.slug]: '*' } }),
-        testDir,
+        context.testDir,
       );
-      fs.mkdirSync(`${testDir}/apps/sub`, { recursive: true });
+      fs.mkdirSync(`${context.testDir}/apps/sub`, { recursive: true });
       updateFile(
         'apps/sub/packmind.json',
         JSON.stringify({ packages: { [pkg.slug]: '*' } }),
-        testDir,
+        context.testDir,
       );
 
-      installResult = await runCli(`install`, {
-        apiKey,
-        cwd: testDir,
-      });
+      installResult = await context.runCli(`install`);
     });
 
     it('succeeds', () => {
@@ -157,15 +140,15 @@ describeWithUserSignedUp('install command', (getContext) => {
     });
 
     it('normalizes slugs in root packmind.json', () => {
-      const packmindJson = readFile('packmind.json', testDir);
+      const packmindJson = readFile('packmind.json', context.testDir);
 
-      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+      expect(packmindJson).toContain(`@${context.space.slug}/${pkg.slug}`);
     });
 
     it('normalizes slugs in subdirectory packmind.json', () => {
-      const packmindJson = readFile('apps/sub/packmind.json', testDir);
+      const packmindJson = readFile('apps/sub/packmind.json', context.testDir);
 
-      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+      expect(packmindJson).toContain(`@${context.space.slug}/${pkg.slug}`);
     });
   });
 
@@ -175,19 +158,16 @@ describeWithUserSignedUp('install command', (getContext) => {
       updateFile(
         'packmind.json',
         JSON.stringify({ packages: { [pkg.slug]: '*' } }),
-        testDir,
+        context.testDir,
       );
-      fs.mkdirSync(`${testDir}/apps/backend`, { recursive: true });
+      fs.mkdirSync(`${context.testDir}/apps/backend`, { recursive: true });
       updateFile(
         'apps/backend/packmind.json',
         JSON.stringify({ packages: { [pkg.slug]: '*' } }),
-        testDir,
+        context.testDir,
       );
 
-      installResult = await runCli(`install --path apps/backend`, {
-        apiKey,
-        cwd: testDir,
-      });
+      installResult = await context.runCli(`install --path apps/backend`);
     });
 
     it('succeeds', () => {
@@ -195,19 +175,22 @@ describeWithUserSignedUp('install command', (getContext) => {
     });
 
     it('normalizes slugs in the target subdirectory', () => {
-      const packmindJson = readFile('apps/backend/packmind.json', testDir);
+      const packmindJson = readFile(
+        'apps/backend/packmind.json',
+        context.testDir,
+      );
 
-      expect(packmindJson).toContain(`@${space.slug}/${pkg.slug}`);
+      expect(packmindJson).toContain(`@${context.space.slug}/${pkg.slug}`);
     });
 
     it('does not normalize the root packmind.json', () => {
-      const packmindJson = readFile('packmind.json', testDir);
+      const packmindJson = readFile('packmind.json', context.testDir);
 
-      expect(packmindJson).not.toContain(`@${space.slug}/${pkg.slug}`);
+      expect(packmindJson).not.toContain(`@${context.space.slug}/${pkg.slug}`);
     });
 
     it('preserves the original slug in the root packmind.json', () => {
-      const packmindJson = readFile('packmind.json', testDir);
+      const packmindJson = readFile('packmind.json', context.testDir);
 
       expect(packmindJson).toContain(pkg.slug);
     });

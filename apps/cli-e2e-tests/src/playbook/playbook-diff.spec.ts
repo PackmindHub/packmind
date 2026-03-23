@@ -1,124 +1,96 @@
 import {
   describeWithUserSignedUp,
   readFile,
-  runCli,
   setupGitRepo,
   updateFile,
+  UserSignedUpContext,
 } from '../helpers';
 import { Package, Recipe } from '@packmind/types';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
 import { recipeFactory } from '@packmind/recipes/test';
 
-describe('whatever', () => {
-  describeWithUserSignedUp('playbook status command', (getContext) => {
-    let apiKey: string;
-    let testDir: string;
-    let sharedHome: string;
+describeWithUserSignedUp('playbook status command', (getContext) => {
+  let context: UserSignedUpContext;
 
-    let command: Recipe;
-    let pkg: Package;
+  let command: Recipe;
+  let pkg: Package;
+
+  beforeEach(async () => {
+    context = await getContext();
+    await setupGitRepo(context.testDir);
+
+    command = await context.gateway.commands.create(
+      recipeFactory({
+        spaceId: context.space.id,
+      }),
+    );
+    const createPackage = await context.gateway.packages.create({
+      description: '',
+      name: 'My package',
+      recipeIds: [command.id],
+      spaceId: context.space.id,
+      standardIds: [],
+    });
+    pkg = createPackage.package;
+
+    await context.runCli(`install ${pkg.slug}`);
+  });
+
+  describe('when there are not changes', () => {
+    it('shows "No changes found."', async () => {
+      const result = await context.runCli('diff');
+
+      expect(result.stdout).toContain('No changes found.');
+    });
+  });
+
+  describe('when a file has been changed', () => {
+    let commandPath: string;
 
     beforeEach(async () => {
-      const context = await getContext();
-      await setupGitRepo(context.testDir);
+      commandPath = `.packmind/commands/${command.slug}.md`;
 
-      apiKey = context.apiKey;
-      testDir = context.testDir;
-      sharedHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-home-'));
-
-      command = await context.gateway.commands.create(
-        recipeFactory({
-          spaceId: context.space.id,
-        }),
+      const originalContent = readFile(commandPath, context.testDir);
+      updateFile(
+        commandPath,
+        `${originalContent}\n* Never use var`,
+        context.testDir,
       );
-      const createPackage = await context.gateway.packages.create({
-        description: '',
-        name: 'My package',
-        recipeIds: [command.id],
-        spaceId: context.space.id,
-        standardIds: [],
-      });
-      pkg = createPackage.package;
-
-      await runCli(`install ${pkg.slug}`, { apiKey, cwd: testDir });
     });
 
-    afterEach(() => {
-      if (sharedHome && fs.existsSync(sharedHome)) {
-        fs.rmSync(sharedHome, { recursive: true, force: true });
-      }
+    it('shows the changes for the modified file', async () => {
+      const result = await context.runCli('diff');
+
+      expect(result.stderr.split('\n')).toEqual([
+        expect.stringContaining('Summary: 1 change found on 1 artefact:'),
+        expect.stringContaining(`* Command "${command.name}"`),
+        '',
+      ]);
     });
 
-    describe('when there are not changes', () => {
-      it('shows "No changes found."', async () => {
-        const result = await runCli('diff', { apiKey, cwd: testDir });
-
-        expect(result.stdout).toContain('No changes found.');
-      });
-    });
-
-    describe('when a file has been changed', () => {
-      let commandPath: string;
-
+    describe('when changes have been submitted', () => {
       beforeEach(async () => {
-        commandPath = `.packmind/commands/${command.slug}.md`;
-
-        const originalContent = readFile(commandPath, testDir);
-        updateFile(commandPath, `${originalContent}\n* Never use var`, testDir);
+        await context.runCli(`playbook status`);
+        await context.runCli(`playbook add ${commandPath}`);
+        await context.runCli('playbook submit -m "Update command"');
       });
 
-      it('shows the changes for the modified file', async () => {
-        const result = await runCli('diff', { apiKey, cwd: testDir });
+      it('shows "No new changes found."', async () => {
+        const result = await context.runCli('diff');
 
-        expect(result.stderr.split('\n')).toEqual([
-          expect.stringContaining('Summary: 1 change found on 1 artefact:'),
-          expect.stringContaining(`* Command "${command.name}"`),
-          '',
-        ]);
+        expect(result.stdout).toContain('No new changes found.');
       });
 
-      describe('when changes have been submitted', () => {
-        beforeEach(async () => {
-          await runCli(`playbook status`, {
-            apiKey,
-            cwd: testDir,
-            home: sharedHome,
-          });
-          await runCli(`playbook add ${commandPath}`, {
-            apiKey,
-            cwd: testDir,
-            home: sharedHome,
-          });
-          await runCli('playbook submit -m "Update command"', {
-            apiKey,
-            cwd: testDir,
-            home: sharedHome,
-          });
-        });
+      describe('when using --include-submitted', () => {
+        it('shows the previously sent change', async () => {
+          const result = await context.runCli('diff --include-submitted');
 
-        it('shows "No new changes found."', async () => {
-          const result = await runCli('diff', { apiKey, cwd: testDir });
-
-          expect(result.stdout).toContain('No new changes found.');
-        });
-
-        describe('when using --include-submitted', () => {
-          it('shows the previously sent change', async () => {
-            const result = await runCli('diff --include-submitted', {
-              apiKey,
-              cwd: testDir,
-            });
-
-            expect(result.stdout.split('\n')).toEqual(
-              expect.arrayContaining([
-                expect.stringContaining(`Command "${command.name}"`),
-                expect.stringContaining(commandPath),
-                expect.stringContaining('already submitted on'),
-              ]),
-            );
-          });
+          expect(result.stdout.split('\n')).toEqual(
+            expect.arrayContaining([
+              expect.stringContaining(`Command "${command.name}"`),
+              expect.stringContaining(commandPath),
+              expect.stringContaining('already submitted on'),
+            ]),
+          );
         });
       });
     });
