@@ -739,4 +739,3 @@ ${skillVersion.prompt}`;
     return ClaudeDeployer.ARTEFACT_PATHS.skill;
   }
 }
-

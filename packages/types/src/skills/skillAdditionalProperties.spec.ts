@@ -121,12 +121,12 @@ describe('filterAdditionalProperties', () => {
       argumentHint: 'hint',
       effort: 'high',
     };
-    expect(filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS)).toEqual(
-      {
-        argumentHint: 'hint',
-        disableModelInvocation: true,
-      },
-    );
+    expect(
+      filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
+    ).toEqual({
+      argumentHint: 'hint',
+      disableModelInvocation: true,
+    });
   });
 
   it('returns empty object when no properties match', () => {
@@ -151,10 +151,10 @@ describe('filterAdditionalProperties', () => {
 
   it('returns all properties when all match the supported list', () => {
     const props = { disableModelInvocation: false };
-    expect(filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS)).toEqual(
-      {
-        disableModelInvocation: false,
-      },
-    );
+    expect(
+      filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
+    ).toEqual({
+      disableModelInvocation: false,
+    });
   });
 });
