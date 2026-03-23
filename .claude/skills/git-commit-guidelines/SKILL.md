@@ -1,6 +1,6 @@
 ---
 name: 'git-commit-guidelines'
-description: 'Enforce git commit best practices using gitmoji + Conventional Commits format. TRIGGER when creating commits. Ensures quality-gate passes, prevents issue auto-closing (no Close/Fix keywords), includes Co-Authored-By for AI commits, and requires user approval before committing.'
+description: 'Enforce git commit best practices using gitmoji + Conventional Commits format. TRIGGER when creating commits. Prevents issue auto-closing (no Close/Fix keywords), includes Co-Authored-By for AI commits, and requires user approval before committing.'
 ---
 
 # Git Commit Guidelines
@@ -48,20 +48,7 @@ AI: git commit -m "Fix login bug
 #123" ✓
 ```
 
-### Failure 3: Skipping Quality Gate
-
-```
-AI: [Makes changes]
-AI: [Commits immediately without running quality-gate] ❌
-
-CORRECT BEHAVIOR:
-AI: [Makes changes]
-AI: [Runs npm run quality-gate]
-AI: [Fixes any issues]
-AI: [Then proposes commit]
-```
-
-### Failure 4: Missing Gitmoji
+### Failure 3: Missing Gitmoji
 
 ```
 AI: git commit -m "feat(auth): add login validation" ❌
@@ -112,21 +99,13 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 | 🚚      | move     | Moving/renaming files   | `🚚 move: relocate utils to shared`          |
 | 📦      | deps     | Dependencies            | `📦 deps: upgrade React to v19`              |
 
-## 7-Step Commit Workflow
+## 6-Step Commit Workflow
 
 ### Step 1: Complete Work
 
 Ensure all changes are complete and the feature/fix is working.
 
-### Step 2: Run Quality Gate
-
-```bash
-npm run quality-gate
-```
-
-**MANDATORY**: This must pass before committing. Fix any issues found.
-
-### Step 3: Review Changes
+### Step 2: Review Changes
 
 Run these commands to understand what will be committed:
 
@@ -141,7 +120,7 @@ If changes aren't staged, stage them first:
 git add <files>
 ```
 
-### Step 4: Prepare Commit Message
+### Step 3: Prepare Commit Message
 
 Compose the commit message following the format above:
 
@@ -151,7 +130,7 @@ Compose the commit message following the format above:
 4. Include issue reference WITHOUT "Close/Fix/Resolve" prefix
 5. Add Co-Authored-By footer
 
-### Step 5: Ask User for Permission (MANDATORY)
+### Step 4: Ask User for Permission (MANDATORY)
 
 **NEVER skip this step.** Present the commit to the user:
 
@@ -165,7 +144,7 @@ Compose the commit message following the format above:
 
 Wait for explicit user approval.
 
-### Step 6: Create Commit
+### Step 5: Create Commit
 
 Use HEREDOC format to preserve formatting:
 
@@ -185,7 +164,7 @@ EOF
 
 **NEVER use `--no-verify`**
 
-### Step 7: Verify Commit
+### Step 6: Verify Commit
 
 After committing, verify it was successful:
 
@@ -307,7 +286,6 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ### DO
 
 - ✅ Always write commit messages in English
-- ✅ Always run `npm run quality-gate` before committing
 - ✅ Always ask for user permission before committing
 - ✅ Always use gitmoji matching the commit type
 - ✅ Always include `Co-Authored-By` for AI-assisted commits
@@ -323,7 +301,6 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 - ❌ Never commit without user approval
 - ❌ Never use `--no-verify` flag
 - ❌ Never use "Close", "Fix", or "Resolve" before issue numbers
-- ❌ Never skip quality-gate check
 - ❌ Never use `git commit --amend` unless explicitly requested
 - ❌ Never force push to main/master
 - ❌ Never commit files containing secrets (.env, credentials.json)
@@ -345,12 +322,11 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 │   🔒️ security  🗑️ remove  🚚 move    📦 deps               │
 │                                                             │
 │ WORKFLOW:                                                   │
-│   1. npm run quality-gate                                   │
-│   2. git status && git diff --staged                        │
-│   3. Prepare message with gitmoji                           │
-│   4. ASK USER PERMISSION                                    │
-│   5. git commit (use HEREDOC)                               │
-│   6. git log -1 (verify)                                    │
+│   1. git status && git diff --staged                        │
+│   2. Prepare message with gitmoji                           │
+│   3. ASK USER PERMISSION                                    │
+│   4. git commit (use HEREDOC)                               │
+│   5. git log -1 (verify)                                    │
 │                                                             │
 │ RULES:                                                      │
 │   • Always write in English                                 │
@@ -363,4 +339,4 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ---
 
-**REMEMBER:** This skill is MANDATORY when creating commits. Always run quality-gate, always ask for permission, and always use gitmoji. These steps ensure code quality and maintain a clean, informative git history.
+**REMEMBER:** This skill is MANDATORY when creating commits. Always ask for permission, and always use gitmoji. These steps ensure code quality and maintain a clean, informative git history.
