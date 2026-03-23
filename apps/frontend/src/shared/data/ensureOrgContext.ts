@@ -5,7 +5,7 @@ import { AuthService } from '../../services/auth/AuthService';
 import { OrganizationId, UserOrganizationRole } from '@packmind/types';
 import { MeResponse } from '../../domain/accounts/api/gateways/IAuthGateway';
 
-type AuthenticatedMeWithOrganization = Extract<
+export type AuthenticatedMeWithOrganization = Extract<
   MeResponse,
   { authenticated: true }
 > & {
@@ -21,7 +21,7 @@ type AuthenticatedMeWithOrganization = Extract<
  * Ensures the authenticated user's org context matches the URL org slug.
  * If mismatched, performs the org switch via AuthService before returning.
  *
- * Use this in clientLoaders that need the correct org context.
+ * Called by the _protected layout's clientMiddleware — runs once before all loaders.
  */
 export async function ensureOrgContext(
   orgSlug: string,

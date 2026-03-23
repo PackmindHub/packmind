@@ -9,15 +9,22 @@ import {
   initCrisp,
   setCrispUserInfo,
 } from '@packmind/proprietary/frontend/services/vendors/CrispService';
-import { AuthService } from '../../src/services/auth/AuthService';
 import { SkeletonLayout } from '../../src/domain/organizations/components/SkeletonLayout';
 import { OnboardingIntentModal } from '../../src/domain/accounts/components/OnboardingIntentModal';
 import {
   useGetOnboardingStatusQuery,
   useCompleteOnboardingMutation,
 } from '../../src/domain/accounts/api/queries/OnboardingQueries';
+import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
+import type { MiddlewareFunction } from 'react-router';
 
-// NO clientLoader exported here to prevent blocking!
+// Middleware runs BEFORE all child loaders — ensures org context is correct.
+// Child loaders can safely read from TanStack Query cache without any special call.
+export const clientMiddleware: MiddlewareFunction[] = [
+  async ({ params }) => {
+    await ensureOrgContext((params as { orgSlug: string }).orgSlug);
+  },
+];
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
@@ -27,7 +34,6 @@ export default function AuthenticatedLayout() {
   const completeOnboardingMutation = useCompleteOnboardingMutation();
   const navigate = useNavigate();
   const params = useParams();
-  const authService = AuthService.getInstance();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -82,7 +88,6 @@ export default function AuthenticatedLayout() {
   useEffect(() => {
     if (isLoading) return;
 
-    // 1. Unauthenticated -> Redirect to Sign In
     if (!me || !me.authenticated) {
       if (!window.location.pathname.includes('/sign-in')) {
         navigate('/sign-in');
@@ -90,31 +95,11 @@ export default function AuthenticatedLayout() {
       return;
     }
 
-    // 2. Org Switch Check
-    // If the URL has an org slug, but the user context has a DIFFERENT slug, switch context.
-    if (
-      me.organization?.slug &&
-      params.orgSlug &&
-      me.organization.slug !== params.orgSlug &&
-      !AuthService.getIsSwitching()
-    ) {
-      // validateAndSwitchIfNeeded sets/clears the switching flag internally
-      void authService
-        .validateAndSwitchIfNeeded(params.orgSlug)
-        .then((result) => {
-          if (!result.success || !result.hasAccess) {
-            // Access denied or invalid org -> fallback to user's 'current' org dashboard
-            navigate(`/org/${me.organization?.slug}`);
-          }
-          // If success, the query cache invalidation in authService triggers a re-render with new data
-        });
-      return; // Exit early to prevent Crisp init during switch
-    }
+    // Org switch is handled by clientMiddleware (ensureOrgContext) above.
 
-    // 3. Crisp Init
     initCrisp();
     setCrispUserInfo(me.user.email);
-  }, [me, isLoading, navigate, params.orgSlug]);
+  }, [me, isLoading, navigate]);
 
   // OPTIMISTIC UI: Show Skeleton while loading (initial fetch or org switch)
   // Also keep skeleton if we are technically 'authenticated' but switching orgs (mismatched slugs)

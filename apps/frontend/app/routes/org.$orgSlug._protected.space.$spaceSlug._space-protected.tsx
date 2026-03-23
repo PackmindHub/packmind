@@ -8,34 +8,11 @@ import {
 } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { getStandardsBySpaceQueryOptions } from '../../src/domain/standards/api/queries/StandardsQueries';
 import { pmToaster } from '@packmind/ui';
-import { AuthService } from '../../src/services/auth/AuthService';
-import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
-import { OrganizationId, UserOrganizationRole } from '@packmind/types';
-import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
-
-// Type for authenticated user with guaranteed organization
-type AuthenticatedMeWithOrganization = Extract<
-  MeResponse,
-  { authenticated: true }
-> & {
-  organization: {
-    id: OrganizationId;
-    name: string;
-    slug: string;
-    role: UserOrganizationRole;
-  };
-};
+import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
+import { type AuthenticatedMeWithOrganization } from '../../src/shared/data/ensureOrgContext';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
-  // If org switch is in progress, wait for it to complete by returning minimal data
-  // The parent layout will handle the switch and re-render
-  if (AuthService.getIsSwitching()) {
-    return { space: null };
-  }
-
-  // Ensure auth data is loaded and org context matches URL
-  // If mismatched, performs the org switch before returning
-  const me = await ensureOrgContext(params.orgSlug!);
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
 
   return clientLoaderWithMe(params, me as AuthenticatedMeWithOrganization);
 }
