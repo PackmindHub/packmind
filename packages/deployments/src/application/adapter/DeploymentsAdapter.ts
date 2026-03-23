@@ -464,6 +464,7 @@ export class DeploymentsAdapter
       this.distributedPackageRepository,
       this.deploymentsServices.getRenderModeConfigurationService(),
       targetResolutionService,
+      this.spacesPort,
     );
 
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
