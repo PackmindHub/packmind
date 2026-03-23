@@ -18,9 +18,17 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../../application/utils/pathUtils';
-import { ArtifactVersionEntry, FileModification, Space } from '@packmind/types';
+import {
+  ArtifactType,
+  ArtifactVersionEntry,
+  FileModification,
+  Space,
+} from '@packmind/types';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
-import { findLockFileEntryForPath } from '../../../application/utils/lockFileUtils';
+import {
+  findLockFileEntryForPath,
+  findLockFileEntryAndFileForPath,
+} from '../../../application/utils/lockFileUtils';
 
 type SkillFile = {
   path: string;
@@ -147,21 +155,60 @@ export async function playbookAddHandler(
 
   const absolutePath = path.resolve(cwd, filePath);
 
-  const artefactResult = resolveArtefactFromPath(absolutePath);
-  if (!artefactResult) {
-    logErrorConsole(
-      `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command, standard, or skill).`,
-    );
-    exit(1);
-    return;
-  }
+  // Try resolving artifact type and agent from the lock file first (source of truth),
+  // then fall back to path-based pattern matching for new artifacts.
+  let artifactType: ArtifactType;
+  let codingAgent: string;
 
-  const { artifactType, codingAgent } = artefactResult;
+  const earlyTargetDir = await findNearestConfigDir(
+    path.dirname(absolutePath),
+    packmindCliHexa,
+  );
+  const earlyLockFile = earlyTargetDir
+    ? await lockFileRepository.read(earlyTargetDir)
+    : null;
+
+  if (earlyLockFile && earlyTargetDir) {
+    const normalizedForLookup = normalizePath(
+      path.relative(earlyTargetDir, absolutePath),
+    );
+    const lockResult = findLockFileEntryAndFileForPath(
+      normalizedForLookup,
+      earlyLockFile.artifacts,
+    );
+    if (lockResult) {
+      artifactType = lockResult.entry.type;
+      codingAgent = lockResult.file.agent;
+    } else {
+      const artefactResult = resolveArtefactFromPath(absolutePath);
+      if (!artefactResult) {
+        logErrorConsole(
+          `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command, standard, or skill).`,
+        );
+        exit(1);
+        return;
+      }
+      artifactType = artefactResult.artifactType;
+      codingAgent = artefactResult.codingAgent;
+    }
+  } else {
+    const artefactResult = resolveArtefactFromPath(absolutePath);
+    if (!artefactResult) {
+      logErrorConsole(
+        `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command, standard, or skill).`,
+      );
+      exit(1);
+      return;
+    }
+    artifactType = artefactResult.artifactType;
+    codingAgent = artefactResult.codingAgent;
+  }
 
   // Read local content
   let localContent: string;
   let artifactName: string;
   let serializedContent: string;
+  let skillFiles: SkillFile[] = [];
 
   if (artifactType === 'skill') {
     const dirPath = absolutePath.endsWith('SKILL.md')
@@ -186,6 +233,8 @@ export async function playbookAddHandler(
       return;
     }
 
+    skillFiles = files;
+
     const parseResult = parseSkillDirectory(files);
     if (!parseResult.success) {
       logErrorConsole(parseResult.error);
@@ -195,7 +244,9 @@ export async function playbookAddHandler(
 
     artifactName = parseResult.payload.name;
     serializedContent = yaml.stringify(parseResult.payload);
-    localContent = serializedContent;
+
+    const skillMdFile = files.find((f) => f.relativePath === 'SKILL.md');
+    localContent = skillMdFile?.content ?? serializedContent;
   } else {
     try {
       localContent = readFile(absolutePath);
@@ -240,14 +291,8 @@ export async function playbookAddHandler(
     serializedContent = localContent;
   }
 
-  // Find target directory — for skills, normalize SKILL.md to its parent directory first
-  const resolvedPathForConfigSearch =
-    artifactType === 'skill' && absolutePath.endsWith('SKILL.md')
-      ? path.dirname(absolutePath)
-      : absolutePath;
-  const fileDir = path.dirname(resolvedPathForConfigSearch);
-
-  const targetDir = await findNearestConfigDir(fileDir, packmindCliHexa);
+  // Reuse the target directory resolved earlier for lock file lookup
+  const targetDir = earlyTargetDir;
   if (!targetDir) {
     logErrorConsole(
       'Not inside a Packmind project. No packmind.json found in any parent directory.',
@@ -266,9 +311,15 @@ export async function playbookAddHandler(
 
   // Deployed content and lock file paths are relative to the project directory
   // (targetDir), not the git root. Use targetDir-relative paths for all comparisons.
-  const normalizedFilePath = normalizePath(
-    path.relative(targetDir, absolutePath),
-  );
+  // For skills, normalize to directory path (strip SKILL.md) since lock file entries
+  // store individual file paths but playbook should reference the skill directory.
+  const normalizedFilePath = (() => {
+    const refPath =
+      artifactType === 'skill' && absolutePath.endsWith('SKILL.md')
+        ? path.dirname(absolutePath)
+        : absolutePath;
+    return normalizePath(path.relative(targetDir, refPath));
+  })();
 
   // Resolve space ID
   let spaceId: string;
@@ -306,10 +357,10 @@ export async function playbookAddHandler(
 
   // Determine changeType using lock file
   let changeType: 'created' | 'updated' = 'created';
-  const lockFile = await lockFileRepository.read(targetDir);
-  if (lockFile) {
-    const matchingEntry = Object.values(lockFile.artifacts).find((entry) =>
-      entry.files.some((f) => normalizePath(f.path) === normalizedFilePath),
+  if (earlyLockFile) {
+    const matchingEntry = findLockFileEntryForPath(
+      normalizedFilePath,
+      earlyLockFile.artifacts,
     );
     if (matchingEntry && matchingEntry.spaceId === spaceId) {
       changeType = 'updated';
@@ -317,18 +368,46 @@ export async function playbookAddHandler(
   }
 
   // Check if content matches deployed (via lock file artifact versions)
-  if (changeType === 'updated' && lockFile) {
+  if (changeType === 'updated' && earlyLockFile) {
     const deployedFiles = await fetchDeployedArtifactFiles(
       packmindCliHexa,
-      lockFile,
+      earlyLockFile,
     );
-    const deployedFile = deployedFiles.find(
-      (f) => normalizePath(f.path) === normalizedFilePath,
-    );
-    if (deployedFile && deployedFile.content?.trim() === localContent.trim()) {
-      logInfoConsole('Already up to date — local content matches deployed.');
-      exit(0);
-      return;
+
+    if (artifactType === 'skill') {
+      // For skills, check all files in the skill directory
+      const skillDeployedFiles = deployedFiles.filter((f) =>
+        normalizePath(f.path).startsWith(normalizedFilePath + '/'),
+      );
+      const allMatch =
+        skillDeployedFiles.length > 0 &&
+        skillDeployedFiles.every((deployed) => {
+          const localFile = skillFiles.find(
+            (f) =>
+              normalizePath(path.join(normalizedFilePath, f.relativePath)) ===
+              normalizePath(deployed.path),
+          );
+          return (
+            localFile && deployed.content?.trim() === localFile.content.trim()
+          );
+        });
+      if (allMatch) {
+        logInfoConsole('Already up to date — local content matches deployed.');
+        exit(0);
+        return;
+      }
+    } else {
+      const deployedFile = deployedFiles.find(
+        (f) => normalizePath(f.path) === normalizedFilePath,
+      );
+      if (
+        deployedFile &&
+        deployedFile.content?.trim() === localContent.trim()
+      ) {
+        logInfoConsole('Already up to date — local content matches deployed.');
+        exit(0);
+        return;
+      }
     }
   }
 
