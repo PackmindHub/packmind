@@ -417,8 +417,8 @@ describe('GitlabDuoDeployer', () => {
           mockTarget,
         );
 
-        expect(result.createOrUpdate[0].content).toContain("allowed-tools:");
-        expect(result.createOrUpdate[0].content).not.toContain("allowedTools:");
+        expect(result.createOrUpdate[0].content).toContain('allowed-tools:');
+        expect(result.createOrUpdate[0].content).not.toContain('allowedTools:');
       });
     });
 
