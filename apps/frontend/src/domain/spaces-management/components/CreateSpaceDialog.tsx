@@ -5,6 +5,7 @@ import {
   PMButton,
   PMCloseButton,
   PMInput,
+  PMText,
   pmToaster,
 } from '@packmind/ui';
 import { useCreateSpaceMutation } from '../api/queries/SpacesManagementQueries';
@@ -15,24 +16,23 @@ interface CreateSpaceDialogProps {
   setOpen: (open: boolean) => void;
 }
 
-const SPACE_NAME_MAX_LENGTH = 255;
+const SPACE_NAME_MAX_LENGTH = 64;
 
 export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
   open,
   setOpen,
 }) => {
   const [spaceName, setSpaceName] = React.useState('');
+  const [spaceNameError, setSpaceNameError] = React.useState<
+    string | undefined
+  >();
   const createSpaceMutation = useCreateSpaceMutation();
 
   const handleSpaceCreation = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!spaceName.trim()) {
-      pmToaster.create({
-        title: 'Error',
-        description: 'Space name is required',
-        type: 'error',
-      });
+      setSpaceNameError('Space name is required');
       return;
     }
 
@@ -46,14 +46,11 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
       });
 
       setSpaceName('');
+      setSpaceNameError(undefined);
       setOpen(false);
     } catch (error) {
       if (isPackmindConflictError(error)) {
-        pmToaster.create({
-          title: 'Error',
-          description: 'A space with this name already exists',
-          type: 'error',
-        });
+        setSpaceNameError('A space with this name already exists');
       } else {
         pmToaster.create({
           title: 'Error',
@@ -72,6 +69,7 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
           setOpen(details.open);
           if (!details.open) {
             setSpaceName('');
+            setSpaceNameError(undefined);
           }
         }
       }}
@@ -90,18 +88,26 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
               </PMDialog.CloseTrigger>
             </PMDialog.Header>
             <PMDialog.Body>
-              <PMField.Root required>
+              <PMField.Root required invalid={!!spaceNameError}>
                 <PMField.Label>
-                  Space Name <PMField.RequiredIndicator />
+                  Space Name{' '}
+                  <PMText as="span" variant="small" color="secondary">
+                    ({spaceName.length} / {SPACE_NAME_MAX_LENGTH} max)
+                  </PMText>
+                  <PMField.RequiredIndicator />
                 </PMField.Label>
                 <PMInput
                   value={spaceName}
-                  onChange={(e) => setSpaceName(e.target.value)}
+                  onChange={(e) => {
+                    setSpaceName(e.target.value);
+                    setSpaceNameError(undefined);
+                  }}
                   maxLength={SPACE_NAME_MAX_LENGTH}
                   placeholder="Enter space name"
                   required
                   disabled={createSpaceMutation.isPending}
                 />
+                <PMField.ErrorText>{spaceNameError}</PMField.ErrorText>
               </PMField.Root>
             </PMDialog.Body>
             <PMDialog.Footer>
