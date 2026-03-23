@@ -406,18 +406,25 @@ describe('GitlabDuoDeployer', () => {
     });
 
     describe('allowed-tools frontmatter key', () => {
-      it('renders in kebab-case', async () => {
+      let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
+
+      beforeEach(async () => {
         const skillVersion = skillVersionFactory({
           allowedTools: 'Read,Write,Bash',
         });
 
-        const result = await deployer.deploySkills(
+        result = await deployer.deploySkills(
           [skillVersion],
           mockGitRepo,
           mockTarget,
         );
+      });
 
+      it('renders in kebab-case', () => {
         expect(result.createOrUpdate[0].content).toContain('allowed-tools:');
+      });
+
+      it('does not render in camelCase', () => {
         expect(result.createOrUpdate[0].content).not.toContain('allowedTools:');
       });
     });
@@ -501,7 +508,9 @@ describe('GitlabDuoDeployer', () => {
     });
 
     describe('when skillVersion.files is absent and skillFilesMap is provided', () => {
-      it('falls back to skillFilesMap', async () => {
+      let result: Awaited<ReturnType<typeof deployer.generateFileUpdatesForSkills>>;
+
+      beforeEach(async () => {
         const skillVersion = skillVersionFactory({
           slug: 'fallback-skill',
         });
@@ -518,12 +527,17 @@ describe('GitlabDuoDeployer', () => {
           },
         ]);
 
-        const result = await deployer.generateFileUpdatesForSkills(
+        result = await deployer.generateFileUpdatesForSkills(
           [skillVersion],
           skillFilesMap,
         );
+      });
 
+      it('deploys SKILL.md and the fallback file', () => {
         expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes the file from skillFilesMap', () => {
         const configFile = result.createOrUpdate.find((f) =>
           f.path.includes('config.json'),
         );
