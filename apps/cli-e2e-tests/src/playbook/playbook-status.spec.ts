@@ -8,7 +8,7 @@ import {
   updateFile,
   setupGitRepo,
   IPackmindGateway,
-} from './helpers';
+} from '../helpers';
 import { Space, Standard } from '@packmind/types';
 
 describeWithUserSignedUp('playbook status command', (getContext) => {
