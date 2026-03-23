@@ -6,9 +6,13 @@
 
 ## Fixed
 
-- Distribution analytics were broken because `@space/package` slug format from the CLI was not matched against bare `package` slugs in the database, resulting in no `distributed_packages` or artifact version associations being created
-
 ## Removed
+
+# [1.11.1] - 2026-03-23
+
+## Fixed
+
+- Distribution analytics were broken because `@space/package` slug format from the CLI was not matched against bare `package` slugs in the database, resulting in no `distributed_packages` or artifact version associations being created
 
 # [1.11.0] - 2026-03-20
 
@@ -246,7 +250,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.11.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.11.1...HEAD
+[1.11.1]: https://github.com/PackmindHub/packmind/compare/release/1.11.0...release/1.11.1
 [1.11.0]: https://github.com/PackmindHub/packmind/compare/release/1.10.0...release/1.11.0
 [1.10.0]: https://github.com/PackmindHub/packmind/compare/release/1.9.0...release/1.10.0
 [1.9.0]: https://github.com/PackmindHub/packmind/compare/release/1.8.0...release/1.9.0
