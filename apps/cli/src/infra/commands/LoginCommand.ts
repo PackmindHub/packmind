@@ -18,7 +18,7 @@ export const loginCommand = command({
     host: option({
       type: string,
       long: 'host',
-      description: 'Packmind server URL (default: https://app.packmind.com)',
+      description: 'Packmind server URL (default: https://app.packmind.ai)',
       defaultValue: () => DEFAULT_HOST,
     }),
     code: option({
