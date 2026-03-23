@@ -940,11 +940,11 @@ describe('playbookAddHandler', () => {
         );
       });
 
-      it('does not store spaceName for updated artifacts', async () => {
+      it('stores spaceName resolved from getSpaces for updated artifacts', async () => {
         await playbookAddHandler(buildDeps());
 
         const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
-        expect(callArg.spaceName).toBeUndefined();
+        expect(callArg.spaceName).toBe('Global');
       });
     });
   });

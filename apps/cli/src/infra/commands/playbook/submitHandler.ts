@@ -618,6 +618,7 @@ export async function playbookSubmitHandler(
   // Submit
   const packmindGateway = packmindCliHexa.getPackmindGateway();
   let totalCreated = 0;
+  let totalSkipped = 0;
   let hasErrors = false;
 
   for (const [spaceId, proposals] of proposalsBySpaceId) {
@@ -635,6 +636,7 @@ export async function playbookSubmitHandler(
     });
 
     totalCreated += response.created;
+    totalSkipped += response.skipped;
 
     if (response.errors.length > 0) {
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
@@ -704,13 +706,35 @@ export async function playbookSubmitHandler(
   }
 
   if (hasErrors) {
-    logErrorConsole('Some proposals failed to submit.');
+    if (totalCreated > 0) {
+      logWarningConsole(
+        `Partially submitted: ${totalCreated} succeeded, some failed`,
+      );
+    } else {
+      logErrorConsole('Proposals failed to submit');
+    }
     exit(1);
     return;
   }
 
-  logSuccessConsole(
-    `Submitted ${totalCreated} change proposal${totalCreated !== 1 ? 's' : ''}.`,
-  );
+  const parts: string[] = [];
+  if (totalCreated > 0) {
+    parts.push(`${totalCreated} submitted`);
+  }
+  if (totalSkipped > 0) {
+    parts.push(`${totalSkipped} skipped (already submitted)`);
+  }
+
+  if (totalCreated > 0 && totalSkipped === 0) {
+    logSuccessConsole(
+      `Submitted ${totalCreated} change proposal${totalCreated !== 1 ? 's' : ''}`,
+    );
+  } else if (totalCreated === 0 && totalSkipped > 0) {
+    logWarningConsole(
+      `All proposals were already submitted (${totalSkipped} skipped)`,
+    );
+  } else {
+    logSuccessConsole(`Change proposals: ${parts.join(', ')}`);
+  }
   exit(0);
 }

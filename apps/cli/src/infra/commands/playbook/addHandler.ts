@@ -73,6 +73,9 @@ async function tryStageRemovedFromLockFile(
     deps.packmindCliHexa,
     targetDir,
   );
+  const allSpaces = await deps.packmindCliHexa.getSpaces();
+  const spaceName = allSpaces.find((s) => s.id === lockEntry.spaceId)?.name;
+
   deps.playbookLocalRepository.addChange({
     filePath: normalizedPath,
     artifactType: lockEntry.type,
@@ -81,11 +84,13 @@ async function tryStageRemovedFromLockFile(
     changeType: 'removed',
     content: '',
     spaceId: lockEntry.spaceId,
+    spaceName,
     targetId: deployedContext?.targetId,
     addedAt: new Date().toISOString(),
   });
+  const spaceInfo = spaceName ? ` in space "${spaceName}"` : '';
   logSuccessConsole(
-    `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook.`,
+    `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook${spaceInfo}`,
   );
   deps.exit(0);
   return true;
@@ -299,6 +304,8 @@ export async function playbookAddHandler(
   if (changeType === 'updated') {
     spaceId =
       deployedContext?.spaceId ?? (await packmindCliHexa.getDefaultSpace()).id;
+    const allSpaces = await packmindCliHexa.getSpaces();
+    spaceName = allSpaces.find((s) => s.id === spaceId)?.name;
   } else {
     const allSpaces = await packmindCliHexa.getSpaces();
 
@@ -338,8 +345,9 @@ export async function playbookAddHandler(
     addedAt: new Date().toISOString(),
   });
 
+  const spaceInfo = spaceName ? ` in space "${spaceName}"` : '';
   logSuccessConsole(
-    `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook. ${formatLabel(codingAgent)}`,
+    `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook${spaceInfo}. ${formatLabel(codingAgent)}`,
   );
   exit(0);
 }
