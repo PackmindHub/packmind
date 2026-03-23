@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router';
 import {
   PMField,
   PMDialog,
@@ -10,6 +11,8 @@ import {
 } from '@packmind/ui';
 import { useCreateSpaceMutation } from '../api/queries/SpacesManagementQueries';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { routes } from '../../../shared/utils/routes';
 
 interface CreateSpaceDialogProps {
   open: boolean;
@@ -22,6 +25,8 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
   open,
   setOpen,
 }) => {
+  const navigate = useNavigate();
+  const { organization } = useAuthContext();
   const [spaceName, setSpaceName] = React.useState('');
   const [spaceNameError, setSpaceNameError] = React.useState<
     string | undefined
@@ -48,6 +53,10 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
       setSpaceName('');
       setSpaceNameError(undefined);
       setOpen(false);
+
+      if (organization) {
+        navigate(routes.space.toDashboard(organization.slug, space.slug));
+      }
     } catch (error) {
       if (isPackmindConflictError(error)) {
         setSpaceNameError('A space with this name already exists');
