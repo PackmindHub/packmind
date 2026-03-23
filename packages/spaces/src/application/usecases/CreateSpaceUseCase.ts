@@ -2,9 +2,11 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   createOrganizationId,
+  createUserId,
   CreateSpaceCommand,
   CreateSpaceResponse,
   IAccountsPort,
+  IEventTrackingPort,
 } from '@packmind/types';
 import { SpaceName } from '../../domain/SpaceName';
 import { SpaceService } from '../services/SpaceService';
@@ -18,6 +20,7 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
   constructor(
     private readonly spaceService: SpaceService,
     accountsPort: IAccountsPort,
+    private readonly eventTrackingPort: IEventTrackingPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -28,10 +31,19 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
   ): Promise<CreateSpaceResponse> {
     const spaceName = new SpaceName(command.name);
 
-    return this.spaceService.createSpace(
+    const space = await this.spaceService.createSpace(
       spaceName.value,
       createOrganizationId(command.organizationId),
       false,
     );
+
+    this.eventTrackingPort.trackEvent(
+      createUserId(command.userId),
+      createOrganizationId(command.organizationId),
+      'space_created',
+      { spaceName: space.name, spaceSlug: space.slug },
+    );
+
+    return space;
   }
 }

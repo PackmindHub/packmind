@@ -4,6 +4,8 @@ import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   ISpacesPort,
   ISpacesPortName,
 } from '@packmind/types';
@@ -66,9 +68,13 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
     try {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
+        IEventTrackingPortName,
+      );
 
       await this.spacesAdapter.initialize({
         [IAccountsPortName]: accountsPort,
+        [IEventTrackingPortName]: eventTrackingPort,
       });
 
       this.logger.info('SpacesHexa initialized successfully');

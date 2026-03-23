@@ -1,6 +1,7 @@
 import {
   CreateSpaceCommand,
   IAccountsPort,
+  IEventTrackingPort,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
@@ -26,6 +27,7 @@ describe('CreateSpaceUseCase', () => {
   let useCase: CreateSpaceUseCase;
   let spaceService: jest.Mocked<SpaceService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
 
   const buildCommand = (
     overrides?: Partial<CreateSpaceCommand>,
@@ -46,7 +48,17 @@ describe('CreateSpaceUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    useCase = new CreateSpaceUseCase(spaceService, accountsPort, stubLogger());
+    eventTrackingPort = {
+      trackEvent: jest.fn(),
+      identifyOrganizationGroup: jest.fn(),
+    } as unknown as jest.Mocked<IEventTrackingPort>;
+
+    useCase = new CreateSpaceUseCase(
+      spaceService,
+      accountsPort,
+      eventTrackingPort,
+      stubLogger(),
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -78,6 +90,17 @@ describe('CreateSpaceUseCase', () => {
           false,
         );
       });
+
+      it('tracks a space_created amplitude event with space name and slug', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'space_created',
+          { spaceName: createdSpace.name, spaceSlug: createdSpace.slug },
+        );
+      });
     });
 
     describe('when a space with the same slug already exists', () => {
@@ -91,6 +114,11 @@ describe('CreateSpaceUseCase', () => {
         await expect(useCase.execute(buildCommand())).rejects.toThrow(
           SpaceSlugConflictError,
         );
+      });
+
+      it('does not track an amplitude event', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow();
+        expect(eventTrackingPort.trackEvent).not.toHaveBeenCalled();
       });
     });
 
