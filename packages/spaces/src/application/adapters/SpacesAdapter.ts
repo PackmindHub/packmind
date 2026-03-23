@@ -6,6 +6,8 @@ import {
   GetDefaultSpaceResponse,
   IAccountsPort,
   IAccountsPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   ISpacesPort,
   ListUserSpacesCommand,
   ListUserSpacesResponse,
@@ -24,6 +26,7 @@ import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
  */
 export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   private accountsPort!: IAccountsPort;
+  private eventTrackingPort!: IEventTrackingPort;
 
   constructor(private readonly hexa: SpacesHexa) {}
 
@@ -34,7 +37,11 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
 
   async createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
     const spaceService = this.hexa.getSpaceService();
-    const useCase = new CreateSpaceUseCase(spaceService, this.accountsPort);
+    const useCase = new CreateSpaceUseCase(
+      spaceService,
+      this.accountsPort,
+      this.eventTrackingPort,
+    );
     return useCase.execute(command);
   }
 
@@ -79,13 +86,16 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
    */
   public async initialize(ports: Record<string, unknown>): Promise<void> {
     this.accountsPort = ports[IAccountsPortName] as IAccountsPort;
+    this.eventTrackingPort = ports[
+      IEventTrackingPortName
+    ] as IEventTrackingPort;
   }
 
   /**
    * Check if the adapter is ready to use.
    */
   public isReady(): boolean {
-    return !!this.accountsPort;
+    return !!this.accountsPort && !!this.eventTrackingPort;
   }
 
   /**
