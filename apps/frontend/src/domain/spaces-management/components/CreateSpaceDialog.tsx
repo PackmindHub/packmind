@@ -112,7 +112,7 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
                     setSpaceNameError(undefined);
                   }}
                   maxLength={SPACE_NAME_MAX_LENGTH}
-                  placeholder="Enter space name"
+                  placeholder="e.g. 'frontend team', 'security'..."
                   required
                   disabled={createSpaceMutation.isPending}
                 />
@@ -133,7 +133,7 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
                 type="submit"
                 loading={createSpaceMutation.isPending}
               >
-                {createSpaceMutation.isPending ? 'Creating...' : 'Create'}
+                {createSpaceMutation.isPending ? 'Creating...' : 'Create space'}
               </PMButton>
             </PMDialog.Footer>
           </form>
