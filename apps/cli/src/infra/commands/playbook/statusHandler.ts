@@ -3,6 +3,7 @@ import * as path from 'path';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { formatLabel, logConsole } from '../../utils/consoleLogger';
+import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
@@ -38,10 +39,6 @@ type GroupedChange = {
   spaceName?: string;
   filePaths: string[];
 };
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 function logGroupedChange(header: string, filePaths: string[]): void {
   if (filePaths.length === 1) {

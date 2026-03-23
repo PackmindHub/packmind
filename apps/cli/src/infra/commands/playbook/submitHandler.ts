@@ -25,6 +25,7 @@ import {
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
+import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
@@ -52,10 +53,6 @@ type ProposalItem = {
   targetId: string | undefined;
   spaceId: string;
 };
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 function buildEditorPrefill(changes: PlaybookChangeEntry[]): string {
   const lines = [
