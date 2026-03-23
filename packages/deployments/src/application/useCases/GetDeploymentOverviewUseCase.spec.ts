@@ -154,7 +154,11 @@ describe('GetDeploymentOverviewUseCase', () => {
       it('calls deployments repository with organization id and success status', () => {
         expect(
           distributionRepository.listByOrganizationIdWithStatus,
-        ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
+        ).toHaveBeenCalledWith(
+          organizationId,
+          DistributionStatus.success,
+          createSpaceId('space-1'),
+        );
       });
 
       it('calls spaces port to get space by id', () => {

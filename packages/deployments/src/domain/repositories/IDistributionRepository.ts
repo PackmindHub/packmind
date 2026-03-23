@@ -9,6 +9,7 @@ import {
   RecipeVersion,
   SkillId,
   SkillVersion,
+  SpaceId,
   StandardId,
   StandardVersion,
   TargetId,
@@ -50,6 +51,7 @@ export interface IDistributionRepository {
   listByOrganizationIdWithStatus(
     organizationId: OrganizationId,
     status?: DistributionStatus,
+    spaceId?: SpaceId,
   ): Promise<Distribution[]>;
 
   /**
