@@ -7,7 +7,7 @@ import { submitPlaybookCommand } from './playbook/SubmitCommand';
 
 export const playbookCommand = subcommands({
   name: 'playbook',
-  description: 'Track local changes to deployed Packmind artifacts',
+  description: 'Manage local playbook files and propose changes to your team',
   cmds: {
     add: addPlaybookCommand,
     rm: rmPlaybookCommand,

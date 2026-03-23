@@ -2,6 +2,7 @@ import { playbookRmHandler, PlaybookRmHandlerDependencies } from './rmHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 
 jest.mock('../../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
@@ -12,9 +13,8 @@ jest.mock('../../utils/consoleLogger', () => ({
 const LOCK_FILE_WITH_COMMAND = {
   lockfileVersion: 1,
   packageSlugs: ['my-package'],
-  agents: ['claude'],
+  agents: ['claude' as const],
   installedAt: '2026-03-17T00:00:00.000Z',
-  cliVersion: '1.0.0',
   targetId: 'target-456',
   artifacts: {
     'my-command': {
@@ -24,10 +24,15 @@ const LOCK_FILE_WITH_COMMAND = {
       version: 1,
       spaceId: 'space-123',
       packageIds: ['pkg-1'],
-      files: [{ path: '.claude/commands/my-command.md', agent: 'claude' }],
+      files: [
+        {
+          path: '.claude/commands/my-command.md',
+          agent: 'claude' as const,
+        },
+      ],
     },
   },
-};
+} satisfies PackmindLockFile;
 
 const LOCK_FILE_WITH_STANDARD = {
   ...LOCK_FILE_WITH_COMMAND,
@@ -40,11 +45,14 @@ const LOCK_FILE_WITH_STANDARD = {
       spaceId: 'space-123',
       packageIds: ['pkg-1'],
       files: [
-        { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+        {
+          path: '.packmind/standards/my-standard.md',
+          agent: 'packmind' as const,
+        },
       ],
     },
   },
-};
+} satisfies PackmindLockFile;
 
 const LOCK_FILE_WITH_SKILL = {
   ...LOCK_FILE_WITH_COMMAND,
@@ -57,15 +65,18 @@ const LOCK_FILE_WITH_SKILL = {
       spaceId: 'space-123',
       packageIds: ['pkg-1'],
       files: [
-        { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+        {
+          path: '.claude/skills/my-skill/SKILL.md',
+          agent: 'claude' as const,
+        },
         {
           path: '.claude/skills/my-skill/support/helper.py',
-          agent: 'claude',
+          agent: 'claude' as const,
         },
       ],
     },
   },
-};
+} satisfies PackmindLockFile;
 
 describe('playbookRmHandler', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
@@ -100,8 +111,6 @@ describe('playbookRmHandler', () => {
 
     mockLockFileRepository = {
       read: jest.fn().mockResolvedValue(LOCK_FILE_WITH_COMMAND),
-      write: jest.fn(),
-      delete: jest.fn(),
     };
   });
 
