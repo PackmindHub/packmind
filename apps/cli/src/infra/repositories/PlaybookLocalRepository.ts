@@ -27,7 +27,7 @@ export class PlaybookLocalRepository implements IPlaybookLocalRepository {
   addChange(entry: PlaybookChangeEntry): void {
     const data = this.readYaml();
     const existingIndex = data.changes.findIndex(
-      (c) => c.filePath === entry.filePath,
+      (c) => c.filePath === entry.filePath && c.spaceId === entry.spaceId,
     );
 
     if (existingIndex >= 0) {
@@ -39,10 +39,12 @@ export class PlaybookLocalRepository implements IPlaybookLocalRepository {
     this.writeYaml(data);
   }
 
-  removeChange(filePath: string): boolean {
+  removeChange(filePath: string, spaceId: string): boolean {
     const data = this.readYaml();
     const initialLength = data.changes.length;
-    data.changes = data.changes.filter((c) => c.filePath !== filePath);
+    data.changes = data.changes.filter(
+      (c) => !(c.filePath === filePath && c.spaceId === spaceId),
+    );
 
     if (data.changes.length === initialLength) {
       return false;
@@ -56,8 +58,12 @@ export class PlaybookLocalRepository implements IPlaybookLocalRepository {
     return this.readYaml().changes;
   }
 
-  getChange(filePath: string): PlaybookChangeEntry | null {
-    return this.readYaml().changes.find((c) => c.filePath === filePath) ?? null;
+  getChange(filePath: string, spaceId: string): PlaybookChangeEntry | null {
+    return (
+      this.readYaml().changes.find(
+        (c) => c.filePath === filePath && c.spaceId === spaceId,
+      ) ?? null
+    );
   }
 
   clearAll(): void {
