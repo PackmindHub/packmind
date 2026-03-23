@@ -83,6 +83,29 @@ describe('playbookUnstageHandler', () => {
     });
   });
 
+  describe('when not inside a Packmind project', () => {
+    beforeEach(() => {
+      const { findNearestConfigDir } = jest.requireMock(
+        '../../../application/utils/findNearestConfigDir',
+      );
+      findNearestConfigDir.mockResolvedValueOnce(null);
+    });
+
+    it('logs an error', async () => {
+      await playbookUnstageHandler(buildDeps({ filePath: 'path/to/file.md' }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Not inside a Packmind project. No packmind.json found in any parent directory.',
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookUnstageHandler(buildDeps({ filePath: 'path/to/file.md' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('when the entry is not found in the playbook', () => {
     beforeEach(() => {
       mockPlaybookLocalRepository.getChanges.mockReturnValue([]);

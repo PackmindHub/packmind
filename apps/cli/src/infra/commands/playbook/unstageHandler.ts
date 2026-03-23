@@ -35,14 +35,19 @@ export async function playbookUnstageHandler(
     return;
   }
 
-  const absolutePath = path.resolve(getCwd(), filePath);
-  const configDir = await findNearestConfigDir(
-    path.dirname(absolutePath),
-    packmindCliHexa,
+  const cwd = getCwd();
+  const absolutePath = path.resolve(cwd, filePath);
+  const configDir = await findNearestConfigDir(cwd, packmindCliHexa);
+  if (!configDir) {
+    logErrorConsole(
+      'Not inside a Packmind project. No packmind.json found in any parent directory.',
+    );
+    exit(1);
+    return;
+  }
+  const normalizedFilePath = normalizePath(
+    path.relative(configDir, absolutePath),
   );
-  const normalizedFilePath = configDir
-    ? normalizePath(path.relative(configDir, absolutePath))
-    : normalizePath(filePath);
 
   const matchingEntries = playbookLocalRepository
     .getChanges()
