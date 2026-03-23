@@ -92,6 +92,7 @@ export function SidebarNavigationLink(
           alignItems="center"
           justifyContent={isCollapsed ? 'center' : 'space-between'}
           {...(isCollapsed && { paddingY: 2 })}
+          {...(isCollapsed && isActive && { backgroundColor: 'blue.700' })}
           width="100%"
         >
           {isCollapsed ? (

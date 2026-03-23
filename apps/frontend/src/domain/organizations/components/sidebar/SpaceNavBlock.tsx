@@ -1,5 +1,5 @@
 import React from 'react';
-import { PMAvatar, PMBox, PMText, PMTooltip } from '@packmind/ui';
+import { PMAvatar, PMBox, PMSeparator, PMText, PMTooltip } from '@packmind/ui';
 import {
   LuBookCheck,
   LuEye,
@@ -94,6 +94,7 @@ function CollapsedSpaceNavItems({
         label="Review changes"
         icon={<LuGitPullRequestArrow />}
       />
+      <PMSeparator borderColor="border.primary" my={1} w={'full'} />
       <SidebarNavigationLink
         url={routes.space.toPackages(orgSlug, space.slug)}
         label="Packages"
@@ -161,6 +162,7 @@ function CollapsedSpaceNavBlock({
         >
           <PMAvatar.Root
             size="xs"
+            borderRadius="sm"
             backgroundColor={
               isActive ? 'background.secondary' : 'background.tertiary'
             }
@@ -182,6 +184,7 @@ function CollapsedSpaceNavBlock({
           flexDirection="column"
           alignItems="center"
           gap={1}
+          mt={1}
         >
           <CollapsedSpaceNavItems space={space} orgSlug={orgSlug} />
         </PMBox>
