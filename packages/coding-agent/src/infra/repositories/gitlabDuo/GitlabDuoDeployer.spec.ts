@@ -508,7 +508,9 @@ describe('GitlabDuoDeployer', () => {
     });
 
     describe('when skillVersion.files is absent and skillFilesMap is provided', () => {
-      let result: Awaited<ReturnType<typeof deployer.generateFileUpdatesForSkills>>;
+      let result: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
 
       beforeEach(async () => {
         const skillVersion = skillVersionFactory({
