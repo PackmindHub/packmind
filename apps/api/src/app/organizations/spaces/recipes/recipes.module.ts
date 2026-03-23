@@ -4,7 +4,6 @@ import { recipesSchemas } from '@packmind/recipes';
 import { OrganizationsSpacesRecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { OrganizationsSpacesRecipesChangeProposalsModule } from './change-proposals/recipes-change-proposals.module';
 
@@ -14,7 +13,7 @@ import { OrganizationsSpacesRecipesChangeProposalsModule } from './change-propos
  * This module is registered as a child of OrganizationsSpacesModule via RouterModule,
  * automatically inheriting the /organizations/:orgId/spaces/:spaceId path prefix.
  *
- * Both OrganizationAccessGuard and SpaceAccessGuard are provided to ensure proper access validation.
+ * OrganizationAccessGuard is provided to ensure proper access validation.
  */
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { OrganizationsSpacesRecipesChangeProposalsModule } from './change-propos
   providers: [
     RecipesService,
     OrganizationAccessGuard,
-    SpaceAccessGuard,
     {
       provide: PackmindLogger,
       useFactory: () =>

@@ -20,7 +20,6 @@ import {
 } from '@packmind/types';
 import { SkillsChangeProposalsService } from './skills-change-proposals.service';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../../guards/space-access.guard';
 
 const origin = 'OrganizationsSpacesSkillsChangeProposalsController';
 
@@ -29,7 +28,7 @@ const origin = 'OrganizationsSpacesSkillsChangeProposalsController';
  * Actual path: /organizations/:orgId/spaces/:spaceId/skills/:skillId/change-proposals (inherited via RouterModule in AppModule)
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesSkillsChangeProposalsController {
   constructor(
     private readonly service: SkillsChangeProposalsService,

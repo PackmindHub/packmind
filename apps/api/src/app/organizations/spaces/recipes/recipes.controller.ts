@@ -24,7 +24,6 @@ import {
 } from '@packmind/types';
 import { RecipesService } from './recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../guards/space-access.guard';
 
 const origin = 'OrganizationsSpacesRecipesController';
 
@@ -38,10 +37,10 @@ const origin = 'OrganizationsSpacesRecipesController';
  * - This controller: (empty, inherits from /recipes path in RouterModule)
  * - Final path: /organizations/:orgId/spaces/:spaceId/recipes
  *
- * Both OrganizationAccessGuard and SpaceAccessGuard ensure proper access control.
+ * OrganizationAccessGuard ensures proper access control.
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesRecipesController {
   constructor(
     private readonly recipesService: RecipesService,

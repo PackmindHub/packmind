@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationsSpacesStandardsController } from './standards.controller';
 import { StandardsService } from './standards.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { OrganizationsSpacesStandardsRulesModule } from './rules/rules.module';
 import { OrganizationsSpacesStandardsChangeProposalsModule } from './change-proposals/standards-change-proposals.module';
@@ -16,7 +15,7 @@ import { standardsSchemas } from '@packmind/standards';
  * automatically inheriting the /organizations/:orgId/spaces/:spaceId path prefix.
  *
  * The OrganizationsSpacesStandardsRulesModule is imported to enable nested rules routes.
- * Both OrganizationAccessGuard and SpaceAccessGuard are provided to ensure proper access validation.
+ * OrganizationAccessGuard is provided to ensure proper access validation.
  */
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { standardsSchemas } from '@packmind/standards';
   providers: [
     StandardsService,
     OrganizationAccessGuard,
-    SpaceAccessGuard,
     {
       provide: PackmindLogger,
       useFactory: () =>

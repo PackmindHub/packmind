@@ -30,7 +30,6 @@ import {
 } from '@packmind/types';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../guards/space-access.guard';
 
 const origin = 'OrganizationsSpacesPackagesController';
 
@@ -44,10 +43,10 @@ const origin = 'OrganizationsSpacesPackagesController';
  * - This controller: (empty, inherits from /packages path in RouterModule)
  * - Final path: /organizations/:orgId/spaces/:spaceId/packages
  *
- * Both OrganizationAccessGuard and SpaceAccessGuard ensure proper access control.
+ * OrganizationAccessGuard ensures proper access control.
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesPackagesController {
   constructor(
     private readonly deploymentsService: DeploymentsService,

@@ -20,7 +20,6 @@ import {
 } from '@packmind/types';
 import { StandardsChangeProposalsService } from './standards-change-proposals.service';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../../guards/space-access.guard';
 
 const origin = 'OrganizationsSpacesStandardsChangeProposalsController';
 
@@ -29,7 +28,7 @@ const origin = 'OrganizationsSpacesStandardsChangeProposalsController';
  * Actual path: /organizations/:orgId/spaces/:spaceId/standards/:standardId/change-proposals (inherited via RouterModule in AppModule)
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesStandardsChangeProposalsController {
   constructor(
     private readonly service: StandardsChangeProposalsService,
