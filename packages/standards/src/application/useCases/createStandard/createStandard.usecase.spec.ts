@@ -86,7 +86,6 @@ describe('CreateStandardUsecase', () => {
       deleteStandard: jest.fn(),
       listStandardsBySpace: jest.fn(),
       listStandardsByUser: jest.fn(),
-      listStandardsByOrganizationAndUser: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
 
     // Mock StandardVersionService
@@ -853,7 +852,6 @@ describe('CreateStandardUsecase', () => {
           deleteStandard: jest.fn(),
           listStandardsBySpace: jest.fn(),
           listStandardsByUser: jest.fn(),
-          listStandardsByOrganizationAndUser: jest.fn(),
         } as unknown as jest.Mocked<StandardService>;
 
         standardVersionService = {
