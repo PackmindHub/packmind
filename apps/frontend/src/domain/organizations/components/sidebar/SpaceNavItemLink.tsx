@@ -28,14 +28,13 @@ export function SpaceNavItemLink(
           alignItems="center"
           gap={2}
           w="full"
-          p={4}
+          pl={4}
+          pr={2}
           py={1}
           fontSize="xs"
           borderRadius="sm"
           cursor="pointer"
-          bg={isActive ? 'blue.900' : 'transparent'}
-          color={isActive ? 'text.primary' : 'text.secondary'}
-          fontWeight={isActive ? 'semibold' : 'normal'}
+          bg="transparent"
           _hover={
             isActive ? undefined : { bg: 'blue.800', color: 'text.primary' }
           }
@@ -47,12 +46,19 @@ export function SpaceNavItemLink(
             <PMIcon
               fontSize="sm"
               flexShrink={0}
-              color={isActive ? 'text.primary' : 'text.tertiary'}
+              color={isActive ? 'branding.primary' : 'text.tertiary'}
             >
               {icon}
             </PMIcon>
           )}
-          <PMText fontSize="xs" flex={1}>
+          <PMText
+            fontSize="xs"
+            flex={1}
+            textProps={{
+              color: isActive ? 'branding.primary' : 'text.secondary',
+            }}
+            fontWeight={isActive ? 'semibold' : 'normal'}
+          >
             {label}
           </PMText>
           {badge &&
