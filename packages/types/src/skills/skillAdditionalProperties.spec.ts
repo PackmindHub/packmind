@@ -3,6 +3,9 @@ import {
   camelToKebab,
   CAMEL_TO_YAML_KEY,
   CLAUDE_CODE_ADDITIONAL_FIELDS,
+  COPILOT_ADDITIONAL_FIELDS,
+  CURSOR_ADDITIONAL_FIELDS,
+  filterAdditionalProperties,
   sortAdditionalPropertiesKeys,
 } from './skillAdditionalProperties';
 
@@ -107,5 +110,51 @@ describe('sortAdditionalPropertiesKeys', () => {
       ['model', 'opus'],
       ['hooks', { pre: 'echo' }],
     ]);
+  });
+});
+
+describe('filterAdditionalProperties', () => {
+  it('keeps only keys in the supported list', () => {
+    const props = {
+      disableModelInvocation: true,
+      model: 'opus',
+      argumentHint: 'hint',
+      effort: 'high',
+    };
+    expect(filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS)).toEqual(
+      {
+        argumentHint: 'hint',
+        disableModelInvocation: true,
+      },
+    );
+  });
+
+  it('returns empty object when no properties match', () => {
+    const props = { model: 'opus', effort: 'high' };
+    expect(filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS)).toEqual(
+      {},
+    );
+  });
+
+  it('filters correctly for Cursor supported fields', () => {
+    const props = {
+      disableModelInvocation: true,
+      argumentHint: 'hint',
+      userInvocable: true,
+    };
+    expect(filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS)).toEqual(
+      {
+        disableModelInvocation: true,
+      },
+    );
+  });
+
+  it('returns all properties when all match the supported list', () => {
+    const props = { disableModelInvocation: false };
+    expect(filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS)).toEqual(
+      {
+        disableModelInvocation: false,
+      },
+    );
   });
 });

@@ -89,6 +89,32 @@ export const CAMEL_TO_YAML_KEY: Record<string, string> = Object.fromEntries(
 );
 
 /**
+ * Additional properties supported by the GitHub Copilot agent (camelCase storage keys).
+ */
+export const COPILOT_ADDITIONAL_FIELDS: string[] = [
+  'argumentHint',
+  'disableModelInvocation',
+  'userInvocable',
+];
+
+/**
+ * Additional properties supported by the Cursor agent (camelCase storage keys).
+ */
+export const CURSOR_ADDITIONAL_FIELDS: string[] = ['disableModelInvocation'];
+
+/**
+ * Filters additional properties to only include keys supported by a given agent.
+ */
+export function filterAdditionalProperties(
+  props: Record<string, unknown>,
+  supportedKeys: string[],
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(props).filter(([key]) => supportedKeys.includes(key)),
+  );
+}
+
+/**
  * Sorts additional properties entries: known fields first (in canonical order),
  * then unknown fields alphabetically.
  */
