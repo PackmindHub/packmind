@@ -145,8 +145,11 @@ function SidebarCollapseToggle() {
   return (
     <PMIconButton
       aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      size="xs"
+      size="sm"
       variant="ghost"
+      _hover={{
+        backgroundColor: 'background.secondary',
+      }}
       onClick={onToggleCollapse}
     >
       {isCollapsed ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}

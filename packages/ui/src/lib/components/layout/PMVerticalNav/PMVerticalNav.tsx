@@ -54,7 +54,7 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
           display="flex"
           justifyContent={getLogoContainerJustify(logo, logoAction)}
           alignItems="center"
-          padding={4}
+          padding={2}
           mb={4}
           width="100%"
         >
