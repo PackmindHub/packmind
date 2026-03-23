@@ -539,6 +539,163 @@ describe('playbookSubmitHandler', () => {
     });
   });
 
+  describe('updated skill', () => {
+    const SKILL_CONTENT =
+      'name: My Skill\ndescription: A useful skill\nprompt: Do something\n';
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'old skill content',
+              skillFileId: 'skill-file-id-99',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          changeType: 'updated',
+          content: SKILL_CONTENT,
+        }),
+      ]);
+    });
+
+    it('uses skillFileId from deployed files as payload targetId', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const skillProposal = batchCall.proposals.find(
+        (p: { type: ChangeProposalType }) =>
+          p.type === ChangeProposalType.updateSkillFileContent,
+      );
+
+      expect(skillProposal.payload.targetId).toBe('skill-file-id-99');
+    });
+
+    it('generates updateSkillFileContent proposal', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const proposalTypes = batchCall.proposals.map(
+        (p: { type: ChangeProposalType }) => p.type,
+      );
+
+      expect(proposalTypes).toContain(
+        ChangeProposalType.updateSkillFileContent,
+      );
+    });
+  });
+
+  describe('updated skill without skillFileId in deployed files', () => {
+    const SKILL_CONTENT =
+      'name: My Skill\ndescription: A useful skill\nprompt: Do something\n';
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'old skill content',
+              // No skillFileId
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          changeType: 'updated',
+          content: SKILL_CONTENT,
+        }),
+      ]);
+    });
+
+    it('skips the proposal and warns', async () => {
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
+
+      await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('skill file ID not found'),
+      );
+    });
+
+    it('does not submit proposals', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+      expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('successful submit', () => {
     beforeEach(() => {
       mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);

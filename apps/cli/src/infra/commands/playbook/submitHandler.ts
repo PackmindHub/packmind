@@ -372,15 +372,33 @@ function buildUpdatedCommandProposals(
 function buildUpdatedSkillProposals(
   entry: PlaybookChangeEntry,
   artifactId: string | null,
+  deployedFiles: FileModification[],
 ): ProposalItem[] {
   if (!artifactId) return [];
+
+  // Find the SKILL.md file in deployed files matching this skill directory
+  const skillMdFile = deployedFiles.find((f) => {
+    const normalized = normalizePath(f.path);
+    return (
+      normalized.startsWith(normalizePath(entry.filePath) + '/') &&
+      normalized.endsWith('/SKILL.md')
+    );
+  });
+
+  const skillFileId = skillMdFile?.skillFileId;
+  if (!skillFileId) {
+    logWarningConsole(
+      `Skipping "${entry.artifactName}" — skill file ID not found in deployed content.`,
+    );
+    return [];
+  }
 
   return [
     {
       type: ChangeProposalType.updateSkillFileContent,
       artefactId: artifactId,
       payload: {
-        targetId: artifactId,
+        targetId: skillFileId,
         oldValue: '',
         newValue: entry.content,
       },
@@ -582,7 +600,9 @@ export async function playbookSubmitHandler(
           );
           break;
         case 'skill':
-          allProposals.push(...buildUpdatedSkillProposals(entry, artifactId));
+          allProposals.push(
+            ...buildUpdatedSkillProposals(entry, artifactId, deployedFiles),
+          );
           break;
       }
     }
