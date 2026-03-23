@@ -21,7 +21,7 @@ import { GetStandardByIdResponse } from '@packmind/types';
 export async function clientLoader({
   params,
 }: {
-  params: { standardId: string; spaceSlug: string };
+  params: { standardId: string; spaceSlug: string; orgSlug: string };
 }) {
   // Fetch user data - ensureQueryData uses cache if available, fetches otherwise
   const me = await queryClient.ensureQueryData(getMeQueryOptions());
