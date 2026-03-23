@@ -68,6 +68,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
           this.distributionRepository.listByOrganizationIdWithStatus(
             organizationId,
             DistributionStatus.success,
+            command.spaceId,
           ),
           Promise.all(
             spaces.map((space) =>
