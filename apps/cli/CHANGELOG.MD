@@ -4,6 +4,7 @@
 
 - CLI `install` command is now recursive by default (no `-r` flag needed); the `-r`/`--recursive` flag is deprecated with a warning
 - CLI `install` command now supports `--path <dir>` to scope recursive install to a specific directory
+- Added `playbook` command to centralize change proposals
 
 ## Changed
 
@@ -12,6 +13,8 @@
 ## Fixed
 
 ## Removed
+
+- Dropped `diff add`, `diff remove` and `diff --submit` in favor of `playbook` commands.
 
 # [0.22.0] - 2026-03-13
 
