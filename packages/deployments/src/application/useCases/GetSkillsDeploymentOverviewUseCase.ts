@@ -49,6 +49,7 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
         await this.distributionRepository.listByOrganizationIdWithStatus(
           command.organizationId as OrganizationId,
           DistributionStatus.success, // Filter only successful distributions for overview
+          command.spaceId,
         );
 
       // Get the requested space

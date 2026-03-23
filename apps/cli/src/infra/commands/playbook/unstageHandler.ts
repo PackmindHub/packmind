@@ -9,6 +9,7 @@ import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 export type PlaybookUnstageHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   filePath: string | undefined;
+  spaceSlug: string | undefined;
   exit: (code: number) => void;
   getCwd: () => string;
   playbookLocalRepository: IPlaybookLocalRepository;
@@ -17,8 +18,14 @@ export type PlaybookUnstageHandlerDependencies = {
 export async function playbookUnstageHandler(
   deps: PlaybookUnstageHandlerDependencies,
 ): Promise<void> {
-  const { packmindCliHexa, filePath, exit, getCwd, playbookLocalRepository } =
-    deps;
+  const {
+    packmindCliHexa,
+    filePath,
+    spaceSlug,
+    exit,
+    getCwd,
+    playbookLocalRepository,
+  } = deps;
 
   if (!filePath) {
     logErrorConsole(
@@ -28,20 +35,67 @@ export async function playbookUnstageHandler(
     return;
   }
 
-  const absolutePath = path.resolve(getCwd(), filePath);
-  const configDir = await findNearestConfigDir(absolutePath, packmindCliHexa);
-  const normalizedFilePath = configDir
-    ? normalizePath(path.relative(configDir, absolutePath))
-    : normalizePath(filePath);
+  const cwd = getCwd();
+  const absolutePath = path.resolve(cwd, filePath);
+  const configDir = await findNearestConfigDir(cwd, packmindCliHexa);
+  if (!configDir) {
+    logErrorConsole(
+      'Not inside a Packmind project. No packmind.json found in any parent directory.',
+    );
+    exit(1);
+    return;
+  }
+  const normalizedFilePath = normalizePath(
+    path.relative(configDir, absolutePath),
+  );
 
-  const removed = playbookLocalRepository.removeChange(normalizedFilePath);
+  const matchingEntries = playbookLocalRepository
+    .getChanges()
+    .filter((c) => c.filePath === normalizedFilePath);
 
-  if (!removed) {
+  if (matchingEntries.length === 0) {
     logErrorConsole(`No staged change found for ${normalizedFilePath}`);
     exit(1);
     return;
   }
 
+  if (spaceSlug) {
+    const entry = matchingEntries.find(
+      (c) => c.spaceName === spaceSlug || c.spaceId === spaceSlug,
+    );
+    if (!entry) {
+      logErrorConsole(
+        `No staged change found for ${normalizedFilePath} in space "${spaceSlug}"`,
+      );
+      exit(1);
+      return;
+    }
+    playbookLocalRepository.removeChange(normalizedFilePath, entry.spaceId);
+    logSuccessConsole(
+      `Unstaged ${normalizedFilePath} from playbook (space: ${spaceSlug})`,
+    );
+    exit(0);
+    return;
+  }
+
+  if (matchingEntries.length > 1) {
+    const spaceList = matchingEntries
+      .map(
+        (c) =>
+          `  ${c.spaceName ?? c.spaceId}${c.spaceName ? ` (${c.spaceId})` : ''}`,
+      )
+      .join('\n');
+    logErrorConsole(
+      `Multiple staged entries for ${normalizedFilePath}. Use --space to specify which one:\n${spaceList}`,
+    );
+    exit(1);
+    return;
+  }
+
+  playbookLocalRepository.removeChange(
+    normalizedFilePath,
+    matchingEntries[0].spaceId,
+  );
   logSuccessConsole(`Unstaged ${normalizedFilePath} from playbook`);
   exit(0);
 }

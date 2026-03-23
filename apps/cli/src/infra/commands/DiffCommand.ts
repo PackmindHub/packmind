@@ -1,4 +1,3 @@
-import { existsSync, readFileSync, rmSync, unlinkSync } from 'fs';
 import {
   command,
   flag,
@@ -10,9 +9,11 @@ import {
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { diffArtefactsHandler } from './diffArtefactsHandler';
-import { diffAddHandler } from './diffAddHandler';
-import { diffRemoveHandler } from './diffRemoveHandler';
-import { readSkillDirectory } from '../utils/readSkillDirectory';
+import {
+  formatCommand,
+  logErrorConsole,
+  logInfoConsole,
+} from '../utils/consoleLogger';
 
 export const diffCommand = command({
   name: 'diff',
@@ -50,21 +51,31 @@ export const diffCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
+    if (submit) {
+      logErrorConsole(
+        'Deprecated: `packmind-cli diff --submit` has been removed',
+      );
+      logInfoConsole('Use the following command instead:');
+      let submitCommand = `packmind-cli playbook submit`;
+      if (message) {
+        submitCommand = `${submitCommand} -m "${message}"`;
+      }
+
+      logInfoConsole(` ${formatCommand(submitCommand)}`);
+      process.exit(1);
+    }
+
     if (positionals[0] === 'add') {
       const addFilePath =
         path && positionals[1]
           ? `${path}/${positionals[1]}`.replace(/\/+/g, '/')
           : positionals[1];
-      await diffAddHandler({
-        packmindCliHexa,
-        filePath: addFilePath,
-        message,
-        exit: process.exit,
-        getCwd: () => process.cwd(),
-        readFile: (p) => readFileSync(p, 'utf-8'),
-        readSkillDirectory,
-      });
-      return;
+      const addCommand = `packmind-cli playbook add ${addFilePath}`;
+
+      logErrorConsole('Deprecated: `packmind-cli diff add` has been removed');
+      logInfoConsole('Use the following command instead:');
+      logInfoConsole(` ${formatCommand(addCommand)}`);
+      process.exit(1);
     }
 
     if (positionals[0] === 'remove' || positionals[0] === 'rm') {
@@ -72,17 +83,14 @@ export const diffCommand = command({
         path && positionals[1]
           ? `${path}/${positionals[1]}`.replace(/\/+/g, '/')
           : positionals[1];
-      await diffRemoveHandler({
-        packmindCliHexa,
-        filePath: removeFilePath,
-        message,
-        exit: process.exit,
-        getCwd: () => process.cwd(),
-        existsSync: (p) => existsSync(p),
-        unlinkSync: (p) => unlinkSync(p),
-        rmSync: (p, opts) => rmSync(p, opts),
-      });
-      return;
+      const removeCommand = `packmind-cli playbook remove ${removeFilePath}`;
+
+      logErrorConsole(
+        'Deprecated: `packmind-cli diff remove` has been removed',
+      );
+      logInfoConsole('Use the following command instead:');
+      logInfoConsole(` ${formatCommand(removeCommand)}`);
+      process.exit(1);
     }
 
     await diffArtefactsHandler({

@@ -18,10 +18,13 @@ import {
   IAccountsPort,
   IRecipesPort,
   ISkillsPort,
+  ISpacesPort,
   IStandardsPort,
   NotifyDistributionCommand,
   Package,
   RenderMode,
+  Space,
+  SpaceType,
   Target,
   RecipeVersion,
   SkillVersion,
@@ -41,6 +44,7 @@ describe('NotifyDistributionUseCase', () => {
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockPackageRepository: jest.Mocked<IPackageRepository>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
@@ -49,7 +53,6 @@ describe('NotifyDistributionUseCase', () => {
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
-  const spaceId = createSpaceId(uuidv4());
   const packageId = createPackageId(uuidv4());
   const gitRepoId = createGitRepoId(uuidv4());
   const targetId = createTargetId(uuidv4());
@@ -77,12 +80,36 @@ describe('NotifyDistributionUseCase', () => {
     slug: 'test-org',
   });
 
-  const buildPackage = (slug = 'my-package'): Package => ({
+  const globalSpaceId = createSpaceId(uuidv4());
+
+  const buildGlobalSpace = (): Space => ({
+    id: globalSpaceId,
+    name: 'Global',
+    slug: 'global',
+    type: SpaceType.open,
+    organizationId,
+    isDefaultSpace: true,
+  });
+
+  const buildSpace = (overrides: Partial<Space> = {}): Space => ({
+    id: createSpaceId(uuidv4()),
+    name: 'Custom Space',
+    slug: 'custom-space',
+    type: SpaceType.open,
+    organizationId,
+    isDefaultSpace: false,
+    ...overrides,
+  });
+
+  const buildPackage = (
+    slug = 'my-package',
+    pkgSpaceId = globalSpaceId,
+  ): Package => ({
     id: packageId,
     name: 'Test Package',
     slug,
     description: 'Test description',
-    spaceId,
+    spaceId: pkgSpaceId,
     createdBy: userId,
     recipes: [recipeId],
     standards: [standardId],
@@ -177,6 +204,13 @@ describe('NotifyDistributionUseCase', () => {
       findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
     } as unknown as jest.Mocked<TargetResolutionService>;
 
+    mockSpacesPort = {
+      getSpaceBySlug: jest.fn().mockResolvedValue(null),
+      getDefaultSpace: jest
+        .fn()
+        .mockResolvedValue({ defaultSpace: buildGlobalSpace() }),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     useCase = new NotifyDistributionUseCase(
       mockAccountsPort,
       mockRecipesPort,
@@ -187,6 +221,7 @@ describe('NotifyDistributionUseCase', () => {
       mockDistributedPackageRepository,
       mockRenderModeConfigurationService,
       mockTargetResolutionService,
+      mockSpacesPort,
       stubLogger(),
     );
   });
@@ -488,6 +523,269 @@ describe('NotifyDistributionUseCase', () => {
             operation: 'remove',
           }),
         );
+      });
+    });
+
+    describe('with @space/ prefixed package slugs', () => {
+      describe('when slugs use @space/pkg format', () => {
+        const mySpace = buildSpace({ slug: 'my-space', name: 'My Space' });
+
+        beforeEach(async () => {
+          const recipeVersion = buildRecipeVersion();
+          const standardVersion = buildStandardVersion();
+          const skillVersion = buildSkillVersion();
+          const pkg = buildPackage('my-package', mySpace.id);
+
+          mockSpacesPort.getSpaceBySlug.mockResolvedValue(mySpace);
+
+          mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+          mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+            standardVersion,
+          );
+          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+          mockDistributionRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+          mockDistributedPackageRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+
+          const command: NotifyDistributionCommand = {
+            userId,
+            organizationId,
+            distributedPackages: ['@my-space/my-package'],
+            gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          await useCase.execute(command);
+        });
+
+        it('calls getSpaceBySlug with the space slug', () => {
+          expect(mockSpacesPort.getSpaceBySlug).toHaveBeenCalledWith(
+            'my-space',
+            organizationId,
+          );
+        });
+
+        it('matches packages by slug and space', () => {
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              packageId,
+              operation: 'add',
+            }),
+          );
+        });
+
+        it('adds standard versions', () => {
+          expect(
+            mockDistributedPackageRepository.addStandardVersions,
+          ).toHaveBeenCalledWith(expect.any(String), expect.any(Array));
+        });
+
+        it('adds recipe versions', () => {
+          expect(
+            mockDistributedPackageRepository.addRecipeVersions,
+          ).toHaveBeenCalledWith(expect.any(String), expect.any(Array));
+        });
+
+        it('adds skill versions', () => {
+          expect(
+            mockDistributedPackageRepository.addSkillVersions,
+          ).toHaveBeenCalledWith(expect.any(String), expect.any(Array));
+        });
+      });
+
+      describe('when two packages have the same slug in different spaces', () => {
+        const mySpace = buildSpace({ slug: 'my-space', name: 'My Space' });
+        const otherSpace = buildSpace({
+          slug: 'other-space',
+          name: 'Other Space',
+        });
+        let pkgInMySpace: Package;
+
+        beforeEach(async () => {
+          const recipeVersion = buildRecipeVersion();
+          const standardVersion = buildStandardVersion();
+          const skillVersion = buildSkillVersion();
+          pkgInMySpace = buildPackage('shared-pkg', mySpace.id);
+          const pkgInOtherSpace = {
+            ...buildPackage('shared-pkg', otherSpace.id),
+            id: createPackageId(uuidv4()),
+          };
+
+          mockSpacesPort.getSpaceBySlug.mockImplementation((slug: string) => {
+            if (slug === 'my-space') return Promise.resolve(mySpace);
+            if (slug === 'other-space') return Promise.resolve(otherSpace);
+            return Promise.resolve(null);
+          });
+
+          mockPackageRepository.findByOrganizationId.mockResolvedValue([
+            pkgInMySpace,
+            pkgInOtherSpace,
+          ]);
+          mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+            standardVersion,
+          );
+          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+          mockDistributionRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+          mockDistributedPackageRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+
+          const command: NotifyDistributionCommand = {
+            userId,
+            organizationId,
+            distributedPackages: ['@my-space/shared-pkg'],
+            gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          await useCase.execute(command);
+        });
+
+        it('matches only one package', () => {
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledTimes(1);
+        });
+
+        it('matches the package from the correct space', () => {
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              packageId: pkgInMySpace.id,
+              operation: 'add',
+            }),
+          );
+        });
+      });
+
+      describe('when space slug does not match any space', () => {
+        it('does not match the package', async () => {
+          const pkg = buildPackage('my-package');
+
+          mockSpacesPort.getSpaceBySlug.mockResolvedValue(null);
+          mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+          mockDistributionRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+
+          const command: NotifyDistributionCommand = {
+            userId,
+            organizationId,
+            distributedPackages: ['@unknown-space/my-package'],
+            gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          await useCase.execute(command);
+
+          expect(mockDistributionRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              distributedPackages: [],
+            }),
+          );
+        });
+      });
+
+      describe('when bare slug resolves via the default space', () => {
+        beforeEach(async () => {
+          const recipeVersion = buildRecipeVersion();
+          const standardVersion = buildStandardVersion();
+          const skillVersion = buildSkillVersion();
+          const pkg = buildPackage('my-package', globalSpaceId);
+
+          mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+          mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+            standardVersion,
+          );
+          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+          mockDistributionRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+          mockDistributedPackageRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+
+          const command: NotifyDistributionCommand = {
+            userId,
+            organizationId,
+            distributedPackages: ['my-package'],
+            gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          await useCase.execute(command);
+        });
+
+        it('calls getDefaultSpace to resolve the default space', () => {
+          expect(mockSpacesPort.getDefaultSpace).toHaveBeenCalledWith({
+            userId,
+            organizationId,
+          });
+        });
+
+        it('matches the package in the default space', () => {
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              packageId,
+              operation: 'add',
+            }),
+          );
+        });
+      });
+
+      describe('when mixing prefixed and bare formats', () => {
+        const mySpace = buildSpace({ slug: 'my-space', name: 'My Space' });
+
+        beforeEach(async () => {
+          const recipeVersion = buildRecipeVersion();
+          const standardVersion = buildStandardVersion();
+          const pkg1 = buildPackage('package-1', mySpace.id);
+          const pkg2 = {
+            ...buildPackage('package-2', globalSpaceId),
+            id: createPackageId(uuidv4()),
+          };
+
+          mockSpacesPort.getSpaceBySlug.mockResolvedValue(mySpace);
+
+          mockPackageRepository.findByOrganizationId.mockResolvedValue([
+            pkg1,
+            pkg2,
+          ]);
+          mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+            standardVersion,
+          );
+          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockDistributionRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+          mockDistributedPackageRepository.add.mockImplementation((d) =>
+            Promise.resolve(d),
+          );
+
+          const command: NotifyDistributionCommand = {
+            userId,
+            organizationId,
+            distributedPackages: ['@my-space/package-1', 'package-2'],
+            gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          await useCase.execute(command);
+        });
+
+        it('matches both packages', () => {
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledTimes(2);
+        });
       });
     });
 

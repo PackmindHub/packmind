@@ -12,6 +12,7 @@ import {
   RenderMode,
   SkillId,
   SkillVersion,
+  SpaceId,
   StandardId,
   StandardVersion,
   TargetId,
@@ -331,12 +332,14 @@ export class DistributionRepository implements IDistributionRepository {
   async listByOrganizationIdWithStatus(
     organizationId: OrganizationId,
     status?: DistributionStatus,
+    spaceId?: SpaceId,
   ): Promise<Distribution[]> {
     this.logger.info(
       'Listing distributions by organization ID with status filter',
       {
         organizationId,
         status,
+        spaceId,
       },
     );
 
@@ -361,6 +364,21 @@ export class DistributionRepository implements IDistributionRepository {
 
       if (status) {
         queryBuilder.andWhere('distribution.status = :status', { status });
+      }
+
+      if (spaceId) {
+        queryBuilder
+          .andWhere((qb) => {
+            const subQuery = qb
+              .subQuery()
+              .select('dp.distributionId')
+              .from('DistributedPackage', 'dp')
+              .innerJoin('dp.package', 'p')
+              .where('p.spaceId = :spaceId')
+              .getQuery();
+            return `distribution.id IN ${subQuery}`;
+          })
+          .setParameter('spaceId', spaceId);
       }
 
       queryBuilder.orderBy('distribution.createdAt', 'DESC');

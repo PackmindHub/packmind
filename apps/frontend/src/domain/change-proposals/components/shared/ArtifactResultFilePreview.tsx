@@ -12,12 +12,14 @@ import {
 import { PreviewArtifactRenderingCommand } from '@packmind/types';
 import { CopyMarkdownButton } from './CopyMarkdownButton';
 import { DownloadAsAgentButton } from './DownloadAsAgentButton';
+import { stripFrontmatter } from '../../utils/stripFrontmatter';
 
 interface ArtifactResultFilePreviewProps {
-  fileName: string;
+  fileName?: string;
   markdown: string;
   previewContent?: ReactNode;
   hideActions?: boolean;
+  hideFileName?: boolean;
   getPreviewCommand?: () => Omit<
     PreviewArtifactRenderingCommand,
     'codingAgent'
@@ -29,6 +31,7 @@ export function ArtifactResultFilePreview({
   markdown,
   previewContent,
   hideActions = false,
+  hideFileName = false,
   getPreviewCommand,
 }: Readonly<ArtifactResultFilePreviewProps>) {
   const defaultPreview = (
@@ -39,7 +42,7 @@ export function ArtifactResultFilePreview({
       padding={4}
       backgroundColor="background.primary"
     >
-      <PMMarkdownViewer content={markdown} />
+      <PMMarkdownViewer content={stripFrontmatter(markdown)} />
     </PMBox>
   );
 
@@ -64,8 +67,13 @@ export function ArtifactResultFilePreview({
       p={4}
     >
       <PMVStack align="stretch" gap={2} width="full">
-        <PMHStack justify="space-between" align="center">
-          <PMBreadcrumb segments={fileName.split('/')} interactive={false} />
+        <PMHStack
+          justify={hideFileName ? 'flex-end' : 'space-between'}
+          align="center"
+        >
+          {!hideFileName && fileName && (
+            <PMBreadcrumb segments={fileName.split('/')} interactive={false} />
+          )}
           {!hideActions && (
             <PMHStack gap={1}>
               <CopyMarkdownButton markdown={markdown} />

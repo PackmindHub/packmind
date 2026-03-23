@@ -1,12 +1,11 @@
 import { redirect } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
-import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import { getSpacesQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
+import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
-  const me = await queryClient.ensureQueryData(getMeQueryOptions());
-  if (!me?.organization) throw redirect('/sign-in');
+  const me = await ensureOrgContext(params.orgSlug!);
 
   const spaces = await queryClient.ensureQueryData(
     getSpacesQueryOptions(me.organization.id),

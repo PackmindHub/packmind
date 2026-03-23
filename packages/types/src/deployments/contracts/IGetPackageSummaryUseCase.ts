@@ -1,9 +1,11 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { OrganizationId } from '../../accounts/Organization';
+import { SpaceId } from '../../spaces';
 
 export type GetPackageSummaryCommand = PackmindCommand & {
   organizationId: OrganizationId;
   slug: string;
+  spaceId?: SpaceId;
 };
 
 export type SummarizedArtifact = {
@@ -17,6 +19,7 @@ export type GetPackageSummaryResponse = {
   description: string;
   recipes: SummarizedArtifact[];
   standards: SummarizedArtifact[];
+  skills: SummarizedArtifact[];
 };
 
 export type IGetPackageSummaryUseCase = IUseCase<

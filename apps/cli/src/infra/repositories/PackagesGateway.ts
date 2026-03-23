@@ -22,11 +22,14 @@ export class PackagesGateway implements IPackagesGateway {
     );
   };
 
-  public getSummary: Gateway<IGetPackageSummaryUseCase> = async ({ slug }) => {
+  public getSummary: Gateway<IGetPackageSummaryUseCase> = async ({
+    slug,
+    spaceId,
+  }) => {
     const { organizationId } = this.httpClient.getAuthContext();
 
     return this.httpClient.request(
-      `/api/v0/organizations/${organizationId}/packages/${encodeURIComponent(slug)}`,
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/summary/${encodeURIComponent(slug)}`,
     );
   };
 
