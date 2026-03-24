@@ -44,7 +44,7 @@ export const submitPlaybookCommand = command({
       type: optional(string),
       long: 'message',
       short: 'm',
-      description: 'Submit message',
+      description: 'Message describing the intent behind the proposed changes',
     }),
   },
   handler: async ({ message }) => {

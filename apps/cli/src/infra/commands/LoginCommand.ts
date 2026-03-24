@@ -13,7 +13,7 @@ const DEFAULT_HOST = 'https://app.packmind.ai';
 
 export const loginCommand = command({
   name: 'login',
-  description: 'Authenticate with Packmind by logging in through the browser',
+  description: 'Log in to Packmind through the browser',
   args: {
     host: option({
       type: string,

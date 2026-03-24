@@ -53,7 +53,7 @@ function displayAuthInfo(
 
 export const whoamiCommand = command({
   name: 'whoami',
-  description: 'Show current authentication status and credentials info',
+  description: 'Show current authentication status',
   args: {},
   handler: async () => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
