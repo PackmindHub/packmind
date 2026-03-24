@@ -20,6 +20,7 @@ export type PlaybookStatusHandlerDependencies = {
   cwd: string;
   exit: (code: number) => void;
   readFile: (path: string) => string;
+  listDirectoryFiles: (dirPath: string) => string[];
 };
 
 type UntrackedChange = {
@@ -123,6 +124,7 @@ export async function playbookStatusHandler(
     cwd,
     exit,
     readFile,
+    listDirectoryFiles,
   } = deps;
 
   const stagedChanges = playbookLocalRepository.getChanges();
@@ -234,6 +236,55 @@ export async function playbookStatusHandler(
           untrackedChanges.push({
             artifactName: artifact.name,
             artifactType: artifact.type,
+            filePath: displayPath,
+          });
+        }
+      }
+    }
+
+    // Detect new local files in skill directories that are not in the deployed set
+    const deployedPathSet = new Set(
+      deployedFiles.map((f) => normalizePath(f.path)),
+    );
+    for (const entry of Object.values(lockFile.artifacts)) {
+      if (entry.type !== 'skill') continue;
+
+      // Derive the skill directory from SKILL.md path
+      const skillMdFile = entry.files.find((f) =>
+        normalizePath(f.path).endsWith('/SKILL.md'),
+      );
+      if (!skillMdFile) continue;
+      const skillDir = normalizePath(path.dirname(skillMdFile.path));
+
+      // Skip if this skill is already staged
+      if (
+        targetStagedPaths.has(skillDir) ||
+        targetSkillDirPaths.some(
+          (staged) => skillDir === staged || skillDir.startsWith(staged + '/'),
+        )
+      ) {
+        continue;
+      }
+
+      const absoluteSkillDir = path.join(projectDir, skillDir);
+      let localFiles: string[];
+      try {
+        localFiles = listDirectoryFiles(absoluteSkillDir);
+      } catch {
+        continue;
+      }
+
+      for (const localRelPath of localFiles) {
+        const normalizedLocalPath = normalizePath(
+          path.join(skillDir, localRelPath),
+        );
+        if (!deployedPathSet.has(normalizedLocalPath)) {
+          const displayPath = normalizePath(
+            path.relative(cwd, path.join(projectDir, normalizedLocalPath)),
+          );
+          untrackedChanges.push({
+            artifactName: entry.name,
+            artifactType: entry.type,
             filePath: displayPath,
           });
         }

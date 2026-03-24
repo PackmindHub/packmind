@@ -370,6 +370,7 @@ export async function playbookAddHandler(
       );
       const allMatch =
         skillDeployedFiles.length > 0 &&
+        skillDeployedFiles.length === skillFiles.length &&
         skillDeployedFiles.every((deployed) => {
           const localFile = skillFiles.find(
             (f) =>
