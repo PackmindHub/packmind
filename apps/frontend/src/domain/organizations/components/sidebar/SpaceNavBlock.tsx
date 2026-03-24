@@ -1,5 +1,12 @@
 import React from 'react';
-import { PMAvatar, PMBox, PMSeparator, PMText, PMTooltip } from '@packmind/ui';
+import {
+  PMAvatar,
+  PMBox,
+  PMSeparator,
+  PMStatus,
+  PMText,
+  PMTooltip,
+} from '@packmind/ui';
 import {
   LuBookCheck,
   LuEye,
@@ -22,6 +29,26 @@ interface SpaceNavBlockProps {
   isActive: boolean;
   isSelected: boolean;
   onSpaceClick: () => void;
+}
+
+const SPACE_COLOR_PALETTES = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'teal',
+  'blue',
+  'cyan',
+  'purple',
+  'pink',
+] as const;
+
+export function getSpaceColorPalette(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = Math.trunc(hash * 31 + (name.codePointAt(i) ?? 0));
+  }
+  return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
 }
 
 export function getSpaceInitials(name: string): string {
@@ -142,6 +169,13 @@ function ExpandedSpaceNavBlock({
               textOverflow="ellipsis"
               whiteSpace="nowrap"
             >
+              <PMStatus.Root
+                colorPalette={getSpaceColorPalette(space.name)}
+                as="span"
+                mr={1.5}
+              >
+                <PMStatus.Indicator />
+              </PMStatus.Root>
               {space.name}
             </PMText>
           </PMBox>
@@ -250,6 +284,13 @@ function SpaceNameRow({
         textOverflow="ellipsis"
         whiteSpace="nowrap"
       >
+        <PMStatus.Root
+          colorPalette={getSpaceColorPalette(space.name)}
+          as="span"
+          mr={1.5}
+        >
+          <PMStatus.Indicator />
+        </PMStatus.Root>
         {space.name}
       </PMText>
     </PMBox>
