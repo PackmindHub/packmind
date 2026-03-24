@@ -4,6 +4,7 @@ import { findNearestConfigDir } from '../../../application/utils/findNearestConf
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { formatLabel, logConsole } from '../../utils/consoleLogger';
 import { capitalize } from '../../utils/stringUtils';
+import { modeToPermissionStringOrDefault } from '../../utils/permissions';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
@@ -21,6 +22,7 @@ export type PlaybookStatusHandlerDependencies = {
   exit: (code: number) => void;
   readFile: (path: string) => string;
   listDirectoryFiles: (dirPath: string) => string[];
+  getFileMode?: (path: string) => number | null;
 };
 
 type UntrackedChange = {
@@ -125,6 +127,7 @@ export async function playbookStatusHandler(
     exit,
     readFile,
     listDirectoryFiles,
+    getFileMode,
   } = deps;
 
   const stagedChanges = playbookLocalRepository.getChanges();
@@ -239,6 +242,25 @@ export async function playbookStatusHandler(
             filePath: displayPath,
           });
         }
+      } else if (deployedFile.skillFilePermissions && getFileMode) {
+        const localMode = getFileMode(path.join(projectDir, deployedFile.path));
+        if (localMode !== null) {
+          const localPermissions = modeToPermissionStringOrDefault(localMode);
+          if (localPermissions !== deployedFile.skillFilePermissions) {
+            const artifact = findArtifactForFile(
+              deployedFile.path,
+              lockFile.artifacts,
+            );
+            if (artifact) {
+              untrackedChanges.push({
+                artifactName: artifact.name,
+                artifactType: artifact.type,
+                filePath: displayPath,
+                changeType: 'permissions changed',
+              });
+            }
+          }
+        }
       }
     }
 
@@ -286,6 +308,7 @@ export async function playbookStatusHandler(
             artifactName: entry.name,
             artifactType: entry.type,
             filePath: displayPath,
+            changeType: 'new file',
           });
         }
       }

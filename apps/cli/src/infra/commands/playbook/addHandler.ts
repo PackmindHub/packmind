@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 
@@ -105,6 +106,33 @@ async function tryStageRemovedFromLockFile(
   return true;
 }
 
+function resolveSkillDirectoryRoot(absolutePath: string): string {
+  if (absolutePath.endsWith('SKILL.md')) {
+    return path.dirname(absolutePath);
+  }
+
+  try {
+    if (fs.statSync(absolutePath).isDirectory()) {
+      return absolutePath;
+    }
+  } catch {
+    // Path doesn't exist — return as-is and let downstream handle the error
+    return absolutePath;
+  }
+
+  // absolutePath is a file inside a skill directory — walk up looking for SKILL.md
+  let current = path.dirname(absolutePath);
+  const root = path.parse(current).root;
+  while (current !== root) {
+    if (fs.existsSync(path.join(current, 'SKILL.md'))) {
+      return current;
+    }
+    current = path.dirname(current);
+  }
+
+  return absolutePath;
+}
+
 export async function playbookAddHandler(
   deps: PlaybookAddHandlerDependencies,
 ): Promise<void> {
@@ -185,10 +213,11 @@ export async function playbookAddHandler(
   let serializedContent: string;
   let skillFiles: SkillFile[] = [];
 
+  let skillDirPath: string | undefined;
+
   if (artifactType === 'skill') {
-    const dirPath = absolutePath.endsWith('SKILL.md')
-      ? path.dirname(absolutePath)
-      : absolutePath;
+    const dirPath = resolveSkillDirectoryRoot(absolutePath);
+    skillDirPath = dirPath;
 
     let files: SkillFile[];
     try {
@@ -295,13 +324,11 @@ export async function playbookAddHandler(
 
   // Deployed content and lock file paths are relative to the project directory
   // (targetDir), not the git root. Use targetDir-relative paths for all comparisons.
-  // For skills, normalize to directory path (strip SKILL.md) since lock file entries
+  // For skills, normalize to the skill directory path since lock file entries
   // store individual file paths but playbook should reference the skill directory.
   const normalizedFilePath = (() => {
     const refPath =
-      artifactType === 'skill' && absolutePath.endsWith('SKILL.md')
-        ? path.dirname(absolutePath)
-        : absolutePath;
+      artifactType === 'skill' && skillDirPath ? skillDirPath : absolutePath;
     return normalizePath(path.relative(targetDir, refPath));
   })();
 
@@ -378,7 +405,10 @@ export async function playbookAddHandler(
               normalizePath(deployed.path),
           );
           return (
-            localFile && deployed.content?.trim() === localFile.content.trim()
+            localFile &&
+            deployed.content?.trim() === localFile.content.trim() &&
+            (!deployed.skillFilePermissions ||
+              deployed.skillFilePermissions === localFile.permissions)
           );
         });
       if (allMatch) {

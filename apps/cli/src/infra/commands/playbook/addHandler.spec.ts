@@ -1,3 +1,11 @@
+import * as fs from 'fs';
+
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  statSync: jest.fn(),
+  existsSync: jest.fn(),
+}));
+
 import {
   playbookAddHandler,
   PlaybookAddHandlerDependencies,
@@ -48,6 +56,12 @@ describe('playbookAddHandler', () => {
   let mockGetContentByVersions: jest.Mock;
 
   beforeEach(() => {
+    // Default fs mocks for resolveSkillDirectoryRoot:
+    // - statSync: treat any path as a directory (skill tests pass directory paths)
+    // - existsSync: return false (no SKILL.md found when walking up)
+    (fs.statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
+    (fs.existsSync as jest.Mock).mockReturnValue(false);
+
     mockGetDeployed = jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
@@ -722,6 +736,148 @@ describe('playbookAddHandler', () => {
       );
 
       expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when skill content matches but permissions differ', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: 'rwxr-xr-x',
+          isBase64: false,
+        },
+      ]);
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: VALID_SKILL_MD_CONTENT,
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('stages the skill as updated', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'updated' }),
+      );
+    });
+
+    it('does not log already up to date', async () => {
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(logInfoConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
+    });
+  });
+
+  describe('when skill content and permissions both match', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: VALID_SKILL_MD_CONTENT,
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('logs already up to date', async () => {
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
     });
   });
 
@@ -1415,6 +1571,117 @@ describe('playbookAddHandler', () => {
 
         expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('when adding a specific file path within a skill directory', () => {
+    beforeEach(() => {
+      // Make statSync indicate the path is a file, not a directory
+      (fs.statSync as jest.Mock).mockReturnValue({
+        isDirectory: () => false,
+      });
+      // existsSync returns true when looking for SKILL.md in the skill root
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/project/.claude/skills/my-skill/SKILL.md',
+      );
+
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+        {
+          path: '/project/.claude/skills/my-skill/references/file.md',
+          relativePath: 'references/file.md',
+          content: 'reference content',
+          size: 17,
+          permissions: 'rwxr-xr-x',
+          isBase64: false,
+        },
+      ]);
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                agent: 'claude',
+              },
+              {
+                path: '.claude/skills/my-skill/references/file.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: VALID_SKILL_MD_CONTENT,
+              skillFilePermissions: 'rw-r--r--',
+            },
+            {
+              path: '.claude/skills/my-skill/references/file.md',
+              content: 'reference content',
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('resolves to the skill directory and stages as updated', async () => {
+      await playbookAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/references/file.md',
+        }),
+      );
+
+      expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+        '/project/.claude/skills/my-skill',
+      );
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '.claude/skills/my-skill',
+          changeType: 'updated',
+          artifactType: 'skill',
+        }),
+      );
+    });
+
+    it('does not stage as removed', async () => {
+      await playbookAddHandler(
+        buildDeps({
+          filePath: '.claude/skills/my-skill/references/file.md',
+        }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'removed' }),
+      );
     });
   });
 
