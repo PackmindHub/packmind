@@ -1,6 +1,5 @@
 import * as path from 'path';
 
-import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import { findLockFileEntryAndFileForPath } from '../../../application/utils/lockFileUtils';
 import { normalizePath } from '../../../application/utils/pathUtils';
@@ -78,8 +77,6 @@ export async function playbookRmHandler(
     return;
   }
 
-  // Try resolving artifact type and agent from the lock file first (source of truth),
-  // then fall back to path-based pattern matching.
   const normalizedForLookup = normalizePath(
     path.relative(targetDir, absolutePath),
   );
@@ -88,22 +85,14 @@ export async function playbookRmHandler(
     lockFile.artifacts,
   );
 
-  let artifactType: string;
-  let codingAgent: string;
-
-  if (lockResult) {
-    artifactType = lockResult.entry.type;
-    codingAgent = lockResult.file.agent;
-  } else {
-    const artefactResult = resolveArtefactFromPath(absolutePath);
-    if (!artefactResult) {
-      logErrorConsole('This file was not distributed using packmind');
-      exit(1);
-      return;
-    }
-    artifactType = artefactResult.artifactType;
-    codingAgent = artefactResult.codingAgent;
+  if (!lockResult) {
+    logErrorConsole('This file was not distributed using packmind');
+    exit(1);
+    return;
   }
+
+  const artifactType = lockResult.entry.type;
+  const codingAgent = lockResult.file.agent;
 
   if (artifactType === 'skill' && isSkillSupportFile(absolutePath)) {
     logErrorConsole(
@@ -122,9 +111,8 @@ export async function playbookRmHandler(
 
   // Re-lookup with resolved path for skills (directory vs file)
   const lockEntry =
-    lockResult?.entry ??
     findLockFileEntryAndFileForPath(normalizedFilePath, lockFile.artifacts)
-      ?.entry;
+      ?.entry ?? lockResult.entry;
   if (!lockEntry) {
     logErrorConsole('This file was not distributed using packmind');
     exit(1);
