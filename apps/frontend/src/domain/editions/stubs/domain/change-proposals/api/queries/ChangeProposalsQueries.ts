@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
 const noopQuery: { data: any; isLoading: boolean; isError: boolean } = {
   data: undefined,
   isLoading: false,
