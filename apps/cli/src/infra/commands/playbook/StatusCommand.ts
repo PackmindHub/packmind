@@ -1,9 +1,10 @@
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { command } from 'cmd-ts';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PlaybookLocalRepository } from '../../repositories/PlaybookLocalRepository';
 import { LockFileRepository } from '../../repositories/LockFileRepository';
+import { listDirectoryFiles } from '../../utils/listDirectoryFiles';
 import { playbookStatusHandler } from './statusHandler';
 
 export const statusPlaybookCommand = command({
@@ -27,6 +28,14 @@ export const statusPlaybookCommand = command({
       cwd: process.cwd(),
       exit: process.exit,
       readFile: (p) => readFileSync(p, 'utf-8'),
+      listDirectoryFiles,
+      getFileMode: (p) => {
+        try {
+          return statSync(p).mode;
+        } catch {
+          return null;
+        }
+      },
     });
   },
 });

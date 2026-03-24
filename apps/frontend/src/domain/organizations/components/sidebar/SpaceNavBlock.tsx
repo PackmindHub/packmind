@@ -1,5 +1,12 @@
 import React from 'react';
-import { PMAvatar, PMBox, PMSeparator, PMText, PMTooltip } from '@packmind/ui';
+import {
+  PMAvatar,
+  PMBox,
+  PMSeparator,
+  PMStatus,
+  PMText,
+  PMTooltip,
+} from '@packmind/ui';
 import {
   LuBookCheck,
   LuEye,
@@ -20,7 +27,28 @@ interface SpaceNavBlockProps {
   space: Space;
   orgSlug: string;
   isActive: boolean;
+  isSelected: boolean;
   onSpaceClick: () => void;
+}
+
+const SPACE_COLOR_PALETTES = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'teal',
+  'blue',
+  'cyan',
+  'purple',
+  'pink',
+] as const;
+
+export function getSpaceColorPalette(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = Math.trunc(hash * 31 + (name.codePointAt(i) ?? 0));
+  }
+  return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
 }
 
 export function getSpaceInitials(name: string): string {
@@ -36,6 +64,7 @@ export function SpaceNavBlock({
   space,
   orgSlug,
   isActive,
+  isSelected,
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const { isCollapsed } = useSidebarCollapse();
@@ -56,6 +85,7 @@ export function SpaceNavBlock({
       space={space}
       orgSlug={orgSlug}
       isActive={isActive}
+      isSelected={isSelected}
       onSpaceClick={onSpaceClick}
     />
   );
@@ -114,18 +144,41 @@ function ExpandedSpaceNavBlock({
   space,
   orgSlug,
   isActive,
+  isSelected,
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   return (
     <PMBox>
-      <SpaceNameRow
-        space={space}
-        isActive={isActive}
-        onSpaceClick={onSpaceClick}
-      />
+      {!isActive && (
+        <SpaceNameRow
+          space={space}
+          isActive={isActive}
+          isSelected={isSelected}
+          onSpaceClick={onSpaceClick}
+        />
+      )}
 
       {isActive && (
-        <PMBox mt={1}>
+        <PMBox mt={1} bg="background.secondary" borderRadius="md" py={1.5}>
+          <PMBox paddingX={3} paddingY={1}>
+            <PMText
+              fontSize="xs"
+              fontWeight="semibold"
+              textProps={{ color: 'primary' }}
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+            >
+              <PMStatus.Root
+                colorPalette={getSpaceColorPalette(space.name)}
+                as="span"
+                mr={1.5}
+              >
+                <PMStatus.Indicator />
+              </PMStatus.Root>
+              {space.name}
+            </PMText>
+          </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
       )}
@@ -138,7 +191,7 @@ function CollapsedSpaceNavBlock({
   orgSlug,
   isActive,
   onSpaceClick,
-}: Readonly<SpaceNavBlockProps>): React.ReactElement {
+}: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
 
   return (
@@ -163,9 +216,7 @@ function CollapsedSpaceNavBlock({
           <PMAvatar.Root
             size="xs"
             borderRadius="sm"
-            backgroundColor={
-              isActive ? 'background.secondary' : 'background.tertiary'
-            }
+            backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
             color="text.primary"
             {...(isActive && {
               outline: '2px solid',
@@ -196,10 +247,12 @@ function CollapsedSpaceNavBlock({
 function SpaceNameRow({
   space,
   isActive,
+  isSelected,
   onSpaceClick,
 }: Readonly<{
   space: Space;
   isActive: boolean;
+  isSelected: boolean;
   onSpaceClick: () => void;
 }>): React.ReactElement {
   return (
@@ -215,17 +268,27 @@ function SpaceNameRow({
       cursor="pointer"
       width="full"
       textAlign="left"
-      bg={isActive ? 'blue.900' : 'transparent'}
+      bg="transparent"
       _hover={isActive ? undefined : { backgroundColor: 'blue.900' }}
       transition="background-color 0.15s"
     >
       <PMText
         fontSize="xs"
-        fontWeight={isActive ? 'semibold' : 'medium'}
+        fontWeight={isSelected ? 'bold' : isActive ? 'semibold' : 'medium'}
+        textProps={{
+          color: isSelected ? 'branding.primary' : 'primary',
+        }}
         overflow="hidden"
         textOverflow="ellipsis"
         whiteSpace="nowrap"
       >
+        <PMStatus.Root
+          colorPalette={getSpaceColorPalette(space.name)}
+          as="span"
+          mr={1.5}
+        >
+          <PMStatus.Indicator />
+        </PMStatus.Root>
         {space.name}
       </PMText>
     </PMBox>

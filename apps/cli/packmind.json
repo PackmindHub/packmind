@@ -1,5 +1,5 @@
 {
   "packages": {
-    "cli": "*"
+    "@global/cli": "*"
   }
 }

@@ -4,6 +4,7 @@ interface CustomSpacesNavBlockProps {
   spaces: Space[];
   orgSlug: string;
   currentSpaceSlug: string | undefined;
+  selectedSpaceId: string | null;
   onSpaceClick: (space: Space) => void;
 }
 

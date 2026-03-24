@@ -1,6 +1,9 @@
 import * as path from 'path';
 
-import { normalizePath } from '../../../application/utils/pathUtils';
+import {
+  normalizePath,
+  resolveSkillDirPath,
+} from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
@@ -37,7 +40,11 @@ export async function playbookUnstageHandler(
 
   const cwd = getCwd();
   const absolutePath = path.resolve(cwd, filePath);
-  const configDir = await findNearestConfigDir(cwd, packmindCliHexa);
+  const resolvedPath = resolveSkillDirPath(absolutePath);
+  const configDir = await findNearestConfigDir(
+    path.dirname(resolvedPath),
+    packmindCliHexa,
+  );
   if (!configDir) {
     logErrorConsole(
       'Not inside a Packmind project. No packmind.json found in any parent directory.',
@@ -45,13 +52,21 @@ export async function playbookUnstageHandler(
     exit(1);
     return;
   }
+
+  // Use git root as base so cross-target paths resolve correctly.
+  // Entries stored by `add` combine configDir (relative to git root) + filePath (relative to target).
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+  const baseDir = gitRoot ?? configDir;
   const normalizedFilePath = normalizePath(
-    path.relative(configDir, absolutePath),
+    path.relative(baseDir, resolvedPath),
   );
 
-  const matchingEntries = playbookLocalRepository
-    .getChanges()
-    .filter((c) => c.filePath === normalizedFilePath);
+  const matchingEntries = playbookLocalRepository.getChanges().filter((c) => {
+    const fullEntryPath = c.configDir
+      ? normalizePath(path.join(c.configDir, c.filePath))
+      : c.filePath;
+    return fullEntryPath === normalizedFilePath;
+  });
 
   if (matchingEntries.length === 0) {
     logErrorConsole(`No staged change found for ${normalizedFilePath}`);
@@ -60,8 +75,11 @@ export async function playbookUnstageHandler(
   }
 
   if (spaceSlug) {
+    const normalizedSlug = spaceSlug.startsWith('@')
+      ? spaceSlug.slice(1)
+      : spaceSlug;
     const entry = matchingEntries.find(
-      (c) => c.spaceName === spaceSlug || c.spaceId === spaceSlug,
+      (c) => c.spaceName === normalizedSlug || c.spaceId === normalizedSlug,
     );
     if (!entry) {
       logErrorConsole(
@@ -70,7 +88,7 @@ export async function playbookUnstageHandler(
       exit(1);
       return;
     }
-    playbookLocalRepository.removeChange(normalizedFilePath, entry.spaceId);
+    playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
     logSuccessConsole(
       `Unstaged ${normalizedFilePath} from playbook (space: ${spaceSlug})`,
     );
@@ -93,7 +111,7 @@ export async function playbookUnstageHandler(
   }
 
   playbookLocalRepository.removeChange(
-    normalizedFilePath,
+    matchingEntries[0].filePath,
     matchingEntries[0].spaceId,
   );
   logSuccessConsole(`Unstaged ${normalizedFilePath} from playbook`);

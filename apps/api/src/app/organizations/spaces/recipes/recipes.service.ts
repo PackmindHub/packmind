@@ -28,12 +28,6 @@ export class RecipesService {
     private readonly logger: PackmindLogger,
   ) {}
 
-  async getRecipesByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Recipe[]> {
-    return this.recipesAdapter.listRecipesByOrganization(organizationId);
-  }
-
   async getRecipesBySpace(
     spaceId: SpaceId,
     organizationId: OrganizationId,

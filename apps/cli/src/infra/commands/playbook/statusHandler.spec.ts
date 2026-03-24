@@ -19,10 +19,17 @@ jest.mock('../../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
 }));
 
+jest.mock('../../utils/permissions', () => ({
+  modeToPermissionStringOrDefault: jest.fn((mode: number) =>
+    (mode & 0o777) === 0o755 ? 'rwxr-xr-x' : 'rw-r--r--',
+  ),
+}));
+
 describe('playbookStatusHandler', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
   let mockReadFile: jest.Mock;
+  let mockListDirectoryFiles: jest.Mock;
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   let mockGetContentByVersions: jest.Mock;
@@ -48,10 +55,13 @@ describe('playbookStatusHandler', () => {
       getPackmindGateway: () => ({
         deployment: { getContentByVersions: mockGetContentByVersions },
       }),
+      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
+      findDescendantConfigs: jest.fn().mockResolvedValue([]),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
     mockReadFile = jest.fn();
+    mockListDirectoryFiles = jest.fn().mockReturnValue([]);
 
     mockPlaybookLocalRepository = {
       addChange: jest.fn(),
@@ -82,6 +92,7 @@ describe('playbookStatusHandler', () => {
       cwd: repoRoot,
       exit: mockExit,
       readFile: mockReadFile,
+      listDirectoryFiles: mockListDirectoryFiles,
       ...overrides,
     };
   }
@@ -586,6 +597,9 @@ describe('playbookStatusHandler', () => {
       (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
         (dir: string) => Promise.resolve(dir === '/gitroot/subproject'),
       );
+      (
+        mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+      ).mockResolvedValue('/gitroot');
 
       mockLockFileRepository.read.mockImplementation((dir: string) =>
         Promise.resolve(dir === '/gitroot/subproject' ? lockFile : null),
@@ -617,7 +631,7 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
     });
 
-    it('displays the untracked artifact with file path for the subproject', async () => {
+    it('displays the untracked artifact with file path relative to cwd', async () => {
       await playbookStatusHandler(buildDeps({ cwd: '/gitroot/subproject' }));
 
       expect(mockLogConsole).toHaveBeenCalledWith(
@@ -794,6 +808,140 @@ describe('playbookStatusHandler', () => {
     });
   });
 
+  describe('when staged entry has configDir', () => {
+    it('displays file path prefixed with configDir', async () => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+          configDir: 'apps/frontend',
+        } as PlaybookChangeEntry,
+      ]);
+
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My skill" (updated) apps/frontend/.claude/skills/my-skill',
+      );
+    });
+
+    it('falls back to bare filePath when configDir is undefined', async () => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+        } as PlaybookChangeEntry,
+      ]);
+
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My skill" (updated) .claude/skills/my-skill',
+      );
+    });
+  });
+
+  describe('when untracked changes exist in a configDir target', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'artifact-1': {
+          name: 'My standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              agent: 'packmind',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      (
+        mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+      ).mockResolvedValue('/project');
+      (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+        (dir: string) =>
+          Promise.resolve(
+            dir === '/project/apps/frontend' || dir === '/project',
+          ),
+      );
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+          configDir: 'apps/frontend',
+        } as PlaybookChangeEntry,
+      ]);
+
+      mockLockFileRepository.read.mockImplementation((dir: string) =>
+        Promise.resolve(dir === '/project/apps/frontend' ? lockFile : null),
+      );
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('local modified content');
+    });
+
+    it('displays untracked file path prefixed with configDir', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "My standard" apps/frontend/.packmind/standards/my-standard.md',
+      );
+    });
+
+    it('reads local files relative to the configDir project directory', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockReadFile).toHaveBeenCalledWith(
+        expect.stringContaining(
+          '/project/apps/frontend/.packmind/standards/my-standard.md',
+        ),
+      );
+    });
+  });
+
   describe('when a deployed file has been manually deleted', () => {
     const lockFile: PackmindLockFile = {
       lockfileVersion: 1,
@@ -859,6 +1007,640 @@ describe('playbookStatusHandler', () => {
 
       expect(mockLogConsole).toHaveBeenCalledWith(
         'Use `packmind playbook add <path>` to track them',
+      );
+    });
+  });
+
+  describe('when a deployed skill file has been deleted locally', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'my-skill': {
+          name: 'My Skill',
+          type: 'skill',
+          id: 'artifact-skill-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              agent: 'claude',
+            },
+            {
+              path: '.claude/skills/my-skill/support/helper.py',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'skill content',
+            },
+            {
+              path: '.claude/skills/my-skill/support/helper.py',
+              content: 'print("hello")',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockImplementation((filePath: string) => {
+        if (filePath.includes('SKILL.md')) return 'skill content';
+        throw new Error('ENOENT: no such file or directory');
+      });
+    });
+
+    it('displays the deleted skill file as untracked', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My Skill" (deleted) .claude/skills/my-skill/support/helper.py',
+      );
+    });
+
+    it('does not show the unchanged SKILL.md as untracked', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const skillMdUntracked = allCalls.some(
+        (msg: string) =>
+          typeof msg === 'string' &&
+          msg.includes('SKILL.md') &&
+          msg.includes('not tracked'),
+      );
+      expect(skillMdUntracked).toBe(false);
+    });
+
+    it('displays the untracked header', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
+    });
+  });
+
+  describe('when a deployed skill file has changed permissions only', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'my-skill': {
+          name: 'My Skill',
+          type: 'skill',
+          id: 'artifact-skill-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              agent: 'claude',
+            },
+            {
+              path: '.claude/skills/my-skill/references/file.md',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'skill content',
+            },
+            {
+              path: '.claude/skills/my-skill/references/file.md',
+              content: 'file content',
+              skillFileId: 'file-id-1',
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockImplementation((filePath: string) => {
+        if (filePath.includes('SKILL.md')) return 'skill content';
+        if (filePath.includes('file.md')) return 'file content';
+        throw new Error('ENOENT');
+      });
+    });
+
+    it('displays file as untracked with permissions changed label when only permissions differ', async () => {
+      const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
+
+      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My Skill" (permissions changed) .claude/skills/my-skill/references/file.md',
+      );
+    });
+
+    it('does not show file as untracked when permissions match', async () => {
+      const mockGetFileMode = jest.fn().mockReturnValue(0o100644);
+
+      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const hasUntracked = allCalls.some(
+        (msg: string) =>
+          typeof msg === 'string' && msg.includes('Changes not tracked:'),
+      );
+      expect(hasUntracked).toBe(false);
+    });
+
+    it('shows content change without permissions label when both content and permissions differ', async () => {
+      mockReadFile.mockImplementation((filePath: string) => {
+        if (filePath.includes('SKILL.md')) return 'skill content';
+        if (filePath.includes('file.md')) return 'modified file content';
+        throw new Error('ENOENT');
+      });
+      const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
+
+      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const fileLine = allCalls.filter(
+        (msg: string) =>
+          typeof msg === 'string' && msg.includes('references/file.md'),
+      );
+      expect(fileLine).toHaveLength(1);
+      expect(fileLine[0]).not.toContain('permissions changed');
+    });
+  });
+
+  describe('when a skill is already staged and a support file is deleted', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'my-skill': {
+          name: 'My Skill',
+          type: 'skill',
+          id: 'artifact-skill-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              agent: 'claude',
+            },
+            {
+              path: '.claude/skills/my-skill/support/helper.py',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+        } as PlaybookChangeEntry,
+      ]);
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'skill content',
+            },
+            {
+              path: '.claude/skills/my-skill/support/helper.py',
+              content: 'print("hello")',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockImplementation((filePath: string) => {
+        if (filePath.includes('SKILL.md')) return 'skill content';
+        throw new Error('ENOENT: no such file or directory');
+      });
+    });
+
+    it('does not show deleted support file as untracked when skill directory is staged', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const hasUntracked = allCalls.some(
+        (msg: string) =>
+          typeof msg === 'string' && msg.includes('Changes not tracked:'),
+      );
+      expect(hasUntracked).toBe(false);
+    });
+  });
+
+  describe('when a skill has new local files not in the deployed set', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'my-skill': {
+          name: 'My Skill',
+          type: 'skill',
+          id: 'artifact-skill-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'skill content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('skill content');
+      mockListDirectoryFiles.mockReturnValue([
+        'SKILL.md',
+        'references/file.md',
+      ]);
+    });
+
+    it('displays the new file as untracked with new file label', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My Skill" (new file) .claude/skills/my-skill/references/file.md',
+      );
+    });
+
+    it('displays the untracked header', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
+    });
+
+    it('does not show SKILL.md as untracked since it matches deployed', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const skillMdLine = allCalls.find(
+        (msg: string) =>
+          typeof msg === 'string' &&
+          msg.includes('SKILL.md') &&
+          msg.includes('not tracked'),
+      );
+      expect(skillMdLine).toBeUndefined();
+    });
+
+    it('scans the correct skill directory', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockListDirectoryFiles).toHaveBeenCalledWith(
+        '/project/.claude/skills/my-skill',
+      );
+    });
+  });
+
+  describe('when a skill has new local files but skill is already staged', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'my-skill': {
+          name: 'My Skill',
+          type: 'skill',
+          id: 'artifact-skill-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+        } as PlaybookChangeEntry,
+      ]);
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'skill content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('skill content');
+      mockListDirectoryFiles.mockReturnValue([
+        'SKILL.md',
+        'references/file.md',
+      ]);
+    });
+
+    it('does not show new files as untracked when skill is staged', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const hasUntracked = allCalls.some(
+        (msg: string) =>
+          typeof msg === 'string' && msg.includes('Changes not tracked:'),
+      );
+      expect(hasUntracked).toBe(false);
+    });
+  });
+
+  describe('when cwd is a subdirectory of the git root', () => {
+    describe('staged changes', () => {
+      it('shows path relative to cwd when run from a sub-app directory', async () => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          {
+            filePath: '.packmind/commands/my-command.ts',
+            artifactType: 'command',
+            artifactName: 'My command',
+            codingAgent: 'packmind',
+            addedAt: '2026-03-17T00:00:00.000Z',
+            spaceId: 'space-123',
+            content: 'content',
+            changeType: 'updated',
+            configDir: 'apps/frontend',
+          } as PlaybookChangeEntry,
+        ]);
+
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/apps/frontend' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Command "My command" (updated) .packmind/commands/my-command.ts',
+        );
+      });
+
+      it('shows relative path with ../../ when run from an unrelated package', async () => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          {
+            filePath: '.packmind/commands/my-command.ts',
+            artifactType: 'command',
+            artifactName: 'My command',
+            codingAgent: 'packmind',
+            addedAt: '2026-03-17T00:00:00.000Z',
+            spaceId: 'space-123',
+            content: 'content',
+            changeType: 'updated',
+            configDir: 'apps/frontend',
+          } as PlaybookChangeEntry,
+        ]);
+
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/packages/whatever' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Command "My command" (updated) ../../apps/frontend/.packmind/commands/my-command.ts',
+        );
+      });
+    });
+
+    describe('untracked changes', () => {
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'artifact-1': {
+            name: 'My standard',
+            type: 'standard',
+            id: 'artifact-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      };
+
+      beforeEach(() => {
+        (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+          (dir: string) =>
+            Promise.resolve(
+              dir === '/project/apps/frontend' || dir === '/project',
+            ),
+        );
+        mockLockFileRepository.read.mockImplementation((dir: string) =>
+          Promise.resolve(dir === '/project/apps/frontend' ? lockFile : null),
+        );
+        mockGetContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                content: 'deployed content',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          resolvedAgents: [],
+        });
+        mockReadFile.mockReturnValue('local modified content');
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          {
+            filePath: '.packmind/standards/unrelated.md',
+            artifactType: 'standard',
+            artifactName: 'Unrelated',
+            codingAgent: 'packmind',
+            addedAt: '2026-03-17T00:00:00.000Z',
+            spaceId: 'space-123',
+            content: 'content',
+            changeType: 'updated',
+            configDir: 'apps/frontend',
+          } as PlaybookChangeEntry,
+        ]);
+      });
+
+      it('shows path relative to cwd when run from the sub-app directory', async () => {
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/apps/frontend' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Standard "My standard" .packmind/standards/my-standard.md',
+        );
+      });
+
+      it('shows relative path with ../../ when run from an unrelated package', async () => {
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/packages/whatever' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Standard "My standard" ../../apps/frontend/.packmind/standards/my-standard.md',
+        );
+      });
+    });
+  });
+
+  describe('when running from root and sub-target has untracked changes', () => {
+    const subTargetLockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['packmind'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-sub',
+      artifacts: {
+        'artifact-1': {
+          name: 'Second standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.packmind/standards/second-standard.md',
+              agent: 'packmind',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+        (dir: string) => Promise.resolve(dir === '/project'),
+      );
+      (
+        mockPackmindCliHexa.findDescendantConfigs as jest.Mock
+      ).mockResolvedValue(['/project/apps/frontend']);
+      mockLockFileRepository.read.mockImplementation((dir: string) =>
+        Promise.resolve(
+          dir === '/project/apps/frontend' ? subTargetLockFile : null,
+        ),
+      );
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/second-standard.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('local modified content');
+    });
+
+    it('shows the untracked header', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/project' }));
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
+    });
+
+    it('shows the sub-target untracked change with path relative to cwd', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/project' }));
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "Second standard" apps/frontend/.packmind/standards/second-standard.md',
+      );
+    });
+
+    it('reads files from the sub-target directory', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/project' }));
+
+      expect(mockReadFile).toHaveBeenCalledWith(
+        '/project/apps/frontend/.packmind/standards/second-standard.md',
       );
     });
   });

@@ -1,9 +1,12 @@
 import * as path from 'path';
 
-import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
-import { findLockFileEntryForPath } from '../../../application/utils/lockFileUtils';
-import { normalizePath } from '../../../application/utils/pathUtils';
+import { findLockFileEntryAndFileForPath } from '../../../application/utils/lockFileUtils';
+import {
+  normalizePath,
+  resolveSkillDirPath,
+} from '../../../application/utils/pathUtils';
+import { resolveDeployedContext } from '../../../application/utils/resolveDeployedContext';
 import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
@@ -29,13 +32,6 @@ function isSkillSupportFile(absolutePath: string): boolean {
   return afterSkillDir !== 'SKILL.md';
 }
 
-function resolveSkillDirPath(absolutePath: string): string {
-  if (absolutePath.endsWith('SKILL.md')) {
-    return path.dirname(absolutePath);
-  }
-  return absolutePath;
-}
-
 export async function playbookRmHandler(
   deps: PlaybookRmHandlerDependencies,
 ): Promise<void> {
@@ -58,16 +54,42 @@ export async function playbookRmHandler(
 
   const absolutePath = path.resolve(getCwd(), filePath);
 
-  const artefactResult = resolveArtefactFromPath(absolutePath);
-  if (!artefactResult) {
+  // Resolve target directory and lock file first
+  const targetDir = await findNearestConfigDir(
+    path.dirname(absolutePath),
+    packmindCliHexa,
+  );
+  if (!targetDir) {
     logErrorConsole(
-      `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command, standard, or skill).`,
+      'Not inside a Packmind project. No packmind.json found in any parent directory.',
     );
     exit(1);
     return;
   }
 
-  const { artifactType, codingAgent } = artefactResult;
+  const lockFile = await lockFileRepository.read(targetDir);
+  if (!lockFile) {
+    logErrorConsole('This file was not distributed using packmind');
+    exit(1);
+    return;
+  }
+
+  const normalizedForLookup = normalizePath(
+    path.relative(targetDir, absolutePath),
+  );
+  const lockResult = findLockFileEntryAndFileForPath(
+    normalizedForLookup,
+    lockFile.artifacts,
+  );
+
+  if (!lockResult) {
+    logErrorConsole('This file was not distributed using packmind');
+    exit(1);
+    return;
+  }
+
+  const artifactType = lockResult.entry.type;
+  const codingAgent = lockResult.file.agent;
 
   if (artifactType === 'skill' && isSkillSupportFile(absolutePath)) {
     logErrorConsole(
@@ -80,51 +102,54 @@ export async function playbookRmHandler(
   const resolvedAbsolutePath =
     artifactType === 'skill' ? resolveSkillDirPath(absolutePath) : absolutePath;
 
-  const fileDir = path.dirname(resolvedAbsolutePath);
-
-  const targetDir = await findNearestConfigDir(fileDir, packmindCliHexa);
-  if (!targetDir) {
-    logErrorConsole(
-      'Not inside a Packmind project. No packmind.json found in any parent directory.',
-    );
-    exit(1);
-    return;
-  }
-
   const normalizedFilePath = normalizePath(
     path.relative(targetDir, resolvedAbsolutePath),
   );
 
-  const lockFile = await lockFileRepository.read(targetDir);
-  if (!lockFile) {
-    logErrorConsole('This file was not distributed using packmind');
-    exit(1);
-    return;
-  }
-
-  const lockEntry = findLockFileEntryForPath(
-    normalizedFilePath,
-    lockFile.artifacts,
-  );
+  // Re-lookup with resolved path for skills (directory vs file)
+  const lockEntry =
+    findLockFileEntryAndFileForPath(normalizedFilePath, lockFile.artifacts)
+      ?.entry ?? lockResult.entry;
   if (!lockEntry) {
     logErrorConsole('This file was not distributed using packmind');
     exit(1);
     return;
   }
 
+  const existingChange = playbookLocalRepository.getChange(
+    normalizedFilePath,
+    lockEntry.spaceId,
+  );
+  if (existingChange?.changeType === 'removed') {
+    logSuccessConsole(`"${lockEntry.name}" is already staged for removal.`);
+    exit(0);
+    return;
+  }
+
   const allSpaces = await packmindCliHexa.getSpaces();
   const spaceName = allSpaces.find((s) => s.id === lockEntry.spaceId)?.name;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
+  const configDir = gitRoot
+    ? normalizePath(path.relative(gitRoot, targetDir))
+    : '';
+
+  const deployedContext = await resolveDeployedContext(
+    packmindCliHexa,
+    targetDir,
+  );
 
   playbookLocalRepository.addChange({
     filePath: normalizedFilePath,
     artifactType: lockEntry.type,
     artifactName: lockEntry.name,
     codingAgent,
+    configDir,
     changeType: 'removed',
     content: '',
     spaceId: lockEntry.spaceId,
     spaceName,
-    targetId: lockFile.targetId,
+    targetId: deployedContext?.targetId ?? lockFile.targetId,
     addedAt: new Date().toISOString(),
   });
 

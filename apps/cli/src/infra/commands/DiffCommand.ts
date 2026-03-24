@@ -18,7 +18,7 @@ import {
 export const diffCommand = command({
   name: 'diff',
   description:
-    'Show differences between local command files and server content',
+    '[Deprecated] Use playbook commands instead. Run for migration guidance',
   args: {
     submit: flag({
       long: 'submit',

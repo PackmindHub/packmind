@@ -1,11 +1,13 @@
 import {
   CreateSpaceCommand,
   IAccountsPort,
-  IEventTrackingPort,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { OrganizationAdminRequiredError } from '@packmind/node-utils';
+import {
+  OrganizationAdminRequiredError,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
@@ -27,7 +29,9 @@ describe('CreateSpaceUseCase', () => {
   let useCase: CreateSpaceUseCase;
   let spaceService: jest.Mocked<SpaceService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<
+    Pick<PackmindEventEmitterService, 'emit'>
+  >;
 
   const buildCommand = (
     overrides?: Partial<CreateSpaceCommand>,
@@ -48,15 +52,14 @@ describe('CreateSpaceUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn(),
-      identifyOrganizationGroup: jest.fn(),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
 
     useCase = new CreateSpaceUseCase(
       spaceService,
       accountsPort,
-      eventTrackingPort,
+      eventEmitterService as unknown as PackmindEventEmitterService,
       stubLogger(),
     );
   });
@@ -91,14 +94,19 @@ describe('CreateSpaceUseCase', () => {
         );
       });
 
-      it('tracks a space_created amplitude event with space name and slug', async () => {
+      it('emits a SpaceCreatedEvent with space name and slug', async () => {
         await useCase.execute(buildCommand());
 
-        expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-          userId,
-          organizationId,
-          'space_created',
-          { spaceName: createdSpace.name, spaceSlug: createdSpace.slug },
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              userId,
+              organizationId,
+              source: 'ui',
+              spaceName: createdSpace.name,
+              spaceSlug: createdSpace.slug,
+            }),
+          }),
         );
       });
     });
@@ -116,10 +124,10 @@ describe('CreateSpaceUseCase', () => {
         );
       });
 
-      it('does not track an amplitude event', async () => {
+      it('does not emit a SpaceCreatedEvent', async () => {
         await useCase.execute(buildCommand()).catch(() => undefined);
 
-        expect(eventTrackingPort.trackEvent).not.toHaveBeenCalled();
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

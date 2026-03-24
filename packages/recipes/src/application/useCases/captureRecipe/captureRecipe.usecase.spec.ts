@@ -59,7 +59,6 @@ describe('CaptureRecipeUsecase', () => {
     // Mock RecipeService
     recipeService = {
       addRecipe: jest.fn(),
-      listRecipesByOrganization: jest.fn(),
       listRecipesBySpace: jest.fn(),
       getRecipeById: jest.fn(),
       findRecipeBySlug: jest.fn(),

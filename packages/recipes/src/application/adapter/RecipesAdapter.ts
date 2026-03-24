@@ -44,7 +44,6 @@ import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/delete
 import { FindRecipeBySlugUsecase } from '../useCases/findRecipeBySlug/findRecipeBySlug.usecase';
 import { GetRecipeByIdUsecase } from '../useCases/getRecipeById/getRecipeById.usecase';
 import { GetRecipeVersionUsecase } from '../useCases/getRecipeVersion/getRecipeVersion.usecase';
-import { ListRecipesByOrganizationUsecase } from '../useCases/listRecipesByOrganization/listRecipesByOrganization.usecase';
 import { ListRecipesBySpaceUsecase } from '../useCases/listRecipesBySpace/listRecipesBySpace.usecase';
 import { ListRecipeVersionsUsecase } from '../useCases/listRecipeVersions/listRecipeVersions.usecase';
 import { UpdateRecipeFromUIUsecase } from '../useCases/updateRecipeFromUI/updateRecipeFromUI.usecase';
@@ -75,7 +74,6 @@ export class RecipesAdapter
   private _deleteRecipe!: DeleteRecipeUsecase;
   private _getRecipeById!: GetRecipeByIdUsecase;
   private _findRecipeBySlug!: FindRecipeBySlugUsecase;
-  private _listRecipesByOrganization!: ListRecipesByOrganizationUsecase;
   private _listRecipesBySpace!: ListRecipesBySpaceUsecase;
   private _listRecipeVersions!: ListRecipeVersionsUsecase;
   private _getRecipeVersion!: GetRecipeVersionUsecase;
@@ -188,10 +186,6 @@ export class RecipesAdapter
     );
 
     this._findRecipeBySlug = new FindRecipeBySlugUsecase(
-      this.recipesServices.getRecipeService(),
-    );
-
-    this._listRecipesByOrganization = new ListRecipesByOrganizationUsecase(
       this.recipesServices.getRecipeService(),
     );
 
@@ -348,12 +342,6 @@ export class RecipesAdapter
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ) {
     return this._findRecipeBySlug.findRecipeBySlug(slug, organizationId, opts);
-  }
-
-  public listRecipesByOrganization(organizationId: OrganizationId) {
-    return this._listRecipesByOrganization.listRecipesByOrganization(
-      organizationId,
-    );
   }
 
   /**

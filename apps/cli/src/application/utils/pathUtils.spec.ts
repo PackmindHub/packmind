@@ -1,4 +1,8 @@
-import { normalizePath, pathStartsWith } from './pathUtils';
+import {
+  normalizePath,
+  pathStartsWith,
+  resolveSkillDirPath,
+} from './pathUtils';
 
 describe('pathUtils', () => {
   describe('normalizePath', () => {
@@ -87,6 +91,24 @@ describe('pathUtils', () => {
         const prefix = 'C:\\Users\\user\\project';
         const result = pathStartsWith(filePath, prefix);
         expect(result).toBe(false);
+      });
+    });
+  });
+
+  describe('resolveSkillDirPath', () => {
+    describe('when the path ends with SKILL.md', () => {
+      it('returns the parent directory', () => {
+        const result = resolveSkillDirPath(
+          '/project/.claude/skills/my-skill/SKILL.md',
+        );
+        expect(result).toBe('/project/.claude/skills/my-skill');
+      });
+    });
+
+    describe('when the path does not end with SKILL.md', () => {
+      it('returns the path unchanged', () => {
+        const result = resolveSkillDirPath('/project/.claude/skills/my-skill');
+        expect(result).toBe('/project/.claude/skills/my-skill');
       });
     });
   });

@@ -1,12 +1,16 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
+import {
+  AbstractAdminUseCase,
+  AdminContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
   CreateSpaceCommand,
   CreateSpaceResponse,
   IAccountsPort,
-  IEventTrackingPort,
+  SpaceCreatedEvent,
 } from '@packmind/types';
 import { SpaceName } from '../../domain/SpaceName';
 import { SpaceService } from '../services/SpaceService';
@@ -20,7 +24,7 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
   constructor(
     private readonly spaceService: SpaceService,
     accountsPort: IAccountsPort,
-    private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -37,11 +41,14 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
       false,
     );
 
-    this.eventTrackingPort.trackEvent(
-      createUserId(command.userId),
-      createOrganizationId(command.organizationId),
-      'space_created',
-      { spaceName: space.name, spaceSlug: space.slug },
+    this.eventEmitterService.emit(
+      new SpaceCreatedEvent({
+        userId: createUserId(command.userId),
+        organizationId: createOrganizationId(command.organizationId),
+        source: command.source ?? 'ui',
+        spaceName: space.name,
+        spaceSlug: space.slug,
+      }),
     );
 
     return space;

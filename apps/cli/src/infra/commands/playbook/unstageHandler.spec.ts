@@ -20,7 +20,10 @@ jest.mock('../../../application/utils/findNearestConfigDir', () => ({
 describe('playbookUnstageHandler', () => {
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
-  let mockPackmindCliHexa: { configExists: jest.Mock };
+  let mockPackmindCliHexa: {
+    configExists: jest.Mock;
+    tryGetGitRepositoryRoot: jest.Mock;
+  };
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
 
   const makeEntry = (
@@ -43,7 +46,10 @@ describe('playbookUnstageHandler', () => {
   beforeEach(() => {
     mockExit = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/project');
-    mockPackmindCliHexa = { configExists: jest.fn() };
+    mockPackmindCliHexa = {
+      configExists: jest.fn(),
+      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
+    };
     mockPlaybookLocalRepository = {
       addChange: jest.fn(),
       removeChange: jest.fn(),
@@ -236,6 +242,22 @@ describe('playbookUnstageHandler', () => {
 
         expect(mockExit).toHaveBeenCalledWith(0);
       });
+
+      describe('when the slug has an @ prefix', () => {
+        it('resolves the space by stripping the @ prefix', async () => {
+          await playbookUnstageHandler(
+            buildDeps({
+              filePath: 'path/to/file.md',
+              spaceSlug: '@frontend',
+            }),
+          );
+
+          expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+            'path/to/file.md',
+            'space-1',
+          );
+        });
+      });
     });
 
     describe('with --space flag not matching any entry', () => {
@@ -259,6 +281,53 @@ describe('playbookUnstageHandler', () => {
     });
   });
 
+  describe('when entry has a configDir (cross-target file)', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.packmind/standards/third-standard.md',
+          configDir: 'apps/frontend',
+        }),
+      ]);
+      mockPlaybookLocalRepository.removeChange.mockReturnValue(true);
+    });
+
+    it('matches by combining configDir and filePath', async () => {
+      await playbookUnstageHandler(
+        buildDeps({
+          filePath: 'apps/frontend/.packmind/standards/third-standard.md',
+        }),
+      );
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.packmind/standards/third-standard.md',
+        'space-1',
+      );
+    });
+
+    it('logs a success message', async () => {
+      await playbookUnstageHandler(
+        buildDeps({
+          filePath: 'apps/frontend/.packmind/standards/third-standard.md',
+        }),
+      );
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        'Unstaged apps/frontend/.packmind/standards/third-standard.md from playbook',
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await playbookUnstageHandler(
+        buildDeps({
+          filePath: 'apps/frontend/.packmind/standards/third-standard.md',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
   describe('when filePath has leading ./', () => {
     beforeEach(() => {
       mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
@@ -273,6 +342,63 @@ describe('playbookUnstageHandler', () => {
       expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
         'path/to/file.md',
         'space-1',
+      );
+    });
+  });
+
+  describe('when unstaging a skill via SKILL.md path', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: 'skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+        }),
+      ]);
+      mockPlaybookLocalRepository.removeChange.mockReturnValue(true);
+    });
+
+    it('resolves SKILL.md to the skill directory and unstages', async () => {
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        'skills/my-skill',
+        'space-1',
+      );
+    });
+
+    it('logs success with the skill directory path', async () => {
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        'Unstaged skills/my-skill from playbook',
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('resolves configDir from the skill directory, not cwd', async () => {
+      const { findNearestConfigDir } = jest.requireMock(
+        '../../../application/utils/findNearestConfigDir',
+      );
+
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(findNearestConfigDir).toHaveBeenCalledWith(
+        '/project/skills',
+        expect.anything(),
       );
     });
   });

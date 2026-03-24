@@ -125,39 +125,6 @@ export class StandardService {
     }
   }
 
-  async listStandardsByOrganizationAndUser(
-    organizationId: OrganizationId,
-    userId: UserId,
-  ): Promise<Standard[]> {
-    this.logger.info('Listing standards by organization and user', {
-      organizationId,
-      userId,
-    });
-
-    try {
-      const standards = await this.standardRepository.findByOrganizationAndUser(
-        organizationId,
-        userId,
-      );
-      this.logger.info(
-        'Standards retrieved by organization and user successfully',
-        {
-          organizationId,
-          userId,
-          count: standards.length,
-        },
-      );
-      return standards;
-    } catch (error) {
-      this.logger.error('Failed to list standards by organization and user', {
-        organizationId,
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async getStandardById(id: StandardId): Promise<Standard | null> {
     this.logger.info('Getting standard by ID', { id });
 

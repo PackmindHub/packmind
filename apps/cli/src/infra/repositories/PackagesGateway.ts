@@ -2,7 +2,7 @@ import { IPackagesGateway } from '../../domain/repositories/IPackagesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import {
   IGetPackageSummaryUseCase,
-  IListPackagesUseCase,
+  IListPackagesBySpaceUseCase,
   Gateway,
   ICreatePackageUseCase,
   IAddArtefactsToPackageUseCase,
@@ -14,11 +14,11 @@ export class PackagesGateway implements IPackagesGateway {
     private readonly httpClient: PackmindHttpClient,
   ) {}
 
-  public list: Gateway<IListPackagesUseCase> = async () => {
+  public list: Gateway<IListPackagesBySpaceUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
 
     return this.httpClient.request(
-      `/api/v0/organizations/${organizationId}/packages`,
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/packages`,
     );
   };
 

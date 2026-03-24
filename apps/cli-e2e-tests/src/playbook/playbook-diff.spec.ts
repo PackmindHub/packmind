@@ -60,10 +60,9 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
     it('shows the changes for the modified file', async () => {
       const result = await context.runCli('diff');
 
-      expect(result.stderr.split('\n')).toEqual([
-        expect.stringContaining('Summary: 1 change found on 1 artefact:'),
-        expect.stringContaining(`* Command "${command.name}"`),
-        '',
+      expect(result.stderr).toMatchOutput([
+        'Summary: 1 change found on 1 artefact:',
+        `* Command "${command.name}"`,
       ]);
     });
 
@@ -84,13 +83,11 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
         it('shows the previously sent change', async () => {
           const result = await context.runCli('diff --include-submitted');
 
-          expect(result.stdout.split('\n')).toEqual(
-            expect.arrayContaining([
-              expect.stringContaining(`Command "${command.name}"`),
-              expect.stringContaining(commandPath),
-              expect.stringContaining('already submitted on'),
-            ]),
-          );
+          expect(result.stdout).toMatchOutput([
+            `Command "${command.name}"`,
+            commandPath,
+            `Instructions updated [already submitted on`,
+          ]);
         });
       });
     });
