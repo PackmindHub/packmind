@@ -68,16 +68,19 @@ function groupStagedChanges(changes: PlaybookChangeEntry[]): GroupedChange[] {
   for (const change of changes) {
     const changeType = change.changeType ?? 'updated';
     const key = `${change.artifactType}:${change.artifactName}:${changeType}`;
+    const displayPath = change.configDir
+      ? `${change.configDir}/${change.filePath}`
+      : change.filePath;
     const existing = groups.get(key);
     if (existing) {
-      existing.filePaths.push(change.filePath);
+      existing.filePaths.push(displayPath);
     } else {
       groups.set(key, {
         artifactName: change.artifactName,
         artifactType: change.artifactType,
         changeType,
         spaceName: change.spaceName,
-        filePaths: [change.filePath],
+        filePaths: [displayPath],
       });
     }
   }
@@ -116,71 +119,108 @@ export async function playbookStatusHandler(
   } = deps;
 
   const stagedChanges = playbookLocalRepository.getChanges();
-  const stagedPaths = new Set(
-    stagedChanges.map((c) => normalizePath(c.filePath)),
-  );
-  const stagedSkillDirPaths = stagedChanges
-    .filter((c) => c.artifactType === 'skill')
-    .map((c) => normalizePath(c.filePath));
 
   const untrackedChanges: UntrackedChange[] = [];
 
-  const projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
-  if (projectDir) {
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+
+  // Group staged changes by configDir
+  const stagedByConfigDir = new Map<string, PlaybookChangeEntry[]>();
+  for (const change of stagedChanges) {
+    const key = change.configDir ?? '__cwd__';
+    const group = stagedByConfigDir.get(key) ?? [];
+    group.push(change);
+    stagedByConfigDir.set(key, group);
+  }
+
+  // Also process configDirs that have no staged changes (for untracked detection)
+  const fallbackConfigDir = await findNearestConfigDir(cwd, packmindCliHexa);
+
+  const configDirs = new Set([...stagedByConfigDir.keys()]);
+  if (fallbackConfigDir && !configDirs.has('__cwd__')) {
+    const rel = gitRoot
+      ? normalizePath(path.relative(gitRoot, fallbackConfigDir))
+      : '';
+    if (!configDirs.has(rel)) configDirs.add(rel);
+  }
+
+  for (const configDirKey of configDirs) {
+    let projectDir: string | null;
+    if (configDirKey === '__cwd__') {
+      projectDir = fallbackConfigDir;
+    } else if (gitRoot) {
+      projectDir = path.join(gitRoot, configDirKey);
+    } else {
+      continue;
+    }
+
+    if (!projectDir) continue;
     const lockFile = await lockFileRepository.read(projectDir);
+    if (!lockFile || Object.keys(lockFile.artifacts).length === 0) continue;
 
-    if (lockFile && Object.keys(lockFile.artifacts).length > 0) {
-      const deployedFiles = await fetchDeployedFiles(
-        packmindCliHexa.getPackmindGateway(),
-        lockFile,
-      );
+    const deployedFiles = await fetchDeployedFiles(
+      packmindCliHexa.getPackmindGateway(),
+      lockFile,
+    );
+    const configDirPrefix =
+      configDirKey && configDirKey !== '__cwd__' ? configDirKey + '/' : '';
 
-      for (const deployedFile of deployedFiles) {
-        const normalizedDeployedPath = normalizePath(deployedFile.path);
+    // Build staged path set for this target
+    const targetStagedPaths = new Set(
+      (stagedByConfigDir.get(configDirKey) ?? []).map((c) =>
+        normalizePath(c.filePath),
+      ),
+    );
+    const targetSkillDirPaths = (stagedByConfigDir.get(configDirKey) ?? [])
+      .filter((c) => c.artifactType === 'skill')
+      .map((c) => normalizePath(c.filePath));
 
-        if (
-          stagedPaths.has(normalizedDeployedPath) ||
-          stagedSkillDirPaths.some((staged) =>
-            normalizedDeployedPath.startsWith(staged + '/'),
-          )
-        ) {
-          continue;
+    for (const deployedFile of deployedFiles) {
+      const normalizedDeployedPath = normalizePath(deployedFile.path);
+
+      if (
+        targetStagedPaths.has(normalizedDeployedPath) ||
+        targetSkillDirPaths.some((staged) =>
+          normalizedDeployedPath.startsWith(staged + '/'),
+        )
+      ) {
+        continue;
+      }
+
+      const displayPath = configDirPrefix + deployedFile.path;
+      let localContent: string;
+      try {
+        localContent = readFile(path.join(projectDir, deployedFile.path));
+      } catch {
+        const artifact = findArtifactForFile(
+          deployedFile.path,
+          lockFile.artifacts,
+        );
+        if (artifact) {
+          untrackedChanges.push({
+            artifactName: artifact.name,
+            artifactType: artifact.type,
+            filePath: displayPath,
+            changeType: 'deleted',
+          });
         }
+        continue;
+      }
 
-        let localContent: string;
-        try {
-          localContent = readFile(path.join(projectDir, deployedFile.path));
-        } catch {
-          const artifact = findArtifactForFile(
-            deployedFile.path,
-            lockFile.artifacts,
-          );
-          if (artifact) {
-            untrackedChanges.push({
-              artifactName: artifact.name,
-              artifactType: artifact.type,
-              filePath: deployedFile.path,
-              changeType: 'deleted',
-            });
-          }
-          continue;
-        }
-
-        if (
-          deployedFile.content &&
-          localContent.trim() !== deployedFile.content.trim()
-        ) {
-          const artifact = findArtifactForFile(
-            deployedFile.path,
-            lockFile.artifacts,
-          );
-          if (artifact) {
-            untrackedChanges.push({
-              artifactName: artifact.name,
-              artifactType: artifact.type,
-              filePath: deployedFile.path,
-            });
-          }
+      if (
+        deployedFile.content &&
+        localContent.trim() !== deployedFile.content.trim()
+      ) {
+        const artifact = findArtifactForFile(
+          deployedFile.path,
+          lockFile.artifacts,
+        );
+        if (artifact) {
+          untrackedChanges.push({
+            artifactName: artifact.name,
+            artifactType: artifact.type,
+            filePath: displayPath,
+          });
         }
       }
     }

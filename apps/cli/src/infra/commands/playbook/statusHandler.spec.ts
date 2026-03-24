@@ -48,6 +48,7 @@ describe('playbookStatusHandler', () => {
       getPackmindGateway: () => ({
         deployment: { getContentByVersions: mockGetContentByVersions },
       }),
+      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -586,6 +587,9 @@ describe('playbookStatusHandler', () => {
       (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
         (dir: string) => Promise.resolve(dir === '/gitroot/subproject'),
       );
+      (
+        mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+      ).mockResolvedValue('/gitroot');
 
       mockLockFileRepository.read.mockImplementation((dir: string) =>
         Promise.resolve(dir === '/gitroot/subproject' ? lockFile : null),
@@ -617,11 +621,11 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
     });
 
-    it('displays the untracked artifact with file path for the subproject', async () => {
+    it('displays the untracked artifact with file path prefixed by subproject', async () => {
       await playbookStatusHandler(buildDeps({ cwd: '/gitroot/subproject' }));
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Command "My command" .claude/commands/my-command.md',
+        '  - Command "My command" subproject/.claude/commands/my-command.md',
       );
     });
 
@@ -790,6 +794,140 @@ describe('playbookStatusHandler', () => {
 
       expect(mockLogConsole).toHaveBeenCalledWith(
         'Use `packmind playbook submit` to send them',
+      );
+    });
+  });
+
+  describe('when staged entry has configDir', () => {
+    it('displays file path prefixed with configDir', async () => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+          configDir: 'apps/frontend',
+        } as PlaybookChangeEntry,
+      ]);
+
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My skill" (updated) apps/frontend/.claude/skills/my-skill',
+      );
+    });
+
+    it('falls back to bare filePath when configDir is undefined', async () => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+        } as PlaybookChangeEntry,
+      ]);
+
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My skill" (updated) .claude/skills/my-skill',
+      );
+    });
+  });
+
+  describe('when untracked changes exist in a configDir target', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'artifact-1': {
+          name: 'My standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              agent: 'packmind',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      (
+        mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+      ).mockResolvedValue('/project');
+      (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+        (dir: string) =>
+          Promise.resolve(
+            dir === '/project/apps/frontend' || dir === '/project',
+          ),
+      );
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        {
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My skill',
+          codingAgent: 'claude',
+          addedAt: '2026-03-17T00:00:00.000Z',
+          spaceId: 'space-123',
+          content: 'content',
+          changeType: 'updated',
+          configDir: 'apps/frontend',
+        } as PlaybookChangeEntry,
+      ]);
+
+      mockLockFileRepository.read.mockImplementation((dir: string) =>
+        Promise.resolve(dir === '/project/apps/frontend' ? lockFile : null),
+      );
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('local modified content');
+    });
+
+    it('displays untracked file path prefixed with configDir', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "My standard" apps/frontend/.packmind/standards/my-standard.md',
+      );
+    });
+
+    it('reads local files relative to the configDir project directory', async () => {
+      await playbookStatusHandler(buildDeps());
+
+      expect(mockReadFile).toHaveBeenCalledWith(
+        expect.stringContaining(
+          '/project/apps/frontend/.packmind/standards/my-standard.md',
+        ),
       );
     });
   });
