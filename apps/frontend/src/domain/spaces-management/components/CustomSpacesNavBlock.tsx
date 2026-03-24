@@ -6,6 +6,7 @@ interface CustomSpacesNavBlockProps {
   spaces: Space[];
   orgSlug: string;
   currentSpaceSlug: string | undefined;
+  selectedSpaceId: string | null;
   onSpaceClick: (space: Space) => void;
 }
 
@@ -13,6 +14,7 @@ export function CustomSpacesNavBlock({
   spaces,
   orgSlug,
   currentSpaceSlug,
+  selectedSpaceId,
   onSpaceClick,
 }: Readonly<CustomSpacesNavBlockProps>): React.ReactElement {
   return (
@@ -25,6 +27,7 @@ export function CustomSpacesNavBlock({
             space={space}
             orgSlug={orgSlug}
             isActive={space.slug === currentSpaceSlug}
+            isSelected={space.id === selectedSpaceId}
             onSpaceClick={() => onSpaceClick(space)}
           />
         ))}
