@@ -7,10 +7,13 @@ import {
   ChangeProposalPayload,
   ChangeProposalType,
   FileModification,
+  NewSkillPayload,
   SpaceId,
   TargetId,
+  canonicalJsonStringify,
   createRuleId,
 } from '@packmind/types';
+import { parseSkillMd, serializeSkillMetadata } from '@packmind/node-utils';
 
 import { parseStandardMd } from '../../../application/utils/parseStandardMd';
 import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
@@ -373,36 +376,237 @@ function buildUpdatedSkillProposals(
 ): ProposalItem[] {
   if (!artifactId) return [];
 
-  // Find the SKILL.md file in deployed files matching this skill directory
-  const skillMdFile = deployedFiles.find((f) => {
-    const normalized = normalizePath(f.path);
-    return (
-      normalized.startsWith(normalizePath(entry.filePath) + '/') &&
-      normalized.endsWith('/SKILL.md')
-    );
-  });
+  const proposals: ProposalItem[] = [];
+  const base: Pick<ProposalItem, 'artefactId' | 'targetId' | 'spaceId'> = {
+    artefactId: artifactId,
+    targetId: entry.targetId,
+    spaceId: entry.spaceId,
+  };
 
-  const skillFileId = skillMdFile?.skillFileId;
-  if (!skillFileId) {
+  // Parse the local YAML content (NewSkillPayload)
+  let local: NewSkillPayload;
+  try {
+    local = yaml.parse(entry.content);
+  } catch {
     logWarningConsole(
-      `Skipping "${entry.artifactName}" — skill file ID not found in deployed content.`,
+      `Skipping "${entry.artifactName}" — failed to parse local skill content.`,
     );
     return [];
   }
 
-  return [
-    {
-      type: ChangeProposalType.updateSkillFileContent,
-      artefactId: artifactId,
+  // Find the deployed SKILL.md to compare against
+  const normalizedEntryPath = normalizePath(entry.filePath);
+  const skillMdFile = deployedFiles.find((f) => {
+    const normalized = normalizePath(f.path);
+    return (
+      normalized.startsWith(normalizedEntryPath + '/') &&
+      normalized.endsWith('/SKILL.md')
+    );
+  });
+
+  if (skillMdFile?.content) {
+    const deployed = parseSkillMd(skillMdFile.content);
+    if (deployed) {
+      // Compare SKILL.md fields and generate granular proposals
+      proposals.push(...diffSkillDefinition(local, deployed, base));
+    } else {
+      // Fallback: if parsing fails, submit prompt as full update
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateSkillPrompt,
+        payload: { oldValue: '', newValue: local.prompt },
+      });
+    }
+  } else {
+    logWarningConsole(
+      `Skipping "${entry.artifactName}" — deployed SKILL.md content not found.`,
+    );
+    return [];
+  }
+
+  // Handle helper files
+  const deployedHelperFiles = deployedFiles.filter((f) => {
+    const normalized = normalizePath(f.path);
+    return (
+      normalized.startsWith(normalizedEntryPath + '/') &&
+      !normalized.endsWith('/SKILL.md') &&
+      f.skillFileId
+    );
+  });
+
+  const localFiles = local.files ?? [];
+
+  // Updated or unchanged helper files
+  for (const deployed of deployedHelperFiles) {
+    const relativePath = normalizePath(deployed.path).slice(
+      normalizedEntryPath.length + 1,
+    );
+    const localFile = localFiles.find((f) => f.path === relativePath);
+
+    if (!localFile) {
+      // File deleted locally
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.deleteSkillFile,
+        payload: {
+          targetId: deployed.skillFileId,
+          item: {
+            id: deployed.skillFileId,
+            path: relativePath,
+            content: deployed.content ?? '',
+            permissions: deployed.skillFilePermissions ?? 'read',
+            isBase64: 'isBase64' in deployed ? !!deployed.isBase64 : false,
+          },
+        },
+      });
+    } else if (localFile.content !== deployed.content) {
+      // File content changed
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateSkillFileContent,
+        payload: {
+          targetId: deployed.skillFileId,
+          oldValue: deployed.content ?? '',
+          newValue: localFile.content,
+          isBase64: localFile.isBase64 ?? false,
+        },
+      });
+    }
+  }
+
+  // New helper files (exist locally but not deployed)
+  const deployedRelativePaths = new Set(
+    deployedHelperFiles.map((f) =>
+      normalizePath(f.path).slice(normalizedEntryPath.length + 1),
+    ),
+  );
+  for (const localFile of localFiles) {
+    if (!deployedRelativePaths.has(localFile.path)) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.addSkillFile,
+        payload: {
+          item: {
+            path: localFile.path,
+            content: localFile.content,
+            permissions: localFile.permissions ?? 'rw-r--r--',
+            isBase64: localFile.isBase64 ?? false,
+          },
+        },
+      });
+    }
+  }
+
+  return proposals;
+}
+
+function diffSkillDefinition(
+  local: NewSkillPayload,
+  deployed: ReturnType<typeof parseSkillMd> & {},
+  base: Pick<ProposalItem, 'artefactId' | 'targetId' | 'spaceId'>,
+): ProposalItem[] {
+  const proposals: ProposalItem[] = [];
+
+  if (local.name !== deployed.name) {
+    proposals.push({
+      ...base,
+      type: ChangeProposalType.updateSkillName,
+      payload: { oldValue: deployed.name, newValue: local.name },
+    });
+  }
+
+  if (local.description !== deployed.description) {
+    proposals.push({
+      ...base,
+      type: ChangeProposalType.updateSkillDescription,
+      payload: { oldValue: deployed.description, newValue: local.description },
+    });
+  }
+
+  if (local.prompt !== deployed.body) {
+    proposals.push({
+      ...base,
+      type: ChangeProposalType.updateSkillPrompt,
+      payload: { oldValue: deployed.body, newValue: local.prompt },
+    });
+  }
+
+  const localLicense = local.license ?? '';
+  if (localLicense !== deployed.license) {
+    proposals.push({
+      ...base,
+      type: ChangeProposalType.updateSkillLicense,
+      payload: { oldValue: deployed.license, newValue: localLicense },
+    });
+  }
+
+  const localCompatibility = local.compatibility ?? '';
+  if (localCompatibility !== deployed.compatibility) {
+    proposals.push({
+      ...base,
+      type: ChangeProposalType.updateSkillCompatibility,
       payload: {
-        targetId: skillFileId,
-        oldValue: '',
-        newValue: entry.content,
+        oldValue: deployed.compatibility,
+        newValue: localCompatibility,
       },
-      targetId: entry.targetId,
-      spaceId: entry.spaceId,
-    },
-  ];
+    });
+  }
+
+  const localAllowedTools = local.allowedTools ?? '';
+  if (localAllowedTools !== deployed.allowedTools) {
+    proposals.push({
+      ...base,
+      type: ChangeProposalType.updateSkillAllowedTools,
+      payload: {
+        oldValue: deployed.allowedTools,
+        newValue: localAllowedTools,
+      },
+    });
+  }
+
+  const localMetadataJson =
+    local.metadata && Object.keys(local.metadata).length > 0
+      ? serializeSkillMetadata(local.metadata)
+      : '{}';
+  if (localMetadataJson !== deployed.metadataJson) {
+    proposals.push({
+      ...base,
+      type: ChangeProposalType.updateSkillMetadata,
+      payload: {
+        oldValue: deployed.metadataJson,
+        newValue: localMetadataJson,
+      },
+    });
+  }
+
+  // Additional properties (Claude Code specific fields)
+  const localAdditionalProps = local.additionalProperties ?? {};
+  const deployedAdditionalProps = deployed.additionalProperties;
+  const allKeys = new Set([
+    ...Object.keys(localAdditionalProps),
+    ...Object.keys(deployedAdditionalProps),
+  ]);
+  for (const key of allKeys) {
+    const localValue =
+      key in localAdditionalProps
+        ? canonicalJsonStringify(localAdditionalProps[key])
+        : '';
+    // Matches canonicalJsonStringify(null) for properties present in deployed but absent locally
+    const deployedValue = deployedAdditionalProps[key] ?? 'null';
+    if (localValue !== deployedValue) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateSkillAdditionalProperty,
+        payload: {
+          targetId: key,
+          oldValue: deployedValue,
+          newValue: localValue,
+        },
+      });
+    }
+  }
+
+  return proposals;
 }
 
 function buildRemovedProposals(

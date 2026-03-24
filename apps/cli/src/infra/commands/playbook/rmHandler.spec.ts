@@ -400,4 +400,43 @@ describe('playbookRmHandler', () => {
       expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
     });
   });
+
+  describe('when artifact is already staged for removal', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChange.mockReturnValue({
+        filePath: '.claude/commands/my-command.md',
+        artifactType: 'command',
+        artifactName: 'My Command',
+        codingAgent: 'claude',
+        changeType: 'removed',
+        content: '',
+        spaceId: 'space-123',
+        addedAt: '2026-03-24T00:00:00.000Z',
+      });
+    });
+
+    it('logs already staged message', async () => {
+      const { logSuccessConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
+
+      await playbookRmHandler(buildDeps());
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        '"My Command" is already staged for removal.',
+      );
+    });
+
+    it('does not call addChange', async () => {
+      await playbookRmHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+
+    it('exits with 0', async () => {
+      await playbookRmHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
 });
