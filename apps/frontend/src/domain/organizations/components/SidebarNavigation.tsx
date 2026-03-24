@@ -416,6 +416,7 @@ export const SidebarNavigation: React.FunctionComponent<
               space={defaultSpace}
               orgSlug={orgSlug}
               isActive={defaultSpace.slug === currentSpaceSlug}
+              isSelected={activeSpacePanel === defaultSpace.id}
               onSpaceClick={() => {
                 if (defaultSpace.slug !== currentSpaceSlug) {
                   setActiveSpacePanel(defaultSpace.id);
@@ -428,6 +429,7 @@ export const SidebarNavigation: React.FunctionComponent<
                 spaces={spaces}
                 orgSlug={orgSlug}
                 currentSpaceSlug={currentSpaceSlug}
+                selectedSpaceId={activeSpacePanel}
                 onSpaceClick={(space) => {
                   if (space.slug !== currentSpaceSlug) {
                     setActiveSpacePanel(space.id);

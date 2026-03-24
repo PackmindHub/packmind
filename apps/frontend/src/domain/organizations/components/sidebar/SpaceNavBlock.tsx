@@ -20,6 +20,7 @@ interface SpaceNavBlockProps {
   space: Space;
   orgSlug: string;
   isActive: boolean;
+  isSelected: boolean;
   onSpaceClick: () => void;
 }
 
@@ -36,6 +37,7 @@ export function SpaceNavBlock({
   space,
   orgSlug,
   isActive,
+  isSelected,
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const { isCollapsed } = useSidebarCollapse();
@@ -56,6 +58,7 @@ export function SpaceNavBlock({
       space={space}
       orgSlug={orgSlug}
       isActive={isActive}
+      isSelected={isSelected}
       onSpaceClick={onSpaceClick}
     />
   );
@@ -114,6 +117,7 @@ function ExpandedSpaceNavBlock({
   space,
   orgSlug,
   isActive,
+  isSelected,
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   return (
@@ -121,6 +125,7 @@ function ExpandedSpaceNavBlock({
       <SpaceNameRow
         space={space}
         isActive={isActive}
+        isSelected={isSelected}
         onSpaceClick={onSpaceClick}
       />
 
@@ -138,7 +143,7 @@ function CollapsedSpaceNavBlock({
   orgSlug,
   isActive,
   onSpaceClick,
-}: Readonly<SpaceNavBlockProps>): React.ReactElement {
+}: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
 
   return (
@@ -196,10 +201,12 @@ function CollapsedSpaceNavBlock({
 function SpaceNameRow({
   space,
   isActive,
+  isSelected,
   onSpaceClick,
 }: Readonly<{
   space: Space;
   isActive: boolean;
+  isSelected: boolean;
   onSpaceClick: () => void;
 }>): React.ReactElement {
   return (
@@ -221,7 +228,10 @@ function SpaceNameRow({
     >
       <PMText
         fontSize="xs"
-        fontWeight={isActive ? 'semibold' : 'medium'}
+        fontWeight={isSelected ? 'bold' : isActive ? 'semibold' : 'medium'}
+        textProps={{
+          color: isSelected ? 'branding.primary' : 'primary',
+        }}
         overflow="hidden"
         textOverflow="ellipsis"
         whiteSpace="nowrap"
