@@ -14,8 +14,7 @@ import { PlaybookLocalRepository } from '../repositories/PlaybookLocalRepository
 
 export const installCommand = command({
   name: 'install',
-  description:
-    'Install commands and standards from specified packages and save them to the current directory',
+  description: 'Install packages and save their artifacts locally',
   aliases: ['pull'],
   args: {
     list: flag({
