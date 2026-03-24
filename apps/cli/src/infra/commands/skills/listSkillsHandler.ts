@@ -8,29 +8,9 @@ import {
   logConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../../utils/credentials';
+import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 type Skill = IListSkillsResult[number];
-type UrlBuilder = (spaceSlug: string, skillSlug: string) => string | null;
-
-function buildSkillUrl(
-  host: string,
-  orgSlug: string,
-  spaceSlug: string,
-  skillSlug: string,
-): string {
-  return `${host}/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/files`;
-}
-
-function resolveUrlBuilder(): UrlBuilder {
-  const apiKey = loadApiKey();
-  if (!apiKey) return () => null;
-  const decoded = decodeApiKey(apiKey);
-  const orgSlug = decoded?.jwt?.organization?.slug;
-  if (!decoded?.host || !orgSlug) return () => null;
-  return (spaceSlug, skillSlug) =>
-    buildSkillUrl(decoded.host, orgSlug, spaceSlug, skillSlug);
-}
 
 function groupSkillsBySpace(
   skills: Skill[],
@@ -154,7 +134,7 @@ export async function listSkillsHandler(
 
     logConsole(formatHeader(`📋 Skills (${skills.length})\n`));
 
-    const buildUrl = resolveUrlBuilder();
+    const buildUrl = resolveUrlBuilder((slug) => `skills/${slug}/files`);
     displayGroupedSkills(skills, spaces, buildUrl);
 
     exit(0);

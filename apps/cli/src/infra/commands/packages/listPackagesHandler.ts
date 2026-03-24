@@ -7,31 +7,10 @@ import {
   logInfoConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../../utils/credentials';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
-
-function buildPackageUrl(
-  host: string,
-  orgSlug: string,
-  spaceSlug: string,
-  packageId: string,
-): string {
-  return `${host}/org/${orgSlug}/space/${spaceSlug}/packages/${packageId}`;
-}
+import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 export type ListPackagesArgs = { space?: string };
-
-type UrlBuilder = (spaceSlug: string, id: string) => string | null;
-
-function resolveUrlBuilder(): UrlBuilder {
-  const apiKey = loadApiKey();
-  if (!apiKey) return () => null;
-  const decoded = decodeApiKey(apiKey);
-  const orgSlug = decoded?.jwt?.organization?.slug;
-  if (!decoded?.host || !orgSlug) return () => null;
-  return (spaceSlug, id) =>
-    buildPackageUrl(decoded.host, orgSlug, spaceSlug, id);
-}
 
 function logPackageEntry(
   pkg: Package,
@@ -168,7 +147,7 @@ export async function listPackagesHandler(
       return;
     }
 
-    const buildUrl = resolveUrlBuilder();
+    const buildUrl = resolveUrlBuilder((id) => `packages/${id}`);
 
     logConsole('\nAvailable packages:\n');
 

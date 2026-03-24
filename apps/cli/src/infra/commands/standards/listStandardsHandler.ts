@@ -8,29 +8,9 @@ import {
   logConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../../utils/credentials';
+import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 type Standard = ListStandardsResult[number];
-type UrlBuilder = (spaceSlug: string, standardId: string) => string | null;
-
-function buildStandardUrl(
-  host: string,
-  orgSlug: string,
-  spaceSlug: string,
-  standardId: string,
-): string {
-  return `${host}/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/summary`;
-}
-
-function resolveUrlBuilder(): UrlBuilder {
-  const apiKey = loadApiKey();
-  if (!apiKey) return () => null;
-  const decoded = decodeApiKey(apiKey);
-  const orgSlug = decoded?.jwt?.organization?.slug;
-  if (!decoded?.host || !orgSlug) return () => null;
-  return (spaceSlug, standardId) =>
-    buildStandardUrl(decoded.host, orgSlug, spaceSlug, standardId);
-}
 
 function groupStandardsBySpace(
   standards: Standard[],
@@ -157,7 +137,7 @@ export async function listStandardsHandler(
 
     logConsole(formatHeader(`📋 Standards (${standards.length})\n`));
 
-    const buildUrl = resolveUrlBuilder();
+    const buildUrl = resolveUrlBuilder((id) => `standards/${id}/summary`);
     displayGroupedStandards(standards, spaces, buildUrl);
 
     exit(0);
