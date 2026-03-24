@@ -57,14 +57,3 @@ export function extractWasmFiles(): string {
 
   return tempDir;
 }
-
-/**
- * Gets the directory where WASM files are located
- * Call this before initializing parsers
- */
-export function getWasmDirectory(): string {
-  if (!wasmExtractedDir) {
-    return extractWasmFiles();
-  }
-  return wasmExtractedDir;
-}

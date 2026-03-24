@@ -1,12 +1,10 @@
 import { StandardsGateway } from './StandardsGateway';
 import { createMockHttpClient } from '../../mocks/createMockHttpClient';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 
 describe('StandardsGateway', () => {
   let gateway: StandardsGateway;
   let mockHttpClient: jest.Mocked<PackmindHttpClient>;
-  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
   const mockOrganizationId = 'org-123';
 
   beforeEach(() => {
@@ -18,11 +16,7 @@ describe('StandardsGateway', () => {
       }),
     });
 
-    mockSpacesGateway = {
-      getGlobal: jest.fn(),
-    };
-
-    gateway = new StandardsGateway(mockHttpClient, mockSpacesGateway);
+    gateway = new StandardsGateway(mockHttpClient);
   });
 
   afterEach(() => {

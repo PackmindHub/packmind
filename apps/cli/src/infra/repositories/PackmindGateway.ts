@@ -40,7 +40,7 @@ export class PackmindGateway implements IPackmindGateway {
     this.spaces = new SpacesGateway(this.httpClient);
     this.skills = new SkillsGateway(this.httpClient);
     this.commands = new CommandsGateway(this.httpClient);
-    this.standards = new StandardsGateway(this.httpClient, this.spaces);
+    this.standards = new StandardsGateway(this.httpClient);
     this.packages = new PackagesGateway(apiKey, this.httpClient);
     this.deployment = new DeploymentGateway(this.httpClient);
   }
