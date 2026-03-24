@@ -91,20 +91,13 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
       expect(statusResult.returnCode).toBe(0);
     });
 
-    it('shows the "Changes to be submitted:" header', () => {
-      expect(statusResult.stdout).toContain('Changes to be submitted:');
-    });
-
-    it('shows the standard as updated', () => {
-      expect(statusResult.stdout).toContain(
-        `Standard "${standard.name}" (updated)`,
-      );
-    });
-
-    it('shows the submit hint', () => {
-      expect(statusResult.stdout).toContain(
+    it('shows the changes as ready to be submitted', async () => {
+      expect(statusResult.stdout).toMatchOutput([
+        'Changes to be submitted:',
+        `Standard "${standard.name}" (updated) in space "Global" .packmind/standards/${standard.slug}.md`,
+        '',
         'Use `packmind playbook submit` to send them',
-      );
+      ]);
     });
   });
 
@@ -163,6 +156,15 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
 
     it('succeeds', () => {
       expect(statusResult.returnCode).toBe(0);
+    });
+
+    it('shows the changes as ready to be submitted', async () => {
+      expect(statusResult.stdout).toMatchOutput([
+        'Changes to be submitted:',
+        `Standard "React router" (created) in space "Global" .packmind/standards/react-router.md`,
+        '',
+        'Use `packmind playbook submit` to send them',
+      ]);
     });
 
     it('shows the "Changes to be submitted:" header', () => {
