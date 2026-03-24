@@ -111,7 +111,10 @@ export class PackmindCliHexaFactory {
         this.repositories.packmindGateway,
       ),
       installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
-      listPackages: new ListPackagesUseCase(this.repositories.packmindGateway),
+      listPackages: new ListPackagesUseCase(
+        this.repositories.packmindGateway,
+        this.services.spaceService,
+      ),
       getPackageBySlug: new GetPackageSummaryUseCase(
         this.repositories.packmindGateway,
       ),

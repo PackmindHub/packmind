@@ -98,17 +98,13 @@ export async function listPackagesHandler(
 
   try {
     logInfoConsole('Fetching available packages...');
-    const [allPackages, allSpaces] = await Promise.all([
-      packmindCliHexa.listPackages({}),
-      packmindCliHexa.getSpaces(),
-    ]);
+
+    const allSpaces = await packmindCliHexa.getSpaces();
 
     if (!allSpaces || allSpaces.length === 0) {
       throw new Error('Unable to list organization spaces.');
     }
 
-    let packages = allPackages;
-    let spaces = allSpaces;
     const matchedSpace = resolveSpaceFromArgs(args.space, allSpaces);
 
     if (args.space && !matchedSpace) {
@@ -123,10 +119,10 @@ export async function listPackagesHandler(
       return;
     }
 
-    if (matchedSpace) {
-      spaces = [matchedSpace];
-      packages = allPackages.filter((pkg) => pkg.spaceId === matchedSpace.id);
-    }
+    const packages = await packmindCliHexa.listPackages(
+      matchedSpace ? { spaceId: matchedSpace.id } : {},
+    );
+    const spaces = matchedSpace ? [matchedSpace] : allSpaces;
 
     if (packages.length === 0) {
       logConsole(
