@@ -1,3 +1,5 @@
+import * as path from 'path';
+
 /**
  * Normalizes path separators to forward slashes for consistent cross-platform comparison.
  * This is needed because:
@@ -19,4 +21,16 @@ export function pathStartsWith(filePath: string, prefix: string): boolean {
     normalizedFile.startsWith(normalizedPrefix + '/') ||
     normalizedFile === normalizedPrefix
   );
+}
+
+/**
+ * Resolves the skill directory path from a given absolute path.
+ * If the path ends with 'SKILL.md', returns the parent directory.
+ * Otherwise, returns the path unchanged.
+ */
+export function resolveSkillDirPath(absolutePath: string): string {
+  if (absolutePath.endsWith('SKILL.md')) {
+    return path.dirname(absolutePath);
+  }
+  return absolutePath;
 }

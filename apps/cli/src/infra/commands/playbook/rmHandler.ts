@@ -2,7 +2,10 @@ import * as path from 'path';
 
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import { findLockFileEntryAndFileForPath } from '../../../application/utils/lockFileUtils';
-import { normalizePath } from '../../../application/utils/pathUtils';
+import {
+  normalizePath,
+  resolveSkillDirPath,
+} from '../../../application/utils/pathUtils';
 import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
@@ -26,13 +29,6 @@ function isSkillSupportFile(absolutePath: string): boolean {
   );
   if (!afterSkillDir) return false;
   return afterSkillDir !== 'SKILL.md';
-}
-
-function resolveSkillDirPath(absolutePath: string): string {
-  if (absolutePath.endsWith('SKILL.md')) {
-    return path.dirname(absolutePath);
-  }
-  return absolutePath;
 }
 
 export async function playbookRmHandler(

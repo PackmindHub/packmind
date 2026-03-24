@@ -276,4 +276,61 @@ describe('playbookUnstageHandler', () => {
       );
     });
   });
+
+  describe('when unstaging a skill via SKILL.md path', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: 'skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+        }),
+      ]);
+      mockPlaybookLocalRepository.removeChange.mockReturnValue(true);
+    });
+
+    it('resolves SKILL.md to the skill directory and unstages', async () => {
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        'skills/my-skill',
+        'space-1',
+      );
+    });
+
+    it('logs success with the skill directory path', async () => {
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        'Unstaged skills/my-skill from playbook',
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('resolves configDir from the skill directory, not cwd', async () => {
+      const { findNearestConfigDir } = jest.requireMock(
+        '../../../application/utils/findNearestConfigDir',
+      );
+
+      await playbookUnstageHandler(
+        buildDeps({ filePath: 'skills/my-skill/SKILL.md' }),
+      );
+
+      expect(findNearestConfigDir).toHaveBeenCalledWith(
+        '/project/skills',
+        expect.anything(),
+      );
+    });
+  });
 });
