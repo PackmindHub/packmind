@@ -119,6 +119,16 @@ export async function playbookRmHandler(
     return;
   }
 
+  const existingChange = playbookLocalRepository.getChange(
+    normalizedFilePath,
+    lockEntry.spaceId,
+  );
+  if (existingChange?.changeType === 'removed') {
+    logSuccessConsole(`"${lockEntry.name}" is already staged for removal.`);
+    exit(0);
+    return;
+  }
+
   const allSpaces = await packmindCliHexa.getSpaces();
   const spaceName = allSpaces.find((s) => s.id === lockEntry.spaceId)?.name;
 
