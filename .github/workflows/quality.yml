@@ -140,6 +140,16 @@ jobs:
 
       - name: Compare apps/cli/src directories
         run: |
+          PROPRIETARY_COUNT=$(find apps/cli/src -type f | wc -l | tr -d ' ')
+          OSS_COUNT=$(find /tmp/packmind-oss/apps/cli/src -type f | wc -l | tr -d ' ')
+          echo "Proprietary: ${PROPRIETARY_COUNT} files | OSS: ${OSS_COUNT} files"
+
+          if [ "$PROPRIETARY_COUNT" -eq 0 ] || [ "$OSS_COUNT" -eq 0 ]; then
+            echo "::error::One of the directories is empty or missing. Aborting comparison."
+            exit 1
+          fi
+
+          echo ""
           echo "=== File presence differences ==="
           diff -rq apps/cli/src /tmp/packmind-oss/apps/cli/src || FILE_DIFF=1
 
