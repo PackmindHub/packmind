@@ -122,15 +122,29 @@ function ExpandedSpaceNavBlock({
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   return (
     <PMBox>
-      <SpaceNameRow
-        space={space}
-        isActive={isActive}
-        isSelected={isSelected}
-        onSpaceClick={onSpaceClick}
-      />
+      {!isActive && (
+        <SpaceNameRow
+          space={space}
+          isActive={isActive}
+          isSelected={isSelected}
+          onSpaceClick={onSpaceClick}
+        />
+      )}
 
       {isActive && (
-        <PMBox mt={1}>
+        <PMBox mt={1} bg="background.secondary" borderRadius="md" py={1.5}>
+          <PMBox paddingX={3} paddingY={1}>
+            <PMText
+              fontSize="xs"
+              fontWeight="semibold"
+              textProps={{ color: 'primary' }}
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+            >
+              {space.name}
+            </PMText>
+          </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
       )}
@@ -222,7 +236,7 @@ function SpaceNameRow({
       cursor="pointer"
       width="full"
       textAlign="left"
-      bg={isActive ? 'blue.900' : 'transparent'}
+      bg="transparent"
       _hover={isActive ? undefined : { backgroundColor: 'blue.900' }}
       transition="background-color 0.15s"
     >
