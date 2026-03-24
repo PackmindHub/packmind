@@ -621,11 +621,11 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
     });
 
-    it('displays the untracked artifact with file path prefixed by subproject', async () => {
+    it('displays the untracked artifact with file path relative to cwd', async () => {
       await playbookStatusHandler(buildDeps({ cwd: '/gitroot/subproject' }));
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Command "My command" subproject/.claude/commands/my-command.md',
+        '  - Command "My command" .claude/commands/my-command.md',
       );
     });
 
@@ -998,6 +998,144 @@ describe('playbookStatusHandler', () => {
       expect(mockLogConsole).toHaveBeenCalledWith(
         'Use `packmind playbook add <path>` to track them',
       );
+    });
+  });
+
+  describe('when cwd is a subdirectory of the git root', () => {
+    describe('staged changes', () => {
+      it('shows path relative to cwd when run from a sub-app directory', async () => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          {
+            filePath: '.packmind/commands/my-command.ts',
+            artifactType: 'command',
+            artifactName: 'My command',
+            codingAgent: 'packmind',
+            addedAt: '2026-03-17T00:00:00.000Z',
+            spaceId: 'space-123',
+            content: 'content',
+            changeType: 'updated',
+            configDir: 'apps/frontend',
+          } as PlaybookChangeEntry,
+        ]);
+
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/apps/frontend' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Command "My command" (updated) .packmind/commands/my-command.ts',
+        );
+      });
+
+      it('shows relative path with ../../ when run from an unrelated package', async () => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          {
+            filePath: '.packmind/commands/my-command.ts',
+            artifactType: 'command',
+            artifactName: 'My command',
+            codingAgent: 'packmind',
+            addedAt: '2026-03-17T00:00:00.000Z',
+            spaceId: 'space-123',
+            content: 'content',
+            changeType: 'updated',
+            configDir: 'apps/frontend',
+          } as PlaybookChangeEntry,
+        ]);
+
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/packages/whatever' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Command "My command" (updated) ../../apps/frontend/.packmind/commands/my-command.ts',
+        );
+      });
+    });
+
+    describe('untracked changes', () => {
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'artifact-1': {
+            name: 'My standard',
+            type: 'standard',
+            id: 'artifact-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      };
+
+      beforeEach(() => {
+        (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+          (dir: string) =>
+            Promise.resolve(
+              dir === '/project/apps/frontend' || dir === '/project',
+            ),
+        );
+        mockLockFileRepository.read.mockImplementation((dir: string) =>
+          Promise.resolve(dir === '/project/apps/frontend' ? lockFile : null),
+        );
+        mockGetContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                content: 'deployed content',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          resolvedAgents: [],
+        });
+        mockReadFile.mockReturnValue('local modified content');
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          {
+            filePath: '.packmind/standards/unrelated.md',
+            artifactType: 'standard',
+            artifactName: 'Unrelated',
+            codingAgent: 'packmind',
+            addedAt: '2026-03-17T00:00:00.000Z',
+            spaceId: 'space-123',
+            content: 'content',
+            changeType: 'updated',
+            configDir: 'apps/frontend',
+          } as PlaybookChangeEntry,
+        ]);
+      });
+
+      it('shows path relative to cwd when run from the sub-app directory', async () => {
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/apps/frontend' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Standard "My standard" .packmind/standards/my-standard.md',
+        );
+      });
+
+      it('shows relative path with ../../ when run from an unrelated package', async () => {
+        await playbookStatusHandler(
+          buildDeps({ cwd: '/project/packages/whatever' }),
+        );
+
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Standard "My standard" ../../apps/frontend/.packmind/standards/my-standard.md',
+        );
+      });
     });
   });
 });
