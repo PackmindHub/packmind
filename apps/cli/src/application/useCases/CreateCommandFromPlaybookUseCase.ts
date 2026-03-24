@@ -37,6 +37,7 @@ export class CreateCommandFromPlaybookUseCase implements ICreateCommandFromPlayb
       commandId: command.id,
       name: command.name,
       slug: command.slug,
+      spaceSlug: space.slug,
     };
   }
 }

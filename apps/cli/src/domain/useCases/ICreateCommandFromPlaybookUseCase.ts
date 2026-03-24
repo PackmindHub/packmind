@@ -18,6 +18,7 @@ export interface ICreateCommandResult {
   commandId: string;
   name: string;
   slug: string;
+  spaceSlug: string;
 }
 
 export interface ICreateCommandFromPlaybookUseCase {
