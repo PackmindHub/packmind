@@ -8,6 +8,7 @@ import {
   logErrorConsole,
 } from '../../utils/consoleLogger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
 import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 export type ListPackagesArgs = { space?: string };
@@ -119,28 +120,29 @@ export async function listPackagesHandler(
 
     let packages = allPackages;
     let spaces = allSpaces;
-    const spaceFilter = args.space?.startsWith('@')
-      ? args.space.slice(1)
-      : args.space;
+    const matchedSpace = resolveSpaceFromArgs(args.space, allSpaces);
 
-    if (spaceFilter) {
-      const matchedSpace = allSpaces.find((s) => s.slug === spaceFilter);
-      if (!matchedSpace) {
-        logErrorConsole(`Space '@${spaceFilter}' not found.`);
-        logInfoConsole(
-          `Available spaces: ${allSpaces.map((s) => `@${s.slug}`).join(', ')}`,
-        );
-        exit(1);
-        return;
-      }
+    if (args.space && !matchedSpace) {
+      const slug = args.space.startsWith('@')
+        ? args.space.slice(1)
+        : args.space;
+      logErrorConsole(`Space '@${slug}' not found.`);
+      logInfoConsole(
+        `Available spaces: ${allSpaces.map((s) => `@${s.slug}`).join(', ')}`,
+      );
+      exit(1);
+      return;
+    }
+
+    if (matchedSpace) {
       spaces = [matchedSpace];
       packages = allPackages.filter((pkg) => pkg.spaceId === matchedSpace.id);
     }
 
     if (packages.length === 0) {
       logConsole(
-        spaceFilter
-          ? `No packages found in space '@${spaceFilter}'.`
+        matchedSpace
+          ? `No packages found in space '@${matchedSpace.slug}'.`
           : 'No packages found.',
       );
       exit(0);

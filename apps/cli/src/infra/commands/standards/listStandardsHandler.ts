@@ -8,6 +8,7 @@ import {
   logConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
+import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
 import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 type Standard = ListStandardsResult[number];
@@ -105,20 +106,16 @@ export async function listStandardsHandler(
   try {
     logConsole('Fetching standards...\n');
 
-    const spaceFilter = args.space?.startsWith('@')
-      ? args.space.slice(1)
-      : args.space;
-
-    let matchedSpace: Space | null = null;
     const spaces = await packmindCliHexa.getSpaces();
+    const matchedSpace = resolveSpaceFromArgs(args.space, spaces);
 
-    if (spaceFilter) {
-      matchedSpace = spaces.find((s) => s.slug === spaceFilter) ?? null;
-      if (!matchedSpace) {
-        logErrorConsole(`Space "${spaceFilter}" not found.`);
-        exit(1);
-        return;
-      }
+    if (args.space && !matchedSpace) {
+      const slug = args.space.startsWith('@')
+        ? args.space.slice(1)
+        : args.space;
+      logErrorConsole(`Space "${slug}" not found.`);
+      exit(1);
+      return;
     }
 
     const standards = await packmindCliHexa.listStandards(
@@ -127,8 +124,8 @@ export async function listStandardsHandler(
 
     if (standards.length === 0) {
       logConsole(
-        spaceFilter
-          ? `No standards found in space "${spaceFilter}".`
+        matchedSpace
+          ? `No standards found in space "${matchedSpace.slug}".`
           : 'No standards found.',
       );
       exit(0);

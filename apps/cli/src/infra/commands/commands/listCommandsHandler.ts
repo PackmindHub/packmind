@@ -8,6 +8,7 @@ import {
   logConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
+import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
 import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 type Command = ListCommandsResult[number];
@@ -87,20 +88,16 @@ export async function listCommandsHandler(
   try {
     logConsole('Fetching commands...\n');
 
-    const spaceFilter = args.space?.startsWith('@')
-      ? args.space.slice(1)
-      : args.space;
-
-    let matchedSpace: Space | null = null;
     const spaces = await packmindCliHexa.getSpaces();
+    const matchedSpace = resolveSpaceFromArgs(args.space, spaces);
 
-    if (spaceFilter) {
-      matchedSpace = spaces.find((s) => s.slug === spaceFilter) ?? null;
-      if (!matchedSpace) {
-        logErrorConsole(`Space "${spaceFilter}" not found.`);
-        exit(1);
-        return;
-      }
+    if (args.space && !matchedSpace) {
+      const slug = args.space.startsWith('@')
+        ? args.space.slice(1)
+        : args.space;
+      logErrorConsole(`Space "${slug}" not found.`);
+      exit(1);
+      return;
     }
 
     const commands = await packmindCliHexa.listCommands(
@@ -109,8 +106,8 @@ export async function listCommandsHandler(
 
     if (commands.length === 0) {
       logConsole(
-        spaceFilter
-          ? `No commands found in space "${spaceFilter}".`
+        matchedSpace
+          ? `No commands found in space "${matchedSpace.slug}".`
           : 'No commands found.',
       );
       exit(0);
