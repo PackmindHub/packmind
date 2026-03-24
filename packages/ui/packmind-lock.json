@@ -1,13 +1,19 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["design-system"],
-  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-16T14:26:20.720Z",
-  "cliVersion": "0.22.0",
+  "packageSlugs": ["@global/design-system"],
+  "agents": [
+    "agents_md",
+    "claude",
+    "copilot",
+    "cursor",
+    "gitlab_duo",
+    "packmind"
+  ],
+  "installedAt": "2026-03-24T09:00:27.632Z",
   "artifacts": {
     "command:wrapping-chakra-ui-with-slot-components": {
-      "type": "command",
       "name": "Wrapping Chakra UI with Slot Components",
+      "type": "command",
       "id": "9c0df659-eb9f-4e37-b915-8540f982d6f2",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -32,8 +38,8 @@
       ]
     },
     "standard:front-end-ui-and-design-systems": {
-      "type": "standard",
       "name": "Front-end UI and Design Systems",
+      "type": "standard",
       "id": "4135f974-b52a-4d6b-a222-9894e8998c3f",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",

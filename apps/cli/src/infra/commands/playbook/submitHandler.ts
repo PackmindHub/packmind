@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 
 import {
-  ArtifactVersionEntry,
   ChangeProposalArtefactId,
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
@@ -25,6 +24,7 @@ import {
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
+import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
@@ -32,6 +32,7 @@ import {
 } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
+import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -52,10 +53,6 @@ type ProposalItem = {
   targetId: string | undefined;
   spaceId: string;
 };
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 function buildEditorPrefill(changes: PlaybookChangeEntry[]): string {
   const lines = [
@@ -372,15 +369,33 @@ function buildUpdatedCommandProposals(
 function buildUpdatedSkillProposals(
   entry: PlaybookChangeEntry,
   artifactId: string | null,
+  deployedFiles: FileModification[],
 ): ProposalItem[] {
   if (!artifactId) return [];
+
+  // Find the SKILL.md file in deployed files matching this skill directory
+  const skillMdFile = deployedFiles.find((f) => {
+    const normalized = normalizePath(f.path);
+    return (
+      normalized.startsWith(normalizePath(entry.filePath) + '/') &&
+      normalized.endsWith('/SKILL.md')
+    );
+  });
+
+  const skillFileId = skillMdFile?.skillFileId;
+  if (!skillFileId) {
+    logWarningConsole(
+      `Skipping "${entry.artifactName}" — skill file ID not found in deployed content.`,
+    );
+    return [];
+  }
 
   return [
     {
       type: ChangeProposalType.updateSkillFileContent,
       artefactId: artifactId,
       payload: {
-        targetId: artifactId,
+        targetId: skillFileId,
         oldValue: '',
         newValue: entry.content,
       },
@@ -418,36 +433,6 @@ function buildRemovedProposals(
       spaceId: entry.spaceId,
     },
   ];
-}
-
-function lockFileToArtifactVersionEntries(
-  lockFile: PackmindLockFile,
-): ArtifactVersionEntry[] {
-  return Object.values(lockFile.artifacts).map((entry) => ({
-    name: entry.name,
-    type: entry.type,
-    id: entry.id,
-    version: entry.version,
-    spaceId: entry.spaceId,
-  }));
-}
-
-async function fetchDeployedFiles(
-  packmindCliHexa: PackmindCliHexa,
-  lockFile: PackmindLockFile,
-): Promise<FileModification[]> {
-  try {
-    const artifacts = lockFileToArtifactVersionEntries(lockFile);
-    const response = await packmindCliHexa
-      .getPackmindGateway()
-      .deployment.getContentByVersions({
-        artifacts,
-        agents: lockFile.agents,
-      });
-    return response.fileUpdates.createOrUpdate;
-  } catch {
-    return [];
-  }
 }
 
 function findDeployedContentForPath(
@@ -500,20 +485,52 @@ export async function playbookSubmitHandler(
     resolvedMessage = stripped;
   }
 
-  // Read lock file and fetch deployed content by artifact versions
-  const projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
-  const lockFile = projectDir
-    ? await lockFileRepository.read(projectDir)
-    : null;
-  const deployedFiles =
-    lockFile && Object.keys(lockFile.artifacts).length > 0
-      ? await fetchDeployedFiles(packmindCliHexa, lockFile)
-      : [];
+  // Per-target lock file resolution cache
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+
+  type TargetContext = {
+    lockFile: PackmindLockFile | null;
+    deployedFiles: FileModification[];
+    projectDir: string | null;
+  };
+
+  const targetContextCache = new Map<string, TargetContext>();
+
+  async function getTargetContext(
+    entry: PlaybookChangeEntry,
+  ): Promise<TargetContext> {
+    const key = entry.configDir ?? '__cwd__';
+    if (targetContextCache.has(key)) return targetContextCache.get(key)!;
+
+    let projectDir: string | null;
+    if (entry.configDir !== undefined && gitRoot) {
+      projectDir = path.join(gitRoot, entry.configDir);
+    } else {
+      projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
+    }
+
+    const lockFile = projectDir
+      ? await lockFileRepository.read(projectDir)
+      : null;
+    const deployedFiles =
+      lockFile && Object.keys(lockFile.artifacts).length > 0
+        ? await fetchDeployedFiles(
+            packmindCliHexa.getPackmindGateway(),
+            lockFile,
+          )
+        : [];
+
+    const ctx = { lockFile, deployedFiles, projectDir };
+    targetContextCache.set(key, ctx);
+    return ctx;
+  }
 
   // Build proposals
   const allProposals: ProposalItem[] = [];
 
   for (const entry of changes) {
+    const ctx = await getTargetContext(entry);
+
     if (entry.changeType === 'created') {
       switch (entry.artifactType) {
         case 'standard':
@@ -529,7 +546,7 @@ export async function playbookSubmitHandler(
     } else if (entry.changeType === 'removed') {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
-        lockFile,
+        ctx.lockFile,
       );
       if (!artifactId) {
         logWarningConsole(
@@ -537,11 +554,13 @@ export async function playbookSubmitHandler(
         );
         continue;
       }
-      allProposals.push(...buildRemovedProposals(entry, artifactId, lockFile));
+      allProposals.push(
+        ...buildRemovedProposals(entry, artifactId, ctx.lockFile),
+      );
     } else {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
-        lockFile,
+        ctx.lockFile,
       );
 
       if (!artifactId) {
@@ -553,7 +572,7 @@ export async function playbookSubmitHandler(
 
       const deployedContent = findDeployedContentForPath(
         entry.filePath,
-        deployedFiles,
+        ctx.deployedFiles,
       );
 
       if (
@@ -582,7 +601,9 @@ export async function playbookSubmitHandler(
           );
           break;
         case 'skill':
-          allProposals.push(...buildUpdatedSkillProposals(entry, artifactId));
+          allProposals.push(
+            ...buildUpdatedSkillProposals(entry, artifactId, ctx.deployedFiles),
+          );
           break;
       }
     }
@@ -655,21 +676,21 @@ export async function playbookSubmitHandler(
         for (const filePath of filePaths) {
           playbookLocalRepository.removeChange(filePath, spaceId);
         }
-        if (projectDir) {
-          const removedEntries = spaceChanges.filter(
-            (c) => c.changeType === 'removed',
-          );
-          for (const entry of removedEntries) {
-            try {
-              const fullPath = path.join(projectDir, entry.filePath);
-              if (entry.artifactType === 'skill') {
-                deps.rmSync(fullPath, { recursive: true });
-              } else {
-                deps.unlinkSync(fullPath);
-              }
-            } catch {
-              // File may already be deleted (manual deletion case)
+        const removedEntries = spaceChanges.filter(
+          (c) => c.changeType === 'removed',
+        );
+        for (const entry of removedEntries) {
+          const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+          if (!entryCtx?.projectDir) continue;
+          try {
+            const fullPath = path.join(entryCtx.projectDir, entry.filePath);
+            if (entry.artifactType === 'skill') {
+              deps.rmSync(fullPath, { recursive: true });
+            } else {
+              deps.unlinkSync(fullPath);
             }
+          } catch {
+            // File may already be deleted (manual deletion case)
           }
         }
       } else {
@@ -685,21 +706,21 @@ export async function playbookSubmitHandler(
       }
 
       // Delete local files for removed entries
-      if (projectDir) {
-        const removedEntries = changes.filter(
-          (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
-        );
-        for (const entry of removedEntries) {
-          try {
-            const fullPath = path.join(projectDir, entry.filePath);
-            if (entry.artifactType === 'skill') {
-              deps.rmSync(fullPath, { recursive: true });
-            } else {
-              deps.unlinkSync(fullPath);
-            }
-          } catch {
-            // File may already be deleted (manual deletion case)
+      const removedEntries = changes.filter(
+        (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
+      );
+      for (const entry of removedEntries) {
+        const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+        if (!entryCtx?.projectDir) continue;
+        try {
+          const fullPath = path.join(entryCtx.projectDir, entry.filePath);
+          if (entry.artifactType === 'skill') {
+            deps.rmSync(fullPath, { recursive: true });
+          } else {
+            deps.unlinkSync(fullPath);
           }
+        } catch {
+          // File may already be deleted (manual deletion case)
         }
       }
     }

@@ -7,6 +7,7 @@ import {
   PackmindFileConfig,
 } from '@packmind/types';
 import { logErrorConsole, logWarningConsole } from '../utils/consoleLogger';
+import { IPlaybookLocalRepository } from '../../domain/repositories/IPlaybookLocalRepository';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -18,6 +19,7 @@ export type InstallHandlerDependencies = {
   getCwd: () => string;
   log: typeof console.log;
   error: typeof console.error;
+  playbookLocalRepository?: IPlaybookLocalRepository;
 };
 
 /**
@@ -652,6 +654,10 @@ export async function installPackagesHandler(
       log,
     });
 
+    if (deps.playbookLocalRepository) {
+      deps.playbookLocalRepository.clearAll();
+    }
+
     return {
       filesCreated: result.filesCreated,
       filesUpdated: result.filesUpdated,
@@ -1127,6 +1133,10 @@ export async function recursiveInstallHandler(
       });
       exit(1);
       return result;
+    }
+
+    if (deps.playbookLocalRepository) {
+      deps.playbookLocalRepository.clearAll();
     }
 
     exit(0);

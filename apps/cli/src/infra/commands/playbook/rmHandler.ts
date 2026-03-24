@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
-import { findLockFileEntryForPath } from '../../../application/utils/lockFileUtils';
+import { findLockFileEntryAndFileForPath } from '../../../application/utils/lockFileUtils';
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
@@ -58,16 +58,52 @@ export async function playbookRmHandler(
 
   const absolutePath = path.resolve(getCwd(), filePath);
 
-  const artefactResult = resolveArtefactFromPath(absolutePath);
-  if (!artefactResult) {
+  // Resolve target directory and lock file first
+  const targetDir = await findNearestConfigDir(
+    path.dirname(absolutePath),
+    packmindCliHexa,
+  );
+  if (!targetDir) {
     logErrorConsole(
-      `Unsupported file path: ${absolutePath}. File must be in a recognized artefact directory (command, standard, or skill).`,
+      'Not inside a Packmind project. No packmind.json found in any parent directory.',
     );
     exit(1);
     return;
   }
 
-  const { artifactType, codingAgent } = artefactResult;
+  const lockFile = await lockFileRepository.read(targetDir);
+  if (!lockFile) {
+    logErrorConsole('This file was not distributed using packmind');
+    exit(1);
+    return;
+  }
+
+  // Try resolving artifact type and agent from the lock file first (source of truth),
+  // then fall back to path-based pattern matching.
+  const normalizedForLookup = normalizePath(
+    path.relative(targetDir, absolutePath),
+  );
+  const lockResult = findLockFileEntryAndFileForPath(
+    normalizedForLookup,
+    lockFile.artifacts,
+  );
+
+  let artifactType: string;
+  let codingAgent: string;
+
+  if (lockResult) {
+    artifactType = lockResult.entry.type;
+    codingAgent = lockResult.file.agent;
+  } else {
+    const artefactResult = resolveArtefactFromPath(absolutePath);
+    if (!artefactResult) {
+      logErrorConsole('This file was not distributed using packmind');
+      exit(1);
+      return;
+    }
+    artifactType = artefactResult.artifactType;
+    codingAgent = artefactResult.codingAgent;
+  }
 
   if (artifactType === 'skill' && isSkillSupportFile(absolutePath)) {
     logErrorConsole(
@@ -80,32 +116,15 @@ export async function playbookRmHandler(
   const resolvedAbsolutePath =
     artifactType === 'skill' ? resolveSkillDirPath(absolutePath) : absolutePath;
 
-  const fileDir = path.dirname(resolvedAbsolutePath);
-
-  const targetDir = await findNearestConfigDir(fileDir, packmindCliHexa);
-  if (!targetDir) {
-    logErrorConsole(
-      'Not inside a Packmind project. No packmind.json found in any parent directory.',
-    );
-    exit(1);
-    return;
-  }
-
   const normalizedFilePath = normalizePath(
     path.relative(targetDir, resolvedAbsolutePath),
   );
 
-  const lockFile = await lockFileRepository.read(targetDir);
-  if (!lockFile) {
-    logErrorConsole('This file was not distributed using packmind');
-    exit(1);
-    return;
-  }
-
-  const lockEntry = findLockFileEntryForPath(
-    normalizedFilePath,
-    lockFile.artifacts,
-  );
+  // Re-lookup with resolved path for skills (directory vs file)
+  const lockEntry =
+    lockResult?.entry ??
+    findLockFileEntryAndFileForPath(normalizedFilePath, lockFile.artifacts)
+      ?.entry;
   if (!lockEntry) {
     logErrorConsole('This file was not distributed using packmind');
     exit(1);

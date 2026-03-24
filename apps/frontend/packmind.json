@@ -1,5 +1,5 @@
 {
   "packages": {
-    "frontend": "*"
+    "@global/frontend": "*"
   }
 }

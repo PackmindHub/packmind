@@ -8,6 +8,7 @@ export interface PlaybookChangeEntry {
   spaceId: string;
   spaceName?: string;
   targetId?: string;
+  configDir?: string; // path from git root to target's config dir (e.g. "apps/frontend" or "" for root). undefined = legacy entry.
   content: string; // full content snapshot (for skills: serialized payload)
 }
 

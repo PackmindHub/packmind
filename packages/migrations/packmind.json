@@ -1,5 +1,5 @@
 {
   "packages": {
-    "migration": "*"
+    "@global/migration": "*"
   }
 }

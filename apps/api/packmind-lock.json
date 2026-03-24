@@ -1,13 +1,19 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["nestjs"],
-  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-16T14:26:19.501Z",
-  "cliVersion": "0.22.0",
+  "packageSlugs": ["@global/nestjs"],
+  "agents": [
+    "agents_md",
+    "claude",
+    "copilot",
+    "cursor",
+    "gitlab_duo",
+    "packmind"
+  ],
+  "installedAt": "2026-03-24T09:00:25.172Z",
   "artifacts": {
     "standard:nestjs-module-hierarchy": {
-      "type": "standard",
       "name": "NestJS Module Hierarchy",
+      "type": "standard",
       "id": "f6404dc7-632c-4ee6-9f56-723990dd5e39",
       "version": 3,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -32,8 +38,8 @@
       ]
     },
     "standard:rest-api-endpoint-design": {
-      "type": "standard",
       "name": "REST API Endpoint Design",
+      "type": "standard",
       "id": "a8417805-402a-468c-9248-cc64d77d7809",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",

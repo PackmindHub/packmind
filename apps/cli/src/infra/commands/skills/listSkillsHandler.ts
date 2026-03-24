@@ -8,29 +8,10 @@ import {
   logConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../../utils/credentials';
+import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
+import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 type Skill = IListSkillsResult[number];
-type UrlBuilder = (spaceSlug: string, skillSlug: string) => string | null;
-
-function buildSkillUrl(
-  host: string,
-  orgSlug: string,
-  spaceSlug: string,
-  skillSlug: string,
-): string {
-  return `${host}/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/files`;
-}
-
-function resolveUrlBuilder(): UrlBuilder {
-  const apiKey = loadApiKey();
-  if (!apiKey) return () => null;
-  const decoded = decodeApiKey(apiKey);
-  const orgSlug = decoded?.jwt?.organization?.slug;
-  if (!decoded?.host || !orgSlug) return () => null;
-  return (spaceSlug, skillSlug) =>
-    buildSkillUrl(decoded.host, orgSlug, spaceSlug, skillSlug);
-}
 
 function groupSkillsBySpace(
   skills: Skill[],
@@ -122,20 +103,16 @@ export async function listSkillsHandler(
   try {
     logConsole('Fetching skills...\n');
 
-    const spaceFilter = args.space?.startsWith('@')
-      ? args.space.slice(1)
-      : args.space;
-
-    let matchedSpace: Space | null = null;
     const spaces = await packmindCliHexa.getSpaces();
+    const matchedSpace = resolveSpaceFromArgs(args.space, spaces);
 
-    if (spaceFilter) {
-      matchedSpace = spaces.find((s) => s.slug === spaceFilter) ?? null;
-      if (!matchedSpace) {
-        logErrorConsole(`Space "${spaceFilter}" not found.`);
-        exit(1);
-        return;
-      }
+    if (args.space && !matchedSpace) {
+      const slug = args.space.startsWith('@')
+        ? args.space.slice(1)
+        : args.space;
+      logErrorConsole(`Space "${slug}" not found.`);
+      exit(1);
+      return;
     }
 
     const skills = await packmindCliHexa.listSkills(
@@ -144,8 +121,8 @@ export async function listSkillsHandler(
 
     if (skills.length === 0) {
       logConsole(
-        spaceFilter
-          ? `No skills found in space "${spaceFilter}".`
+        matchedSpace
+          ? `No skills found in space "${matchedSpace.slug}".`
           : 'No skills found.',
       );
       exit(0);
@@ -154,7 +131,7 @@ export async function listSkillsHandler(
 
     logConsole(formatHeader(`📋 Skills (${skills.length})\n`));
 
-    const buildUrl = resolveUrlBuilder();
+    const buildUrl = resolveUrlBuilder((slug) => `skills/${slug}/files`);
     displayGroupedSkills(skills, spaces, buildUrl);
 
     exit(0);

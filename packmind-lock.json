@@ -1,13 +1,19 @@
 {
   "lockfileVersion": 1,
   "packageSlugs": ["@global/generic", "@global/playground"],
-  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-16T14:26:19.287Z",
-  "cliVersion": "0.22.0",
+  "agents": [
+    "agents_md",
+    "claude",
+    "copilot",
+    "cursor",
+    "gitlab_duo",
+    "packmind"
+  ],
+  "installedAt": "2026-03-24T09:00:24.349Z",
   "artifacts": {
     "command:update-handoff": {
-      "type": "command",
       "name": "Update Handoff",
+      "type": "command",
       "id": "fc2294fd-2bcd-4b09-a610-8dbad8459276",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -32,8 +38,8 @@
       ]
     },
     "command:working-with-git-worktrees-in-cursor": {
-      "type": "command",
       "name": "Working with Git Worktrees in Cursor",
+      "type": "command",
       "id": "bea9e57f-d1f9-4346-82c3-70d6c41eb547",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -58,8 +64,8 @@
       ]
     },
     "command:creating-end-user-documentation-for-packmind": {
-      "type": "command",
       "name": "Creating End-User Documentation for Packmind",
+      "type": "command",
       "id": "51fa2ad4-cb4d-4f27-a7d3-8aa55c91ff18",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -84,8 +90,8 @@
       ]
     },
     "command:adding-ai-agent-rendering-system": {
-      "type": "command",
       "name": "Adding ai-agent rendering system",
+      "type": "command",
       "id": "90ec87fc-6104-4e52-aee2-bdf88992f7ee",
       "version": 6,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -110,8 +116,8 @@
       ]
     },
     "command:create-new-package-in-monorepo": {
-      "type": "command",
       "name": "Create New Package",
+      "type": "command",
       "id": "231875a1-cd53-414c-8fbb-c4f301a2d386",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -136,8 +142,8 @@
       ]
     },
     "command:create-or-update-model-and-typeorm-schemas": {
-      "type": "command",
       "name": "Create or update model and TypeORM schemas",
+      "type": "command",
       "id": "e76d8f23-e2c3-4336-9cd3-c6102f47af0f",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -162,8 +168,8 @@
       ]
     },
     "command:gateway-pattern-implementation-in-packmind-frontend": {
-      "type": "command",
       "name": "Gateway Pattern Implementation in Packmind Frontend",
+      "type": "command",
       "id": "ef745515-4898-4a34-8762-5c3a7a2d0f63",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -188,8 +194,8 @@
       ]
     },
     "command:how-to-write-typeorm-migrations-in-packmind": {
-      "type": "command",
       "name": "How to Write TypeORM Migrations in Packmind",
+      "type": "command",
       "id": "27151725-7ae6-4318-9377-e03ab73d4247",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -214,8 +220,8 @@
       ]
     },
     "command:repository-implementation-and-testing-pattern": {
-      "type": "command",
       "name": "Repository Implementation and Testing Pattern",
+      "type": "command",
       "id": "d08e183f-beff-431e-9b0e-d21ffb64014c",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -240,8 +246,8 @@
       ]
     },
     "command:wrapping-chakra-ui-with-slot-components": {
-      "type": "command",
       "name": "Wrapping Chakra UI with Slot Components",
+      "type": "command",
       "id": "9c0df659-eb9f-4e37-b915-8540f982d6f2",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -266,8 +272,8 @@
       ]
     },
     "command:release-app": {
-      "type": "command",
       "name": "Release app",
+      "type": "command",
       "id": "03040e51-42bb-4bdf-94fb-e12721e1d941",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -292,8 +298,8 @@
       ]
     },
     "command:release-cli": {
-      "type": "command",
       "name": "Release CLI",
+      "type": "command",
       "id": "c1ac14ce-bb7b-44e3-a4db-d6252d1b9930",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -318,8 +324,8 @@
       ]
     },
     "standard:changelog": {
-      "type": "standard",
       "name": "Changelog",
+      "type": "standard",
       "id": "68528136-4310-4910-848c-89c9fce93739",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -344,8 +350,8 @@
       ]
     },
     "standard:testing-good-practices": {
-      "type": "standard",
       "name": "Testing good practices",
+      "type": "standard",
       "id": "f18dc77f-ea04-4b57-af74-319287fd7fea",
       "version": 6,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -370,8 +376,8 @@
       ]
     },
     "standard:typescript-good-practices": {
-      "type": "standard",
       "name": "Typescript good practices",
+      "type": "standard",
       "id": "e26dc800-20ca-4378-beb7-aa1c773864e3",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -396,8 +402,8 @@
       ]
     },
     "skill:test-factory-patterns": {
-      "type": "skill",
       "name": "test-factory-patterns",
+      "type": "skill",
       "id": "3dc94d05-adea-4b2e-95dd-39199913b1ef",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -417,12 +423,47 @@
           "path": ".cursor/skills/test-factory-patterns/SKILL.md",
           "agent": "cursor",
           "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/test-factory-patterns/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "skill:git-commit-guidelines": {
+      "name": "git-commit-guidelines",
+      "type": "skill",
+      "id": "f1133c02-d615-4520-9c51-3adf3e6932eb",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "files": [
+        {
+          "path": ".github/skills/git-commit-guidelines/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/git-commit-guidelines/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/git-commit-guidelines/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/git-commit-guidelines/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
         }
       ]
     },
     "skill:working-with-playground-app": {
-      "type": "skill",
       "name": "working-with-playground-app",
+      "type": "skill",
       "id": "9f2f119d-b7ca-4415-b056-03bb4d7ee387",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -454,12 +495,21 @@
         {
           "path": ".cursor/skills/working-with-playground-app/references/frontend-domain-structure.md",
           "agent": "cursor"
+        },
+        {
+          "path": ".gitlab/duo/skills/working-with-playground-app/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "gitlab_duo"
         }
       ]
     },
     "skill:working-with-pm-design-kit": {
-      "type": "skill",
       "name": "working-with-pm-design-kit",
+      "type": "skill",
       "id": "a21235ed-a979-41db-ad6f-6cc87c7b840d",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -491,6 +541,15 @@
         {
           "path": ".cursor/skills/working-with-pm-design-kit/references/component-catalog.md",
           "agent": "cursor"
+        },
+        {
+          "path": ".gitlab/duo/skills/working-with-pm-design-kit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/working-with-pm-design-kit/references/component-catalog.md",
+          "agent": "gitlab_duo"
         }
       ]
     }

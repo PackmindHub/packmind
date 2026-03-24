@@ -541,12 +541,187 @@ describe('playbookAddHandler', () => {
       );
     });
 
+    it('stores directory path in playbook when SKILL.md path is provided', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '.claude/skills/my-skill',
+        }),
+      );
+    });
+
+    it('stores directory path in playbook when directory path is provided', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '.claude/skills/my-skill',
+        }),
+      );
+    });
+
     it('exits with 0', async () => {
       await playbookAddHandler(
         buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
       );
 
       expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when skill exists in lock file (changeType detection)', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT + '\nmodified',
+          size: 100,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: VALID_SKILL_MD_CONTENT,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('detects changeType as updated when directory path is provided', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'updated' }),
+      );
+    });
+
+    it('detects changeType as updated when SKILL.md path is provided', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'updated' }),
+      );
+    });
+  });
+
+  describe('when skill local content matches deployed content', () => {
+    beforeEach(() => {
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.claude/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: VALID_SKILL_MD_CONTENT.length,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: VALID_SKILL_MD_CONTENT,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('logs already up to date', async () => {
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
     });
   });
 
@@ -952,6 +1127,94 @@ describe('playbookAddHandler', () => {
             changeType: 'created',
           }),
         );
+      });
+    });
+  });
+
+  describe('configDir in playbook entries', () => {
+    describe('when adding from a subdirectory target', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+          (dir: string) => Promise.resolve(dir === '/project/apps/frontend'),
+        );
+        (mockPackmindCliHexa.readFullConfig as jest.Mock).mockImplementation(
+          (dir: string) =>
+            Promise.resolve(
+              dir === '/project/apps/frontend'
+                ? { packages: { 'my-package': '*' }, agents: [] }
+                : null,
+            ),
+        );
+        (
+          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+        ).mockResolvedValue('/project');
+      });
+
+      it('stores configDir as relative path from git root to targetDir', async () => {
+        await playbookAddHandler(buildDeps({ cwd: '/project/apps/frontend' }));
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('apps/frontend');
+      });
+    });
+
+    describe('when adding from repo root', () => {
+      it('stores configDir as empty string', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('');
+      });
+    });
+
+    describe('when git root is unavailable', () => {
+      beforeEach(() => {
+        (
+          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+        ).mockResolvedValue(null);
+      });
+
+      it('stores configDir as empty string', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('');
+      });
+    });
+
+    describe('when file is removed and staged from lock file', () => {
+      beforeEach(() => {
+        mockReadFile.mockImplementation(() => {
+          throw new Error('ENOENT: no such file or directory');
+        });
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+      });
+
+      it('includes configDir in removed entry', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('');
       });
     });
   });

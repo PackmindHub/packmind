@@ -7,31 +7,11 @@ import {
   logInfoConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../../utils/credentials';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
-
-function buildPackageUrl(
-  host: string,
-  orgSlug: string,
-  spaceSlug: string,
-  packageId: string,
-): string {
-  return `${host}/org/${orgSlug}/space/${spaceSlug}/packages/${packageId}`;
-}
+import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
+import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
 
 export type ListPackagesArgs = { space?: string };
-
-type UrlBuilder = (spaceSlug: string, id: string) => string | null;
-
-function resolveUrlBuilder(): UrlBuilder {
-  const apiKey = loadApiKey();
-  if (!apiKey) return () => null;
-  const decoded = decodeApiKey(apiKey);
-  const orgSlug = decoded?.jwt?.organization?.slug;
-  if (!decoded?.host || !orgSlug) return () => null;
-  return (spaceSlug, id) =>
-    buildPackageUrl(decoded.host, orgSlug, spaceSlug, id);
-}
 
 function logPackageEntry(
   pkg: Package,
@@ -140,35 +120,36 @@ export async function listPackagesHandler(
 
     let packages = allPackages;
     let spaces = allSpaces;
-    const spaceFilter = args.space?.startsWith('@')
-      ? args.space.slice(1)
-      : args.space;
+    const matchedSpace = resolveSpaceFromArgs(args.space, allSpaces);
 
-    if (spaceFilter) {
-      const matchedSpace = allSpaces.find((s) => s.slug === spaceFilter);
-      if (!matchedSpace) {
-        logErrorConsole(`Space '@${spaceFilter}' not found.`);
-        logInfoConsole(
-          `Available spaces: ${allSpaces.map((s) => `@${s.slug}`).join(', ')}`,
-        );
-        exit(1);
-        return;
-      }
+    if (args.space && !matchedSpace) {
+      const slug = args.space.startsWith('@')
+        ? args.space.slice(1)
+        : args.space;
+      logErrorConsole(`Space '@${slug}' not found.`);
+      logInfoConsole(
+        `Available spaces: ${allSpaces.map((s) => `@${s.slug}`).join(', ')}`,
+      );
+      exit(1);
+      return;
+    }
+
+    if (matchedSpace) {
       spaces = [matchedSpace];
       packages = allPackages.filter((pkg) => pkg.spaceId === matchedSpace.id);
     }
 
     if (packages.length === 0) {
       logConsole(
-        spaceFilter
-          ? `No packages found in space '@${spaceFilter}'.`
+        matchedSpace
+          ? `No packages found in space '@${matchedSpace.slug}'.`
           : 'No packages found.',
       );
       exit(0);
       return;
     }
 
-    const buildUrl = resolveUrlBuilder();
+    const buildUrl = resolveUrlBuilder((id) => `packages/${id}`);
 
     logConsole('\nAvailable packages:\n');
 

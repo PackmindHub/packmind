@@ -1,13 +1,19 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["packages-packmind"],
-  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-16T14:26:20.142Z",
-  "cliVersion": "0.22.0",
+  "packageSlugs": ["@global/packages-packmind"],
+  "agents": [
+    "agents_md",
+    "claude",
+    "copilot",
+    "cursor",
+    "gitlab_duo",
+    "packmind"
+  ],
+  "installedAt": "2026-03-24T09:00:26.574Z",
   "artifacts": {
     "command:create-new-package-in-monorepo": {
-      "type": "command",
       "name": "Create New Package",
+      "type": "command",
       "id": "231875a1-cd53-414c-8fbb-c4f301a2d386",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -32,8 +38,8 @@
       ]
     },
     "command:repository-implementation-and-testing-pattern": {
-      "type": "command",
       "name": "Repository Implementation and Testing Pattern",
+      "type": "command",
       "id": "d08e183f-beff-431e-9b0e-d21ffb64014c",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -58,8 +64,8 @@
       ]
     },
     "command:create-or-update-model-and-typeorm-schemas": {
-      "type": "command",
       "name": "Create or update model and TypeORM schemas",
+      "type": "command",
       "id": "e76d8f23-e2c3-4336-9cd3-c6102f47af0f",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -84,8 +90,8 @@
       ]
     },
     "standard:usecase-test-structure-and-validation": {
-      "type": "standard",
       "name": "UseCase Test Structure and Validation",
+      "type": "standard",
       "id": "10213584-b320-407d-a8f3-40b678b0bc3d",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -110,8 +116,8 @@
       ]
     },
     "standard:domain-events": {
-      "type": "standard",
       "name": "Domain Events",
+      "type": "standard",
       "id": "13efa764-49dd-4fe3-b165-ebdd5c07ad55",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -136,8 +142,8 @@
       ]
     },
     "standard:back-end-typescript-clean-code-practices": {
-      "type": "standard",
       "name": "Back-end TypeScript Clean Code Practices",
+      "type": "standard",
       "id": "2e289137-cf3f-48a7-b6eb-bd2b4abf5caa",
       "version": 8,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -162,8 +168,8 @@
       ]
     },
     "standard:use-case-architecture-patterns": {
-      "type": "standard",
       "name": "Use Case Architecture Patterns",
+      "type": "standard",
       "id": "4906974d-1960-426d-92af-170c3dbc6b36",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -188,8 +194,8 @@
       ]
     },
     "standard:port-adapter-cross-domain-integration": {
-      "type": "standard",
       "name": "Port-Adapter Cross-Domain Integration",
+      "type": "standard",
       "id": "5534ff2c-297b-419e-9aaf-4ee16bae7f1f",
       "version": 12,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -214,8 +220,8 @@
       ]
     },
     "standard:jest-test-suite-organization-and-patterns": {
-      "type": "standard",
       "name": "Jest Test Suite Organization and Patterns",
+      "type": "standard",
       "id": "85f88ffe-8bb5-475a-94cf-2924b3d28866",
       "version": 6,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -240,8 +246,8 @@
       ]
     },
     "standard:compliance-logging-personal-information": {
-      "type": "standard",
       "name": "Compliance - Logging Personal Information",
+      "type": "standard",
       "id": "b81c1442-e55e-4eec-b207-6330b632fef7",
       "version": 3,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -266,8 +272,8 @@
       ]
     },
     "standard:backend-tests-redaction": {
-      "type": "standard",
       "name": "Backend Tests Redaction",
+      "type": "standard",
       "id": "bb95e639-1e75-4197-872a-3348393290dc",
       "version": 7,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -292,8 +298,8 @@
       ]
     },
     "standard:back-end-repositories-sql-queries-using-typeorm": {
-      "type": "standard",
       "name": "Back-end repositories SQL queries using TypeORM",
+      "type": "standard",
       "id": "ea68e1f0-61dd-46cf-ac64-0e5c7cc57d99",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -318,8 +324,8 @@
       ]
     },
     "skill:hexagonal-architecture": {
-      "type": "skill",
       "name": "hexagonal-architecture",
+      "type": "skill",
       "id": "6e1f3f9d-8c03-4824-92bb-facf926d880f",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -495,6 +501,63 @@
         {
           "path": ".cursor/skills/hexagonal-architecture/layers/infrastructure-layer.md",
           "agent": "cursor"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/adapter.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/hexa-facade.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/contract.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/event.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/listener.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/port.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/layers/application-layer.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/repository.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/schema.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/service.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/components/usecase.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/layers/domain-layer.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/hexagonal-architecture/layers/infrastructure-layer.md",
+          "agent": "gitlab_duo"
         }
       ]
     }
