@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 
 import {
-  ArtifactVersionEntry,
   ChangeProposalArtefactId,
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
@@ -33,6 +32,7 @@ import {
 } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
+import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -435,36 +435,6 @@ function buildRemovedProposals(
   ];
 }
 
-function lockFileToArtifactVersionEntries(
-  lockFile: PackmindLockFile,
-): ArtifactVersionEntry[] {
-  return Object.values(lockFile.artifacts).map((entry) => ({
-    name: entry.name,
-    type: entry.type,
-    id: entry.id,
-    version: entry.version,
-    spaceId: entry.spaceId,
-  }));
-}
-
-async function fetchDeployedFiles(
-  packmindCliHexa: PackmindCliHexa,
-  lockFile: PackmindLockFile,
-): Promise<FileModification[]> {
-  try {
-    const artifacts = lockFileToArtifactVersionEntries(lockFile);
-    const response = await packmindCliHexa
-      .getPackmindGateway()
-      .deployment.getContentByVersions({
-        artifacts,
-        agents: lockFile.agents,
-      });
-    return response.fileUpdates.createOrUpdate;
-  } catch {
-    return [];
-  }
-}
-
 function findDeployedContentForPath(
   filePath: string,
   deployedFiles: FileModification[],
@@ -522,7 +492,7 @@ export async function playbookSubmitHandler(
     : null;
   const deployedFiles =
     lockFile && Object.keys(lockFile.artifacts).length > 0
-      ? await fetchDeployedFiles(packmindCliHexa, lockFile)
+      ? await fetchDeployedFiles(packmindCliHexa.getPackmindGateway(), lockFile)
       : [];
 
   // Build proposals

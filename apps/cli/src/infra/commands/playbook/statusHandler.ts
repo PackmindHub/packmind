@@ -10,11 +10,8 @@ import {
   PlaybookChangeEntry,
 } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
-import {
-  PackmindLockFile,
-  PackmindLockFileEntry,
-} from '../../../domain/repositories/PackmindLockFile';
-import { ArtifactVersionEntry, FileModification } from '@packmind/types';
+import { PackmindLockFileEntry } from '../../../domain/repositories/PackmindLockFile';
+import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
 
 export type PlaybookStatusHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -64,36 +61,6 @@ function findArtifactForFile(
     }
   }
   return undefined;
-}
-
-function lockFileToArtifactVersionEntries(
-  lockFile: PackmindLockFile,
-): ArtifactVersionEntry[] {
-  return Object.values(lockFile.artifacts).map((entry) => ({
-    name: entry.name,
-    type: entry.type,
-    id: entry.id,
-    version: entry.version,
-    spaceId: entry.spaceId,
-  }));
-}
-
-async function fetchDeployedFiles(
-  packmindCliHexa: PackmindCliHexa,
-  lockFile: PackmindLockFile,
-): Promise<FileModification[]> {
-  try {
-    const artifacts = lockFileToArtifactVersionEntries(lockFile);
-    const response = await packmindCliHexa
-      .getPackmindGateway()
-      .deployment.getContentByVersions({
-        artifacts,
-        agents: lockFile.agents,
-      });
-    return response.fileUpdates.createOrUpdate;
-  } catch {
-    return [];
-  }
 }
 
 function groupStagedChanges(changes: PlaybookChangeEntry[]): GroupedChange[] {
@@ -163,7 +130,10 @@ export async function playbookStatusHandler(
     const lockFile = await lockFileRepository.read(projectDir);
 
     if (lockFile && Object.keys(lockFile.artifacts).length > 0) {
-      const deployedFiles = await fetchDeployedFiles(packmindCliHexa, lockFile);
+      const deployedFiles = await fetchDeployedFiles(
+        packmindCliHexa.getPackmindGateway(),
+        lockFile,
+      );
 
       for (const deployedFile of deployedFiles) {
         const normalizedDeployedPath = normalizePath(deployedFile.path);

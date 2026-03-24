@@ -18,18 +18,12 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../../application/utils/pathUtils';
-import {
-  ArtifactType,
-  ArtifactVersionEntry,
-  FileModification,
-  MultiFileCodingAgent,
-  Space,
-} from '@packmind/types';
-import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
+import { ArtifactType, MultiFileCodingAgent, Space } from '@packmind/types';
 import {
   findLockFileEntryForPath,
   findLockFileEntryAndFileForPath,
 } from '../../../application/utils/lockFileUtils';
+import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
 
 type SkillFile = {
   path: string;
@@ -103,32 +97,6 @@ async function tryStageRemovedFromLockFile(
   );
   deps.exit(0);
   return true;
-}
-
-async function fetchDeployedArtifactFiles(
-  packmindCliHexa: PackmindCliHexa,
-  lockFile: PackmindLockFile,
-): Promise<FileModification[]> {
-  try {
-    const artifacts: ArtifactVersionEntry[] = Object.values(
-      lockFile.artifacts,
-    ).map((entry) => ({
-      name: entry.name,
-      type: entry.type,
-      id: entry.id,
-      version: entry.version,
-      spaceId: entry.spaceId,
-    }));
-    const response = await packmindCliHexa
-      .getPackmindGateway()
-      .deployment.getContentByVersions({
-        artifacts,
-        agents: lockFile.agents,
-      });
-    return response.fileUpdates.createOrUpdate;
-  } catch {
-    return [];
-  }
 }
 
 export async function playbookAddHandler(
@@ -370,8 +338,8 @@ export async function playbookAddHandler(
 
   // Check if content matches deployed (via lock file artifact versions)
   if (changeType === 'updated' && earlyLockFile) {
-    const deployedFiles = await fetchDeployedArtifactFiles(
-      packmindCliHexa,
+    const deployedFiles = await fetchDeployedFiles(
+      packmindCliHexa.getPackmindGateway(),
       earlyLockFile,
     );
 
