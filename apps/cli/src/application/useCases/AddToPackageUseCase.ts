@@ -31,10 +31,10 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
       ? await this.resolveSpaceBySlug(spaceSlug)
       : await this.spaceService.getDefaultSpace();
 
-    const packages = await this.gateway.packages.list({});
-    const pkg = packages.packages.find(
-      (pkg) => pkg.slug === packageSlug && pkg.spaceId === space.id,
-    );
+    const packages = await this.gateway.packages.list({
+      spaceId: space.id,
+    });
+    const pkg = packages.packages.find((pkg) => pkg.slug === packageSlug);
     if (!pkg) {
       throw new ItemNotFoundError('package', packageSlug);
     }

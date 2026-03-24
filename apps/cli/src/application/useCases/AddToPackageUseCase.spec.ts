@@ -268,7 +268,7 @@ describe('AddToPackageUseCase', () => {
         ],
       });
 
-      packagesGateway.list.mockResolvedValue({ packages: [pkg, teamPkg] });
+      packagesGateway.list.mockResolvedValue({ packages: [teamPkg] });
       packagesGateway.addArtefacts.mockResolvedValue({
         package: teamPkg,
         added: { standards: ['std-id-1'], commands: [], skills: [] },

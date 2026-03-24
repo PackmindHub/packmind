@@ -1,11 +1,11 @@
 import { Package, Space } from '@packmind/types';
 import {
-  formatSlug,
-  formatLabel,
   formatCommand,
+  formatLabel,
+  formatSlug,
   logConsole,
-  logInfoConsole,
   logErrorConsole,
+  logInfoConsole,
 } from '../../utils/consoleLogger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
@@ -40,17 +40,15 @@ function logPackageEntry(
 function groupPackagesBySpace(
   packages: Package[],
   spaces: Space[],
-): { groups: Array<{ space: Space; pkgs: Package[] }>; orphaned: Package[] } {
+): Array<{ space: Space; pkgs: Package[] }> {
   const spaceMap = new Map<string, Space>(
     spaces.map((s) => [s.id as string, s]),
   );
   const groupsMap = new Map<string, { space: Space; pkgs: Package[] }>();
-  const orphaned: Package[] = [];
 
   for (const pkg of packages) {
     const space = spaceMap.get(pkg.spaceId as string);
     if (!space) {
-      orphaned.push(pkg);
       continue;
     }
     let group = groupsMap.get(space.id as string);
@@ -61,10 +59,9 @@ function groupPackagesBySpace(
     group.pkgs.push(pkg);
   }
 
-  const groups = [...groupsMap.values()].sort((a, b) =>
+  return [...groupsMap.values()].sort((a, b) =>
     a.space.name.localeCompare(b.space.name),
   );
-  return { groups, orphaned };
 }
 
 function displayGroupedPackages(
@@ -72,7 +69,7 @@ function displayGroupedPackages(
   spaces: Space[],
   buildUrl: UrlBuilder,
 ): string {
-  const { groups, orphaned } = groupPackagesBySpace(packages, spaces);
+  const groups = groupPackagesBySpace(packages, spaces);
   let firstSlug: string | null = null;
 
   for (const { space, pkgs } of groups) {
@@ -83,14 +80,6 @@ function displayGroupedPackages(
       logPackageEntry(pkg, fullSlug, space.slug, buildUrl);
       logConsole('');
     }
-  }
-
-  for (const pkg of [...orphaned].sort((a, b) =>
-    a.slug.localeCompare(b.slug),
-  )) {
-    firstSlug ??= pkg.slug;
-    logPackageEntry(pkg, pkg.slug, 'global', buildUrl);
-    logConsole('');
   }
 
   return firstSlug ?? formatSlug(packages[0].slug);
@@ -109,17 +98,13 @@ export async function listPackagesHandler(
 
   try {
     logInfoConsole('Fetching available packages...');
-    const [allPackages, allSpaces] = await Promise.all([
-      packmindCliHexa.listPackages({}),
-      packmindCliHexa.getSpaces(),
-    ]);
+
+    const allSpaces = await packmindCliHexa.getSpaces();
 
     if (!allSpaces || allSpaces.length === 0) {
       throw new Error('Unable to list organization spaces.');
     }
 
-    let packages = allPackages;
-    let spaces = allSpaces;
     const matchedSpace = resolveSpaceFromArgs(args.space, allSpaces);
 
     if (args.space && !matchedSpace) {
@@ -134,10 +119,10 @@ export async function listPackagesHandler(
       return;
     }
 
-    if (matchedSpace) {
-      spaces = [matchedSpace];
-      packages = allPackages.filter((pkg) => pkg.spaceId === matchedSpace.id);
-    }
+    const packages = await packmindCliHexa.listPackages(
+      matchedSpace ? { spaceId: matchedSpace.id } : {},
+    );
+    const spaces = matchedSpace ? [matchedSpace] : allSpaces;
 
     if (packages.length === 0) {
       logConsole(

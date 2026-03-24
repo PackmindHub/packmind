@@ -1,6 +1,6 @@
-import { IPublicUseCase, Package } from '@packmind/types';
+import { IPublicUseCase, Package, SpaceId } from '@packmind/types';
 
-export type IListPackagesCommand = Record<string, never>;
+export type IListPackagesCommand = { spaceId?: SpaceId };
 
 export type IListPackagesResult = Package[];
 

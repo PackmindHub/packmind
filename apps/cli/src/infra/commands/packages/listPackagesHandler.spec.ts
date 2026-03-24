@@ -49,15 +49,21 @@ describe('listPackagesHandler', () => {
           slug: 'zebra',
           name: 'Zebra Package',
           description: 'A zebra package',
+          spaceId: defaultSpace.id,
         }),
         packageFactory({
           slug: 'alpha',
           name: 'Alpha Package',
           description: 'An alpha package',
+          spaceId: defaultSpace.id,
         }),
       ]);
 
       await listPackagesHandler({}, deps);
+    });
+
+    it('calls listPackages without space filter', () => {
+      expect(mockPackmindCliHexa.listPackages).toHaveBeenCalledWith({});
     });
 
     it('logs fetching message', () => {
@@ -145,15 +151,18 @@ describe('listPackagesHandler', () => {
 
     beforeEach(() => {
       mockPackmindCliHexa.getSpaces.mockResolvedValue([spaceA, spaceB]);
-      mockPackmindCliHexa.listPackages.mockResolvedValue([
-        packageFactory({ slug: 'api', name: 'API', spaceId: spaceA.id }),
-        packageFactory({ slug: 'ui', name: 'UI', spaceId: spaceB.id }),
-      ]);
     });
 
     it('only shows packages from the requested space', async () => {
+      mockPackmindCliHexa.listPackages.mockResolvedValue([
+        packageFactory({ slug: 'api', name: 'API', spaceId: spaceA.id }),
+      ]);
+
       await listPackagesHandler({ space: 'backend' }, deps);
 
+      expect(mockPackmindCliHexa.listPackages).toHaveBeenCalledWith({
+        spaceId: spaceA.id,
+      });
       expect(consoleLogger.logConsole).toHaveBeenCalledWith(
         expect.stringContaining('@backend/api'),
       );
@@ -163,8 +172,15 @@ describe('listPackagesHandler', () => {
     });
 
     it('supports @-prefixed space slug', async () => {
+      mockPackmindCliHexa.listPackages.mockResolvedValue([
+        packageFactory({ slug: 'api', name: 'API', spaceId: spaceA.id }),
+      ]);
+
       await listPackagesHandler({ space: '@backend' }, deps);
 
+      expect(mockPackmindCliHexa.listPackages).toHaveBeenCalledWith({
+        spaceId: spaceA.id,
+      });
       expect(consoleLogger.logConsole).toHaveBeenCalledWith(
         expect.stringContaining('@backend/api'),
       );
@@ -179,16 +195,18 @@ describe('listPackagesHandler', () => {
       expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
         "Space '@unknown' not found.",
       );
+      expect(mockPackmindCliHexa.listPackages).not.toHaveBeenCalled();
       expect(mockExit).toHaveBeenCalledWith(1);
     });
 
     it('shows no-packages message when the space has no packages', async () => {
-      mockPackmindCliHexa.listPackages.mockResolvedValue([
-        packageFactory({ slug: 'ui', name: 'UI', spaceId: spaceB.id }),
-      ]);
+      mockPackmindCliHexa.listPackages.mockResolvedValue([]);
 
       await listPackagesHandler({ space: 'backend' }, deps);
 
+      expect(mockPackmindCliHexa.listPackages).toHaveBeenCalledWith({
+        spaceId: spaceA.id,
+      });
       expect(consoleLogger.logConsole).toHaveBeenCalledWith(
         "No packages found in space '@backend'.",
       );
@@ -202,7 +220,6 @@ describe('listPackagesHandler', () => {
         spaceFactory({ slug: 'global', name: 'Global' }),
         spaceFactory({ slug: 'backend', name: 'Backend' }),
       ]);
-      mockPackmindCliHexa.listPackages.mockResolvedValue([]);
 
       await listPackagesHandler({ space: 'unknown' }, deps);
     });
@@ -227,9 +244,6 @@ describe('listPackagesHandler', () => {
   describe('when spaces cannot be fetched', () => {
     beforeEach(async () => {
       mockPackmindCliHexa.getSpaces.mockResolvedValue([]);
-      mockPackmindCliHexa.listPackages.mockResolvedValue([
-        packageFactory({ slug: 'api', name: 'API' }),
-      ]);
       await listPackagesHandler({}, deps);
     });
 
