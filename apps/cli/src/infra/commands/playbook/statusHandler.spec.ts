@@ -19,6 +19,12 @@ jest.mock('../../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
 }));
 
+jest.mock('../../utils/permissions', () => ({
+  modeToPermissionStringOrDefault: jest.fn((mode: number) =>
+    (mode & 0o777) === 0o755 ? 'rwxr-xr-x' : 'rw-r--r--',
+  ),
+}));
+
 describe('playbookStatusHandler', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
   let mockExit: jest.Mock;
@@ -1085,6 +1091,88 @@ describe('playbookStatusHandler', () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
+    });
+  });
+
+  describe('when a deployed skill file has changed permissions only', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-456',
+      artifacts: {
+        'my-skill': {
+          name: 'My Skill',
+          type: 'skill',
+          id: 'artifact-skill-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              agent: 'claude',
+            },
+            {
+              path: '.claude/skills/my-skill/references/file.md',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(lockFile);
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'skill content',
+            },
+            {
+              path: '.claude/skills/my-skill/references/file.md',
+              content: 'file content',
+              skillFileId: 'file-id-1',
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockImplementation((filePath: string) => {
+        if (filePath.includes('SKILL.md')) return 'skill content';
+        if (filePath.includes('file.md')) return 'file content';
+        throw new Error('ENOENT');
+      });
+    });
+
+    it('displays file as untracked when only permissions differ', async () => {
+      const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
+
+      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Skill "My Skill" .claude/skills/my-skill/references/file.md',
+      );
+    });
+
+    it('does not show file as untracked when permissions match', async () => {
+      const mockGetFileMode = jest.fn().mockReturnValue(0o100644);
+
+      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const hasUntracked = allCalls.some(
+        (msg: string) =>
+          typeof msg === 'string' && msg.includes('Changes not tracked:'),
+      );
+      expect(hasUntracked).toBe(false);
     });
   });
 

@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { command } from 'cmd-ts';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -29,6 +29,13 @@ export const statusPlaybookCommand = command({
       exit: process.exit,
       readFile: (p) => readFileSync(p, 'utf-8'),
       listDirectoryFiles,
+      getFileMode: (p) => {
+        try {
+          return statSync(p).mode;
+        } catch {
+          return null;
+        }
+      },
     });
   },
 });
