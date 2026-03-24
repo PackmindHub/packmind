@@ -485,20 +485,52 @@ export async function playbookSubmitHandler(
     resolvedMessage = stripped;
   }
 
-  // Read lock file and fetch deployed content by artifact versions
-  const projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
-  const lockFile = projectDir
-    ? await lockFileRepository.read(projectDir)
-    : null;
-  const deployedFiles =
-    lockFile && Object.keys(lockFile.artifacts).length > 0
-      ? await fetchDeployedFiles(packmindCliHexa.getPackmindGateway(), lockFile)
-      : [];
+  // Per-target lock file resolution cache
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+
+  type TargetContext = {
+    lockFile: PackmindLockFile | null;
+    deployedFiles: FileModification[];
+    projectDir: string | null;
+  };
+
+  const targetContextCache = new Map<string, TargetContext>();
+
+  async function getTargetContext(
+    entry: PlaybookChangeEntry,
+  ): Promise<TargetContext> {
+    const key = entry.configDir ?? '__cwd__';
+    if (targetContextCache.has(key)) return targetContextCache.get(key)!;
+
+    let projectDir: string | null;
+    if (entry.configDir !== undefined && gitRoot) {
+      projectDir = path.join(gitRoot, entry.configDir);
+    } else {
+      projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
+    }
+
+    const lockFile = projectDir
+      ? await lockFileRepository.read(projectDir)
+      : null;
+    const deployedFiles =
+      lockFile && Object.keys(lockFile.artifacts).length > 0
+        ? await fetchDeployedFiles(
+            packmindCliHexa.getPackmindGateway(),
+            lockFile,
+          )
+        : [];
+
+    const ctx = { lockFile, deployedFiles, projectDir };
+    targetContextCache.set(key, ctx);
+    return ctx;
+  }
 
   // Build proposals
   const allProposals: ProposalItem[] = [];
 
   for (const entry of changes) {
+    const ctx = await getTargetContext(entry);
+
     if (entry.changeType === 'created') {
       switch (entry.artifactType) {
         case 'standard':
@@ -514,7 +546,7 @@ export async function playbookSubmitHandler(
     } else if (entry.changeType === 'removed') {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
-        lockFile,
+        ctx.lockFile,
       );
       if (!artifactId) {
         logWarningConsole(
@@ -522,11 +554,13 @@ export async function playbookSubmitHandler(
         );
         continue;
       }
-      allProposals.push(...buildRemovedProposals(entry, artifactId, lockFile));
+      allProposals.push(
+        ...buildRemovedProposals(entry, artifactId, ctx.lockFile),
+      );
     } else {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
-        lockFile,
+        ctx.lockFile,
       );
 
       if (!artifactId) {
@@ -538,7 +572,7 @@ export async function playbookSubmitHandler(
 
       const deployedContent = findDeployedContentForPath(
         entry.filePath,
-        deployedFiles,
+        ctx.deployedFiles,
       );
 
       if (
@@ -568,7 +602,7 @@ export async function playbookSubmitHandler(
           break;
         case 'skill':
           allProposals.push(
-            ...buildUpdatedSkillProposals(entry, artifactId, deployedFiles),
+            ...buildUpdatedSkillProposals(entry, artifactId, ctx.deployedFiles),
           );
           break;
       }
@@ -642,21 +676,21 @@ export async function playbookSubmitHandler(
         for (const filePath of filePaths) {
           playbookLocalRepository.removeChange(filePath, spaceId);
         }
-        if (projectDir) {
-          const removedEntries = spaceChanges.filter(
-            (c) => c.changeType === 'removed',
-          );
-          for (const entry of removedEntries) {
-            try {
-              const fullPath = path.join(projectDir, entry.filePath);
-              if (entry.artifactType === 'skill') {
-                deps.rmSync(fullPath, { recursive: true });
-              } else {
-                deps.unlinkSync(fullPath);
-              }
-            } catch {
-              // File may already be deleted (manual deletion case)
+        const removedEntries = spaceChanges.filter(
+          (c) => c.changeType === 'removed',
+        );
+        for (const entry of removedEntries) {
+          const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+          if (!entryCtx?.projectDir) continue;
+          try {
+            const fullPath = path.join(entryCtx.projectDir, entry.filePath);
+            if (entry.artifactType === 'skill') {
+              deps.rmSync(fullPath, { recursive: true });
+            } else {
+              deps.unlinkSync(fullPath);
             }
+          } catch {
+            // File may already be deleted (manual deletion case)
           }
         }
       } else {
@@ -672,21 +706,21 @@ export async function playbookSubmitHandler(
       }
 
       // Delete local files for removed entries
-      if (projectDir) {
-        const removedEntries = changes.filter(
-          (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
-        );
-        for (const entry of removedEntries) {
-          try {
-            const fullPath = path.join(projectDir, entry.filePath);
-            if (entry.artifactType === 'skill') {
-              deps.rmSync(fullPath, { recursive: true });
-            } else {
-              deps.unlinkSync(fullPath);
-            }
-          } catch {
-            // File may already be deleted (manual deletion case)
+      const removedEntries = changes.filter(
+        (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
+      );
+      for (const entry of removedEntries) {
+        const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+        if (!entryCtx?.projectDir) continue;
+        try {
+          const fullPath = path.join(entryCtx.projectDir, entry.filePath);
+          if (entry.artifactType === 'skill') {
+            deps.rmSync(fullPath, { recursive: true });
+          } else {
+            deps.unlinkSync(fullPath);
           }
+        } catch {
+          // File may already be deleted (manual deletion case)
         }
       }
     }

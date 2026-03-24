@@ -1541,6 +1541,188 @@ describe('playbookSubmitHandler', () => {
     });
   });
 
+  describe('per-configDir lock file resolution', () => {
+    it('loads lock file from gitRoot/configDir when entry has configDir', async () => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          configDir: 'apps/frontend',
+          changeType: 'created',
+        }),
+      ]);
+
+      await playbookSubmitHandler(buildDeps({ message: 'submit' }));
+
+      expect(mockLockFileRepository.read).toHaveBeenCalledWith(
+        '/project/apps/frontend',
+      );
+    });
+
+    it('falls back to findNearestConfigDir when entry has no configDir', async () => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({ changeType: 'created' }),
+      ]);
+
+      await playbookSubmitHandler(buildDeps({ message: 'submit' }));
+
+      // findNearestConfigDir resolves via configExists mock → '/project'
+      expect(mockLockFileRepository.read).toHaveBeenCalledWith('/project');
+    });
+
+    it('resolves separate lock files for entries with different configDir values', async () => {
+      const frontendLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind' as const],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-frontend',
+        artifacts: {
+          'frontend-std': {
+            name: 'Frontend Standard',
+            type: 'standard' as const,
+            id: 'artifact-fe-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/frontend-std.md',
+                agent: 'packmind' as const,
+              },
+            ],
+          },
+        },
+      };
+
+      const apiLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind' as const],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-api',
+        artifacts: {
+          'api-std': {
+            name: 'API Standard',
+            type: 'standard' as const,
+            id: 'artifact-api-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-2'],
+            files: [
+              {
+                path: '.packmind/standards/api-std.md',
+                agent: 'packmind' as const,
+              },
+            ],
+          },
+        },
+      };
+
+      mockLockFileRepository.read.mockImplementation(async (dir: string) => {
+        if (dir === '/project/apps/frontend') return frontendLockFile;
+        if (dir === '/project/apps/api') return apiLockFile;
+        return null;
+      });
+
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.packmind/standards/frontend-std.md',
+          artifactName: 'Frontend Standard',
+          configDir: 'apps/frontend',
+          changeType: 'removed',
+          content: '',
+          spaceId: 'space-123',
+        }),
+        makeEntry({
+          filePath: '.packmind/standards/api-std.md',
+          artifactName: 'API Standard',
+          configDir: 'apps/api',
+          changeType: 'removed',
+          content: '',
+          spaceId: 'space-123',
+        }),
+      ]);
+
+      await playbookSubmitHandler(buildDeps({ message: 'remove both' }));
+
+      expect(mockLockFileRepository.read).toHaveBeenCalledWith(
+        '/project/apps/frontend',
+      );
+      expect(mockLockFileRepository.read).toHaveBeenCalledWith(
+        '/project/apps/api',
+      );
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const artefactIds = batchCall.proposals.map(
+        (p: { artefactId: string }) => p.artefactId,
+      );
+      expect(artefactIds).toContain('artifact-fe-1');
+      expect(artefactIds).toContain('artifact-api-1');
+    });
+
+    it('uses per-entry projectDir for file deletion', async () => {
+      mockLockFileRepository.read.mockImplementation(async (dir: string) => {
+        if (dir === '/project/apps/frontend') {
+          return {
+            lockfileVersion: 1,
+            packageSlugs: ['my-package'],
+            agents: ['claude' as const],
+            installedAt: '2026-03-17T00:00:00.000Z',
+            cliVersion: '1.0.0',
+            targetId: 'target-456',
+            artifacts: {
+              'my-command': {
+                name: 'My Command',
+                type: 'command' as const,
+                id: 'artifact-cmd-1',
+                version: 1,
+                spaceId: 'space-123',
+                packageIds: ['pkg-1'],
+                files: [
+                  {
+                    path: '.claude/commands/my-command.md',
+                    agent: 'claude' as const,
+                  },
+                ],
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/commands/my-command.md',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          codingAgent: 'claude',
+          changeType: 'removed',
+          configDir: 'apps/frontend',
+          content: '',
+        }),
+      ]);
+
+      const mockUnlinkSync = jest.fn();
+      await playbookSubmitHandler(
+        buildDeps({ message: 'remove', unlinkSync: mockUnlinkSync }),
+      );
+
+      expect(mockUnlinkSync).toHaveBeenCalledWith(
+        '/project/apps/frontend/.claude/commands/my-command.md',
+      );
+    });
+  });
+
   describe('removed entry not found in lock file', () => {
     beforeEach(() => {
       mockLockFileRepository.read.mockResolvedValue({
