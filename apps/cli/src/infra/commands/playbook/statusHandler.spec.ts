@@ -1152,13 +1152,13 @@ describe('playbookStatusHandler', () => {
       });
     });
 
-    it('displays file as untracked when only permissions differ', async () => {
+    it('displays file as untracked with permissions changed label when only permissions differ', async () => {
       const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
 
       await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Skill "My Skill" .claude/skills/my-skill/references/file.md',
+        '  - Skill "My Skill" (permissions changed) .claude/skills/my-skill/references/file.md',
       );
     });
 
@@ -1173,6 +1173,25 @@ describe('playbookStatusHandler', () => {
           typeof msg === 'string' && msg.includes('Changes not tracked:'),
       );
       expect(hasUntracked).toBe(false);
+    });
+
+    it('shows content change without permissions label when both content and permissions differ', async () => {
+      mockReadFile.mockImplementation((filePath: string) => {
+        if (filePath.includes('SKILL.md')) return 'skill content';
+        if (filePath.includes('file.md')) return 'modified file content';
+        throw new Error('ENOENT');
+      });
+      const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
+
+      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+
+      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+      const fileLine = allCalls.filter(
+        (msg: string) =>
+          typeof msg === 'string' && msg.includes('references/file.md'),
+      );
+      expect(fileLine).toHaveLength(1);
+      expect(fileLine[0]).not.toContain('permissions changed');
     });
   });
 
@@ -1303,11 +1322,11 @@ describe('playbookStatusHandler', () => {
       ]);
     });
 
-    it('displays the new file as untracked', async () => {
+    it('displays the new file as untracked with new file label', async () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Skill "My Skill" .claude/skills/my-skill/references/file.md',
+        '  - Skill "My Skill" (new file) .claude/skills/my-skill/references/file.md',
       );
     });
 

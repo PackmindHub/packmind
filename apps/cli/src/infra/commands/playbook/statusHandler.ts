@@ -256,6 +256,7 @@ export async function playbookStatusHandler(
                 artifactName: artifact.name,
                 artifactType: artifact.type,
                 filePath: displayPath,
+                changeType: 'permissions changed',
               });
             }
           }
@@ -307,6 +308,7 @@ export async function playbookStatusHandler(
             artifactName: entry.name,
             artifactType: entry.type,
             filePath: displayPath,
+            changeType: 'new file',
           });
         }
       }
