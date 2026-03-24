@@ -49,6 +49,7 @@ describe('playbookStatusHandler', () => {
         deployment: { getContentByVersions: mockGetContentByVersions },
       }),
       tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
+      findDescendantConfigs: jest.fn().mockResolvedValue([]),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -1136,6 +1137,83 @@ describe('playbookStatusHandler', () => {
           '  - Standard "My standard" ../../apps/frontend/.packmind/standards/my-standard.md',
         );
       });
+    });
+  });
+
+  describe('when running from root and sub-target has untracked changes', () => {
+    const subTargetLockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['my-package'],
+      agents: ['packmind'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      targetId: 'target-sub',
+      artifacts: {
+        'artifact-1': {
+          name: 'Second standard',
+          type: 'standard',
+          id: 'artifact-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          files: [
+            {
+              path: '.packmind/standards/second-standard.md',
+              agent: 'packmind',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+        (dir: string) => Promise.resolve(dir === '/project'),
+      );
+      (
+        mockPackmindCliHexa.findDescendantConfigs as jest.Mock
+      ).mockResolvedValue(['/project/apps/frontend']);
+      mockLockFileRepository.read.mockImplementation((dir: string) =>
+        Promise.resolve(
+          dir === '/project/apps/frontend' ? subTargetLockFile : null,
+        ),
+      );
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/second-standard.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('local modified content');
+    });
+
+    it('shows the untracked header', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/project' }));
+
+      expect(mockLogConsole).toHaveBeenCalledWith('Changes not tracked:');
+    });
+
+    it('shows the sub-target untracked change with path relative to cwd', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/project' }));
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Standard "Second standard" apps/frontend/.packmind/standards/second-standard.md',
+      );
+    });
+
+    it('reads files from the sub-target directory', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/project' }));
+
+      expect(mockReadFile).toHaveBeenCalledWith(
+        '/project/apps/frontend/.packmind/standards/second-standard.md',
+      );
     });
   });
 });
