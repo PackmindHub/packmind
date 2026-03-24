@@ -255,7 +255,7 @@ export const SidebarNavigation: React.FunctionComponent<
           <>
             <PMSeparator borderColor={'border.tertiary'} />
             {isCollapsed ? (
-              <PMBox display="flex" justifyContent="center" py={2}>
+              <PMBox display="flex" justifyContent="center" pt={2} pb={3}>
                 <PMMenu.Root positioning={{ placement: 'right-start' }}>
                   <PMMenu.Trigger asChild>
                     <PMBox
@@ -322,7 +322,7 @@ export const SidebarNavigation: React.FunctionComponent<
                 </PMMenu.Root>
               </PMBox>
             ) : (
-              <PMBox paddingBottom={2}>
+              <PMBox paddingBottom={3}>
                 <PMBox pl={2} pr={4} py={1}>
                   <PMText
                     fontSize="10px"
