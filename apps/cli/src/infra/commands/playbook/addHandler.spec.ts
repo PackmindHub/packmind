@@ -811,6 +811,29 @@ describe('playbookAddHandler', () => {
 
       expect(mockExit).toHaveBeenCalledWith(0);
     });
+
+    describe('when lock file has a targetId', () => {
+      beforeEach(() => {
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          targetId: 'target-from-lockfile',
+          artifacts: {},
+        });
+      });
+
+      it('uses the lock file targetId as fallback', async () => {
+        await playbookAddHandler(buildDeps());
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetId: 'target-from-lockfile',
+          }),
+        );
+      });
+    });
   });
 
   describe('when addedAt is set', () => {

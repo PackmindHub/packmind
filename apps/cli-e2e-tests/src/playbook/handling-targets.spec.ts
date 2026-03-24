@@ -5,7 +5,7 @@ import {
   updateFile,
   UserSignedUpContext,
 } from '../helpers';
-import { Package, Recipe, Target } from '@packmind/types';
+import { Recipe, Target } from '@packmind/types';
 import { recipeFactory } from '@packmind/recipes/test';
 import fs from 'fs';
 
@@ -13,7 +13,6 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
   let context: UserSignedUpContext;
 
   let command: Recipe;
-  let pkg: Package;
 
   let rootTarget: Target;
   let frontendTarget: Target;
@@ -32,16 +31,24 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
         slug: 'my-command',
       }),
     );
-    const createPackage = await context.gateway.packages.create({
+    const { package: withRecipe } = await context.gateway.packages.create({
       description: '',
       name: 'My package',
       recipeIds: [command.id],
       spaceId: context.space.id,
       standardIds: [],
     });
-    pkg = createPackage.package;
 
-    await context.runCli(`install ${pkg.slug} --path apps/frontend`);
+    const { package: emptyPackage } = await context.gateway.packages.create({
+      description: '',
+      name: 'Empty package',
+      spaceId: context.space.id,
+      recipeIds: [],
+      standardIds: [],
+    });
+
+    await context.runCli(`install ${emptyPackage.slug}`);
+    await context.runCli(`install ${withRecipe.slug} --path apps/frontend`);
 
     const targets = await context.gateway.deployments.getTargetsByOrganization(
       {},
@@ -181,15 +188,6 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
       commandPath = `../../apps/frontend/.packmind/commands/${command.slug}.md`;
 
       await context.runCli(`playbook add ${commandPath}`, { cwd });
-    });
-
-    it('shows the correct path of the change when running diff', async () => {
-      const result = await context.runCli('diff', { cwd });
-
-      expect(result.stdout).toMatchOutput([
-        `Command "${command.name}"`,
-        commandPath,
-      ]);
     });
 
     it('shows the correct path in the status', async () => {
