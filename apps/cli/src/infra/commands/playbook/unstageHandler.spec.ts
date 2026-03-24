@@ -20,7 +20,10 @@ jest.mock('../../../application/utils/findNearestConfigDir', () => ({
 describe('playbookUnstageHandler', () => {
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
-  let mockPackmindCliHexa: { configExists: jest.Mock };
+  let mockPackmindCliHexa: {
+    configExists: jest.Mock;
+    tryGetGitRepositoryRoot: jest.Mock;
+  };
   let mockPlaybookLocalRepository: jest.Mocked<IPlaybookLocalRepository>;
 
   const makeEntry = (
@@ -43,7 +46,10 @@ describe('playbookUnstageHandler', () => {
   beforeEach(() => {
     mockExit = jest.fn();
     mockGetCwd = jest.fn().mockReturnValue('/project');
-    mockPackmindCliHexa = { configExists: jest.fn() };
+    mockPackmindCliHexa = {
+      configExists: jest.fn(),
+      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
+    };
     mockPlaybookLocalRepository = {
       addChange: jest.fn(),
       removeChange: jest.fn(),
@@ -256,6 +262,53 @@ describe('playbookUnstageHandler', () => {
 
         expect(mockExit).toHaveBeenCalledWith(1);
       });
+    });
+  });
+
+  describe('when entry has a configDir (cross-target file)', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.packmind/standards/third-standard.md',
+          configDir: 'apps/frontend',
+        }),
+      ]);
+      mockPlaybookLocalRepository.removeChange.mockReturnValue(true);
+    });
+
+    it('matches by combining configDir and filePath', async () => {
+      await playbookUnstageHandler(
+        buildDeps({
+          filePath: 'apps/frontend/.packmind/standards/third-standard.md',
+        }),
+      );
+
+      expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+        '.packmind/standards/third-standard.md',
+        'space-1',
+      );
+    });
+
+    it('logs a success message', async () => {
+      await playbookUnstageHandler(
+        buildDeps({
+          filePath: 'apps/frontend/.packmind/standards/third-standard.md',
+        }),
+      );
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        'Unstaged apps/frontend/.packmind/standards/third-standard.md from playbook',
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await playbookUnstageHandler(
+        buildDeps({
+          filePath: 'apps/frontend/.packmind/standards/third-standard.md',
+        }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 
