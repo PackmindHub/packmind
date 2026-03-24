@@ -32,6 +32,7 @@ describe('createCommandHandler', () => {
         commandId: 'test-command-123',
         name: 'Test Command',
         slug: 'test-command',
+        spaceSlug: 'global',
       }),
     };
     mockLoadApiKey.mockReturnValue('');
@@ -90,6 +91,25 @@ describe('createCommandHandler', () => {
     let result: Awaited<ReturnType<typeof createCommandHandler>>;
 
     beforeEach(async () => {
+      mockUseCase.execute.mockResolvedValue({
+        commandId: 'test-command-123',
+        name: 'Test Command',
+        slug: 'test-command',
+        spaceSlug: 'my-space',
+      });
+      mockLoadApiKey.mockReturnValue('test-api-key');
+      mockDecodeApiKey.mockReturnValue({
+        host: 'https://app.packmind.ai',
+        jwt: {
+          organization: {
+            id: 'org-123',
+            name: 'My Org',
+            slug: 'my-org',
+            role: 'admin',
+          },
+        },
+      });
+
       const playbook = {
         name: 'Test Command',
         summary: 'Test summary',
@@ -116,6 +136,12 @@ describe('createCommandHandler', () => {
     it('passes spaceSlug to the use case', () => {
       expect(mockUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ spaceSlug: 'my-space' }),
+      );
+    });
+
+    it('returns webapp URL with the resolved space slug', () => {
+      expect(result.webappUrl).toBe(
+        'https://app.packmind.ai/org/my-org/space/my-space/commands/test-command-123',
       );
     });
   });
