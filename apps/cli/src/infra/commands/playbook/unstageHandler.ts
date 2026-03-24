@@ -1,6 +1,9 @@
 import * as path from 'path';
 
-import { normalizePath } from '../../../application/utils/pathUtils';
+import {
+  normalizePath,
+  resolveSkillDirPath,
+} from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
@@ -37,7 +40,11 @@ export async function playbookUnstageHandler(
 
   const cwd = getCwd();
   const absolutePath = path.resolve(cwd, filePath);
-  const configDir = await findNearestConfigDir(cwd, packmindCliHexa);
+  const resolvedPath = resolveSkillDirPath(absolutePath);
+  const configDir = await findNearestConfigDir(
+    path.dirname(resolvedPath),
+    packmindCliHexa,
+  );
   if (!configDir) {
     logErrorConsole(
       'Not inside a Packmind project. No packmind.json found in any parent directory.',
@@ -46,7 +53,7 @@ export async function playbookUnstageHandler(
     return;
   }
   const normalizedFilePath = normalizePath(
-    path.relative(configDir, absolutePath),
+    path.relative(configDir, resolvedPath),
   );
 
   const matchingEntries = playbookLocalRepository
