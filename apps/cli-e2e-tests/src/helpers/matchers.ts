@@ -1,3 +1,19 @@
+interface CustomMatchers<R = unknown> {
+  toMatchOutput(expected: string | Array<string>): R;
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
+    interface Expect extends CustomMatchers {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
+    interface Matchers<R> extends CustomMatchers<R> {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
+    interface InverseAsymmetricMatchers extends CustomMatchers {}
+  }
+}
+
 // eslint-disable-next-line no-control-regex
 const stripAnsi = (str: string) => str.replace(/\x1B\[[0-9;]*[mGKHF]/g, '');
 
