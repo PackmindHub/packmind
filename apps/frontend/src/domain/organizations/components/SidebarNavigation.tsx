@@ -251,6 +251,128 @@ export const SidebarNavigation: React.FunctionComponent<
         width={sidebarWidth}
         logo={!isCollapsed}
         logoAction={<SidebarCollapseToggle />}
+        footerNav={
+          <>
+            <PMSeparator borderColor={'border.tertiary'} />
+            {isCollapsed ? (
+              <PMBox display="flex" justifyContent="center" py={2}>
+                <PMMenu.Root positioning={{ placement: 'right-start' }}>
+                  <PMMenu.Trigger asChild>
+                    <PMBox
+                      as="button"
+                      cursor="pointer"
+                      data-testid={
+                        SidebarAccountsMenuDataTestIds.OpenSubMenuCTA
+                      }
+                    >
+                      <PMAvatar.Root
+                        size="xs"
+                        backgroundColor="background.secondary"
+                        color="text.primary"
+                      >
+                        <PMAvatar.Fallback name={user?.email} />
+                      </PMAvatar.Root>
+                    </PMBox>
+                  </PMMenu.Trigger>
+                  <PMPortal>
+                    <PMMenu.Positioner>
+                      <PMMenu.Content>
+                        <PMMenu.Item
+                          value="integrations"
+                          onClick={() => navigate(routes.org.toSetup(orgSlug))}
+                          cursor="pointer"
+                          data-testid={
+                            SidebarNavigationDataTestId.IntegrationsLink
+                          }
+                        >
+                          <PMIcon marginRight={2}>
+                            <LuWrench />
+                          </PMIcon>
+                          Integrations
+                        </PMMenu.Item>
+                        <PMMenu.Item
+                          value="help"
+                          onClick={() =>
+                            window.open('https://docs.packmind.com', '_blank')
+                          }
+                          cursor="pointer"
+                        >
+                          <PMIcon marginRight={2}>
+                            <LuCircleHelp />
+                          </PMIcon>
+                          Help
+                        </PMMenu.Item>
+                        <PMMenu.Separator borderColor="border.tertiary" />
+                        <PMMenu.Item
+                          value="sign-out"
+                          onClick={handleSignOut}
+                          cursor="pointer"
+                          data-testid={
+                            SidebarAccountsMenuDataTestIds.SignoutCTA
+                          }
+                        >
+                          <PMIcon marginRight={2}>
+                            <LuLogOut />
+                          </PMIcon>
+                          Log out
+                        </PMMenu.Item>
+                      </PMMenu.Content>
+                    </PMMenu.Positioner>
+                  </PMPortal>
+                </PMMenu.Root>
+              </PMBox>
+            ) : (
+              <PMBox paddingBottom={2}>
+                <PMBox pl={2} pr={4} py={1}>
+                  <PMText
+                    fontSize="10px"
+                    fontWeight="semibold"
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    color="faded"
+                  >
+                    You
+                  </PMText>
+                </PMBox>
+                <PMVerticalNavSection
+                  navEntries={[
+                    <SidebarNavigationLink
+                      key="setup"
+                      url={routes.org.toSetup(orgSlug)}
+                      label="Integrations"
+                      icon={<LuWrench />}
+                      data-testid={SidebarNavigationDataTestId.IntegrationsLink}
+                    />,
+                    <SidebarHelpMenu key="help" />,
+                    <PMBox
+                      key="logout"
+                      as="button"
+                      display="flex"
+                      alignItems="center"
+                      w="full"
+                      px={2}
+                      py={1}
+                      fontSize="xs"
+                      borderRadius="sm"
+                      cursor="pointer"
+                      color="text.secondary"
+                      _hover={{ bg: 'blue.800', color: 'text.primary' }}
+                      transition="background-color 0.15s"
+                      textAlign="left"
+                      onClick={handleSignOut}
+                      data-testid={SidebarAccountsMenuDataTestIds.SignoutCTA}
+                    >
+                      <PMIcon mr={2}>
+                        <LuLogOut />
+                      </PMIcon>
+                      Log out
+                    </PMBox>,
+                  ]}
+                />
+              </PMBox>
+            )}
+          </>
+        }
       >
         <PMBox display="flex" flexDirection="column" flex={1} minH={0} w="full">
           {/* Spaces -- scrollable */}
@@ -314,122 +436,6 @@ export const SidebarNavigation: React.FunctionComponent<
               />
             )}
           </PMBox>
-
-          {/* Bottom section -- pinned at bottom */}
-          <PMSeparator borderColor={'border.tertiary'} />
-          {isCollapsed ? (
-            <PMBox display="flex" justifyContent="center" py={2}>
-              <PMMenu.Root positioning={{ placement: 'right-start' }}>
-                <PMMenu.Trigger asChild>
-                  <PMBox
-                    as="button"
-                    cursor="pointer"
-                    data-testid={SidebarAccountsMenuDataTestIds.OpenSubMenuCTA}
-                  >
-                    <PMAvatar.Root
-                      size="xs"
-                      backgroundColor="background.secondary"
-                      color="text.primary"
-                    >
-                      <PMAvatar.Fallback name={user?.email} />
-                    </PMAvatar.Root>
-                  </PMBox>
-                </PMMenu.Trigger>
-                <PMPortal>
-                  <PMMenu.Positioner>
-                    <PMMenu.Content>
-                      <PMMenu.Item
-                        value="integrations"
-                        onClick={() => navigate(routes.org.toSetup(orgSlug))}
-                        cursor="pointer"
-                        data-testid={
-                          SidebarNavigationDataTestId.IntegrationsLink
-                        }
-                      >
-                        <PMIcon marginRight={2}>
-                          <LuWrench />
-                        </PMIcon>
-                        Integrations
-                      </PMMenu.Item>
-                      <PMMenu.Item
-                        value="help"
-                        onClick={() =>
-                          window.open('https://docs.packmind.com', '_blank')
-                        }
-                        cursor="pointer"
-                      >
-                        <PMIcon marginRight={2}>
-                          <LuCircleHelp />
-                        </PMIcon>
-                        Help
-                      </PMMenu.Item>
-                      <PMMenu.Separator borderColor="border.tertiary" />
-                      <PMMenu.Item
-                        value="sign-out"
-                        onClick={handleSignOut}
-                        cursor="pointer"
-                        data-testid={SidebarAccountsMenuDataTestIds.SignoutCTA}
-                      >
-                        <PMIcon marginRight={2}>
-                          <LuLogOut />
-                        </PMIcon>
-                        Log out
-                      </PMMenu.Item>
-                    </PMMenu.Content>
-                  </PMMenu.Positioner>
-                </PMPortal>
-              </PMMenu.Root>
-            </PMBox>
-          ) : (
-            <PMBox>
-              <PMBox pl={2} pr={4} py={1}>
-                <PMText
-                  fontSize="10px"
-                  fontWeight="semibold"
-                  textTransform="uppercase"
-                  letterSpacing="wider"
-                  color="faded"
-                >
-                  You
-                </PMText>
-              </PMBox>
-              <PMVerticalNavSection
-                navEntries={[
-                  <SidebarNavigationLink
-                    key="setup"
-                    url={routes.org.toSetup(orgSlug)}
-                    label="Integrations"
-                    icon={<LuWrench />}
-                    data-testid={SidebarNavigationDataTestId.IntegrationsLink}
-                  />,
-                  <SidebarHelpMenu key="help" />,
-                  <PMBox
-                    key="logout"
-                    as="button"
-                    display="flex"
-                    alignItems="center"
-                    w="full"
-                    px={2}
-                    py={1}
-                    fontSize="xs"
-                    borderRadius="sm"
-                    cursor="pointer"
-                    color="text.secondary"
-                    _hover={{ bg: 'blue.800', color: 'text.primary' }}
-                    transition="background-color 0.15s"
-                    textAlign="left"
-                    onClick={handleSignOut}
-                    data-testid={SidebarAccountsMenuDataTestIds.SignoutCTA}
-                  >
-                    <PMIcon mr={2}>
-                      <LuLogOut />
-                    </PMIcon>
-                    Log out
-                  </PMBox>,
-                ]}
-              />
-            </PMBox>
-          )}
         </PMBox>
       </PMVerticalNav>
 
