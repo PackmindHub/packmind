@@ -1,6 +1,7 @@
 import {
   describeWithUserSignedUp,
   readFile,
+  RunCliResult,
   setupGitRepo,
   updateFile,
   UserSignedUpContext,
@@ -101,6 +102,29 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
         );
       });
 
+      describe('when undoing the change', () => {
+        let result: RunCliResult;
+
+        beforeEach(async () => {
+          result = await context.runCli(
+            `playbook unstage ${commandPathInTarget}`,
+          );
+        });
+
+        it('succeeds', () => {
+          expect(result.returnCode).toEqual(0);
+        });
+
+        it('does appear as unchanged in the status', async () => {
+          const result = await context.runCli('playbook status');
+
+          expect(result.stdout).toMatchOutput([
+            'Changes not tracked:',
+            `Command "${command.name}" ${commandPathInTarget}`,
+          ]);
+        });
+      });
+
       describe('when submitting the changes', () => {
         beforeEach(async () => {
           await context.runCli(`playbook submit -m "Some change"`);
@@ -153,6 +177,29 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
         expect(result.stdout).toMatchOutput(
           `Command "${command.name}" (updated) in space "Global" ${commandPath}`,
         );
+      });
+
+      describe('when undoing the change', () => {
+        let result: RunCliResult;
+
+        beforeEach(async () => {
+          result = await context.runCli(`playbook unstage ${commandPath}`, {
+            cwd,
+          });
+        });
+
+        it('succeeds', () => {
+          expect(result.returnCode).toEqual(0);
+        });
+
+        it('does appear as unchanged in the status', async () => {
+          const result = await context.runCli('playbook status', { cwd });
+
+          expect(result.stdout).toMatchOutput([
+            'Changes not tracked:',
+            `Command "${command.name}" ${commandPath}`,
+          ]);
+        });
       });
 
       describe('when submitting the changes', () => {

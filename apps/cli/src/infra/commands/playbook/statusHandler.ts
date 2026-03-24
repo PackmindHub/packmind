@@ -151,6 +151,15 @@ export async function playbookStatusHandler(
     if (!configDirs.has(rel)) configDirs.add(rel);
   }
 
+  // Also scan descendant targets (sub-targets below cwd)
+  const descendantDirs = await packmindCliHexa.findDescendantConfigs(cwd);
+  for (const descendantDir of descendantDirs) {
+    const rel = gitRoot
+      ? normalizePath(path.relative(gitRoot, descendantDir))
+      : normalizePath(path.relative(cwd, descendantDir));
+    if (!configDirs.has(rel)) configDirs.add(rel);
+  }
+
   for (const configDirKey of configDirs) {
     let projectDir: string | null;
     if (configDirKey === '__cwd__') {
