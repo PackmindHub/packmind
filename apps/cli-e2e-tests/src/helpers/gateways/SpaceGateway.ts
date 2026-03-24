@@ -11,4 +11,12 @@ export class SpaceGateway implements ISpaceGateway {
       `/api/v0/organizations/${organizationId}/spaces/global`,
     );
   };
+
+  create = async (params: { name: string }): Promise<Space> => {
+    const organizationId = this.httpClient.getOrganizationId();
+    return this.httpClient.request<Space>(
+      `/api/v0/organizations/${organizationId}/spaces-management`,
+      { method: 'POST', body: params },
+    );
+  };
 }
