@@ -17,7 +17,7 @@ Change Proposals enable users to propose modifications to distributed artifacts 
 There are two ways to submit change proposals:
 
 1. **Use the `packmind-update-playbook` skill** — the skill analyzes your coding session, identifies relevant changes, and submits proposals on your behalf automatically. This is the recommended approach.
-2. **Edit local files manually and use the CLI** — modify distributed artifact files directly, then use `packmind-cli diff` commands to preview and submit your changes.
+2. **Edit local files manually and use the CLI** — modify distributed artifact files directly, then use `packmind-cli playbook` commands to stage and submit changes as a batch, or `packmind-cli diff` commands to preview and submit individual changes.
 
 ## Submitting Changes with the `packmind-update-playbook` Skill
 
@@ -48,7 +48,91 @@ The skill activates automatically when you use phrases like "update the playbook
 
 Local changes must be made on files deployed by Packmind during distribution — these include files in the `.packmind/` directory as well as agent-specific directories such as `.claude/`, `.github/`, `.cursor/`, and others depending on your enabled AI agents (see [Distribute artifacts](/governance/distribution) for the full list).
 
-### View local changes
+There are two CLI workflows for submitting changes:
+
+1. **Playbook staging workflow (recommended)** — stage multiple changes, review them, and submit as a batch
+2. **Direct diff submission** — preview and submit individual changes immediately
+
+### Staging and submitting with `playbook`
+
+The `playbook` commands let you stage multiple changes locally, review what will be submitted, and then submit everything as a single batch of proposals.
+
+#### Stage a change
+
+Use `playbook add` to stage a local modification, addition, or update for submission:
+
+```bash
+packmind-cli playbook add .claude/rules/naming-conventions.md
+```
+
+For skills, point to the skill directory:
+
+```bash
+packmind-cli playbook add .claude/skills/my-skill/
+```
+
+If your organization has multiple spaces, use the `--space` flag to target a specific space:
+
+```bash
+packmind-cli playbook add .claude/rules/naming-conventions.md --space "my-space"
+```
+
+Sample output:
+
+```
+Staged "Naming Conventions" (standard, updated) to playbook in space "my-space"
+```
+
+#### Stage a removal
+
+Use `playbook rm` to stage the removal of an artifact:
+
+```bash
+packmind-cli playbook rm .claude/commands/old-workflow.md
+```
+
+#### Review staged changes
+
+Use `playbook status` to see what is currently staged and what local changes are untracked:
+
+```bash
+packmind-cli playbook status
+```
+
+Sample output:
+
+```
+Staged changes:
+  updated  .claude/rules/naming-conventions.md (standard)
+  removed  .claude/commands/old-workflow.md (command)
+
+Untracked changes:
+  modified .claude/rules/error-handling.md (standard)
+```
+
+#### Unstage a change
+
+Use `playbook unstage` to remove a change from staging without discarding the local edit:
+
+```bash
+packmind-cli playbook unstage .claude/rules/naming-conventions.md
+```
+
+#### Submit staged changes
+
+Use `playbook submit` to submit all staged changes as change proposals:
+
+```bash
+packmind-cli playbook submit -m "Updated naming conventions for API endpoints"
+```
+
+If you omit the `-m` flag in interactive mode, an editor will open for you to write the message.
+
+### Direct submission with `diff`
+
+For submitting individual changes without staging, use the `diff` commands:
+
+#### View local changes
 
 To see what local changes haven't been submitted yet:
 
@@ -56,7 +140,7 @@ To see what local changes haven't been submitted yet:
 packmind-cli diff
 ```
 
-### Submit changes
+#### Submit changes
 
 To submit your local changes as a proposal with a justification message:
 
@@ -73,7 +157,7 @@ The message is required when submitting and has a maximum length of 1024 charact
   versions, reapply your changes, and submit again.
 </Tip>
 
-### Include already-submitted changes
+#### Include already-submitted changes
 
 To view all local changes, including those that have already been submitted:
 
@@ -81,7 +165,7 @@ To view all local changes, including those that have already been submitted:
 packmind-cli diff --include-submitted
 ```
 
-### Add new artifacts
+#### Add new artifacts
 
 To submit a **new** artifact (standard, command, or skill) as a change proposal:
 
@@ -97,13 +181,13 @@ The file must be located in a recognized artifact directory:
 | **Standards** | `.claude/rules/`, `.cursor/rules/`, `.github/instructions/`, `.continue/rules/`, `.packmind/standards/`   |
 | **Skills**    | `.claude/skills/`, `.cursor/skills/`, `.github/skills/`                                                   |
 
-#### File format requirements
+**File format requirements:**
 
 - **Commands**: File must not be empty. Frontmatter with `name:` is optional.
 - **Standards**: Must contain a heading and at least one rule (bullet point).
 - **Skills**: Path must point to a directory containing a `SKILL.md` with valid frontmatter (`name`, `description`) and a non-empty body.
 
-#### When it won't work
+**When it won't work:**
 
 The command will fail if:
 
@@ -111,13 +195,13 @@ The command will fail if:
 - The path points to a directory instead of a file (for commands and standards)
 - The file content is invalid (empty command, standard without rules, skill missing `SKILL.md`)
 
-#### Message flag
+**Message flag:**
 
 The `-m "message"` flag is required in non-interactive or CI mode. If omitted in interactive mode, an editor will open. Maximum length is 1024 characters.
 
 On success, the artifact is submitted as a change proposal visible in the **Review changes** UI, with a summary logged to the console.
 
-### Remove artifacts
+#### Remove artifacts
 
 To suggest removing an artifact (standard, command, or skill) from packages:
 
@@ -127,20 +211,20 @@ packmind-cli diff remove <path> -m "Reason for removing the artifact"
 
 The file must be located in a recognized artifact directory (same as for adding new artifacts). The `-m` flag follows the same rules as other diff commands.
 
-#### What happens on success
+**What happens on success:**
 
 - The file is deleted locally
 - A removal proposal is created and appears in the **Review changes** UI
 
-#### When it won't work
+**When it won't work:**
 
 The command will fail if the artifact was not deployed by Packmind (error: _"This {type} does not come from Packmind"_).
 
-#### Reviewing removal proposals
+**Reviewing removal proposals:**
 
 Removal proposals appear alongside other change proposals in the **Review changes** UI. The reviewer can either dismiss the proposal or choose **Remove from packages**. When removing, a dialog lets the reviewer select which packages to remove the artifact from, showing which packages are affected before applying the change.
 
-#### Conflicts with removal proposals
+**Conflicts with removal proposals:**
 
 If someone submits a modification and someone else submits a removal for the same artifact, both proposals appear in the review UI. Accepted removal proposals block conflicting proposals on the same artifact.
 

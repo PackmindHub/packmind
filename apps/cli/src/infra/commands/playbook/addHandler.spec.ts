@@ -1134,7 +1134,6 @@ describe('playbookAddHandler', () => {
   describe('configDir in playbook entries', () => {
     describe('when adding from a subdirectory target', () => {
       beforeEach(() => {
-        mockGetCwd.mockReturnValue('/project/apps/frontend');
         (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
           (dir: string) => Promise.resolve(dir === '/project/apps/frontend'),
         );
@@ -1152,7 +1151,7 @@ describe('playbookAddHandler', () => {
       });
 
       it('stores configDir as relative path from git root to targetDir', async () => {
-        await playbookAddHandler(buildDeps());
+        await playbookAddHandler(buildDeps({ cwd: '/project/apps/frontend' }));
 
         const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
         expect(callArg.configDir).toBe('apps/frontend');

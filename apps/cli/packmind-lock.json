@@ -1,13 +1,19 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["cli"],
-  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-16T14:26:19.666Z",
-  "cliVersion": "0.22.0",
+  "packageSlugs": ["@global/cli"],
+  "agents": [
+    "agents_md",
+    "claude",
+    "copilot",
+    "cursor",
+    "gitlab_duo",
+    "packmind"
+  ],
+  "installedAt": "2026-03-24T09:00:25.461Z",
   "artifacts": {
     "standard:cli-packmindgateway-method-implementation": {
-      "type": "standard",
       "name": "CLI Gateway Implementation",
+      "type": "standard",
       "id": "0c29c0e5-16d3-4dcd-801c-6efcf599cfe0",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -32,8 +38,8 @@
       ]
     },
     "standard:cli-command-structure": {
-      "type": "standard",
       "name": "CLI Command Structure",
+      "type": "standard",
       "id": "560cfcf7-b91e-4a1f-8390-4646dceee7c2",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
@@ -58,8 +64,8 @@
       ]
     },
     "standard:cli-use-case-structure": {
-      "type": "standard",
       "name": "CLI Use Case Structure",
+      "type": "standard",
       "id": "7048ab48-07e3-4dcc-a492-d581a5bbf4e2",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
