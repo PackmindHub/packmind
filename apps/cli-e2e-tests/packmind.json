@@ -1,0 +1,5 @@
+{
+  "packages": {
+    "@global/cli-e2e": "*"
+  }
+}

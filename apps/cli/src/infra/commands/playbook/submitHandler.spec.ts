@@ -319,6 +319,26 @@ describe('playbookSubmitHandler', () => {
         }),
       );
     });
+
+    describe('when entry has no targetId but lock file does', () => {
+      it('uses the lock file targetId as fallback', async () => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({ changeType: 'created', targetId: undefined }),
+        ]);
+
+        await playbookSubmitHandler(buildDeps({ message: 'create std' }));
+
+        expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            proposals: expect.arrayContaining([
+              expect.objectContaining({
+                targetId: 'target-456',
+              }),
+            ]),
+          }),
+        );
+      });
+    });
   });
 
   describe('created command', () => {

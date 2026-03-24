@@ -63,14 +63,21 @@ function findArtifactForFile(
   return undefined;
 }
 
-function groupStagedChanges(changes: PlaybookChangeEntry[]): GroupedChange[] {
+function groupStagedChanges(
+  changes: PlaybookChangeEntry[],
+  cwd: string,
+  gitRoot: string | null,
+): GroupedChange[] {
   const groups = new Map<string, GroupedChange>();
   for (const change of changes) {
     const changeType = change.changeType ?? 'updated';
     const key = `${change.artifactType}:${change.artifactName}:${changeType}`;
-    const displayPath = change.configDir
+    const rootRelativePath = change.configDir
       ? `${change.configDir}/${change.filePath}`
       : change.filePath;
+    const displayPath = gitRoot
+      ? normalizePath(path.relative(cwd, path.join(gitRoot, rootRelativePath)))
+      : rootRelativePath;
     const existing = groups.get(key);
     if (existing) {
       existing.filePaths.push(displayPath);
@@ -162,9 +169,6 @@ export async function playbookStatusHandler(
       packmindCliHexa.getPackmindGateway(),
       lockFile,
     );
-    const configDirPrefix =
-      configDirKey && configDirKey !== '__cwd__' ? configDirKey + '/' : '';
-
     // Build staged path set for this target
     const targetStagedPaths = new Set(
       (stagedByConfigDir.get(configDirKey) ?? []).map((c) =>
@@ -187,7 +191,9 @@ export async function playbookStatusHandler(
         continue;
       }
 
-      const displayPath = configDirPrefix + deployedFile.path;
+      const displayPath = normalizePath(
+        path.relative(cwd, path.join(projectDir, deployedFile.path)),
+      );
       let localContent: string;
       try {
         localContent = readFile(path.join(projectDir, deployedFile.path));
@@ -226,7 +232,7 @@ export async function playbookStatusHandler(
     }
   }
 
-  const groupedStaged = groupStagedChanges(stagedChanges);
+  const groupedStaged = groupStagedChanges(stagedChanges, cwd, gitRoot);
   const groupedUntracked = groupUntrackedChanges(untrackedChanges);
 
   if (groupedStaged.length > 0) {

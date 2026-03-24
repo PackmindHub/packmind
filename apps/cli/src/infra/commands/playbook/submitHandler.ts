@@ -735,6 +735,12 @@ export async function playbookSubmitHandler(
   for (const entry of changes) {
     const ctx = await getTargetContext(entry);
 
+    // Fall back to the lock file's targetId for entries staged before the fix
+    // where resolveDeployedContext couldn't resolve it (e.g. no git provider configured).
+    if (!entry.targetId && ctx.lockFile?.targetId) {
+      entry.targetId = ctx.lockFile.targetId;
+    }
+
     if (entry.changeType === 'created') {
       switch (entry.artifactType) {
         case 'standard':

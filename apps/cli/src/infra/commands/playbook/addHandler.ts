@@ -94,7 +94,7 @@ async function tryStageRemovedFromLockFile(
     content: '',
     spaceId: lockEntry.spaceId,
     spaceName,
-    targetId: deployedContext?.targetId,
+    targetId: deployedContext?.targetId ?? lockFile.targetId,
     addedAt: new Date().toISOString(),
   });
   const spaceInfo = spaceName ? ` in space "${spaceName}"` : '';
@@ -288,7 +288,10 @@ export async function playbookAddHandler(
     targetDir,
   );
 
-  const targetId = deployedContext?.targetId;
+  // Prefer the targetId from the deployed context, but fall back to the lock file's
+  // targetId (written during install) when the git-provider lookup doesn't resolve
+  // a target (e.g. no GitHub integration configured).
+  const targetId = deployedContext?.targetId ?? earlyLockFile?.targetId;
 
   // Deployed content and lock file paths are relative to the project directory
   // (targetDir), not the git root. Use targetDir-relative paths for all comparisons.
