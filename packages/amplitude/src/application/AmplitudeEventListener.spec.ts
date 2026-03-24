@@ -17,6 +17,7 @@ import {
   ChangeProposalSubmittedEvent,
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
+  SpaceCreatedEvent,
   createUserId,
   createOrganizationId,
   createRecipeId,
@@ -514,6 +515,33 @@ describe('AmplitudeEventListener', () => {
           itemType: 'skill',
           itemId: 'skill-001',
           changeType: 'updateSkillName',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('SpaceCreatedEvent', () => {
+    it('tracks space_created event with correct payload', async () => {
+      const event = new SpaceCreatedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        spaceName: 'My Space',
+        spaceSlug: 'my-space',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'space_created',
+        {
+          spaceName: 'My Space',
+          spaceSlug: 'my-space',
           source: 'ui',
         },
       );

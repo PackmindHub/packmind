@@ -25,6 +25,7 @@ import {
   ChangeProposalSubmittedEvent,
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
+  SpaceCreatedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
@@ -70,6 +71,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     );
     this.subscribe(ChangeProposalAcceptedEvent, this.onChangeProposalAccepted);
     this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
+    this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
@@ -343,5 +345,12 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
         changeType: payload.changeType,
       }),
     );
+  };
+
+  private onSpaceCreated = async (event: SpaceCreatedEvent): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'space_created', (payload) => ({
+      spaceName: payload.spaceName,
+      spaceSlug: payload.spaceSlug,
+    }));
   };
 }
