@@ -50,7 +50,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
       deleteStandard: jest.fn(),
       listStandardsBySpace: jest.fn(),
       listStandardsByUser: jest.fn(),
-      listStandardsByOrganizationAndUser: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
 
     // Mock StandardVersionService

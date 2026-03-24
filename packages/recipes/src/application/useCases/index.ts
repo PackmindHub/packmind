@@ -6,7 +6,6 @@ export { UpdateRecipeFromUIUsecase } from './updateRecipeFromUI/updateRecipeFrom
 export { DeleteRecipeUsecase } from './deleteRecipe/deleteRecipe.usecase';
 export { GetRecipeByIdUsecase } from './getRecipeById/getRecipeById.usecase';
 export { FindRecipeBySlugUsecase } from './findRecipeBySlug/findRecipeBySlug.usecase';
-export { ListRecipesByOrganizationUsecase } from './listRecipesByOrganization/listRecipesByOrganization.usecase';
 export { ListRecipesBySpaceUsecase } from './listRecipesBySpace/listRecipesBySpace.usecase';
 export { ListRecipeVersionsUsecase } from './listRecipeVersions/listRecipeVersions.usecase';
 export { GetRecipeVersionUsecase } from './getRecipeVersion/getRecipeVersion.usecase';

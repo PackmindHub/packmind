@@ -13,12 +13,7 @@ export interface IRecipeRepository extends IRepository<Recipe> {
     organizationId: OrganizationId,
     opts?: QueryOption,
   ): Promise<Recipe | null>;
-  findByOrganizationId(organizationId: OrganizationId): Promise<Recipe[]>;
   findByUserId(userId: UserId): Promise<Recipe[]>;
-  findByOrganizationAndUser(
-    organizationId: OrganizationId,
-    userId: UserId,
-  ): Promise<Recipe[]>;
 
   findBySpaceId(
     spaceId: SpaceId,

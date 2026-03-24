@@ -78,11 +78,6 @@ export interface IRecipesPort {
   ): Promise<Recipe | null>;
 
   /**
-   * List all recipes for an organization
-   */
-  listRecipesByOrganization(organizationId: OrganizationId): Promise<Recipe[]>;
-
-  /**
    * List recipes by space (public API - with access control)
    */
   listRecipesBySpace(command: ListRecipesBySpaceCommand): Promise<Recipe[]>;

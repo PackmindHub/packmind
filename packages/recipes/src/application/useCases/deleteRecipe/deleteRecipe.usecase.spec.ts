@@ -44,7 +44,6 @@ describe('DeleteRecipeUsecase', () => {
     recipeService = {
       addRecipe: jest.fn(),
       publishToGit: jest.fn(),
-      listRecipesByOrganization: jest.fn(),
       getRecipeById: jest.fn(),
       updateRecipe: jest.fn(),
       findRecipeBySlug: jest.fn(),

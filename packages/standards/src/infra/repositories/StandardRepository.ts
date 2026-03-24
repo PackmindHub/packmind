@@ -103,64 +103,6 @@ export class StandardRepository
     }
   }
 
-  async findByOrganizationId(
-    organizationId: OrganizationId,
-  ): Promise<Standard[]> {
-    this.logger.warn(
-      'findByOrganizationId is deprecated - standards are now space-scoped',
-      {
-        organizationId,
-      },
-    );
-    // Standards no longer have organizationId - they are space-scoped
-    // This method is deprecated and will return an empty array
-    return [];
-
-    // Old implementation (no longer works after organizationId column was dropped):
-    /*
-    try {
-      // First, get all standards for the organization
-      const standards = await this.repository.find({
-        where: { organizationId },
-        relations: ['gitCommit'],
-      });
-
-      // For each standard, get the latest version to retrieve scope
-      const standardsWithScope = await Promise.all(
-        standards.map(async (standard) => {
-          // Get the latest version for this standard
-          const latestVersion = await this.repository.manager
-            .getRepository<StandardVersion>(StandardVersionSchema)
-            .findOne({
-              where: { standardId: standard.id },
-              order: { version: 'DESC' },
-            });
-
-          return {
-            ...standard,
-            scope: latestVersion?.scope ?? standard.scope,
-          };
-        }),
-      );
-
-      this.logger.info('Standards with scope found by organization ID', {
-        organizationId,
-        count: standardsWithScope.length,
-      });
-      return standardsWithScope;
-    } catch (error) {
-      this.logger.error(
-        'Failed to find standards with scope by organization ID',
-        {
-          organizationId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
-    */
-  }
-
   async findBySpaceId(
     spaceId: SpaceId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
@@ -230,46 +172,5 @@ export class StandardRepository
       });
       throw error;
     }
-  }
-
-  async findByOrganizationAndUser(
-    organizationId: OrganizationId,
-    userId: UserId,
-  ): Promise<Standard[]> {
-    this.logger.warn(
-      'findByOrganizationAndUser is deprecated - standards are now space-scoped',
-      {
-        organizationId,
-        userId,
-      },
-    );
-    // Standards no longer have organizationId - they are space-scoped
-    // This method is deprecated and will return an empty array
-    return [];
-
-    // Old implementation (no longer works after organizationId column was dropped):
-    /*
-    try {
-      const standards = await this.repository.find({
-        where: { organizationId, userId },
-      });
-      this.logger.info('Standards found by organization and user ID', {
-        organizationId,
-        userId,
-        count: standards.length,
-      });
-      return standards;
-    } catch (error) {
-      this.logger.error(
-        'Failed to find standards by organization and user ID',
-        {
-          organizationId,
-          userId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
-    */
   }
 }

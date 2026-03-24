@@ -76,7 +76,6 @@ describe('GetDeploymentOverviewUseCase', () => {
     } as jest.Mocked<IDistributionRepository>;
 
     recipesPort = {
-      listRecipesByOrganization: jest.fn(),
       listRecipesBySpace: jest.fn(),
       getRecipeVersionById: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;

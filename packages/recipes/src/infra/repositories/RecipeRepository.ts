@@ -85,38 +85,6 @@ export class RecipeRepository
     }
   }
 
-  async findByOrganizationId(
-    organizationId: OrganizationId,
-  ): Promise<Recipe[]> {
-    this.logger.warn(
-      'findByOrganizationId is deprecated - recipes are now space-scoped',
-      {
-        organizationId,
-      },
-    );
-    // Recipes no longer have organizationId - they are space-scoped
-    // This method is deprecated and will return an empty array
-    return [];
-
-    // Old implementation (no longer works after organizationId column was dropped):
-    /*
-    try {
-      const recipes = await this.repository.find({ where: { organizationId } });
-      this.logger.info('Recipes found by organization ID', {
-        organizationId,
-        count: recipes.length,
-      });
-      return recipes;
-    } catch (error) {
-      this.logger.error('Failed to find recipes by organization ID', {
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-    */
-  }
-
   async findByUserId(userId: UserId): Promise<Recipe[]> {
     this.logger.info('Finding recipes by user ID', { userId });
 
@@ -134,44 +102,6 @@ export class RecipeRepository
       });
       throw error;
     }
-  }
-
-  async findByOrganizationAndUser(
-    organizationId: OrganizationId,
-    userId: UserId,
-  ): Promise<Recipe[]> {
-    this.logger.warn(
-      'findByOrganizationAndUser is deprecated - recipes are now space-scoped',
-      {
-        organizationId,
-        userId,
-      },
-    );
-    // Recipes no longer have organizationId - they are space-scoped
-    // This method is deprecated and will return an empty array
-    return [];
-
-    // Old implementation (no longer works after organizationId column was dropped):
-    /*
-    try {
-      const recipes = await this.repository.find({
-        where: { organizationId, userId },
-      });
-      this.logger.info('Recipes found by organization and user ID', {
-        organizationId,
-        userId,
-        count: recipes.length,
-      });
-      return recipes;
-    } catch (error) {
-      this.logger.error('Failed to find recipes by organization and user ID', {
-        organizationId,
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-    */
   }
 
   async findBySpaceId(

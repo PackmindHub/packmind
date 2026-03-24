@@ -49,27 +49,6 @@ describe('RecipeRepository', () => {
 
   afterAll(() => fixture.destroy());
 
-  it('findByOrganizationId is deprecated and returns empty array', async () => {
-    const recipe = recipeFactory();
-    await recipeRepository.add(recipe);
-
-    const organizationId = createOrganizationId(uuidv4());
-    expect(
-      await recipeRepository.findByOrganizationId(organizationId),
-    ).toStrictEqual([]);
-  });
-
-  it('findByOrganizationId is deprecated - returns empty array even with recipes', async () => {
-    const organizationId = createOrganizationId(uuidv4());
-    await recipeRepository.add(recipeFactory({ slug: 'recipe-1' }));
-    await recipeRepository.add(recipeFactory({ slug: 'recipe-2' }));
-    await recipeRepository.add(recipeFactory({ slug: 'recipe-3' }));
-
-    expect(
-      await recipeRepository.findByOrganizationId(organizationId),
-    ).toHaveLength(0);
-  });
-
   it('can find a recipe by id', async () => {
     const recipe = recipeFactory();
     await recipeRepository.add(recipe);

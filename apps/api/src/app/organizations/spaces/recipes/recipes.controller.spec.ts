@@ -20,7 +20,6 @@ describe('OrganizationsSpacesRecipesController', () => {
 
   beforeEach(() => {
     recipesService = {
-      getRecipesByOrganization: jest.fn(),
       getRecipesBySpace: jest.fn(),
       getRecipeById: jest.fn(),
       getRecipeVersionsById: jest.fn(),

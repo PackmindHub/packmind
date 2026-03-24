@@ -29,10 +29,8 @@ describe('StandardService', () => {
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
-      findByOrganizationId: jest.fn(),
       findBySpaceId: jest.fn(),
       findByUserId: jest.fn(),
-      findByOrganizationAndUser: jest.fn(),
     };
 
     stubbedLogger = stubLogger();
@@ -370,39 +368,6 @@ describe('StandardService', () => {
     });
 
     it('returns standards for the specified user', () => {
-      expect(result).toEqual(standards);
-    });
-  });
-
-  describe('listStandardsByOrganizationAndUser', () => {
-    let organizationId: OrganizationId;
-    let userId: UserId;
-    let standards: Standard[];
-    let result: Standard[];
-
-    beforeEach(async () => {
-      organizationId = createOrganizationId(uuidv4());
-      userId = createUserId(uuidv4());
-      standards = [standardFactory({ userId }), standardFactory({ userId })];
-
-      standardRepository.findByOrganizationAndUser = jest
-        .fn()
-        .mockResolvedValue(standards);
-
-      result = await standardService.listStandardsByOrganizationAndUser(
-        organizationId,
-        userId,
-      );
-    });
-
-    it('calls repository with correct organizationId and userId', () => {
-      expect(standardRepository.findByOrganizationAndUser).toHaveBeenCalledWith(
-        organizationId,
-        userId,
-      );
-    });
-
-    it('returns standards for the specified organization and user', () => {
       expect(result).toEqual(standards);
     });
   });
