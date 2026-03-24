@@ -472,6 +472,21 @@ function buildUpdatedSkillProposals(
         },
       });
     }
+
+    // Check for permission changes (independent of content changes)
+    const localPermissions = localFile?.permissions ?? 'rw-r--r--';
+    const deployedPermissions = deployed.skillFilePermissions ?? 'read';
+    if (localFile && localPermissions !== deployedPermissions) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateSkillFilePermissions,
+        payload: {
+          targetId: deployed.skillFileId,
+          oldValue: deployedPermissions,
+          newValue: localPermissions,
+        },
+      });
+    }
   }
 
   // New helper files (exist locally but not deployed)

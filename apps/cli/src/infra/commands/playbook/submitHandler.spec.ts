@@ -1203,6 +1203,105 @@ describe('playbookSubmitHandler', () => {
     });
   });
 
+  describe('updated skill with changed helper file permissions', () => {
+    const DEPLOYED_SKILL_MD = [
+      '---',
+      'name: My Skill',
+      'description: A useful skill',
+      '---',
+      'Do something',
+    ].join('\n');
+
+    const SKILL_CONTENT =
+      'name: My Skill\ndescription: A useful skill\nprompt: Do something\nfiles:\n  - path: helper.ts\n    content: same content\n    permissions: rwxr-xr-x\n    isBase64: false\n';
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+              { path: '.claude/skills/my-skill/helper.ts', agent: 'claude' },
+            ],
+          },
+        },
+      });
+
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: DEPLOYED_SKILL_MD,
+            },
+            {
+              path: '.claude/skills/my-skill/helper.ts',
+              content: 'same content',
+              skillFileId: 'helper-file-id',
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          filePath: '.claude/skills/my-skill',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          codingAgent: 'claude',
+          changeType: 'updated',
+          content: SKILL_CONTENT,
+        }),
+      ]);
+    });
+
+    it('generates updateSkillFilePermissions proposal', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const permProposal = batchCall.proposals.find(
+        (p: { type: ChangeProposalType }) =>
+          p.type === ChangeProposalType.updateSkillFilePermissions,
+      );
+      expect(permProposal).toBeDefined();
+      expect(permProposal.payload).toEqual({
+        targetId: 'helper-file-id',
+        oldValue: 'rw-r--r--',
+        newValue: 'rwxr-xr-x',
+      });
+    });
+
+    it('does not generate updateSkillFileContent when only permissions changed', async () => {
+      await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+      const batchCall =
+        mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+      const contentProposal = batchCall.proposals.find(
+        (p: { type: ChangeProposalType }) =>
+          p.type === ChangeProposalType.updateSkillFileContent,
+      );
+      expect(contentProposal).toBeUndefined();
+    });
+  });
+
   describe('updated skill without deployed SKILL.md content', () => {
     const SKILL_CONTENT =
       'name: My Skill\ndescription: A useful skill\nprompt: Do something\n';
