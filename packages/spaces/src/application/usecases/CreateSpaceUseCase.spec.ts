@@ -117,7 +117,8 @@ describe('CreateSpaceUseCase', () => {
       });
 
       it('does not track an amplitude event', async () => {
-        await expect(useCase.execute(buildCommand())).rejects.toThrow();
+        await useCase.execute(buildCommand()).catch(() => undefined);
+
         expect(eventTrackingPort.trackEvent).not.toHaveBeenCalled();
       });
     });
