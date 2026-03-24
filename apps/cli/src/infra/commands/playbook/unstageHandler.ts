@@ -75,8 +75,11 @@ export async function playbookUnstageHandler(
   }
 
   if (spaceSlug) {
+    const normalizedSlug = spaceSlug.startsWith('@')
+      ? spaceSlug.slice(1)
+      : spaceSlug;
     const entry = matchingEntries.find(
-      (c) => c.spaceName === spaceSlug || c.spaceId === spaceSlug,
+      (c) => c.spaceName === normalizedSlug || c.spaceId === normalizedSlug,
     );
     if (!entry) {
       logErrorConsole(
