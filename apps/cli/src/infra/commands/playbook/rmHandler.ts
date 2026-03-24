@@ -6,6 +6,7 @@ import {
   normalizePath,
   resolveSkillDirPath,
 } from '../../../application/utils/pathUtils';
+import { resolveDeployedContext } from '../../../application/utils/resolveDeployedContext';
 import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
@@ -128,16 +129,27 @@ export async function playbookRmHandler(
   const allSpaces = await packmindCliHexa.getSpaces();
   const spaceName = allSpaces.find((s) => s.id === lockEntry.spaceId)?.name;
 
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
+  const configDir = gitRoot
+    ? normalizePath(path.relative(gitRoot, targetDir))
+    : '';
+
+  const deployedContext = await resolveDeployedContext(
+    packmindCliHexa,
+    targetDir,
+  );
+
   playbookLocalRepository.addChange({
     filePath: normalizedFilePath,
     artifactType: lockEntry.type,
     artifactName: lockEntry.name,
     codingAgent,
+    configDir,
     changeType: 'removed',
     content: '',
     spaceId: lockEntry.spaceId,
     spaceName,
-    targetId: lockFile.targetId,
+    targetId: deployedContext?.targetId ?? lockFile.targetId,
     addedAt: new Date().toISOString(),
   });
 
