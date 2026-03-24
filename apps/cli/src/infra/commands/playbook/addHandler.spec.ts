@@ -1131,6 +1131,95 @@ describe('playbookAddHandler', () => {
     });
   });
 
+  describe('configDir in playbook entries', () => {
+    describe('when adding from a subdirectory target', () => {
+      beforeEach(() => {
+        mockGetCwd.mockReturnValue('/project/apps/frontend');
+        (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+          (dir: string) => Promise.resolve(dir === '/project/apps/frontend'),
+        );
+        (mockPackmindCliHexa.readFullConfig as jest.Mock).mockImplementation(
+          (dir: string) =>
+            Promise.resolve(
+              dir === '/project/apps/frontend'
+                ? { packages: { 'my-package': '*' }, agents: [] }
+                : null,
+            ),
+        );
+        (
+          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+        ).mockResolvedValue('/project');
+      });
+
+      it('stores configDir as relative path from git root to targetDir', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('apps/frontend');
+      });
+    });
+
+    describe('when adding from repo root', () => {
+      it('stores configDir as empty string', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('');
+      });
+    });
+
+    describe('when git root is unavailable', () => {
+      beforeEach(() => {
+        (
+          mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+        ).mockResolvedValue(null);
+      });
+
+      it('stores configDir as empty string', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('');
+      });
+    });
+
+    describe('when file is removed and staged from lock file', () => {
+      beforeEach(() => {
+        mockReadFile.mockImplementation(() => {
+          throw new Error('ENOENT: no such file or directory');
+        });
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+      });
+
+      it('includes configDir in removed entry', async () => {
+        await playbookAddHandler(buildDeps());
+
+        const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
+        expect(callArg.configDir).toBe('');
+      });
+    });
+  });
+
   describe('lenient standard parsing fallback', () => {
     const HEADING_ONLY_CONTENT = '# My Lenient Standard\n\nSome description.';
     const NO_HEADING_CONTENT = 'Just some plain text without a heading.';

@@ -72,6 +72,11 @@ async function tryStageRemovedFromLockFile(
   );
   if (!lockEntry) return false;
 
+  const gitRoot = await deps.packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
+  const configDir = gitRoot
+    ? normalizePath(path.relative(gitRoot, targetDir))
+    : '';
+
   const deployedContext = await resolveDeployedContext(
     deps.packmindCliHexa,
     targetDir,
@@ -84,6 +89,7 @@ async function tryStageRemovedFromLockFile(
     artifactType: lockEntry.type,
     artifactName: lockEntry.name,
     codingAgent: deps.codingAgent,
+    configDir,
     changeType: 'removed',
     content: '',
     spaceId: lockEntry.spaceId,
@@ -270,6 +276,12 @@ export async function playbookAddHandler(
     return;
   }
 
+  // Compute configDir: relative path from git root to targetDir
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
+  const configDir = gitRoot
+    ? normalizePath(path.relative(gitRoot, targetDir))
+    : '';
+
   // Resolve deployed context
   const deployedContext = await resolveDeployedContext(
     packmindCliHexa,
@@ -385,6 +397,7 @@ export async function playbookAddHandler(
     artifactType,
     artifactName,
     codingAgent,
+    configDir,
     changeType,
     content: serializedContent,
     spaceId,
