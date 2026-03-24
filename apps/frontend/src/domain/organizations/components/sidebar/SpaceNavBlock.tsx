@@ -216,9 +216,7 @@ function CollapsedSpaceNavBlock({
           <PMAvatar.Root
             size="xs"
             borderRadius="sm"
-            backgroundColor={
-              isActive ? 'background.secondary' : 'background.tertiary'
-            }
+            backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
             color="text.primary"
             {...(isActive && {
               outline: '2px solid',
