@@ -5,10 +5,6 @@ import {
   GetGitRemoteUrlUseCaseResult,
 } from './application/useCases/GetGitRemoteUrlUseCase';
 import {
-  ExecuteSingleFileAstUseCaseCommand,
-  ExecuteSingleFileAstUseCaseResult,
-} from './domain/useCases/IExecuteSingleFileAstUseCase';
-import {
   ListFilesInDirectoryUseCaseCommand,
   ListFilesInDirectoryUseCaseResult,
 } from './application/useCases/ListFilesInDirectoryUseCase';
@@ -68,7 +64,6 @@ import {
   INotifyDistributionUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
-import { PackmindLockFile } from './domain/repositories/PackmindLockFile';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 
 import {
@@ -82,7 +77,6 @@ import {
 } from './domain/useCases/IDiffArtefactsUseCase';
 import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
 import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
-import { loadCredentials } from './infra/utils/credentials';
 import { Space } from '@packmind/types';
 import { ISpaceService } from './domain/services/ISpaceService';
 
@@ -119,12 +113,6 @@ export class PackmindCliHexa {
     command: GetGitRemoteUrlUseCaseCommand,
   ): Promise<GetGitRemoteUrlUseCaseResult> {
     return this.hexa.useCases.getGitRemoteUrl.execute(command);
-  }
-
-  public async executeSingleFileAst(
-    command: ExecuteSingleFileAstUseCaseCommand,
-  ): Promise<ExecuteSingleFileAstUseCaseResult> {
-    return this.hexa.useCases.executeSingleFileAst.execute(command);
   }
 
   public async listFilesInDirectory(
@@ -366,12 +354,6 @@ export class PackmindCliHexa {
     return this.hexa.useCases.installDefaultSkills.execute(command);
   }
 
-  public async readLockFile(
-    baseDirectory: string,
-  ): Promise<PackmindLockFile | null> {
-    return this.hexa.repositories.lockFileRepository.read(baseDirectory);
-  }
-
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
   }
@@ -421,27 +403,5 @@ export class PackmindCliHexa {
 
   public getSpaceService(): ISpaceService {
     return this.hexa.services.spaceService;
-  }
-
-  /**
-   * Gets the Packmind web app URL derived from the API host.
-   * Transforms API host (e.g., https://api.packmind.com) to web app URL (e.g., https://app.packmind.com)
-   * Falls back to https://app.packmind.com if no credentials are available.
-   */
-  public getWebAppUrl(): string {
-    const credentials = loadCredentials();
-    if (!credentials?.host) {
-      return 'https://app.packmind.com';
-    }
-
-    // Transform API host to web app host
-    // api.packmind.com -> app.packmind.com
-    // localhost:3000/api -> localhost:3000
-    try {
-      const host = credentials.host;
-      return host.replace('api.', 'app.').replace('/api', '');
-    } catch {
-      return 'https://app.packmind.com';
-    }
   }
 }

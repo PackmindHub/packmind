@@ -89,17 +89,6 @@ export function formatFilePath(text: string): string {
 }
 
 /**
- * Formats a URL as a clickable hyperlink in supported terminals.
- * Uses OSC 8 escape sequence: \x1b]8;;URL\x07text\x1b]8;;\x07
- * Falls back to underlined cyan text in unsupported terminals.
- */
-export function formatLink(url: string, text?: string): string {
-  const displayText = text || url;
-  // OSC 8 hyperlink format supported by many modern terminals
-  return `\x1b]8;;${url}\x07${chalk.cyan.underline(displayText)}\x1b]8;;\x07`;
-}
-
-/**
  * Formats a section header with visual emphasis.
  */
 export function formatHeader(text: string): string {

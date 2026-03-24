@@ -22,7 +22,7 @@ describe('StandardsGateway', () => {
       getGlobal: jest.fn(),
     };
 
-    gateway = new StandardsGateway(mockHttpClient, mockSpacesGateway);
+    gateway = new StandardsGateway(mockHttpClient);
   });
 
   afterEach(() => {
