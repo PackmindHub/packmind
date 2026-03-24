@@ -1,4 +1,7 @@
-import { IBaseAdapter } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   CreateSpaceCommand,
   CreateSpaceResponse,
@@ -6,8 +9,6 @@ import {
   GetDefaultSpaceResponse,
   IAccountsPort,
   IAccountsPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   ISpacesPort,
   ListUserSpacesCommand,
   ListUserSpacesResponse,
@@ -26,7 +27,7 @@ import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
  */
 export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   private accountsPort!: IAccountsPort;
-  private eventTrackingPort!: IEventTrackingPort;
+  private eventEmitterService!: PackmindEventEmitterService;
 
   constructor(private readonly hexa: SpacesHexa) {}
 
@@ -40,7 +41,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     const useCase = new CreateSpaceUseCase(
       spaceService,
       this.accountsPort,
-      this.eventTrackingPort,
+      this.eventEmitterService,
     );
     return useCase.execute(command);
   }
@@ -86,16 +87,16 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
    */
   public async initialize(ports: Record<string, unknown>): Promise<void> {
     this.accountsPort = ports[IAccountsPortName] as IAccountsPort;
-    this.eventTrackingPort = ports[
-      IEventTrackingPortName
-    ] as IEventTrackingPort;
+    this.eventEmitterService = ports[
+      'eventEmitterService'
+    ] as PackmindEventEmitterService;
   }
 
   /**
    * Check if the adapter is ready to use.
    */
   public isReady(): boolean {
-    return !!this.accountsPort && !!this.eventTrackingPort;
+    return !!this.accountsPort && !!this.eventEmitterService;
   }
 
   /**
