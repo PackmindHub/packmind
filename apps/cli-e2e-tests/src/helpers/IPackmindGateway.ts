@@ -20,6 +20,7 @@ export interface IAuthGateway {
 
 export interface ISpaceGateway {
   getGlobal: () => Promise<Space>;
+  create: (params: { name: string }) => Promise<Space>;
 }
 
 export interface ICommandGateway {
