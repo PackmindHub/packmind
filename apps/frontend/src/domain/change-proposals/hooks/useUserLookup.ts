@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import { UserId } from '@packmind/types';
-import { useGetUserStatusesQuery } from '../../accounts/api/queries/UserQueries';
+import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 
 export function useUserLookup(): Map<UserId, string> {
-  const { data } = useGetUserStatusesQuery();
+  const { data } = useGetUsersInMyOrganizationQuery();
 
   return useMemo(() => {
     const map = new Map<UserId, string>();
-    if (data?.userStatuses) {
-      for (const user of data.userStatuses) {
+    if (data?.users) {
+      for (const user of data.users) {
         map.set(user.userId, user.email.split('@')[0]);
       }
     }
