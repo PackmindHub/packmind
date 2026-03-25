@@ -4,6 +4,19 @@ import path from 'path';
 
 const SKILL_FILE_NAME = 'SKILL.md';
 
+const IGNORED_DIRECTORY_NAMES = new Set([
+  'node_modules',
+  '.yarn',
+  '.pnpm',
+  '.pnpm-store',
+  '.cache',
+  '.git',
+  '.svn',
+  '.hg',
+  '.turbo',
+  '.nx',
+]);
+
 export function resolveSkillDirectoryRoot(absolutePath: string): string {
   if (path.basename(absolutePath) === SKILL_FILE_NAME) {
     return path.dirname(absolutePath);
@@ -45,7 +58,10 @@ async function findNestedSkillDirectories(
   }
 
   const nestedDirectories = entries
-    .filter((entry) => entry.isDirectory())
+    .filter(
+      (entry) =>
+        entry.isDirectory() && !IGNORED_DIRECTORY_NAMES.has(entry.name),
+    )
     .map((entry) => path.join(directoryPath, entry.name))
     .sort((leftPath, rightPath) => leftPath.localeCompare(rightPath));
 

@@ -89,6 +89,41 @@ describe('resolveSkillInputPaths', () => {
       expect(resolvedPaths).toEqual([skillDirectoryPath]);
     });
   });
+
+  describe('when the parent directory contains ignored directories', () => {
+    it('skips ignored dependency and cache directories when scanning for skills', async () => {
+      const parentDirectoryPath = path.join(tempDir, 'skills');
+      const skillDirectoryPath = path.join(parentDirectoryPath, 'alpha');
+      const nodeModulesSkillPath = path.join(
+        parentDirectoryPath,
+        'node_modules',
+        'fake-skill',
+      );
+      const gitSkillPath = path.join(parentDirectoryPath, '.git', 'fake-skill');
+      const yarnCacheSkillPath = path.join(
+        parentDirectoryPath,
+        '.yarn',
+        'cache',
+        'fake-skill',
+      );
+
+      await fs.mkdir(skillDirectoryPath, { recursive: true });
+      await fs.mkdir(nodeModulesSkillPath, { recursive: true });
+      await fs.mkdir(gitSkillPath, { recursive: true });
+      await fs.mkdir(yarnCacheSkillPath, { recursive: true });
+      await fs.writeFile(path.join(skillDirectoryPath, 'SKILL.md'), 'content');
+      await fs.writeFile(
+        path.join(nodeModulesSkillPath, 'SKILL.md'),
+        'ignored',
+      );
+      await fs.writeFile(path.join(gitSkillPath, 'SKILL.md'), 'ignored');
+      await fs.writeFile(path.join(yarnCacheSkillPath, 'SKILL.md'), 'ignored');
+
+      const resolvedPaths = await resolveSkillInputPaths(['skills'], tempDir);
+
+      expect(resolvedPaths).toEqual([skillDirectoryPath]);
+    });
+  });
 });
 
 describe('resolveSkillDirectoryRoot', () => {
