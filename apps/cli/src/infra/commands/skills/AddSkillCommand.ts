@@ -59,10 +59,17 @@ async function confirmBatchUpload(skillPaths: string[]): Promise<boolean> {
   logConsole('\nContinue? (y/n)');
 
   return new Promise((resolve) => {
-    process.stdin.once('data', (data: Buffer | string) => {
+    const onData = (data: Buffer | string) => {
+      process.stdin.removeListener('close', onClose);
       const line = data.toString().trim();
       resolve(line.toLowerCase() === 'y' || line.toLowerCase() === 'yes');
-    });
+    };
+    const onClose = () => {
+      process.stdin.removeListener('data', onData);
+      resolve(false);
+    };
+    process.stdin.once('data', onData);
+    process.stdin.once('close', onClose);
   });
 }
 
