@@ -220,6 +220,7 @@ describe('RecipeService', () => {
           id: recipeId,
           ...updateData,
           spaceId: existingRecipe.spaceId,
+          movedTo: existingRecipe.movedTo,
         });
       });
 

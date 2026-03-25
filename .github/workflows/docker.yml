@@ -122,7 +122,7 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       # Download all build artifacts
       - name: Download API build artifacts

@@ -226,6 +226,7 @@ describe('StandardService', () => {
           ...updateData,
           scope: null,
           spaceId: existingStandard.spaceId,
+          movedTo: existingStandard.movedTo,
         });
       });
 

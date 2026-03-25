@@ -30,7 +30,7 @@ export const StandardDistributionsList: React.FC<
     return {
       'N/A': 'Unknown User',
       ...Object.fromEntries(
-        data.users.map((user) => [user.userId, user.email]),
+        data.users.map((user) => [user.userId, user.email.split('@')[0]]),
       ),
     };
   };

@@ -16,6 +16,7 @@ export const recipeFactory: Factory<Recipe> = (recipe?: Partial<Recipe>) => {
     version: 1,
     userId: createUserId(uuidv4()),
     spaceId: createSpaceId(uuidv4()),
+    movedTo: null,
     ...recipe,
   };
 };

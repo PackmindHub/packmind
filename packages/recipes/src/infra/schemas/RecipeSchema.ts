@@ -48,6 +48,11 @@ export const RecipeSchema = new EntitySchema<
       type: 'uuid',
       nullable: false,
     },
+    movedTo: {
+      name: 'moved_to',
+      type: 'uuid',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
