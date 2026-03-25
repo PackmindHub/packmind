@@ -6,6 +6,7 @@ import {
   ICheckChangeProposalsUseCase,
 } from '@packmind/types';
 
+import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 
@@ -21,6 +22,11 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
       {
         method: 'POST',
         body: { proposals: command.proposals },
+        onError: (response) => {
+          if (response.status === 404) {
+            throw new CommunityEditionError('change proposals');
+          }
+        },
       },
     );
   };
@@ -32,6 +38,11 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
       {
         method: 'POST',
         body: { proposals: command.proposals },
+        onError: (response) => {
+          if (response.status === 404) {
+            throw new CommunityEditionError('change proposals');
+          }
+        },
       },
     );
   };

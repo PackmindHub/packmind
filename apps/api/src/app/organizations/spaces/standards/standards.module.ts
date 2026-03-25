@@ -5,7 +5,7 @@ import { StandardsService } from './standards.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { OrganizationsSpacesStandardsRulesModule } from './rules/rules.module';
-import { OrganizationsSpacesStandardsChangeProposalsModule } from './change-proposals/standards-change-proposals.module';
+import { OrganizationsSpacesStandardsChangeProposalsModule } from '@packmind/playbook-change-management';
 import { standardsSchemas } from '@packmind/standards';
 
 /**

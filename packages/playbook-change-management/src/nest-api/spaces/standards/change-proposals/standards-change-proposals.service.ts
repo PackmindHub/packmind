@@ -7,7 +7,7 @@ import {
   ListChangeProposalsByArtefactResponse,
   StandardId,
 } from '@packmind/types';
-import { InjectPlaybookChangeManagementAdapter } from '../../../../shared/HexaInjection';
+import { InjectPlaybookChangeManagementAdapter } from '../../../shared/HexaInjection';
 
 @Injectable()
 export class StandardsChangeProposalsService {

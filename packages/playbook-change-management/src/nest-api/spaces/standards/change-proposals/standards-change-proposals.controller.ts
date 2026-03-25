@@ -19,7 +19,7 @@ import {
   StandardId,
 } from '@packmind/types';
 import { StandardsChangeProposalsService } from './standards-change-proposals.service';
-import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
+import { OrganizationAccessGuard } from '../../../shared/organization-access.guard';
 
 const origin = 'OrganizationsSpacesStandardsChangeProposalsController';
 

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesChangeProposalsController } from './change-proposals.controller';
 import { ChangeProposalsService } from './change-proposals.service';
-import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
+import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**

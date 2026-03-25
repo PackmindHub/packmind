@@ -36,11 +36,11 @@ import {
   StandardId,
 } from '@packmind/types';
 import { ChangeProposalsService } from './change-proposals.service';
-import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
+import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 import {
   ChangeProposalPayloadMismatchError,
   UnsupportedChangeProposalTypeError,
-} from '@packmind/playbook-change-management';
+} from '../../application/errors';
 
 const origin = 'OrganizationsSpacesChangeProposalsController';
 

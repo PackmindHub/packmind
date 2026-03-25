@@ -6,6 +6,8 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "express": "^5.2.1",
     "@packmind/accounts": "*",
     "@packmind/deployments": "*",
     "@packmind/logger": "*",

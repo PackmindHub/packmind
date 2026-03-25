@@ -22,7 +22,7 @@ import {
 import {
   InjectCodingAgentAdapter,
   InjectPlaybookChangeManagementAdapter,
-} from '../../../shared/HexaInjection';
+} from '../shared/HexaInjection';
 
 @Injectable()
 export class ChangeProposalsService {

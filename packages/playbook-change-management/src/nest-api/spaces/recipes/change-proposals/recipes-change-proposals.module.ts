@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesRecipesChangeProposalsController } from './recipes-change-proposals.controller';
 import { RecipesChangeProposalsService } from './recipes-change-proposals.service';
-import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
+import { OrganizationAccessGuard } from '../../../shared/organization-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**

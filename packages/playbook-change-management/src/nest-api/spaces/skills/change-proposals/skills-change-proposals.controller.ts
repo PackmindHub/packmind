@@ -19,7 +19,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import { SkillsChangeProposalsService } from './skills-change-proposals.service';
-import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
+import { OrganizationAccessGuard } from '../../../shared/organization-access.guard';
 
 const origin = 'OrganizationsSpacesSkillsChangeProposalsController';
 

@@ -5,28 +5,28 @@ import {
   IPlaybookChangeManagementPort,
   ListChangeProposalsByArtefactCommand,
   ListChangeProposalsByArtefactResponse,
-  RecipeId,
+  SkillId,
 } from '@packmind/types';
-import { InjectPlaybookChangeManagementAdapter } from '../../../../shared/HexaInjection';
+import { InjectPlaybookChangeManagementAdapter } from '../../../shared/HexaInjection';
 
 @Injectable()
-export class RecipesChangeProposalsService {
+export class SkillsChangeProposalsService {
   constructor(
     @InjectPlaybookChangeManagementAdapter()
     private readonly playbookChangeManagementAdapter: IPlaybookChangeManagementPort,
   ) {}
 
-  async listChangeProposalsByRecipe(
-    command: ListChangeProposalsByArtefactCommand<RecipeId>,
+  async listChangeProposalsBySkill(
+    command: ListChangeProposalsByArtefactCommand<SkillId>,
   ): Promise<ListChangeProposalsByArtefactResponse> {
     return this.playbookChangeManagementAdapter.listChangeProposalsByArtefact(
       command,
     );
   }
 
-  async applyRecipeChangeProposals(
-    command: ApplyChangeProposalsCommand<RecipeId>,
-  ): Promise<ApplyChangeProposalsResponse<RecipeId>> {
+  async applySkillChangeProposals(
+    command: ApplyChangeProposalsCommand<SkillId>,
+  ): Promise<ApplyChangeProposalsResponse<SkillId>> {
     return this.playbookChangeManagementAdapter.applyChangeProposals(command);
   }
 }

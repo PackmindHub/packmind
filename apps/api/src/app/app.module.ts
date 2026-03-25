@@ -37,10 +37,12 @@ import { OrganizationsSpacesStandardsModule } from './organizations/spaces/stand
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/skills.module';
-import { OrganizationsSpacesChangeProposalsModule } from './organizations/spaces/change-proposals/change-proposals.module';
-import { OrganizationsSpacesRecipesChangeProposalsModule } from './organizations/spaces/recipes/change-proposals/recipes-change-proposals.module';
-import { OrganizationsSpacesStandardsChangeProposalsModule } from './organizations/spaces/standards/change-proposals/standards-change-proposals.module';
-import { OrganizationsSpacesSkillsChangeProposalsModule } from './organizations/spaces/skills/change-proposals/skills-change-proposals.module';
+import {
+  OrganizationsSpacesChangeProposalsModule,
+  OrganizationsSpacesRecipesChangeProposalsModule,
+  OrganizationsSpacesStandardsChangeProposalsModule,
+  OrganizationsSpacesSkillsChangeProposalsModule,
+} from '@packmind/playbook-change-management';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
 import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
 import { OrganizationTargetsModule } from './organizations/deployments/targets/targets.module';
