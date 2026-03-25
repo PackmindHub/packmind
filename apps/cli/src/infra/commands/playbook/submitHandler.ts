@@ -11,14 +11,13 @@ import {
   SpaceId,
   TargetId,
   canonicalJsonStringify,
-  createRuleId,
 } from '@packmind/types';
 import { parseSkillMd, serializeSkillMetadata } from '@packmind/node-utils';
 
 import { parseStandardMd } from '../../../application/utils/parseStandardMd';
 import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
 import { parseCommandFile } from '../../../application/utils/parseCommandFile';
-import { matchUpdatedRules } from '../../../application/utils/ruleSimilarity';
+import { compareStandardFields } from '../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import {
@@ -194,130 +193,38 @@ function buildUpdatedStandardProposals(
 ): ProposalItem[] {
   if (!artifactId) return [];
 
-  const localParsed = parseStandardMd(entry.content, entry.filePath);
-  if (!localParsed) return [];
-
-  const serverParsed = deployedContent
-    ? parseStandardMd(deployedContent, entry.filePath)
-    : null;
-
-  const proposals: ProposalItem[] = [];
   const base = {
     artefactId: artifactId,
     targetId: entry.targetId,
     spaceId: entry.spaceId,
   };
 
-  if (serverParsed) {
-    if (
-      serverParsed.frontmatterName &&
-      localParsed.frontmatterName &&
-      serverParsed.frontmatterName !== localParsed.frontmatterName
-    ) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardName,
-        payload: {
-          oldValue: serverParsed.frontmatterName,
-          newValue: localParsed.frontmatterName,
-        },
-      });
-    }
-
-    if (serverParsed.name !== localParsed.name) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardName,
-        payload: {
-          oldValue: serverParsed.name,
-          newValue: localParsed.name,
-        },
-      });
-    }
-
-    if (
-      serverParsed.frontmatterDescription &&
-      localParsed.frontmatterDescription &&
-      serverParsed.frontmatterDescription !== localParsed.frontmatterDescription
-    ) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardDescription,
-        payload: {
-          oldValue: serverParsed.frontmatterDescription,
-          newValue: localParsed.frontmatterDescription,
-        },
-      });
-    }
-
-    if (serverParsed.description !== localParsed.description) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardDescription,
-        payload: {
-          oldValue: serverParsed.description,
-          newValue: localParsed.description,
-        },
-      });
-    }
-
-    if (serverParsed.scope !== localParsed.scope) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardScope,
-        payload: {
-          oldValue: serverParsed.scope,
-          newValue: localParsed.scope,
-        },
-      });
-    }
+  if (deployedContent) {
+    const fieldChanges = compareStandardFields(
+      entry.content,
+      deployedContent,
+      entry.filePath,
+    );
+    return fieldChanges.map((change) => ({
+      ...base,
+      type: change.type,
+      payload: change.payload,
+    }));
   }
 
-  const serverRules = new Set(serverParsed?.rules ?? []);
+  // No deployed content: parse local and emit all rules as adds
+  const localParsed = parseStandardMd(entry.content, entry.filePath);
+  if (!localParsed) return [];
+
+  const proposals: ProposalItem[] = [];
   const localRules = new Set(localParsed.rules);
-  const deletedRules = [...serverRules].filter((r) => !localRules.has(r));
-  const addedRules = [...localRules].filter((r) => !serverRules.has(r));
-
-  const { updates, remainingDeleted, remainingAdded } = matchUpdatedRules(
-    deletedRules,
-    addedRules,
-  );
-
-  for (const update of updates) {
-    const ruleId = createRuleId('unresolved');
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateRule,
-      payload: {
-        targetId: ruleId,
-        oldValue: update.oldValue,
-        newValue: update.newValue,
-      },
-    });
-  }
-
-  for (const rule of remainingDeleted) {
-    const ruleId = createRuleId('unresolved');
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.deleteRule,
-      payload: {
-        targetId: ruleId,
-        item: { id: ruleId, content: rule },
-      },
-    });
-  }
-
-  for (const rule of remainingAdded) {
+  for (const rule of localRules) {
     proposals.push({
       ...base,
       type: ChangeProposalType.addRule,
-      payload: {
-        item: { content: rule },
-      },
+      payload: { item: { content: rule } },
     });
   }
-
   return proposals;
 }
 
