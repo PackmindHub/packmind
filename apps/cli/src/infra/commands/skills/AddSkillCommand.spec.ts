@@ -75,7 +75,7 @@ describe('addSkillHandler', () => {
   });
 
   describe('when multiple skill directories are provided', () => {
-    describe('and all uploads succeed', () => {
+    describe('with all uploads succeeding', () => {
       beforeEach(async () => {
         mockedResolveSkillInputPaths.mockResolvedValue([
           'C:\\skills\\skill-a',
@@ -122,7 +122,7 @@ describe('addSkillHandler', () => {
       });
     });
 
-    describe('and one upload fails', () => {
+    describe('with one upload failing', () => {
       beforeEach(async () => {
         mockedResolveSkillInputPaths.mockResolvedValue([
           'C:\\skills\\skill-a',
@@ -200,7 +200,7 @@ describe('addSkillHandler', () => {
   });
 
   describe('when a single skill directory is provided', () => {
-    describe('and the upload succeeds', () => {
+    describe('with the upload succeeding', () => {
       beforeEach(async () => {
         mockedResolveSkillInputPaths.mockResolvedValue([
           'C:\\skills\\single-skill',
@@ -230,7 +230,7 @@ describe('addSkillHandler', () => {
       });
     });
 
-    describe('and the upload fails', () => {
+    describe('with the upload failing', () => {
       beforeEach(async () => {
         mockedResolveSkillInputPaths.mockResolvedValue([
           'C:\\skills\\single-skill',
@@ -307,7 +307,7 @@ describe('addSkillHandler', () => {
       });
     });
 
-    describe('and the user declines the import', () => {
+    describe('with the user declining the import', () => {
       beforeEach(async () => {
         mockedResolveSkillInputPaths.mockResolvedValue([
           'C:\\skills\\skill-a',
