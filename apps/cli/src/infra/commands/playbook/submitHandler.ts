@@ -10,9 +10,8 @@ import {
   NewSkillPayload,
   SpaceId,
   TargetId,
-  canonicalJsonStringify,
 } from '@packmind/types';
-import { parseSkillMd, serializeSkillMetadata } from '@packmind/node-utils';
+import { parseSkillMd } from '@packmind/node-utils';
 
 import { parseStandardMd } from '../../../application/utils/parseStandardMd';
 import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
@@ -20,6 +19,7 @@ import { parseCommandFile } from '../../../application/utils/parseCommandFile';
 import {
   compareStandardFields,
   compareCommandFields,
+  compareSkillDefinitionFields,
 } from '../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
@@ -296,7 +296,14 @@ function buildUpdatedSkillProposals(
     const deployed = parseSkillMd(skillMdFile.content);
     if (deployed) {
       // Compare SKILL.md fields and generate granular proposals
-      proposals.push(...diffSkillDefinition(local, deployed, base));
+      const fieldChanges = compareSkillDefinitionFields(local, deployed);
+      proposals.push(
+        ...fieldChanges.map((change) => ({
+          ...base,
+          type: change.type,
+          payload: change.payload,
+        })),
+      );
     } else {
       // Fallback: if parsing fails, submit prompt as full update
       proposals.push({
@@ -395,115 +402,6 @@ function buildUpdatedSkillProposals(
             permissions: localFile.permissions ?? 'rw-r--r--',
             isBase64: localFile.isBase64 ?? false,
           },
-        },
-      });
-    }
-  }
-
-  return proposals;
-}
-
-function diffSkillDefinition(
-  local: NewSkillPayload,
-  deployed: ReturnType<typeof parseSkillMd> & {},
-  base: Pick<ProposalItem, 'artefactId' | 'targetId' | 'spaceId'>,
-): ProposalItem[] {
-  const proposals: ProposalItem[] = [];
-
-  if (local.name !== deployed.name) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateSkillName,
-      payload: { oldValue: deployed.name, newValue: local.name },
-    });
-  }
-
-  if (local.description !== deployed.description) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateSkillDescription,
-      payload: { oldValue: deployed.description, newValue: local.description },
-    });
-  }
-
-  if (local.prompt !== deployed.body) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateSkillPrompt,
-      payload: { oldValue: deployed.body, newValue: local.prompt },
-    });
-  }
-
-  const localLicense = local.license ?? '';
-  if (localLicense !== deployed.license) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateSkillLicense,
-      payload: { oldValue: deployed.license, newValue: localLicense },
-    });
-  }
-
-  const localCompatibility = local.compatibility ?? '';
-  if (localCompatibility !== deployed.compatibility) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateSkillCompatibility,
-      payload: {
-        oldValue: deployed.compatibility,
-        newValue: localCompatibility,
-      },
-    });
-  }
-
-  const localAllowedTools = local.allowedTools ?? '';
-  if (localAllowedTools !== deployed.allowedTools) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateSkillAllowedTools,
-      payload: {
-        oldValue: deployed.allowedTools,
-        newValue: localAllowedTools,
-      },
-    });
-  }
-
-  const localMetadataJson =
-    local.metadata && Object.keys(local.metadata).length > 0
-      ? serializeSkillMetadata(local.metadata)
-      : '{}';
-  if (localMetadataJson !== deployed.metadataJson) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateSkillMetadata,
-      payload: {
-        oldValue: deployed.metadataJson,
-        newValue: localMetadataJson,
-      },
-    });
-  }
-
-  // Additional properties (Claude Code specific fields)
-  const localAdditionalProps = local.additionalProperties ?? {};
-  const deployedAdditionalProps = deployed.additionalProperties;
-  const allKeys = new Set([
-    ...Object.keys(localAdditionalProps),
-    ...Object.keys(deployedAdditionalProps),
-  ]);
-  for (const key of allKeys) {
-    const localValue =
-      key in localAdditionalProps
-        ? canonicalJsonStringify(localAdditionalProps[key])
-        : '';
-    // Matches canonicalJsonStringify(null) for properties present in deployed but absent locally
-    const deployedValue = deployedAdditionalProps[key] ?? 'null';
-    if (localValue !== deployedValue) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateSkillAdditionalProperty,
-        payload: {
-          targetId: key,
-          oldValue: deployedValue,
-          newValue: localValue,
         },
       });
     }
