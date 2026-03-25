@@ -1,6 +1,6 @@
 import { Link, LinkProps } from '@chakra-ui/react';
 
-export interface IPMLinkProps extends LinkProps {
+export interface IPMLinkProps extends Omit<LinkProps, 'variant'> {
   variant?: 'plain' | 'navbar' | 'underline' | 'active';
   to?: string;
 }
@@ -10,5 +10,5 @@ export const PMLink: React.FC<IPMLinkProps> = ({
   to,
   ...rest
 }) => {
-  return <Link variant={variant} {...rest} />;
+  return <Link variant={variant as LinkProps['variant']} {...rest} />;
 };
