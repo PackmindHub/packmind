@@ -6,9 +6,9 @@ import {
   ICheckChangeProposalsUseCase,
 } from '@packmind/types';
 
-import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
+import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 
 export class ChangeProposalGateway implements IChangeProposalGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
