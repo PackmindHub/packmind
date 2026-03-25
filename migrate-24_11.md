@@ -107,14 +107,19 @@ Update the pin accordingly in both Dockerfiles. If the proprietary repo has addi
 
 ### 8. CI workflows
 
-Ensure `NODE_OPTIONS="--no-experimental-strip-types"` is set in any CI job that runs Jest tests. This can be done at the workflow level:
+In the OSS repo, `build.yml` has been updated: every `NODE_OPTIONS` now includes `--no-experimental-strip-types` alongside `--max-old-space-size=16384`. Example:
 
 ```yaml
-env:
-  NODE_OPTIONS: '--no-experimental-strip-types'
+NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
 ```
 
-Or in the test script in `package.json`.
+For the proprietary repo, search for all `NODE_OPTIONS` in CI workflows and append the flag:
+
+```bash
+grep -rn "NODE_OPTIONS" .github/workflows/
+```
+
+Any step that runs `nx test` must have `--no-experimental-strip-types` in its `NODE_OPTIONS`.
 
 ## Deprecation warnings (informational, no action needed)
 
