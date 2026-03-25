@@ -103,9 +103,7 @@ export const diffCommand = command({
       exit: process.exit,
       getCwd: () => process.cwd(),
       log: console.log,
-      submit,
       includeSubmitted,
-      message,
       path,
     });
   },
