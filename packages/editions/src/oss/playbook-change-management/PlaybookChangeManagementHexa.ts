@@ -34,5 +34,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
     // Nothing to cleanup in OSS edition
   }
 
-  destroy(): void {}
+  destroy(): void {
+    /* empty */
+  }
 }
