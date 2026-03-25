@@ -1098,17 +1098,17 @@ packmind-cli packages add --to backend --skill debugging-workflow
   when automating package management in scripts or CI/CD pipelines.
 </Tip>
 
-## Diff Command
+## Playbook Command
 
-Compare your local artifact files (standards, commands, skills) against the versions published in Packmind, and optionally propose your changes for team review.
+Manage local artifact changes and propose them to your team using a git-like staging workflow. The `playbook` command groups six subcommands: `diff`, `status`, `add`, `rm`, `unstage`, and `submit`.
 
-### Preview Changes
+### View Differences
 
 ```bash
-packmind-cli diff
+packmind-cli playbook diff
 ```
 
-This compares your local files against the published versions and displays what has changed. No changes are submitted.
+Compares your local artifact files (standards, commands, skills) against the versions published in Packmind. No changes are submitted.
 
 **Example output:**
 
@@ -1132,38 +1132,81 @@ For each standard, the diff shows:
 - **Rule (add)** — a new rule added locally
 - **Rule (delete)** — a rule removed locally
 
-### Submit Changes as Proposals
-
-```bash
-packmind-cli diff --submit
-```
-
-Submits your local changes as change proposals, which can be reviewed and accepted by your team in the Packmind web app.
-
-Add an optional message to explain the intent behind your changes:
-
-```bash
-packmind-cli diff --submit -m "Improve error handling rules for better observability"
-```
-
-If you omit `-m`, Packmind opens your default editor so you can write the message interactively.
-
 **Options:**
 
-| Flag                  | Short | Description                                                       |
-| --------------------- | ----- | ----------------------------------------------------------------- |
-| `--submit`            |       | Submit detected changes as change proposals                       |
-| `--message <text>`    | `-m`  | Message describing the intent behind the changes (max 1024 chars) |
-| `--include-submitted` |       | Include already-submitted changes in the output                   |
+| Flag                  | Short | Description                                     |
+| --------------------- | ----- | ----------------------------------------------- |
+| `--include-submitted` |       | Include already-submitted changes in the output |
+| `--path <path>`       | `-p`  | Limit analysis to a specific path               |
+
+### Check Status
+
+```bash
+packmind-cli playbook status
+```
+
+Shows staged changes ready for submission and untracked local modifications.
+
+**Example output:**
+
+```
+Changes to be submitted:
+  - Standard "Error Handling" (updated)
+    .claude/rules/error-handling.md
+
+Changes not tracked:
+  - Command "Deploy" (modified)
+    .claude/commands/deploy.md
+
+Use `packmind playbook add <path>` to track them
+```
+
+### Stage Changes
+
+```bash
+packmind-cli playbook add <path>
+```
+
+Stages a local artifact change for submission. The change type (created or updated) is detected automatically by comparing with the deployed version.
+
+### Stage Removal
+
+```bash
+packmind-cli playbook rm <path>
+```
+
+Stages an artifact for removal from the playbook. The artifact must have been distributed by Packmind. Alias: `remove`.
+
+### Unstage Changes
+
+```bash
+packmind-cli playbook unstage <path>
+```
+
+Removes a previously staged change from the playbook without submitting it.
+
+### Submit Proposals
+
+```bash
+packmind-cli playbook submit -m "Improve error handling rules for better observability"
+```
+
+Submits all staged changes as change proposals for team review in the Packmind web app.
+
+| Flag               | Short | Description                                                       |
+| ------------------ | ----- | ----------------------------------------------------------------- |
+| `--message <text>` | `-m`  | Message describing the intent behind the changes (max 1024 chars) |
+
+If you omit `-m`, Packmind opens your default editor so you can write the message interactively.
 
 ### How Rule Updates Are Detected
 
 When you modify a rule in a standard file, Packmind automatically determines whether the change is a rule update (the same rule was edited) or a separate deletion and addition (two unrelated rules). This keeps your change proposals clean and meaningful, showing reviewers exactly what was changed rather than an unrelated delete + add pair.
 
 <Tip>
-  **Requires a git repository** — The `diff` command requires your project to be
-  in a git repository with a configured remote. Make sure you have run
-  `packmind-cli install` to set up your `packmind.json` before using `diff`.
+  **Requires a git repository** — The `playbook` command requires your project
+  to be in a git repository with a configured remote. Make sure you have run
+  `packmind-cli install` to set up your `packmind.json` before using `playbook`.
 </Tip>
 
 ## Update Command
