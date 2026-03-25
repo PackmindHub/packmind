@@ -50,10 +50,7 @@ on:
 jobs:
   build-scan-push:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    # Both editions: main branch and release tags
-    if: |
-      github.ref == 'refs/heads/main' ||
-      startsWith(github.ref, 'refs/tags/release/')
+    # Build+scan on all branches; push steps have their own ref guards
     outputs:
       # On main: outputs SHA tag (what's actually pushed)
       # On release/*: outputs version tag (what's actually pushed)

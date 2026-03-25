@@ -45,7 +45,6 @@ jobs:
   # Note: The docker workflow handles branch conditions internally based on edition
   docker:
     needs: [build, quality]
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/docker.yml
     with:
       api-artifact: ${{ needs.build.outputs.api-artifact }}
