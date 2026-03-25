@@ -76,12 +76,8 @@ export async function resolveSkillInputPaths(
       if (stat.isDirectory()) {
         const discoveredSkillDirectories =
           await findNestedSkillDirectories(skillDirectoryRoot);
-        const candidatePaths =
-          discoveredSkillDirectories.length > 0
-            ? discoveredSkillDirectories
-            : [skillDirectoryRoot];
 
-        for (const candidatePath of candidatePaths) {
+        for (const candidatePath of discoveredSkillDirectories) {
           if (!seenPaths.has(candidatePath)) {
             seenPaths.add(candidatePath);
             resolvedSkillPaths.push(candidatePath);
