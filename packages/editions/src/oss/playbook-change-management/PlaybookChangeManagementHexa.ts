@@ -33,4 +33,6 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
   async cleanup(): Promise<void> {
     // Nothing to cleanup in OSS edition
   }
+
+  destroy(): void {}
 }
