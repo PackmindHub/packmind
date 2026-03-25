@@ -65,6 +65,7 @@ export class SkillService {
       const skill: Skill = {
         id: skillId,
         ...skillData,
+        movedTo: null,
         createdAt: now,
         updatedAt: now,
       };
@@ -188,6 +189,7 @@ export class SkillService {
         id: skillId,
         ...skillData,
         spaceId: existingSkill.spaceId,
+        movedTo: existingSkill.movedTo,
         createdAt: existingSkill.createdAt,
         updatedAt: new Date(),
       };

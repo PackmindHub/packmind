@@ -20,6 +20,7 @@ export const standardFactory: Factory<Standard> = (
     userId: createUserId(uuidv4()),
     scope: null,
     spaceId: createSpaceId(uuidv4()),
+    movedTo: null,
     ...standard,
   };
 };

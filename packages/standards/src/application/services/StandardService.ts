@@ -59,6 +59,7 @@ export class StandardService {
       const standard: Standard = {
         id: standardId,
         ...standardData,
+        movedTo: null,
       };
 
       this.logger.debug('Adding standard to repository');
@@ -213,6 +214,7 @@ export class StandardService {
         id: standardId,
         ...standardData,
         spaceId: existingStandard.spaceId,
+        movedTo: existingStandard.movedTo,
       };
 
       this.logger.debug('Updating standard in repository');

@@ -57,6 +57,7 @@ export class RecipeService {
       const recipe: Recipe = {
         id: recipeId,
         ...recipeData,
+        movedTo: null,
       };
 
       const savedRecipe = await this.recipeRepository.add(recipe);
@@ -202,6 +203,7 @@ export class RecipeService {
         id: recipeId,
         ...recipeData,
         spaceId: existingRecipe.spaceId,
+        movedTo: existingRecipe.movedTo,
       };
 
       const savedRecipe = await this.recipeRepository.add(updatedRecipe);
