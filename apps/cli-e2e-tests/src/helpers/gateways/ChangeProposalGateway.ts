@@ -1,49 +1,34 @@
 import {
-  BatchCreateChangeProposalsResponse,
-  CheckChangeProposalsResponse,
   Gateway,
-  IBatchCreateChangeProposalsUseCase,
-  ICheckChangeProposalsUseCase,
+  IListChangeProposalsByArtefact,
+  IListChangeProposalsBySpace,
+  RecipeId,
 } from '@packmind/types';
+import { PackmindHttpClient } from './PackmindHttpClient';
 
-import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
-import { PackmindHttpClient } from '../http/PackmindHttpClient';
-import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
+export interface IChangeProposalGateway {
+  listBySpace: Gateway<IListChangeProposalsBySpace>;
+  listChangeProposalsByRecipe: Gateway<
+    IListChangeProposalsByArtefact<RecipeId>
+  >;
+}
 
 export class ChangeProposalGateway implements IChangeProposalGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
 
-  batchCreate: Gateway<IBatchCreateChangeProposalsUseCase> = async (
-    command,
-  ) => {
-    const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<BatchCreateChangeProposalsResponse>(
-      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/change-proposals/batch`,
-      {
-        method: 'POST',
-        body: { proposals: command.proposals },
-        onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('change proposals');
-          }
-        },
-      },
+  listBySpace: Gateway<IListChangeProposalsBySpace> = async (command) => {
+    const organizationId = this.httpClient.getOrganizationId();
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/change-proposals/grouped`,
     );
   };
 
-  check: Gateway<ICheckChangeProposalsUseCase> = async (command) => {
-    const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<CheckChangeProposalsResponse>(
-      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/change-proposals/check`,
-      {
-        method: 'POST',
-        body: { proposals: command.proposals },
-        onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('change proposals');
-          }
-        },
-      },
+  listChangeProposalsByRecipe: Gateway<
+    IListChangeProposalsByArtefact<RecipeId>
+  > = async (command) => {
+    const organizationId = this.httpClient.getOrganizationId();
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/recipes/${command.artefactId}/change-proposals`,
     );
   };
 }
