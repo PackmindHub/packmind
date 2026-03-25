@@ -5,7 +5,7 @@ import path from 'path';
 const SKILL_FILE_NAME = 'SKILL.md';
 
 export function resolveSkillDirectoryRoot(absolutePath: string): string {
-  if (absolutePath.endsWith(SKILL_FILE_NAME)) {
+  if (path.basename(absolutePath) === SKILL_FILE_NAME) {
     return path.dirname(absolutePath);
   }
 
