@@ -1,7 +1,9 @@
 import { ChangeProposalType } from '@packmind/types';
 
 import {
+  SkillDefinitionInput,
   compareCommandFields,
+  compareSkillDefinitionFields,
   compareStandardFields,
 } from './artifactComparison';
 
@@ -199,5 +201,155 @@ describe('compareCommandFields', () => {
     expect(
       compareCommandFields('---\nname: Cmd\n---\nBody', '', basePath),
     ).toEqual([]);
+  });
+});
+
+describe('compareSkillDefinitionFields', () => {
+  const makeLocal = (
+    overrides: Partial<SkillDefinitionInput> = {},
+  ): SkillDefinitionInput => ({
+    name: 'My Skill',
+    description: 'A skill',
+    prompt: 'Do stuff',
+    ...overrides,
+  });
+
+  // ParsedSkillMd uses 'body' instead of 'prompt'
+  const makeDeployed = (overrides = {}) => ({
+    name: 'My Skill',
+    description: 'A skill',
+    body: 'Do stuff',
+    license: '',
+    compatibility: '',
+    allowedTools: '',
+    metadataJson: '{}',
+    additionalProperties: {} as Record<string, string>,
+    ...overrides,
+  });
+
+  it('returns empty array when all fields match', () => {
+    expect(compareSkillDefinitionFields(makeLocal(), makeDeployed())).toEqual(
+      [],
+    );
+  });
+
+  it('detects name change', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ name: 'New Name' }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({ type: ChangeProposalType.updateSkillName }),
+    );
+  });
+
+  it('detects description change', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ description: 'New desc' }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateSkillDescription,
+      }),
+    );
+  });
+
+  it('detects prompt/body change', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ prompt: 'New prompt' }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({ type: ChangeProposalType.updateSkillPrompt }),
+    );
+  });
+
+  it('detects license change', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ license: 'MIT' }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({ type: ChangeProposalType.updateSkillLicense }),
+    );
+  });
+
+  it('detects compatibility change', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ compatibility: 'claude' }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateSkillCompatibility,
+      }),
+    );
+  });
+
+  it('detects allowedTools change', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ allowedTools: 'Read,Write' }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateSkillAllowedTools,
+      }),
+    );
+  });
+
+  it('detects metadata change', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ metadata: { key: 'value' } }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateSkillMetadata,
+      }),
+    );
+  });
+
+  it('detects additional property changes', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ additionalProperties: { model: 'sonnet' } }),
+      makeDeployed({ additionalProperties: { model: '"opus"' } }),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateSkillAdditionalProperty,
+        payload: expect.objectContaining({ targetId: 'model' }),
+      }),
+    );
+  });
+
+  it('detects added additional property', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal({ additionalProperties: { model: 'sonnet' } }),
+      makeDeployed(),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateSkillAdditionalProperty,
+        payload: expect.objectContaining({ targetId: 'model' }),
+      }),
+    );
+  });
+
+  it('detects removed additional property', () => {
+    const changes = compareSkillDefinitionFields(
+      makeLocal(),
+      makeDeployed({ additionalProperties: { model: '"opus"' } }),
+    );
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateSkillAdditionalProperty,
+        payload: expect.objectContaining({
+          targetId: 'model',
+          newValue: '',
+        }),
+      }),
+    );
   });
 });
