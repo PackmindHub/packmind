@@ -39,7 +39,7 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 
 - When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
-- ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
+- ensure the env variable `PACKMIND_EDITION` is properly set to `proprietary`
 - when asked to execute `packmind-cli`, use `node ./dist/apps/cli/main.cjs`
 
 ## Git Workflow
