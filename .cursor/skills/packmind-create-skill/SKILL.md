@@ -254,10 +254,10 @@ After testing the skill, users may request improvements. Often this happens righ
 Run the following command with the actual skill path:
 
 ```bash
-packmind-cli skills add <path/to/skill-folder>
+packmind-cli skills add <path/to/skill-folder-or-parent> [additional-skill-folders-or-parents...]
 ```
 
-This registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents.
+This registers one or more skills with Packmind. Each path can point to a skill folder directly or to a parent folder that contains multiple skill folders.
 
 ### Step 8: Offer to Add to Package
 
