@@ -17,7 +17,10 @@ import { parseSkillMd, serializeSkillMetadata } from '@packmind/node-utils';
 import { parseStandardMd } from '../../../application/utils/parseStandardMd';
 import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
 import { parseCommandFile } from '../../../application/utils/parseCommandFile';
-import { compareStandardFields } from '../../../application/utils/artifactComparison';
+import {
+  compareStandardFields,
+  compareCommandFields,
+} from '../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import {
@@ -233,47 +236,25 @@ function buildUpdatedCommandProposals(
   artifactId: string | null,
   deployedContent: string | null,
 ): ProposalItem[] {
-  if (!artifactId) return [];
+  if (!artifactId || !deployedContent) return [];
 
-  const localParsed = parseCommandFile(entry.content, entry.filePath);
-  if (!localParsed.success) return [];
+  const fieldChanges = compareCommandFields(
+    entry.content,
+    deployedContent,
+    entry.filePath,
+  );
 
-  const serverParsed = deployedContent
-    ? parseCommandFile(deployedContent, entry.filePath)
-    : null;
-
-  const proposals: ProposalItem[] = [];
   const base = {
     artefactId: artifactId,
     targetId: entry.targetId,
     spaceId: entry.spaceId,
   };
 
-  if (serverParsed?.success) {
-    if (serverParsed.parsed.name !== localParsed.parsed.name) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateCommandName,
-        payload: {
-          oldValue: serverParsed.parsed.name,
-          newValue: localParsed.parsed.name,
-        },
-      });
-    }
-
-    if (serverParsed.parsed.content !== localParsed.parsed.content) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateCommandDescription,
-        payload: {
-          oldValue: serverParsed.parsed.content,
-          newValue: localParsed.parsed.content,
-        },
-      });
-    }
-  }
-
-  return proposals;
+  return fieldChanges.map((change) => ({
+    ...base,
+    type: change.type,
+    payload: change.payload,
+  }));
 }
 
 function buildUpdatedSkillProposals(
