@@ -16,7 +16,10 @@ export const PMIconButton = (props: IPMIconButtonProps) => {
   const { children, variant = 'ghost', ...iconButtonProps } = props;
 
   return (
-    <IconButton {...iconButtonProps} variant={variant as IconButtonProps['variant']}>
+    <IconButton
+      {...iconButtonProps}
+      variant={variant as IconButtonProps['variant']}
+    >
       {children}
     </IconButton>
   );
