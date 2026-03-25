@@ -3,7 +3,7 @@
   "version": "1.12.0",
   "private": true,
   "engines": {
-    "node": "24.14.1",
+    "node": "24.14.0",
     "npm": "11.11.0"
   },
   "scripts": {
@@ -20,8 +20,8 @@
     "prettier:write": "prettier -w .",
     "quality-gate": "npm run typecheck:frontend && npm run test:staged && npm run lint:staged && npm run build",
     "withEnv": "bash -c 'set -a; [ -f .env ] && source .env; set +a; eval \"$@\"' --",
-    "test": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384' nx run-many -t test --exclude=cli-e2e-tests --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
-    "test:staged": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
+    "test": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx run-many -t test --exclude=cli-e2e-tests --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
+    "test:staged": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
     "test:memory-profile": "./scripts/test-memory-profile.sh",
     "typecheck:frontend": "nx run frontend:typecheck"
   },
