@@ -8,7 +8,13 @@
       "@packmind/amplitude": ["packages/editions/src/index.ts"],
       "@packmind/plugins": ["packages/editions/src/index.ts"],
       "@packmind/import-practices-legacy": ["packages/editions/src/index.ts"],
-      "@packmind/spaces-management": ["packages/editions/src/index.ts"]
+      "@packmind/spaces-management": ["packages/editions/src/index.ts"],
+      "@packmind/playbook-change-management": [
+        "packages/editions/src/index.ts"
+      ],
+      "@packmind/playbook-change-management/test": [
+        "packages/editions/src/index.ts"
+      ]
     }
   }
 }

@@ -3,7 +3,6 @@ import { PMBox } from '@packmind/ui';
 import {
   LuBookCheck,
   LuEye,
-  LuGitPullRequestArrow,
   LuHouse,
   LuPackage,
   LuTerminal,
@@ -11,8 +10,6 @@ import {
 } from 'react-icons/lu';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
 import { routes } from '../../../../shared/utils/routes';
-import { useGetSpaceBySlugQuery } from '../../../spaces/api/queries/SpacesQueries';
-import { useGetGroupedChangeProposalsQuery } from '../../../change-proposals/api/queries/ChangeProposalsQueries';
 import { SpaceNavItemLink } from './SpaceNavItemLink';
 
 interface SpaceNavSectionsProps {
@@ -50,8 +47,6 @@ export function SpaceNavSections({
         icon={<LuWandSparkles />}
         data-testid={SidebarNavigationDataTestId.SkillsLink}
       />
-      <ReviewChangesNavLink orgSlug={orgSlug} spaceSlug={spaceSlug} />
-
       <SectionHeading title="Distribution" />
       <SpaceNavItemLink
         url={routes.space.toPackages(orgSlug, spaceSlug)}
@@ -91,35 +86,5 @@ function SectionHeading({
     >
       {title}
     </PMBox>
-  );
-}
-
-function ReviewChangesNavLink({
-  orgSlug,
-  spaceSlug,
-}: Readonly<{ orgSlug: string; spaceSlug: string }>): React.ReactElement {
-  const { data: space } = useGetSpaceBySlugQuery(spaceSlug);
-  const { data: groupedProposals } = useGetGroupedChangeProposalsQuery(
-    space?.id,
-  );
-
-  const totalArtefacts = groupedProposals
-    ? groupedProposals.standards.length +
-      groupedProposals.commands.length +
-      groupedProposals.skills.length +
-      groupedProposals.creations.length
-    : 0;
-
-  return (
-    <SpaceNavItemLink
-      url={routes.space.toReviewChanges(orgSlug, spaceSlug)}
-      label="Review changes"
-      icon={<LuGitPullRequestArrow />}
-      badge={
-        totalArtefacts > 0
-          ? { text: String(totalArtefacts), colorScheme: 'blue' }
-          : undefined
-      }
-    />
   );
 }

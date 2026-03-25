@@ -1,5 +1,5 @@
 import { Outlet, redirect } from 'react-router';
-import { ChangeProposalUpdateSubscription } from '../../src/domain/change-proposals/components/ChangeProposalUpdateSubscription';
+import { ChangeProposalUpdateSubscription } from '@packmind/proprietary/frontend/domain/change-proposals/components/ChangeProposalUpdateSubscription';
 import type { LoaderFunctionArgs, Params } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
 import {

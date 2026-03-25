@@ -17,11 +17,14 @@ import {
   ChangeProposalCaptureMode,
 } from '@packmind/types';
 import { ProposeChangeModal } from './ProposeChangeModal';
-import { useCreateChangeProposalMutation } from '../../change-proposals/api/queries/ChangeProposalsQueries';
+import { useCreateChangeProposalMutation } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
-jest.mock('../../change-proposals/api/queries/ChangeProposalsQueries', () => ({
-  useCreateChangeProposalMutation: jest.fn(),
-}));
+jest.mock(
+  '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
+  () => ({
+    useCreateChangeProposalMutation: jest.fn(),
+  }),
+);
 
 const mockUseCreateChangeProposalMutation =
   useCreateChangeProposalMutation as jest.MockedFunction<

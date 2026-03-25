@@ -20,7 +20,6 @@
     "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
-    "@packmind/playbook-change-management": "*",
     "uuid": "11.1.0",
     "@packmind/test-utils": "*",
     "@packmind/llm": "*",

@@ -1,1 +1,0 @@
-export { CreateSkillReviewDetail } from './CreateSkillReviewDetail';

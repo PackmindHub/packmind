@@ -35,7 +35,7 @@ import { PackageCountBadge } from '../../deployments/components/PackageCountBadg
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
-import { useGetGroupedChangeProposalsQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
+import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -247,34 +247,43 @@ export const StandardsList = ({
           </>
         ),
         version: standard.version,
-        pendingReviews: (() => {
-          const count = pendingReviewCountByStandardId.get(standard.id) ?? 0;
-          if (count > 0 && orgSlug && spaceSlug) {
-            return (
-              <PMLink asChild>
-                <Link
-                  to={routes.space.toReviewChangesArtefact(
-                    orgSlug,
-                    spaceSlug,
-                    'standards',
-                    standard.id,
-                  )}
-                >
-                  <PMBadge colorPalette="yellow" variant="solid" size="sm">
-                    {count}
+        ...(groupedProposals
+          ? {
+              pendingReviews: (() => {
+                const count =
+                  pendingReviewCountByStandardId.get(standard.id) ?? 0;
+                if (count > 0 && orgSlug && spaceSlug) {
+                  return (
+                    <PMLink asChild>
+                      <Link
+                        to={routes.space.toReviewChangesArtefact(
+                          orgSlug,
+                          spaceSlug,
+                          'standards',
+                          standard.id,
+                        )}
+                      >
+                        <PMBadge
+                          colorPalette="yellow"
+                          variant="solid"
+                          size="sm"
+                        >
+                          {count}
+                        </PMBadge>
+                      </Link>
+                    </PMLink>
+                  );
+                }
+                return (
+                  <PMBadge colorPalette="green" variant="solid" size="sm">
+                    0
                   </PMBadge>
-                </Link>
-              </PMLink>
-            );
-          }
-          return (
-            <PMBadge colorPalette="green" variant="solid" size="sm">
-              0
-            </PMBadge>
-          );
-        })(),
-        pendingReviewsCount:
-          pendingReviewCountByStandardId.get(standard.id) ?? 0,
+                );
+              })(),
+              pendingReviewsCount:
+                pendingReviewCountByStandardId.get(standard.id) ?? 0,
+            }
+          : {}),
         packages: (
           <PackageCountBadge
             artifactId={standard.id}
@@ -299,6 +308,7 @@ export const StandardsList = ({
     searchQuery,
     packagesResponse,
     pendingReviewCountByStandardId,
+    groupedProposals,
   ]);
 
   const isAllSelected =
@@ -356,14 +366,18 @@ export const StandardsList = ({
       sortable: true,
       sortDirection: getSortDirection('version'),
     },
-    {
-      key: 'pendingReviews',
-      header: 'Pending reviews',
-      width: '150px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('pendingReviews'),
-    },
+    ...(groupedProposals
+      ? [
+          {
+            key: 'pendingReviews',
+            header: 'Pending reviews',
+            width: '150px',
+            align: 'center' as const,
+            sortable: true,
+            sortDirection: getSortDirection('pendingReviews'),
+          },
+        ]
+      : []),
     {
       key: 'packages',
       header: 'Packages',

@@ -37,8 +37,8 @@ import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { ProposeChangeModal } from './ProposeChangeModal';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
 import { RecipeVersionHistoryHeader } from './RecipeVersionHistoryHeader';
-import { useListChangeProposalsByRecipeQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
-import { ArtifactResultFilePreview } from '../../change-proposals/components/shared/ArtifactResultFilePreview';
+import { useListChangeProposalsByRecipeQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { ArtifactResultFilePreview } from '@packmind/proprietary/frontend/domain/change-proposals/components/shared/ArtifactResultFilePreview';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -67,7 +67,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const hasDistributions = distributions && distributions.length > 0;
   const pendingCount =
     changeProposals?.changeProposals?.filter(
-      (p) => p.status === ChangeProposalStatus.pending,
+      (p: { status: string }) => p.status === ChangeProposalStatus.pending,
     ).length ?? 0;
   const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 

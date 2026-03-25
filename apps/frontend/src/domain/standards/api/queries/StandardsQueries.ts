@@ -26,7 +26,7 @@ import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import {
   CHANGE_PROPOSALS_QUERY_SCOPE,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
-} from '../../../change-proposals/api/queryKeys';
+} from '@packmind/proprietary/frontend/domain/change-proposals/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 

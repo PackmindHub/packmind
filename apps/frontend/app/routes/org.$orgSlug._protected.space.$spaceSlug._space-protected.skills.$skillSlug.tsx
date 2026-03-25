@@ -33,7 +33,7 @@ import { SkillVersionHistoryHeader } from '../../src/domain/skills/components/Sk
 import { useSkillSectionNavigation } from '../../src/domain/skills/hooks/useSkillSectionNavigation';
 import { SkillActions } from '../../src/domain/skills/components/SkillActions';
 import { SKILL_MESSAGES } from '../../src/domain/skills/constants/messages';
-import { useListChangeProposalsBySkillQuery } from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { useListChangeProposalsBySkillQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
 
@@ -119,7 +119,7 @@ export default function SkillDetailLayoutRouteModule() {
   );
   const pendingCount =
     changeProposals?.changeProposals?.filter(
-      (p) => p.status === ChangeProposalStatus.pending,
+      (p: { status: string }) => p.status === ChangeProposalStatus.pending,
     ).length ?? 0;
 
   const skillWithFiles = skillWithFilesFromQuery ?? loaderData?.skill;

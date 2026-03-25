@@ -5,7 +5,7 @@ import { OrganizationsSpacesRecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { OrganizationsSpacesRecipesChangeProposalsModule } from './change-proposals/recipes-change-proposals.module';
+import { OrganizationsSpacesRecipesChangeProposalsModule } from '@packmind/playbook-change-management';
 
 /**
  * Module for space-scoped recipe routes within organizations

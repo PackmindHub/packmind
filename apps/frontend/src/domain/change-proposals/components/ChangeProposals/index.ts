@@ -1,1 +1,0 @@
-export { ChangeProposalsChangesList } from './ChangeProposalsChangesList';

@@ -1,13 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import {
-  PMBox,
-  PMMarkdownViewer,
-  PMText,
-  PMVStack,
-  isFeatureFlagEnabled,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  SKILL_EVALUATION_FEATURE_KEY,
-} from '@packmind/ui';
+import { PMBox, PMMarkdownViewer, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   ChangeProposalType,
@@ -22,12 +14,6 @@ import { serializeSkillToMarkdown } from '../../utils/serializeArtifactToMarkdow
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { SkillFilePreview } from '../../../skills/components/SkillFilePreview';
 import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
-import { SkillReviewKPIComparison } from '../../../skills/components/SkillReview/SkillReviewKPIComparison';
-import {
-  SKILL_REVIEW_MOCK_DATA,
-  SKILL_REVIEW_IMPROVED_MOCK_DATA,
-} from '../../../skills/components/SkillReview/skillReviewMockData';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
 interface SkillResultTabContentProps {
   skill: Skill;
@@ -50,14 +36,6 @@ export function SkillResultTabContent({
   acceptedProposalIds,
   filePathFilter = '',
 }: Readonly<SkillResultTabContentProps>) {
-  const { user } = useAuthContext();
-
-  const isEvaluationEnabled = isFeatureFlagEnabled({
-    featureKeys: [SKILL_EVALUATION_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail: user?.email,
-  });
-
   const applied = useMemo(
     () => applySkillProposals(skill, files, proposals, acceptedProposalIds),
     [skill, files, proposals, acceptedProposalIds],
@@ -135,15 +113,6 @@ export function SkillResultTabContent({
       >
         Version with accepted changes
       </PMText>
-
-      {hasAccepted && isEvaluationEnabled && (
-        <PMBox mb={6}>
-          <SkillReviewKPIComparison
-            originalData={SKILL_REVIEW_MOCK_DATA}
-            newData={SKILL_REVIEW_IMPROVED_MOCK_DATA}
-          />
-        </PMBox>
-      )}
 
       {hasAccepted ? (
         <PMVStack gap={6} align="stretch">
