@@ -37,7 +37,7 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
 
   describe('when there are not changes', () => {
     it('shows "No changes found."', async () => {
-      const result = await context.runCli('diff');
+      const result = await context.runCli('playbook diff');
 
       expect(result.stdout).toContain('No changes found.');
     });
@@ -58,7 +58,7 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
     });
 
     it('shows the changes for the modified file', async () => {
-      const result = await context.runCli('diff');
+      const result = await context.runCli('playbook diff');
 
       expect(result.stderr).toMatchOutput([
         'Summary: 1 change found on 1 artefact:',
@@ -74,14 +74,16 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
       });
 
       it('shows "No new changes found."', async () => {
-        const result = await context.runCli('diff');
+        const result = await context.runCli('playbook diff');
 
         expect(result.stdout).toContain('No new changes found.');
       });
 
       describe('when using --include-submitted', () => {
         it('shows the previously sent change', async () => {
-          const result = await context.runCli('diff --include-submitted');
+          const result = await context.runCli(
+            'playbook diff --include-submitted',
+          );
 
           expect(result.stdout).toMatchOutput([
             `Command "${command.name}"`,

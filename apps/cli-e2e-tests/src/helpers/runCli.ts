@@ -17,7 +17,7 @@ export interface RunCliResult {
 
 /**
  * Parse command string into arguments, respecting quoted strings.
- * Example: 'diff --submit -m "My message"' -> ['diff', '--submit', '-m', 'My message']
+ * Example: 'playbook diff --submit -m "My message"' -> ['diff', '--submit', '-m', 'My message']
  */
 function parseCommandArgs(command: string): string[] {
   const args: string[] = [];

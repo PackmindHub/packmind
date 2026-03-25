@@ -81,7 +81,7 @@ describe('...', () => {
 
     describe('when running commands from repo root', () => {
       it('shows the correct path of the change when running diff', async () => {
-        const result = await context.runCli('diff');
+        const result = await context.runCli('playbook diff');
 
         expect(result.stdout).toMatchOutput([
           `Command "${command.name}"`,
@@ -198,7 +198,7 @@ describe('...', () => {
       });
 
       it('shows the correct path of the change when running diff', async () => {
-        const result = await context.runCli('diff', { cwd });
+        const result = await context.runCli('playbook diff', { cwd });
 
         expect(result.stdout).toMatchOutput([
           `Command "${command.name}"`,

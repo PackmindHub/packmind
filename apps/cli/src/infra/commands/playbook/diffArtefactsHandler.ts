@@ -1,14 +1,14 @@
 import * as nodePath from 'path';
 import * as fs from 'fs/promises';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   ArtifactType,
   CHANGE_PROPOSAL_TYPE_LABELS,
   ChangeProposalPayload,
   ChangeProposalType,
 } from '@packmind/types';
-import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
-import { CheckDiffItemResult } from '../../domain/useCases/ICheckDiffsUseCase';
+import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
+import { CheckDiffItemResult } from '../../../domain/useCases/ICheckDiffsUseCase';
 import {
   logWarningConsole,
   logInfoConsole,
@@ -16,11 +16,9 @@ import {
   formatHeader,
   formatBold,
   formatFilePath,
-  logSuccessConsole,
-} from '../utils/consoleLogger';
-import { formatContentDiff } from '../utils/diffFormatter';
-import { formatAdditionalPropertyDiff } from './formatAdditionalPropertyDiff';
-import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
+} from '../../utils/consoleLogger';
+import { formatContentDiff } from '../../utils/diffFormatter';
+import { formatAdditionalPropertyDiff } from '../formatAdditionalPropertyDiff';
 import chalk from 'chalk';
 
 export type DiffHandlerDependencies = {
@@ -28,9 +26,7 @@ export type DiffHandlerDependencies = {
   exit: (code: number) => void;
   getCwd: () => string;
   log: typeof console.log;
-  submit?: boolean;
   includeSubmitted?: boolean;
-  message?: string;
   path?: string;
 };
 
@@ -248,98 +244,6 @@ async function collectGitInfo(deps: DiffHandlerDependencies): Promise<{
   return { gitRemoteUrl, gitBranch, gitRoot };
 }
 
-async function handleSubmission(params: {
-  packmindCliHexa: PackmindCliHexa;
-  unsubmittedItems: CheckDiffItemResult[];
-  messageFlag: string | undefined;
-  exit: (code: number) => void;
-}): Promise<boolean> {
-  const { packmindCliHexa, unsubmittedItems, messageFlag, exit } = params;
-  const unsubmittedDiffs = unsubmittedItems.map((r) => r.diff);
-
-  if (unsubmittedDiffs.length === 0) {
-    logInfoConsole('All changes already submitted.');
-    return false;
-  }
-
-  let message: string;
-  if (messageFlag !== undefined) {
-    const validation = validateMessage(messageFlag);
-    if (!validation.valid) {
-      logErrorConsole(validation.error);
-      exit(1);
-      return true;
-    }
-    message = validation.message;
-  } else if (process.stdin.isTTY) {
-    const editorMessage = openEditorForMessage();
-    const validation = validateMessage(editorMessage);
-    if (!validation.valid) {
-      logErrorConsole(
-        'Aborting submission: empty message. Use -m to provide a message.',
-      );
-      exit(1);
-      return true;
-    }
-    message = validation.message;
-  } else {
-    logErrorConsole(
-      'Non-interactive mode requires -m flag. Use: packmind-cli diff --submit -m "your message"',
-    );
-    exit(1);
-    return true;
-  }
-
-  const groupedUnsubmitted = Array.from(
-    groupDiffsByArtefact(unsubmittedDiffs).values(),
-  );
-  const result = await packmindCliHexa.submitDiffs(groupedUnsubmitted, message);
-
-  for (const err of result.errors) {
-    if (err.code === 'ChangeProposalPayloadMismatchError') {
-      logErrorConsole(
-        `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it (${err.message})`,
-      );
-    } else {
-      logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
-    }
-  }
-
-  if (result.submitted > 0) {
-    const truncatedMessage =
-      message.length > 50 ? message.slice(0, 50) + '...' : message;
-    logInfoConsole(`Message: "${truncatedMessage}"`);
-  }
-
-  const summaryParts: string[] = [];
-  if (result.submitted > 0) {
-    summaryParts.push(`${result.submitted} submitted`);
-  }
-  if (result.alreadySubmitted > 0) {
-    summaryParts.push(`${result.alreadySubmitted} already submitted`);
-  }
-  if (result.errors.length > 0) {
-    const errorWord = result.errors.length === 1 ? 'error' : 'errors';
-    summaryParts.push(`${result.errors.length} ${errorWord}`);
-  }
-
-  if (summaryParts.length > 0) {
-    const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
-    if (result.errors.length === 0 && result.alreadySubmitted === 0) {
-      logSuccessConsole(summaryMessage);
-    } else if (
-      (result.errors.length > 0 && result.submitted > 0) ||
-      result.alreadySubmitted > 0
-    ) {
-      logWarningConsole(summaryMessage);
-    } else {
-      logErrorConsole(summaryMessage);
-    }
-  }
-
-  return false;
-}
-
 function extractUniqueAndSortedArtefacts(groups: Map<string, ArtefactDiff[]>) {
   const typeSortOrder: Record<ArtifactType, number> = {
     command: 0,
@@ -456,15 +360,7 @@ function displayDiffs(params: {
 export async function diffArtefactsHandler(
   deps: DiffHandlerDependencies,
 ): Promise<DiffHandlerResult> {
-  const {
-    packmindCliHexa,
-    exit,
-    getCwd,
-    log,
-    submit,
-    includeSubmitted,
-    message: messageFlag,
-  } = deps;
+  const { packmindCliHexa, exit, getCwd, log, includeSubmitted } = deps;
   const cwd = getCwd();
 
   // Compute search path (--path / -p flag)
@@ -581,9 +477,6 @@ export async function diffArtefactsHandler(
 
     if (allDiffs.length === 0) {
       log('No changes found.');
-      if (submit) {
-        logInfoConsole('No changes to submit.');
-      }
       exit(0);
       return { diffsFound: 0 };
     }
@@ -611,9 +504,6 @@ export async function diffArtefactsHandler(
       if (submittedItems.length > 0) {
         logInfoConsole(buildSubmittedFooter(submittedItems));
       }
-      if (submit) {
-        logInfoConsole('All changes already submitted.');
-      }
       exit(0);
       return { diffsFound: 0 };
     }
@@ -627,18 +517,6 @@ export async function diffArtefactsHandler(
       submittedItems,
       log,
     });
-
-    if (submit) {
-      const aborted = await handleSubmission({
-        packmindCliHexa,
-        unsubmittedItems,
-        messageFlag,
-        exit,
-      });
-      if (aborted) {
-        return { diffsFound: changeCount };
-      }
-    }
 
     exit(0);
     return { diffsFound: changeCount };

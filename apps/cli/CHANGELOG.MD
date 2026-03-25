@@ -16,6 +16,7 @@
 ## Removed
 
 - Dropped `diff add`, `diff remove` and `diff --submit` in favor of `playbook` commands.
+- Deprecated `diff` command, replaced by `playbook diff`
 
 # [0.22.0] - 2026-03-13
 
