@@ -37,7 +37,7 @@ import {
 } from '../../deployments/components/PackageCountBadge';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
-import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { useGetGroupedChangeProposalsQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -235,42 +235,33 @@ export const RecipesList = ({
           </>
         ),
         version: recipe.version,
-        ...(groupedProposals
-          ? {
-              pendingReviews: (() => {
-                const count = pendingReviewCountByRecipeId.get(recipe.id) ?? 0;
-                if (count > 0 && spaceSlug) {
-                  return (
-                    <PMLink asChild>
-                      <Link
-                        to={routes.space.toReviewChangesArtefact(
-                          orgSlug,
-                          spaceSlug,
-                          'commands',
-                          recipe.id,
-                        )}
-                      >
-                        <PMBadge
-                          colorPalette="yellow"
-                          variant="solid"
-                          size="sm"
-                        >
-                          {count}
-                        </PMBadge>
-                      </Link>
-                    </PMLink>
-                  );
-                }
-                return (
-                  <PMBadge colorPalette="green" variant="solid" size="sm">
-                    0
+        pendingReviews: (() => {
+          const count = pendingReviewCountByRecipeId.get(recipe.id) ?? 0;
+          if (count > 0 && spaceSlug) {
+            return (
+              <PMLink asChild>
+                <Link
+                  to={routes.space.toReviewChangesArtefact(
+                    orgSlug,
+                    spaceSlug,
+                    'commands',
+                    recipe.id,
+                  )}
+                >
+                  <PMBadge colorPalette="yellow" variant="solid" size="sm">
+                    {count}
                   </PMBadge>
-                );
-              })(),
-              pendingReviewsCount:
-                pendingReviewCountByRecipeId.get(recipe.id) ?? 0,
-            }
-          : {}),
+                </Link>
+              </PMLink>
+            );
+          }
+          return (
+            <PMBadge colorPalette="green" variant="solid" size="sm">
+              0
+            </PMBadge>
+          );
+        })(),
+        pendingReviewsCount: pendingReviewCountByRecipeId.get(recipe.id) ?? 0,
         packages: (
           <PackageCountBadge
             artifactId={recipe.id}
@@ -295,7 +286,6 @@ export const RecipesList = ({
     searchQuery,
     packagesResponse,
     pendingReviewCountByRecipeId,
-    groupedProposals,
   ]);
 
   const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
@@ -354,18 +344,14 @@ export const RecipesList = ({
       sortable: true,
       sortDirection: getSortDirection('version'),
     },
-    ...(groupedProposals
-      ? [
-          {
-            key: 'pendingReviews',
-            header: 'Pending reviews',
-            width: '150px',
-            align: 'center' as const,
-            sortable: true,
-            sortDirection: getSortDirection('pendingReviews'),
-          },
-        ]
-      : []),
+    {
+      key: 'pendingReviews',
+      header: 'Pending reviews',
+      width: '150px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('pendingReviews'),
+    },
     {
       key: 'packages',
       header: 'Packages',

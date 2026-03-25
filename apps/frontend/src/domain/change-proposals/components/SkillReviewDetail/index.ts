@@ -1,0 +1,1 @@
+export { SkillReviewDetail } from './SkillReviewDetail';

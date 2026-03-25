@@ -22,10 +22,6 @@ module.exports = function getOssWebpackPaths(__dirname) {
       __dirname,
       '../../packages/editions/src',
     ),
-    '@packmind/playbook-change-management': join(
-      __dirname,
-      '../../packages/editions/src',
-    ),
     // Add other OSS-specific overrides here as needed
   };
 };
