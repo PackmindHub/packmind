@@ -21,7 +21,6 @@ export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
   'change-proposals-in-webapp';
 
 export const EDIT_CHANGE_PROPOSALS_FEATURE_KEY = 'edit-change-proposals';
-export const SKILL_EVALUATION_FEATURE_KEY = 'skill-evaluation';
 
 export const SPACES_MANAGEMENT_FEATURE_KEY = 'spaces-management';
 
@@ -41,11 +40,6 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   ],
   [EDIT_CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [SPACES_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [SKILL_EVALUATION_FEATURE_KEY]: [
-    'cedric.teyton@packmind.com',
-    'arthur.magne@packmind.com',
-    'joan.racenet@packmind.com',
-  ],
 };
 
 const isEmailEntry = (entry: string): boolean => {

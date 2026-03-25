@@ -98,8 +98,6 @@ export const routes = {
       spaceSlug: string,
       skillSlug: string,
     ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/distributions`,
-    toSkillReview: (orgSlug: string, spaceSlug: string, skillSlug: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/review`,
     toReviewChanges: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/review-changes`,
     toReviewChangesArtefactType: (

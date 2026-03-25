@@ -1,7 +1,6 @@
-export type SkillNavKey = 'files' | 'distributions' | 'review';
+export type SkillNavKey = 'files' | 'distributions';
 
 export const SKILL_NAV_KEYS = {
   FILES: 'files' as const,
   DISTRIBUTIONS: 'distributions' as const,
-  REVIEW: 'review' as const,
 };
