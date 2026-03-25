@@ -8,7 +8,7 @@ import {
 } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { diffArtefactsHandler } from './diffArtefactsHandler';
+import { diffArtefactsHandler } from './playbook/diffArtefactsHandler';
 import {
   formatCommand,
   logErrorConsole,
@@ -18,7 +18,7 @@ import {
 export const diffCommand = command({
   name: 'diff',
   description:
-    '[Deprecated] Use playbook commands instead. Run for migration guidance',
+    '[Deprecated] Use `playbook diff` commands instead. Run for migration guidance',
   args: {
     submit: flag({
       long: 'submit',
@@ -92,6 +92,11 @@ export const diffCommand = command({
       logInfoConsole(` ${formatCommand(removeCommand)}`);
       process.exit(1);
     }
+
+    const diffCommand = `packmind-cli playbook diff${includeSubmitted ? ' --include-submitted' : ''}${path ? ` --path ${path}` : ''}`;
+    logErrorConsole('Deprecated: `packmind-cli diff` will be removed');
+    logInfoConsole('Use the following command instead:');
+    logInfoConsole(` ${formatCommand(diffCommand)}`);
 
     await diffArtefactsHandler({
       packmindCliHexa,

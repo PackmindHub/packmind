@@ -1,14 +1,14 @@
 import * as nodePath from 'path';
 import * as fs from 'fs/promises';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   ArtifactType,
   CHANGE_PROPOSAL_TYPE_LABELS,
   ChangeProposalPayload,
   ChangeProposalType,
 } from '@packmind/types';
-import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
-import { CheckDiffItemResult } from '../../domain/useCases/ICheckDiffsUseCase';
+import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
+import { CheckDiffItemResult } from '../../../domain/useCases/ICheckDiffsUseCase';
 import {
   logWarningConsole,
   logInfoConsole,
@@ -17,10 +17,13 @@ import {
   formatBold,
   formatFilePath,
   logSuccessConsole,
-} from '../utils/consoleLogger';
-import { formatContentDiff } from '../utils/diffFormatter';
-import { formatAdditionalPropertyDiff } from './formatAdditionalPropertyDiff';
-import { openEditorForMessage, validateMessage } from '../utils/editorMessage';
+} from '../../utils/consoleLogger';
+import { formatContentDiff } from '../../utils/diffFormatter';
+import { formatAdditionalPropertyDiff } from '../formatAdditionalPropertyDiff';
+import {
+  openEditorForMessage,
+  validateMessage,
+} from '../../utils/editorMessage';
 import chalk from 'chalk';
 
 export type DiffHandlerDependencies = {

@@ -3,11 +3,11 @@ import {
   diffArtefactsHandler,
   DiffHandlerDependencies,
 } from './diffArtefactsHandler';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { ChangeProposalType, createSkillFileId } from '@packmind/types';
 
 jest.mock('fs/promises');
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logErrorConsole: jest.fn(),
@@ -17,14 +17,14 @@ jest.mock('../utils/consoleLogger', () => ({
   formatBold: jest.fn((text: string) => text),
 }));
 
-jest.mock('../utils/diffFormatter', () => ({
+jest.mock('../../utils/diffFormatter', () => ({
   formatContentDiff: jest.fn(() => ({
     lines: ['    + added line', '    - removed line'],
     hasChanges: true,
   })),
 }));
 
-jest.mock('../utils/editorMessage', () => ({
+jest.mock('../../utils/editorMessage', () => ({
   openEditorForMessage: jest.fn(() => 'test message from editor'),
   validateMessage: jest.fn((msg: string) => ({
     valid: true,
@@ -166,7 +166,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays summary with single artefact', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       expect(logWarningConsole).toHaveBeenCalledWith(
@@ -175,7 +177,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays artefact name in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       expect(logWarningConsole).toHaveBeenCalledWith('* Command "My Command"');
@@ -241,7 +245,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays summary with multiple artefacts', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       expect(logWarningConsole).toHaveBeenCalledWith(
@@ -250,7 +256,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('lists Command before Standard in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -293,7 +301,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('lists Command before Skill in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -304,7 +314,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('lists Skill before Standard in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -340,7 +352,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('sorts artefacts alphabetically within same type', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -928,7 +942,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error about not being in a Packmind project', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Not inside a Packmind project'),
       );
@@ -959,7 +973,7 @@ describe('diffArtefactsHandler', () => {
     it('displays the error', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith('Invalid JSON');
     });
 
@@ -984,7 +998,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error message', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith('Network error');
     });
 
@@ -1039,7 +1053,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith(
         'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
@@ -1070,7 +1084,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith(
         'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
@@ -1163,7 +1177,7 @@ describe('diffArtefactsHandler', () => {
 
       it('displays submission summary', async () => {
         const { logSuccessConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         await diffArtefactsHandler({
           ...deps,
@@ -1210,7 +1224,7 @@ describe('diffArtefactsHandler', () => {
 
       it('displays summary with submitted and already submitted counts', async () => {
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         await diffArtefactsHandler({
           ...deps,
@@ -1249,7 +1263,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays error for each failed submission', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
         await diffArtefactsHandler({
           ...deps,
           submit: true,
@@ -1262,7 +1278,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays error summary', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
         await diffArtefactsHandler({
           ...deps,
           submit: true,
@@ -1305,7 +1323,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays user-friendly outdated message with artifact type', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
         await diffArtefactsHandler({
           ...deps,
           submit: true,
@@ -1343,7 +1363,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays raw error message', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
         await diffArtefactsHandler({
           ...deps,
           submit: true,
@@ -1356,7 +1378,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('does not display outdated message', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
         await diffArtefactsHandler({
           ...deps,
           submit: true,
@@ -1400,7 +1424,7 @@ describe('diffArtefactsHandler', () => {
 
       it('displays summary with all counts', async () => {
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         await diffArtefactsHandler({
           ...deps,
@@ -1434,7 +1458,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays no changes to submit message', async () => {
-        const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
         await diffArtefactsHandler({
           ...deps,
           submit: true,
@@ -1509,7 +1535,7 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays footer about submitted changes', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
@@ -1518,7 +1544,7 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays footer with hint to use --include-submitted', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
@@ -1568,7 +1594,7 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays footer about submitted changes', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
@@ -1670,7 +1696,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           '* Standard "My Standard" (all already submitted)',
@@ -1681,7 +1707,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           '* Command "My Command"',
@@ -1713,7 +1739,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           'Summary: 2 changes found on 2 artefacts (all already submitted):',
@@ -1724,7 +1750,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           '* Command "My Command" (all already submitted)',
@@ -1846,7 +1872,7 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays all changes already submitted message', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await diffArtefactsHandler({
         ...deps,
         submit: true,
@@ -1998,7 +2024,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays an error with the resolved path', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await diffArtefactsHandler({ ...deps, path: 'non/existent/path' });
 

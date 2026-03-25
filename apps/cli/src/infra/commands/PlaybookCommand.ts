@@ -4,6 +4,7 @@ import { rmPlaybookCommand } from './playbook/RmCommand';
 import { unstagePlaybookCommand } from './playbook/UnstageCommand';
 import { statusPlaybookCommand } from './playbook/StatusCommand';
 import { submitPlaybookCommand } from './playbook/SubmitCommand';
+import { diffCommand } from './playbook/DiffCommand';
 
 export const playbookCommand = subcommands({
   name: 'playbook',
@@ -12,6 +13,7 @@ export const playbookCommand = subcommands({
     add: addPlaybookCommand,
     rm: rmPlaybookCommand,
     unstage: unstagePlaybookCommand,
+    diff: diffCommand,
     status: statusPlaybookCommand,
     submit: submitPlaybookCommand,
   },
