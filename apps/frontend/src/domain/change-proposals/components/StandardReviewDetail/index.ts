@@ -1,1 +1,0 @@
-export { StandardReviewDetail } from './StandardReviewDetail';

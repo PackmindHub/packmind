@@ -19,6 +19,10 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
       __dirname,
       '../../packages/import-practices-legacy/src',
     ),
+    '@packmind/playbook-change-management': join(
+      __dirname,
+      '../../packages/playbook-change-management/src',
+    ),
     // Add other proprietary-specific overrides here as needed
   };
 };

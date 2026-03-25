@@ -19,7 +19,7 @@ import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   CHANGE_PROPOSALS_QUERY_SCOPE,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
-} from '../../../change-proposals/api/queryKeys';
+} from '@packmind/proprietary/frontend/domain/change-proposals/api/queryKeys';
 
 export const getRecipesBySpaceQueryOptions = (
   organizationId: OrganizationId | undefined,
