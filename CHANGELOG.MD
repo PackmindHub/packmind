@@ -8,6 +8,20 @@
 
 ## Removed
 
+# [1.12.0] - 2026-03-25
+
+## Added
+
+- Support custom additional properties in skills (e.g. Claude Code fields like `argument-hint`, `model`, `hooks`) stored as JSONB and tracked via change proposals (#206)
+
+## Changed
+
+- Improve UI of the sidebar
+
+## Fixed
+
+- Fixed navigation issues when switching across spaces and organizations
+
 # [1.11.1] - 2026-03-23
 
 ## Fixed
@@ -26,7 +40,6 @@
 - The `diff` command now detects updated rules using similarity matching: when a rule is modified rather than deleted and re-added, it is submitted as an `updateRule` change proposal
 - Add API support for `packmind-lock` file generation and version tracking
 - Render skills for GitLab Duo in `.gitlab/duo/skills/` using multi-file deployment with YAML frontmatter
-- Support custom additional properties in skills (e.g. Claude Code fields like `argument-hint`, `model`, `hooks`) stored as JSONB and tracked via change proposals (#206)
 
 ## Changed
 
@@ -251,7 +264,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.11.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...HEAD
+[1.12.0]: https://github.com/PackmindHub/packmind/compare/release/1.11.1...release/1.12.0
 [1.11.1]: https://github.com/PackmindHub/packmind/compare/release/1.11.0...release/1.11.1
 [1.11.0]: https://github.com/PackmindHub/packmind/compare/release/1.10.0...release/1.11.0
 [1.10.0]: https://github.com/PackmindHub/packmind/compare/release/1.9.0...release/1.10.0
