@@ -1,6 +1,9 @@
 import { ChangeProposalType } from '@packmind/types';
 
-import { compareStandardFields } from './artifactComparison';
+import {
+  compareCommandFields,
+  compareStandardFields,
+} from './artifactComparison';
 
 const PACKMIND_PATH = '.packmind/standards/my-standard.md';
 
@@ -154,5 +157,47 @@ describe('compareStandardFields', () => {
       'unknown/path.md',
     );
     expect(result).toEqual([]);
+  });
+});
+
+describe('compareCommandFields', () => {
+  const basePath = '.claude/commands/my-command.md';
+
+  it('returns empty array when contents are identical', () => {
+    const content = '---\nname: My Command\n---\nDo something useful';
+    expect(compareCommandFields(content, content, basePath)).toEqual([]);
+  });
+
+  it('detects name change', () => {
+    const deployed = '---\nname: Old Command\n---\nBody here';
+    const local = '---\nname: New Command\n---\nBody here';
+    const changes = compareCommandFields(local, deployed, basePath);
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateCommandName,
+        payload: { oldValue: 'Old Command', newValue: 'New Command' },
+      }),
+    );
+  });
+
+  it('detects content change', () => {
+    const deployed = '---\nname: Cmd\n---\nOld body';
+    const local = '---\nname: Cmd\n---\nNew body';
+    const changes = compareCommandFields(local, deployed, basePath);
+    expect(changes).toContainEqual(
+      expect.objectContaining({
+        type: ChangeProposalType.updateCommandDescription,
+      }),
+    );
+  });
+
+  it('returns empty array when local parsing fails', () => {
+    expect(compareCommandFields('', 'valid content', basePath)).toEqual([]);
+  });
+
+  it('returns empty array when deployed parsing fails', () => {
+    expect(
+      compareCommandFields('---\nname: Cmd\n---\nBody', '', basePath),
+    ).toEqual([]);
   });
 });

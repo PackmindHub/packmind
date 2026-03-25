@@ -1,5 +1,6 @@
 import { ChangeProposalType, createRuleId } from '@packmind/types';
 
+import { parseCommandFile } from './parseCommandFile';
 import { parseStandardMd } from './parseStandardMd';
 import { matchUpdatedRules } from './ruleSimilarity';
 
@@ -116,6 +117,42 @@ export function compareStandardFields(
       type: ChangeProposalType.addRule,
       payload: {
         item: { content: rule },
+      },
+    });
+  }
+
+  return changes;
+}
+
+export function compareCommandFields(
+  localContent: string,
+  deployedContent: string,
+  filePath: string,
+): FieldChange[] {
+  const localParsed = parseCommandFile(localContent, filePath);
+  if (!localParsed.success) return [];
+
+  const serverParsed = parseCommandFile(deployedContent, filePath);
+  if (!serverParsed.success) return [];
+
+  const changes: FieldChange[] = [];
+
+  if (serverParsed.parsed.name !== localParsed.parsed.name) {
+    changes.push({
+      type: ChangeProposalType.updateCommandName,
+      payload: {
+        oldValue: serverParsed.parsed.name,
+        newValue: localParsed.parsed.name,
+      },
+    });
+  }
+
+  if (serverParsed.parsed.content !== localParsed.parsed.content) {
+    changes.push({
+      type: ChangeProposalType.updateCommandDescription,
+      payload: {
+        oldValue: serverParsed.parsed.content,
+        newValue: localParsed.parsed.content,
       },
     });
   }
