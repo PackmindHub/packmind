@@ -258,7 +258,7 @@ Run the following command with the actual skill path:
 packmind-cli skills add <path/to/skill-folder-or-parent> [additional-skill-folders-or-parents...]
 \`\`\`
 
-This registers one or more skills with Packmind. Each path can point to a skill folder directly or to a parent folder that contains multiple skill folders.
+This registers one or more skills with Packmind, making them available for deployment to target repositories and AI coding agents. Each path can point to a skill folder directly or to a parent folder that contains multiple skill folders.
 
 ### Step 8: Offer to Add to Package
 
