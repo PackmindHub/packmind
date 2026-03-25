@@ -45,7 +45,7 @@ testWithApi.describe('packmind-cli install', () => {
       expect(distributions).toEqual([
         {
           target: `/ in ${gitRepoOwner}/${gitRepoName}:${notifyDistributionCommand.gitBranch}`,
-          author: userData.email,
+          author: userData.email.split('@')[0],
         },
       ]);
     },
