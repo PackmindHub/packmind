@@ -299,6 +299,33 @@ describe('addSkillHandler', () => {
     });
   });
 
+  describe('when the provided paths resolve to no skill directories', () => {
+    beforeEach(async () => {
+      mockedResolveSkillInputPaths.mockResolvedValue([]);
+
+      await addSkillHandler(
+        {
+          skillPaths: ['C:\\workspace\\empty-dir'],
+        },
+        deps,
+      );
+    });
+
+    it('logs the no-skill-found usage message', () => {
+      expect(mockLogErrorConsole).toHaveBeenCalledWith(
+        'No skill directories found in the provided paths. Usage: packmind-cli skills add <path> [additional-paths...]',
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not attempt any upload', () => {
+      expect(mockPackmindCliHexa.uploadSkill).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when batch confirmation is needed and stdin is a TTY', () => {
     beforeEach(() => {
       Object.defineProperty(process.stdin, 'isTTY', {
