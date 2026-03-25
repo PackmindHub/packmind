@@ -3,11 +3,11 @@ import {
   diffArtefactsHandler,
   DiffHandlerDependencies,
 } from './diffArtefactsHandler';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { ChangeProposalType, createSkillFileId } from '@packmind/types';
 
 jest.mock('fs/promises');
-jest.mock('../utils/consoleLogger', () => ({
+jest.mock('../../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logErrorConsole: jest.fn(),
@@ -17,14 +17,14 @@ jest.mock('../utils/consoleLogger', () => ({
   formatBold: jest.fn((text: string) => text),
 }));
 
-jest.mock('../utils/diffFormatter', () => ({
+jest.mock('../../utils/diffFormatter', () => ({
   formatContentDiff: jest.fn(() => ({
     lines: ['    + added line', '    - removed line'],
     hasChanges: true,
   })),
 }));
 
-jest.mock('../utils/editorMessage', () => ({
+jest.mock('../../utils/editorMessage', () => ({
   openEditorForMessage: jest.fn(() => 'test message from editor'),
   validateMessage: jest.fn((msg: string) => ({
     valid: true,
@@ -166,7 +166,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays summary with single artefact', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       expect(logWarningConsole).toHaveBeenCalledWith(
@@ -175,7 +177,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays artefact name in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       expect(logWarningConsole).toHaveBeenCalledWith('* Command "My Command"');
@@ -241,7 +245,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays summary with multiple artefacts', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       expect(logWarningConsole).toHaveBeenCalledWith(
@@ -250,7 +256,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('lists Command before Standard in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -293,7 +301,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('lists Command before Skill in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -304,7 +314,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('lists Skill before Standard in summary', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -340,7 +352,9 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('sorts artefacts alphabetically within same type', async () => {
-      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logWarningConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
       await diffArtefactsHandler(deps);
 
       const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
@@ -928,7 +942,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error about not being in a Packmind project', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith(
         expect.stringContaining('Not inside a Packmind project'),
       );
@@ -959,7 +973,7 @@ describe('diffArtefactsHandler', () => {
     it('displays the error', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith('Invalid JSON');
     });
 
@@ -984,7 +998,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error message', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith('Network error');
     });
 
@@ -1039,7 +1053,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith(
         'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
@@ -1070,7 +1084,7 @@ describe('diffArtefactsHandler', () => {
     it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
       expect(logErrorConsole).toHaveBeenCalledWith(
         'Could not determine git repository info. The diff command requires a git repository with a remote configured.',
       );
@@ -1089,361 +1103,10 @@ describe('diffArtefactsHandler', () => {
     });
   });
 
-  describe('when submit is false', () => {
-    beforeEach(() => {
-      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-        packages: { 'my-package': '*' },
-      });
+  it('does not call submitDiffs', async () => {
+    await diffArtefactsHandler({ ...deps });
 
-      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-        {
-          filePath: '.packmind/commands/my-command.md',
-          type: ChangeProposalType.updateCommandDescription,
-          payload: { oldValue: 'old', newValue: 'new' },
-          artifactName: 'My Command',
-          artifactType: 'command',
-        },
-      ]);
-    });
-
-    it('does not call submitDiffs', async () => {
-      await diffArtefactsHandler({ ...deps, submit: false });
-
-      expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when submit is true', () => {
-    describe('when there are diffs', () => {
-      beforeEach(() => {
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-package': '*' },
-        });
-
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-          {
-            filePath: '.packmind/commands/my-command.md',
-            type: ChangeProposalType.updateCommandDescription,
-            payload: { oldValue: 'old', newValue: 'new' },
-            artifactName: 'My Command',
-            artifactType: 'command',
-          },
-        ]);
-
-        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
-          submitted: 1,
-          alreadySubmitted: 0,
-          skipped: [],
-          errors: [],
-        });
-      });
-
-      it('calls submitDiffs with grouped diffs', async () => {
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith(
-          [
-            [
-              {
-                filePath: '.packmind/commands/my-command.md',
-                type: ChangeProposalType.updateCommandDescription,
-                payload: { oldValue: 'old', newValue: 'new' },
-                artifactName: 'My Command',
-                artifactType: 'command',
-              },
-            ],
-          ],
-          'test message',
-        );
-      });
-
-      it('displays submission summary', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../utils/consoleLogger',
-        );
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logSuccessConsole).toHaveBeenCalledWith('Summary: 1 submitted');
-      });
-    });
-
-    describe('when there are diffs with skipped artifacts', () => {
-      beforeEach(() => {
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-package': '*' },
-        });
-
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-          {
-            filePath: '.packmind/commands/my-command.md',
-            type: ChangeProposalType.updateCommandDescription,
-            payload: { oldValue: 'old', newValue: 'new' },
-            artifactName: 'My Command',
-            artifactType: 'command',
-          },
-          {
-            filePath: '.packmind/standards/my-standard.md',
-            type: ChangeProposalType.updateStandardDescription,
-            payload: { oldValue: 'old std', newValue: 'new std' },
-            artifactName: 'My Standard',
-            artifactType: 'standard',
-          },
-        ]);
-
-        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
-          submitted: 1,
-          alreadySubmitted: 1,
-          skipped: [
-            { name: 'My Standard', reason: 'Only commands are supported' },
-          ],
-          errors: [],
-        });
-      });
-
-      it('displays summary with submitted and already submitted counts', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
-        );
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logWarningConsole).toHaveBeenCalledWith(
-          'Summary: 1 submitted, 1 already submitted',
-        );
-      });
-    });
-
-    describe('when submit has errors', () => {
-      beforeEach(() => {
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-package': '*' },
-        });
-
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-          {
-            filePath: '.packmind/commands/my-command.md',
-            type: ChangeProposalType.updateCommandDescription,
-            payload: { oldValue: 'old', newValue: 'new' },
-            artifactName: 'My Command',
-            artifactType: 'command',
-          },
-        ]);
-
-        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
-          submitted: 0,
-          alreadySubmitted: 0,
-          skipped: [],
-          errors: [{ name: 'My Command', message: 'Server error' }],
-        });
-      });
-
-      it('displays error for each failed submission', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logErrorConsole).toHaveBeenCalledWith(
-          'Failed to submit "My Command": Server error',
-        );
-      });
-
-      it('displays error summary', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logErrorConsole).toHaveBeenCalledWith('Summary: 1 error');
-      });
-    });
-
-    describe('when submit has a ChangeProposalPayloadMismatchError', () => {
-      beforeEach(() => {
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-package': '*' },
-        });
-
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-          {
-            filePath: '.packmind/commands/my-command.md',
-            type: ChangeProposalType.updateCommandDescription,
-            payload: { oldValue: 'old', newValue: 'new' },
-            artifactName: 'My Command',
-            artifactType: 'command',
-          },
-        ]);
-
-        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
-          submitted: 0,
-          alreadySubmitted: 0,
-          skipped: [],
-          errors: [
-            {
-              name: 'My Command',
-              message: 'Payload mismatch',
-              code: 'ChangeProposalPayloadMismatchError',
-              artifactType: 'command',
-            },
-          ],
-        });
-      });
-
-      it('displays user-friendly outdated message with artifact type', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logErrorConsole).toHaveBeenCalledWith(
-          'Failed to submit "My Command": command is outdated, please run `packmind-cli install` to update it (Payload mismatch)',
-        );
-      });
-    });
-
-    describe('when submit has a non-mismatch error', () => {
-      beforeEach(() => {
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-package': '*' },
-        });
-
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-          {
-            filePath: '.packmind/commands/my-command.md',
-            type: ChangeProposalType.updateCommandDescription,
-            payload: { oldValue: 'old', newValue: 'new' },
-            artifactName: 'My Command',
-            artifactType: 'command',
-          },
-        ]);
-
-        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
-          submitted: 0,
-          alreadySubmitted: 0,
-          skipped: [],
-          errors: [{ name: 'My Command', message: 'Server error' }],
-        });
-      });
-
-      it('displays raw error message', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logErrorConsole).toHaveBeenCalledWith(
-          'Failed to submit "My Command": Server error',
-        );
-      });
-
-      it('does not display outdated message', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logErrorConsole).not.toHaveBeenCalledWith(
-          expect.stringContaining('is outdated'),
-        );
-      });
-    });
-
-    describe('when submit has mix of submitted, skipped, and errors', () => {
-      beforeEach(() => {
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-package': '*' },
-        });
-
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-          {
-            filePath: '.packmind/commands/my-command.md',
-            type: ChangeProposalType.updateCommandDescription,
-            payload: { oldValue: 'old', newValue: 'new' },
-            artifactName: 'My Command',
-            artifactType: 'command',
-          },
-        ]);
-
-        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
-          submitted: 2,
-          alreadySubmitted: 1,
-          skipped: [
-            { name: 'My Standard', reason: 'Only commands are supported' },
-          ],
-          errors: [
-            { name: 'Failing Command', message: 'Server error' },
-            { name: 'Another Command', message: 'Timeout' },
-          ],
-        });
-      });
-
-      it('displays summary with all counts', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
-        );
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logWarningConsole).toHaveBeenCalledWith(
-          'Summary: 2 submitted, 1 already submitted, 2 errors',
-        );
-      });
-    });
-
-    describe('when there are no diffs', () => {
-      beforeEach(() => {
-        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-          packages: { 'my-package': '*' },
-        });
-
-        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([]);
-      });
-
-      it('does not call submitDiffs', async () => {
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
-      });
-
-      it('displays no changes to submit message', async () => {
-        const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
-        await diffArtefactsHandler({
-          ...deps,
-          submit: true,
-          message: 'test message',
-        });
-
-        expect(logInfoConsole).toHaveBeenCalledWith('No changes to submit.');
-      });
-    });
+    expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
   });
 
   describe('when some diffs are already submitted', () => {
@@ -1509,7 +1172,7 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays footer about submitted changes', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
@@ -1518,7 +1181,7 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays footer with hint to use --include-submitted', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
@@ -1568,7 +1231,7 @@ describe('diffArtefactsHandler', () => {
     });
 
     it('displays footer about submitted changes', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
@@ -1670,7 +1333,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           '* Standard "My Standard" (all already submitted)',
@@ -1681,7 +1344,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           '* Command "My Command"',
@@ -1713,7 +1376,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           'Summary: 2 changes found on 2 artefacts (all already submitted):',
@@ -1724,138 +1387,12 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, includeSubmitted: true });
 
         const { logWarningConsole } = jest.requireMock(
-          '../utils/consoleLogger',
+          '../../utils/consoleLogger',
         );
         expect(logWarningConsole).toHaveBeenCalledWith(
           '* Command "My Command" (all already submitted)',
         );
       });
-    });
-  });
-
-  describe('when --submit is used with mixed submitted and unsubmitted diffs', () => {
-    const commandDiff = {
-      filePath: '.packmind/commands/my-command.md',
-      type: ChangeProposalType.updateCommandDescription,
-      payload: { oldValue: 'old', newValue: 'new' },
-      artifactName: 'My Command',
-      artifactType: 'command' as const,
-    };
-
-    const standardDiff = {
-      filePath: '.packmind/standards/my-standard.md',
-      type: ChangeProposalType.updateStandardDescription,
-      payload: { oldValue: 'old std', newValue: 'new std' },
-      artifactName: 'My Standard',
-      artifactType: 'standard' as const,
-    };
-
-    beforeEach(() => {
-      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-        packages: { 'my-package': '*' },
-      });
-
-      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
-        commandDiff,
-        standardDiff,
-      ]);
-
-      mockPackmindCliHexa.checkDiffs.mockResolvedValue({
-        results: [
-          { diff: commandDiff, exists: false, createdAt: null, message: null },
-          {
-            diff: standardDiff,
-            exists: true,
-            createdAt: '2025-06-15T10:30:00.000Z',
-            message: null,
-          },
-        ],
-      });
-
-      mockPackmindCliHexa.submitDiffs.mockResolvedValue({
-        submitted: 1,
-        alreadySubmitted: 0,
-        skipped: [],
-        errors: [],
-      });
-    });
-
-    it('only submits unsubmitted diffs', async () => {
-      await diffArtefactsHandler({
-        ...deps,
-        submit: true,
-        message: 'test message',
-      });
-
-      expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith(
-        [[commandDiff]],
-        'test message',
-      );
-    });
-
-    it('does not submit already submitted diffs', async () => {
-      await diffArtefactsHandler({
-        ...deps,
-        submit: true,
-        message: 'test message',
-      });
-
-      const submitCalls = mockPackmindCliHexa.submitDiffs.mock.calls;
-      const allSubmittedDiffs = submitCalls.flatMap((call) => call[0].flat());
-
-      expect(allSubmittedDiffs).not.toContain(standardDiff);
-    });
-  });
-
-  describe('when --submit is used and all diffs are already submitted', () => {
-    const commandDiff = {
-      filePath: '.packmind/commands/my-command.md',
-      type: ChangeProposalType.updateCommandDescription,
-      payload: { oldValue: 'old', newValue: 'new' },
-      artifactName: 'My Command',
-      artifactType: 'command' as const,
-    };
-
-    beforeEach(() => {
-      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
-        packages: { 'my-package': '*' },
-      });
-
-      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([commandDiff]);
-
-      mockPackmindCliHexa.checkDiffs.mockResolvedValue({
-        results: [
-          {
-            diff: commandDiff,
-            exists: true,
-            createdAt: '2025-06-15T10:30:00.000Z',
-            message: null,
-          },
-        ],
-      });
-    });
-
-    it('does not call submitDiffs', async () => {
-      await diffArtefactsHandler({
-        ...deps,
-        submit: true,
-        message: 'test message',
-      });
-
-      expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
-    });
-
-    it('displays all changes already submitted message', async () => {
-      const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
-      await diffArtefactsHandler({
-        ...deps,
-        submit: true,
-        message: 'test message',
-      });
-
-      expect(logInfoConsole).toHaveBeenCalledWith(
-        'All changes already submitted.',
-      );
     });
   });
 
@@ -1998,7 +1535,9 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays an error with the resolved path', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
 
         await diffArtefactsHandler({ ...deps, path: 'non/existent/path' });
 

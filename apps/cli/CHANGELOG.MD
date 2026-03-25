@@ -2,6 +2,16 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [0.23.0] - 2026-03-25
+
+## Added
+
 - CLI `install` command is now recursive by default (no `-r` flag needed); the `-r`/`--recursive` flag is deprecated with a warning
 - CLI `install` command now supports `--path <dir>` to scope recursive install to a specific directory
 - The `diff` command now detects changes to skill additional properties (e.g. Claude Code fields like `argument-hint`, `model`, `hooks`) and submits per-key `updateSkillAdditionalProperty` change proposals (#206)
@@ -11,11 +21,10 @@
 
 - Packages are now prefixed with the space slug (eg: `@global/my-package` instead of `my-package`) to support multi-spaces in organizations.
 
-## Fixed
-
 ## Removed
 
 - Dropped `diff add`, `diff remove` and `diff --submit` in favor of `playbook` commands.
+- Deprecated `diff` command, replaced by `playbook diff`
 
 # [0.22.0] - 2026-03-13
 
@@ -268,7 +277,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.22.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.23.0...HEAD
+[0.23.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.22.0...release-cli/0.23.0
 [0.22.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.1...release-cli/0.22.0
 [0.21.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.0...release-cli/0.21.1
 [0.21.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.20.0...release-cli/0.21.0
