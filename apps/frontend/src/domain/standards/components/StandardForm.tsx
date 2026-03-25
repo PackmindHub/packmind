@@ -131,6 +131,21 @@ export const StandardForm: React.FC<StandardFormProps> = ({
       return;
     }
 
+    if (scope.trim()) {
+      const patterns = scope
+        .split(',')
+        .map((p) => p.trim())
+        .filter(Boolean);
+      const hasPositivePattern = patterns.some((p) => !p.startsWith('!'));
+      if (!hasPositivePattern) {
+        setAlert({
+          type: 'error',
+          message: STANDARD_MESSAGES.validation.scopeRequiresPositivePattern,
+        });
+        return;
+      }
+    }
+
     const validRules = rules.filter((rule) => rule.content.trim());
 
     const standardData = {
@@ -389,16 +404,17 @@ export const StandardForm: React.FC<StandardFormProps> = ({
             <PMField.Root>
               <PMField.Label>Scope</PMField.Label>
               <PMInput
-                placeholder="**/*.spec.ts,**/*.test.ts"
+                placeholder="**/*.spec.ts,!**/generated/**"
                 value={scope}
                 onChange={(e) => setScope(e.target.value)}
                 disabled={isPending}
-                title="Define which files this standard applies to using glob patterns. Leave empty to apply to all files."
+                title="Define which files this standard applies to using glob patterns. Prefix a pattern with ! to exclude files. Leave empty to apply to all files."
               />
               <PMField.HelperText>
                 Optional: Use glob patterns to target specific files (e.g.,
                 **/*.spec.ts for test files, src/domain/**/* for domain folder).
-                Separate multiple patterns with commas.
+                Prefix a pattern with ! to exclude files (e.g.,
+                !**/generated/**). Separate multiple patterns with commas.
               </PMField.HelperText>
               <PMField.ErrorText />
             </PMField.Root>
