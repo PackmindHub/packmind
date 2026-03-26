@@ -27,6 +27,15 @@ jest.mock('../../../application/utils/resolveSkillInputPaths', () => ({
   resolveSkillInputPaths: jest.fn(),
 }));
 
+const WORKSPACE_DIRECTORY_PATH = String.raw`C:\workspace`;
+const SKILL_A_PATH = String.raw`C:\skills\skill-a`;
+const SKILL_B_PATH = String.raw`C:\skills\skill-b`;
+const SINGLE_SKILL_PATH = String.raw`C:\skills\single-skill`;
+const BLOCKED_SKILL_PATH = String.raw`C:\skills\blocked`;
+const EMPTY_DIRECTORY_PATH = String.raw`C:\workspace\empty-dir`;
+const NESTED_ALPHA_SKILL_PATH = String.raw`C:\workspace\skills\alpha`;
+const NESTED_BETA_SKILL_PATH = String.raw`C:\workspace\skills\beta`;
+
 const mockLogConsole = logConsole as jest.Mock;
 const mockLogErrorConsole = logErrorConsole as jest.Mock;
 const mockLogInfoConsole = logInfoConsole as jest.Mock;
@@ -46,9 +55,18 @@ function createUploadResult(name: string, version: number) {
   };
 }
 
+function createPermissionDeniedError(): Error & { code: string } {
+  return Object.assign(new Error('EACCES: permission denied'), {
+    code: 'EACCES',
+  });
+}
+
 describe('addSkillHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<Pick<PackmindCliHexa, 'uploadSkill'>>;
-  let mockCreatePackmindCliHexa: jest.Mock<Pick<PackmindCliHexa, 'uploadSkill'>, []>;
+  let mockCreatePackmindCliHexa: jest.Mock<
+    Pick<PackmindCliHexa, 'uploadSkill'>,
+    []
+  >;
   let mockExit: jest.Mock;
   let deps: AddSkillCommandDependencies;
 
@@ -58,13 +76,12 @@ describe('addSkillHandler', () => {
       uploadSkill: jest.fn(),
     };
     mockCreatePackmindCliHexa = jest.fn(() => mockPackmindCliHexa);
-
     mockExit = jest.fn();
 
     deps = {
       createPackmindCliHexa: mockCreatePackmindCliHexa,
       exit: mockExit,
-      getCwd: () => 'C:\\workspace',
+      getCwd: () => WORKSPACE_DIRECTORY_PATH,
     };
 
     Object.defineProperty(process.stdin, 'isTTY', {
@@ -81,17 +98,14 @@ describe('addSkillHandler', () => {
   describe('when multiple skill directories are provided', () => {
     describe('with all uploads succeeding', () => {
       beforeEach(async () => {
-        mockedResolveSkillInputPaths.mockResolvedValue([
-          'C:\\skills\\skill-a',
-          'C:\\skills\\skill-b',
-        ]);
+        mockedResolveSkillInputPaths.mockResolvedValue([SKILL_A_PATH, SKILL_B_PATH]);
         mockPackmindCliHexa.uploadSkill
           .mockResolvedValueOnce(createUploadResult('skill-a', 1))
           .mockResolvedValueOnce(createUploadResult('skill-b', 2));
 
         await addSkillHandler(
           {
-            skillPaths: ['C:\\skills\\skill-a', 'C:\\skills\\skill-b'],
+            skillPaths: [SKILL_A_PATH, SKILL_B_PATH],
             space: 'frontend',
             originSkill: 'origin-skill',
           },
@@ -101,7 +115,7 @@ describe('addSkillHandler', () => {
 
       it('uploads the first skill path', () => {
         expect(mockPackmindCliHexa.uploadSkill).toHaveBeenNthCalledWith(1, {
-          skillPath: 'C:\\skills\\skill-a',
+          skillPath: SKILL_A_PATH,
           spaceSlug: 'frontend',
           originSkill: 'origin-skill',
         });
@@ -109,7 +123,7 @@ describe('addSkillHandler', () => {
 
       it('uploads the second skill path', () => {
         expect(mockPackmindCliHexa.uploadSkill).toHaveBeenNthCalledWith(2, {
-          skillPath: 'C:\\skills\\skill-b',
+          skillPath: SKILL_B_PATH,
           spaceSlug: 'frontend',
           originSkill: 'origin-skill',
         });
@@ -132,10 +146,7 @@ describe('addSkillHandler', () => {
 
     describe('with one upload failing', () => {
       beforeEach(async () => {
-        mockedResolveSkillInputPaths.mockResolvedValue([
-          'C:\\skills\\skill-a',
-          'C:\\skills\\skill-b',
-        ]);
+        mockedResolveSkillInputPaths.mockResolvedValue([SKILL_A_PATH, SKILL_B_PATH]);
         mockPackmindCliHexa.uploadSkill
           .mockRejectedValueOnce(
             new Error(
@@ -146,7 +157,7 @@ describe('addSkillHandler', () => {
 
         await addSkillHandler(
           {
-            skillPaths: ['C:\\skills\\skill-a', 'C:\\skills\\skill-b'],
+            skillPaths: [SKILL_A_PATH, SKILL_B_PATH],
           },
           deps,
         );
@@ -158,14 +169,14 @@ describe('addSkillHandler', () => {
 
       it('logs the failing skill path', () => {
         expect(mockLogErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining('Upload failed for C:\\skills\\skill-a'),
+          expect.stringContaining(`Upload failed for ${SKILL_A_PATH}`),
         );
       });
 
       it('logs the multiple-space example for the failing path', () => {
         expect(mockLogConsole).toHaveBeenCalledWith(
           expect.stringContaining(
-            'packmind-cli skills add --space <slug> C:\\skills\\skill-a',
+            `packmind-cli skills add --space <slug> ${SKILL_A_PATH}`,
           ),
         );
       });
@@ -210,16 +221,14 @@ describe('addSkillHandler', () => {
   describe('when a single skill directory is provided', () => {
     describe('with the upload succeeding', () => {
       beforeEach(async () => {
-        mockedResolveSkillInputPaths.mockResolvedValue([
-          'C:\\skills\\single-skill',
-        ]);
+        mockedResolveSkillInputPaths.mockResolvedValue([SINGLE_SKILL_PATH]);
         mockPackmindCliHexa.uploadSkill.mockResolvedValueOnce(
           createUploadResult('single-skill', 3),
         );
 
         await addSkillHandler(
           {
-            skillPaths: ['C:\\skills\\single-skill'],
+            skillPaths: [SINGLE_SKILL_PATH],
           },
           deps,
         );
@@ -227,7 +236,7 @@ describe('addSkillHandler', () => {
 
       it('logs the single-upload progress message', () => {
         expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          'Uploading skill from C:\\skills\\single-skill...',
+          `Uploading skill from ${SINGLE_SKILL_PATH}...`,
         );
       });
 
@@ -240,16 +249,14 @@ describe('addSkillHandler', () => {
 
     describe('with the upload failing', () => {
       beforeEach(async () => {
-        mockedResolveSkillInputPaths.mockResolvedValue([
-          'C:\\skills\\single-skill',
-        ]);
+        mockedResolveSkillInputPaths.mockResolvedValue([SINGLE_SKILL_PATH]);
         mockPackmindCliHexa.uploadSkill.mockRejectedValueOnce(
           new Error('SKILL.md not found in skill directory'),
         );
 
         await addSkillHandler(
           {
-            skillPaths: ['C:\\skills\\single-skill'],
+            skillPaths: [SINGLE_SKILL_PATH],
           },
           deps,
         );
@@ -270,8 +277,8 @@ describe('addSkillHandler', () => {
   describe('when an input path resolves to nested skill directories', () => {
     beforeEach(async () => {
       mockedResolveSkillInputPaths.mockResolvedValue([
-        'C:\\workspace\\skills\\alpha',
-        'C:\\workspace\\skills\\beta',
+        NESTED_ALPHA_SKILL_PATH,
+        NESTED_BETA_SKILL_PATH,
       ]);
       mockPackmindCliHexa.uploadSkill
         .mockResolvedValueOnce(createUploadResult('alpha', 1))
@@ -288,19 +295,19 @@ describe('addSkillHandler', () => {
     it('discovers skill directories from the current working directory', () => {
       expect(mockedResolveSkillInputPaths).toHaveBeenCalledWith(
         ['skills'],
-        'C:\\workspace',
+        WORKSPACE_DIRECTORY_PATH,
       );
     });
 
     it('uploads each discovered skill directory', () => {
       expect(mockPackmindCliHexa.uploadSkill).toHaveBeenNthCalledWith(1, {
-        skillPath: 'C:\\workspace\\skills\\alpha',
+        skillPath: NESTED_ALPHA_SKILL_PATH,
         spaceSlug: undefined,
         originSkill: undefined,
       });
 
       expect(mockPackmindCliHexa.uploadSkill).toHaveBeenNthCalledWith(2, {
-        skillPath: 'C:\\workspace\\skills\\beta',
+        skillPath: NESTED_BETA_SKILL_PATH,
         spaceSlug: undefined,
         originSkill: undefined,
       });
@@ -313,7 +320,7 @@ describe('addSkillHandler', () => {
 
       await addSkillHandler(
         {
-          skillPaths: ['C:\\workspace\\empty-dir'],
+          skillPaths: [EMPTY_DIRECTORY_PATH],
         },
         deps,
       );
@@ -344,10 +351,7 @@ describe('addSkillHandler', () => {
 
     describe('with the user declining the import', () => {
       beforeEach(async () => {
-        mockedResolveSkillInputPaths.mockResolvedValue([
-          'C:\\skills\\skill-a',
-          'C:\\skills\\skill-b',
-        ]);
+        mockedResolveSkillInputPaths.mockResolvedValue([SKILL_A_PATH, SKILL_B_PATH]);
 
         jest
           .spyOn(process.stdin, 'once')
@@ -360,7 +364,7 @@ describe('addSkillHandler', () => {
 
         await addSkillHandler(
           {
-            skillPaths: ['C:\\skills\\skill-a', 'C:\\skills\\skill-b'],
+            skillPaths: [SKILL_A_PATH, SKILL_B_PATH],
           },
           deps,
         );
@@ -387,24 +391,16 @@ describe('addSkillHandler', () => {
   describe('when one input path fails skill discovery in a batch', () => {
     beforeEach(async () => {
       mockedResolveSkillInputPaths
-        .mockRejectedValueOnce(
-          Object.assign(new Error('EACCES: permission denied'), {
-            code: 'EACCES',
-          }),
-        )
-        .mockRejectedValueOnce(
-          Object.assign(new Error('EACCES: permission denied'), {
-            code: 'EACCES',
-          }),
-        )
-        .mockResolvedValueOnce([String.raw`C:\skills\skill-a`]);
+        .mockRejectedValueOnce(createPermissionDeniedError())
+        .mockRejectedValueOnce(createPermissionDeniedError())
+        .mockResolvedValueOnce([SKILL_A_PATH]);
       mockPackmindCliHexa.uploadSkill.mockResolvedValueOnce(
         createUploadResult('skill-a', 1),
       );
 
       await addSkillHandler(
         {
-          skillPaths: [String.raw`C:\skills\blocked`, String.raw`C:\skills\skill-a`],
+          skillPaths: [BLOCKED_SKILL_PATH, SKILL_A_PATH],
         },
         deps,
       );
@@ -413,14 +409,14 @@ describe('addSkillHandler', () => {
     it('retries resolution one input at a time after the batch failure', () => {
       expect(mockedResolveSkillInputPaths).toHaveBeenNthCalledWith(
         2,
-        [String.raw`C:\skills\blocked`],
-        String.raw`C:\workspace`,
+        [BLOCKED_SKILL_PATH],
+        WORKSPACE_DIRECTORY_PATH,
       );
     });
 
     it('uploads the readable skill path', () => {
       expect(mockPackmindCliHexa.uploadSkill).toHaveBeenCalledWith({
-        skillPath: String.raw`C:\skills\skill-a`,
+        skillPath: SKILL_A_PATH,
         spaceSlug: undefined,
         originSkill: undefined,
       });
@@ -428,7 +424,7 @@ describe('addSkillHandler', () => {
 
     it('logs the discovery failure with the original error', () => {
       expect(mockLogErrorConsole).toHaveBeenCalledWith(
-        String.raw`Skill discovery failed for C:\skills\blocked: EACCES: permission denied`,
+        `Skill discovery failed for ${BLOCKED_SKILL_PATH}: EACCES: permission denied`,
       );
     });
 
@@ -447,25 +443,23 @@ describe('addSkillHandler', () => {
 
     beforeEach(async () => {
       mockedResolveSkillInputPaths
-        .mockRejectedValueOnce(Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES' }))
-        .mockRejectedValueOnce(Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES' }))
-        .mockResolvedValueOnce([String.raw`C:\skills\skill-a`])
-        .mockResolvedValueOnce([String.raw`C:\skills\skill-b`]);
+        .mockRejectedValueOnce(createPermissionDeniedError())
+        .mockRejectedValueOnce(createPermissionDeniedError())
+        .mockResolvedValueOnce([SKILL_A_PATH])
+        .mockResolvedValueOnce([SKILL_B_PATH]);
 
       jest
         .spyOn(process.stdin, 'once')
-        .mockImplementation((_event: string, callback: (line: string) => void) => {
-          callback('n');
-          return process.stdin;
-        });
+        .mockImplementation(
+          (_event: string, callback: (line: string) => void) => {
+            callback('n');
+            return process.stdin;
+          },
+        );
 
       await addSkillHandler(
         {
-          skillPaths: [
-            String.raw`C:\skills\blocked`,
-            String.raw`C:\skills\skill-a`,
-            String.raw`C:\skills\skill-b`,
-          ],
+          skillPaths: [BLOCKED_SKILL_PATH, SKILL_A_PATH, SKILL_B_PATH],
         },
         deps,
       );
@@ -485,7 +479,7 @@ describe('addSkillHandler', () => {
       await expect(
         addSkillHandler(
           {
-            skillPaths: [String.raw`C:\skills\skill-a`, String.raw`C:\skills\skill-b`],
+            skillPaths: [SKILL_A_PATH, SKILL_B_PATH],
           },
           deps,
         ),
@@ -496,22 +490,14 @@ describe('addSkillHandler', () => {
   describe('when fallback discovery hits a non-permission error', () => {
     it('rethrows the unexpected error', async () => {
       mockedResolveSkillInputPaths
-        .mockRejectedValueOnce(
-          Object.assign(new Error('EACCES: permission denied'), {
-            code: 'EACCES',
-          }),
-        )
-        .mockRejectedValueOnce(
-          Object.assign(new Error('EACCES: permission denied'), {
-            code: 'EACCES',
-          }),
-        )
+        .mockRejectedValueOnce(createPermissionDeniedError())
+        .mockRejectedValueOnce(createPermissionDeniedError())
         .mockRejectedValueOnce(new Error('unexpected resolver failure'));
 
       await expect(
         addSkillHandler(
           {
-            skillPaths: [String.raw`C:\skills\blocked`, String.raw`C:\skills\skill-a`],
+            skillPaths: [BLOCKED_SKILL_PATH, SKILL_A_PATH],
           },
           deps,
         ),
