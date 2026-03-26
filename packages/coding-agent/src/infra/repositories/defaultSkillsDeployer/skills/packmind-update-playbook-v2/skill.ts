@@ -176,10 +176,13 @@ Proceed once the user confirms the grouping, or adjust if they suggest different
 
 Edit the files that belong to **your agent** — this lets the user review and test changes in their actual working environment. Do NOT edit files from other agents or the \`.packmind/\` source-of-truth copies. Only edit one copy per artifact; the CLI handles the rest.
 
-Determine which agent context you are running in. The agent directories are:
-- Claude Code: \`.claude/\`
-- Cursor: \`.cursor/\`
-- GitHub Copilot: \`.github/\`
+**Agent Detection**: You know your own identity from your system prompt. Identify which agent you are:
+- **Claude Code** (system prompt says "Claude Code" or "Anthropic's CLI") → \`.claude/\`
+- **Cursor** (system prompt says "Cursor" or "designed by Cursor") → \`.cursor/\`
+- **GitHub Copilot** (system prompt says "GitHub Copilot") → \`.github/\`
+- **Other/Unknown** → ask the user which agent directory to use
+
+If unsure, check the path from which this skill was loaded — it contains your agent directory name.
 
 **Important**: Packmind packages can be installed in subdirectories, not just the repo root. Search for \`**/packmind-lock.json\` across the entire project tree to find all installed locations. Each lock file lists all files per artifact with their agent — use the path matching your agent.
 
