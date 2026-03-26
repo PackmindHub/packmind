@@ -4,7 +4,6 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { AgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
 import { initHandler } from './initHandler';
-import { logErrorConsole } from '../utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -29,12 +28,16 @@ export const initCommand = command({
       installDefaultSkills:
         packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
       cliVersion: CLI_VERSION,
+      output: packmindCliHexa.output,
     });
 
     if (!result.success) {
-      for (const error of result.errors) {
-        logErrorConsole(`Error: ${error}`);
-      }
+      packmindCliHexa.output.notifyError(
+        'The following errors hapenned during initialization:',
+        {
+          content: result.errors.join('\n'),
+        },
+      );
       process.exit(1);
     }
   },

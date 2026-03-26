@@ -1,12 +1,6 @@
 import { command, positional, string, optional, option } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { createCommandHandler } from './commands/createCommandHandler';
-import {
-  logSuccessConsole,
-  logErrorConsole,
-  logConsole,
-  formatCommand,
-} from '../utils/consoleLogger';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CreateCommandFromPlaybookUseCase } from '../../application/useCases/CreateCommandFromPlaybookUseCase';
 import { originSkillOption } from './sharedOptions';
@@ -29,10 +23,11 @@ export const createCommandCommand = command({
     originSkill: originSkillOption,
   },
   handler: async ({ file, space, originSkill }) => {
+    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
+    const hexa = new PackmindCliHexa(packmindLogger);
+    const gateway = hexa.getPackmindGateway();
+
     try {
-      const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
-      const hexa = new PackmindCliHexa(packmindLogger);
-      const gateway = hexa.getPackmindGateway();
       const useCase = new CreateCommandFromPlaybookUseCase(
         gateway,
         hexa.getSpaceService(),
@@ -46,25 +41,29 @@ export const createCommandCommand = command({
       );
 
       if (result.success) {
-        logSuccessConsole(
+        hexa.output.notifySuccess(
           `Command "${result.commandName}" created successfully (ID: ${result.commandId})`,
+          result.webappUrl
+            ? { content: `View it in the webapp: ${result.webappUrl}` }
+            : undefined,
         );
-        if (result.webappUrl) {
-          logConsole('');
-          logConsole(`View it in the webapp: ${result.webappUrl}`);
-        }
         process.exit(0);
       } else {
-        logErrorConsole(`Failed to create command: ${result.error}`);
-        if (result.error?.includes('Multiple spaces found')) {
-          logConsole(
-            `\nExample: ${formatCommand(`packmind-cli commands create --space <slug> ${file ?? '<file>'}`)}`,
-          );
-        }
+        hexa.output.notifyError(
+          'Failed to create command',
+          result.error
+            ? {
+                content: result.error,
+                exampleCommand: result.error.includes('Multiple spaces found')
+                  ? `packmind-cli commands create --space <slug> ${file ?? '<file>'}`
+                  : undefined,
+              }
+            : undefined,
+        );
         process.exit(1);
       }
     } catch (e) {
-      logErrorConsole(
+      hexa.output.notifyError(
         `Error: ${e instanceof Error ? e.message : 'Unknown error'}`,
       );
       process.exit(1);

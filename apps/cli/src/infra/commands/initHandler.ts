@@ -4,14 +4,9 @@ import {
   configAgentsHandler,
   ConfigAgentsHandlerDependencies,
 } from './config/configAgentsHandler';
-import {
-  logSuccessConsole,
-  logInfoConsole,
-  logConsole,
-  formatCommand,
-} from '../utils/consoleLogger';
 import { IInstallDefaultSkillsResult } from '../../domain/useCases/IInstallDefaultSkillsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { IOutput } from '../../domain/repositories/IOutput';
 
 export type InstallDefaultSkillsFunction = (options: {
   includeBeta: boolean;
@@ -25,6 +20,7 @@ export type InitHandlerDependencies = {
   baseDirectory: string;
   installDefaultSkills: InstallDefaultSkillsFunction;
   cliVersion: string;
+  output: IOutput;
   isTTY?: boolean;
 };
 
@@ -48,6 +44,7 @@ export async function initHandler(
     installDefaultSkills,
     cliVersion,
     isTTY,
+    output,
   } = deps;
 
   // Step 1: Run config agents flow
@@ -57,17 +54,17 @@ export async function initHandler(
     packmindGateway,
     baseDirectory,
     isTTY,
+    output,
   };
 
   await configAgentsHandler(configAgentsDeps);
 
-  // Step 2: Run skills init flow
-  logInfoConsole('Installing default skills...');
-
-  const result = await installDefaultSkills({
-    includeBeta: false,
-    cliVersion,
-  });
+  const result = await output.withLoader('Installing default skills...', () =>
+    installDefaultSkills({
+      includeBeta: false,
+      cliVersion,
+    }),
+  );
 
   if (result.errors.length > 0) {
     return {
@@ -79,23 +76,32 @@ export async function initHandler(
   const totalFiles = result.filesCreated + result.filesUpdated;
 
   if (totalFiles === 0) {
-    logInfoConsole('Default skills are already up to date.');
+    output.notifyInfo('Default skills are already up to date.');
   } else {
-    logSuccessConsole('Default skills installed successfully!');
+    const fileUpdates: string[] = [];
     if (result.filesCreated > 0) {
-      logInfoConsole(`  Files created: ${result.filesCreated}`);
+      fileUpdates.push(`  Files created: ${result.filesCreated}`);
     }
     if (result.filesUpdated > 0) {
-      logInfoConsole(`  Files updated: ${result.filesUpdated}`);
+      fileUpdates.push(`  Files updated: ${result.filesUpdated}`);
     }
+
+    output.notifySuccess(
+      'Default skills installed successfully!',
+      fileUpdates
+        ? {
+            content: fileUpdates.join('\n'),
+          }
+        : undefined,
+    );
   }
 
   // Step 3: Display success message with next steps
-  logConsole('');
-  logSuccessConsole('Packmind initialized successfully!');
-  logInfoConsole(
-    `Next step: Run ${formatCommand('/packmind-onboard')} in your AI agent to onboard the project`,
-  );
+  output.notifySuccess('Packmind initialized successfully!', {
+    content:
+      'Next step: run the following command in your AI agent to onboard the project',
+    command: '/packmind-onboard',
+  });
 
   return {
     success: true,

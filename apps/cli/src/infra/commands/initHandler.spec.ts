@@ -5,22 +5,15 @@ import {
   InitHandlerDependencies,
   InstallDefaultSkillsFunction,
 } from './initHandler';
-import * as consoleLogger from '../utils/consoleLogger';
 import * as configAgentsHandlerModule from './config/configAgentsHandler';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
-
-jest.mock('../utils/consoleLogger', () => ({
-  logInfoConsole: jest.fn(),
-  logSuccessConsole: jest.fn(),
-  logConsole: jest.fn(),
-  formatCommand: jest.fn((text: string) => `[CMD:${text}]`),
-}));
+import { IOutput } from '../../domain/repositories/IOutput';
+import { createMockOutputRepository } from '../../mocks/createMockRepositories';
 
 jest.mock('./config/configAgentsHandler', () => ({
   configAgentsHandler: jest.fn(),
 }));
 
-const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 const mockConfigAgentsHandler =
   configAgentsHandlerModule.configAgentsHandler as jest.MockedFunction<
     typeof configAgentsHandlerModule.configAgentsHandler
@@ -30,6 +23,7 @@ describe('initHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
   let mockAgentDetectionService: jest.Mocked<IAgentArtifactDetectionService>;
   let mockInstallDefaultSkills: jest.MockedFunction<InstallDefaultSkillsFunction>;
+  let mockOutput: jest.Mocked<IOutput>;
   let deps: InitHandlerDependencies;
 
   beforeEach(() => {
@@ -51,6 +45,8 @@ describe('initHandler', () => {
 
     mockInstallDefaultSkills = jest.fn();
 
+    mockOutput = createMockOutputRepository();
+
     deps = {
       configRepository: mockConfigRepository,
       agentDetectionService: mockAgentDetectionService,
@@ -59,6 +55,7 @@ describe('initHandler', () => {
       installDefaultSkills: mockInstallDefaultSkills,
       cliVersion: '1.2.3',
       isTTY: true,
+      output: mockOutput,
     };
 
     mockConfigAgentsHandler.mockResolvedValue(undefined);
@@ -153,39 +150,51 @@ describe('initHandler', () => {
       result = await initHandler(deps);
     });
 
-    it('displays "Installing default skills..."', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+    it('calls withLoader with "Installing default skills..."', () => {
+      expect(mockOutput.withLoader).toHaveBeenCalledWith(
         'Installing default skills...',
+        expect.any(Function),
       );
     });
 
     it('displays "Default skills installed successfully!"', () => {
-      expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
         'Default skills installed successfully!',
+        expect.anything(),
       );
     });
 
     it('displays files created count', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        '  Files created: 3',
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+        'Default skills installed successfully!',
+        expect.objectContaining({
+          content: expect.stringContaining('Files created: 3'),
+        }),
       );
     });
 
     it('displays files updated count', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        '  Files updated: 2',
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+        'Default skills installed successfully!',
+        expect.objectContaining({
+          content: expect.stringContaining('Files updated: 2'),
+        }),
       );
     });
 
     it('displays "Packmind initialized successfully!"', () => {
-      expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
         'Packmind initialized successfully!',
+        expect.anything(),
       );
     });
 
     it('displays next step message about /packmind-onboard', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('/packmind-onboard'),
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+        'Packmind initialized successfully!',
+        expect.objectContaining({
+          command: '/packmind-onboard',
+        }),
       );
     });
 
@@ -210,14 +219,20 @@ describe('initHandler', () => {
     });
 
     it('displays files created count', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        '  Files created: 5',
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+        'Default skills installed successfully!',
+        expect.objectContaining({
+          content: expect.stringContaining('Files created: 5'),
+        }),
       );
     });
 
     it('does not display files updated count', () => {
-      expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
-        expect.stringContaining('Files updated'),
+      expect(mockOutput.notifySuccess).not.toHaveBeenCalledWith(
+        'Default skills installed successfully!',
+        expect.objectContaining({
+          content: expect.stringContaining('Files updated'),
+        }),
       );
     });
   });
@@ -234,14 +249,20 @@ describe('initHandler', () => {
     });
 
     it('does not display files created count', () => {
-      expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
-        expect.stringContaining('Files created'),
+      expect(mockOutput.notifySuccess).not.toHaveBeenCalledWith(
+        'Default skills installed successfully!',
+        expect.objectContaining({
+          content: expect.stringContaining('Files created'),
+        }),
       );
     });
 
     it('displays files updated count', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        '  Files updated: 4',
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+        'Default skills installed successfully!',
+        expect.objectContaining({
+          content: expect.stringContaining('Files updated: 4'),
+        }),
       );
     });
   });
@@ -260,26 +281,31 @@ describe('initHandler', () => {
     });
 
     it('displays "Default skills are already up to date."', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+      expect(mockOutput.notifyInfo).toHaveBeenCalledWith(
         'Default skills are already up to date.',
       );
     });
 
     it('does not display "Default skills installed successfully!"', () => {
-      expect(mockConsoleLogger.logSuccessConsole).not.toHaveBeenCalledWith(
+      expect(mockOutput.notifySuccess).not.toHaveBeenCalledWith(
         'Default skills installed successfully!',
+        expect.anything(),
       );
     });
 
     it('displays "Packmind initialized successfully!"', () => {
-      expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
         'Packmind initialized successfully!',
+        expect.anything(),
       );
     });
 
     it('displays next step message about /packmind-onboard', () => {
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('/packmind-onboard'),
+      expect(mockOutput.notifySuccess).toHaveBeenCalledWith(
+        'Packmind initialized successfully!',
+        expect.objectContaining({
+          command: '/packmind-onboard',
+        }),
       );
     });
 
@@ -318,20 +344,25 @@ describe('initHandler', () => {
     });
 
     it('does not display "Default skills installed successfully!"', () => {
-      expect(mockConsoleLogger.logSuccessConsole).not.toHaveBeenCalledWith(
+      expect(mockOutput.notifySuccess).not.toHaveBeenCalledWith(
         'Default skills installed successfully!',
+        expect.anything(),
       );
     });
 
     it('does not display "Packmind initialized successfully!"', () => {
-      expect(mockConsoleLogger.logSuccessConsole).not.toHaveBeenCalledWith(
+      expect(mockOutput.notifySuccess).not.toHaveBeenCalledWith(
         'Packmind initialized successfully!',
+        expect.anything(),
       );
     });
 
     it('does not display next step message', () => {
-      expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
-        expect.stringContaining('/packmind-onboard'),
+      expect(mockOutput.notifySuccess).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          command: expect.stringContaining('/packmind-onboard'),
+        }),
       );
     });
   });

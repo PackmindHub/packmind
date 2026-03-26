@@ -79,6 +79,7 @@ import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
 import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { Space } from '@packmind/types';
 import { ISpaceService } from './domain/services/ISpaceService';
+import { IOutput } from './domain/repositories/IOutput';
 
 const origin = 'PackmindCliHexa';
 
@@ -107,6 +108,10 @@ export class PackmindCliHexa {
     this.logger.info('Destroying PackmindCliHexa');
     // Add any cleanup logic here if needed
     this.logger.info('PackmindCliHexa destroyed');
+  }
+
+  public get output(): IOutput {
+    return this.hexa.repositories.output;
   }
 
   public async getGitRemoteUrl(
