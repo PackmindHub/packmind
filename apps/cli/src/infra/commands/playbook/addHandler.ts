@@ -19,7 +19,12 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../../application/utils/pathUtils';
-import { ArtifactType, MultiFileCodingAgent, Space } from '@packmind/types';
+import {
+  ArtifactType,
+  MultiFileCodingAgent,
+  Space,
+  validateArtifactFileFormat,
+} from '@packmind/types';
 import {
   findLockFileEntryForPath,
   findLockFileEntryAndFileForPath,
@@ -205,6 +210,16 @@ export async function playbookAddHandler(
     }
     artifactType = artefactResult.artifactType;
     codingAgent = artefactResult.codingAgent;
+  }
+
+  const formatValidation = validateArtifactFileFormat(
+    absolutePath,
+    artifactType,
+  );
+  if (!formatValidation.valid) {
+    logErrorConsole(formatValidation.reason);
+    exit(1);
+    return;
   }
 
   // Read local content

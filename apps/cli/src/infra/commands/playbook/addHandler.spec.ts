@@ -207,6 +207,54 @@ describe('playbookAddHandler', () => {
     });
   });
 
+  describe('when command file has invalid format', () => {
+    it('logs error about invalid format', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/commands/whatever.py' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid file format'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/commands/whatever.py' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/commands/whatever.py' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+
+    it('does not read the file', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/commands/whatever.py' }),
+      );
+
+      expect(mockReadFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when standard file has invalid format', () => {
+    it('exits with 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/rules/whatever.txt' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('when readFile throws', () => {
     beforeEach(() => {
       mockReadFile.mockImplementation(() => {
