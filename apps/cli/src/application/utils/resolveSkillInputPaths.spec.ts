@@ -1,10 +1,22 @@
-import fs from 'fs/promises';
-import os from 'os';
-import path from 'path';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import {
   resolveSkillDirectoryRoot,
   resolveSkillInputPaths,
 } from './resolveSkillInputPaths';
+
+function createPermissionDeniedError(
+  directoryPath: string,
+): NodeJS.ErrnoException {
+  const error = new Error(
+    `EACCES: permission denied, scandir '${directoryPath}'`,
+  ) as NodeJS.ErrnoException;
+  error.code = 'EACCES';
+  error.path = directoryPath;
+  error.syscall = 'scandir';
+  return error;
+}
 
 describe('resolveSkillInputPaths', () => {
   let tempDir: string;
@@ -122,6 +134,63 @@ describe('resolveSkillInputPaths', () => {
       const resolvedPaths = await resolveSkillInputPaths(['skills'], tempDir);
 
       expect(resolvedPaths).toEqual([skillDirectoryPath]);
+    });
+  });
+
+  describe('when scanning a nested directory fails with a permission error', () => {
+    it('surfaces the filesystem error', async () => {
+      const parentDirectoryPath = path.join(tempDir, 'skills');
+      const accessibleSkillDirectoryPath = path.join(parentDirectoryPath, 'alpha');
+      const blockedDirectoryPath = path.join(parentDirectoryPath, 'blocked');
+      const originalReaddir = fs.readdir.bind(fs);
+
+      await fs.mkdir(accessibleSkillDirectoryPath, { recursive: true });
+      await fs.mkdir(blockedDirectoryPath, { recursive: true });
+      await fs.writeFile(
+        path.join(accessibleSkillDirectoryPath, 'SKILL.md'),
+        'alpha content',
+      );
+
+      jest.spyOn(fs, 'readdir').mockImplementation(
+        (async (...args: Parameters<typeof fs.readdir>) => {
+          const [targetPath] = args;
+
+          if (path.resolve(String(targetPath)) === blockedDirectoryPath) {
+            throw createPermissionDeniedError(blockedDirectoryPath);
+          }
+
+          return originalReaddir(...args);
+        }) as typeof fs.readdir,
+      );
+
+      await expect(resolveSkillInputPaths(['skills'], tempDir)).rejects.toMatchObject({
+        code: 'EACCES',
+      });
+    });
+  });
+
+  describe('when the input root cannot be read', () => {
+    it('surfaces the stat permission error', async () => {
+      const blockedDirectoryPath = path.join(tempDir, 'skills');
+      const originalStat = fs.stat.bind(fs);
+
+      await fs.mkdir(blockedDirectoryPath, { recursive: true });
+
+      jest.spyOn(fs, 'stat').mockImplementation(
+        (async (...args: Parameters<typeof fs.stat>) => {
+          const [targetPath] = args;
+
+          if (path.resolve(String(targetPath)) === blockedDirectoryPath) {
+            throw createPermissionDeniedError(blockedDirectoryPath);
+          }
+
+          return originalStat(...args);
+        }) as typeof fs.stat,
+      );
+
+      await expect(resolveSkillInputPaths(['skills'], tempDir)).rejects.toMatchObject({
+        code: 'EACCES',
+      });
     });
   });
 });

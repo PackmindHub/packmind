@@ -48,18 +48,21 @@ function createUploadResult(name: string, version: number) {
 
 describe('addSkillHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<Pick<PackmindCliHexa, 'uploadSkill'>>;
+  let mockCreatePackmindCliHexa: jest.Mock<Pick<PackmindCliHexa, 'uploadSkill'>, []>;
   let mockExit: jest.Mock;
   let deps: AddSkillCommandDependencies;
 
   beforeEach(() => {
+    mockedResolveSkillInputPaths.mockReset();
     mockPackmindCliHexa = {
       uploadSkill: jest.fn(),
     };
+    mockCreatePackmindCliHexa = jest.fn(() => mockPackmindCliHexa);
 
     mockExit = jest.fn();
 
     deps = {
-      createPackmindCliHexa: () => mockPackmindCliHexa,
+      createPackmindCliHexa: mockCreatePackmindCliHexa,
       exit: mockExit,
       getCwd: () => 'C:\\workspace',
     };
@@ -71,6 +74,7 @@ describe('addSkillHandler', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
@@ -119,6 +123,10 @@ describe('addSkillHandler', () => {
 
       it('does not exit with an error code', () => {
         expect(mockExit).not.toHaveBeenCalled();
+      });
+
+      it('resolves the batch in a single call', () => {
+        expect(mockedResolveSkillInputPaths).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -362,6 +370,10 @@ describe('addSkillHandler', () => {
         expect(mockPackmindCliHexa.uploadSkill).not.toHaveBeenCalled();
       });
 
+      it('does not initialize the CLI services', () => {
+        expect(mockCreatePackmindCliHexa).not.toHaveBeenCalled();
+      });
+
       it('logs cancel message', () => {
         expect(mockLogConsole).toHaveBeenCalledWith('Import cancelled.');
       });
@@ -369,6 +381,141 @@ describe('addSkillHandler', () => {
       it('does not exit with an error code', () => {
         expect(mockExit).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('when one input path fails skill discovery in a batch', () => {
+    beforeEach(async () => {
+      mockedResolveSkillInputPaths
+        .mockRejectedValueOnce(
+          Object.assign(new Error('EACCES: permission denied'), {
+            code: 'EACCES',
+          }),
+        )
+        .mockRejectedValueOnce(
+          Object.assign(new Error('EACCES: permission denied'), {
+            code: 'EACCES',
+          }),
+        )
+        .mockResolvedValueOnce([String.raw`C:\skills\skill-a`]);
+      mockPackmindCliHexa.uploadSkill.mockResolvedValueOnce(
+        createUploadResult('skill-a', 1),
+      );
+
+      await addSkillHandler(
+        {
+          skillPaths: [String.raw`C:\skills\blocked`, String.raw`C:\skills\skill-a`],
+        },
+        deps,
+      );
+    });
+
+    it('retries resolution one input at a time after the batch failure', () => {
+      expect(mockedResolveSkillInputPaths).toHaveBeenNthCalledWith(
+        2,
+        [String.raw`C:\skills\blocked`],
+        String.raw`C:\workspace`,
+      );
+    });
+
+    it('uploads the readable skill path', () => {
+      expect(mockPackmindCliHexa.uploadSkill).toHaveBeenCalledWith({
+        skillPath: String.raw`C:\skills\skill-a`,
+        spaceSlug: undefined,
+        originSkill: undefined,
+      });
+    });
+
+    it('logs the discovery failure with the original error', () => {
+      expect(mockLogErrorConsole).toHaveBeenCalledWith(
+        String.raw`Skill discovery failed for C:\skills\blocked: EACCES: permission denied`,
+      );
+    });
+
+    it('exits with code 1 after the partial success', () => {
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when a discovery failure is followed by user cancellation', () => {
+    beforeEach(() => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+    });
+
+    beforeEach(async () => {
+      mockedResolveSkillInputPaths
+        .mockRejectedValueOnce(Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES' }))
+        .mockRejectedValueOnce(Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES' }))
+        .mockResolvedValueOnce([String.raw`C:\skills\skill-a`])
+        .mockResolvedValueOnce([String.raw`C:\skills\skill-b`]);
+
+      jest
+        .spyOn(process.stdin, 'once')
+        .mockImplementation((_event: string, callback: (line: string) => void) => {
+          callback('n');
+          return process.stdin;
+        });
+
+      await addSkillHandler(
+        {
+          skillPaths: [
+            String.raw`C:\skills\blocked`,
+            String.raw`C:\skills\skill-a`,
+            String.raw`C:\skills\skill-b`,
+          ],
+        },
+        deps,
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when the batch resolver fails for a non-permission error', () => {
+    it('rethrows the error instead of falling back to per-input discovery', async () => {
+      mockedResolveSkillInputPaths.mockRejectedValueOnce(
+        new Error('unexpected resolver failure'),
+      );
+
+      await expect(
+        addSkillHandler(
+          {
+            skillPaths: [String.raw`C:\skills\skill-a`, String.raw`C:\skills\skill-b`],
+          },
+          deps,
+        ),
+      ).rejects.toThrow('unexpected resolver failure');
+    });
+  });
+
+  describe('when fallback discovery hits a non-permission error', () => {
+    it('rethrows the unexpected error', async () => {
+      mockedResolveSkillInputPaths
+        .mockRejectedValueOnce(
+          Object.assign(new Error('EACCES: permission denied'), {
+            code: 'EACCES',
+          }),
+        )
+        .mockRejectedValueOnce(
+          Object.assign(new Error('EACCES: permission denied'), {
+            code: 'EACCES',
+          }),
+        )
+        .mockRejectedValueOnce(new Error('unexpected resolver failure'));
+
+      await expect(
+        addSkillHandler(
+          {
+            skillPaths: [String.raw`C:\skills\blocked`, String.raw`C:\skills\skill-a`],
+          },
+          deps,
+        ),
+      ).rejects.toThrow('unexpected resolver failure');
     });
   });
 });

@@ -1,6 +1,6 @@
-import fs from 'fs';
-import fsPromises from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
+import path from 'node:path';
 
 const SKILL_FILE_NAME = 'SKILL.md';
 
@@ -16,6 +16,29 @@ const IGNORED_DIRECTORY_NAMES = new Set([
   '.turbo',
   '.nx',
 ]);
+
+function isMissingPathError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return 'code' in error
+    ? error.code === 'ENOENT' || error.code === 'ENOTDIR'
+    : false;
+}
+
+function addResolvedSkillPath(
+  resolvedSkillPaths: string[],
+  seenPaths: Set<string>,
+  candidatePath: string,
+): void {
+  if (seenPaths.has(candidatePath)) {
+    return;
+  }
+
+  seenPaths.add(candidatePath);
+  resolvedSkillPaths.push(candidatePath);
+}
 
 export function resolveSkillDirectoryRoot(absolutePath: string): string {
   if (path.basename(absolutePath) === SKILL_FILE_NAME) {
@@ -76,6 +99,37 @@ async function findNestedSkillDirectories(
   return discoveredSkillDirectories;
 }
 
+async function addNestedSkillDirectories(
+  skillDirectoryRoot: string,
+  resolvedSkillPaths: string[],
+  seenPaths: Set<string>,
+): Promise<boolean> {
+  let skillDirectoryRootStat: Awaited<ReturnType<typeof fsPromises.stat>> | undefined;
+
+  try {
+    skillDirectoryRootStat = await fsPromises.stat(skillDirectoryRoot);
+  } catch (error) {
+    if (!isMissingPathError(error)) {
+      throw error;
+    }
+
+    return false;
+  }
+
+  if (!skillDirectoryRootStat.isDirectory()) {
+    return false;
+  }
+
+  const discoveredSkillDirectories =
+    await findNestedSkillDirectories(skillDirectoryRoot);
+
+  for (const candidatePath of discoveredSkillDirectories) {
+    addResolvedSkillPath(resolvedSkillPaths, seenPaths, candidatePath);
+  }
+
+  return true;
+}
+
 export async function resolveSkillInputPaths(
   inputPaths: readonly string[],
   cwd: string,
@@ -87,30 +141,17 @@ export async function resolveSkillInputPaths(
     const absoluteInputPath = path.resolve(cwd, inputPath);
     const skillDirectoryRoot = resolveSkillDirectoryRoot(absoluteInputPath);
 
-    try {
-      const stat = await fsPromises.stat(skillDirectoryRoot);
-      if (stat.isDirectory()) {
-        const discoveredSkillDirectories =
-          await findNestedSkillDirectories(skillDirectoryRoot);
+    const resolvedNestedDirectories = await addNestedSkillDirectories(
+      skillDirectoryRoot,
+      resolvedSkillPaths,
+      seenPaths,
+    );
 
-        for (const candidatePath of discoveredSkillDirectories) {
-          if (!seenPaths.has(candidatePath)) {
-            seenPaths.add(candidatePath);
-            resolvedSkillPaths.push(candidatePath);
-          }
-        }
-        continue;
-      }
-    } catch {
-      // Preserve the previous behavior for missing or unreadable inputs by
-      // passing the resolved path through to the upload flow, which will
-      // surface the underlying filesystem error consistently.
+    if (resolvedNestedDirectories) {
+      continue;
     }
 
-    if (!seenPaths.has(skillDirectoryRoot)) {
-      seenPaths.add(skillDirectoryRoot);
-      resolvedSkillPaths.push(skillDirectoryRoot);
-    }
+    addResolvedSkillPath(resolvedSkillPaths, seenPaths, skillDirectoryRoot);
   }
 
   return resolvedSkillPaths;

@@ -18,6 +18,21 @@ type AddSkillCommandArgs = {
   originSkill?: string;
 };
 
+type SkillPathResolutionFailure = {
+  inputPath: string;
+  message: string;
+};
+
+type ResolvedSkillPathsForUpload = {
+  resolvedSkillPaths: string[];
+  resolutionFailures: SkillPathResolutionFailure[];
+};
+
+type UploadBatchResult = {
+  successCount: number;
+  failureCount: number;
+};
+
 export type AddSkillCommandDependencies = {
   createPackmindCliHexa: () => Pick<PackmindCliHexa, 'uploadSkill'>;
   exit: (code: number) => void;
@@ -76,12 +91,12 @@ async function confirmBatchUpload(skillPaths: string[]): Promise<boolean> {
 function logUploadResult(result: UploadSkillResult): void {
   if (result.isNewSkill) {
     logSuccessConsole('Skill created successfully!');
-  } else if (!result.versionCreated) {
+  } else if (result.versionCreated) {
+    logSuccessConsole(`Skill updated to version ${result.version}!`);
+  } else {
     logInfoConsole(
       `Skill content is identical to version ${result.version}, no new version created.`,
     );
-  } else {
-    logSuccessConsole(`Skill updated to version ${result.version}!`);
   }
 
   logInfoConsole(`  Name: ${result.name}`);
@@ -91,9 +106,8 @@ function logUploadResult(result: UploadSkillResult): void {
 }
 
 function logMultipleSpacesExample(skillPath: string): void {
-  logConsole(
-    `\nExample: ${formatCommand(`packmind-cli skills add --space <slug> ${skillPath}`)}`,
-  );
+  const commandText = `packmind-cli skills add --space <slug> ${skillPath}`;
+  logConsole(`\nExample: ${formatCommand(commandText)}`);
 }
 
 function formatSkillDirectoryLabel(count: number): string {
@@ -114,6 +128,164 @@ function logUploadSummary(successCount: number, failureCount: number): void {
   );
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isPermissionError(error: unknown): boolean {
+  if (!(error instanceof Error) || !('code' in error)) {
+    return false;
+  }
+
+  return error.code === 'EACCES' || error.code === 'EPERM';
+}
+
+function addResolvedSkillPath(
+  resolvedSkillPaths: string[],
+  seenPaths: Set<string>,
+  candidatePath: string,
+): void {
+  if (seenPaths.has(candidatePath)) {
+    return;
+  }
+
+  seenPaths.add(candidatePath);
+  resolvedSkillPaths.push(candidatePath);
+}
+
+async function resolveSkillPathsForUpload(
+  inputPaths: readonly string[],
+  cwd: string,
+): Promise<ResolvedSkillPathsForUpload> {
+  try {
+    return {
+      resolvedSkillPaths: await resolveSkillInputPaths(inputPaths, cwd),
+      resolutionFailures: [],
+    };
+  } catch (error) {
+    if (!isPermissionError(error)) {
+      throw error;
+    }
+
+    const resolvedSkillPaths: string[] = [];
+    const resolutionFailures: SkillPathResolutionFailure[] = [];
+    const seenPaths = new Set<string>();
+
+    for (const inputPath of inputPaths) {
+      try {
+        const resolvedPaths = await resolveSkillInputPaths([inputPath], cwd);
+
+        for (const resolvedPath of resolvedPaths) {
+          addResolvedSkillPath(resolvedSkillPaths, seenPaths, resolvedPath);
+        }
+      } catch (error) {
+        if (!isPermissionError(error)) {
+          throw error;
+        }
+
+        resolutionFailures.push({
+          inputPath,
+          message: getErrorMessage(error),
+        });
+      }
+    }
+
+    return {
+      resolvedSkillPaths,
+      resolutionFailures,
+    };
+  }
+}
+
+function logResolutionFailures(
+  resolutionFailures: readonly SkillPathResolutionFailure[],
+): void {
+  for (const resolutionFailure of resolutionFailures) {
+    logErrorConsole(
+      `Skill discovery failed for ${resolutionFailure.inputPath}: ${resolutionFailure.message}`,
+    );
+  }
+}
+
+function exitWhenNoSkillPathsResolved(
+  resolvedSkillPaths: readonly string[],
+  resolutionFailures: readonly SkillPathResolutionFailure[],
+  exit: (code: number) => void,
+): boolean {
+  if (resolvedSkillPaths.length > 0) {
+    return false;
+  }
+
+  if (resolutionFailures.length > 0) {
+    exit(1);
+    return true;
+  }
+
+  logErrorConsole(
+    'No skill directories found in the provided paths. Usage: packmind-cli skills add <path> [additional-paths...]',
+  );
+  exit(1);
+  return true;
+}
+
+async function confirmBatchUploadIfNeeded(
+  resolvedSkillPaths: readonly string[],
+  resolutionFailures: readonly SkillPathResolutionFailure[],
+  exit: (code: number) => void,
+): Promise<boolean> {
+  if (resolvedSkillPaths.length <= 1 || !process.stdin.isTTY) {
+    return true;
+  }
+
+  if (await confirmBatchUpload([...resolvedSkillPaths])) {
+    return true;
+  }
+
+  logConsole('Import cancelled.');
+
+  if (resolutionFailures.length > 0) {
+    exit(1);
+  }
+
+  return false;
+}
+
+async function uploadResolvedSkillPaths(
+  resolvedSkillPaths: readonly string[],
+  args: AddSkillCommandArgs,
+  uploadSkill: Pick<PackmindCliHexa, 'uploadSkill'>['uploadSkill'],
+  initialFailureCount: number,
+): Promise<UploadBatchResult> {
+  let successCount = 0;
+  let failureCount = initialFailureCount;
+
+  for (const [index, skillPath] of resolvedSkillPaths.entries()) {
+    try {
+      logUploadStart(skillPath, resolvedSkillPaths.length, index);
+
+      const result = await uploadSkill({
+        skillPath,
+        originSkill: args.originSkill,
+        spaceSlug: args.space,
+      });
+
+      logUploadResult(result);
+      successCount += 1;
+    } catch (error) {
+      failureCount += 1;
+
+      const message = getErrorMessage(error);
+      logErrorConsole(`Upload failed for ${skillPath}: ${message}`);
+
+      if (message.includes('Multiple spaces found')) {
+        logMultipleSpacesExample(skillPath);
+      }
+    }
+  }
+
+  return { successCount, failureCount };
+}
+
 export async function addSkillHandler(
   args: AddSkillCommandArgs,
   deps: AddSkillCommandDependencies = createDefaultDependencies(),
@@ -126,54 +298,39 @@ export async function addSkillHandler(
     return;
   }
 
-  const packmindCliHexa = deps.createPackmindCliHexa();
-  const resolvedSkillPaths = await resolveSkillInputPaths(
-    args.skillPaths,
-    deps.getCwd(),
-  );
+  const { resolvedSkillPaths, resolutionFailures } =
+    await resolveSkillPathsForUpload(args.skillPaths, deps.getCwd());
 
-  if (resolvedSkillPaths.length === 0) {
-    logErrorConsole(
-      'No skill directories found in the provided paths. Usage: packmind-cli skills add <path> [additional-paths...]',
-    );
-    deps.exit(1);
+  logResolutionFailures(resolutionFailures);
+
+  if (
+    exitWhenNoSkillPathsResolved(
+      resolvedSkillPaths,
+      resolutionFailures,
+      deps.exit,
+    )
+  ) {
     return;
   }
 
-  if (resolvedSkillPaths.length > 1 && process.stdin.isTTY) {
-    const confirmed = await confirmBatchUpload(resolvedSkillPaths);
-    if (!confirmed) {
-      logConsole('Import cancelled.');
-      return;
-    }
+  if (
+    !(await confirmBatchUploadIfNeeded(
+      resolvedSkillPaths,
+      resolutionFailures,
+      deps.exit,
+    ))
+  ) {
+    return;
   }
 
-  let successCount = 0;
-  let failureCount = 0;
+  const packmindCliHexa = deps.createPackmindCliHexa();
 
-  for (const [index, skillPath] of resolvedSkillPaths.entries()) {
-    try {
-      logUploadStart(skillPath, resolvedSkillPaths.length, index);
-
-      const result = await packmindCliHexa.uploadSkill({
-        skillPath,
-        originSkill: args.originSkill,
-        spaceSlug: args.space,
-      });
-
-      logUploadResult(result);
-      successCount += 1;
-    } catch (error) {
-      failureCount += 1;
-
-      const message = error instanceof Error ? error.message : String(error);
-      logErrorConsole(`Upload failed for ${skillPath}: ${message}`);
-
-      if (message.includes('Multiple spaces found')) {
-        logMultipleSpacesExample(skillPath);
-      }
-    }
-  }
+  const { successCount, failureCount } = await uploadResolvedSkillPaths(
+    resolvedSkillPaths,
+    args,
+    packmindCliHexa.uploadSkill,
+    resolutionFailures.length,
+  );
 
   if (resolvedSkillPaths.length > 1 || failureCount > 0) {
     logUploadSummary(successCount, failureCount);
