@@ -1,7 +1,8 @@
 import { PMAlertDialog, PMButton, PMHStack, PMBadge } from '@packmind/ui';
 import { useNavigate } from 'react-router';
-import { SkillId } from '@packmind/types';
+import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
+import { DownloadSkillPopover } from './DownloadSkillPopover';
 
 type SkillActionsProps = {
   onDeleteRequest: () => void;
@@ -12,6 +13,8 @@ type SkillActionsProps = {
   deleteDialogMessage: string;
   pendingCount: number;
   skillId: SkillId;
+  organizationId: OrganizationId;
+  spaceId: SpaceId;
   orgSlug?: string;
   spaceSlug?: string;
 };
@@ -25,6 +28,8 @@ export const SkillActions = ({
   deleteDialogMessage,
   pendingCount,
   skillId,
+  organizationId,
+  spaceId,
   orgSlug,
   spaceSlug,
 }: SkillActionsProps) => {
@@ -32,6 +37,11 @@ export const SkillActions = ({
 
   return (
     <PMHStack gap={2}>
+      <DownloadSkillPopover
+        skillId={skillId}
+        organizationId={organizationId}
+        spaceId={spaceId}
+      />
       {pendingCount > 0 && (
         <PMButton
           variant="tertiary"

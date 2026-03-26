@@ -33,5 +33,6 @@ export * from './INotifyDistributionUseCase';
 export * from './IRemovePackageFromTargetsUseCase';
 export * from './IDeployDefaultSkillsUseCase';
 export * from './IDownloadDefaultSkillsZipForAgent';
+export * from './IDownloadSkillZipForAgentUseCase';
 export * from './IGetDeployedContentUseCase';
 export * from './IGetContentByVersionsUseCase';

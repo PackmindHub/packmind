@@ -42,6 +42,10 @@ export type AnalyticsEventMap = {
   default_skills_downloaded: {
     agent: CodingAgent;
   };
+  skill_downloaded: {
+    agent: CodingAgent;
+    skillId: string;
+  };
   onboarding_reason_selected: {
     reason_key: string;
     reason_label: string;
