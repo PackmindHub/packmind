@@ -1,8 +1,9 @@
+import { ArtifactType } from '../../deployments/FileUpdates';
 import { UserEvent } from '../../events';
 import { SpaceId } from '../../spaces';
-import { ArtifactReference } from '../ArtifactReference';
 
-export type PlaybookArtefactMovedPayload = ArtifactReference & {
+export type PlaybookArtefactMovedPayload = {
+  artifactType: ArtifactType;
   sourceSpaceId: SpaceId;
   destinationSpaceId: SpaceId;
 };

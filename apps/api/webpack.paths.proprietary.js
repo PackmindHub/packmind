@@ -23,6 +23,10 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
       __dirname,
       '../../packages/playbook-change-management/src',
     ),
+    '@packmind/spaces-management': join(
+      __dirname,
+      '../../packages/spaces-management/src',
+    ),
     // Add other proprietary-specific overrides here as needed
   };
 };
