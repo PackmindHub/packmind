@@ -338,13 +338,10 @@ export async function playbookAddHandler(
   const allSpaces = await packmindCliHexa.getSpaces();
 
   if (spaceSlug) {
-    const normalizedSlug = spaceSlug.startsWith('@')
-      ? spaceSlug.slice(1)
-      : spaceSlug;
-    const matchedSpace = allSpaces.find((s) => s.slug === normalizedSlug);
+    const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
     if (!matchedSpace) {
       logErrorConsole(
-        `Space "${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
+        `Space "@${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
       );
       exit(1);
       return;

@@ -242,22 +242,6 @@ describe('playbookUnstageHandler', () => {
 
         expect(mockExit).toHaveBeenCalledWith(0);
       });
-
-      describe('when the slug has an @ prefix', () => {
-        it('resolves the space by stripping the @ prefix', async () => {
-          await playbookUnstageHandler(
-            buildDeps({
-              filePath: 'path/to/file.md',
-              spaceSlug: '@frontend',
-            }),
-          );
-
-          expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
-            'path/to/file.md',
-            'space-1',
-          );
-        });
-      });
     });
 
     describe('with --space flag not matching any entry', () => {
@@ -267,7 +251,7 @@ describe('playbookUnstageHandler', () => {
         );
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          'No staged change found for path/to/file.md in space "unknown"',
+          'No staged change found for path/to/file.md in space "@unknown"',
         );
       });
 

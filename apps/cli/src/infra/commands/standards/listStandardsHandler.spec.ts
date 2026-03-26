@@ -170,7 +170,7 @@ describe('listStandardsHandler', () => {
 
       it('displays space-specific empty message', () => {
         expect(console.log).toHaveBeenCalledWith(
-          'No standards found in space "space-a".',
+          'No standards found in space "@space-a".',
         );
       });
 
@@ -187,7 +187,7 @@ describe('listStandardsHandler', () => {
       it('displays an error message', () => {
         expect(console.error).toHaveBeenCalledWith(
           expect.anything(),
-          expect.stringContaining('Space "unknown-space" not found.'),
+          expect.stringContaining('Space "@unknown-space" not found.'),
         );
       });
 

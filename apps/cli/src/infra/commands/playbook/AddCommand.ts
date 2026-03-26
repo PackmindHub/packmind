@@ -6,6 +6,7 @@ import { PlaybookLocalRepository } from '../../repositories/PlaybookLocalReposit
 import { LockFileRepository } from '../../repositories/LockFileRepository';
 import { readSkillDirectory } from '../../utils/readSkillDirectory';
 import { playbookAddHandler } from './addHandler';
+import { SpaceSlug } from '../customParameters/SpaceSlug';
 
 export const addPlaybookCommand = command({
   name: 'add',
@@ -17,7 +18,7 @@ export const addPlaybookCommand = command({
       description: 'Path to the artifact file or directory to stage',
     }),
     space: option({
-      type: optional(string),
+      type: optional(SpaceSlug),
       long: 'space',
       description: 'Target space slug',
     }),

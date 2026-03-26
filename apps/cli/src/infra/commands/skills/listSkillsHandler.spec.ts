@@ -163,7 +163,7 @@ describe('listSkillsHandler', () => {
     it('logs an error about the missing space', () => {
       expect(console.error).toHaveBeenCalledWith(
         expect.anything(),
-        expect.stringContaining('Space "unknown" not found.'),
+        expect.stringContaining('Space "@unknown" not found.'),
       );
     });
 
@@ -201,7 +201,7 @@ describe('listSkillsHandler', () => {
 
     it('displays space-specific empty message', () => {
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('No skills found in space "space-a".'),
+        expect.stringContaining('No skills found in space "@space-a".'),
       );
     });
 

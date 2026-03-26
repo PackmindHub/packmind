@@ -1274,18 +1274,6 @@ describe('playbookAddHandler', () => {
         const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
         expect(callArg.spaceName).toBe('Team Backend');
       });
-
-      describe('when the slug has an @ prefix', () => {
-        it('resolves the space by stripping the @ prefix', async () => {
-          await playbookAddHandler(buildDeps({ spaceSlug: '@team-backend' }));
-
-          expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-            expect.objectContaining({
-              spaceId: 'space-456',
-            }),
-          );
-        });
-      });
     });
 
     describe('when creating in multi-space org with invalid --space flag', () => {

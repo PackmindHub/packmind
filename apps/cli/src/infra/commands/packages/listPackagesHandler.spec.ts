@@ -221,7 +221,7 @@ describe('listPackagesHandler', () => {
 
       it('logs an error', () => {
         expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
-          "Space '@unknown' not found.",
+          'Space "@unknown" not found.',
         );
       });
 
@@ -249,7 +249,7 @@ describe('listPackagesHandler', () => {
 
       it('shows no-packages message', () => {
         expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-          "No packages found in space '@backend'.",
+          'No packages found in space "@backend".',
         );
       });
 
@@ -271,7 +271,7 @@ describe('listPackagesHandler', () => {
 
     it('logs space not found with @ prefix', () => {
       expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        "Space '@unknown' not found.",
+        'Space "@unknown" not found.',
       );
     });
 

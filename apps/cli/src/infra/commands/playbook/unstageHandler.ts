@@ -75,15 +75,12 @@ export async function playbookUnstageHandler(
   }
 
   if (spaceSlug) {
-    const normalizedSlug = spaceSlug.startsWith('@')
-      ? spaceSlug.slice(1)
-      : spaceSlug;
     const entry = matchingEntries.find(
-      (c) => c.spaceName === normalizedSlug || c.spaceId === normalizedSlug,
+      (c) => c.spaceName === spaceSlug || c.spaceId === spaceSlug,
     );
     if (!entry) {
       logErrorConsole(
-        `No staged change found for ${normalizedFilePath} in space "${spaceSlug}"`,
+        `No staged change found for ${normalizedFilePath} in space "@${spaceSlug}"`,
       );
       exit(1);
       return;
