@@ -18,6 +18,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
   SpaceCreatedEvent,
+  PlaybookArtefactMovedEvent,
   createUserId,
   createOrganizationId,
   createRecipeId,
@@ -542,6 +543,35 @@ describe('AmplitudeEventListener', () => {
         {
           spaceName: 'My Space',
           spaceSlug: 'my-space',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('PlaybookArtefactMovedEvent', () => {
+    it('tracks playbook_artefact_moved event with correct payload', async () => {
+      const event = new PlaybookArtefactMovedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        artifactType: 'standard',
+        sourceSpaceId: createSpaceId('space-source'),
+        destinationSpaceId: createSpaceId('space-dest'),
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'playbook_artefact_moved',
+        {
+          artifactType: 'standard',
+          sourceSpaceId: 'space-source',
+          destinationSpaceId: 'space-dest',
           source: 'ui',
         },
       );

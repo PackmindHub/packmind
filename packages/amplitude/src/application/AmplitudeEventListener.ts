@@ -26,6 +26,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
   SpaceCreatedEvent,
+  PlaybookArtefactMovedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
@@ -72,6 +73,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(ChangeProposalAcceptedEvent, this.onChangeProposalAccepted);
     this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
     this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
+    this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
@@ -352,5 +354,19 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       spaceName: payload.spaceName,
       spaceSlug: payload.spaceSlug,
     }));
+  };
+
+  private onPlaybookArtefactMoved = async (
+    event: PlaybookArtefactMovedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'playbook_artefact_moved',
+      (payload) => ({
+        artifactType: payload.artifactType,
+        sourceSpaceId: payload.sourceSpaceId,
+        destinationSpaceId: payload.destinationSpaceId,
+      }),
+    );
   };
 }
