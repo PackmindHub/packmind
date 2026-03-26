@@ -8,6 +8,7 @@ import {
   GetDetectionProgramsForPackagesResponse,
   IGetDetectionProgramsForPackagesUseCase,
 } from '@packmind/types';
+import { parsePackageSlug } from '@packmind/deployments';
 import { DetectionProgramService } from '../../services/DetectionProgramService';
 
 const origin = 'GetDetectionProgramsForPackagesUseCase';
@@ -66,10 +67,20 @@ export class GetDetectionProgramsForPackagesUseCase implements IGetDetectionProg
 
     for (const slug of command.packagesSlugs) {
       try {
+        const { spaceSlug, packageSlug } = parsePackageSlug(slug);
+        const resolvedSpaceSlug = spaceSlug ?? 'global';
+        const space = spaces.find((s) => s.slug === resolvedSpaceSlug);
+
+        if (!space) {
+          this.logger.warn(`Space not found for package: ${slug}`);
+          continue;
+        }
+
         const packageSummary = await this.deploymentsAdapter.getPackageSummary({
           organizationId: createOrganizationId(command.organizationId),
           userId: command.userId,
-          slug,
+          slug: packageSlug,
+          spaceId: space.id,
         });
 
         if (!packageSummary) {

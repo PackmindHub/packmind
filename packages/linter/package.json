@@ -6,6 +6,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@packmind/deployments": "*",
     "@packmind/git": "*",
     "@packmind/linter-ast": "*",
     "@packmind/linter-execution": "*",
