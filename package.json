@@ -169,7 +169,7 @@
     "clsx": "^2.0.0",
     "cmd-ts": "^0.14.3",
     "cookie-parser": "^1.4.7",
-    "crisp-api": "^10.2.0",
+    "crisp-api": "^10.9.1",
     "date-fns": "^4.1.0",
     "diff": "^8.0.3",
     "dompurify": "^3.3.3",
