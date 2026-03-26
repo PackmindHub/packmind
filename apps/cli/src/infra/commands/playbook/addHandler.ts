@@ -23,6 +23,7 @@ import {
   ArtifactType,
   MultiFileCodingAgent,
   Space,
+  SpaceId,
   validateArtifactFileFormat,
 } from '@packmind/types';
 import {
@@ -297,9 +298,11 @@ export async function playbookAddHandler(
       if (parsed) {
         artifactName = parsed.name;
       } else {
-        const lenient = parseLenientStandard(localContent, absolutePath);
+        const lenient = parseLenientStandard(localContent);
         if (!lenient) {
-          logErrorConsole('File is empty.');
+          logErrorConsole(
+            `${filePath} is not a valid artifact. Expected a markdown heading (# Name) followed by content.`,
+          );
           exit(1);
           return;
         }
@@ -411,7 +414,7 @@ export async function playbookAddHandler(
       );
       if (nameExists) {
         logErrorConsole(
-          `A ${artifactType} named "${artifactName}" already exists in space "${spaceName}".`,
+          `A ${artifactType} named "${artifactName}" already exists in Packmind.`,
         );
         exit(1);
         return;
@@ -502,15 +505,21 @@ async function listExistingArtifactNames(
 ): Promise<string[]> {
   switch (artifactType) {
     case 'skill': {
-      const skills = await packmindCliHexa.listSkills({ spaceId });
+      const skills = await packmindCliHexa.listSkills({
+        spaceId: spaceId as SpaceId,
+      });
       return skills.map((s) => s.name);
     }
     case 'command': {
-      const commands = await packmindCliHexa.listCommands({ spaceId });
+      const commands = await packmindCliHexa.listCommands({
+        spaceId: spaceId as SpaceId,
+      });
       return commands.map((c) => c.name);
     }
     case 'standard': {
-      const standards = await packmindCliHexa.listStandards({ spaceId });
+      const standards = await packmindCliHexa.listStandards({
+        spaceId: spaceId as SpaceId,
+      });
       return standards.map((s) => s.name);
     }
   }
