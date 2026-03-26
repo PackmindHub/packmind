@@ -59,7 +59,11 @@ export async function resolveSkillDirectoryRoot(
     if ((await fs.stat(absolutePath)).isDirectory()) {
       return absolutePath;
     }
-  } catch {
+  } catch (error) {
+    if (!isMissingPathError(error)) {
+      throw error;
+    }
+
     return absolutePath;
   }
 
@@ -149,7 +153,8 @@ export async function resolveSkillInputPaths(
 
   for (const inputPath of inputPaths) {
     const absoluteInputPath = path.resolve(cwd, inputPath);
-    const skillDirectoryRoot = await resolveSkillDirectoryRoot(absoluteInputPath);
+    const skillDirectoryRoot =
+      await resolveSkillDirectoryRoot(absoluteInputPath);
 
     const resolvedNestedDirectories = await addNestedSkillDirectories(
       skillDirectoryRoot,

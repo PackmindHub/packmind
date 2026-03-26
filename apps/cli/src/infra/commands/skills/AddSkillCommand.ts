@@ -10,7 +10,10 @@ import {
   formatCommand,
 } from '../../utils/consoleLogger';
 import { originSkillOption } from '../sharedOptions';
-import {addResolvedSkillPath, resolveSkillInputPaths} from '../../../application/utils/resolveSkillInputPaths';
+import {
+  addResolvedSkillPath,
+  resolveSkillInputPaths,
+} from '../../../application/utils/resolveSkillInputPaths';
 
 type AddSkillCommandArgs = {
   skillPaths: readonly string[];
