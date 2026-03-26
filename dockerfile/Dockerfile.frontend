@@ -29,11 +29,9 @@ COPY --chown=packmind:packmind dockerfile/nginx.compose.conf /etc/nginx/nginx.co
 COPY --chown=packmind:packmind dockerfile/nginx.k8s.no-ingress.conf /etc/nginx/nginx.k8s.no-ingress.conf
 COPY --chown=packmind:packmind dockerfile/nginx-entrypoint.sh /home/packmind/nginx.sh
 
-# Set executable permission for the script
-RUN chmod +x /home/packmind/nginx.sh
-
-# Remove apk to reduce attack surface
-RUN rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/cache/apk
+# Set executable permission and remove apk to reduce attack surface
+RUN chmod +x /home/packmind/nginx.sh && \
+    rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/cache/apk
 
 USER packmind
 
