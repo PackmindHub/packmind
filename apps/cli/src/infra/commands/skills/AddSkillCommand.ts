@@ -10,11 +10,8 @@ import {
   formatCommand,
 } from '../../utils/consoleLogger';
 import { originSkillOption } from '../sharedOptions';
-<<<<<<< HEAD
-import {
-  addResolvedSkillPath,
-  resolveSkillInputPaths,
-} from '../../../application/utils/resolveSkillInputPaths';
+import { addResolvedSkillPath, resolveSkillInputPaths } from '../../../application/utils/resolveSkillInputPaths';
+import { SpaceSlug } from '../customParameters/SpaceSlug';
 
 type AddSkillCommandArgs = {
   skillPaths: readonly string[];
@@ -331,9 +328,6 @@ export async function addSkillHandler(
     deps.exit(1);
   }
 }
-=======
-import { SpaceSlug } from '../customParameters/SpaceSlug';
->>>>>>> f594290b00fad835525fcb560d0644dd17934fa1
 
 export const addSkillCommand = command({
   name: 'add',
