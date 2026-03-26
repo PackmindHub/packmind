@@ -172,7 +172,7 @@
     "crisp-api": "^10.2.0",
     "date-fns": "^4.1.0",
     "diff": "^8.0.3",
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.3.3",
     "fastify": "^5.7.2",
     "fastify-plugin": "~5.1.0",
     "http-proxy-middleware": "^3.0.5",
