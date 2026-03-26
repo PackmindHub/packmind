@@ -102,13 +102,18 @@ describe('addToPackageHandler', () => {
         );
       });
 
-      it('shows an example --to for each space', () => {
-        expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('--to @global/my-pkg'),
-        );
-        expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('--to @team/my-pkg'),
-        );
+      describe('shows an example --to for each space', () => {
+        it('shows --to @global/my-pkg', () => {
+          expect(mockLogInfoConsole).toHaveBeenCalledWith(
+            expect.stringContaining('--to @global/my-pkg'),
+          );
+        });
+
+        it('shows --to @team/my-pkg', () => {
+          expect(mockLogInfoConsole).toHaveBeenCalledWith(
+            expect.stringContaining('--to @team/my-pkg'),
+          );
+        });
       });
 
       it('hints to run packages list', () => {
@@ -131,14 +136,16 @@ describe('addToPackageHandler', () => {
         expect(deps.mockExit).not.toHaveBeenCalled();
       });
 
-      it('resolves correctly when multiple spaces exist', async () => {
-        const deps = makeDeps();
-        (deps.hexa.getSpaces as jest.Mock).mockResolvedValue([
-          SPACE_GLOBAL,
-          SPACE_TEAM,
-        ]);
-        await addToPackageHandler(makeArgs({ to: '@team/my-pkg' }), deps);
-        expect(deps.mockExit).not.toHaveBeenCalled();
+      describe('when multiple spaces exist', () => {
+        it('resolves correctly', async () => {
+          const deps = makeDeps();
+          (deps.hexa.getSpaces as jest.Mock).mockResolvedValue([
+            SPACE_GLOBAL,
+            SPACE_TEAM,
+          ]);
+          await addToPackageHandler(makeArgs({ to: '@team/my-pkg' }), deps);
+          expect(deps.mockExit).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -271,13 +278,18 @@ describe('addToPackageHandler', () => {
         await addToPackageHandler(makeArgs(), deps);
       });
 
-      it('hints to run the list command without --space flag', () => {
-        expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli standards list'),
-        );
-        expect(mockLogInfoConsole).not.toHaveBeenCalledWith(
-          expect.stringContaining('--space'),
-        );
+      describe('hints to run the list command without --space flag', () => {
+        it('suggests the list command', () => {
+          expect(mockLogInfoConsole).toHaveBeenCalledWith(
+            expect.stringContaining('packmind-cli standards list'),
+          );
+        });
+
+        it('does not include --space flag', () => {
+          expect(mockLogInfoConsole).not.toHaveBeenCalledWith(
+            expect.stringContaining('--space'),
+          );
+        });
       });
 
       it('calls exit(1)', () => {
