@@ -2,6 +2,7 @@ import { playbookRmHandler, PlaybookRmHandlerDependencies } from './rmHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 
 jest.mock('../../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
@@ -9,12 +10,17 @@ jest.mock('../../utils/consoleLogger', () => ({
   logSuccessConsole: jest.fn(),
 }));
 
+jest.mock('../../../application/utils/resolveDeployedContext', () => ({
+  resolveDeployedContext: jest.fn().mockResolvedValue({
+    targetId: 'deployed-target-789',
+  }),
+}));
+
 const LOCK_FILE_WITH_COMMAND = {
   lockfileVersion: 1,
   packageSlugs: ['my-package'],
-  agents: ['claude'],
+  agents: ['claude' as const],
   installedAt: '2026-03-17T00:00:00.000Z',
-  cliVersion: '1.0.0',
   targetId: 'target-456',
   artifacts: {
     'my-command': {
@@ -24,10 +30,15 @@ const LOCK_FILE_WITH_COMMAND = {
       version: 1,
       spaceId: 'space-123',
       packageIds: ['pkg-1'],
-      files: [{ path: '.claude/commands/my-command.md', agent: 'claude' }],
+      files: [
+        {
+          path: '.claude/commands/my-command.md',
+          agent: 'claude' as const,
+        },
+      ],
     },
   },
-};
+} satisfies PackmindLockFile;
 
 const LOCK_FILE_WITH_STANDARD = {
   ...LOCK_FILE_WITH_COMMAND,
@@ -40,11 +51,14 @@ const LOCK_FILE_WITH_STANDARD = {
       spaceId: 'space-123',
       packageIds: ['pkg-1'],
       files: [
-        { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+        {
+          path: '.packmind/standards/my-standard.md',
+          agent: 'packmind' as const,
+        },
       ],
     },
   },
-};
+} satisfies PackmindLockFile;
 
 const LOCK_FILE_WITH_SKILL = {
   ...LOCK_FILE_WITH_COMMAND,
@@ -57,15 +71,18 @@ const LOCK_FILE_WITH_SKILL = {
       spaceId: 'space-123',
       packageIds: ['pkg-1'],
       files: [
-        { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+        {
+          path: '.claude/skills/my-skill/SKILL.md',
+          agent: 'claude' as const,
+        },
         {
           path: '.claude/skills/my-skill/support/helper.py',
-          agent: 'claude',
+          agent: 'claude' as const,
         },
       ],
     },
   },
-};
+} satisfies PackmindLockFile;
 
 describe('playbookRmHandler', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
@@ -85,6 +102,12 @@ describe('playbookRmHandler', () => {
         packages: { 'my-package': '*' },
         agents: [],
       }),
+      getSpaces: jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'space-123', name: 'My Space', slug: 'my-space' },
+        ]),
+      tryGetGitRepositoryRoot: jest.fn().mockResolvedValue('/project'),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -100,8 +123,6 @@ describe('playbookRmHandler', () => {
 
     mockLockFileRepository = {
       read: jest.fn().mockResolvedValue(LOCK_FILE_WITH_COMMAND),
-      write: jest.fn(),
-      delete: jest.fn(),
     };
   });
 
@@ -154,7 +175,7 @@ describe('playbookRmHandler', () => {
       await playbookRmHandler(buildDeps({ filePath: 'src/index.ts' }));
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Unsupported file path'),
+        'This file was not distributed using packmind',
       );
     });
 
@@ -236,7 +257,8 @@ describe('playbookRmHandler', () => {
           changeType: 'removed',
           content: '',
           spaceId: 'space-123',
-          targetId: 'target-456',
+          configDir: '',
+          targetId: 'deployed-target-789',
         }),
       );
     });
@@ -384,6 +406,65 @@ describe('playbookRmHandler', () => {
       );
 
       expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when resolveDeployedContext returns null', () => {
+    beforeEach(() => {
+      const { resolveDeployedContext } = jest.requireMock(
+        '../../../application/utils/resolveDeployedContext',
+      );
+      resolveDeployedContext.mockResolvedValue(null);
+    });
+
+    it('falls back to lockFile.targetId', async () => {
+      await playbookRmHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'target-456',
+          configDir: '',
+        }),
+      );
+    });
+  });
+
+  describe('when artifact is already staged for removal', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChange.mockReturnValue({
+        filePath: '.claude/commands/my-command.md',
+        artifactType: 'command',
+        artifactName: 'My Command',
+        codingAgent: 'claude',
+        changeType: 'removed',
+        content: '',
+        spaceId: 'space-123',
+        addedAt: '2026-03-24T00:00:00.000Z',
+      });
+    });
+
+    it('logs already staged message', async () => {
+      const { logSuccessConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
+
+      await playbookRmHandler(buildDeps());
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        '"My Command" is already staged for removal.',
+      );
+    });
+
+    it('does not call addChange', async () => {
+      await playbookRmHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+
+    it('exits with 0', async () => {
+      await playbookRmHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 });

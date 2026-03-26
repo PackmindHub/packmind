@@ -69,6 +69,7 @@ export const DeployWithCliModal: React.FC<DeployWithCliModalProps> = ({
           <TabContent>
             <DistributeStep
               packages={packagesResponse?.packages}
+              spaceSlug={targetSpace?.slug}
               isLoading={isLoadingSpaces || isLoadingPackages}
             />
           </TabContent>

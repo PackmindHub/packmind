@@ -242,4 +242,75 @@ describe('SkillDiffStrategy', () => {
       });
     });
   });
+
+  describe('when additional properties differ between server and local', () => {
+    let diffs: Awaited<ReturnType<SkillDiffStrategy['diff']>>;
+
+    beforeEach(async () => {
+      const serverContent = [
+        '---',
+        'name: My Skill',
+        'description: A skill',
+        'model: opus',
+        '---',
+        'Skill body',
+      ].join('\n');
+
+      const localContent = [
+        '---',
+        'name: My Skill',
+        'description: A skill',
+        'model: sonnet',
+        '---',
+        'Skill body',
+      ].join('\n');
+
+      const file: DiffableFile = {
+        path: '.claude/skills/my-skill/SKILL.md',
+        content: serverContent,
+        artifactType: 'skill',
+        artifactName: 'My Skill',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(localContent);
+
+      diffs = await strategy.diff(file, '/base');
+    });
+
+    it('produces an updateSkillAdditionalProperty diff', () => {
+      const additionalPropDiff = diffs.find(
+        (d) => d.type === ChangeProposalType.updateSkillAdditionalProperty,
+      );
+      expect(additionalPropDiff).toBeDefined();
+    });
+
+    it('targets the model key', () => {
+      const additionalPropDiff = diffs.find(
+        (d) => d.type === ChangeProposalType.updateSkillAdditionalProperty,
+      );
+      expect(additionalPropDiff!.payload).toEqual(
+        expect.objectContaining({ targetId: 'model' }),
+      );
+    });
+
+    it('sets oldValue to the server model value', () => {
+      const additionalPropDiff = diffs.find(
+        (d) => d.type === ChangeProposalType.updateSkillAdditionalProperty,
+      );
+      expect(additionalPropDiff!.payload).toEqual(
+        expect.objectContaining({ oldValue: '"opus"' }),
+      );
+    });
+
+    it('sets newValue to the local model value', () => {
+      const additionalPropDiff = diffs.find(
+        (d) => d.type === ChangeProposalType.updateSkillAdditionalProperty,
+      );
+      expect(additionalPropDiff!.payload).toEqual(
+        expect.objectContaining({ newValue: '"sonnet"' }),
+      );
+    });
+  });
 });

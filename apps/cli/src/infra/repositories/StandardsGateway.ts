@@ -5,15 +5,11 @@ import {
   RuleWithId,
   RuleExample,
 } from '../../domain/repositories/IStandardsGateway';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { Gateway, IListStandardsBySpaceUseCase } from '@packmind/types';
 
 export class StandardsGateway implements IStandardsGateway {
-  constructor(
-    private readonly httpClient: PackmindHttpClient,
-    private readonly spaces: ISpacesGateway,
-  ) {}
+  constructor(private readonly httpClient: PackmindHttpClient) {}
 
   public create = async (
     spaceId: string,

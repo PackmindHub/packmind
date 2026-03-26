@@ -104,6 +104,7 @@ describe('CreateCommandFromPlaybookUseCase', () => {
         commandId: 'cmd-1',
         name: 'Test Command',
         slug: 'test-command',
+        spaceSlug: 'global',
       });
     });
   });

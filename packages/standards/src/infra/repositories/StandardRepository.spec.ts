@@ -54,64 +54,6 @@ describe('StandardRepository', () => {
 
   afterAll(() => fixture.destroy());
 
-  it('can store and retrieve standards by organization with scope from latest version', async () => {
-    const organizationId = createOrganizationId(uuidv4());
-    const standard = standardFactory({
-      scope: 'standard-scope',
-    });
-    await standardRepository.add(standard);
-
-    // Create standard versions with different scopes
-    const versionRepo = fixture.datasource.getRepository(StandardVersionSchema);
-    const version1 = standardVersionFactory({
-      standardId: standard.id,
-      version: 1,
-      scope: 'version-1-scope',
-    });
-    const version2 = standardVersionFactory({
-      standardId: standard.id,
-      version: 2,
-      scope: 'version-2-scope',
-    });
-    await versionRepo.save(version1);
-    await versionRepo.save(version2);
-
-    const foundStandards =
-      await standardRepository.findByOrganizationId(organizationId);
-
-    // findByOrganizationId is deprecated and returns empty array
-    expect(foundStandards).toHaveLength(0);
-  });
-
-  describe('when no versions exist', () => {
-    it('returns standard scope', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const standard = standardFactory({
-        scope: 'standard-scope',
-      });
-      await standardRepository.add(standard);
-
-      const foundStandards =
-        await standardRepository.findByOrganizationId(organizationId);
-
-      // findByOrganizationId is deprecated - returns empty array
-      expect(foundStandards).toHaveLength(0);
-    });
-  });
-
-  it('can store and retrieve multiple standards by organization', async () => {
-    const organizationId = createOrganizationId(uuidv4());
-    await standardRepository.add(standardFactory({ slug: 'slug-1' }));
-    await standardRepository.add(standardFactory({ slug: 'slug-2' }));
-    await standardRepository.add(standardFactory({ slug: 'slug-3' }));
-
-    const foundStandards =
-      await standardRepository.findByOrganizationId(organizationId);
-
-    // findByOrganizationId is deprecated - returns empty array
-    expect(foundStandards).toHaveLength(0);
-  });
-
   it('can find a standard by id', async () => {
     const standard = standardFactory();
     await standardRepository.add(standard);
@@ -152,20 +94,6 @@ describe('StandardRepository', () => {
 
     const foundStandards = await standardRepository.findByUserId(userId);
     expect(foundStandards).toEqual([standard]);
-  });
-
-  it('can find standards by organization and user', async () => {
-    const organizationId = createOrganizationId(uuidv4());
-    const userId = createUserId(uuidv4());
-    const standard = standardFactory({ userId });
-    await standardRepository.add(standard);
-
-    const foundStandards = await standardRepository.findByOrganizationAndUser(
-      organizationId,
-      userId,
-    );
-    // findByOrganizationAndUser is deprecated and returns empty array
-    expect(foundStandards).toEqual([]);
   });
 
   describe('when finding standards by space with versioned scopes', () => {
@@ -260,24 +188,6 @@ describe('StandardRepository', () => {
     });
   });
 
-  describe('when searching for organization standards', () => {
-    it('finds standards with spaceId', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceId = createSpaceId(uuidv4());
-      const standardWithSpace = standardFactory({
-        spaceId,
-        slug: 'space-slug',
-      });
-      await standardRepository.add(standardWithSpace);
-
-      const foundStandards =
-        await standardRepository.findByOrganizationId(organizationId);
-
-      // findByOrganizationId is deprecated - returns empty array
-      expect(foundStandards).toHaveLength(0);
-    });
-  });
-
   describe('when finding a non-existent standard', () => {
     it('returns null for non-existent id', async () => {
       const foundStandard = await standardRepository.findById(
@@ -293,14 +203,6 @@ describe('StandardRepository', () => {
         organizationId,
       );
       expect(foundStandard).toBeNull();
-    });
-
-    it('returns empty array for non-existent organization', async () => {
-      const nonExistentOrgId = createOrganizationId(uuidv4());
-
-      const foundStandards =
-        await standardRepository.findByOrganizationId(nonExistentOrgId);
-      expect(foundStandards).toHaveLength(0);
     });
 
     it('returns empty array for non-existent user', async () => {

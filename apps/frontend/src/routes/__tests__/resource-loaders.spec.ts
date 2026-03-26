@@ -7,6 +7,7 @@ import { clientLoader as recipeLoader } from '../../../app/routes/org.$orgSlug._
 jest.mock('../../shared/data/queryClient', () => ({
   queryClient: {
     ensureQueryData: jest.fn(),
+    fetchQuery: jest.fn(),
   },
 }));
 
@@ -28,11 +29,15 @@ jest.mock('@packmind/ui', () => {
 const ensureQueryDataMock = queryClient.ensureQueryData as jest.MockedFunction<
   typeof queryClient.ensureQueryData
 >;
+const fetchQueryMock = queryClient.fetchQuery as jest.MockedFunction<
+  typeof queryClient.fetchQuery
+>;
 const pmToasterErrorMock = pmToaster.error as jest.Mock;
 
 describe('organization resource loaders', () => {
   beforeEach(() => {
     ensureQueryDataMock.mockReset();
+    fetchQueryMock.mockReset();
     pmToasterErrorMock.mockReset();
   });
 
@@ -44,12 +49,13 @@ describe('organization resource loaders', () => {
         .mockResolvedValueOnce({
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
         })
-        .mockResolvedValueOnce({ id: 'space-1' })
-        .mockResolvedValueOnce({ standards: [] });
+        .mockResolvedValueOnce({ id: 'space-1' });
+      fetchQueryMock.mockResolvedValueOnce({ standards: [] });
 
       try {
         await standardLoader({
           params: {
+            orgSlug: 'org-slug',
             standardId: 'std-1',
             spaceSlug: 'space-slug',
           },

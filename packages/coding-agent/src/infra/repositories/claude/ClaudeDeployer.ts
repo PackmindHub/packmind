@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CAMEL_TO_YAML_KEY,
   CODING_AGENT_ARTEFACT_PATHS,
   DeleteItem,
   DeleteItemType,
@@ -12,11 +13,14 @@ import {
   SkillVersion,
   StandardVersion,
   Target,
+  camelToKebab,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
+import { formatAdditionalPropertyYaml } from '../utils/YamlFrontmatterUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
+import { sortAdditionalPropertiesKeys } from '@packmind/node-utils';
 
 const origin = 'ClaudeDeployer';
 
@@ -706,6 +710,19 @@ ${instructionContent}`;
         )
         .join('\n');
       frontmatterFields.push(`metadata:\n${metadataYaml}`);
+    }
+
+    // Emit Claude Code-specific additional properties
+    if (
+      skillVersion.additionalProperties &&
+      Object.keys(skillVersion.additionalProperties).length > 0
+    ) {
+      for (const [camelKey, value] of sortAdditionalPropertiesKeys(
+        skillVersion.additionalProperties,
+      )) {
+        const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
+        frontmatterFields.push(formatAdditionalPropertyYaml(yamlKey, value));
+      }
     }
 
     const frontmatter = `---

@@ -59,20 +59,42 @@ describe('DistributeStep', () => {
         expect(screen.getByText('Package 2')).toBeInTheDocument();
       });
 
-      it('displays install command for package-1', () => {
-        renderWithProviders(<DistributeStep packages={packages} />);
+      describe('when spaceSlug is provided', () => {
+        beforeEach(() => {
+          renderWithProviders(
+            <DistributeStep packages={packages} spaceSlug="global" />,
+          );
+        });
 
-        expect(
-          screen.getByDisplayValue('packmind-cli install package-1'),
-        ).toBeInTheDocument();
+        it('displays qualified install command for package-1', () => {
+          expect(
+            screen.getByDisplayValue('packmind-cli install @global/package-1'),
+          ).toBeInTheDocument();
+        });
+
+        it('displays qualified install command for package-2', () => {
+          expect(
+            screen.getByDisplayValue('packmind-cli install @global/package-2'),
+          ).toBeInTheDocument();
+        });
       });
 
-      it('displays install command for package-2', () => {
-        renderWithProviders(<DistributeStep packages={packages} />);
+      describe('when spaceSlug is not provided', () => {
+        beforeEach(() => {
+          renderWithProviders(<DistributeStep packages={packages} />);
+        });
 
-        expect(
-          screen.getByDisplayValue('packmind-cli install package-2'),
-        ).toBeInTheDocument();
+        it('displays unqualified install command for package-1', () => {
+          expect(
+            screen.getByDisplayValue('packmind-cli install package-1'),
+          ).toBeInTheDocument();
+        });
+
+        it('displays unqualified install command for package-2', () => {
+          expect(
+            screen.getByDisplayValue('packmind-cli install package-2'),
+          ).toBeInTheDocument();
+        });
       });
     });
   });

@@ -43,13 +43,11 @@ const pmLinkRecipe = defineRecipe({
           backgroundColor: 'blue.800',
         },
         _active: {
-          color: 'text.primary',
-          backgroundColor: 'blue.900',
+          color: 'branding.primary',
           fontWeight: 'bold',
         },
         _open: {
-          color: 'text.primary',
-          backgroundColor: 'blue.900',
+          color: 'branding.primary',
           fontWeight: 'bold',
         },
       },

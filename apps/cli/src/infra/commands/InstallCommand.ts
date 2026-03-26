@@ -10,11 +10,11 @@ import {
 import { listPackagesHandler } from './packages/listPackagesHandler';
 import { showPackageHandler } from './packages/showPackageHandler';
 import { logWarningConsole } from '../utils/consoleLogger';
+import { PlaybookLocalRepository } from '../repositories/PlaybookLocalRepository';
 
 export const installCommand = command({
   name: 'install',
-  description:
-    'Install commands and standards from specified packages and save them to the current directory',
+  description: 'Install packages and save their artifacts locally',
   aliases: ['pull'],
   args: {
     list: flag({
@@ -57,12 +57,20 @@ export const installCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
+    const repoRoot = await packmindCliHexa.tryGetGitRepositoryRoot(
+      process.cwd(),
+    );
+    const playbookLocalRepository = repoRoot
+      ? new PlaybookLocalRepository(repoRoot)
+      : undefined;
+
     const deps: InstallHandlerDependencies = {
       packmindCliHexa,
       exit: process.exit,
       getCwd: () => process.cwd(),
       log: console.log,
       error: console.error,
+      playbookLocalRepository,
     };
 
     // Handle --list flag

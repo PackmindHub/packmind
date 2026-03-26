@@ -22,6 +22,7 @@ export type CreateSkillData = {
   license?: string;
   compatibility?: string;
   metadata?: Record<string, string>;
+  additionalProperties?: Record<string, unknown>;
   version: number;
   userId: UserId;
   spaceId: SpaceId;
@@ -36,6 +37,7 @@ export type UpdateSkillData = {
   license?: string;
   compatibility?: string;
   metadata?: Record<string, string>;
+  additionalProperties?: Record<string, unknown>;
   version: number;
   userId: UserId;
 };
@@ -63,6 +65,7 @@ export class SkillService {
       const skill: Skill = {
         id: skillId,
         ...skillData,
+        movedTo: null,
         createdAt: now,
         updatedAt: now,
       };
@@ -186,6 +189,7 @@ export class SkillService {
         id: skillId,
         ...skillData,
         spaceId: existingSkill.spaceId,
+        movedTo: existingSkill.movedTo,
         createdAt: existingSkill.createdAt,
         updatedAt: new Date(),
       };

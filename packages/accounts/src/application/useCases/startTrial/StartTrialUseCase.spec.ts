@@ -65,7 +65,7 @@ describe('StartTrialUseCase', () => {
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     mockSpacesPort = {
-      createSpace: jest.fn(),
+      createDefaultSpace: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     mockDeploymentPort = {
@@ -95,7 +95,7 @@ describe('StartTrialUseCase', () => {
           mockOrganization,
         );
         mockUserService.createUser.mockResolvedValue(mockUser);
-        mockSpacesPort.createSpace.mockResolvedValue(undefined);
+        mockSpacesPort.createDefaultSpace.mockResolvedValue(undefined);
       });
 
       it('creates organization with generated name', async () => {
@@ -126,8 +126,7 @@ describe('StartTrialUseCase', () => {
 
         await startTrialUseCase.execute(command);
 
-        expect(mockSpacesPort.createSpace).toHaveBeenCalledWith(
-          'Global',
+        expect(mockSpacesPort.createDefaultSpace).toHaveBeenCalledWith(
           mockOrganization.id,
         );
       });
@@ -318,7 +317,7 @@ describe('StartTrialUseCase', () => {
           mockOrganization,
         );
         mockUserService.createUser.mockResolvedValue(mockUser);
-        mockSpacesPort.createSpace.mockRejectedValue(
+        mockSpacesPort.createDefaultSpace.mockRejectedValue(
           new Error('Space creation failed'),
         );
       });
@@ -367,12 +366,12 @@ describe('StartTrialUseCase', () => {
         mockUserService.createUser.mockResolvedValue(mockUser);
       });
 
-      it('does not call createSpace', async () => {
+      it('does not call createDefaultSpace', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         await useCaseWithoutSpacesPort.execute(command);
 
-        expect(mockSpacesPort.createSpace).not.toHaveBeenCalled();
+        expect(mockSpacesPort.createDefaultSpace).not.toHaveBeenCalled();
       });
 
       it('returns user data', async () => {
@@ -443,7 +442,7 @@ describe('StartTrialUseCase', () => {
           mockOrganization,
         );
         mockUserService.createUser.mockResolvedValue(mockUser);
-        mockSpacesPort.createSpace.mockResolvedValue(undefined);
+        mockSpacesPort.createDefaultSpace.mockResolvedValue(undefined);
         mockDeploymentPort.createRenderModeConfiguration.mockRejectedValue(
           new Error('Render mode configuration failed'),
         );

@@ -1,6 +1,11 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  HexaRegistry,
+  BaseHexaOpts,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
@@ -66,9 +71,13 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
     try {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
 
       await this.spacesAdapter.initialize({
         [IAccountsPortName]: accountsPort,
+        eventEmitterService,
       });
 
       this.logger.info('SpacesHexa initialized successfully');

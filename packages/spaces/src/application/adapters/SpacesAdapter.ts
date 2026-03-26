@@ -1,5 +1,10 @@
-import { IBaseAdapter } from '@packmind/node-utils';
 import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  CreateSpaceCommand,
+  CreateSpaceResponse,
   GetDefaultSpaceCommand,
   GetDefaultSpaceResponse,
   IAccountsPort,
@@ -12,6 +17,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import type { SpacesHexa } from '../../SpacesHexa';
+import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
 import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 
@@ -21,16 +27,23 @@ import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
  */
 export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   private accountsPort!: IAccountsPort;
+  private eventEmitterService!: PackmindEventEmitterService;
 
   constructor(private readonly hexa: SpacesHexa) {}
 
-  async createSpace(
-    name: string,
-    organizationId: OrganizationId,
-    isDefaultSpace = true,
-  ): Promise<Space> {
+  async createDefaultSpace(organizationId: OrganizationId): Promise<Space> {
     const spaceService = this.hexa.getSpaceService();
-    return spaceService.createSpace(name, organizationId, isDefaultSpace);
+    return spaceService.createDefaultSpace(organizationId);
+  }
+
+  async createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
+    const spaceService = this.hexa.getSpaceService();
+    const useCase = new CreateSpaceUseCase(
+      spaceService,
+      this.accountsPort,
+      this.eventEmitterService,
+    );
+    return useCase.execute(command);
   }
 
   async listSpacesByOrganization(
@@ -74,13 +87,16 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
    */
   public async initialize(ports: Record<string, unknown>): Promise<void> {
     this.accountsPort = ports[IAccountsPortName] as IAccountsPort;
+    this.eventEmitterService = ports[
+      'eventEmitterService'
+    ] as PackmindEventEmitterService;
   }
 
   /**
    * Check if the adapter is ready to use.
    */
   public isReady(): boolean {
-    return !!this.accountsPort;
+    return !!this.accountsPort && !!this.eventEmitterService;
   }
 
   /**

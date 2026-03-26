@@ -2,21 +2,25 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 
 import {
-  ArtifactVersionEntry,
   ChangeProposalArtefactId,
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
   ChangeProposalType,
   FileModification,
+  NewSkillPayload,
   SpaceId,
   TargetId,
-  createRuleId,
 } from '@packmind/types';
+import { parseSkillMd } from '@packmind/node-utils';
 
 import { parseStandardMd } from '../../../application/utils/parseStandardMd';
 import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
 import { parseCommandFile } from '../../../application/utils/parseCommandFile';
-import { matchUpdatedRules } from '../../../application/utils/ruleSimilarity';
+import {
+  compareStandardFields,
+  compareCommandFields,
+  compareSkillDefinitionFields,
+} from '../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import {
@@ -25,6 +29,7 @@ import {
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
+import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   IPlaybookLocalRepository,
@@ -32,6 +37,7 @@ import {
 } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
+import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -41,7 +47,8 @@ export type PlaybookSubmitHandlerDependencies = {
   exit: (code: number) => void;
   message: string | undefined;
   openEditor: (prefill: string) => string | null;
-  unlinkFile: (filePath: string) => void;
+  unlinkSync: (filePath: string) => void;
+  rmSync: (dirPath: string, options?: { recursive?: boolean }) => void;
 };
 
 type ProposalItem = {
@@ -51,10 +58,6 @@ type ProposalItem = {
   targetId: string | undefined;
   spaceId: string;
 };
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 function buildEditorPrefill(changes: PlaybookChangeEntry[]): string {
   const lines = [
@@ -193,130 +196,38 @@ function buildUpdatedStandardProposals(
 ): ProposalItem[] {
   if (!artifactId) return [];
 
-  const localParsed = parseStandardMd(entry.content, entry.filePath);
-  if (!localParsed) return [];
-
-  const serverParsed = deployedContent
-    ? parseStandardMd(deployedContent, entry.filePath)
-    : null;
-
-  const proposals: ProposalItem[] = [];
   const base = {
     artefactId: artifactId,
     targetId: entry.targetId,
     spaceId: entry.spaceId,
   };
 
-  if (serverParsed) {
-    if (
-      serverParsed.frontmatterName &&
-      localParsed.frontmatterName &&
-      serverParsed.frontmatterName !== localParsed.frontmatterName
-    ) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardName,
-        payload: {
-          oldValue: serverParsed.frontmatterName,
-          newValue: localParsed.frontmatterName,
-        },
-      });
-    }
-
-    if (serverParsed.name !== localParsed.name) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardName,
-        payload: {
-          oldValue: serverParsed.name,
-          newValue: localParsed.name,
-        },
-      });
-    }
-
-    if (
-      serverParsed.frontmatterDescription &&
-      localParsed.frontmatterDescription &&
-      serverParsed.frontmatterDescription !== localParsed.frontmatterDescription
-    ) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardDescription,
-        payload: {
-          oldValue: serverParsed.frontmatterDescription,
-          newValue: localParsed.frontmatterDescription,
-        },
-      });
-    }
-
-    if (serverParsed.description !== localParsed.description) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardDescription,
-        payload: {
-          oldValue: serverParsed.description,
-          newValue: localParsed.description,
-        },
-      });
-    }
-
-    if (serverParsed.scope !== localParsed.scope) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateStandardScope,
-        payload: {
-          oldValue: serverParsed.scope,
-          newValue: localParsed.scope,
-        },
-      });
-    }
+  if (deployedContent) {
+    const fieldChanges = compareStandardFields(
+      entry.content,
+      deployedContent,
+      entry.filePath,
+    );
+    return fieldChanges.map((change) => ({
+      ...base,
+      type: change.type,
+      payload: change.payload,
+    }));
   }
 
-  const serverRules = new Set(serverParsed?.rules ?? []);
+  // No deployed content: parse local and emit all rules as adds
+  const localParsed = parseStandardMd(entry.content, entry.filePath);
+  if (!localParsed) return [];
+
+  const proposals: ProposalItem[] = [];
   const localRules = new Set(localParsed.rules);
-  const deletedRules = [...serverRules].filter((r) => !localRules.has(r));
-  const addedRules = [...localRules].filter((r) => !serverRules.has(r));
-
-  const { updates, remainingDeleted, remainingAdded } = matchUpdatedRules(
-    deletedRules,
-    addedRules,
-  );
-
-  for (const update of updates) {
-    const ruleId = createRuleId('unresolved');
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.updateRule,
-      payload: {
-        targetId: ruleId,
-        oldValue: update.oldValue,
-        newValue: update.newValue,
-      },
-    });
-  }
-
-  for (const rule of remainingDeleted) {
-    const ruleId = createRuleId('unresolved');
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.deleteRule,
-      payload: {
-        targetId: ruleId,
-        item: { id: ruleId, content: rule },
-      },
-    });
-  }
-
-  for (const rule of remainingAdded) {
+  for (const rule of localRules) {
     proposals.push({
       ...base,
       type: ChangeProposalType.addRule,
-      payload: {
-        item: { content: rule },
-      },
+      payload: { item: { content: rule } },
     });
   }
-
   return proposals;
 }
 
@@ -325,68 +236,178 @@ function buildUpdatedCommandProposals(
   artifactId: string | null,
   deployedContent: string | null,
 ): ProposalItem[] {
-  if (!artifactId) return [];
+  if (!artifactId || !deployedContent) return [];
 
-  const localParsed = parseCommandFile(entry.content, entry.filePath);
-  if (!localParsed.success) return [];
+  const fieldChanges = compareCommandFields(
+    entry.content,
+    deployedContent,
+    entry.filePath,
+  );
 
-  const serverParsed = deployedContent
-    ? parseCommandFile(deployedContent, entry.filePath)
-    : null;
-
-  const proposals: ProposalItem[] = [];
   const base = {
     artefactId: artifactId,
     targetId: entry.targetId,
     spaceId: entry.spaceId,
   };
 
-  if (serverParsed?.success) {
-    if (serverParsed.parsed.name !== localParsed.parsed.name) {
+  return fieldChanges.map((change) => ({
+    ...base,
+    type: change.type,
+    payload: change.payload,
+  }));
+}
+
+function buildUpdatedSkillProposals(
+  entry: PlaybookChangeEntry,
+  artifactId: string | null,
+  deployedFiles: FileModification[],
+): ProposalItem[] {
+  if (!artifactId) return [];
+
+  const proposals: ProposalItem[] = [];
+  const base: Pick<ProposalItem, 'artefactId' | 'targetId' | 'spaceId'> = {
+    artefactId: artifactId,
+    targetId: entry.targetId,
+    spaceId: entry.spaceId,
+  };
+
+  // Parse the local YAML content (NewSkillPayload)
+  let local: NewSkillPayload;
+  try {
+    local = yaml.parse(entry.content);
+  } catch {
+    logWarningConsole(
+      `Skipping "${entry.artifactName}" — failed to parse local skill content.`,
+    );
+    return [];
+  }
+
+  // Find the deployed SKILL.md to compare against
+  const normalizedEntryPath = normalizePath(entry.filePath);
+  const skillMdFile = deployedFiles.find((f) => {
+    const normalized = normalizePath(f.path);
+    return (
+      normalized.startsWith(normalizedEntryPath + '/') &&
+      normalized.endsWith('/SKILL.md')
+    );
+  });
+
+  if (skillMdFile?.content) {
+    const deployed = parseSkillMd(skillMdFile.content);
+    if (deployed) {
+      // Compare SKILL.md fields and generate granular proposals
+      const fieldChanges = compareSkillDefinitionFields(local, deployed);
+      proposals.push(
+        ...fieldChanges.map((change) => ({
+          ...base,
+          type: change.type,
+          payload: change.payload,
+        })),
+      );
+    } else {
+      // Fallback: if parsing fails, submit prompt as full update
       proposals.push({
         ...base,
-        type: ChangeProposalType.updateCommandName,
+        type: ChangeProposalType.updateSkillPrompt,
+        payload: { oldValue: '', newValue: local.prompt },
+      });
+    }
+  } else {
+    logWarningConsole(
+      `Skipping "${entry.artifactName}" — deployed SKILL.md content not found.`,
+    );
+    return [];
+  }
+
+  // Handle helper files
+  const deployedHelperFiles = deployedFiles.filter((f) => {
+    const normalized = normalizePath(f.path);
+    return (
+      normalized.startsWith(normalizedEntryPath + '/') &&
+      !normalized.endsWith('/SKILL.md') &&
+      f.skillFileId
+    );
+  });
+
+  const localFiles = local.files ?? [];
+
+  // Updated or unchanged helper files
+  for (const deployed of deployedHelperFiles) {
+    const relativePath = normalizePath(deployed.path).slice(
+      normalizedEntryPath.length + 1,
+    );
+    const localFile = localFiles.find((f) => f.path === relativePath);
+
+    if (!localFile) {
+      // File deleted locally
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.deleteSkillFile,
         payload: {
-          oldValue: serverParsed.parsed.name,
-          newValue: localParsed.parsed.name,
+          targetId: deployed.skillFileId,
+          item: {
+            id: deployed.skillFileId,
+            path: relativePath,
+            content: deployed.content ?? '',
+            permissions: deployed.skillFilePermissions ?? 'read',
+            isBase64: 'isBase64' in deployed ? !!deployed.isBase64 : false,
+          },
+        },
+      });
+    } else if (localFile.content !== deployed.content) {
+      // File content changed
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.updateSkillFileContent,
+        payload: {
+          targetId: deployed.skillFileId,
+          oldValue: deployed.content ?? '',
+          newValue: localFile.content,
+          isBase64: localFile.isBase64 ?? false,
         },
       });
     }
 
-    if (serverParsed.parsed.content !== localParsed.parsed.content) {
+    // Check for permission changes (independent of content changes)
+    const localPermissions = localFile?.permissions ?? 'rw-r--r--';
+    const deployedPermissions = deployed.skillFilePermissions ?? 'read';
+    if (localFile && localPermissions !== deployedPermissions) {
       proposals.push({
         ...base,
-        type: ChangeProposalType.updateCommandDescription,
+        type: ChangeProposalType.updateSkillFilePermissions,
         payload: {
-          oldValue: serverParsed.parsed.content,
-          newValue: localParsed.parsed.content,
+          targetId: deployed.skillFileId,
+          oldValue: deployedPermissions,
+          newValue: localPermissions,
+        },
+      });
+    }
+  }
+
+  // New helper files (exist locally but not deployed)
+  const deployedRelativePaths = new Set(
+    deployedHelperFiles.map((f) =>
+      normalizePath(f.path).slice(normalizedEntryPath.length + 1),
+    ),
+  );
+  for (const localFile of localFiles) {
+    if (!deployedRelativePaths.has(localFile.path)) {
+      proposals.push({
+        ...base,
+        type: ChangeProposalType.addSkillFile,
+        payload: {
+          item: {
+            path: localFile.path,
+            content: localFile.content,
+            permissions: localFile.permissions ?? 'rw-r--r--',
+            isBase64: localFile.isBase64 ?? false,
+          },
         },
       });
     }
   }
 
   return proposals;
-}
-
-function buildUpdatedSkillProposals(
-  entry: PlaybookChangeEntry,
-  artifactId: string | null,
-): ProposalItem[] {
-  if (!artifactId) return [];
-
-  return [
-    {
-      type: ChangeProposalType.updateSkillFileContent,
-      artefactId: artifactId,
-      payload: {
-        targetId: artifactId,
-        oldValue: '',
-        newValue: entry.content,
-      },
-      targetId: entry.targetId,
-      spaceId: entry.spaceId,
-    },
-  ];
 }
 
 function buildRemovedProposals(
@@ -417,36 +438,6 @@ function buildRemovedProposals(
       spaceId: entry.spaceId,
     },
   ];
-}
-
-function lockFileToArtifactVersionEntries(
-  lockFile: PackmindLockFile,
-): ArtifactVersionEntry[] {
-  return Object.values(lockFile.artifacts).map((entry) => ({
-    name: entry.name,
-    type: entry.type,
-    id: entry.id,
-    version: entry.version,
-    spaceId: entry.spaceId,
-  }));
-}
-
-async function fetchDeployedFiles(
-  packmindCliHexa: PackmindCliHexa,
-  lockFile: PackmindLockFile,
-): Promise<FileModification[]> {
-  try {
-    const artifacts = lockFileToArtifactVersionEntries(lockFile);
-    const response = await packmindCliHexa
-      .getPackmindGateway()
-      .deployment.getContentByVersions({
-        artifacts,
-        agents: lockFile.agents,
-      });
-    return response.fileUpdates.createOrUpdate;
-  } catch {
-    return [];
-  }
 }
 
 function findDeployedContentForPath(
@@ -499,20 +490,58 @@ export async function playbookSubmitHandler(
     resolvedMessage = stripped;
   }
 
-  // Read lock file and fetch deployed content by artifact versions
-  const projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
-  const lockFile = projectDir
-    ? await lockFileRepository.read(projectDir)
-    : null;
-  const deployedFiles =
-    lockFile && Object.keys(lockFile.artifacts).length > 0
-      ? await fetchDeployedFiles(packmindCliHexa, lockFile)
-      : [];
+  // Per-target lock file resolution cache
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+
+  type TargetContext = {
+    lockFile: PackmindLockFile | null;
+    deployedFiles: FileModification[];
+    projectDir: string | null;
+  };
+
+  const targetContextCache = new Map<string, TargetContext>();
+
+  async function getTargetContext(
+    entry: PlaybookChangeEntry,
+  ): Promise<TargetContext> {
+    const key = entry.configDir ?? '__cwd__';
+    if (targetContextCache.has(key)) return targetContextCache.get(key)!;
+
+    let projectDir: string | null;
+    if (entry.configDir !== undefined && gitRoot) {
+      projectDir = path.join(gitRoot, entry.configDir);
+    } else {
+      projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
+    }
+
+    const lockFile = projectDir
+      ? await lockFileRepository.read(projectDir)
+      : null;
+    const deployedFiles =
+      lockFile && Object.keys(lockFile.artifacts).length > 0
+        ? await fetchDeployedFiles(
+            packmindCliHexa.getPackmindGateway(),
+            lockFile,
+          )
+        : [];
+
+    const ctx = { lockFile, deployedFiles, projectDir };
+    targetContextCache.set(key, ctx);
+    return ctx;
+  }
 
   // Build proposals
   const allProposals: ProposalItem[] = [];
 
   for (const entry of changes) {
+    const ctx = await getTargetContext(entry);
+
+    // Fall back to the lock file's targetId for entries staged before the fix
+    // where resolveDeployedContext couldn't resolve it (e.g. no git provider configured).
+    if (!entry.targetId && ctx.lockFile?.targetId) {
+      entry.targetId = ctx.lockFile.targetId;
+    }
+
     if (entry.changeType === 'created') {
       switch (entry.artifactType) {
         case 'standard':
@@ -528,7 +557,7 @@ export async function playbookSubmitHandler(
     } else if (entry.changeType === 'removed') {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
-        lockFile,
+        ctx.lockFile,
       );
       if (!artifactId) {
         logWarningConsole(
@@ -536,11 +565,13 @@ export async function playbookSubmitHandler(
         );
         continue;
       }
-      allProposals.push(...buildRemovedProposals(entry, artifactId, lockFile));
+      allProposals.push(
+        ...buildRemovedProposals(entry, artifactId, ctx.lockFile),
+      );
     } else {
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
-        lockFile,
+        ctx.lockFile,
       );
 
       if (!artifactId) {
@@ -552,7 +583,7 @@ export async function playbookSubmitHandler(
 
       const deployedContent = findDeployedContentForPath(
         entry.filePath,
-        deployedFiles,
+        ctx.deployedFiles,
       );
 
       if (
@@ -581,7 +612,9 @@ export async function playbookSubmitHandler(
           );
           break;
         case 'skill':
-          allProposals.push(...buildUpdatedSkillProposals(entry, artifactId));
+          allProposals.push(
+            ...buildUpdatedSkillProposals(entry, artifactId, ctx.deployedFiles),
+          );
           break;
       }
     }
@@ -592,7 +625,7 @@ export async function playbookSubmitHandler(
       'Nothing to submit — no changes detected compared to deployed versions.',
     );
     for (const entry of changes) {
-      playbookLocalRepository.removeChange(entry.filePath);
+      playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
     }
     exit(0);
     return;
@@ -617,6 +650,7 @@ export async function playbookSubmitHandler(
   // Submit
   const packmindGateway = packmindCliHexa.getPackmindGateway();
   let totalCreated = 0;
+  let totalSkipped = 0;
   let hasErrors = false;
 
   for (const [spaceId, proposals] of proposalsBySpaceId) {
@@ -634,42 +668,105 @@ export async function playbookSubmitHandler(
     });
 
     totalCreated += response.created;
+    totalSkipped += response.skipped;
 
     if (response.errors.length > 0) {
-      hasErrors = true;
-      for (const error of response.errors) {
-        logErrorConsole(`Error: ${error.message}`);
+      const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
+      const spaceChanges = changes.filter((c) => filePaths.has(c.filePath));
+      const allRemovals =
+        spaceChanges.length > 0 &&
+        spaceChanges.every((c) => c.changeType === 'removed');
+      const allSpaceNotFound = response.errors.every(
+        (e) => e.code === 'SpaceNotFoundError',
+      );
+
+      if (allRemovals && allSpaceNotFound) {
+        logWarningConsole(
+          `Space ${spaceId} no longer exists — cleaning up local files.`,
+        );
+        for (const filePath of filePaths) {
+          playbookLocalRepository.removeChange(filePath, spaceId);
+        }
+        const removedEntries = spaceChanges.filter(
+          (c) => c.changeType === 'removed',
+        );
+        for (const entry of removedEntries) {
+          const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+          if (!entryCtx?.projectDir) continue;
+          try {
+            const fullPath = path.join(entryCtx.projectDir, entry.filePath);
+            if (entry.artifactType === 'skill') {
+              deps.rmSync(fullPath, { recursive: true });
+            } else {
+              deps.unlinkSync(fullPath);
+            }
+          } catch {
+            // File may already be deleted (manual deletion case)
+          }
+        }
+      } else {
+        hasErrors = true;
+        for (const error of response.errors) {
+          logErrorConsole(`Error: ${error.message}`);
+        }
       }
     } else {
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
       for (const filePath of filePaths) {
-        playbookLocalRepository.removeChange(filePath);
+        playbookLocalRepository.removeChange(filePath, spaceId);
       }
 
       // Delete local files for removed entries
-      if (projectDir) {
-        const removedEntries = changes.filter(
-          (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
-        );
-        for (const entry of removedEntries) {
-          try {
-            deps.unlinkFile(path.join(projectDir, entry.filePath));
-          } catch {
-            // File may already be deleted (manual deletion case)
+      const removedEntries = changes.filter(
+        (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
+      );
+      for (const entry of removedEntries) {
+        const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+        if (!entryCtx?.projectDir) continue;
+        try {
+          const fullPath = path.join(entryCtx.projectDir, entry.filePath);
+          if (entry.artifactType === 'skill') {
+            deps.rmSync(fullPath, { recursive: true });
+          } else {
+            deps.unlinkSync(fullPath);
           }
+        } catch {
+          // File may already be deleted (manual deletion case)
         }
       }
     }
   }
 
   if (hasErrors) {
-    logErrorConsole('Some proposals failed to submit.');
+    if (totalCreated > 0) {
+      logWarningConsole(
+        `Partially submitted: ${totalCreated} succeeded, some failed`,
+      );
+    } else {
+      logErrorConsole('Proposals failed to submit');
+    }
     exit(1);
     return;
   }
 
-  logSuccessConsole(
-    `Submitted ${totalCreated} change proposal${totalCreated !== 1 ? 's' : ''}.`,
-  );
+  const parts: string[] = [];
+  if (totalCreated > 0) {
+    parts.push(`${totalCreated} submitted`);
+  }
+  if (totalSkipped > 0) {
+    parts.push(`${totalSkipped} skipped (already submitted)`);
+  }
+
+  if (totalCreated > 0 && totalSkipped === 0) {
+    logSuccessConsole(
+      `Submitted ${totalCreated} change proposal${totalCreated !== 1 ? 's' : ''}`,
+    );
+  } else if (totalCreated === 0 && totalSkipped > 0) {
+    logWarningConsole(
+      `All proposals were already submitted (${totalSkipped} skipped)`,
+    );
+  } else {
+    logSuccessConsole(`Change proposals: ${parts.join(', ')}`);
+  }
   exit(0);
 }

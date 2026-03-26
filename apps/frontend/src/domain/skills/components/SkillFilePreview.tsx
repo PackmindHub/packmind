@@ -57,7 +57,8 @@ export const SkillFilePreview = ({
       }
       blob = new Blob([bytes], { type: getMimeType(file.path) });
     } else {
-      blob = new Blob([file.content], { type: 'text/plain' });
+      const downloadContent = clipboardContent ?? file.content;
+      blob = new Blob([downloadContent], { type: 'text/plain' });
     }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

@@ -44,7 +44,6 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
       borderRight={'1px solid'}
       borderColor={'{colors.border.tertiary}'}
       alignItems={'flex-start'}
-      paddingBottom={4}
       transition="width 0.2s ease, min-width 0.2s ease"
       overflow="hidden"
     >
@@ -54,7 +53,7 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
           display="flex"
           justifyContent={getLogoContainerJustify(logo, logoAction)}
           alignItems="center"
-          padding={4}
+          padding={2}
           mb={4}
           width="100%"
         >
@@ -72,7 +71,7 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
       </PMVStack>
 
       {footerNav && (
-        <PMBox w={'full'} maxWidth={'full'} paddingX={2}>
+        <PMBox w={'full'} maxWidth={'full'}>
           {footerNav}
         </PMBox>
       )}

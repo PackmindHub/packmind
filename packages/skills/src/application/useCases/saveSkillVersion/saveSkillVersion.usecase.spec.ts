@@ -113,6 +113,7 @@ describe('SaveSkillVersionUsecase', () => {
         compatibility: 'All environments',
         metadata: { version: 'v2' },
         allowedTools: 'Read,Write',
+        additionalProperties: { userInvocable: true, model: 'opus' },
         files: [],
       };
 
@@ -192,6 +193,7 @@ describe('SaveSkillVersionUsecase', () => {
         license: skillVersionInput.license,
         compatibility: skillVersionInput.compatibility,
         metadata: skillVersionInput.metadata,
+        additionalProperties: skillVersionInput.additionalProperties,
         version: 2,
       });
     });
@@ -208,6 +210,7 @@ describe('SaveSkillVersionUsecase', () => {
         license: skillVersionInput.license,
         compatibility: skillVersionInput.compatibility,
         metadata: skillVersionInput.metadata,
+        additionalProperties: skillVersionInput.additionalProperties,
         version: 2,
         userId: skillVersionInput.userId,
       });

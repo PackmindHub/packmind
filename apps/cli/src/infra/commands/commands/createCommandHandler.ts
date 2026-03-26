@@ -18,9 +18,10 @@ export interface ICreateCommandHandlerResult {
 function buildWebappUrl(
   host: string,
   orgSlug: string,
+  spaceSlug: string,
   commandId: string,
 ): string {
-  return `${host}/org/${orgSlug}/space/global/commands/${commandId}`;
+  return `${host}/org/${orgSlug}/space/${spaceSlug}/commands/${commandId}`;
 }
 
 export async function createCommandHandler(
@@ -75,6 +76,7 @@ export async function createCommandHandler(
         webappUrl = buildWebappUrl(
           decoded.host,
           decoded.jwt.organization.slug,
+          result.spaceSlug,
           result.commandId,
         );
       }

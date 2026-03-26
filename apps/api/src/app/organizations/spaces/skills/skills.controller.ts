@@ -29,7 +29,6 @@ import {
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { getErrorMessage } from '../../../shared/utils/error.utils';
 
 const origin = 'OrganizationsSpacesSkillsController';
@@ -44,10 +43,10 @@ const origin = 'OrganizationsSpacesSkillsController';
  * - This controller: (empty, inherits from /skills path in RouterModule)
  * - Final path: /organizations/:orgId/spaces/:spaceId/skills
  *
- * Both OrganizationAccessGuard and SpaceAccessGuard ensure proper access control.
+ * OrganizationAccessGuard ensures proper access control.
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesSkillsController {
   constructor(
     private readonly skillsService: SkillsService,

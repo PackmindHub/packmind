@@ -1,29 +1,9 @@
 import { Space } from '@packmind/types';
 import { ListCommandsResult } from '../../../domain/useCases/IListCommandsUseCase';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
-import { loadApiKey, decodeApiKey } from '../../utils/credentials';
+import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
 
 type Command = ListCommandsResult[number];
-type UrlBuilder = (spaceSlug: string, id: string) => string | null;
-
-function buildCommandUrl(
-  host: string,
-  orgSlug: string,
-  spaceSlug: string,
-  commandId: string,
-): string {
-  return `${host}/org/${orgSlug}/space/${spaceSlug}/commands/${commandId}`;
-}
-
-function resolveUrlBuilder(): UrlBuilder {
-  const apiKey = loadApiKey();
-  if (!apiKey) return () => null;
-  const decoded = decodeApiKey(apiKey);
-  const orgSlug = decoded?.jwt?.organization?.slug;
-  if (!decoded?.host || !orgSlug) return () => null;
-  return (spaceSlug, id) =>
-    buildCommandUrl(decoded.host, orgSlug, spaceSlug, id);
-}
 
 function groupCommandsBySpace(
   commands: Command[],
@@ -112,7 +92,7 @@ export async function listCommandsHandler(
       return;
     }
 
-    const buildUrl = resolveUrlBuilder();
+    const buildUrl = resolveUrlBuilder((id) => `commands/${id}`);
 
     if (spaceFilter && matchedSpace) {
       packmindCliHexa.output.listArtefacts(

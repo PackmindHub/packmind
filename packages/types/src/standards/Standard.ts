@@ -15,5 +15,6 @@ export type Standard = WithCreator<{
   userId: UserId; // The owner of the standard
   scope: string | null; // Scope from the latest StandardVersion
   spaceId: SpaceId; // The space this standard belongs to
+  movedTo: SpaceId | null;
   updatedAt?: Date;
 }>;

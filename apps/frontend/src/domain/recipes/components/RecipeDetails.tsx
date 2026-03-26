@@ -13,9 +13,6 @@ import {
   PMTabs,
   PMSpinner,
   PMHeading,
-  PMIconButton,
-  PMCopiable,
-  PMTooltip,
   PMEmptyState,
   PMFeatureFlag,
   DEFAULT_FEATURE_DOMAIN_MAP,
@@ -23,7 +20,6 @@ import {
   PMLink,
   PMBadge,
 } from '@packmind/ui';
-import { LuCopy } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 import {
   useGetRecipeByIdQuery,
@@ -34,10 +30,6 @@ import { RecipeDistributionsList } from '../../deployments/components/RecipeDist
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { ChangeProposalStatus, RecipeId } from '@packmind/types';
-import {
-  MarkdownEditor,
-  MarkdownEditorProvider,
-} from '../../../shared/components/editor/MarkdownEditor';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -45,8 +37,8 @@ import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { ProposeChangeModal } from './ProposeChangeModal';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
 import { RecipeVersionHistoryHeader } from './RecipeVersionHistoryHeader';
-import { useListChangeProposalsByRecipeQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
-import { stripFrontmatter } from '../../change-proposals/utils/stripFrontmatter';
+import { useListChangeProposalsByRecipeQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { ArtifactResultFilePreview } from '@packmind/proprietary/frontend/domain/change-proposals/components/shared/ArtifactResultFilePreview';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -75,7 +67,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const hasDistributions = distributions && distributions.length > 0;
   const pendingCount =
     changeProposals?.changeProposals?.filter(
-      (p) => p.status === ChangeProposalStatus.pending,
+      (p: { status: string }) => p.status === ChangeProposalStatus.pending,
     ).length ?? 0;
   const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 
@@ -179,17 +171,6 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       isFullWidth
       actions={
         <PMHStack gap={2}>
-          <PMCopiable.Root value={recipe.content}>
-            <PMTooltip label="Copy to clipboard">
-              <PMCopiable.Trigger asChild>
-                <PMIconButton aria-label="Copy to clipboard" variant="outline">
-                  <PMCopiable.Indicator>
-                    <LuCopy />
-                  </PMCopiable.Indicator>
-                </PMIconButton>
-              </PMCopiable.Trigger>
-            </PMTooltip>
-          </PMCopiable.Root>
           {pendingCount > 0 && (
             <PMButton
               variant="tertiary"
@@ -278,18 +259,10 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                       Propose change
                     </PMLink>
                   </PMFeatureFlag>
-                  <PMBox
-                    border="solid 1px"
-                    borderColor="border.primary"
-                    width={{ '2xl': '4xl', smToXl: 'full' }}
-                  >
-                    <MarkdownEditorProvider>
-                      <MarkdownEditor
-                        defaultValue={stripFrontmatter(recipe.content)}
-                        readOnly
-                      />
-                    </MarkdownEditorProvider>
-                  </PMBox>
+                  <ArtifactResultFilePreview
+                    markdown={recipe.content}
+                    hideFileName
+                  />
                 </>
               ),
             },

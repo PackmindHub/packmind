@@ -29,7 +29,6 @@ import {
 } from '@packmind/types';
 import { RulesService } from './rules.service';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../../guards/space-access.guard';
 
 const origin = 'OrganizationsSpacesStandardsRulesController';
 
@@ -43,11 +42,11 @@ const origin = 'OrganizationsSpacesStandardsRulesController';
  * - This controller: (empty, inherits from /rules path in RouterModule)
  * - Final path: /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules
  *
- * Both OrganizationAccessGuard and SpaceAccessGuard ensure proper access control.
+ * OrganizationAccessGuard ensures proper access control.
  * Additional validation ensures the standard belongs to the specified space.
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesStandardsRulesController {
   constructor(
     private readonly rulesService: RulesService,

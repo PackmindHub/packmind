@@ -8,6 +8,7 @@ import { playbookRmHandler } from './rmHandler';
 export const rmPlaybookCommand = command({
   name: 'rm',
   description: 'Stage an artifact for removal',
+  aliases: ['remove'],
   args: {
     filePath: positional({
       type: string,

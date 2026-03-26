@@ -181,29 +181,4 @@ describe('SkillRepository', () => {
       expect(foundSkills.map((s) => s.id)).toEqual([skill1.id]);
     });
   });
-
-  describe('findByOrganizationId', () => {
-    it('returns empty array as method is deprecated', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-
-      const foundSkills =
-        await skillRepository.findByOrganizationId(organizationId);
-
-      expect(foundSkills).toHaveLength(0);
-    });
-  });
-
-  describe('findByOrganizationAndUser', () => {
-    it('returns empty array as method is deprecated', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const userId = createUserId(uuidv4());
-
-      const foundSkills = await skillRepository.findByOrganizationAndUser(
-        organizationId,
-        userId,
-      );
-
-      expect(foundSkills).toHaveLength(0);
-    });
-  });
 });

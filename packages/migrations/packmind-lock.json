@@ -1,13 +1,19 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["migration"],
-  "agents": ["agents_md", "claude", "copilot", "cursor", "packmind"],
-  "installedAt": "2026-03-16T14:26:20.633Z",
-  "cliVersion": "0.22.0",
+  "packageSlugs": ["@global/migration"],
+  "agents": [
+    "agents_md",
+    "claude",
+    "copilot",
+    "cursor",
+    "gitlab_duo",
+    "packmind"
+  ],
+  "installedAt": "2026-03-24T09:00:27.324Z",
   "artifacts": {
     "command:create-or-update-model-and-typeorm-schemas": {
-      "type": "command",
       "name": "Create or update model and TypeORM schemas",
+      "type": "command",
       "id": "e76d8f23-e2c3-4336-9cd3-c6102f47af0f",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",

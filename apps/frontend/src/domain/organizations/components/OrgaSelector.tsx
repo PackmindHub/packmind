@@ -12,8 +12,11 @@ import {
 import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
+import { useQueryClient } from '@tanstack/react-query';
 import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
 import { useSelectOrganizationMutation } from '../../accounts/api/queries/AuthQueries';
+import { getMeQueryOptions } from '../../accounts/api/queries/UserQueries';
+import { ORGANIZATION_QUERY_SCOPE } from '../api/queryKeys';
 import { routes } from '../../../shared/utils/routes';
 
 interface ISidebarOrgaSelectorProps {
@@ -26,6 +29,7 @@ export const SidebarOrgaSelector: React.FunctionComponent<
 > = ({ currentOrganization, hasOrgaSettings = false }) => {
   const [createOrgaDialogOpen, setCreateOrgaDialogOpen] = React.useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const selectOrganizationMutation = useSelectOrganizationMutation();
 
   const { data: organizations = [], isLoading } =
@@ -40,11 +44,14 @@ export const SidebarOrgaSelector: React.FunctionComponent<
     const selectedOrg = organizations.find((org) => org.id === orgaId);
     if (!selectedOrg) return;
 
-    // Switch organization via API (sets new JWT), then clear cache and navigate
     await selectOrganizationMutation.mutateAsync({ organizationId: orgaId });
 
-    // Navigate to the new organization's dashboard
-    // The route loaders will handle redirecting to the appropriate space
+    // Explicitly clear cache and refresh /me BEFORE navigating
+    // (mutation onSuccess is fire-and-forget in TanStack Query v5)
+    await queryClient.cancelQueries({ queryKey: [ORGANIZATION_QUERY_SCOPE] });
+    queryClient.removeQueries({ queryKey: [ORGANIZATION_QUERY_SCOPE] });
+    await queryClient.fetchQuery(getMeQueryOptions());
+
     navigate(routes.org.toDashboard(selectedOrg.slug));
   };
 

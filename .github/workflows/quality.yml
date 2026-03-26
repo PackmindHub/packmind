@@ -61,7 +61,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Generate Proprietary tsconfig
         env:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
@@ -88,7 +88,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Generate Proprietary tsconfig
         env:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
@@ -125,3 +125,42 @@ jobs:
         run: ./cli-binary/packmind-cli-linux-x64 lint .
         env:
           PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+
+  check-cli-sync:
+    if: vars.PACKMIND_EDITION == 'proprietary'
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    name: Check CLI source parity with OSS
+
+    steps:
+      - name: Checkout proprietary repo
+        uses: actions/checkout@v4
+
+      - name: Clone OSS repo (shallow)
+        run: git clone --depth 1 --branch main https://github.com/PackmindHub/Packmind.git /tmp/packmind-oss
+
+      - name: Compare apps/cli/src directories
+        run: |
+          PROPRIETARY_COUNT=$(find apps/cli/src -type f | wc -l | tr -d ' ')
+          OSS_COUNT=$(find /tmp/packmind-oss/apps/cli/src -type f | wc -l | tr -d ' ')
+          echo "Proprietary: ${PROPRIETARY_COUNT} files | OSS: ${OSS_COUNT} files"
+
+          if [ "$PROPRIETARY_COUNT" -eq 0 ] || [ "$OSS_COUNT" -eq 0 ]; then
+            echo "::error::One of the directories is empty or missing. Aborting comparison."
+            exit 1
+          fi
+
+          echo ""
+          echo "=== File presence differences ==="
+          diff -rq apps/cli/src /tmp/packmind-oss/apps/cli/src || FILE_DIFF=1
+
+          echo ""
+          echo "=== Content differences ==="
+          diff -r apps/cli/src /tmp/packmind-oss/apps/cli/src || CONTENT_DIFF=1
+
+          if [ "${FILE_DIFF:-0}" = "1" ] || [ "${CONTENT_DIFF:-0}" = "1" ]; then
+            echo ""
+            echo "::error::CLI source code (apps/cli/src) has diverged from the OSS repo (PackmindHub/Packmind). Please sync the changes."
+            exit 1
+          fi
+
+          echo "CLI source code is in sync with OSS."

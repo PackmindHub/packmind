@@ -17,6 +17,7 @@ import { commandsCommand } from './infra/commands/CommandsCommand';
 import { diffCommand } from './infra/commands/DiffCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
 import { playbookCommand } from './infra/commands/PlaybookCommand';
+import { spacesCommand } from './infra/commands/SpacesCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
 import { initCommand } from './infra/commands/InitCommand';
 import { updateCommand } from './infra/commands/UpdateCommand';
@@ -107,6 +108,7 @@ const app = subcommands({
     playbook: playbookCommand,
     'setup-mcp': setupMcpCommand,
     skills: skillsCommand,
+    spaces: spacesCommand,
     standards: standardsCommand,
     uninstall: uninstallCommand,
     update: updateCommand,

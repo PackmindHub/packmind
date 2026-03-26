@@ -1,1 +1,0 @@
-export { CreateChangeProposalUseCase } from './CreateChangeProposalUseCase';

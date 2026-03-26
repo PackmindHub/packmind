@@ -57,6 +57,7 @@ export class RecipeService {
       const recipe: Recipe = {
         id: recipeId,
         ...recipeData,
+        movedTo: null,
       };
 
       const savedRecipe = await this.recipeRepository.add(recipe);
@@ -69,28 +70,6 @@ export class RecipeService {
     } catch (error) {
       this.logger.error('Failed to add recipe', {
         name: recipeData.name,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  async listRecipesByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Recipe[]> {
-    this.logger.info('Listing recipes by organization', { organizationId });
-
-    try {
-      const recipes =
-        await this.recipeRepository.findByOrganizationId(organizationId);
-      this.logger.info('Recipes retrieved by organization successfully', {
-        organizationId,
-        count: recipes.length,
-      });
-      return recipes;
-    } catch (error) {
-      this.logger.error('Failed to list recipes by organization', {
-        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -134,39 +113,6 @@ export class RecipeService {
       return recipes;
     } catch (error) {
       this.logger.error('Failed to list recipes by user', {
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  async listRecipesByOrganizationAndUser(
-    organizationId: OrganizationId,
-    userId: UserId,
-  ): Promise<Recipe[]> {
-    this.logger.info('Listing recipes by organization and user', {
-      organizationId,
-      userId,
-    });
-
-    try {
-      const recipes = await this.recipeRepository.findByOrganizationAndUser(
-        organizationId,
-        userId,
-      );
-      this.logger.info(
-        'Recipes retrieved by organization and user successfully',
-        {
-          organizationId,
-          userId,
-          count: recipes.length,
-        },
-      );
-      return recipes;
-    } catch (error) {
-      this.logger.error('Failed to list recipes by organization and user', {
-        organizationId,
         userId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -257,6 +203,7 @@ export class RecipeService {
         id: recipeId,
         ...recipeData,
         spaceId: existingRecipe.spaceId,
+        movedTo: existingRecipe.movedTo,
       };
 
       const savedRecipe = await this.recipeRepository.add(updatedRecipe);

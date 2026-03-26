@@ -76,7 +76,6 @@ describe('GetDeploymentOverviewUseCase', () => {
     } as jest.Mocked<IDistributionRepository>;
 
     recipesPort = {
-      listRecipesByOrganization: jest.fn(),
       listRecipesBySpace: jest.fn(),
       getRecipeVersionById: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
@@ -154,7 +153,11 @@ describe('GetDeploymentOverviewUseCase', () => {
       it('calls deployments repository with organization id and success status', () => {
         expect(
           distributionRepository.listByOrganizationIdWithStatus,
-        ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
+        ).toHaveBeenCalledWith(
+          organizationId,
+          DistributionStatus.success,
+          createSpaceId('space-1'),
+        );
       });
 
       it('calls spaces port to get space by id', () => {

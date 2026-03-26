@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesController } from './spaces.controller';
-import { SpaceAccessGuard } from './guards/space-access.guard';
 import { RecipesModule } from './recipes/recipes.module';
 import { OrganizationsSpacesStandardsModule } from './standards/standards.module';
 import { OrganizationsSpacesPackagesModule } from './packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './skills/skills.module';
-import { OrganizationsSpacesChangeProposalsModule } from './change-proposals/change-proposals.module';
+import { OrganizationsSpacesChangeProposalsModule } from '@packmind/playbook-change-management';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { SpacesService } from '../../spaces/spaces.service';
 
@@ -27,8 +26,8 @@ import { SpacesService } from '../../spaces/spaces.service';
  * - /organizations/:orgId/spaces/:spaceId/packages (OrganizationsSpacesPackagesModule)
  * - /organizations/:orgId/spaces/:spaceId/skills (OrganizationsSpacesSkillsModule)
  *
- * All routes are protected by OrganizationAccessGuard and optionally SpaceAccessGuard
- * which validate that the user has access to the organization and space.
+ * All routes are protected by OrganizationAccessGuard
+ * which validates that the user has access to the organization.
  */
 @Module({
   imports: [
@@ -41,13 +40,11 @@ import { SpacesService } from '../../spaces/spaces.service';
   controllers: [OrganizationsSpacesController],
   providers: [
     SpacesService,
-    SpaceAccessGuard,
     {
       provide: PackmindLogger,
       useFactory: () =>
         new PackmindLogger('OrganizationsSpacesModule', LogLevel.INFO),
     },
   ],
-  exports: [SpaceAccessGuard],
 })
 export class OrganizationsSpacesModule {}

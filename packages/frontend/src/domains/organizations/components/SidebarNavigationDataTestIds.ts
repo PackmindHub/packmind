@@ -3,4 +3,5 @@ export enum SidebarNavigationDataTestId {
   PackagesLink = 'SidebarNavigationDataTestId.PackagesLinks',
   SettingsLink = 'SidebarNavigationDataTestId.SettingsLink',
   SkillsLink = 'SidebarNavigationDataTestId.SkillsLink',
+  IntegrationsLink = 'SidebarNavigationDataTestId.IntegrationsLink',
 }

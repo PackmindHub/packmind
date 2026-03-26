@@ -8,6 +8,7 @@ export interface PlaybookChangeEntry {
   spaceId: string;
   spaceName?: string;
   targetId?: string;
+  configDir?: string; // path from git root to target's config dir (e.g. "apps/frontend" or "" for root). undefined = legacy entry.
   content: string; // full content snapshot (for skills: serialized payload)
 }
 
@@ -18,8 +19,8 @@ export interface PlaybookYaml {
 
 export interface IPlaybookLocalRepository {
   addChange(entry: PlaybookChangeEntry): void;
-  removeChange(filePath: string): boolean;
+  removeChange(filePath: string, spaceId: string): boolean;
   getChanges(): PlaybookChangeEntry[];
-  getChange(filePath: string): PlaybookChangeEntry | null;
+  getChange(filePath: string, spaceId: string): PlaybookChangeEntry | null;
   clearAll(): void;
 }

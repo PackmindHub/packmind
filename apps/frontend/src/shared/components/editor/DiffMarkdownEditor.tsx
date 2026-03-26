@@ -3,7 +3,7 @@ import { Milkdown, useEditor } from '@milkdown/react';
 import '@packmind/assets/milkdown.theme';
 import { PMBox } from '@packmind/ui';
 import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { buildUnifiedMarkdownDiff } from '../../../domain/change-proposals/utils/buildUnifiedMarkdownDiff';
+import { buildUnifiedMarkdownDiff } from '@packmind/proprietary/frontend/domain/change-proposals/utils/buildUnifiedMarkdownDiff';
 
 interface IDiffMarkdownEditorProps {
   /** Original markdown content before changes */

@@ -163,14 +163,22 @@ describe('PlaybookLocalRepository', () => {
     describe('when entry exists', () => {
       it('returns the entry', () => {
         expect(
-          repository.getChange('.packmind/standards/my-standard.md'),
+          repository.getChange('.packmind/standards/my-standard.md', 'space-1'),
         ).toEqual(entry);
       });
     });
 
     describe('when entry does not exist', () => {
-      it('returns null', () => {
-        expect(repository.getChange('.packmind/standards/other.md')).toBeNull();
+      it('returns null for different filePath', () => {
+        expect(
+          repository.getChange('.packmind/standards/other.md', 'space-1'),
+        ).toBeNull();
+      });
+
+      it('returns null for different spaceId', () => {
+        expect(
+          repository.getChange('.packmind/standards/my-standard.md', 'space-2'),
+        ).toBeNull();
       });
     });
   });
@@ -239,7 +247,7 @@ describe('PlaybookLocalRepository', () => {
       });
     });
 
-    describe('when adding an entry with same filePath (upsert)', () => {
+    describe('when adding an entry with same filePath and spaceId (upsert)', () => {
       const existingEntry: PlaybookChangeEntry = {
         filePath: '.packmind/standards/my-standard.md',
         artifactType: 'standard',
@@ -268,6 +276,56 @@ describe('PlaybookLocalRepository', () => {
         expect(parsed.changes).toEqual([entry]);
       });
     });
+
+    describe('when adding an entry with same filePath but different spaceId', () => {
+      const existingEntry: PlaybookChangeEntry = {
+        filePath: '.packmind/standards/my-standard.md',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        codingAgent: 'claude',
+        addedAt: '2026-03-15T10:00:00.000Z',
+        spaceId: 'space-1',
+        content: '# Content',
+      };
+
+      const entryForOtherSpace: PlaybookChangeEntry = {
+        ...entry,
+        spaceId: 'space-2',
+        spaceName: 'Other Space',
+      };
+
+      beforeEach(() => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(
+          yaml.stringify({ version: 1, changes: [existingEntry] }),
+        );
+        mockFs.mkdirSync.mockReturnValue(undefined);
+        mockFs.writeFileSync.mockReturnValue(undefined);
+
+        repository.addChange(entryForOtherSpace);
+      });
+
+      it('keeps both entries', () => {
+        const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
+        const parsed = yaml.parse(writtenContent) as PlaybookYaml;
+
+        expect(parsed.changes).toHaveLength(2);
+      });
+
+      it('preserves the original space entry first', () => {
+        const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
+        const parsed = yaml.parse(writtenContent) as PlaybookYaml;
+
+        expect(parsed.changes[0].spaceId).toBe('space-1');
+      });
+
+      it('appends the new space entry second', () => {
+        const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
+        const parsed = yaml.parse(writtenContent) as PlaybookYaml;
+
+        expect(parsed.changes[1].spaceId).toBe('space-2');
+      });
+    });
   });
 
   describe('removeChange', () => {
@@ -293,12 +351,18 @@ describe('PlaybookLocalRepository', () => {
 
       it('returns true', () => {
         expect(
-          repository.removeChange('.packmind/standards/my-standard.md'),
+          repository.removeChange(
+            '.packmind/standards/my-standard.md',
+            'space-1',
+          ),
         ).toBe(true);
       });
 
       it('writes the file without the removed entry', () => {
-        repository.removeChange('.packmind/standards/my-standard.md');
+        repository.removeChange(
+          '.packmind/standards/my-standard.md',
+          'space-1',
+        );
 
         const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
         const parsed = yaml.parse(writtenContent) as PlaybookYaml;
@@ -315,10 +379,58 @@ describe('PlaybookLocalRepository', () => {
         );
       });
 
-      it('returns false', () => {
-        expect(repository.removeChange('.packmind/standards/other.md')).toBe(
-          false,
+      it('returns false for different filePath', () => {
+        expect(
+          repository.removeChange('.packmind/standards/other.md', 'space-1'),
+        ).toBe(false);
+      });
+
+      it('returns false for different spaceId', () => {
+        expect(
+          repository.removeChange(
+            '.packmind/standards/my-standard.md',
+            'space-2',
+          ),
+        ).toBe(false);
+      });
+    });
+
+    describe('when removing one of multiple spaces for same filePath', () => {
+      const entrySpace2: PlaybookChangeEntry = {
+        ...entry,
+        spaceId: 'space-2',
+      };
+
+      beforeEach(() => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(
+          yaml.stringify({ version: 1, changes: [entry, entrySpace2] }),
         );
+        mockFs.mkdirSync.mockReturnValue(undefined);
+        mockFs.writeFileSync.mockReturnValue(undefined);
+      });
+
+      describe('only removes the entry for the specified space', () => {
+        let parsed: PlaybookYaml;
+
+        beforeEach(() => {
+          repository.removeChange(
+            '.packmind/standards/my-standard.md',
+            'space-1',
+          );
+
+          const writtenContent = mockFs.writeFileSync.mock
+            .calls[0][1] as string;
+          parsed = yaml.parse(writtenContent) as PlaybookYaml;
+        });
+
+        it('keeps one entry', () => {
+          expect(parsed.changes).toHaveLength(1);
+        });
+
+        it('retains the other space entry', () => {
+          expect(parsed.changes[0].spaceId).toBe('space-2');
+        });
       });
     });
 
@@ -329,7 +441,10 @@ describe('PlaybookLocalRepository', () => {
 
       it('returns false', () => {
         expect(
-          repository.removeChange('.packmind/standards/my-standard.md'),
+          repository.removeChange(
+            '.packmind/standards/my-standard.md',
+            'space-1',
+          ),
         ).toBe(false);
       });
     });

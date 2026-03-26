@@ -15,7 +15,7 @@ import {
   SpaceId,
   ChangeProposalStatus,
 } from '@packmind/types';
-import { useListChangeProposalsByStandardQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
+import { useListChangeProposalsByStandardQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { routes } from '../../../shared/utils/routes';
 import { StandardVersionHistoryHeader } from './StandardVersionHistoryHeader';
@@ -82,7 +82,7 @@ export const StandardDetails = ({
   );
   const pendingCount =
     changeProposals?.changeProposals?.filter(
-      (p) => p.status === ChangeProposalStatus.pending,
+      (p: { status: string }) => p.status === ChangeProposalStatus.pending,
     ).length ?? 0;
 
   const { ruleLanguages } = useStandardEditionFeatures(standard.id);

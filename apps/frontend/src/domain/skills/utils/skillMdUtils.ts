@@ -1,6 +1,11 @@
 import { stringify } from 'yaml';
 
 import type { SkillVersion } from '@packmind/types';
+import {
+  camelToKebab,
+  CAMEL_TO_YAML_KEY,
+  sortAdditionalPropertiesKeys,
+} from '@packmind/types';
 
 /**
  * Reconstructs the full SKILL.md file content from a SkillVersion.
@@ -33,6 +38,18 @@ export function buildSkillMdContent(version: SkillVersion): string {
 
   if (version.metadata && Object.keys(version.metadata).length > 0) {
     frontmatter['metadata'] = version.metadata;
+  }
+
+  if (
+    version.additionalProperties &&
+    Object.keys(version.additionalProperties).length > 0
+  ) {
+    for (const [camelKey, value] of sortAdditionalPropertiesKeys(
+      version.additionalProperties,
+    )) {
+      const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
+      frontmatter[yamlKey] = value;
+    }
   }
 
   const yamlBlock = stringify(frontmatter).trimEnd();

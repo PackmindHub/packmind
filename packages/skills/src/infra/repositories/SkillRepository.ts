@@ -75,18 +75,6 @@ export class SkillRepository
     }
   }
 
-  async findByOrganizationId(organizationId: OrganizationId): Promise<Skill[]> {
-    this.logger.warn(
-      'findByOrganizationId is deprecated - skills are now space-scoped',
-      {
-        organizationId,
-      },
-    );
-    // Skills no longer have organizationId - they are space-scoped
-    // This method is deprecated and will return an empty array
-    return [];
-  }
-
   async findBySpaceId(
     spaceId: SpaceId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
@@ -146,21 +134,5 @@ export class SkillRepository
       });
       throw error;
     }
-  }
-
-  async findByOrganizationAndUser(
-    organizationId: OrganizationId,
-    userId: UserId,
-  ): Promise<Skill[]> {
-    this.logger.warn(
-      'findByOrganizationAndUser is deprecated - skills are now space-scoped',
-      {
-        organizationId,
-        userId,
-      },
-    );
-    // Skills no longer have organizationId - they are space-scoped
-    // This method is deprecated and will return an empty array
-    return [];
   }
 }

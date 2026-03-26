@@ -15,10 +15,7 @@ describe('whoami command', () => {
 
     beforeEach(async () => {
       context = await getContext();
-      const result = await runCli('whoami', {
-        apiKey: context.apiKey,
-        cwd: context.testDir,
-      });
+      const result = await context.runCli('whoami');
 
       returnCode = result.returnCode;
       stdout = result.stdout;
@@ -33,13 +30,11 @@ describe('whoami command', () => {
     });
 
     it('shows user and host information', () => {
-      expect(stdout.split('\n')).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining(`Host: ${getPackmindInstanceUrl()}`),
-          expect.stringContaining(`Organization: ${context.organization.name}`),
-          expect.stringContaining(`User: ${context.user.email}`),
-        ]),
-      );
+      expect(stdout).toMatchOutput([
+        `Host: ${getPackmindInstanceUrl()}`,
+        `Organization: ${context.organization.name}`,
+        `User: ${context.user.email}`,
+      ]);
     });
   });
 

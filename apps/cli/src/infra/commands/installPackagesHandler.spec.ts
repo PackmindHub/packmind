@@ -129,6 +129,68 @@ describe('installPackagesHandler', () => {
       });
     });
 
+    describe('playbook clearing after successful install', () => {
+      let mockPlaybookRepo: { clearAll: jest.Mock };
+
+      beforeEach(() => {
+        mockPlaybookRepo = { clearAll: jest.fn() };
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { backend: '*' },
+        });
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 1,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 0,
+          errors: [],
+          deployedArtifacts: [],
+        });
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+      });
+
+      it('clears playbook after successful install', async () => {
+        await installPackagesHandler(
+          { packagesSlugs: ['backend'] },
+          {
+            ...deps,
+            playbookLocalRepository: mockPlaybookRepo as never,
+          },
+        );
+
+        expect(mockPlaybookRepo.clearAll).toHaveBeenCalled();
+      });
+
+      describe('when playbookLocalRepository is not provided', () => {
+        it('does not clear playbook', async () => {
+          await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+          expect(mockPlaybookRepo.clearAll).not.toHaveBeenCalled();
+        });
+      });
+
+      it('does not clear playbook after failed install', async () => {
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 0,
+          errors: ['Something went wrong'],
+          deployedArtifacts: [],
+        });
+
+        await installPackagesHandler(
+          { packagesSlugs: ['backend'] },
+          {
+            ...deps,
+            playbookLocalRepository: mockPlaybookRepo as never,
+          },
+        );
+
+        expect(mockPlaybookRepo.clearAll).not.toHaveBeenCalled();
+      });
+    });
+
     describe('when install succeeds with no file changes', () => {
       let result: Awaited<ReturnType<typeof installPackagesHandler>>;
 
@@ -2280,6 +2342,78 @@ describe('installPackagesHandler', () => {
 
           expect(mockExit).toHaveBeenCalledWith(1);
         });
+      });
+    });
+
+    describe('playbook clearing after successful recursive install', () => {
+      let mockPlaybookRepo: { clearAll: jest.Mock };
+
+      beforeEach(() => {
+        mockPlaybookRepo = { clearAll: jest.fn() };
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { backend: '*' },
+        });
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 1,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 0,
+          errors: [],
+          deployedArtifacts: [],
+        });
+      });
+
+      it('clears playbook after successful recursive install', async () => {
+        await recursiveInstallHandler(
+          {},
+          {
+            ...deps,
+            playbookLocalRepository: mockPlaybookRepo as never,
+          },
+        );
+
+        expect(mockPlaybookRepo.clearAll).toHaveBeenCalled();
+      });
+
+      it('does not clear playbook after failed recursive install', async () => {
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+        mockPackmindCliHexa.readFullConfig.mockRejectedValue(
+          new Error('Invalid JSON'),
+        );
+
+        await recursiveInstallHandler(
+          {},
+          {
+            ...deps,
+            playbookLocalRepository: mockPlaybookRepo as never,
+          },
+        );
+
+        expect(mockPlaybookRepo.clearAll).not.toHaveBeenCalled();
       });
     });
   });

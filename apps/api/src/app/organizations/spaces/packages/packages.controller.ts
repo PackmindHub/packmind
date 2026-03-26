@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -16,6 +17,7 @@ import {
   CreatePackageResponse,
   DeletePackagesBatchResponse,
   GetPackageByIdResponse,
+  GetPackageSummaryResponse,
   ListPackagesBySpaceResponse,
   UpdatePackageResponse,
   OrganizationId,
@@ -28,7 +30,6 @@ import {
 } from '@packmind/types';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { SpaceAccessGuard } from '../guards/space-access.guard';
 
 const origin = 'OrganizationsSpacesPackagesController';
 
@@ -42,10 +43,10 @@ const origin = 'OrganizationsSpacesPackagesController';
  * - This controller: (empty, inherits from /packages path in RouterModule)
  * - Final path: /organizations/:orgId/spaces/:spaceId/packages
  *
- * Both OrganizationAccessGuard and SpaceAccessGuard ensure proper access control.
+ * OrganizationAccessGuard ensures proper access control.
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+@UseGuards(OrganizationAccessGuard)
 export class OrganizationsSpacesPackagesController {
   constructor(
     private readonly deploymentsService: DeploymentsService,
@@ -94,6 +95,46 @@ export class OrganizationsSpacesPackagesController {
           error: errorMessage,
         },
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Get a package summary by slug
+   * GET /organizations/:orgId/spaces/:spaceId/packages/summary/:slug
+   */
+  @Get('summary/:slug')
+  async getPackageSummaryBySlug(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('slug') slug: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetPackageSummaryResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/summary/:slug - Fetching package summary',
+      { organizationId, spaceId, slug },
+    );
+
+    try {
+      return await this.deploymentsService.getPackageSummary({
+        userId,
+        organizationId,
+        spaceId,
+        slug,
+        source: request.clientSource,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/packages/summary/:slug - Failed to fetch package summary',
+        { organizationId, spaceId, slug, error: errorMessage },
+      );
+      if (error instanceof Error && error.message.includes('does not exist')) {
+        throw new NotFoundException(error.message);
+      }
       throw error;
     }
   }

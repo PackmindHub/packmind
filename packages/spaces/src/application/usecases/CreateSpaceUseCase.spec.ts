@@ -4,6 +4,10 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import {
+  OrganizationAdminRequiredError,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
@@ -19,12 +23,15 @@ describe('CreateSpaceUseCase', () => {
   const organization = organizationFactory({ id: organizationId });
   const user = userFactory({
     id: userId,
-    memberships: [{ userId, organizationId, role: 'member' }],
+    memberships: [{ userId, organizationId, role: 'admin' }],
   });
 
   let useCase: CreateSpaceUseCase;
   let spaceService: jest.Mocked<SpaceService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let eventEmitterService: jest.Mocked<
+    Pick<PackmindEventEmitterService, 'emit'>
+  >;
 
   const buildCommand = (
     overrides?: Partial<CreateSpaceCommand>,
@@ -45,7 +52,16 @@ describe('CreateSpaceUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    useCase = new CreateSpaceUseCase(spaceService, accountsPort, stubLogger());
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
+
+    useCase = new CreateSpaceUseCase(
+      spaceService,
+      accountsPort,
+      eventEmitterService as unknown as PackmindEventEmitterService,
+      stubLogger(),
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -77,6 +93,22 @@ describe('CreateSpaceUseCase', () => {
           false,
         );
       });
+
+      it('emits a SpaceCreatedEvent with space name and slug', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              userId,
+              organizationId,
+              source: 'ui',
+              spaceName: createdSpace.name,
+              spaceSlug: createdSpace.slug,
+            }),
+          }),
+        );
+      });
     });
 
     describe('when a space with the same slug already exists', () => {
@@ -91,6 +123,12 @@ describe('CreateSpaceUseCase', () => {
           SpaceSlugConflictError,
         );
       });
+
+      it('does not emit a SpaceCreatedEvent', async () => {
+        await useCase.execute(buildCommand()).catch(() => undefined);
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
+      });
     });
 
     describe('when the user is not a member of the organization', () => {
@@ -102,6 +140,53 @@ describe('CreateSpaceUseCase', () => {
 
       it('throws an access error', async () => {
         await expect(useCase.execute(buildCommand())).rejects.toThrow();
+      });
+    });
+
+    describe('when the user is a member but not an admin', () => {
+      beforeEach(() => {
+        accountsPort.getUserById.mockResolvedValue(
+          userFactory({
+            id: userId,
+            memberships: [{ userId, organizationId, role: 'member' }],
+          }),
+        );
+      });
+
+      it('throws OrganizationAdminRequiredError', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow(
+          OrganizationAdminRequiredError,
+        );
+      });
+    });
+
+    describe('when the name is empty', () => {
+      it('throws InvalidSpaceNameError with empty message', async () => {
+        await expect(
+          useCase.execute(buildCommand({ name: '' })),
+        ).rejects.toThrow('Invalid space name: name cannot be empty');
+      });
+    });
+
+    describe('when the name has leading and trailing whitespace', () => {
+      const createdSpace = spaceFactory({
+        organizationId,
+        name: 'My Space',
+        isDefaultSpace: false,
+      });
+
+      beforeEach(() => {
+        spaceService.createSpace.mockResolvedValue(createdSpace);
+      });
+
+      it('trims the name before passing it to the service', async () => {
+        await useCase.execute(buildCommand({ name: '  My Space  ' }));
+
+        expect(spaceService.createSpace).toHaveBeenCalledWith(
+          'My Space',
+          organizationId,
+          false,
+        );
       });
     });
   });

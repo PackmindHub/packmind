@@ -1,13 +1,13 @@
 import {
   Gateway,
-  IListPackagesUseCase,
+  IListPackagesBySpaceUseCase,
   IGetPackageSummaryUseCase,
   ICreatePackageUseCase,
   IAddArtefactsToPackageUseCase,
 } from '@packmind/types';
 
 export interface IPackagesGateway {
-  list: Gateway<IListPackagesUseCase>;
+  list: Gateway<IListPackagesBySpaceUseCase>;
   getSummary: Gateway<IGetPackageSummaryUseCase>;
   create: Gateway<ICreatePackageUseCase>;
   addArtefacts: Gateway<IAddArtefactsToPackageUseCase>;

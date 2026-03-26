@@ -1,6 +1,7 @@
 import { GitlabDuoDeployer } from './GitlabDuoDeployer';
-import { createUserId, DeleteItemType } from '@packmind/types';
 import {
+  createUserId,
+  DeleteItemType,
   GitRepo,
   createGitRepoId,
   createGitProviderId,
@@ -10,6 +11,9 @@ import {
   createRecipeVersionId,
   Target,
   createTargetId,
+  SkillFile,
+  SkillVersionId,
+  createSkillFileId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
@@ -377,6 +381,190 @@ describe('GitlabDuoDeployer', () => {
 
       it('has no files to delete', () => {
         expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when metadata contains non-string values', () => {
+      it('coerces values to strings without crashing', async () => {
+        const skillVersion = skillVersionFactory({
+          metadata: {
+            category: 'test',
+            disableModelInvocation: true,
+          } as unknown as Record<string, string>,
+        });
+
+        const result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(result.createOrUpdate[0].content).toContain(
+          "disableModelInvocation: 'true'",
+        );
+      });
+    });
+
+    describe('when skill has empty metadata', () => {
+      let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
+
+      beforeEach(async () => {
+        const skillVersion = skillVersionFactory({
+          slug: 'no-metadata-skill',
+          metadata: {},
+        });
+
+        result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('does not include metadata field in frontmatter', () => {
+        expect(result.createOrUpdate[0].content).not.toContain('metadata:');
+      });
+    });
+
+    describe('allowed-tools frontmatter key', () => {
+      let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
+
+      beforeEach(async () => {
+        const skillVersion = skillVersionFactory({
+          allowedTools: 'Read,Write,Bash',
+        });
+
+        result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('renders in kebab-case', () => {
+        expect(result.createOrUpdate[0].content).toContain('allowed-tools:');
+      });
+
+      it('does not render in camelCase', () => {
+        expect(result.createOrUpdate[0].content).not.toContain('allowedTools:');
+      });
+    });
+
+    describe('when skillVersion.files are present', () => {
+      let result: Awaited<ReturnType<typeof deployer.deploySkills>>;
+      let skillVersion: ReturnType<typeof skillVersionFactory>;
+
+      beforeEach(async () => {
+        const files: SkillFile[] = [
+          {
+            id: createSkillFileId('file-1'),
+            skillVersionId: '' as SkillVersionId,
+            path: 'helper.py',
+            content: 'print("hello")',
+            permissions: 'rw',
+            isBase64: false,
+          },
+          {
+            id: createSkillFileId('file-2'),
+            skillVersionId: '' as SkillVersionId,
+            path: 'SKILL.MD',
+            content: 'should be skipped',
+            permissions: 'r',
+            isBase64: false,
+          },
+        ];
+
+        skillVersion = skillVersionFactory({
+          slug: 'files-skill',
+          files,
+        });
+
+        result = await deployer.deploySkills(
+          [skillVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('deploys SKILL.md and additional files', () => {
+        expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('places additional file at correct path', () => {
+        const helperFile = result.createOrUpdate.find((f) =>
+          f.path.includes('helper.py'),
+        );
+        expect(helperFile?.path).toBe(
+          '.gitlab/duo/skills/files-skill/helper.py',
+        );
+      });
+
+      it('includes isBase64 on additional files', () => {
+        const helperFile = result.createOrUpdate.find((f) =>
+          f.path.includes('helper.py'),
+        );
+        expect(helperFile?.isBase64).toBe(false);
+      });
+
+      it('includes skillFileId on additional files', () => {
+        const helperFile = result.createOrUpdate.find((f) =>
+          f.path.includes('helper.py'),
+        );
+        expect(helperFile?.skillFileId).toBe('file-1');
+      });
+
+      it('includes skillFilePermissions on additional files', () => {
+        const helperFile = result.createOrUpdate.find((f) =>
+          f.path.includes('helper.py'),
+        );
+        expect(helperFile?.skillFilePermissions).toBe('rw');
+      });
+
+      it('skips SKILL.MD from files', () => {
+        const skillMdDuplicate = result.createOrUpdate.filter((f) =>
+          f.path.toUpperCase().endsWith('SKILL.MD'),
+        );
+        expect(skillMdDuplicate).toHaveLength(1);
+      });
+    });
+
+    describe('when skillVersion.files is absent and skillFilesMap is provided', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersion = skillVersionFactory({
+          slug: 'fallback-skill',
+        });
+
+        const skillFilesMap = new Map<SkillVersionId, SkillFile[]>();
+        skillFilesMap.set(skillVersion.id, [
+          {
+            id: createSkillFileId('map-file-1'),
+            skillVersionId: skillVersion.id,
+            path: 'config.json',
+            content: '{}',
+            permissions: 'r',
+            isBase64: false,
+          },
+        ]);
+
+        result = await deployer.generateFileUpdatesForSkills(
+          [skillVersion],
+          skillFilesMap,
+        );
+      });
+
+      it('deploys SKILL.md and the fallback file', () => {
+        expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes the file from skillFilesMap', () => {
+        const configFile = result.createOrUpdate.find((f) =>
+          f.path.includes('config.json'),
+        );
+        expect(configFile).toBeDefined();
       });
     });
 
