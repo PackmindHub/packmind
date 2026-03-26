@@ -1924,10 +1924,30 @@ describe('playbookAddHandler', () => {
       expect(mockExit).toHaveBeenCalledWith(1);
     });
 
+    it('calls listCommands with spaceId for space-scoped check', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPackmindCliHexa.listCommands).toHaveBeenCalledWith({
+        spaceId: 'space-123',
+      });
+    });
+
     it('does not add to playbook', async () => {
       await playbookAddHandler(buildDeps());
 
       expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when artifact with same name exists in a different space', () => {
+    beforeEach(() => {
+      (mockPackmindCliHexa.listCommands as jest.Mock).mockResolvedValue([]);
+    });
+
+    it('stages the artifact successfully', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 
@@ -2017,7 +2037,7 @@ describe('playbookAddHandler', () => {
       ]);
     });
 
-    it('calls listSkills with spaceId', async () => {
+    it('calls listSkills with spaceId for space-scoped check', async () => {
       mockReadSkillDirectory.mockResolvedValue([
         {
           path: '/project/.claude/skills/my-skill/SKILL.md',
@@ -2091,12 +2111,14 @@ describe('playbookAddHandler', () => {
       ]);
     });
 
-    it('calls listStandards', async () => {
+    it('calls listStandards with spaceId for space-scoped check', async () => {
       await playbookAddHandler(
         buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
       );
 
-      expect(mockPackmindCliHexa.listStandards).toHaveBeenCalled();
+      expect(mockPackmindCliHexa.listStandards).toHaveBeenCalledWith({
+        spaceId: 'space-123',
+      });
     });
 
     it('exits with 1', async () => {
