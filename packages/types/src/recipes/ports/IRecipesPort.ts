@@ -1,4 +1,5 @@
 import { OrganizationId } from '../../accounts/Organization';
+import { UserId } from '../../accounts/User';
 import {
   CaptureRecipeCommand,
   CaptureRecipeWithPackagesCommand,
@@ -129,4 +130,13 @@ export interface IRecipesPort {
   updateRecipeFromUI(
     command: UpdateRecipeFromUICommand,
   ): Promise<UpdateRecipeFromUIResponse>;
+
+  /**
+   * Duplicate a recipe and its full entity graph into a destination space.
+   */
+  duplicateRecipeToSpace(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Recipe>;
 }

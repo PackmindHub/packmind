@@ -11,6 +11,8 @@ export class SkillsServices {
   constructor(private readonly skillsRepositories: ISkillsRepositories) {
     this.skillService = new SkillService(
       this.skillsRepositories.getSkillRepository(),
+      this.skillsRepositories.getSkillVersionRepository(),
+      this.skillsRepositories.getSkillFileRepository(),
     );
     this.skillVersionService = new SkillVersionService(
       this.skillsRepositories.getSkillVersionRepository(),

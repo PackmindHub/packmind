@@ -1,15 +1,11 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { SpaceId } from '../../spaces';
-import { StandardId } from '../../standards';
-import { SkillId } from '../../skills';
-import { RecipeId } from '../../recipes';
+import { ArtifactReference } from '../ArtifactReference';
 
 export type MoveArtifactsToSpaceCommand = PackmindCommand & {
   sourceSpaceId: SpaceId;
   destinationSpaceId: SpaceId;
-  standardIds?: StandardId[];
-  skillIds?: SkillId[];
-  recipeIds?: RecipeId[];
+  artifacts: ArtifactReference[];
 };
 
 export type MoveArtifactsToSpaceResponse = { movedCount: number };

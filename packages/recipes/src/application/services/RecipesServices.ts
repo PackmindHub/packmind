@@ -15,6 +15,7 @@ export class RecipesServices {
   ) {
     this.recipeService = new RecipeService(
       this.recipesRepositories.getRecipeRepository(),
+      this.recipesRepositories.getRecipeVersionRepository(),
     );
     this.recipeVersionService = new RecipeVersionService(
       this.recipesRepositories.getRecipeVersionRepository(),
