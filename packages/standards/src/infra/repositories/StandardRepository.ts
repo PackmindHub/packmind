@@ -9,6 +9,7 @@ import {
   QueryOption,
   SpaceId,
   Standard,
+  StandardId,
   StandardVersion,
   UserId,
 } from '@packmind/types';
@@ -168,6 +169,40 @@ export class StandardRepository
     } catch (error) {
       this.logger.error('Failed to find standards by user ID', {
         userId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async markAsMoved(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    this.logger.info('Marking standard as moved', {
+      standardId,
+      destinationSpaceId,
+    });
+
+    try {
+      await this.repository.manager.transaction(async (transaction) => {
+        await transaction.update(
+          StandardSchema,
+          { id: standardId },
+          {
+            movedTo: destinationSpaceId,
+          },
+        );
+        await transaction.softDelete(StandardSchema, { id: standardId });
+      });
+
+      this.logger.info('Standard marked as moved successfully', {
+        standardId,
+        destinationSpaceId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to mark standard as moved', {
+        standardId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

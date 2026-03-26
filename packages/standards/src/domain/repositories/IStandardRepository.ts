@@ -4,6 +4,7 @@ import {
   QueryOption,
   SpaceId,
   Standard,
+  StandardId,
   UserId,
 } from '@packmind/types';
 
@@ -17,4 +18,8 @@ export interface IStandardRepository extends IRepository<Standard> {
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Standard[]>;
   findByUserId(userId: UserId): Promise<Standard[]>;
+  markAsMoved(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void>;
 }

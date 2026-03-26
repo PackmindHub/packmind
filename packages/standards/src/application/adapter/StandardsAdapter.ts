@@ -571,4 +571,13 @@ export class StandardsAdapter
       .getStandardService()
       .duplicateStandardToSpace(standardId, destinationSpaceId, newUserId);
   }
+
+  async markStandardAsMoved(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    return this.services
+      .getStandardService()
+      .markStandardAsMoved(standardId, destinationSpaceId);
+  }
 }

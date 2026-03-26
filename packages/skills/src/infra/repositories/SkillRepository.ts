@@ -7,6 +7,7 @@ import {
   OrganizationId,
   QueryOption,
   Skill,
+  SkillId,
   SpaceId,
   UserId,
 } from '@packmind/types';
@@ -130,6 +131,40 @@ export class SkillRepository
     } catch (error) {
       this.logger.error('Failed to find skills by user ID', {
         userId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async markAsMoved(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    this.logger.info('Marking skill as moved', {
+      skillId,
+      destinationSpaceId,
+    });
+
+    try {
+      await this.repository.manager.transaction(async (transaction) => {
+        await transaction.update(
+          SkillSchema,
+          { id: skillId },
+          {
+            movedTo: destinationSpaceId,
+          },
+        );
+        await transaction.softDelete(SkillSchema, { id: skillId });
+      });
+
+      this.logger.info('Skill marked as moved successfully', {
+        skillId,
+        destinationSpaceId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to mark skill as moved', {
+        skillId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

@@ -3,6 +3,7 @@ import {
   OrganizationId,
   QueryOption,
   Recipe,
+  RecipeId,
   SpaceId,
   UserId,
 } from '@packmind/types';
@@ -19,4 +20,5 @@ export interface IRecipeRepository extends IRepository<Recipe> {
     spaceId: SpaceId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Recipe[]>;
+  markAsMoved(recipeId: RecipeId, destinationSpaceId: SpaceId): Promise<void>;
 }

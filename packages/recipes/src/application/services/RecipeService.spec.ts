@@ -33,6 +33,7 @@ describe('RecipeService', () => {
       restoreById: jest.fn(),
       findByUserId: jest.fn(),
       findBySpaceId: jest.fn(),
+      markAsMoved: jest.fn(),
     };
 
     stubbedLogger = stubLogger();
@@ -308,6 +309,54 @@ describe('RecipeService', () => {
           // Ignore error
         }
         expect(recipeRepository.deleteById).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('markRecipeAsMoved', () => {
+    const destinationSpaceId = createSpaceId(uuidv4());
+
+    describe('when the recipe exists', () => {
+      let recipeId: RecipeId;
+      let recipe: Recipe;
+
+      beforeEach(async () => {
+        recipeId = createRecipeId(uuidv4());
+        recipe = recipeFactory({ id: recipeId });
+
+        recipeRepository.findById = jest.fn().mockResolvedValue(recipe);
+        recipeRepository.markAsMoved = jest.fn().mockResolvedValue(undefined);
+
+        await recipeService.markRecipeAsMoved(recipeId, destinationSpaceId);
+      });
+
+      it('checks if the recipe exists', () => {
+        expect(recipeRepository.findById).toHaveBeenCalledWith(recipeId);
+      });
+
+      it('calls markAsMoved on repository with correct args', () => {
+        expect(recipeRepository.markAsMoved).toHaveBeenCalledWith(
+          recipeId,
+          destinationSpaceId,
+        );
+      });
+    });
+
+    describe('when the recipe does not exist', () => {
+      let nonExistentRecipeId: RecipeId;
+
+      beforeEach(() => {
+        nonExistentRecipeId = createRecipeId(uuidv4());
+        recipeRepository.findById = jest.fn().mockResolvedValue(null);
+      });
+
+      it('throws an error with the correct message', async () => {
+        await expect(
+          recipeService.markRecipeAsMoved(
+            nonExistentRecipeId,
+            destinationSpaceId,
+          ),
+        ).rejects.toThrow(`Recipe with id ${nonExistentRecipeId} not found`);
       });
     });
   });

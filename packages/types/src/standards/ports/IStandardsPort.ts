@@ -74,4 +74,8 @@ export interface IStandardsPort {
     destinationSpaceId: SpaceId,
     newUserId: UserId,
   ): Promise<Standard>;
+  markStandardAsMoved(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void>;
 }

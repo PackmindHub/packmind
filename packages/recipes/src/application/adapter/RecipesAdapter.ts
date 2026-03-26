@@ -390,4 +390,13 @@ export class RecipesAdapter
       .getRecipeService()
       .duplicateRecipeToSpace(recipeId, destinationSpaceId, newUserId);
   }
+
+  async markRecipeAsMoved(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    return this.recipesServices
+      .getRecipeService()
+      .markRecipeAsMoved(recipeId, destinationSpaceId);
+  }
 }
