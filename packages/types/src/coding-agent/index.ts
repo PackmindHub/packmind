@@ -5,3 +5,4 @@ export * from './validation';
 export * from './CodingAgent';
 export * from './CodingAgentArtefactPaths';
 export * from './resolveArtefactFromPath';
+export * from './validateArtifactFileFormat';

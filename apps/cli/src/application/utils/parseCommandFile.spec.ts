@@ -36,6 +36,30 @@ describe('parseCommandFile', () => {
     });
   });
 
+  describe('when frontmatter has empty body', () => {
+    it('returns error', () => {
+      const content = '---\nname: My Command\n---\n';
+
+      const result = parseCommandFile(content, 'commands/my-command.md');
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Command body is empty',
+      });
+    });
+
+    it('returns error for whitespace-only body', () => {
+      const content = '---\nname: My Command\n---\n\n  \n';
+
+      const result = parseCommandFile(content, 'commands/my-command.md');
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Command body is empty',
+      });
+    });
+  });
+
   describe('when content has no frontmatter', () => {
     it('uses humanized filename as name and returns full content', () => {
       const content = 'This is a plain command file\nwith some instructions.';

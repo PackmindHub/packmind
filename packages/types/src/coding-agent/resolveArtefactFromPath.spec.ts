@@ -293,4 +293,29 @@ describe('resolveArtefactFromPath', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('when path contains a similar but different directory name', () => {
+    it('returns null for .claude/commands-backup/ (trailing slash prevents false positive)', () => {
+      const result = resolveArtefactFromPath('.claude/commands-backup/file.md');
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null for .claude/commands_old/ (trailing slash prevents false positive)', () => {
+      const result = resolveArtefactFromPath('.claude/commands_old/file.md');
+
+      expect(result).toBeNull();
+    });
+
+    it('matches nested workspace path containing .claude/skills/', () => {
+      const result = resolveArtefactFromPath(
+        '/workspace/nested/.claude/skills/my-skill/SKILL.md',
+      );
+
+      expect(result).toEqual({
+        artifactType: 'skill',
+        codingAgent: 'claude',
+      });
+    });
+  });
 });

@@ -3,13 +3,13 @@ import { parseLenientStandard } from './parseLenientStandard';
 describe('parseLenientStandard', () => {
   describe('when content is empty or whitespace-only', () => {
     it('returns null for empty string', () => {
-      const result = parseLenientStandard('', 'my-standard.md');
+      const result = parseLenientStandard('');
 
       expect(result).toBeNull();
     });
 
     it('returns null for whitespace-only content', () => {
-      const result = parseLenientStandard('   \n  \n  ', 'my-standard.md');
+      const result = parseLenientStandard('   \n  \n  ');
 
       expect(result).toBeNull();
     });
@@ -19,7 +19,7 @@ describe('parseLenientStandard', () => {
     it('uses heading text as name and remaining content as description', () => {
       const content = '# My Standard\n\nSome description here';
 
-      const result = parseLenientStandard(content, 'my-standard.md');
+      const result = parseLenientStandard(content);
 
       expect(result).toEqual({
         name: 'My Standard',
@@ -30,7 +30,7 @@ describe('parseLenientStandard', () => {
     it('trims whitespace from name and description', () => {
       const content = '#   Spaced Name   \n\n  Description with spaces  \n';
 
-      const result = parseLenientStandard(content, 'my-standard.md');
+      const result = parseLenientStandard(content);
 
       expect(result).toEqual({
         name: 'Spaced Name',
@@ -41,7 +41,7 @@ describe('parseLenientStandard', () => {
     it('handles heading with empty description', () => {
       const content = '# Just a Name\n';
 
-      const result = parseLenientStandard(content, 'my-standard.md');
+      const result = parseLenientStandard(content);
 
       expect(result).toEqual({
         name: 'Just a Name',
@@ -52,7 +52,7 @@ describe('parseLenientStandard', () => {
     it('skips leading blank lines before heading', () => {
       const content = '\n\n# My Standard\n\nDescription';
 
-      const result = parseLenientStandard(content, 'my-standard.md');
+      const result = parseLenientStandard(content);
 
       expect(result).toEqual({
         name: 'My Standard',
@@ -63,7 +63,7 @@ describe('parseLenientStandard', () => {
     it('preserves multi-line description', () => {
       const content = '# My Standard\n\nLine one\nLine two\n\nLine three';
 
-      const result = parseLenientStandard(content, 'my-standard.md');
+      const result = parseLenientStandard(content);
 
       expect(result).toEqual({
         name: 'My Standard',
@@ -73,48 +73,28 @@ describe('parseLenientStandard', () => {
   });
 
   describe('when no heading is present', () => {
-    it('uses filename stem as name and full content as description', () => {
+    it('returns null for content without a heading', () => {
       const content = 'Just some content without a heading';
 
-      const result = parseLenientStandard(content, 'my-standard.md');
+      const result = parseLenientStandard(content);
 
-      expect(result).toEqual({
-        name: 'my-standard',
-        description: 'Just some content without a heading',
-      });
+      expect(result).toBeNull();
     });
 
-    it('extracts stem from file path with directories', () => {
-      const content = 'Some content';
+    it('returns null for content with only sub-headings', () => {
+      const content = '## Sub heading\n\nSome content';
 
-      const result = parseLenientStandard(content, '/path/to/cool-standard.md');
+      const result = parseLenientStandard(content);
 
-      expect(result).toEqual({
-        name: 'cool-standard',
-        description: 'Some content',
-      });
+      expect(result).toBeNull();
     });
 
-    it('handles file without extension', () => {
-      const content = 'Some content';
+    it('returns null for bullet-only content', () => {
+      const content = '* rule one\n* rule two';
 
-      const result = parseLenientStandard(content, 'my-standard');
+      const result = parseLenientStandard(content);
 
-      expect(result).toEqual({
-        name: 'my-standard',
-        description: 'Some content',
-      });
-    });
-
-    it('trims content used as description', () => {
-      const content = '  \n  Some content  \n  ';
-
-      const result = parseLenientStandard(content, 'my-standard.md');
-
-      expect(result).toEqual({
-        name: 'my-standard',
-        description: 'Some content',
-      });
+      expect(result).toBeNull();
     });
   });
 });

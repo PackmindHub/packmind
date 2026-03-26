@@ -19,7 +19,13 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../../application/utils/pathUtils';
-import { ArtifactType, MultiFileCodingAgent, Space } from '@packmind/types';
+import {
+  ArtifactType,
+  MultiFileCodingAgent,
+  Space,
+  SpaceId,
+  validateArtifactFileFormat,
+} from '@packmind/types';
 import {
   findLockFileEntryForPath,
   findLockFileEntryAndFileForPath,
@@ -207,6 +213,16 @@ export async function playbookAddHandler(
     codingAgent = artefactResult.codingAgent;
   }
 
+  const formatValidation = validateArtifactFileFormat(
+    absolutePath,
+    artifactType,
+  );
+  if (!formatValidation.valid) {
+    logErrorConsole(formatValidation.reason);
+    exit(1);
+    return;
+  }
+
   // Read local content
   let localContent: string;
   let artifactName: string;
@@ -282,9 +298,11 @@ export async function playbookAddHandler(
       if (parsed) {
         artifactName = parsed.name;
       } else {
-        const lenient = parseLenientStandard(localContent, absolutePath);
+        const lenient = parseLenientStandard(localContent);
         if (!lenient) {
-          logErrorConsole('File is empty.');
+          logErrorConsole(
+            `${filePath} is not a valid artifact. Expected a markdown heading (# Name) followed by content.`,
+          );
           exit(1);
           return;
         }
@@ -383,6 +401,34 @@ export async function playbookAddHandler(
     }
   }
 
+  // Check name uniqueness for new artifacts
+  if (changeType === 'created') {
+    try {
+      const existingNames = await listExistingArtifactNames(
+        packmindCliHexa,
+        artifactType,
+        spaceId,
+      );
+      const nameExists = existingNames.some(
+        (name) => name.toLowerCase() === artifactName.toLowerCase(),
+      );
+      if (nameExists) {
+        logErrorConsole(
+          `A ${artifactType} named "${artifactName}" already exists in Packmind.`,
+        );
+        exit(1);
+        return;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logErrorConsole(
+        `Failed to check for existing ${artifactType}s: ${errorMessage}`,
+      );
+      exit(1);
+      return;
+    }
+  }
+
   // Check if content matches deployed (via lock file artifact versions)
   if (changeType === 'updated' && earlyLockFile) {
     const deployedFiles = await fetchDeployedFiles(
@@ -450,6 +496,33 @@ export async function playbookAddHandler(
     `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook${spaceInfo}. ${formatLabel(codingAgent)}`,
   );
   exit(0);
+}
+
+async function listExistingArtifactNames(
+  packmindCliHexa: PackmindCliHexa,
+  artifactType: ArtifactType,
+  spaceId: string,
+): Promise<string[]> {
+  switch (artifactType) {
+    case 'skill': {
+      const skills = await packmindCliHexa.listSkills({
+        spaceId: spaceId as SpaceId,
+      });
+      return skills.map((s) => s.name);
+    }
+    case 'command': {
+      const commands = await packmindCliHexa.listCommands({
+        spaceId: spaceId as SpaceId,
+      });
+      return commands.map((c) => c.name);
+    }
+    case 'standard': {
+      const standards = await packmindCliHexa.listStandards({
+        spaceId: spaceId as SpaceId,
+      });
+      return standards.map((s) => s.name);
+    }
+  }
 }
 
 export function formatSpaceList(spaces: Space[]): string {

@@ -37,6 +37,10 @@ export function parseCommandFile(
       .slice(closingIndex + FRONTMATTER_DELIMITER.length + 1)
       .replace(/^\n+/, '');
 
+    if (!body || body.trim().length === 0) {
+      return { success: false, error: 'Command body is empty' };
+    }
+
     return { success: true, parsed: { name, content: body } };
   }
 
