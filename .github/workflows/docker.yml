@@ -48,6 +48,27 @@ on:
         value: ${{ jobs.build-scan-push.outputs.version }}
 
 jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile.api
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: dockerfile/Dockerfile.api
+
+      - name: Lint Dockerfile.frontend
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: dockerfile/Dockerfile.frontend
+
+      - name: Lint Dockerfile.mcp
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: dockerfile/Dockerfile.mcp
+
   build-scan-push:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     # Both editions: main branch and release tags
