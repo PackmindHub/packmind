@@ -151,23 +151,23 @@ describe('scopeMatcher', () => {
       );
     });
 
-    describe('with negative patterns', () => {
-      it('preserves ! prefix and builds effective pattern', () => {
-        expect(buildEffectivePattern('/backend', '!**/_internal/**')).toBe(
-          '!/backend/**/_internal/**',
+    describe('with positive patterns only (negative prefix handled by caller)', () => {
+      it('builds pattern for scope without negation prefix', () => {
+        expect(buildEffectivePattern('/backend', '**/_internal/**')).toBe(
+          '/backend/**/_internal/**',
         );
       });
 
-      it('handles negative pattern with leading slash', () => {
-        expect(buildEffectivePattern('/backend', '!/**/_internal/**')).toBe(
-          '!/backend/**/_internal/**',
+      it('builds pattern for scope with leading slash', () => {
+        expect(buildEffectivePattern('/backend', '/**/_internal/**')).toBe(
+          '/backend/**/_internal/**',
         );
       });
 
-      it('handles negative pattern starting with target path', () => {
+      it('builds pattern for scope starting with target path', () => {
         expect(
-          buildEffectivePattern('/backend/src', '!/backend/src/**/*.test.ts'),
-        ).toBe('!/backend/src/**/*.test.ts');
+          buildEffectivePattern('/backend/src', '/backend/src/**/*.test.ts'),
+        ).toBe('/backend/src/**/*.test.ts');
       });
     });
   });
@@ -204,22 +204,20 @@ describe('scopeMatcher', () => {
 
     describe('only negative patterns (no positive)', () => {
       it('returns false because at least one positive pattern is required', () => {
-        const result = fileMatchesTargetAndScope(
-          '/src/main.ts',
-          '/',
-          ['!**/test/**'],
-        );
+        const result = fileMatchesTargetAndScope('/src/main.ts', '/', [
+          '!**/test/**',
+        ]);
         expect(result).toBe(false);
       });
     });
 
     describe('multiple negative patterns', () => {
       it('excludes file matching first exclusion', () => {
-        const result = fileMatchesTargetAndScope(
-          '/backend/test/file.ts',
-          '/',
-          ['**/*.ts', '!**/test/**', '!**/vendor/**'],
-        );
+        const result = fileMatchesTargetAndScope('/backend/test/file.ts', '/', [
+          '**/*.ts',
+          '!**/test/**',
+          '!**/vendor/**',
+        ]);
         expect(result).toBe(false);
       });
 
@@ -233,11 +231,11 @@ describe('scopeMatcher', () => {
       });
 
       it('includes file not matching any exclusion', () => {
-        const result = fileMatchesTargetAndScope(
-          '/backend/src/main.ts',
-          '/',
-          ['**/*.ts', '!**/test/**', '!**/vendor/**'],
-        );
+        const result = fileMatchesTargetAndScope('/backend/src/main.ts', '/', [
+          '**/*.ts',
+          '!**/test/**',
+          '!**/vendor/**',
+        ]);
         expect(result).toBe(true);
       });
     });

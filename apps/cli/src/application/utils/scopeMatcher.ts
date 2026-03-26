@@ -4,11 +4,6 @@ export function buildEffectivePattern(
   targetPath: string,
   scope: string | null,
 ): string {
-  // Handle negative patterns: strip '!', build pattern, re-add '!'
-  if (scope && scope.startsWith('!')) {
-    return '!' + buildEffectivePattern(targetPath, scope.substring(1));
-  }
-
   // Normalize target path (remove trailing slash unless it's root)
   const normalizedTarget =
     targetPath === '/' ? '/' : targetPath.replace(/\/$/, '');
@@ -19,10 +14,7 @@ export function buildEffectivePattern(
   }
 
   // Check if scope starts with target path
-  if (
-    scope.startsWith(normalizedTarget + '/') ||
-    scope === normalizedTarget
-  ) {
+  if (scope.startsWith(normalizedTarget + '/') || scope === normalizedTarget) {
     // Use scope alone, ensure it has wildcard if it's a directory
     return scope.endsWith('/') ? scope + '**' : scope;
   }

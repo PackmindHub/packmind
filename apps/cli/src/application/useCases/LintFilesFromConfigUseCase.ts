@@ -41,14 +41,6 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  private fileMatchesTargetAndScope(
-    filePath: string,
-    targetPath: string,
-    scopePatterns: string[],
-  ): boolean {
-    return fileMatchesTargetAndScope(filePath, targetPath, scopePatterns);
-  }
-
   public async execute(
     command: LintFilesFromConfigCommand,
   ): Promise<LintFilesFromConfigResult> {
@@ -224,7 +216,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
           for (const standard of target.standards) {
             // Apply scope filtering within the target
             if (
-              !this.fileMatchesTargetAndScope(
+              !fileMatchesTargetAndScope(
                 normalizedFilePath,
                 targetConfig.targetPath,
                 standard.scope,

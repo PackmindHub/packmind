@@ -39,14 +39,6 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  public fileMatchesTargetAndScope(
-    filePath: string,
-    targetPath: string,
-    scopePatterns: string[],
-  ): boolean {
-    return fileMatchesTargetAndScope(filePath, targetPath, scopePatterns);
-  }
-
   public async execute(
     command: LintFilesAgainstRuleCommand,
   ): Promise<LintFilesAgainstRuleResult> {
@@ -331,7 +323,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
 
           // Check if file matches target and scope
           if (
-            !this.fileMatchesTargetAndScope(
+            !fileMatchesTargetAndScope(
               normalizedFilePath,
               target.path,
               standard.scope,

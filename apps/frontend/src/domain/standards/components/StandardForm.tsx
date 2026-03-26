@@ -211,7 +211,16 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     }
   };
 
-  const isFormValid = name.trim() && description.trim();
+  const hasScopeError = (() => {
+    if (!scope.trim()) return false;
+    const patterns = scope
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    return patterns.length > 0 && !patterns.some((p) => !p.startsWith('!'));
+  })();
+
+  const isFormValid = name.trim() && description.trim() && !hasScopeError;
 
   if (mode === 'edit' && rulesLoading) {
     return <PMText>Loading rules...</PMText>;
