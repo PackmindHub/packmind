@@ -1,4 +1,4 @@
-import { CodingAgent, StartTrialCommandAgents } from '@packmind/types';
+import { CodingAgent, SkillId, StartTrialCommandAgents } from '@packmind/types';
 
 export enum McpUnavailableReason {
   CantUseMcp = 'cant-use-mcp',
@@ -42,6 +42,10 @@ export type AnalyticsEventMap = {
     reason: McpUnavailableReason;
     otherDetails?: string;
     selectedAgent: StartTrialCommandAgents;
+  };
+  skill_downloaded: {
+    agent: CodingAgent;
+    skillId: SkillId;
   };
   default_skills_downloaded: {
     agent: CodingAgent;
