@@ -10,7 +10,7 @@ import {
   formatCommand,
 } from '../../utils/consoleLogger';
 import { originSkillOption } from '../sharedOptions';
-import { resolveSkillInputPaths } from '../../../application/utils/resolveSkillInputPaths';
+import {addResolvedSkillPath, resolveSkillInputPaths} from '../../../application/utils/resolveSkillInputPaths';
 
 type AddSkillCommandArgs = {
   skillPaths: readonly string[];
@@ -140,19 +140,6 @@ function isPermissionError(error: unknown): boolean {
   return error.code === 'EACCES' || error.code === 'EPERM';
 }
 
-function addResolvedSkillPath(
-  resolvedSkillPaths: string[],
-  seenPaths: Set<string>,
-  candidatePath: string,
-): void {
-  if (seenPaths.has(candidatePath)) {
-    return;
-  }
-
-  seenPaths.add(candidatePath);
-  resolvedSkillPaths.push(candidatePath);
-}
-
 async function resolveSkillPathsForUpload(
   inputPaths: readonly string[],
   cwd: string,
@@ -253,7 +240,7 @@ async function confirmBatchUploadIfNeeded(
 async function uploadResolvedSkillPaths(
   resolvedSkillPaths: readonly string[],
   args: AddSkillCommandArgs,
-  uploadSkill: Pick<PackmindCliHexa, 'uploadSkill'>['uploadSkill'],
+  packmindCliHexa: Pick<PackmindCliHexa, 'uploadSkill'>,
   initialFailureCount: number,
 ): Promise<UploadBatchResult> {
   let successCount = 0;
@@ -263,7 +250,7 @@ async function uploadResolvedSkillPaths(
     try {
       logUploadStart(skillPath, resolvedSkillPaths.length, index);
 
-      const result = await uploadSkill({
+      const result = await packmindCliHexa.uploadSkill({
         skillPath,
         originSkill: args.originSkill,
         spaceSlug: args.space,
@@ -328,7 +315,7 @@ export async function addSkillHandler(
   const { successCount, failureCount } = await uploadResolvedSkillPaths(
     resolvedSkillPaths,
     args,
-    packmindCliHexa.uploadSkill,
+    packmindCliHexa,
     resolutionFailures.length,
   );
 

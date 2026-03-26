@@ -1,5 +1,4 @@
-import fs from 'node:fs';
-import fsPromises from 'node:fs/promises';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const SKILL_FILE_NAME = 'SKILL.md';
@@ -27,7 +26,7 @@ function isMissingPathError(error: unknown): boolean {
     : false;
 }
 
-function addResolvedSkillPath(
+export function addResolvedSkillPath(
   resolvedSkillPaths: string[],
   seenPaths: Set<string>,
   candidatePath: string,
@@ -40,13 +39,24 @@ function addResolvedSkillPath(
   resolvedSkillPaths.push(candidatePath);
 }
 
-export function resolveSkillDirectoryRoot(absolutePath: string): string {
+async function skillFileExists(directoryPath: string): Promise<boolean> {
+  try {
+    await fs.access(path.join(directoryPath, SKILL_FILE_NAME));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function resolveSkillDirectoryRoot(
+  absolutePath: string,
+): Promise<string> {
   if (path.basename(absolutePath) === SKILL_FILE_NAME) {
     return path.dirname(absolutePath);
   }
 
   try {
-    if (fs.statSync(absolutePath).isDirectory()) {
+    if ((await fs.stat(absolutePath)).isDirectory()) {
       return absolutePath;
     }
   } catch {
@@ -57,7 +67,7 @@ export function resolveSkillDirectoryRoot(absolutePath: string): string {
   const root = path.parse(current).root;
 
   while (current !== root) {
-    if (fs.existsSync(path.join(current, SKILL_FILE_NAME))) {
+    if (await skillFileExists(current)) {
       return current;
     }
     current = path.dirname(current);
@@ -69,7 +79,7 @@ export function resolveSkillDirectoryRoot(absolutePath: string): string {
 async function findNestedSkillDirectories(
   directoryPath: string,
 ): Promise<string[]> {
-  const entries = await fsPromises.readdir(directoryPath, {
+  const entries = await fs.readdir(directoryPath, {
     withFileTypes: true,
   });
   const containsSkillFile = entries.some(
@@ -104,10 +114,10 @@ async function addNestedSkillDirectories(
   resolvedSkillPaths: string[],
   seenPaths: Set<string>,
 ): Promise<boolean> {
-  let skillDirectoryRootStat: Awaited<ReturnType<typeof fsPromises.stat>> | undefined;
+  let skillDirectoryRootStat: Awaited<ReturnType<typeof fs.stat>> | undefined;
 
   try {
-    skillDirectoryRootStat = await fsPromises.stat(skillDirectoryRoot);
+    skillDirectoryRootStat = await fs.stat(skillDirectoryRoot);
   } catch (error) {
     if (!isMissingPathError(error)) {
       throw error;
@@ -139,7 +149,7 @@ export async function resolveSkillInputPaths(
 
   for (const inputPath of inputPaths) {
     const absoluteInputPath = path.resolve(cwd, inputPath);
-    const skillDirectoryRoot = resolveSkillDirectoryRoot(absoluteInputPath);
+    const skillDirectoryRoot = await resolveSkillDirectoryRoot(absoluteInputPath);
 
     const resolvedNestedDirectories = await addNestedSkillDirectories(
       skillDirectoryRoot,
