@@ -80,13 +80,15 @@ describe('...', () => {
     });
 
     describe('when running commands from repo root', () => {
-      it('shows the correct path of the change when running diff', async () => {
-        const result = await context.runCli('playbook diff');
+      describe('when running diff', () => {
+        it('shows the correct path of the change', async () => {
+          const result = await context.runCli('playbook diff');
 
-        expect(result.stdout).toMatchOutput([
-          `Command "${command.name}"`,
-          commandPathInTarget,
-        ]);
+          expect(result.stdout).toMatchOutput([
+            `Command "${command.name}"`,
+            commandPathInTarget,
+          ]);
+        });
       });
 
       describe('when the file is removed', () => {
@@ -197,13 +199,15 @@ describe('...', () => {
         commandPath = `.packmind/commands/${command.slug}.md`;
       });
 
-      it('shows the correct path of the change when running diff', async () => {
-        const result = await context.runCli('playbook diff', { cwd });
+      describe('when running diff', () => {
+        it('shows the correct path of the change', async () => {
+          const result = await context.runCli('playbook diff', { cwd });
 
-        expect(result.stdout).toMatchOutput([
-          `Command "${command.name}"`,
-          commandPath,
-        ]);
+          expect(result.stdout).toMatchOutput([
+            `Command "${command.name}"`,
+            commandPath,
+          ]);
+        });
       });
 
       describe('when the file is removed', () => {

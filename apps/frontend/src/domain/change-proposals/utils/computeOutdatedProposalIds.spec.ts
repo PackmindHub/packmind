@@ -579,20 +579,22 @@ describe('computeSkillOutdatedIds', () => {
     });
 
     describe('when property does not exist on skill', () => {
-      it('matches when oldValue is "null"', () => {
-        const skill = makeSkill({ additionalProperties: undefined });
-        const proposal = makeProposal({
-          type: ChangeProposalType.updateSkillAdditionalProperty,
-          artefactVersion: 1,
-          payload: {
-            targetId: 'model',
-            oldValue: 'null',
-            newValue: '"opus"',
-          },
-        });
+      describe('when oldValue is "null"', () => {
+        it('matches', () => {
+          const skill = makeSkill({ additionalProperties: undefined });
+          const proposal = makeProposal({
+            type: ChangeProposalType.updateSkillAdditionalProperty,
+            artefactVersion: 1,
+            payload: {
+              targetId: 'model',
+              oldValue: 'null',
+              newValue: '"opus"',
+            },
+          });
 
-        const result = computeSkillOutdatedIds([proposal], skill, []);
-        expect(result.size).toBe(0);
+          const result = computeSkillOutdatedIds([proposal], skill, []);
+          expect(result.size).toBe(0);
+        });
       });
     });
 

@@ -59,57 +59,65 @@ describe('extractProposalDiffValues', () => {
       });
     });
 
-    it('returns empty string when value is empty (property added)', () => {
-      const proposal = makeProposal(
-        ChangeProposalType.updateSkillAdditionalProperty,
-        {
-          targetId: 'model',
+    describe('when value is empty (property added)', () => {
+      it('returns empty string for oldValue', () => {
+        const proposal = makeProposal(
+          ChangeProposalType.updateSkillAdditionalProperty,
+          {
+            targetId: 'model',
+            oldValue: '',
+            newValue: 'sonnet',
+          },
+        );
+
+        expect(extractProposalDiffValues(proposal)).toEqual({
           oldValue: '',
-          newValue: 'sonnet',
-        },
-      );
-
-      expect(extractProposalDiffValues(proposal)).toEqual({
-        oldValue: '',
-        newValue: 'model: sonnet',
+          newValue: 'model: sonnet',
+        });
       });
     });
 
-    it('returns empty string when old value is null sentinel (property added)', () => {
-      const proposal = makeProposal(
-        ChangeProposalType.updateSkillAdditionalProperty,
-        { targetId: 'model', oldValue: 'null', newValue: 'sonnet' },
-      );
-      expect(extractProposalDiffValues(proposal)).toEqual({
-        oldValue: '',
-        newValue: 'model: sonnet',
+    describe('when old value is null sentinel (property added)', () => {
+      it('returns empty string for oldValue', () => {
+        const proposal = makeProposal(
+          ChangeProposalType.updateSkillAdditionalProperty,
+          { targetId: 'model', oldValue: 'null', newValue: 'sonnet' },
+        );
+        expect(extractProposalDiffValues(proposal)).toEqual({
+          oldValue: '',
+          newValue: 'model: sonnet',
+        });
       });
     });
 
-    it('returns empty string when new value is null sentinel (property removed)', () => {
-      const proposal = makeProposal(
-        ChangeProposalType.updateSkillAdditionalProperty,
-        { targetId: 'model', oldValue: 'sonnet', newValue: 'null' },
-      );
-      expect(extractProposalDiffValues(proposal)).toEqual({
-        oldValue: 'model: sonnet',
-        newValue: '',
-      });
-    });
-
-    it('returns empty string when new value is empty (property removed)', () => {
-      const proposal = makeProposal(
-        ChangeProposalType.updateSkillAdditionalProperty,
-        {
-          targetId: 'context',
-          oldValue: 'some-context',
+    describe('when new value is null sentinel (property removed)', () => {
+      it('returns empty string for newValue', () => {
+        const proposal = makeProposal(
+          ChangeProposalType.updateSkillAdditionalProperty,
+          { targetId: 'model', oldValue: 'sonnet', newValue: 'null' },
+        );
+        expect(extractProposalDiffValues(proposal)).toEqual({
+          oldValue: 'model: sonnet',
           newValue: '',
-        },
-      );
+        });
+      });
+    });
 
-      expect(extractProposalDiffValues(proposal)).toEqual({
-        oldValue: 'context: some-context',
-        newValue: '',
+    describe('when new value is empty (property removed)', () => {
+      it('returns empty string for newValue', () => {
+        const proposal = makeProposal(
+          ChangeProposalType.updateSkillAdditionalProperty,
+          {
+            targetId: 'context',
+            oldValue: 'some-context',
+            newValue: '',
+          },
+        );
+
+        expect(extractProposalDiffValues(proposal)).toEqual({
+          oldValue: 'context: some-context',
+          newValue: '',
+        });
       });
     });
   });
