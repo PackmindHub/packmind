@@ -6,7 +6,6 @@ import {
   PMIconButton,
   PMPopover,
   PMText,
-  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import { CodingAgent, PreviewArtifactRenderingCommand } from '@packmind/types';
@@ -80,17 +79,16 @@ export function DownloadAsAgentButton({
 
   return (
     <PMPopover.Root positioning={{ placement: 'bottom-end' }}>
-      <PMTooltip label="Download for agent">
-        <PMPopover.Trigger asChild>
-          <PMIconButton
-            aria-label="Download for agent"
-            variant="tertiary"
-            size={size}
-          >
-            <LuDownload />
-          </PMIconButton>
-        </PMPopover.Trigger>
-      </PMTooltip>
+      <PMPopover.Trigger asChild>
+        <PMIconButton
+          aria-label="Download for agent"
+          title="Download for agent"
+          variant="tertiary"
+          size={size}
+        >
+          <LuDownload />
+        </PMIconButton>
+      </PMPopover.Trigger>
       <PMPopover.Positioner>
         <PMPopover.Content width="380px">
           <PMPopover.Arrow>
