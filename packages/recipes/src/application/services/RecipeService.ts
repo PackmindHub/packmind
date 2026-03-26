@@ -317,4 +317,34 @@ export class RecipeService {
       throw error;
     }
   }
+
+  async markRecipeAsMoved(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    this.logger.info('Marking recipe as moved', {
+      recipeId,
+      destinationSpaceId,
+    });
+
+    try {
+      const recipe = await this.recipeRepository.findById(recipeId);
+      if (!recipe) {
+        throw new Error(`Recipe with id ${recipeId} not found`);
+      }
+
+      await this.recipeRepository.markAsMoved(recipeId, destinationSpaceId);
+
+      this.logger.info('Recipe marked as moved successfully', {
+        recipeId,
+        destinationSpaceId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to mark recipe as moved', {
+        recipeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

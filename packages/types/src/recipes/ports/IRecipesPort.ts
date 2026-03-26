@@ -139,4 +139,8 @@ export interface IRecipesPort {
     destinationSpaceId: SpaceId,
     newUserId: UserId,
   ): Promise<Recipe>;
+  markRecipeAsMoved(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void>;
 }
