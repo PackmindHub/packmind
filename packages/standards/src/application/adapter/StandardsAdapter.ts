@@ -561,4 +561,14 @@ export class StandardsAdapter
   ): Promise<CreateStandardSamplesResponse> {
     return this._createStandardSamples.execute(command);
   }
+
+  async duplicateStandardToSpace(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Standard> {
+    return this.services
+      .getStandardService()
+      .duplicateStandardToSpace(standardId, destinationSpaceId, newUserId);
+  }
 }
