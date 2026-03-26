@@ -249,9 +249,29 @@ describe('playbookAddHandler', () => {
   });
 
   describe('when standard file has invalid format', () => {
+    beforeEach(() => {
+      mockReadFile.mockReturnValue('random notes without heading');
+      const { parseLenientStandard } = jest.requireMock(
+        '../../../application/utils/parseLenientStandard',
+      );
+      parseLenientStandard.mockReturnValue(null);
+    });
+
+    it('logs error about invalid artifact', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/rules/whatever.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('is not a valid artifact'),
+      );
+    });
+
     it('exits with 1', async () => {
       await playbookAddHandler(
-        buildDeps({ filePath: '.claude/rules/whatever.txt' }),
+        buildDeps({ filePath: '.claude/rules/whatever.md' }),
       );
 
       expect(mockExit).toHaveBeenCalledWith(1);
@@ -1607,7 +1627,7 @@ describe('playbookAddHandler', () => {
         parseLenientStandard.mockReturnValue(null);
       });
 
-      it('logs "File is empty."', async () => {
+      it('logs a not valid artifact error', async () => {
         const { logErrorConsole } = jest.requireMock(
           '../../utils/consoleLogger',
         );
@@ -1616,7 +1636,9 @@ describe('playbookAddHandler', () => {
           buildDeps({ filePath: '.packmind/standards/empty.md' }),
         );
 
-        expect(logErrorConsole).toHaveBeenCalledWith('File is empty.');
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          '.packmind/standards/empty.md is not a valid artifact. Expected a markdown heading (# Name) followed by content.',
+        );
       });
 
       it('exits with 1', async () => {
