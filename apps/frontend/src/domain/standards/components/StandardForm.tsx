@@ -29,6 +29,15 @@ import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 
+function hasOnlyNegativePatterns(scope: string): boolean {
+  if (!scope.trim()) return false;
+  const patterns = scope
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  return patterns.length > 0 && !patterns.some((p) => !p.startsWith('!'));
+}
+
 interface Rule {
   content: string;
   id: RuleId;
@@ -131,19 +140,12 @@ export const StandardForm: React.FC<StandardFormProps> = ({
       return;
     }
 
-    if (scope.trim()) {
-      const patterns = scope
-        .split(',')
-        .map((p) => p.trim())
-        .filter(Boolean);
-      const hasPositivePattern = patterns.some((p) => !p.startsWith('!'));
-      if (!hasPositivePattern) {
-        setAlert({
-          type: 'error',
-          message: STANDARD_MESSAGES.validation.scopeRequiresPositivePattern,
-        });
-        return;
-      }
+    if (hasOnlyNegativePatterns(scope)) {
+      setAlert({
+        type: 'error',
+        message: STANDARD_MESSAGES.validation.scopeRequiresPositivePattern,
+      });
+      return;
     }
 
     const validRules = rules.filter((rule) => rule.content.trim());
@@ -211,14 +213,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     }
   };
 
-  const hasScopeError = (() => {
-    if (!scope.trim()) return false;
-    const patterns = scope
-      .split(',')
-      .map((p) => p.trim())
-      .filter(Boolean);
-    return patterns.length > 0 && !patterns.some((p) => !p.startsWith('!'));
-  })();
+  const hasScopeError = hasOnlyNegativePatterns(scope);
 
   const isFormValid = name.trim() && description.trim() && !hasScopeError;
 
@@ -425,7 +420,10 @@ export const StandardForm: React.FC<StandardFormProps> = ({
                 Prefix a pattern with ! to exclude files (e.g.,
                 !**/generated/**). Separate multiple patterns with commas.
               </PMField.HelperText>
-              <PMField.ErrorText />
+              <PMField.ErrorText>
+                {hasScopeError &&
+                  STANDARD_MESSAGES.validation.scopeRequiresPositivePattern}
+              </PMField.ErrorText>
             </PMField.Root>
           </PMFieldset.Content>
         </PMFieldset.Root>

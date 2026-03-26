@@ -285,5 +285,47 @@ describe('scopeMatcher', () => {
         expect(result).toBe(false);
       });
     });
+
+    describe('negative patterns with /backend target', () => {
+      it('includes file matching positive pattern within target', () => {
+        expect(
+          fileMatchesTargetAndScope('/backend/src/main.ts', '/backend', [
+            '**/*.ts',
+            '!**/test/**',
+          ]),
+        ).toBe(true);
+      });
+
+      it('excludes file matching negative pattern within target', () => {
+        expect(
+          fileMatchesTargetAndScope('/backend/test/helper.ts', '/backend', [
+            '**/*.ts',
+            '!**/test/**',
+          ]),
+        ).toBe(false);
+      });
+    });
+
+    describe('multiple negative patterns with root target', () => {
+      const patterns = ['**/*.ts', '!**/vendor/**', '!**/generated/**'];
+
+      it('includes file not matching any exclusion', () => {
+        expect(fileMatchesTargetAndScope('/src/app.ts', '/', patterns)).toBe(
+          true,
+        );
+      });
+
+      it('excludes file matching first exclusion', () => {
+        expect(fileMatchesTargetAndScope('/vendor/lib.ts', '/', patterns)).toBe(
+          false,
+        );
+      });
+
+      it('excludes file matching second exclusion', () => {
+        expect(
+          fileMatchesTargetAndScope('/generated/model.ts', '/', patterns),
+        ).toBe(false);
+      });
+    });
   });
 });
