@@ -8,6 +8,7 @@ export * from './skills';
 export * from './deployments';
 export * from './git';
 export * from './spaces';
+export * from './spaces-management';
 export * from './standards';
 export * from './languages';
 export * from './linter';
