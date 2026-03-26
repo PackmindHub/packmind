@@ -1,14 +1,15 @@
-import { command, option, optional, string } from 'cmd-ts';
+import { command, option, optional } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { listSkillsHandler } from './skills/listSkillsHandler';
+import { SpaceSlug } from './customParameters/SpaceSlug';
 
 export const listSkillsCommand = command({
   name: 'list',
   description: 'List available skills',
   args: {
     space: option({
-      type: optional(string),
+      type: optional(SpaceSlug),
       long: 'space',
       description: 'Filter skills by space slug',
     }),

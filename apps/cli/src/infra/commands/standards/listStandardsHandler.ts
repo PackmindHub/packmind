@@ -110,10 +110,7 @@ export async function listStandardsHandler(
     const matchedSpace = resolveSpaceFromArgs(args.space, spaces);
 
     if (args.space && !matchedSpace) {
-      const slug = args.space.startsWith('@')
-        ? args.space.slice(1)
-        : args.space;
-      logErrorConsole(`Space "${slug}" not found.`);
+      logErrorConsole(`Space "@${args.space}" not found.`);
       exit(1);
       return;
     }
@@ -125,7 +122,7 @@ export async function listStandardsHandler(
     if (standards.length === 0) {
       logConsole(
         matchedSpace
-          ? `No standards found in space "${matchedSpace.slug}".`
+          ? `No standards found in space "@${matchedSpace.slug}".`
           : 'No standards found.',
       );
       exit(0);

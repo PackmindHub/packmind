@@ -1,14 +1,5 @@
-import {
-  command,
-  flag,
-  option,
-  optional,
-  positional,
-  string,
-  Type,
-} from 'cmd-ts';
+import { command, flag, option, optional, positional, string } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { createRuleId, DetectionSeverity, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { DiffMode } from '../../domain/entities/DiffMode';
 import { IDELintLogger } from '../repositories/IDELintLogger';
@@ -16,63 +7,10 @@ import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import * as pathModule from 'path';
 import { lintHandler, LintHandlerDependencies, Loggers } from './lintHandler';
 import { logWarningConsole } from '../utils/consoleLogger';
-
-const Logger: Type<string, Loggers> = {
-  from: async (input) => {
-    switch (input) {
-      case 'ide':
-        return Loggers.ide;
-      case 'human':
-        return Loggers.human;
-    }
-    throw new Error(
-      `${input} is not a valid value for the --logger option. Expected values are: ide, human`,
-    );
-  },
-};
-
-const RuleID: Type<string, { standardSlug: string; ruleId: RuleId }> = {
-  from: async (input) => {
-    const match = input.match(/^@([^/]+)\/(.+)$/);
-    if (!match) {
-      throw new Error(
-        'Error: Invalid --rule format. Expected format: @standard-slug/ruleId',
-      );
-    }
-    return {
-      standardSlug: match[1],
-      ruleId: createRuleId(match[2]),
-    };
-  },
-};
-
-const DiffModeType: Type<string, DiffMode> = {
-  from: async (input) => {
-    switch (input) {
-      case 'files':
-        return DiffMode.FILES;
-      case 'lines':
-        return DiffMode.LINES;
-    }
-    throw new Error(
-      `${input} is not a valid value for the --diff option. Expected values are: files, lines`,
-    );
-  },
-};
-
-const LevelType: Type<string, DetectionSeverity> = {
-  from: async (input) => {
-    switch (input) {
-      case 'error':
-        return DetectionSeverity.ERROR;
-      case 'warning':
-        return DetectionSeverity.WARNING;
-    }
-    throw new Error(
-      `${input} is not a valid value for the --level option. Expected values are: error, warning`,
-    );
-  },
-};
+import { Logger } from './customParameters/Logger';
+import { RuleID } from './customParameters/RuleID';
+import { DiffModeType } from './customParameters/DiffModeType';
+import { LevelType } from './customParameters/LevelType';
 
 export const lintCommand = command({
   name: 'lint',

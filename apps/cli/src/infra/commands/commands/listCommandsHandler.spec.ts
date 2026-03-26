@@ -167,7 +167,7 @@ describe('listCommandsHandler', () => {
 
       it('displays space-specific empty message', () => {
         expect(console.log).toHaveBeenCalledWith(
-          'No commands found in space "space-a".',
+          'No commands found in space "@space-a".',
         );
       });
 
@@ -184,7 +184,7 @@ describe('listCommandsHandler', () => {
       it('displays an error message', () => {
         expect(console.error).toHaveBeenCalledWith(
           expect.anything(),
-          expect.stringContaining('Space "unknown-space" not found.'),
+          expect.stringContaining('Space "@unknown-space" not found.'),
         );
       });
 

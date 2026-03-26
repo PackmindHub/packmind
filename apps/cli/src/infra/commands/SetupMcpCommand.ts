@@ -1,4 +1,4 @@
-import { command, multioption, Type, array } from 'cmd-ts';
+import { array, command, multioption } from 'cmd-ts';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import * as inquirer from 'inquirer';
@@ -7,37 +7,16 @@ import {
   AgentType,
 } from '../../application/services/AgentDetectionService';
 import {
-  logSuccessConsole,
-  logErrorConsole,
-  logWarningConsole,
   formatBold,
   logConsole,
+  logErrorConsole,
+  logSuccessConsole,
+  logWarningConsole,
 } from '../utils/consoleLogger';
-import { loadCredentials, getCredentialsPath } from '../utils/credentials';
+import { getCredentialsPath, loadCredentials } from '../utils/credentials';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
-
-const VALID_AGENTS = ['copilot', 'cursor', 'claude', 'continue'] as const;
-type AgentArg = (typeof VALID_AGENTS)[number];
-
-const agentArgToType: Record<AgentArg, AgentType> = {
-  copilot: 'vscode',
-  cursor: 'cursor',
-  claude: 'claude',
-  continue: 'continue',
-};
-
-const AgentArgType: Type<string, AgentArg> = {
-  from: async (input) => {
-    const normalized = input.toLowerCase() as AgentArg;
-    if (VALID_AGENTS.includes(normalized)) {
-      return normalized;
-    }
-    throw new Error(
-      `Invalid agent '${input}'. Valid options are: ${VALID_AGENTS.join(', ')}`,
-    );
-  },
-};
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { agentArgToType, AgentArgType } from './customParameters/AgentArgType';
 
 type AgentInfo = {
   type: AgentType;

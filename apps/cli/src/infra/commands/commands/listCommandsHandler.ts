@@ -92,10 +92,7 @@ export async function listCommandsHandler(
     const matchedSpace = resolveSpaceFromArgs(args.space, spaces);
 
     if (args.space && !matchedSpace) {
-      const slug = args.space.startsWith('@')
-        ? args.space.slice(1)
-        : args.space;
-      logErrorConsole(`Space "${slug}" not found.`);
+      logErrorConsole(`Space "@${args.space}" not found.`);
       exit(1);
       return;
     }
@@ -107,7 +104,7 @@ export async function listCommandsHandler(
     if (commands.length === 0) {
       logConsole(
         matchedSpace
-          ? `No commands found in space "${matchedSpace.slug}".`
+          ? `No commands found in space "@${matchedSpace.slug}".`
           : 'No commands found.',
       );
       exit(0);

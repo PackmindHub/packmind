@@ -10,6 +10,7 @@ import {
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CreateStandardFromPlaybookUseCase } from '../../application/useCases/CreateStandardFromPlaybookUseCase';
 import { originSkillOption } from './sharedOptions';
+import { SpaceSlug } from './customParameters/SpaceSlug';
 
 export const createStandardCommand = command({
   name: 'create',
@@ -25,7 +26,7 @@ export const createStandardCommand = command({
       long: 'space',
       description:
         'Slug of the space in which to create the standard (with or without leading @)',
-      type: optional(string),
+      type: optional(SpaceSlug),
     }),
     originSkill: originSkillOption,
   },

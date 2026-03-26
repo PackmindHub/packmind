@@ -9,6 +9,7 @@ import {
   formatCommand,
 } from '../../utils/consoleLogger';
 import { originSkillOption } from '../sharedOptions';
+import { SpaceSlug } from '../customParameters/SpaceSlug';
 
 export const addSkillCommand = command({
   name: 'add',
@@ -23,7 +24,7 @@ export const addSkillCommand = command({
       long: 'space',
       description:
         'Slug of the space in which to add the skill (with or without leading @)',
-      type: optional(string),
+      type: optional(SpaceSlug),
     }),
     originSkill: originSkillOption,
   },
