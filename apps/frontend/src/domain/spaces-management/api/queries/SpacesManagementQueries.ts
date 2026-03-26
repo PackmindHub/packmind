@@ -1,7 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArtifactReference, SpaceId } from '@packmind/types';
 import { spacesManagementGateway } from '../gateways';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { spacesQueryKeys } from '../../../spaces/api/queryKeys';
+import { getSkillsBySpaceKey } from '../../../skills/api/queryKeys';
+import { getStandardsBySpaceKey } from '../../../standards/api/queryKeys';
+import { getRecipesBySpaceKey } from '../../../recipes/api/queryKeys';
+import { LIST_PACKAGES_BY_SPACE_KEY } from '../../../deployments/api/queryKeys';
+import { GET_GROUPED_CHANGE_PROPOSALS_KEY } from '../../../change-proposals/api/queryKeys';
 
 const CREATE_SPACE_MUTATION_KEY = 'createSpace';
 
@@ -21,6 +28,51 @@ export const useCreateSpaceMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: [...spacesQueryKeys.all],
       });
+    },
+  });
+};
+
+type MoveArtifactsToSpaceMutationParams = {
+  destinationSpaceId: SpaceId;
+  artifacts: ArtifactReference[];
+};
+
+const MOVE_ARTIFACTS_TO_SPACE_MUTATION_KEY = 'moveArtifactsToSpace';
+
+export const useMoveArtifactsToSpaceMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
+  return useMutation({
+    mutationKey: [MOVE_ARTIFACTS_TO_SPACE_MUTATION_KEY],
+    mutationFn: async (params: MoveArtifactsToSpaceMutationParams) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return spacesManagementGateway.moveArtifactsToSpace(organization.id, {
+        sourceSpaceId: spaceId,
+        ...params,
+      });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: getSkillsBySpaceKey(spaceId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getStandardsBySpaceKey(spaceId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getRecipesBySpaceKey(spaceId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+        }),
+      ]);
     },
   });
 };

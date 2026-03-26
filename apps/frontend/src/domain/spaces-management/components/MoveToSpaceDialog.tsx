@@ -1,0 +1,179 @@
+import React from 'react';
+import {
+  PMDialog,
+  PMButton,
+  PMCloseButton,
+  PMSelect,
+  PMSelectTrigger,
+  pmCreateListCollection,
+  PMText,
+  pmToaster,
+} from '@packmind/ui';
+import { ArtifactReference, ArtifactType, SpaceId } from '@packmind/types';
+import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { useMoveArtifactsToSpaceMutation } from '../api/queries/SpacesManagementQueries';
+
+export type MoveArtifactType = 'standard' | 'skill' | 'recipe';
+
+interface MoveToSpaceDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  artifactType: MoveArtifactType;
+  selectedIds: string[];
+  onSuccess: () => void;
+}
+
+const ARTIFACT_TYPE_LABELS: Record<MoveArtifactType, string> = {
+  standard: 'standard',
+  skill: 'skill',
+  recipe: 'command',
+};
+
+const MOVE_ARTIFACT_TYPE_MAP: Record<MoveArtifactType, ArtifactType> = {
+  standard: 'standard',
+  skill: 'skill',
+  recipe: 'command',
+};
+
+export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
+  open,
+  setOpen,
+  artifactType,
+  selectedIds,
+  onSuccess,
+}) => {
+  const { spaceId: currentSpaceId } = useCurrentSpace();
+  const { data: spaces } = useGetSpacesQuery();
+  const moveArtifactsMutation = useMoveArtifactsToSpaceMutation();
+  const [destinationSpaceId, setDestinationSpaceId] = React.useState<
+    SpaceId | undefined
+  >();
+
+  const availableSpaces = React.useMemo(
+    () => (spaces ?? []).filter((space) => space.id !== currentSpaceId),
+    [spaces, currentSpaceId],
+  );
+
+  const spaceCollection = React.useMemo(
+    () =>
+      pmCreateListCollection({
+        items: availableSpaces.map((space) => ({
+          value: space.id,
+          label: space.name,
+        })),
+      }),
+    [availableSpaces],
+  );
+
+  const label = ARTIFACT_TYPE_LABELS[artifactType];
+  const count = selectedIds.length;
+
+  const handleMove = async () => {
+    if (!destinationSpaceId) return;
+
+    const type = MOVE_ARTIFACT_TYPE_MAP[artifactType];
+    const artifacts: ArtifactReference[] = selectedIds.map((id) => ({
+      id,
+      type,
+    })) as ArtifactReference[];
+
+    try {
+      const result = await moveArtifactsMutation.mutateAsync({
+        destinationSpaceId,
+        artifacts,
+      });
+
+      pmToaster.create({
+        title: 'Moved successfully',
+        description: `${result.movedCount} ${label}${result.movedCount > 1 ? 's' : ''} moved to the selected space`,
+        type: 'success',
+      });
+
+      setDestinationSpaceId(undefined);
+      setOpen(false);
+      onSuccess();
+    } catch {
+      pmToaster.create({
+        title: 'Error',
+        description: `Failed to move ${label}s`,
+        type: 'error',
+      });
+    }
+  };
+
+  return (
+    <PMDialog.Root
+      open={open}
+      onOpenChange={(details: { open: boolean }) => {
+        if (!moveArtifactsMutation.isPending) {
+          setOpen(details.open);
+          if (!details.open) {
+            setDestinationSpaceId(undefined);
+          }
+        }
+      }}
+      size={'lg'}
+      scrollBehavior={'inside'}
+      closeOnInteractOutside={false}
+    >
+      <PMDialog.Backdrop />
+      <PMDialog.Positioner>
+        <PMDialog.Content>
+          <PMDialog.Header>
+            <PMDialog.Title>
+              Move {count} {label}
+              {count > 1 ? 's' : ''} to another space
+            </PMDialog.Title>
+            <PMDialog.CloseTrigger asChild>
+              <PMCloseButton />
+            </PMDialog.CloseTrigger>
+          </PMDialog.Header>
+          <PMDialog.Body>
+            <PMText mb={4}>
+              Select the destination space for the selected {label}
+              {count > 1 ? 's' : ''}. They will be removed from the current
+              space.
+            </PMText>
+            <PMSelect.Root
+              collection={spaceCollection}
+              value={destinationSpaceId ? [destinationSpaceId] : []}
+              onValueChange={(e) => {
+                setDestinationSpaceId(e.value[0] as SpaceId);
+              }}
+            >
+              <PMSelectTrigger placeholder="Select a destination space" />
+              <PMSelect.Positioner>
+                <PMSelect.Content zIndex={1500}>
+                  {spaceCollection.items.map((item) => (
+                    <PMSelect.Item item={item} key={item.value}>
+                      {item.label}
+                    </PMSelect.Item>
+                  ))}
+                </PMSelect.Content>
+              </PMSelect.Positioner>
+            </PMSelect.Root>
+          </PMDialog.Body>
+          <PMDialog.Footer>
+            <PMDialog.Trigger asChild>
+              <PMButton
+                variant="tertiary"
+                disabled={moveArtifactsMutation.isPending}
+              >
+                Cancel
+              </PMButton>
+            </PMDialog.Trigger>
+            <PMButton
+              variant="primary"
+              onClick={handleMove}
+              loading={moveArtifactsMutation.isPending}
+              disabled={!destinationSpaceId}
+            >
+              {moveArtifactsMutation.isPending ? 'Moving...' : 'Move'}
+            </PMButton>
+          </PMDialog.Footer>
+        </PMDialog.Content>
+      </PMDialog.Positioner>
+    </PMDialog.Root>
+  );
+};
