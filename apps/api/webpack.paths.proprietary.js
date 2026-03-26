@@ -26,7 +26,7 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
     ),
     '@packmind/spaces-management': join(
       __dirname,
-      'src/app/organizations/spaces-management',
+      '../../packages/spaces-management/src',
     ),
     // Add other proprietary-specific overrides here as needed
   };

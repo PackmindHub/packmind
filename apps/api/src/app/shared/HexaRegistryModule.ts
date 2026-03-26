@@ -18,6 +18,7 @@ import {
 } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SkillsHexa } from '@packmind/skills';
+import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import {
@@ -30,6 +31,7 @@ import {
   IPlaybookChangeManagementPort,
   IRecipesPort,
   ISkillsPort,
+  ISpacesManagementPort,
   ISpacesPort,
   IStandardsPort,
 } from '@packmind/types';
@@ -76,6 +78,7 @@ export const STANDARDS_ADAPTER_TOKEN = 'STANDARDS_ADAPTER';
 export const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 export const SPACES_ADAPTER_TOKEN = 'SPACES_ADAPTER';
 export const LINTER_ADAPTER_TOKEN = 'LINTER_ADAPTER';
+export const SPACES_MANAGEMENT_ADAPTER_TOKEN = 'SPACES_MANAGEMENT_ADAPTER';
 export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
 export const LLM_ADAPTER_TOKEN = 'LLM_ADAPTER';
 export const PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN =
@@ -126,6 +129,7 @@ export class HexaRegistryModule {
         GIT_ADAPTER_TOKEN,
         SPACES_ADAPTER_TOKEN,
         LINTER_ADAPTER_TOKEN,
+        SPACES_MANAGEMENT_ADAPTER_TOKEN,
         CODING_AGENT_ADAPTER_TOKEN,
         LLM_ADAPTER_TOKEN,
         PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
@@ -313,6 +317,21 @@ export class HexaRegistryModule {
           return linterHexa.getAdapter();
         } catch {
           // LinterHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // SpacesManagement adapter
+    providers.push({
+      provide: SPACES_MANAGEMENT_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): ISpacesManagementPort | null => {
+        try {
+          const spacesManagementHexa = registry.get(SpacesManagementHexa);
+          return spacesManagementHexa.getAdapter();
+        } catch {
+          // SpacesManagementHexa not available
         }
         return null;
       },
