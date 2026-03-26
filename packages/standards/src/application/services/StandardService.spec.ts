@@ -31,6 +31,7 @@ describe('StandardService', () => {
       restoreById: jest.fn(),
       findBySpaceId: jest.fn(),
       findByUserId: jest.fn(),
+      markAsMoved: jest.fn(),
     };
 
     stubbedLogger = stubLogger();
@@ -370,6 +371,59 @@ describe('StandardService', () => {
 
     it('returns standards for the specified user', () => {
       expect(result).toEqual(standards);
+    });
+  });
+
+  describe('markStandardAsMoved', () => {
+    const destinationSpaceId = createSpaceId(uuidv4());
+
+    describe('when the standard exists', () => {
+      let standardId: StandardId;
+      let standard: Standard;
+
+      beforeEach(async () => {
+        standardId = createStandardId(uuidv4());
+        standard = standardFactory({ id: standardId });
+
+        standardRepository.findById = jest.fn().mockResolvedValue(standard);
+        standardRepository.markAsMoved = jest.fn().mockResolvedValue(undefined);
+
+        await standardService.markStandardAsMoved(
+          standardId,
+          destinationSpaceId,
+        );
+      });
+
+      it('checks if the standard exists', () => {
+        expect(standardRepository.findById).toHaveBeenCalledWith(standardId);
+      });
+
+      it('calls markAsMoved on repository with correct args', () => {
+        expect(standardRepository.markAsMoved).toHaveBeenCalledWith(
+          standardId,
+          destinationSpaceId,
+        );
+      });
+    });
+
+    describe('when the standard does not exist', () => {
+      let nonExistentStandardId: StandardId;
+
+      beforeEach(() => {
+        nonExistentStandardId = createStandardId(uuidv4());
+        standardRepository.findById = jest.fn().mockResolvedValue(null);
+      });
+
+      it('throws an error with the correct message', async () => {
+        await expect(
+          standardService.markStandardAsMoved(
+            nonExistentStandardId,
+            destinationSpaceId,
+          ),
+        ).rejects.toThrow(
+          `Standard with id ${nonExistentStandardId} not found`,
+        );
+      });
     });
   });
 });

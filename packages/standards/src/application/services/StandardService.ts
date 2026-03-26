@@ -376,4 +376,34 @@ export class StandardService {
       throw error;
     }
   }
+
+  async markStandardAsMoved(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    this.logger.info('Marking standard as moved', {
+      standardId,
+      destinationSpaceId,
+    });
+
+    try {
+      const standard = await this.standardRepository.findById(standardId);
+      if (!standard) {
+        throw new Error(`Standard with id ${standardId} not found`);
+      }
+
+      await this.standardRepository.markAsMoved(standardId, destinationSpaceId);
+
+      this.logger.info('Standard marked as moved successfully', {
+        standardId,
+        destinationSpaceId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to mark standard as moved', {
+        standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }
