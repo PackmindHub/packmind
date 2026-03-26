@@ -173,7 +173,7 @@
     "date-fns": "^4.1.0",
     "diff": "^8.0.3",
     "dompurify": "^3.3.3",
-    "fastify": "^5.8.1",
+    "fastify": "^5.8.3",
     "fastify-plugin": "~5.1.0",
     "http-proxy-middleware": "^3.0.5",
     "isbot": "^4.4.0",
