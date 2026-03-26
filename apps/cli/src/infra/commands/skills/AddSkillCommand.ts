@@ -10,6 +10,7 @@ import {
   formatCommand,
 } from '../../utils/consoleLogger';
 import { originSkillOption } from '../sharedOptions';
+<<<<<<< HEAD
 import {
   addResolvedSkillPath,
   resolveSkillInputPaths,
@@ -330,6 +331,9 @@ export async function addSkillHandler(
     deps.exit(1);
   }
 }
+=======
+import { SpaceSlug } from '../customParameters/SpaceSlug';
+>>>>>>> f594290b00fad835525fcb560d0644dd17934fa1
 
 export const addSkillCommand = command({
   name: 'add',
@@ -346,7 +350,7 @@ export const addSkillCommand = command({
       long: 'space',
       description:
         'Slug of the space in which to add the skill (with or without leading @)',
-      type: optional(string),
+      type: optional(SpaceSlug),
     }),
     originSkill: originSkillOption,
   },

@@ -3,8 +3,8 @@ import { PMBox, PMHeading, PMMarkdownViewer, PMVStack } from '@packmind/ui';
 import { useOutletContext } from 'react-router';
 import { StandardDetailsOutletContext } from '../../src/domain/standards/components/StandardDetails';
 import { RuleSummaryTable } from '@packmind/proprietary/frontend/domain/standards/components/RuleSummaryTable';
-import { ArtifactResultFilePreview } from '../../src/domain/change-proposals/components/shared/ArtifactResultFilePreview';
-import { serializeStandardToMarkdown } from '../../src/domain/change-proposals/utils/serializeArtifactToMarkdown';
+import { ArtifactResultFilePreview } from '@packmind/proprietary/frontend/domain/change-proposals/components/shared/ArtifactResultFilePreview';
+import { serializeStandardToMarkdown } from '@packmind/proprietary/frontend/domain/change-proposals/utils/serializeArtifactToMarkdown';
 
 export default function StandardDetailSummaryRouteModule() {
   const { standard, rules, rulesLoading, rulesError } =

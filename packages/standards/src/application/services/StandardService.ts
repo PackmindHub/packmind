@@ -1,9 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
+import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
+import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 import { IStandardRepository } from '../../domain/repositories/IStandardRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  createRuleExampleId,
+  createRuleId,
   createStandardId,
+  createStandardVersionId,
   GitCommit,
   OrganizationId,
   QueryOption,
@@ -39,6 +45,9 @@ export type UpdateStandardData = {
 export class StandardService {
   constructor(
     private readonly standardRepository: IStandardRepository,
+    private readonly standardVersionRepository: IStandardVersionRepository,
+    private readonly ruleRepository: IRuleRepository,
+    private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('StandardService initialized');
@@ -59,6 +68,7 @@ export class StandardService {
       const standard: Standard = {
         id: standardId,
         ...standardData,
+        movedTo: null,
       };
 
       this.logger.debug('Adding standard to repository');
@@ -213,6 +223,7 @@ export class StandardService {
         id: standardId,
         ...standardData,
         spaceId: existingStandard.spaceId,
+        movedTo: existingStandard.movedTo,
       };
 
       this.logger.debug('Updating standard in repository');
@@ -256,6 +267,110 @@ export class StandardService {
     } catch (error) {
       this.logger.error('Failed to delete standard', {
         standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async duplicateStandardToSpace(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Standard> {
+    this.logger.info('Duplicating standard to space', {
+      standardId,
+      destinationSpaceId,
+    });
+
+    try {
+      // 1. Read the original standard
+      const original = await this.standardRepository.findById(standardId);
+      if (!original) {
+        throw new Error(`Standard with id ${standardId} not found`);
+      }
+
+      // 2. Create new standard with fresh ID
+      const newStandardId = createStandardId(uuidv4());
+      const newStandard: Standard = {
+        id: newStandardId,
+        name: original.name,
+        slug: original.slug,
+        description: original.description,
+        summary: original.summary,
+        version: original.version,
+        gitCommit: original.gitCommit,
+        userId: newUserId,
+        scope: original.scope,
+        spaceId: destinationSpaceId,
+        movedTo: null,
+      };
+      const savedStandard = await this.standardRepository.add(newStandard);
+
+      // 3. Read all versions for this standard
+      const versions =
+        await this.standardVersionRepository.findByStandardId(standardId);
+
+      for (const version of versions) {
+        // 4. Create new version with fresh ID, linked to new standard
+        const newVersionId = createStandardVersionId(uuidv4());
+        await this.standardVersionRepository.add({
+          id: newVersionId,
+          standardId: newStandardId,
+          name: version.name,
+          slug: version.slug,
+          description: version.description,
+          version: version.version,
+          summary: version.summary,
+          gitCommit: version.gitCommit,
+          userId: version.userId,
+          scope: version.scope,
+        });
+
+        // 5. Read all rules for this version
+        const rules = await this.ruleRepository.findByStandardVersionId(
+          version.id,
+        );
+
+        for (const rule of rules) {
+          // 6. Create new rule with fresh ID, linked to new version
+          const newRuleId = createRuleId(uuidv4());
+          await this.ruleRepository.add({
+            id: newRuleId,
+            content: rule.content,
+            standardVersionId: newVersionId,
+          });
+
+          // 7. Read all examples for this rule
+          const examples = await this.ruleExampleRepository.findByRuleId(
+            rule.id,
+          );
+
+          for (const example of examples) {
+            // 8. Create new example with fresh ID, linked to new rule
+            await this.ruleExampleRepository.add({
+              id: createRuleExampleId(uuidv4()),
+              lang: example.lang,
+              positive: example.positive,
+              negative: example.negative,
+              ruleId: newRuleId,
+            });
+          }
+        }
+      }
+
+      this.logger.info('Standard duplicated to space successfully', {
+        originalStandardId: standardId,
+        newStandardId,
+        destinationSpaceId,
+        versionsCount: versions.length,
+      });
+
+      return savedStandard;
+    } catch (error) {
+      this.logger.error('Failed to duplicate standard to space', {
+        standardId,
+        destinationSpaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

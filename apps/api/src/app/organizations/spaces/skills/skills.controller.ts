@@ -17,6 +17,8 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SkillValidationError, SkillParseError } from '@packmind/skills';
 import {
+  CodingAgent,
+  CodingAgents,
   DeleteSkillsBatchResponse,
   OrganizationId,
   Skill,
@@ -317,6 +319,66 @@ export class OrganizationsSpacesSkillsController {
       this.logger.error(
         'DELETE /organizations/:orgId/spaces/:spaceId/skills/:skillId - Failed to delete skill',
         { organizationId, spaceId, skillId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Download a skill as a zip file rendered for a specific coding agent
+   * GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/download/:agent
+   */
+  @Get(':skillId/download/:agent')
+  async downloadSkillZipForAgent(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
+    @Param('agent') agent: string,
+    @Req() request: AuthenticatedRequest,
+    @Res() response: Response,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    if (!(agent in CodingAgents)) {
+      throw new BadRequestException(`Unsupported agent: ${agent}`);
+    }
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/download/:agent - Downloading skill zip',
+      { organizationId, spaceId, skillId, agent },
+    );
+
+    try {
+      const result = await this.skillsService.downloadSkillZipForAgent(
+        skillId,
+        spaceId,
+        organizationId,
+        userId,
+        agent as CodingAgent,
+      );
+
+      if (!result.fileContent) {
+        throw new NotFoundException(`Skill with id "${skillId}" not found`);
+      }
+
+      response
+        .setHeader('Content-Type', 'application/zip')
+        .setHeader(
+          'Content-Disposition',
+          `attachment; filename="${result.fileName}"`,
+        )
+        .send(Buffer.from(result.fileContent, 'base64'));
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/download/:agent - Failed to download skill zip',
+        { organizationId, spaceId, skillId, agent, error: errorMessage },
       );
       throw error;
     }

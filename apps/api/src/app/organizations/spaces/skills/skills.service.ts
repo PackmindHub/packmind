@@ -1,9 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { SkillsHexa } from '@packmind/skills';
 import {
+  CodingAgent,
   ClientSource,
   DeleteSkillResponse,
   DeleteSkillsBatchResponse,
+  DownloadSkillZipForAgentResponse,
+  IDeploymentPort,
   OrganizationId,
   Skill,
   SkillId,
@@ -14,12 +17,15 @@ import {
   UploadSkillResponse,
   UserId,
 } from '@packmind/types';
+import { InjectDeploymentAdapter } from '../../../shared/HexaInjection';
 
 @Injectable()
 export class SkillsService {
   constructor(
     @Inject(SkillsHexa)
     private readonly skillsHexa: SkillsHexa,
+    @InjectDeploymentAdapter()
+    private readonly deploymentAdapter: IDeploymentPort,
   ) {}
 
   async getSkillsBySpace(
@@ -135,6 +141,22 @@ export class SkillsService {
       files,
       latestVersion,
     };
+  }
+
+  async downloadSkillZipForAgent(
+    skillId: SkillId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+    userId: UserId,
+    agent: CodingAgent,
+  ): Promise<DownloadSkillZipForAgentResponse> {
+    return this.deploymentAdapter.downloadSkillZipForAgent({
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+      agent,
+    });
   }
 
   async deleteSkillsBatch(

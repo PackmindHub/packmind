@@ -31,6 +31,7 @@ import {
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
   UpdateRecipesFromGitHubCommand,
+  UserId,
   UpdateRecipesFromGitLabCommand,
 } from '@packmind/types';
 import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
@@ -378,5 +379,15 @@ export class RecipesAdapter
     const recipeVersionService = this.recipesServices.getRecipeVersionService();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return recipeVersionService.getRecipeVersionById(id as any);
+  }
+
+  async duplicateRecipeToSpace(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Recipe> {
+    return this.recipesServices
+      .getRecipeService()
+      .duplicateRecipeToSpace(recipeId, destinationSpaceId, newUserId);
   }
 }

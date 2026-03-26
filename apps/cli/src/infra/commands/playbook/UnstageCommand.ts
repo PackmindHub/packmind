@@ -3,6 +3,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PlaybookLocalRepository } from '../../repositories/PlaybookLocalRepository';
 import { playbookUnstageHandler } from './unstageHandler';
+import { SpaceSlug } from '../customParameters/SpaceSlug';
 
 export const unstagePlaybookCommand = command({
   name: 'unstage',
@@ -14,7 +15,7 @@ export const unstagePlaybookCommand = command({
       description: 'Path to the artifact file or directory to unstage',
     }),
     space: option({
-      type: optional(string),
+      type: optional(SpaceSlug),
       long: 'space',
       description:
         'Target space slug (required when artifact is staged for multiple spaces)',

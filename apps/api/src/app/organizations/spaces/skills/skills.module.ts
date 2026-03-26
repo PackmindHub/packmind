@@ -4,7 +4,7 @@ import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { HexaRegistryModule } from '../../../shared/HexaRegistryModule';
-import { OrganizationsSpacesSkillsChangeProposalsModule } from './change-proposals/skills-change-proposals.module';
+import { OrganizationsSpacesSkillsChangeProposalsModule } from '@packmind/playbook-change-management';
 
 /**
  * Module for space-scoped skill routes within organizations

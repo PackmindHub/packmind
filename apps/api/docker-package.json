@@ -12,11 +12,11 @@
     "@amplitude/analytics-node": "^1.5.18",
     "@anthropic-ai/sdk": "^0.70.0",
     "@azure/openai": "^2.0.0",
-    "@infisical/sdk": "^4.0.2",
-    "@nestjs/common": "^11.1.6",
-    "@nestjs/core": "^11.1.6",
-    "@nestjs/jwt": "^11.0.0",
-    "@nestjs/platform-express": "^11.1.6",
+    "@infisical/sdk": "^5.0.0",
+    "@nestjs/common": "^11.1.17",
+    "@nestjs/core": "^11.1.17",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/platform-express": "^11.1.17",
     "@nestjs/typeorm": "^11.0.0",
     "@sentry/nestjs": "^9.40.0",
     "@sentry/node": "^9.40.0",
@@ -44,6 +44,6 @@
     "validator": "^13.15.15",
     "winston": "^3.17.0",
     "@workos-inc/node": "^8.5.0",
-    "yaml": "2.8.0"
+    "yaml": "2.8.3"
   }
 }

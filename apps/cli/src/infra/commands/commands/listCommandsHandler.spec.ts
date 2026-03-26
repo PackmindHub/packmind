@@ -81,16 +81,26 @@ describe('listCommandsHandler', () => {
         expect(logCalls.find((c) => c.includes('Commands (2)'))).toBeDefined();
       });
 
-      it('displays space group headers', () => {
-        const logCalls = (console.log as jest.Mock).mock.calls.map(
-          (c) => c[0] as string,
-        );
-        expect(
-          logCalls.find((c) => c.includes('Space "Space A"')),
-        ).toBeDefined();
-        expect(
-          logCalls.find((c) => c.includes('Space "Space B"')),
-        ).toBeDefined();
+      describe('displays space group headers', () => {
+        let logCalls: string[];
+
+        beforeEach(() => {
+          logCalls = (console.log as jest.Mock).mock.calls.map(
+            (c) => c[0] as string,
+          );
+        });
+
+        it('displays Space A header', () => {
+          expect(
+            logCalls.find((c) => c.includes('Space "Space A"')),
+          ).toBeDefined();
+        });
+
+        it('displays Space B header', () => {
+          expect(
+            logCalls.find((c) => c.includes('Space "Space B"')),
+          ).toBeDefined();
+        });
       });
 
       it('exits with code 0', () => {
@@ -157,7 +167,7 @@ describe('listCommandsHandler', () => {
 
       it('displays space-specific empty message', () => {
         expect(console.log).toHaveBeenCalledWith(
-          'No commands found in space "space-a".',
+          'No commands found in space "@space-a".',
         );
       });
 
@@ -174,7 +184,7 @@ describe('listCommandsHandler', () => {
       it('displays an error message', () => {
         expect(console.error).toHaveBeenCalledWith(
           expect.anything(),
-          expect.stringContaining('Space "unknown-space" not found.'),
+          expect.stringContaining('Space "@unknown-space" not found.'),
         );
       });
 

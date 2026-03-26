@@ -71,6 +71,11 @@ export const SkillSchema = new EntitySchema<
       type: 'jsonb',
       nullable: true,
     },
+    movedTo: {
+      name: 'moved_to',
+      type: 'uuid',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

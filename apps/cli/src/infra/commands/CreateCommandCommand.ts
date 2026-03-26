@@ -10,6 +10,7 @@ import {
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CreateCommandFromPlaybookUseCase } from '../../application/useCases/CreateCommandFromPlaybookUseCase';
 import { originSkillOption } from './sharedOptions';
+import { SpaceSlug } from './customParameters/SpaceSlug';
 
 export const createCommandCommand = command({
   name: 'create',
@@ -24,7 +25,7 @@ export const createCommandCommand = command({
     space: option({
       long: 'space',
       description: 'Slug of the space in which to create the command',
-      type: optional(string),
+      type: optional(SpaceSlug),
     }),
     originSkill: originSkillOption,
   },

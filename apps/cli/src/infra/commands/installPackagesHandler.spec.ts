@@ -161,11 +161,12 @@ describe('installPackagesHandler', () => {
         expect(mockPlaybookRepo.clearAll).toHaveBeenCalled();
       });
 
-      it('does not clear playbook when playbookLocalRepository is not provided', async () => {
-        await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+      describe('when playbookLocalRepository is not provided', () => {
+        it('does not clear playbook', async () => {
+          await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
 
-        // No error thrown — it's optional
-        expect(mockPlaybookRepo.clearAll).not.toHaveBeenCalled();
+          expect(mockPlaybookRepo.clearAll).not.toHaveBeenCalled();
+        });
       });
 
       it('does not clear playbook after failed install', async () => {

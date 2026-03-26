@@ -17,7 +17,7 @@ import {
   ChangeProposalCaptureMode,
 } from '@packmind/types';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
-import { useCreateChangeProposalMutation } from '../../change-proposals/api/queries/ChangeProposalsQueries';
+import { useCreateChangeProposalMutation } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
 let mockOnMarkdownChange: ((value: string) => void) | undefined;
 
@@ -43,9 +43,12 @@ jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
   ),
 }));
 
-jest.mock('../../change-proposals/api/queries/ChangeProposalsQueries', () => ({
-  useCreateChangeProposalMutation: jest.fn(),
-}));
+jest.mock(
+  '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
+  () => ({
+    useCreateChangeProposalMutation: jest.fn(),
+  }),
+);
 
 const mockUseCreateChangeProposalMutation =
   useCreateChangeProposalMutation as jest.MockedFunction<

@@ -831,25 +831,27 @@ describe('playbookStatusHandler', () => {
       );
     });
 
-    it('falls back to bare filePath when configDir is undefined', async () => {
-      mockPlaybookLocalRepository.getChanges.mockReturnValue([
-        {
-          filePath: '.claude/skills/my-skill',
-          artifactType: 'skill',
-          artifactName: 'My skill',
-          codingAgent: 'claude',
-          addedAt: '2026-03-17T00:00:00.000Z',
-          spaceId: 'space-123',
-          content: 'content',
-          changeType: 'updated',
-        } as PlaybookChangeEntry,
-      ]);
+    describe('when configDir is undefined', () => {
+      it('falls back to bare filePath', async () => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          {
+            filePath: '.claude/skills/my-skill',
+            artifactType: 'skill',
+            artifactName: 'My skill',
+            codingAgent: 'claude',
+            addedAt: '2026-03-17T00:00:00.000Z',
+            spaceId: 'space-123',
+            content: 'content',
+            changeType: 'updated',
+          } as PlaybookChangeEntry,
+        ]);
 
-      await playbookStatusHandler(buildDeps());
+        await playbookStatusHandler(buildDeps());
 
-      expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Skill "My skill" (updated) .claude/skills/my-skill',
-      );
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Skill "My skill" (updated) .claude/skills/my-skill',
+        );
+      });
     });
   });
 
@@ -1152,46 +1154,73 @@ describe('playbookStatusHandler', () => {
       });
     });
 
-    it('displays file as untracked with permissions changed label when only permissions differ', async () => {
-      const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
+    describe('when only permissions differ', () => {
+      it('displays file as untracked with permissions changed label', async () => {
+        const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
 
-      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+        await playbookStatusHandler(
+          buildDeps({ getFileMode: mockGetFileMode }),
+        );
 
-      expect(mockLogConsole).toHaveBeenCalledWith(
-        '  - Skill "My Skill" (permissions changed) .claude/skills/my-skill/references/file.md',
-      );
-    });
-
-    it('does not show file as untracked when permissions match', async () => {
-      const mockGetFileMode = jest.fn().mockReturnValue(0o100644);
-
-      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
-
-      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
-      const hasUntracked = allCalls.some(
-        (msg: string) =>
-          typeof msg === 'string' && msg.includes('Changes not tracked:'),
-      );
-      expect(hasUntracked).toBe(false);
-    });
-
-    it('shows content change without permissions label when both content and permissions differ', async () => {
-      mockReadFile.mockImplementation((filePath: string) => {
-        if (filePath.includes('SKILL.md')) return 'skill content';
-        if (filePath.includes('file.md')) return 'modified file content';
-        throw new Error('ENOENT');
+        expect(mockLogConsole).toHaveBeenCalledWith(
+          '  - Skill "My Skill" (permissions changed) .claude/skills/my-skill/references/file.md',
+        );
       });
+    });
+
+    describe('when permissions match', () => {
+      it('does not show file as untracked', async () => {
+        const mockGetFileMode = jest.fn().mockReturnValue(0o100644);
+
+        await playbookStatusHandler(
+          buildDeps({ getFileMode: mockGetFileMode }),
+        );
+
+        const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+        const hasUntracked = allCalls.some(
+          (msg: string) =>
+            typeof msg === 'string' && msg.includes('Changes not tracked:'),
+        );
+        expect(hasUntracked).toBe(false);
+      });
+    });
+
+    describe('when both content and permissions differ', () => {
       const mockGetFileMode = jest.fn().mockReturnValue(0o100755);
 
-      await playbookStatusHandler(buildDeps({ getFileMode: mockGetFileMode }));
+      beforeEach(() => {
+        mockReadFile.mockImplementation((filePath: string) => {
+          if (filePath.includes('SKILL.md')) return 'skill content';
+          if (filePath.includes('file.md')) return 'modified file content';
+          throw new Error('ENOENT');
+        });
+      });
 
-      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
-      const fileLine = allCalls.filter(
-        (msg: string) =>
-          typeof msg === 'string' && msg.includes('references/file.md'),
-      );
-      expect(fileLine).toHaveLength(1);
-      expect(fileLine[0]).not.toContain('permissions changed');
+      it('shows content change without permissions label', async () => {
+        await playbookStatusHandler(
+          buildDeps({ getFileMode: mockGetFileMode }),
+        );
+
+        const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+        const fileLine = allCalls.filter(
+          (msg: string) =>
+            typeof msg === 'string' && msg.includes('references/file.md'),
+        );
+        expect(fileLine).toHaveLength(1);
+      });
+
+      it('does not include permissions changed text', async () => {
+        await playbookStatusHandler(
+          buildDeps({ getFileMode: mockGetFileMode }),
+        );
+
+        const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+        const fileLine = allCalls.filter(
+          (msg: string) =>
+            typeof msg === 'string' && msg.includes('references/file.md'),
+        );
+        expect(fileLine[0]).not.toContain('permissions changed');
+      });
     });
   });
 
@@ -1262,15 +1291,17 @@ describe('playbookStatusHandler', () => {
       });
     });
 
-    it('does not show deleted support file as untracked when skill directory is staged', async () => {
-      await playbookStatusHandler(buildDeps());
+    describe('when skill directory is staged', () => {
+      it('does not show deleted support file as untracked', async () => {
+        await playbookStatusHandler(buildDeps());
 
-      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
-      const hasUntracked = allCalls.some(
-        (msg: string) =>
-          typeof msg === 'string' && msg.includes('Changes not tracked:'),
-      );
-      expect(hasUntracked).toBe(false);
+        const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+        const hasUntracked = allCalls.some(
+          (msg: string) =>
+            typeof msg === 'string' && msg.includes('Changes not tracked:'),
+        );
+        expect(hasUntracked).toBe(false);
+      });
     });
   });
 
@@ -1418,66 +1449,72 @@ describe('playbookStatusHandler', () => {
       ]);
     });
 
-    it('does not show new files as untracked when skill is staged', async () => {
-      await playbookStatusHandler(buildDeps());
+    describe('when skill is staged', () => {
+      it('does not show new files as untracked', async () => {
+        await playbookStatusHandler(buildDeps());
 
-      const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
-      const hasUntracked = allCalls.some(
-        (msg: string) =>
-          typeof msg === 'string' && msg.includes('Changes not tracked:'),
-      );
-      expect(hasUntracked).toBe(false);
+        const allCalls = mockLogConsole.mock.calls.map((c: unknown[]) => c[0]);
+        const hasUntracked = allCalls.some(
+          (msg: string) =>
+            typeof msg === 'string' && msg.includes('Changes not tracked:'),
+        );
+        expect(hasUntracked).toBe(false);
+      });
     });
   });
 
   describe('when cwd is a subdirectory of the git root', () => {
     describe('staged changes', () => {
-      it('shows path relative to cwd when run from a sub-app directory', async () => {
-        mockPlaybookLocalRepository.getChanges.mockReturnValue([
-          {
-            filePath: '.packmind/commands/my-command.ts',
-            artifactType: 'command',
-            artifactName: 'My command',
-            codingAgent: 'packmind',
-            addedAt: '2026-03-17T00:00:00.000Z',
-            spaceId: 'space-123',
-            content: 'content',
-            changeType: 'updated',
-            configDir: 'apps/frontend',
-          } as PlaybookChangeEntry,
-        ]);
+      describe('when run from a sub-app directory', () => {
+        it('shows path relative to cwd', async () => {
+          mockPlaybookLocalRepository.getChanges.mockReturnValue([
+            {
+              filePath: '.packmind/commands/my-command.ts',
+              artifactType: 'command',
+              artifactName: 'My command',
+              codingAgent: 'packmind',
+              addedAt: '2026-03-17T00:00:00.000Z',
+              spaceId: 'space-123',
+              content: 'content',
+              changeType: 'updated',
+              configDir: 'apps/frontend',
+            } as PlaybookChangeEntry,
+          ]);
 
-        await playbookStatusHandler(
-          buildDeps({ cwd: '/project/apps/frontend' }),
-        );
+          await playbookStatusHandler(
+            buildDeps({ cwd: '/project/apps/frontend' }),
+          );
 
-        expect(mockLogConsole).toHaveBeenCalledWith(
-          '  - Command "My command" (updated) .packmind/commands/my-command.ts',
-        );
+          expect(mockLogConsole).toHaveBeenCalledWith(
+            '  - Command "My command" (updated) .packmind/commands/my-command.ts',
+          );
+        });
       });
 
-      it('shows relative path with ../../ when run from an unrelated package', async () => {
-        mockPlaybookLocalRepository.getChanges.mockReturnValue([
-          {
-            filePath: '.packmind/commands/my-command.ts',
-            artifactType: 'command',
-            artifactName: 'My command',
-            codingAgent: 'packmind',
-            addedAt: '2026-03-17T00:00:00.000Z',
-            spaceId: 'space-123',
-            content: 'content',
-            changeType: 'updated',
-            configDir: 'apps/frontend',
-          } as PlaybookChangeEntry,
-        ]);
+      describe('when run from an unrelated package', () => {
+        it('shows relative path with ../../', async () => {
+          mockPlaybookLocalRepository.getChanges.mockReturnValue([
+            {
+              filePath: '.packmind/commands/my-command.ts',
+              artifactType: 'command',
+              artifactName: 'My command',
+              codingAgent: 'packmind',
+              addedAt: '2026-03-17T00:00:00.000Z',
+              spaceId: 'space-123',
+              content: 'content',
+              changeType: 'updated',
+              configDir: 'apps/frontend',
+            } as PlaybookChangeEntry,
+          ]);
 
-        await playbookStatusHandler(
-          buildDeps({ cwd: '/project/packages/whatever' }),
-        );
+          await playbookStatusHandler(
+            buildDeps({ cwd: '/project/packages/whatever' }),
+          );
 
-        expect(mockLogConsole).toHaveBeenCalledWith(
-          '  - Command "My command" (updated) ../../apps/frontend/.packmind/commands/my-command.ts',
-        );
+          expect(mockLogConsole).toHaveBeenCalledWith(
+            '  - Command "My command" (updated) ../../apps/frontend/.packmind/commands/my-command.ts',
+          );
+        });
       });
     });
 
@@ -1546,24 +1583,28 @@ describe('playbookStatusHandler', () => {
         ]);
       });
 
-      it('shows path relative to cwd when run from the sub-app directory', async () => {
-        await playbookStatusHandler(
-          buildDeps({ cwd: '/project/apps/frontend' }),
-        );
+      describe('when run from the sub-app directory', () => {
+        it('shows path relative to cwd', async () => {
+          await playbookStatusHandler(
+            buildDeps({ cwd: '/project/apps/frontend' }),
+          );
 
-        expect(mockLogConsole).toHaveBeenCalledWith(
-          '  - Standard "My standard" .packmind/standards/my-standard.md',
-        );
+          expect(mockLogConsole).toHaveBeenCalledWith(
+            '  - Standard "My standard" .packmind/standards/my-standard.md',
+          );
+        });
       });
 
-      it('shows relative path with ../../ when run from an unrelated package', async () => {
-        await playbookStatusHandler(
-          buildDeps({ cwd: '/project/packages/whatever' }),
-        );
+      describe('when run from an unrelated package', () => {
+        it('shows relative path with ../../', async () => {
+          await playbookStatusHandler(
+            buildDeps({ cwd: '/project/packages/whatever' }),
+          );
 
-        expect(mockLogConsole).toHaveBeenCalledWith(
-          '  - Standard "My standard" ../../apps/frontend/.packmind/standards/my-standard.md',
-        );
+          expect(mockLogConsole).toHaveBeenCalledWith(
+            '  - Standard "My standard" ../../apps/frontend/.packmind/standards/my-standard.md',
+          );
+        });
       });
     });
   });

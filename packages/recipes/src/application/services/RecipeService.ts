@@ -1,10 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
 import { RecipeRepository } from '../../infra/repositories/RecipeRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createRecipeId,
+  createRecipeVersionId,
   GitCommit,
   OrganizationId,
   QueryOption,
@@ -38,6 +40,7 @@ export type UpdateRecipeData = {
 export class RecipeService {
   constructor(
     private readonly recipeRepository: IRecipeRepository = new RecipeRepository(),
+    private readonly recipeVersionRepository: IRecipeVersionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('RecipeService initialized');
@@ -57,6 +60,7 @@ export class RecipeService {
       const recipe: Recipe = {
         id: recipeId,
         ...recipeData,
+        movedTo: null,
       };
 
       const savedRecipe = await this.recipeRepository.add(recipe);
@@ -202,6 +206,7 @@ export class RecipeService {
         id: recipeId,
         ...recipeData,
         spaceId: existingRecipe.spaceId,
+        movedTo: existingRecipe.movedTo,
       };
 
       const savedRecipe = await this.recipeRepository.add(updatedRecipe);
@@ -238,6 +243,75 @@ export class RecipeService {
     } catch (error) {
       this.logger.error('Failed to delete recipe', {
         recipeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async duplicateRecipeToSpace(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Recipe> {
+    this.logger.info('Duplicating recipe to space', {
+      recipeId,
+      destinationSpaceId,
+    });
+
+    try {
+      // 1. Read the original recipe
+      const original = await this.recipeRepository.findById(recipeId);
+      if (!original) {
+        throw new Error(`Recipe with id ${recipeId} not found`);
+      }
+
+      // 2. Create new recipe with fresh ID
+      const newRecipeId = createRecipeId(uuidv4());
+      const newRecipe: Recipe = {
+        id: newRecipeId,
+        name: original.name,
+        slug: original.slug,
+        content: original.content,
+        version: original.version,
+        gitCommit: original.gitCommit,
+        userId: newUserId,
+        spaceId: destinationSpaceId,
+        movedTo: null,
+      };
+      const savedRecipe = await this.recipeRepository.add(newRecipe);
+
+      // 3. Read all versions for this recipe
+      const versions =
+        await this.recipeVersionRepository.findByRecipeId(recipeId);
+
+      for (const version of versions) {
+        // 4. Create new version with fresh ID, linked to new recipe
+        await this.recipeVersionRepository.add({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: newRecipeId,
+          name: version.name,
+          slug: version.slug,
+          content: version.content,
+          version: version.version,
+          summary: version.summary,
+          gitCommit: version.gitCommit,
+          userId: version.userId,
+        });
+      }
+
+      this.logger.info('Recipe duplicated to space successfully', {
+        originalRecipeId: recipeId,
+        newRecipeId,
+        destinationSpaceId,
+        versionsCount: versions.length,
+      });
+
+      return savedRecipe;
+    } catch (error) {
+      this.logger.error('Failed to duplicate recipe to space', {
+        recipeId,
+        destinationSpaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

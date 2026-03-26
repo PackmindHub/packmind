@@ -14,6 +14,8 @@ import {
   DeploymentOverview,
   DownloadDefaultSkillsZipForAgentCommand,
   DownloadDefaultSkillsZipForAgentResponse,
+  DownloadSkillZipForAgentCommand,
+  DownloadSkillZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
   GetContentByVersionsCommand,
@@ -482,6 +484,19 @@ export interface IDeploymentPort {
   downloadDefaultSkillsZipForAgent(
     command: DownloadDefaultSkillsZipForAgentCommand,
   ): Promise<DownloadDefaultSkillsZipForAgentResponse>;
+
+  /**
+   * Downloads a single skill as a zip file rendered for a specific coding agent
+   *
+   * Fetches the latest version of the skill, renders it for the specified agent,
+   * and packages the files into a zip archive.
+   *
+   * @param command - Command containing skillId, spaceId, agent, and user/organization context
+   * @returns Promise of DownloadSkillZipForAgentResponse with zip file name and base64-encoded content
+   */
+  downloadSkillZipForAgent(
+    command: DownloadSkillZipForAgentCommand,
+  ): Promise<DownloadSkillZipForAgentResponse>;
 
   /**
    * Gets the deployed content for a specific target identified by git repo, branch, and path.

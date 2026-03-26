@@ -32,7 +32,7 @@ export const SkillDistributionsList: React.FC<SkillDistributionsListProps> = ({
     return {
       'N/A': 'Unknown User',
       ...Object.fromEntries(
-        data.users.map((user) => [user.userId, user.email]),
+        data.users.map((user) => [user.userId, user.email.split('@')[0]]),
       ),
     };
   };

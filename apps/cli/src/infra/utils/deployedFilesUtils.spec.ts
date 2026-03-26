@@ -39,46 +39,57 @@ describe('lockFileToArtifactVersionEntries', () => {
 });
 
 describe('fetchDeployedFiles', () => {
-  it('returns createOrUpdate files from gateway', async () => {
+  describe('returns createOrUpdate files from gateway', () => {
     const files = [{ path: '.claude/rules/x.md', content: 'hello' }];
-    const gateway: DeploymentGateway = {
-      deployment: {
-        getContentByVersions: jest.fn().mockResolvedValue({
-          fileUpdates: { createOrUpdate: files },
-        }),
-      },
-    };
-    const lockFile: PackmindLockFile = {
-      lockfileVersion: 1,
-      packageSlugs: [],
-      agents: ['claude'],
-      installedAt: '2026-01-01',
-      artifacts: {
-        'art-1': {
-          name: 'X',
-          type: 'standard',
-          id: 'art-1',
-          version: 1,
-          spaceId: 'sp-1',
-          packageIds: [],
-          files: [{ path: '.claude/rules/x.md', agent: 'claude' }],
-        },
-      },
-    };
+    let gateway: DeploymentGateway;
+    let lockFile: PackmindLockFile;
+    let result: typeof files;
 
-    const result = await fetchDeployedFiles(gateway, lockFile);
-    expect(result).toEqual(files);
-    expect(gateway.deployment.getContentByVersions).toHaveBeenCalledWith({
-      artifacts: [
-        {
-          name: 'X',
-          type: 'standard',
-          id: 'art-1',
-          version: 1,
-          spaceId: 'sp-1',
+    beforeEach(async () => {
+      gateway = {
+        deployment: {
+          getContentByVersions: jest.fn().mockResolvedValue({
+            fileUpdates: { createOrUpdate: files },
+          }),
         },
-      ],
-      agents: lockFile.agents,
+      };
+      lockFile = {
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: ['claude'],
+        installedAt: '2026-01-01',
+        artifacts: {
+          'art-1': {
+            name: 'X',
+            type: 'standard',
+            id: 'art-1',
+            version: 1,
+            spaceId: 'sp-1',
+            packageIds: [],
+            files: [{ path: '.claude/rules/x.md', agent: 'claude' }],
+          },
+        },
+      };
+      result = await fetchDeployedFiles(gateway, lockFile);
+    });
+
+    it('returns the files', () => {
+      expect(result).toEqual(files);
+    });
+
+    it('calls getContentByVersions with correct artifacts', () => {
+      expect(gateway.deployment.getContentByVersions).toHaveBeenCalledWith({
+        artifacts: [
+          {
+            name: 'X',
+            type: 'standard',
+            id: 'art-1',
+            version: 1,
+            spaceId: 'sp-1',
+          },
+        ],
+        agents: lockFile.agents,
+      });
     });
   });
 

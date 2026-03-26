@@ -21,6 +21,7 @@ export const skillFactory: Factory<Skill> = (skill?: Partial<Skill>) => {
     compatibility: 'All environments',
     metadata: { category: 'test', tags: 'testing' },
     allowedTools: 'Read,Write,Bash',
+    movedTo: null,
     ...skill,
   };
 };
