@@ -7,7 +7,6 @@ import { CreateSkillDeployer } from './CreateSkillDeployer';
 import { CreateStandardDeployer } from './CreateStandardDeployer';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
-import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
 import { UpdatePlaybookV2Deployer } from './UpdatePlaybookV2Deployer';
 
 export type DeployDefaultSkillsOptions = {
@@ -23,7 +22,6 @@ export class DefaultSkillsDeployer {
     new CreateCommandDeployer(),
     new CreatePackageDeployer(),
     new CliListCommandsDeployer(),
-    new UpdatePlaybookDeployer(),
     new UpdatePlaybookV2Deployer(),
   ];
 

@@ -50,12 +50,6 @@ describe('DefaultSkillsDeployer', () => {
         ).toBe(true);
       });
 
-      it('includes packmind-update-playbook', () => {
-        expect(paths.some((p) => p.includes('packmind-update-playbook'))).toBe(
-          true,
-        );
-      });
-
       it('excludes packmind-update-playbook-v2 (unreleased)', () => {
         expect(
           paths.some((p) => p.includes('packmind-update-playbook-v2')),
@@ -129,12 +123,6 @@ describe('DefaultSkillsDeployer', () => {
           expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
             false,
           );
-        });
-
-        it('excludes packmind-update-playbook (requires 0.21.0)', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-update-playbook')),
-          ).toBe(false);
         });
 
         it('excludes packmind-update-playbook-v2 (unreleased)', () => {
@@ -214,12 +202,6 @@ describe('DefaultSkillsDeployer', () => {
         it('includes packmind-cli-list-commands', () => {
           expect(
             paths.some((p) => p.includes('packmind-cli-list-commands')),
-          ).toBe(true);
-        });
-
-        it('includes packmind-update-playbook', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-update-playbook')),
           ).toBe(true);
         });
 

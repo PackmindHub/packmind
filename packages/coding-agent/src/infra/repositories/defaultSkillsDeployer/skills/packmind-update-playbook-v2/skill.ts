@@ -10,7 +10,7 @@ Evaluate the user's intent against existing Packmind artifacts (standards, comma
 
 **⚠️ MANDATORY WORKFLOW — This skill defines a strict sequence: Understanding Your Request → Summarizing Changes → Analyzing Playbook → Change Report → Applying Changes. Do NOT skip steps or edit artifact files directly. Even for a single-line change, follow every step. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
 
-## **Understanding Your Request**
+### Understanding Your Request
 
 **STOP. This phase runs FIRST, before anything else. No file reads, no CLI commands, no subagents until this gate passes.**
 
@@ -138,7 +138,14 @@ Present this report and ask the user for approval:
 
 Before writing any files, discover available spaces:
 
-1. Run \`packmind-cli spaces list\` to see available spaces.
+1. Run \`packmind-cli spaces list\`. The output looks like:
+   \`\`\`
+   Available spaces:
+
+   - @my-space
+       Name: My Space
+   \`\`\`
+   Extract the slug from each \`@<slug>\` entry — use the value **without** the \`@\` prefix for the \`--space\` flag.
 2. If only **one space** exists, note its slug — the \`--space\` flag is optional for all commands.
 3. If **multiple spaces** exist, note all slugs. The \`--space\` flag is **required** when staging **new** artifacts. For updates to existing artifacts, the space auto-resolves from the lock file.
 
@@ -188,19 +195,23 @@ Determine which agent context you are running in. The agent directories are:
 
 If there are multiple \`packmind-lock.json\` locations and it's unclear where the new artifact should go, ask the user which project directory to target.
 
-**For deprecated artifacts (removal)** — do NOT delete the file yourself. The \`playbook rm\` command handles removal staging. Skip to Step 2.
+**For deprecated artifacts (removal)** — do NOT delete the file yourself. Skip directly to Step 2.
 
 ##### Step 2: Stage changes
 
-For each artifact written or edited in Step 1, stage it with \`playbook add\`:
+Stage each artifact depending on the change type:
 
-\`\`\`
-packmind-cli playbook add <path-to-the-file-you-edited>
-\`\`\`
+- **New artifact** (created in Step 1):
+  \`packmind-cli playbook add <path>\`
+  If the organization has **multiple spaces**, add the \`--space\` flag: \`packmind-cli playbook add <path> --space <slug>\`
 
-- If the organization has **multiple spaces** and this is a **new** artifact, add the \`--space\` flag: \`packmind-cli playbook add <path> --space <slug>\`
-- For **updates**, the space auto-resolves from the lock file — no \`--space\` needed.
-- For **deprecated artifacts**: run \`packmind-cli playbook rm <path>\` instead.
+- **Updated artifact** (edited in Step 1):
+  \`packmind-cli playbook add <path>\`
+  The space auto-resolves from the lock file — no \`--space\` needed.
+
+- **Deprecated artifact** (no file edit — removal only):
+  \`packmind-cli playbook rm <path>\`
+  This stages the artifact for removal. Do NOT delete the file manually — the CLI handles cleanup after submission.
 
 If any command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
 
