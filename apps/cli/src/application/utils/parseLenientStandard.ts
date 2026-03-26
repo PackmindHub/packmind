@@ -1,5 +1,3 @@
-import path from 'path';
-
 import { normalizeLineEndings } from './normalizeLineEndings';
 
 export type LenientStandardResult = {
@@ -9,7 +7,6 @@ export type LenientStandardResult = {
 
 export function parseLenientStandard(
   content: string,
-  filePath: string,
 ): LenientStandardResult | null {
   content = normalizeLineEndings(content);
 
@@ -18,16 +15,14 @@ export function parseLenientStandard(
   }
 
   const lines = content.split('\n');
-  let headingIndex = -1;
 
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].trim() === '') continue;
     if (lines[i].startsWith('# ')) {
       const name = lines[i].slice(2).trim();
       if (name) {
-        headingIndex = i;
         const description = lines
-          .slice(headingIndex + 1)
+          .slice(i + 1)
           .join('\n')
           .trim();
         return { name, description };
@@ -36,9 +31,5 @@ export function parseLenientStandard(
     break;
   }
 
-  const stem = path.basename(filePath, path.extname(filePath));
-  return {
-    name: stem,
-    description: content.trim(),
-  };
+  return null;
 }

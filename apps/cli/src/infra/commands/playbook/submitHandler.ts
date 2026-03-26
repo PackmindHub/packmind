@@ -121,7 +121,7 @@ function buildCreatedStandardProposals(
     ];
   }
 
-  const lenient = parseLenientStandard(entry.content, entry.filePath);
+  const lenient = parseLenientStandard(entry.content);
   if (lenient) {
     return [
       {
