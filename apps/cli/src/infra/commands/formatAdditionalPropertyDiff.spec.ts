@@ -2,24 +2,30 @@ import { formatAdditionalPropertyDiff } from './formatAdditionalPropertyDiff';
 
 describe('formatAdditionalPropertyDiff', () => {
   describe('when adding a property', () => {
-    it('returns only an added line when oldValue is null sentinel', () => {
-      expect(formatAdditionalPropertyDiff('model', 'null', '"opus"')).toEqual([
-        { type: 'added', text: 'model: "opus"' },
-      ]);
+    describe('when oldValue is null sentinel', () => {
+      it('returns only an added line', () => {
+        expect(formatAdditionalPropertyDiff('model', 'null', '"opus"')).toEqual(
+          [{ type: 'added', text: 'model: "opus"' }],
+        );
+      });
     });
   });
 
   describe('when removing a property', () => {
-    it('returns only a removed line when newValue is null sentinel', () => {
-      expect(formatAdditionalPropertyDiff('model', '"opus"', 'null')).toEqual([
-        { type: 'removed', text: 'model: "opus"' },
-      ]);
+    describe('when newValue is null sentinel', () => {
+      it('returns only a removed line', () => {
+        expect(formatAdditionalPropertyDiff('model', '"opus"', 'null')).toEqual(
+          [{ type: 'removed', text: 'model: "opus"' }],
+        );
+      });
     });
 
-    it('returns only a removed line when newValue is empty', () => {
-      expect(formatAdditionalPropertyDiff('model', '"opus"', '')).toEqual([
-        { type: 'removed', text: 'model: "opus"' },
-      ]);
+    describe('when newValue is empty', () => {
+      it('returns only a removed line', () => {
+        expect(formatAdditionalPropertyDiff('model', '"opus"', '')).toEqual([
+          { type: 'removed', text: 'model: "opus"' },
+        ]);
+      });
     });
   });
 
