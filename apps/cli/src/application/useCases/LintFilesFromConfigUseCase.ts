@@ -6,7 +6,6 @@ import {
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
-import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
 import { DEFAULT_EXCLUDES } from '../services/ListFiles';
 import {
@@ -25,6 +24,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { pathStartsWith } from '../utils/pathUtils';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
+import { fileMatchesTargetAndScope } from '../utils/scopeMatcher';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
 const origin = 'LintFilesFromConfigUseCase';
@@ -40,59 +40,6 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
     private readonly repositories: IPackmindRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
-
-  private fileMatchesTargetAndScope(
-    filePath: string,
-    targetPath: string,
-    scopePatterns: string[],
-  ): boolean {
-    if (!scopePatterns || scopePatterns.length === 0) {
-      const effectivePattern = this.buildEffectivePattern(targetPath, null);
-      return minimatch(filePath, effectivePattern, { matchBase: false });
-    }
-
-    return scopePatterns.some((scopePattern) => {
-      const effectivePattern = this.buildEffectivePattern(
-        targetPath,
-        scopePattern,
-      );
-      return minimatch(filePath, effectivePattern, { matchBase: false });
-    });
-  }
-
-  private buildEffectivePattern(
-    targetPath: string,
-    scope: string | null,
-  ): string {
-    const normalizedTarget =
-      targetPath === '/' ? '/' : targetPath.replace(/\/$/, '');
-
-    if (!scope) {
-      return normalizedTarget === '/' ? '/**' : normalizedTarget + '/**';
-    }
-
-    if (
-      scope.startsWith(normalizedTarget + '/') ||
-      scope === normalizedTarget
-    ) {
-      return scope.endsWith('/') ? scope + '**' : scope;
-    }
-
-    const cleanScope = scope.startsWith('/') ? scope.substring(1) : scope;
-
-    let pattern: string;
-    if (normalizedTarget === '/') {
-      pattern = '/' + cleanScope;
-    } else {
-      pattern = normalizedTarget + '/' + cleanScope;
-    }
-
-    if (pattern.endsWith('/')) {
-      pattern = pattern + '**';
-    }
-
-    return pattern;
-  }
 
   public async execute(
     command: LintFilesFromConfigCommand,
@@ -269,7 +216,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
           for (const standard of target.standards) {
             // Apply scope filtering within the target
             if (
-              !this.fileMatchesTargetAndScope(
+              !fileMatchesTargetAndScope(
                 normalizedFilePath,
                 targetConfig.targetPath,
                 standard.scope,

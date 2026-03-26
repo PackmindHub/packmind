@@ -2,6 +2,8 @@
 
 ## Added
 
+- `lint` command now supports negative globs in standard scopes, starting with `!`
+
 ## Changed
 
 ## Fixed

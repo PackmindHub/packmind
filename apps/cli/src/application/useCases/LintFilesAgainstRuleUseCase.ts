@@ -6,7 +6,6 @@ import {
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
-import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
 import { DEFAULT_EXCLUDES } from '../services/ListFiles';
 import {
@@ -28,6 +27,7 @@ import {
   logInfoConsole,
 } from '../../infra/utils/consoleLogger';
 import { handleScope } from '../utils/handleScope';
+import { fileMatchesTargetAndScope } from '../utils/scopeMatcher';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
 const origin = 'LintFilesAgainstRuleUseCase';
@@ -38,91 +38,6 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
     private readonly repositories: IPackmindRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
-
-  public fileMatchesTargetAndScope(
-    filePath: string,
-    targetPath: string,
-    scopePatterns: string[],
-  ): boolean {
-    // File path is expected to already be normalized (relative to git root, starting with '/')
-
-    // If no scope patterns, check if file is within target path
-    if (!scopePatterns || scopePatterns.length === 0) {
-      const effectivePattern = this.buildEffectivePattern(targetPath, null);
-      const matches = minimatch(filePath, effectivePattern, {
-        matchBase: false,
-      });
-
-      this.logger.debug(
-        `File matching check: file="${filePath}", target="${targetPath}", scope=null, pattern="${effectivePattern}", matches=${matches}`,
-      );
-
-      return matches;
-    }
-
-    // Check if file matches ANY of the scope patterns
-    const matches = scopePatterns.some((scopePattern) => {
-      const effectivePattern = this.buildEffectivePattern(
-        targetPath,
-        scopePattern,
-      );
-      const patternMatches = minimatch(filePath, effectivePattern, {
-        matchBase: false,
-      });
-
-      this.logger.debug(
-        `File matching check: file="${filePath}", target="${targetPath}", scope="${scopePattern}", pattern="${effectivePattern}", matches=${patternMatches}`,
-      );
-
-      return patternMatches;
-    });
-
-    return matches;
-  }
-
-  private buildEffectivePattern(
-    targetPath: string,
-    scope: string | null,
-  ): string {
-    // Normalize target path (remove trailing slash unless it's root)
-    const normalizedTarget =
-      targetPath === '/' ? '/' : targetPath.replace(/\/$/, '');
-
-    // If no scope, just use target path with wildcard
-    if (!scope) {
-      return normalizedTarget === '/' ? '/**' : normalizedTarget + '/**';
-    }
-
-    // Check if scope starts with target path (Example 7)
-    // The scope must start with the normalized target path
-    if (
-      scope.startsWith(normalizedTarget + '/') ||
-      scope === normalizedTarget
-    ) {
-      // Use scope alone, ensure it has wildcard if it's a directory
-      return scope.endsWith('/') ? scope + '**' : scope;
-    }
-
-    // Strip leading "/" from scope if present (Examples 6, 8, 9)
-    const cleanScope = scope.startsWith('/') ? scope.substring(1) : scope;
-
-    // Concatenate target path and scope
-    let pattern: string;
-    if (normalizedTarget === '/') {
-      // Root target - prepend slash to scope
-      pattern = '/' + cleanScope;
-    } else {
-      // Non-root target - concatenate with slash
-      pattern = normalizedTarget + '/' + cleanScope;
-    }
-
-    // If pattern ends with '/', add wildcard to match everything inside
-    if (pattern.endsWith('/')) {
-      pattern = pattern + '**';
-    }
-
-    return pattern;
-  }
 
   public async execute(
     command: LintFilesAgainstRuleCommand,
@@ -408,7 +323,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
 
           // Check if file matches target and scope
           if (
-            !this.fileMatchesTargetAndScope(
+            !fileMatchesTargetAndScope(
               normalizedFilePath,
               target.path,
               standard.scope,
