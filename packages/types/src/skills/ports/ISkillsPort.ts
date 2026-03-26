@@ -45,4 +45,8 @@ export interface ISkillsPort {
     destinationSpaceId: SpaceId,
     newUserId: UserId,
   ): Promise<Skill>;
+  markSkillAsMoved(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void>;
 }

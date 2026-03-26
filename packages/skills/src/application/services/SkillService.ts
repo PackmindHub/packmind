@@ -338,4 +338,34 @@ export class SkillService {
       throw error;
     }
   }
+
+  async markSkillAsMoved(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    this.logger.info('Marking skill as moved', {
+      skillId,
+      destinationSpaceId,
+    });
+
+    try {
+      const skill = await this.skillRepository.findById(skillId);
+      if (!skill) {
+        throw new Error(`Skill with id ${skillId} not found`);
+      }
+
+      await this.skillRepository.markAsMoved(skillId, destinationSpaceId);
+
+      this.logger.info('Skill marked as moved successfully', {
+        skillId,
+        destinationSpaceId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to mark skill as moved', {
+        skillId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

@@ -469,4 +469,13 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       .getSkillService()
       .duplicateSkillToSpace(skillId, destinationSpaceId, newUserId);
   }
+
+  async markSkillAsMoved(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    return this.services
+      .getSkillService()
+      .markSkillAsMoved(skillId, destinationSpaceId);
+  }
 }
