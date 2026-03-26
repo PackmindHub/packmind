@@ -200,6 +200,12 @@
     "winston": "^3.17.0",
     "yaml": "^2.8.3"
   },
+  "optionalDependencies": {
+    "@swc/core-linux-arm64-gnu": "~1.15.18",
+    "@swc/core-linux-arm64-musl": "~1.15.18",
+    "@swc/core-linux-x64-gnu": "~1.15.18",
+    "@swc/core-linux-x64-musl": "~1.15.18"
+  },
   "overrides": {
     "fast-xml-parser": "5.3.6"
   }
