@@ -15,32 +15,38 @@ const mockDecodeApiKey = decodeApiKey as jest.MockedFunction<
 describe('resolveUrlBuilder', () => {
   afterEach(() => jest.resetAllMocks());
 
-  it('returns null-builder when no API key', () => {
-    mockLoadApiKey.mockReturnValue(null);
-    const builder = resolveUrlBuilder((id) => `skills/${id}/files`);
-    expect(builder('my-space', 'my-skill')).toBeNull();
+  describe('when no API key', () => {
+    it('returns null-builder', () => {
+      mockLoadApiKey.mockReturnValue(null);
+      const builder = resolveUrlBuilder((id) => `skills/${id}/files`);
+      expect(builder('my-space', 'my-skill')).toBeNull();
+    });
   });
 
-  it('returns null-builder when decoded key has no host', () => {
-    mockLoadApiKey.mockReturnValue('key');
-    mockDecodeApiKey.mockReturnValue({
-      host: '',
-      jwt: {
-        organization: { id: '1', name: 'Org', slug: 'org', role: 'admin' },
-      },
+  describe('when decoded key has no host', () => {
+    it('returns null-builder', () => {
+      mockLoadApiKey.mockReturnValue('key');
+      mockDecodeApiKey.mockReturnValue({
+        host: '',
+        jwt: {
+          organization: { id: '1', name: 'Org', slug: 'org', role: 'admin' },
+        },
+      });
+      const builder = resolveUrlBuilder((id) => `skills/${id}/files`);
+      expect(builder('my-space', 'my-skill')).toBeNull();
     });
-    const builder = resolveUrlBuilder((id) => `skills/${id}/files`);
-    expect(builder('my-space', 'my-skill')).toBeNull();
   });
 
-  it('returns null-builder when decoded key has no org slug', () => {
-    mockLoadApiKey.mockReturnValue('key');
-    mockDecodeApiKey.mockReturnValue({
-      host: 'https://app.packmind.com',
-      jwt: {},
+  describe('when decoded key has no org slug', () => {
+    it('returns null-builder', () => {
+      mockLoadApiKey.mockReturnValue('key');
+      mockDecodeApiKey.mockReturnValue({
+        host: 'https://app.packmind.com',
+        jwt: {},
+      });
+      const builder = resolveUrlBuilder((id) => `skills/${id}/files`);
+      expect(builder('my-space', 'my-skill')).toBeNull();
     });
-    const builder = resolveUrlBuilder((id) => `skills/${id}/files`);
-    expect(builder('my-space', 'my-skill')).toBeNull();
   });
 
   it('builds correct URL for skills', () => {
