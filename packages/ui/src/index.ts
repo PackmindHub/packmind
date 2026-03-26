@@ -5,6 +5,7 @@ export * from './lib/components/typography/PMText';
 export * from './lib/components/typography/PMEm';
 export * from './lib/components/typography/PMLink';
 export * from './lib/components/typography/PMList';
+export * from './lib/components/typography/PMBlockquote';
 export * from './lib/components/form/PMInput/PMInput';
 export * from './lib/components/form/PMTextArea/PMTextArea';
 export * from './lib/components/form/PMLabel/PMLabel';

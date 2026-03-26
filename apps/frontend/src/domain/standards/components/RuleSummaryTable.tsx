@@ -9,6 +9,7 @@ import {
 } from '@packmind/ui';
 import type { Rule } from '@packmind/types';
 import { RuleSummaryStatus } from './RuleSummaryStatus';
+import { RuleSummarySeverity } from './RuleSummarySeverity';
 import { routes } from '../../../shared/utils/routes';
 
 interface RuleSummaryTableProps {
@@ -29,11 +30,11 @@ export const RuleSummaryTable = ({
     orgSlug?: string;
     spaceSlug?: string;
   }>();
-
   const columns = useMemo<PMTableColumn[]>(
     () => [
       { key: 'name', header: 'Name', grow: true },
       { key: 'linter', header: 'Linter status', grow: true },
+      { key: 'severity', header: 'Severity' },
     ],
     [],
   );
@@ -87,6 +88,9 @@ export const RuleSummaryTable = ({
           </PMLink>
         ),
         linter: <RuleSummaryStatus ruleId={rule.id} standardId={standardId} />,
+        severity: (
+          <RuleSummarySeverity ruleId={rule.id} standardId={standardId} />
+        ),
       };
     });
   }, [rules, standardId, orgSlug, spaceSlug, navigate]);
