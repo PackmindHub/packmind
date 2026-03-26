@@ -44,6 +44,6 @@
     "validator": "^13.15.15",
     "winston": "^3.17.0",
     "@workos-inc/node": "^8.5.0",
-    "yaml": "2.8.0"
+    "yaml": "2.8.3"
   }
 }
