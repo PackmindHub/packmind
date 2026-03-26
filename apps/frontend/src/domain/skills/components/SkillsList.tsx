@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import {
+  PMBadge,
   PMBox,
   PMLink,
   PMTable,
@@ -13,7 +14,6 @@ import {
   PMAlertDialog,
   PMCheckbox,
   PMInput,
-  PMBadge,
   useTableSort,
 } from '@packmind/ui';
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -33,7 +33,7 @@ import { PackageCountBadge } from '../../deployments/components/PackageCountBadg
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
-import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { useGetGroupedChangeProposalsQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
 import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
 
 interface ISkillsListProps {
@@ -43,6 +43,7 @@ interface ISkillsListProps {
 export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   const { spaceSlug, spaceId } = useCurrentSpace();
   const { organization } = useAuthContext();
+
   const { data: skills, isLoading, isError } = useGetSkillsQuery();
   const deleteBatchMutation = useDeleteSkillsBatchMutation();
   const { data: packagesResponse } = useListPackagesBySpaceQuery(
@@ -211,42 +212,33 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         ) : (
           <span>-</span>
         ),
-        ...(groupedProposals
-          ? {
-              pendingReviews: (() => {
-                const count = pendingReviewCountBySkillId.get(skill.id) ?? 0;
-                if (count > 0 && spaceSlug) {
-                  return (
-                    <PMLink asChild>
-                      <Link
-                        to={routes.space.toReviewChangesArtefact(
-                          orgSlug,
-                          spaceSlug,
-                          'skills',
-                          skill.id,
-                        )}
-                      >
-                        <PMBadge
-                          colorPalette="yellow"
-                          variant="solid"
-                          size="sm"
-                        >
-                          {count}
-                        </PMBadge>
-                      </Link>
-                    </PMLink>
-                  );
-                }
-                return (
-                  <PMBadge colorPalette="green" variant="solid" size="sm">
-                    0
+        pendingReviews: (() => {
+          const count = pendingReviewCountBySkillId.get(skill.id) ?? 0;
+          if (count > 0 && spaceSlug) {
+            return (
+              <PMLink asChild>
+                <Link
+                  to={routes.space.toReviewChangesArtefact(
+                    orgSlug,
+                    spaceSlug,
+                    'skills',
+                    skill.id,
+                  )}
+                >
+                  <PMBadge colorPalette="yellow" variant="solid" size="sm">
+                    {count}
                   </PMBadge>
-                );
-              })(),
-              pendingReviewsCount:
-                pendingReviewCountBySkillId.get(skill.id) ?? 0,
-            }
-          : {}),
+                </Link>
+              </PMLink>
+            );
+          }
+          return (
+            <PMBadge colorPalette="green" variant="solid" size="sm">
+              0
+            </PMBadge>
+          );
+        })(),
+        pendingReviewsCount: pendingReviewCountBySkillId.get(skill.id) ?? 0,
         packages: (
           <PackageCountBadge
             artifactId={skill.id}
@@ -271,7 +263,6 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     searchQuery,
     packagesResponse,
     pendingReviewCountBySkillId,
-    groupedProposals,
   ]);
 
   const isAllSelected =
@@ -328,18 +319,14 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       sortable: true,
       sortDirection: getSortDirection('version'),
     },
-    ...(groupedProposals
-      ? [
-          {
-            key: 'pendingReviews',
-            header: 'Pending reviews',
-            width: '150px',
-            align: 'center' as const,
-            sortable: true,
-            sortDirection: getSortDirection('pendingReviews'),
-          },
-        ]
-      : []),
+    {
+      key: 'pendingReviews',
+      header: 'Pending reviews',
+      width: '150px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('pendingReviews'),
+    },
     {
       key: 'packages',
       header: 'Packages',

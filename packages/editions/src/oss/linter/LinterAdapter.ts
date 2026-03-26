@@ -54,6 +54,8 @@ import {
   CreateEmptyRuleDetectionAssessmentResponse,
   ILinterPort,
   TrackLinterExecutionResponse,
+  UpdateActiveDetectionProgramSeverityCommand,
+  UpdateActiveDetectionProgramSeverityResponse,
 } from '@packmind/types';
 import { LinterUsecases } from '.';
 
@@ -94,6 +96,12 @@ export class LinterAdapter implements ILinterPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: UpdateActiveDetectionProgramCommand,
   ): Promise<ActiveDetectionProgram> {
+    throw new Error('Method not implemented.');
+  }
+  updateActiveDetectionProgramSeverity(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: UpdateActiveDetectionProgramSeverityCommand,
+  ): Promise<UpdateActiveDetectionProgramSeverityResponse> {
     throw new Error('Method not implemented.');
   }
   getActiveDetectionProgramById(

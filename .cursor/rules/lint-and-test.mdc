@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+Lint your modifications you shall with nx lint <project>
+Test your modifications you shall with nx test <project>
+
+Check against organizations standards you shall with npm run packmind-cli
+
+Lint & test can be ran globally with nx run-many -t <lint|test>
