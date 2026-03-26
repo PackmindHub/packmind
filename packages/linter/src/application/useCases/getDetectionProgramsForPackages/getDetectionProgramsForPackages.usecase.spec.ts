@@ -203,7 +203,9 @@ describe('GetDetectionProgramsForPackagesUseCase', () => {
     });
 
     describe('with unknown space slug', () => {
-      it('logs a warning and skips the package', async () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
         setupMocksForSlugTest([
           { id: globalSpaceId, slug: 'global', name: 'Global' },
         ]);
@@ -214,9 +216,14 @@ describe('GetDetectionProgramsForPackagesUseCase', () => {
           userId,
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('does not fetch the package summary', () => {
         expect(deploymentsAdapter.getPackageSummary).not.toHaveBeenCalled();
+      });
+
+      it('returns empty targets', () => {
         expect(result.targets).toEqual([]);
       });
     });
