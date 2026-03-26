@@ -115,7 +115,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.25.4",
+    "@amplitude/analytics-browser": "^2.37.2",
     "@amplitude/analytics-node": "^1.5.50",
     "@anthropic-ai/sdk": "^0.78.0",
     "@azure/openai": "^2.0.0",
