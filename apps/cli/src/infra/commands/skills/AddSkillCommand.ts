@@ -10,7 +10,7 @@ import {
   formatCommand,
 } from '../../utils/consoleLogger';
 import { originSkillOption } from '../sharedOptions';
-import { resolveSkillInputPaths } from '../../../application/utils/resolveSkillInputPaths';
+import {addResolvedSkillPath, resolveSkillInputPaths} from '../../../application/utils/resolveSkillInputPaths';
 
 type AddSkillCommandArgs = {
   skillPaths: readonly string[];
@@ -138,19 +138,6 @@ function isPermissionError(error: unknown): boolean {
   }
 
   return error.code === 'EACCES' || error.code === 'EPERM';
-}
-
-function addResolvedSkillPath(
-  resolvedSkillPaths: string[],
-  seenPaths: Set<string>,
-  candidatePath: string,
-): void {
-  if (seenPaths.has(candidatePath)) {
-    return;
-  }
-
-  seenPaths.add(candidatePath);
-  resolvedSkillPaths.push(candidatePath);
 }
 
 async function resolveSkillPathsForUpload(

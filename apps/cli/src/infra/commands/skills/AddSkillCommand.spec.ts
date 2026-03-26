@@ -24,6 +24,9 @@ jest.mock('../../utils/consoleLogger', () => ({
 }));
 
 jest.mock('../../../application/utils/resolveSkillInputPaths', () => ({
+  addResolvedSkillPath: jest.requireActual(
+    '../../../application/utils/resolveSkillInputPaths',
+  ).addResolvedSkillPath,
   resolveSkillInputPaths: jest.fn(),
 }));
 

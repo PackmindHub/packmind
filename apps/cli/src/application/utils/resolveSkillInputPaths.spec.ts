@@ -215,7 +215,7 @@ describe('resolveSkillDirectoryRoot', () => {
       await fs.writeFile(path.join(skillDirectoryPath, 'SKILL.md'), 'content');
       await fs.writeFile(nestedFilePath, 'guide');
 
-      const resolvedDirectoryPath = resolveSkillDirectoryRoot(nestedFilePath);
+      const resolvedDirectoryPath = await resolveSkillDirectoryRoot(nestedFilePath);
 
       expect(resolvedDirectoryPath).toBe(skillDirectoryPath);
     });
