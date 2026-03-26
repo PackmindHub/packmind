@@ -153,7 +153,7 @@
     "@sentry/node": "^9.40.0",
     "@sentry/react": "^9.40.0",
     "@storybook/addon-themes": "^9.0.16",
-    "@tanstack/react-query": "^5.81.5",
+    "@tanstack/react-query": "^5.95.2",
     "@teppeis/multimaps": "^3.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/dompurify": "^3.0.5",
