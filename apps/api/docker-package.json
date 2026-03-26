@@ -12,7 +12,7 @@
     "@amplitude/analytics-node": "^1.5.18",
     "@anthropic-ai/sdk": "^0.70.0",
     "@azure/openai": "^2.0.0",
-    "@infisical/sdk": "^4.0.2",
+    "@infisical/sdk": "^5.0.0",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
     "@nestjs/jwt": "^11.0.0",
