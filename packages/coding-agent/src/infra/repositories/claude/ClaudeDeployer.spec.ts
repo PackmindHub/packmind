@@ -4280,8 +4280,8 @@ describe('ClaudeDeployer', () => {
           item.path.startsWith('.claude/skills/'),
         );
 
-        // Should include: 7 default skills + 1 managed skill = 8 total
-        expect(skillDeleteItems).toHaveLength(8);
+        // Should include: 8 default skills + 1 managed skill = 9 total
+        expect(skillDeleteItems).toHaveLength(9);
       });
     });
   });
