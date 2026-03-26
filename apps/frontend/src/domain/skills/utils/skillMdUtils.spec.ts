@@ -196,15 +196,24 @@ describe('buildSkillMdContent', () => {
     });
 
     describe('when additionalProperties is set', () => {
-      it('includes a simple scalar property with kebab-case key', () => {
-        const content = buildSkillMdContent(
-          makeVersion({
-            additionalProperties: { argumentHint: '<url>' },
-          }),
-        );
+      describe('includes a simple scalar property with kebab-case key', () => {
+        let content: string;
 
-        expect(content).toContain('argument-hint');
-        expect(content).toContain('<url>');
+        beforeEach(() => {
+          content = buildSkillMdContent(
+            makeVersion({
+              additionalProperties: { argumentHint: '<url>' },
+            }),
+          );
+        });
+
+        it('includes the kebab-case key', () => {
+          expect(content).toContain('argument-hint');
+        });
+
+        it('includes the value', () => {
+          expect(content).toContain('<url>');
+        });
       });
 
       it('includes a boolean additional property', () => {
@@ -217,28 +226,48 @@ describe('buildSkillMdContent', () => {
         expect(content).toContain('user-invocable');
       });
 
-      it('includes a complex nested additional property', () => {
-        const content = buildSkillMdContent(
-          makeVersion({
-            additionalProperties: {
-              hooks: { preToolUse: [{ matcher: 'Bash', command: 'echo hi' }] },
-            },
-          }),
-        );
+      describe('includes a complex nested additional property', () => {
+        let content: string;
 
-        expect(content).toContain('hooks');
-        expect(content).toContain('preToolUse');
+        beforeEach(() => {
+          content = buildSkillMdContent(
+            makeVersion({
+              additionalProperties: {
+                hooks: {
+                  preToolUse: [{ matcher: 'Bash', command: 'echo hi' }],
+                },
+              },
+            }),
+          );
+        });
+
+        it('includes the top-level key', () => {
+          expect(content).toContain('hooks');
+        });
+
+        it('includes the nested key', () => {
+          expect(content).toContain('preToolUse');
+        });
       });
     });
 
     describe('when additionalProperties is not set', () => {
-      it('omits additional properties from the frontmatter', () => {
-        const content = buildSkillMdContent(
-          makeVersion({ additionalProperties: undefined }),
-        );
+      describe('omits additional properties from the frontmatter', () => {
+        let content: string;
 
-        expect(content).not.toContain('argument-hint');
-        expect(content).not.toContain('user-invocable');
+        beforeEach(() => {
+          content = buildSkillMdContent(
+            makeVersion({ additionalProperties: undefined }),
+          );
+        });
+
+        it('does not contain argument-hint', () => {
+          expect(content).not.toContain('argument-hint');
+        });
+
+        it('does not contain user-invocable', () => {
+          expect(content).not.toContain('user-invocable');
+        });
       });
     });
   });

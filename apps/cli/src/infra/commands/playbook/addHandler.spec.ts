@@ -555,28 +555,32 @@ describe('playbookAddHandler', () => {
       );
     });
 
-    it('stores directory path in playbook when SKILL.md path is provided', async () => {
-      await playbookAddHandler(
-        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
-      );
+    describe('when SKILL.md path is provided', () => {
+      it('stores directory path in playbook', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+        );
 
-      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          filePath: '.claude/skills/my-skill',
-        }),
-      );
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '.claude/skills/my-skill',
+          }),
+        );
+      });
     });
 
-    it('stores directory path in playbook when directory path is provided', async () => {
-      await playbookAddHandler(
-        buildDeps({ filePath: '.claude/skills/my-skill' }),
-      );
+    describe('when directory path is provided', () => {
+      it('stores directory path in playbook', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.claude/skills/my-skill' }),
+        );
 
-      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          filePath: '.claude/skills/my-skill',
-        }),
-      );
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '.claude/skills/my-skill',
+          }),
+        );
+      });
     });
 
     it('exits with 0', async () => {
@@ -637,24 +641,28 @@ describe('playbookAddHandler', () => {
       });
     });
 
-    it('detects changeType as updated when directory path is provided', async () => {
-      await playbookAddHandler(
-        buildDeps({ filePath: '.claude/skills/my-skill' }),
-      );
+    describe('when directory path is provided', () => {
+      it('detects changeType as updated', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.claude/skills/my-skill' }),
+        );
 
-      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-        expect.objectContaining({ changeType: 'updated' }),
-      );
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({ changeType: 'updated' }),
+        );
+      });
     });
 
-    it('detects changeType as updated when SKILL.md path is provided', async () => {
-      await playbookAddHandler(
-        buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
-      );
+    describe('when SKILL.md path is provided', () => {
+      it('detects changeType as updated', async () => {
+        await playbookAddHandler(
+          buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
+        );
 
-      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-        expect.objectContaining({ changeType: 'updated' }),
-      );
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({ changeType: 'updated' }),
+        );
+      });
     });
   });
 
@@ -1377,28 +1385,32 @@ describe('playbookAddHandler', () => {
         });
       });
 
-      it('uses deployed context space when no --space flag is provided', async () => {
-        await playbookAddHandler(buildDeps());
+      describe('when no --space flag is provided', () => {
+        it('uses deployed context space', async () => {
+          await playbookAddHandler(buildDeps());
 
-        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-          expect.objectContaining({
-            spaceId: 'space-123',
-            spaceName: 'Global',
-            changeType: 'updated',
-          }),
-        );
+          expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+            expect.objectContaining({
+              spaceId: 'space-123',
+              spaceName: 'Global',
+              changeType: 'updated',
+            }),
+          );
+        });
       });
 
-      it('treats as creation when --space targets a different space', async () => {
-        await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
+      describe('when --space targets a different space', () => {
+        it('treats as creation', async () => {
+          await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
 
-        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-          expect.objectContaining({
-            spaceId: 'space-456',
-            spaceName: 'Team Backend',
-            changeType: 'created',
-          }),
-        );
+          expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+            expect.objectContaining({
+              spaceId: 'space-456',
+              spaceName: 'Team Backend',
+              changeType: 'created',
+            }),
+          );
+        });
       });
     });
   });
@@ -1665,23 +1677,30 @@ describe('playbookAddHandler', () => {
       });
     });
 
-    it('resolves to the skill directory and stages as updated', async () => {
-      await playbookAddHandler(
-        buildDeps({
-          filePath: '.claude/skills/my-skill/references/file.md',
-        }),
-      );
+    describe('resolves to the skill directory and stages as updated', () => {
+      beforeEach(async () => {
+        await playbookAddHandler(
+          buildDeps({
+            filePath: '.claude/skills/my-skill/references/file.md',
+          }),
+        );
+      });
 
-      expect(mockReadSkillDirectory).toHaveBeenCalledWith(
-        '/project/.claude/skills/my-skill',
-      );
-      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          filePath: '.claude/skills/my-skill',
-          changeType: 'updated',
-          artifactType: 'skill',
-        }),
-      );
+      it('reads the skill directory', () => {
+        expect(mockReadSkillDirectory).toHaveBeenCalledWith(
+          '/project/.claude/skills/my-skill',
+        );
+      });
+
+      it('stages the change as updated', () => {
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '.claude/skills/my-skill',
+            changeType: 'updated',
+            artifactType: 'skill',
+          }),
+        );
+      });
     });
 
     it('does not stage as removed', async () => {

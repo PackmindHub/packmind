@@ -7,12 +7,16 @@ const spaces: Space[] = [
 ];
 
 describe('resolveSpace', () => {
-  it('returns single space when no slug provided', () => {
-    expect(resolveSpace([spaces[0]])).toEqual(spaces[0]);
+  describe('when no slug provided', () => {
+    it('returns single space', () => {
+      expect(resolveSpace([spaces[0]])).toEqual(spaces[0]);
+    });
   });
 
-  it('throws when multiple spaces and no slug', () => {
-    expect(() => resolveSpace(spaces)).toThrow('Multiple spaces found');
+  describe('when multiple spaces and no slug', () => {
+    it('throws', () => {
+      expect(() => resolveSpace(spaces)).toThrow('Multiple spaces found');
+    });
   });
 
   it('finds space by slug', () => {
@@ -23,9 +27,11 @@ describe('resolveSpace', () => {
     expect(resolveSpace(spaces, '@my-space')).toEqual(spaces[0]);
   });
 
-  it('throws when slug not found', () => {
-    expect(() => resolveSpace(spaces, 'nonexistent')).toThrow(
-      'Space "nonexistent" not found',
-    );
+  describe('when slug not found', () => {
+    it('throws', () => {
+      expect(() => resolveSpace(spaces, 'nonexistent')).toThrow(
+        'Space "nonexistent" not found',
+      );
+    });
   });
 });

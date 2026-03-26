@@ -410,17 +410,27 @@ describe('PlaybookLocalRepository', () => {
         mockFs.writeFileSync.mockReturnValue(undefined);
       });
 
-      it('only removes the entry for the specified space', () => {
-        repository.removeChange(
-          '.packmind/standards/my-standard.md',
-          'space-1',
-        );
+      describe('only removes the entry for the specified space', () => {
+        let parsed: PlaybookYaml;
 
-        const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
-        const parsed = yaml.parse(writtenContent) as PlaybookYaml;
+        beforeEach(() => {
+          repository.removeChange(
+            '.packmind/standards/my-standard.md',
+            'space-1',
+          );
 
-        expect(parsed.changes).toHaveLength(1);
-        expect(parsed.changes[0].spaceId).toBe('space-2');
+          const writtenContent = mockFs.writeFileSync.mock
+            .calls[0][1] as string;
+          parsed = yaml.parse(writtenContent) as PlaybookYaml;
+        });
+
+        it('keeps one entry', () => {
+          expect(parsed.changes).toHaveLength(1);
+        });
+
+        it('retains the other space entry', () => {
+          expect(parsed.changes[0].spaceId).toBe('space-2');
+        });
       });
     });
 

@@ -48,9 +48,13 @@ function buildClaudeStandard(opts: {
 }
 
 describe('compareStandardFields', () => {
-  it('returns empty array when contents are identical', () => {
-    const content = buildStandard({});
-    expect(compareStandardFields(content, content, PACKMIND_PATH)).toEqual([]);
+  describe('when contents are identical', () => {
+    it('returns empty array', () => {
+      const content = buildStandard({});
+      expect(compareStandardFields(content, content, PACKMIND_PATH)).toEqual(
+        [],
+      );
+    });
   });
 
   it('detects name change', () => {
@@ -152,22 +156,26 @@ describe('compareStandardFields', () => {
     );
   });
 
-  it('returns empty array when parsing fails', () => {
-    const result = compareStandardFields(
-      'invalid',
-      'invalid',
-      'unknown/path.md',
-    );
-    expect(result).toEqual([]);
+  describe('when parsing fails', () => {
+    it('returns empty array', () => {
+      const result = compareStandardFields(
+        'invalid',
+        'invalid',
+        'unknown/path.md',
+      );
+      expect(result).toEqual([]);
+    });
   });
 });
 
 describe('compareCommandFields', () => {
   const basePath = '.claude/commands/my-command.md';
 
-  it('returns empty array when contents are identical', () => {
-    const content = '---\nname: My Command\n---\nDo something useful';
-    expect(compareCommandFields(content, content, basePath)).toEqual([]);
+  describe('when contents are identical', () => {
+    it('returns empty array', () => {
+      const content = '---\nname: My Command\n---\nDo something useful';
+      expect(compareCommandFields(content, content, basePath)).toEqual([]);
+    });
   });
 
   it('detects name change', () => {
@@ -193,14 +201,18 @@ describe('compareCommandFields', () => {
     );
   });
 
-  it('returns empty array when local parsing fails', () => {
-    expect(compareCommandFields('', 'valid content', basePath)).toEqual([]);
+  describe('when local parsing fails', () => {
+    it('returns empty array', () => {
+      expect(compareCommandFields('', 'valid content', basePath)).toEqual([]);
+    });
   });
 
-  it('returns empty array when deployed parsing fails', () => {
-    expect(
-      compareCommandFields('---\nname: Cmd\n---\nBody', '', basePath),
-    ).toEqual([]);
+  describe('when deployed parsing fails', () => {
+    it('returns empty array', () => {
+      expect(
+        compareCommandFields('---\nname: Cmd\n---\nBody', '', basePath),
+      ).toEqual([]);
+    });
   });
 });
 
@@ -227,10 +239,12 @@ describe('compareSkillDefinitionFields', () => {
     ...overrides,
   });
 
-  it('returns empty array when all fields match', () => {
-    expect(compareSkillDefinitionFields(makeLocal(), makeDeployed())).toEqual(
-      [],
-    );
+  describe('when all fields match', () => {
+    it('returns empty array', () => {
+      expect(compareSkillDefinitionFields(makeLocal(), makeDeployed())).toEqual(
+        [],
+      );
+    });
   });
 
   it('detects name change', () => {

@@ -76,13 +76,18 @@ describe('listSkillsHandler', () => {
       );
     });
 
-    it('displays space headers', () => {
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Space "Space A"'),
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Space "Space B"'),
-      );
+    describe('displays space headers', () => {
+      it('displays Space A header', () => {
+        expect(console.log).toHaveBeenCalledWith(
+          expect.stringContaining('Space "Space A"'),
+        );
+      });
+
+      it('displays Space B header', () => {
+        expect(console.log).toHaveBeenCalledWith(
+          expect.stringContaining('Space "Space B"'),
+        );
+      });
     });
 
     it('exits with code 0', () => {
