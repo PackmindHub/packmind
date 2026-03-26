@@ -75,9 +75,7 @@ export async function playbookUnstageHandler(
   }
 
   if (spaceSlug) {
-    const entry = matchingEntries.find(
-      (c) => c.spaceName === spaceSlug || c.spaceId === spaceSlug,
-    );
+    const entry = matchingEntries.find((c) => c.spaceName === spaceSlug);
     if (!entry) {
       logErrorConsole(
         `No staged change found for ${normalizedFilePath} in space "@${spaceSlug}"`,
