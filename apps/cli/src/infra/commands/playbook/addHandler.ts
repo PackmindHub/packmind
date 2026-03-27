@@ -301,7 +301,7 @@ export async function playbookAddHandler(
         const lenient = parseLenientStandard(localContent);
         if (!lenient) {
           logErrorConsole(
-            `${filePath} is not a valid artifact. Expected a markdown heading (# Name) followed by content.`,
+            `${filePath} is not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
           );
           exit(1);
           return;

@@ -121,7 +121,14 @@ The file must be located in a recognized artifact directory:
 #### File format requirements
 
 - **Commands**: File must not be empty. Frontmatter with `name:` is optional.
-- **Standards**: Must contain a heading and at least one rule (bullet point).
+- **Standards**: Must start with a markdown heading (`# Name`) followed by content. Example:
+
+  ```md
+  # My standard name
+
+  Content goes here...
+  ```
+
 - **Skills**: Path must point to a directory containing a `SKILL.md` with valid frontmatter (`name`, `description`) and a non-empty body.
 
 #### When it won't work

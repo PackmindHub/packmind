@@ -1,4 +1,4 @@
-export const DOMAIN_SKILLS = `# Skills Domain Analysis
+export const ANALYZE_SKILLS = `# Skills Domain Analysis
 
 Scan existing skills, identify which are relevant to the user's validated intent, then perform deep analysis on those in one pass.
 
@@ -10,7 +10,7 @@ Skills are modular packages providing specialized knowledge and workflows. Each 
 - GitHub Copilot: \`**/.github/skills/<skill-name>/\`
 Search recursively for these directories. If multiple agent directories exist, pick one.
 
-For the complete format specification (frontmatter fields, naming rules, directory structure, progressive disclosure), see [agent-skills-specification.md](agent-skills-specification.md).
+For the complete format specification (frontmatter fields, naming rules, directory structure, progressive disclosure), see [agent-skills-specification.md](../references/agent-skills-specification.md).
 
 ## Instructions
 
@@ -48,7 +48,7 @@ For each new skill idea, verify:
 - It will be needed in future sessions (not a one-off)
 - SKILL.md would stay under 5k words (plan references for overflow)
 
-For each new skill that passes validation, follow the procedure in [create-skill-procedure.md](create-skill-procedure.md) to write the skill directory.
+For each new skill that passes validation, follow the procedure in [create-skill-procedure.md](../references/create-skill-procedure.md) to write the skill directory.
 
 ## Output Format
 

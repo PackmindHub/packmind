@@ -1,4 +1,4 @@
-export const DOMAIN_STANDARDS = `# Standards Domain Analysis
+export const ANALYZE_STANDARDS = `# Standards Domain Analysis
 
 Scan existing standards, identify which are relevant to the user's validated intent, then perform deep analysis on those in one pass.
 

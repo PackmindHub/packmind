@@ -1,4 +1,4 @@
-export const DOMAIN_COMMANDS = `# Commands Domain Analysis
+export const ANALYZE_COMMANDS = `# Commands Domain Analysis
 
 Scan existing commands, identify which are relevant to the user's validated intent, then perform deep analysis on those in one pass.
 
