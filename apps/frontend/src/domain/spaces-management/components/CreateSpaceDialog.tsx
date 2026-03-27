@@ -115,6 +115,7 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
                   placeholder="e.g. 'frontend team', 'security'..."
                   required
                   disabled={createSpaceMutation.isPending}
+                  data-testid="create-space-name-input"
                 />
                 <PMField.ErrorText>{spaceNameError}</PMField.ErrorText>
               </PMField.Root>
@@ -132,6 +133,7 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
                 variant="primary"
                 type="submit"
                 loading={createSpaceMutation.isPending}
+                data-testid="create-space-submit"
               >
                 {createSpaceMutation.isPending ? 'Creating...' : 'Create space'}
               </PMButton>

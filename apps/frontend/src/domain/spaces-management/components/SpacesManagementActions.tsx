@@ -49,6 +49,7 @@ export function SpacesManagementActions({
           onClick={() => setMoveDialogOpen(true)}
           size="sm"
           disabled={!isSomeSelected}
+          data-testid="move-to-space-button"
         >
           {`Move to space (${selectedIds.length})`}
         </PMButton>
