@@ -158,15 +158,13 @@ export class RecipeRepository
     });
 
     try {
-      await this.repository.manager.transaction(async (transaction) => {
-        await transaction.update(
-          RecipeSchema,
+      await this.repository.manager.transaction(async (manager) => {
+        const transactionalRepository = manager.getRepository(RecipeSchema);
+        await transactionalRepository.update(
           { id: recipeId },
-          {
-            movedTo: destinationSpaceId,
-          },
+          { movedTo: destinationSpaceId },
         );
-        await transaction.softDelete(RecipeSchema, { id: recipeId });
+        await transactionalRepository.softDelete({ id: recipeId });
       });
 
       this.logger.info('Recipe marked as moved successfully', {
