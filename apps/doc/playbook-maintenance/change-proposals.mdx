@@ -166,6 +166,17 @@ packmind-cli playbook submit -m "Clarify error handling rules for API endpoints"
 
 The message has a maximum length of 1024 characters. If you omit the `-m` flag in interactive mode, an editor will open for you to write the message.
 
+#### Duplicate name detection
+
+Before submitting, Packmind checks whether any artifact you are creating already exists in the target space (by name, case-insensitive). If a duplicate is found, the submission is rejected with an error:
+
+```
+Error: A standard named "My Standard" already exists in this space.
+Use "playbook unstage" to remove it or rename the artifact.
+```
+
+To resolve this, either rename your local artifact file or run `packmind-cli playbook unstage <path>` to remove it from the staged changes.
+
 <Tip>
   If you see an error like **Failed to submit "{name}": {artifactType} is
   outdated, please run packmind-cli install to update it**, it means the local
