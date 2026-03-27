@@ -185,13 +185,11 @@ describe('OpenCode Deployment Integration', () => {
       expect(commandFile?.content).toBe(recipe.content);
     });
 
-    it('clears recipes section in AGENTS.md', () => {
+    it('does not write to AGENTS.md', () => {
       const agentsMdFile = fileUpdates.createOrUpdate.find(
         (f) => f.path === 'AGENTS.md',
       );
-      expect(agentsMdFile?.sections).toEqual([
-        { key: 'Packmind recipes', content: '' },
-      ]);
+      expect(agentsMdFile).toBeUndefined();
     });
   });
 

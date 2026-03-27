@@ -69,14 +69,6 @@ export class OpenCodeDeployer extends SingleFileDeployer {
       });
     }
 
-    // Clear the recipes section in AGENTS.md
-    const agentsMdPath = getTargetPrefixedPath(this.config.filePath, target);
-    fileUpdates.createOrUpdate.push({
-      path: agentsMdPath,
-      sections: [{ key: 'Packmind recipes', content: '' }],
-      artifactType: 'command',
-    });
-
     return fileUpdates;
   }
 
@@ -102,13 +94,6 @@ export class OpenCodeDeployer extends SingleFileDeployer {
         artifactId: recipeVersion.recipeId as string,
       });
     }
-
-    // Clear the recipes section in AGENTS.md
-    fileUpdates.createOrUpdate.push({
-      path: this.config.filePath,
-      sections: [{ key: 'Packmind recipes', content: '' }],
-      artifactType: 'command',
-    });
 
     return fileUpdates;
   }

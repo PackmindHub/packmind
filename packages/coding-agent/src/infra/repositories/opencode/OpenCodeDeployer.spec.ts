@@ -73,31 +73,25 @@ describe('OpenCodeDeployer', () => {
         );
       });
 
-      it('creates two files to update', () => {
-        expect(result.createOrUpdate).toHaveLength(2);
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
       it('creates the command file at the correct path', () => {
-        const commandFile = result.createOrUpdate.find((f) =>
-          f.path.includes('.opencode/commands/'),
+        expect(result.createOrUpdate[0].path).toBe(
+          '.opencode/commands/test-recipe.md',
         );
-        expect(commandFile?.path).toBe('.opencode/commands/test-recipe.md');
       });
 
       it('writes recipe content as-is to command file', () => {
-        const commandFile = result.createOrUpdate.find((f) =>
-          f.path.includes('.opencode/commands/'),
-        );
-        expect(commandFile?.content).toBe(recipeVersion.content);
+        expect(result.createOrUpdate[0].content).toBe(recipeVersion.content);
       });
 
-      it('clears recipes section in AGENTS.md', () => {
+      it('does not write to AGENTS.md', () => {
         const agentsMdFile = result.createOrUpdate.find(
           (f) => f.path === 'AGENTS.md',
         );
-        expect(agentsMdFile?.sections).toEqual([
-          { key: 'Packmind recipes', content: '' },
-        ]);
+        expect(agentsMdFile).toBeUndefined();
       });
 
       it('has no files to delete', () => {
@@ -112,18 +106,8 @@ describe('OpenCodeDeployer', () => {
         result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
       });
 
-      it('creates one file to update', () => {
-        expect(result.createOrUpdate).toHaveLength(1);
-      });
-
-      it('targets AGENTS.md', () => {
-        expect(result.createOrUpdate[0].path).toBe('AGENTS.md');
-      });
-
-      it('clears recipes section', () => {
-        expect(result.createOrUpdate[0].sections).toEqual([
-          { key: 'Packmind recipes', content: '' },
-        ]);
+      it('creates no files to update', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
       });
 
       it('has no files to delete', () => {
@@ -172,13 +156,11 @@ describe('OpenCodeDeployer', () => {
         expect(commandFile?.content).toBe(recipeVersion.content);
       });
 
-      it('clears recipes section in AGENTS.md without target prefix', () => {
+      it('does not write to AGENTS.md', () => {
         const agentsMdFile = result.createOrUpdate.find(
           (f) => f.path === 'AGENTS.md',
         );
-        expect(agentsMdFile?.sections).toEqual([
-          { key: 'Packmind recipes', content: '' },
-        ]);
+        expect(agentsMdFile).toBeUndefined();
       });
     });
   });
