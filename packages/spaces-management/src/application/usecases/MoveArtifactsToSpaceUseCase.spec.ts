@@ -605,19 +605,26 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         ).rejects.toThrow(ArtifactNameConflictError);
       });
 
-      it('does not duplicate or mark the standard as moved', async () => {
-        await useCase
-          .execute(
-            buildCommand({
-              artifacts: [{ id: standardId, type: 'standard' }],
-            }),
-          )
-          .catch(() => {
-            /* expected */
-          });
+      describe('when the move is attempted', () => {
+        beforeEach(async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                artifacts: [{ id: standardId, type: 'standard' }],
+              }),
+            )
+            .catch(() => {
+              /* expected */
+            });
+        });
 
-        expect(standardsPort.duplicateStandardToSpace).not.toHaveBeenCalled();
-        expect(standardsPort.markStandardAsMoved).not.toHaveBeenCalled();
+        it('does not duplicate the standard', () => {
+          expect(standardsPort.duplicateStandardToSpace).not.toHaveBeenCalled();
+        });
+
+        it('does not mark the standard as moved', () => {
+          expect(standardsPort.markStandardAsMoved).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -653,19 +660,26 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         ).rejects.toThrow(ArtifactNameConflictError);
       });
 
-      it('does not duplicate or mark the skill as moved', async () => {
-        await useCase
-          .execute(
-            buildCommand({
-              artifacts: [{ id: skillId, type: 'skill' }],
-            }),
-          )
-          .catch(() => {
-            /* expected */
-          });
+      describe('when the move is attempted', () => {
+        beforeEach(async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                artifacts: [{ id: skillId, type: 'skill' }],
+              }),
+            )
+            .catch(() => {
+              /* expected */
+            });
+        });
 
-        expect(skillsPort.duplicateSkillToSpace).not.toHaveBeenCalled();
-        expect(skillsPort.markSkillAsMoved).not.toHaveBeenCalled();
+        it('does not duplicate the skill', () => {
+          expect(skillsPort.duplicateSkillToSpace).not.toHaveBeenCalled();
+        });
+
+        it('does not mark the skill as moved', () => {
+          expect(skillsPort.markSkillAsMoved).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -701,19 +715,26 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         ).rejects.toThrow(ArtifactNameConflictError);
       });
 
-      it('does not duplicate or mark the recipe as moved', async () => {
-        await useCase
-          .execute(
-            buildCommand({
-              artifacts: [{ id: recipeId, type: 'command' }],
-            }),
-          )
-          .catch(() => {
-            /* expected */
-          });
+      describe('when the move is attempted', () => {
+        beforeEach(async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                artifacts: [{ id: recipeId, type: 'command' }],
+              }),
+            )
+            .catch(() => {
+              /* expected */
+            });
+        });
 
-        expect(recipesPort.duplicateRecipeToSpace).not.toHaveBeenCalled();
-        expect(recipesPort.markRecipeAsMoved).not.toHaveBeenCalled();
+        it('does not duplicate the recipe', () => {
+          expect(recipesPort.duplicateRecipeToSpace).not.toHaveBeenCalled();
+        });
+
+        it('does not mark the recipe as moved', () => {
+          expect(recipesPort.markRecipeAsMoved).not.toHaveBeenCalled();
+        });
       });
     });
 
