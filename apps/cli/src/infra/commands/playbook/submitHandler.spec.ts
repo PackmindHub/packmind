@@ -2496,4 +2496,196 @@ describe('playbookSubmitHandler', () => {
       });
     });
   });
+
+  describe('duplicate name pre-flight check', () => {
+    describe('when creation entry has a duplicate name in the space', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({ changeType: 'created', artifactName: 'My Standard' }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'my-standard',
+              name: 'My Standard',
+              description: '',
+            },
+          ],
+        });
+      });
+
+      it('logs error mentioning the artifact name', async () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('My Standard'),
+        );
+      });
+
+      it('logs error mentioning playbook unstage', async () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('playbook unstage'),
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not call batchCreate', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when creation entry name matches case-insensitively', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({ changeType: 'created', artifactName: 'my standard' }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'my-standard',
+              name: 'My Standard',
+              description: '',
+            },
+          ],
+        });
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when multiple creation entries have duplicate names among themselves', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard.md',
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard-copy.md',
+          }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({ standards: [] });
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when gateway list call fails', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({ changeType: 'created', artifactName: 'New Standard' }),
+        ]);
+        mockGateway.standards.list.mockRejectedValue(
+          new Error('Network error'),
+        );
+      });
+
+      it('proceeds with submit', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalled();
+      });
+    });
+
+    describe('when creation entry has no duplicate', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({ changeType: 'created', artifactName: 'New Standard' }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'other',
+              name: 'Other Standard',
+              description: '',
+            },
+          ],
+        });
+      });
+
+      it('proceeds with submit', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalled();
+      });
+    });
+
+    describe('when created command has a duplicate name', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'created',
+            artifactType: 'command',
+            artifactName: 'My Command',
+            filePath: '.packmind/commands/my-command.md',
+            content: COMMAND_CONTENT,
+          }),
+        ]);
+        mockGateway.commands.list.mockResolvedValue({
+          recipes: [{ id: 'cmd-1', slug: 'my-command', name: 'My Command' }],
+        });
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when created skill has a duplicate name', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'created',
+            artifactType: 'skill',
+            artifactName: 'My Skill',
+            filePath: '.packmind/skills/my-skill',
+            content:
+              'name: My Skill\ndescription: A skill\nprompt: Do something',
+          }),
+        ]);
+        mockGateway.skills.list.mockResolvedValue([
+          { id: 'skill-1', slug: 'my-skill', name: 'My Skill' },
+        ]);
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
 });

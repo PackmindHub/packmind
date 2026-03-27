@@ -29,6 +29,7 @@ import {
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
+import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
@@ -449,6 +450,71 @@ function findDeployedContentForPath(
   return match?.content ?? null;
 }
 
+async function checkForDuplicateNames(
+  createdEntries: PlaybookChangeEntry[],
+  packmindGateway: IPackmindGateway,
+): Promise<string[]> {
+  const errors: string[] = [];
+
+  // Group by (spaceId, artifactType)
+  const groups = new Map<string, PlaybookChangeEntry[]>();
+  for (const entry of createdEntries) {
+    const key = `${entry.spaceId}:${entry.artifactType}`;
+    const existing = groups.get(key) ?? [];
+    existing.push(entry);
+    groups.set(key, existing);
+  }
+
+  // Check duplicates among staged entries themselves
+  for (const [, entries] of groups) {
+    const seen = new Map<string, string>();
+    for (const entry of entries) {
+      const lowerName = entry.artifactName.toLowerCase();
+      if (seen.has(lowerName)) {
+        errors.push(
+          `A ${entry.artifactType} named "${entry.artifactName}" is staged multiple times. Remove the duplicate with "playbook unstage" or rename the artifact.`,
+        );
+      } else {
+        seen.set(lowerName, entry.artifactName);
+      }
+    }
+  }
+
+  // Fetch existing artifacts and check collisions
+  for (const [key, entries] of groups) {
+    const [spaceId, artifactType] = key.split(':');
+    try {
+      let existingNames: string[] = [];
+      if (artifactType === 'standard') {
+        const response = await packmindGateway.standards.list({ spaceId });
+        existingNames = response.standards.map((s) => s.name);
+      } else if (artifactType === 'command') {
+        const response = await packmindGateway.commands.list({ spaceId });
+        existingNames = response.recipes.map((r) => r.name);
+      } else if (artifactType === 'skill') {
+        const response = await packmindGateway.skills.list({ spaceId });
+        existingNames = response.map((s) => s.name);
+      }
+
+      const existingNamesLower = new Set(
+        existingNames.map((n) => n.toLowerCase()),
+      );
+
+      for (const entry of entries) {
+        if (existingNamesLower.has(entry.artifactName.toLowerCase())) {
+          errors.push(
+            `A ${entry.artifactType} named "${entry.artifactName}" already exists in this space. Use "playbook unstage" to remove it or rename the artifact.`,
+          );
+        }
+      }
+    } catch {
+      // Gateway failure — skip pre-flight check for this group
+    }
+  }
+
+  return errors;
+}
+
 export async function playbookSubmitHandler(
   deps: PlaybookSubmitHandlerDependencies,
 ): Promise<void> {
@@ -488,6 +554,22 @@ export async function playbookSubmitHandler(
       return;
     }
     resolvedMessage = stripped;
+  }
+
+  // Pre-flight: check for duplicate artifact names
+  const createdEntries = changes.filter((c) => c.changeType === 'created');
+  if (createdEntries.length > 0) {
+    const duplicateErrors = await checkForDuplicateNames(
+      createdEntries,
+      packmindCliHexa.getPackmindGateway(),
+    );
+    if (duplicateErrors.length > 0) {
+      for (const error of duplicateErrors) {
+        logErrorConsole(error);
+      }
+      exit(1);
+      return;
+    }
   }
 
   // Per-target lock file resolution cache
