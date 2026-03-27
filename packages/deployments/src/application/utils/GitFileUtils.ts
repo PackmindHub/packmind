@@ -67,9 +67,18 @@ export async function fetchExistingFilesFromGit(
 
   const existingFiles = new Map<string, string>();
 
+  // Deduplicate agents by file path to avoid fetching the same file multiple times
+  // (e.g. both 'opencode' and 'agents_md' map to 'AGENTS.md')
+  const uniquePaths = new Map<string, CodingAgent>();
   for (const agent of codingAgents) {
+    const basePath = getFilePathForAgent(agent);
+    if (!uniquePaths.has(basePath)) {
+      uniquePaths.set(basePath, agent);
+    }
+  }
+
+  for (const [basePath, agent] of uniquePaths) {
     try {
-      const basePath = getFilePathForAgent(agent);
       const prefixedPath = getTargetPrefixedPath(basePath, target);
 
       logger.debug('Fetching file for agent', {
