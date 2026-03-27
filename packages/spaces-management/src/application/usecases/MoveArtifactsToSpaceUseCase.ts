@@ -254,8 +254,8 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     if (commandArtifacts.length > 0) {
       const destRecipes = await this.recipesPort.listRecipesBySpace({
         spaceId: destinationSpaceId,
-        organizationId: organizationId as unknown as string,
-        userId: userId as unknown as string,
+        organizationId,
+        userId,
       });
       const destSlugs = new Set(destRecipes.map((r) => r.slug));
 
