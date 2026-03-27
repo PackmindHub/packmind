@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- Notify the user when default skills are skipped when running `packmind skills init` due to an old version of the cli.
+
 ## Removed
 
 # [0.23.0] - 2026-03-25

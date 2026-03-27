@@ -19,6 +19,7 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
       filesCreated: 0,
       filesUpdated: 0,
       errors: [],
+      skippedSkillsCount: 0,
     };
 
     // Read agents configuration from packmind.json
@@ -35,6 +36,8 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
         agents,
       },
     );
+
+    result.skippedSkillsCount = response.skippedSkillsCount;
 
     try {
       // Process createOrUpdate files
