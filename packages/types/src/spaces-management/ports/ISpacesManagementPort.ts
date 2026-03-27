@@ -12,7 +12,6 @@ export const ISpacesManagementPortName = 'ISpacesManagementPort' as const;
 export interface ISpacesManagementPort {
   /**
    * Move artifacts (standards, skills, recipes) from one space to another.
-   * Requires admin privileges.
    */
   moveArtifactsToSpace(
     command: MoveArtifactsToSpaceCommand,
