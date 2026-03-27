@@ -5,10 +5,14 @@ import { getSkillMd } from './skills/packmind-create-skill/skill';
 import { README } from './skills/packmind-create-skill/readme';
 import { getInitSkillPy } from './skills/packmind-create-skill/scripts/init-skill';
 import { QUICK_VALIDATE_PY } from './skills/packmind-create-skill/scripts/quick-validate';
+import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
 
-export class CreateSkillDeployer implements ISkillDeployer {
+export class CreateSkillDeployer
+  extends AbstractDefaultSkillDeployer
+  implements ISkillDeployer
+{
   public readonly slug = 'packmind-create-skill';
-  public readonly minimumVersion = '0.14.0';
+  protected readonly minimumVersion = '0.14.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-skill`;

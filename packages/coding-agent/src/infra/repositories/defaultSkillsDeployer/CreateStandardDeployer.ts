@@ -3,10 +3,14 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
 import { getSkillMd } from './skills/packmind-create-standard/skill';
 import { README } from './skills/packmind-create-standard/readme';
+import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
 
-export class CreateStandardDeployer implements ISkillDeployer {
+export class CreateStandardDeployer
+  extends AbstractDefaultSkillDeployer
+  implements ISkillDeployer
+{
   public readonly slug = 'packmind-create-standard';
-  public readonly minimumVersion = '0.14.0';
+  protected readonly minimumVersion = '0.14.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-standard`;

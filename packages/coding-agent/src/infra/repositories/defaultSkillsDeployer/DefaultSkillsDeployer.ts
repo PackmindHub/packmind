@@ -1,5 +1,4 @@
 import { FileUpdates } from '@packmind/types';
-import semver from 'semver';
 import { CliListCommandsDeployer } from './CliListCommandsDeployer';
 import { CreateCommandDeployer } from './CreateCommandDeployer';
 import { CreatePackageDeployer } from './CreatePackageDeployer';
@@ -77,17 +76,9 @@ export class DefaultSkillsDeployer {
       return this.skillDeployers;
     }
 
-    return this.skillDeployers.filter((deployer) => {
-      if (deployer.minimumVersion === 'unreleased') {
-        return false;
-      }
-
-      if (cliVersion) {
-        return semver.lte(deployer.minimumVersion, cliVersion);
-      }
-
-      return true;
-    });
+    return this.skillDeployers.filter((deployer) =>
+      deployer.isSupportedByCliVersion(cliVersion),
+    );
   }
 
   private countSkippedDeployers(options: DeployDefaultSkillsOptions): number {
@@ -98,9 +89,7 @@ export class DefaultSkillsDeployer {
     }
 
     return this.skillDeployers.filter(
-      (deployer) =>
-        deployer.minimumVersion !== 'unreleased' &&
-        semver.gt(deployer.minimumVersion, cliVersion),
+      (deployer) => !deployer.isSupportedByCliVersion(cliVersion),
     ).length;
   }
 }
