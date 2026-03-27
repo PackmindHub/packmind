@@ -173,7 +173,7 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
               />
             </PMEditable.Root>
             {nameError && (
-              <PMText color="fg.error" fontSize="sm">
+              <PMText color="error" fontSize="sm">
                 {nameError}
               </PMText>
             )}
