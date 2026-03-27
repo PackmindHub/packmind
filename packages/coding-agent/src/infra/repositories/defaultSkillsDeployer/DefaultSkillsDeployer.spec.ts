@@ -13,7 +13,7 @@ describe('DefaultSkillsDeployer', () => {
 
       beforeEach(() => {
         const result = deployer.deployDefaultSkills();
-        paths = result.createOrUpdate.map((f) => f.path);
+        paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
       });
 
       it('includes packmind-create-skill', () => {
@@ -55,6 +55,10 @@ describe('DefaultSkillsDeployer', () => {
           true,
         );
       });
+
+      it('returns 0 skipped skills', () => {
+        expect(deployer.deployDefaultSkills().skippedSkillsCount).toBe(0);
+      });
     });
 
     describe('with includeBeta set to true', () => {
@@ -62,7 +66,7 @@ describe('DefaultSkillsDeployer', () => {
 
       beforeEach(() => {
         const result = deployer.deployDefaultSkills({ includeBeta: true });
-        paths = result.createOrUpdate.map((f) => f.path);
+        paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
       });
 
       it('includes packmind-create-skill', () => {
@@ -86,6 +90,13 @@ describe('DefaultSkillsDeployer', () => {
           true,
         );
       });
+
+      it('returns 0 skipped skills', () => {
+        expect(
+          deployer.deployDefaultSkills({ includeBeta: true })
+            .skippedSkillsCount,
+        ).toBe(0);
+      });
     });
 
     describe('with cliVersion specified', () => {
@@ -94,7 +105,7 @@ describe('DefaultSkillsDeployer', () => {
 
         beforeEach(() => {
           const result = deployer.deployDefaultSkills({ cliVersion: '0.14.0' });
-          paths = result.createOrUpdate.map((f) => f.path);
+          paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
         });
 
         it('includes packmind-create-skill', () => {
@@ -124,6 +135,13 @@ describe('DefaultSkillsDeployer', () => {
             paths.some((p) => p.includes('packmind-update-playbook')),
           ).toBe(false);
         });
+
+        it('returns skipped count for skills requiring a higher version', () => {
+          expect(
+            deployer.deployDefaultSkills({ cliVersion: '0.14.0' })
+              .skippedSkillsCount,
+          ).toBeGreaterThan(0);
+        });
       });
 
       describe('when cliVersion is lower than minimumVersion (0.13.0)', () => {
@@ -131,7 +149,7 @@ describe('DefaultSkillsDeployer', () => {
 
         beforeEach(() => {
           const result = deployer.deployDefaultSkills({ cliVersion: '0.13.0' });
-          paths = result.createOrUpdate.map((f) => f.path);
+          paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
         });
 
         it('excludes packmind-create-skill', () => {
@@ -162,7 +180,7 @@ describe('DefaultSkillsDeployer', () => {
 
         beforeEach(() => {
           const result = deployer.deployDefaultSkills({ cliVersion: '1.0.0' });
-          paths = result.createOrUpdate.map((f) => f.path);
+          paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
         });
 
         it('includes packmind-create-skill', () => {
@@ -204,6 +222,13 @@ describe('DefaultSkillsDeployer', () => {
             paths.some((p) => p.includes('packmind-update-playbook')),
           ).toBe(true);
         });
+
+        it('returns 0 skipped skills', () => {
+          expect(
+            deployer.deployDefaultSkills({ cliVersion: '1.0.0' })
+              .skippedSkillsCount,
+          ).toBe(0);
+        });
       });
     });
 
@@ -216,7 +241,7 @@ describe('DefaultSkillsDeployer', () => {
             cliVersion: '0.1.0',
             includeBeta: true,
           });
-          paths = result.createOrUpdate.map((f) => f.path);
+          paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
         });
 
         it('includes packmind-create-skill regardless of cliVersion', () => {
@@ -239,6 +264,37 @@ describe('DefaultSkillsDeployer', () => {
           expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
             true,
           );
+        });
+
+        it('returns 0 skipped skills', () => {
+          expect(
+            deployer.deployDefaultSkills({
+              cliVersion: '0.1.0',
+              includeBeta: true,
+            }).skippedSkillsCount,
+          ).toBe(0);
+        });
+      });
+    });
+
+    describe('skippedSkillsCount', () => {
+      describe('when cliVersion is provided and some skills require a higher version', () => {
+        it('counts only released skills with minimumVersion higher than cliVersion', () => {
+          const result = deployer.deployDefaultSkills({ cliVersion: '0.14.0' });
+          expect(result.skippedSkillsCount).toBeGreaterThan(0);
+        });
+      });
+
+      describe('when cliVersion is high enough for all released skills', () => {
+        it('returns 0 skipped skills', () => {
+          const result = deployer.deployDefaultSkills({ cliVersion: '1.0.0' });
+          expect(result.skippedSkillsCount).toBe(0);
+        });
+      });
+
+      describe('when no cliVersion is provided', () => {
+        it('returns 0 skipped skills', () => {
+          expect(deployer.deployDefaultSkills().skippedSkillsCount).toBe(0);
         });
       });
     });

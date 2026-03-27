@@ -59,7 +59,13 @@ describe('CursorDeployer', () => {
     it('returns file updates for default skills', async () => {
       const result = await deployer.deployDefaultSkills();
 
-      expect(result.createOrUpdate.length).toBeGreaterThan(0);
+      expect(result.fileUpdates.createOrUpdate.length).toBeGreaterThan(0);
+    });
+
+    it('returns 0 skipped skills count with no cliVersion', async () => {
+      const result = await deployer.deployDefaultSkills();
+
+      expect(result.skippedSkillsCount).toBe(0);
     });
   });
 
