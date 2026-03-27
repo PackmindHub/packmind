@@ -112,9 +112,9 @@ describe('ListOrganizationUsersUseCase', () => {
 
         expect(result).toEqual({
           users: [
-            { userId: user1Id, email: 'admin@example.com', role: 'admin' },
-            { userId: user2Id, email: 'member@example.com', role: 'member' },
-            { userId: user3Id, email: 'viewer@example.com', role: 'member' },
+            { userId: user1Id, displayName: 'admin', role: 'admin' },
+            { userId: user2Id, displayName: 'member', role: 'member' },
+            { userId: user3Id, displayName: 'viewer', role: 'member' },
           ],
         });
       });
@@ -146,9 +146,7 @@ describe('ListOrganizationUsersUseCase', () => {
           await listOrganizationUsersUseCase.executeForMembers(validCommand);
 
         expect(result).toEqual({
-          users: [
-            { userId: user1Id, email: 'user@example.com', role: 'member' },
-          ],
+          users: [{ userId: user1Id, displayName: 'user', role: 'member' }],
         });
       });
     });
@@ -171,9 +169,7 @@ describe('ListOrganizationUsersUseCase', () => {
           await listOrganizationUsersUseCase.executeForMembers(validCommand);
 
         expect(result).toEqual({
-          users: [
-            { userId: user1Id, email: 'user@example.com', role: 'member' },
-          ],
+          users: [{ userId: user1Id, displayName: 'user', role: 'member' }],
         });
       });
     });
@@ -290,9 +286,7 @@ describe('ListOrganizationUsersUseCase', () => {
           await listOrganizationUsersUseCase.executeForMembers(validCommand);
 
         expect(result).toEqual({
-          users: [
-            { userId: user1Id, email: 'single@example.com', role: 'admin' },
-          ],
+          users: [{ userId: user1Id, displayName: 'single', role: 'admin' }],
         });
       });
 

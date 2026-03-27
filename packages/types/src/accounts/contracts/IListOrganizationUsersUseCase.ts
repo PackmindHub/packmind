@@ -4,7 +4,7 @@ import { OrganizationId } from '../Organization';
 
 export type OrganizationUser = {
   userId: UserId;
-  email: string;
+  displayName: string;
   role: UserOrganizationRole;
 };
 

@@ -46,7 +46,7 @@ export class ListOrganizationUsersUseCase
       return { users: [] };
     }
 
-    // Map to organization users with userId, email and role
+    // Map to organization users with userId, displayName and role
     const organizationUsers: OrganizationUser[] = users.map((user) => {
       const membership = user.memberships?.find(
         (m) => m.organizationId === command.organizationId,
@@ -54,7 +54,7 @@ export class ListOrganizationUsersUseCase
 
       return {
         userId: user.id,
-        email: user.email,
+        displayName: user.email.split('@')[0],
         role: membership?.role || 'member',
       };
     });

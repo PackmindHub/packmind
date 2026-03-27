@@ -33,7 +33,7 @@ describe('UserGatewayApi', () => {
       const mockUsers = [
         {
           id: '1',
-          email: 'user1@packmind.com',
+          displayName: 'user1',
           passwordHash: 'hash1',
           active: true,
           memberships: [
@@ -46,7 +46,7 @@ describe('UserGatewayApi', () => {
         },
         {
           id: '2',
-          email: 'user2@packmind.com',
+          displayName: 'user2',
           passwordHash: 'hash2',
           active: true,
           memberships: [
