@@ -3,7 +3,7 @@
 
 # Packmind image configuration
 x-packmind-images: &packmind-images
-  PACKMIND_TAG: ${PACKMIND_TAG:-enterprise-latest}
+  PACKMIND_TAG: ${PACKMIND_TAG:-latest}
 
 # Port configuration
 x-frontend-port: &frontend-port
