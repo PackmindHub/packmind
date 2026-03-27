@@ -1,5 +1,5 @@
 import { accountsSchemas } from '@packmind/accounts';
-import { OpenCodeDeployer, DeployerService } from '@packmind/coding-agent';
+import { DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { recipesSchemas } from '@packmind/recipes';
@@ -13,7 +13,6 @@ import {
   GitProviderVendors,
   GitRepo,
   IGitPort,
-  IStandardsPort,
   Organization,
   Recipe,
   RecipeVersion,
@@ -41,7 +40,6 @@ describe('OpenCode Deployment Integration', () => {
   ]);
 
   let testApp: TestApp;
-  let standardsPort: IStandardsPort;
   let gitPort: IGitPort;
   let deployerService: DeployerService;
 
@@ -59,7 +57,6 @@ describe('OpenCode Deployment Integration', () => {
     await testApp.initialize();
 
     deployerService = testApp.codingAgentHexa.getDeployerService();
-    standardsPort = testApp.standardsHexa.getAdapter();
     gitPort = testApp.gitHexa.getAdapter();
 
     const signUpResult = await testApp.accountsHexa
