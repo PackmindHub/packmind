@@ -55,7 +55,8 @@ export const useMoveArtifactsToSpaceMutation = () => {
         ...params,
       });
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      const { destinationSpaceId } = variables;
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: getSkillsBySpaceKey(spaceId),
@@ -65,6 +66,15 @@ export const useMoveArtifactsToSpaceMutation = () => {
         }),
         queryClient.invalidateQueries({
           queryKey: getRecipesBySpaceKey(spaceId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getSkillsBySpaceKey(destinationSpaceId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getStandardsBySpaceKey(destinationSpaceId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getRecipesBySpaceKey(destinationSpaceId),
         }),
         queryClient.invalidateQueries({
           queryKey: LIST_PACKAGES_BY_SPACE_KEY,
