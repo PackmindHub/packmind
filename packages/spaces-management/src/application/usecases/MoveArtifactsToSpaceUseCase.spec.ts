@@ -261,28 +261,35 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         );
       });
 
-      it('emits a PlaybookArtefactMovedEvent per standard', async () => {
-        await useCase.execute(
-          buildCommand({
-            artifacts: [
-              { id: standardId1, type: 'standard' },
-              { id: standardId2, type: 'standard' },
-            ],
-          }),
-        );
-
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
-        expect(eventEmitterService.emit).toHaveBeenCalledWith(
-          expect.objectContaining({
-            payload: expect.objectContaining({
-              artifactType: 'standard',
-              sourceSpaceId,
-              destinationSpaceId,
-              userId,
-              organizationId,
+      describe('when emitting events for moved standards', () => {
+        beforeEach(async () => {
+          await useCase.execute(
+            buildCommand({
+              artifacts: [
+                { id: standardId1, type: 'standard' },
+                { id: standardId2, type: 'standard' },
+              ],
             }),
-          }),
-        );
+          );
+        });
+
+        it('emits one event per standard', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
+        });
+
+        it('emits a PlaybookArtefactMovedEvent with standard artifact type', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledWith(
+            expect.objectContaining({
+              payload: expect.objectContaining({
+                artifactType: 'standard',
+                sourceSpaceId,
+                destinationSpaceId,
+                userId,
+                organizationId,
+              }),
+            }),
+          );
+        });
       });
     });
 
