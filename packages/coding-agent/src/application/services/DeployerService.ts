@@ -324,6 +324,9 @@ export class DeployerService {
       createOrUpdate: updates.createOrUpdate.filter(
         (f) => !f.path.endsWith(AGENT_FILE_PATHS['agents_md']),
       ),
+      delete: updates.delete.filter(
+        (f) => !f.path.endsWith(AGENT_FILE_PATHS['agents_md']),
+      ),
     };
   }
 
