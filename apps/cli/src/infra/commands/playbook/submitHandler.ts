@@ -482,17 +482,24 @@ async function checkForDuplicateNames(
 
   // Fetch existing artifacts and check collisions
   for (const [key, entries] of groups) {
-    const [spaceId, artifactType] = key.split(':');
+    const [rawSpaceId, artifactType] = key.split(':');
+    const typedSpaceId = rawSpaceId as SpaceId;
     try {
       let existingNames: string[] = [];
       if (artifactType === 'standard') {
-        const response = await packmindGateway.standards.list({ spaceId });
+        const response = await packmindGateway.standards.list({
+          spaceId: typedSpaceId,
+        });
         existingNames = response.standards.map((s) => s.name);
       } else if (artifactType === 'command') {
-        const response = await packmindGateway.commands.list({ spaceId });
+        const response = await packmindGateway.commands.list({
+          spaceId: typedSpaceId,
+        });
         existingNames = response.recipes.map((r) => r.name);
       } else if (artifactType === 'skill') {
-        const response = await packmindGateway.skills.list({ spaceId });
+        const response = await packmindGateway.skills.list({
+          spaceId: typedSpaceId,
+        });
         existingNames = response.map((s) => s.name);
       }
 
