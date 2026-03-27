@@ -9,7 +9,7 @@ export function useUserLookup(): Map<UserId, string> {
     const map = new Map<UserId, string>();
     if (data?.users) {
       for (const user of data.users) {
-        map.set(user.userId, user.email.split('@')[0]);
+        map.set(user.userId, user.displayName);
       }
     }
     return map;
