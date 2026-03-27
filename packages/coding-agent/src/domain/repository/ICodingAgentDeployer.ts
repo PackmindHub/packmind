@@ -6,6 +6,7 @@ import {
   Target,
   FileUpdates,
 } from '@packmind/types';
+import { DefaultSkillsDeployResult } from '../../infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer';
 
 export interface ICodingAgentDeployer {
   deployRecipes(
@@ -57,7 +58,7 @@ export interface ICodingAgentDeployer {
   deployDefaultSkills?(options?: {
     cliVersion?: string;
     includeBeta?: boolean;
-  }): Promise<FileUpdates> | FileUpdates;
+  }): Promise<DefaultSkillsDeployResult> | DefaultSkillsDeployResult;
   /**
    * Returns the base path for skills folder for this deployer.
    * Returns undefined if skills are not supported by this agent.

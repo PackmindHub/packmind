@@ -14,6 +14,11 @@ export type DeployDefaultSkillsOptions = {
   includeBeta?: boolean;
 };
 
+export type DefaultSkillsDeployResult = {
+  fileUpdates: FileUpdates;
+  skippedSkillsCount: number;
+};
+
 export class DefaultSkillsDeployer {
   private readonly skillDeployers: ISkillDeployer[] = [
     new CreateSkillDeployer(),
@@ -44,18 +49,22 @@ export class DefaultSkillsDeployer {
 
   public deployDefaultSkills(
     options: DeployDefaultSkillsOptions = {},
-  ): FileUpdates {
+  ): DefaultSkillsDeployResult {
     const filteredDeployers = this.filterDeployers(options);
+    const skippedSkillsCount = this.countSkippedDeployers(options);
 
     const allFileUpdates = filteredDeployers.map((deployer) =>
       deployer.deploy(this.agentName, this.skillsFolderPath),
     );
 
     return {
-      createOrUpdate: allFileUpdates.flatMap(
-        (updates) => updates.createOrUpdate,
-      ),
-      delete: allFileUpdates.flatMap((updates) => updates.delete),
+      fileUpdates: {
+        createOrUpdate: allFileUpdates.flatMap(
+          (updates) => updates.createOrUpdate,
+        ),
+        delete: allFileUpdates.flatMap((updates) => updates.delete),
+      },
+      skippedSkillsCount,
     };
   }
 
@@ -79,5 +88,19 @@ export class DefaultSkillsDeployer {
 
       return true;
     });
+  }
+
+  private countSkippedDeployers(options: DeployDefaultSkillsOptions): number {
+    const { cliVersion, includeBeta } = options;
+
+    if (includeBeta || !cliVersion) {
+      return 0;
+    }
+
+    return this.skillDeployers.filter(
+      (deployer) =>
+        deployer.minimumVersion !== 'unreleased' &&
+        semver.gt(deployer.minimumVersion, cliVersion),
+    ).length;
   }
 }

@@ -65,6 +65,8 @@ export class DeployDefaultSkillsUseCase
 
     const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
 
+    let skippedSkillsCount = 0;
+
     for (const codingAgent of codingAgents) {
       const deployer = deployerRegistry.getDeployer(
         codingAgent,
@@ -75,16 +77,18 @@ export class DeployDefaultSkillsUseCase
           codingAgent,
         });
 
-        const fileUpdates = await deployer.deployDefaultSkills({
+        const result = await deployer.deployDefaultSkills({
           cliVersion: command.cliVersion,
           includeBeta: command.includeBeta,
         });
-        this.mergeFileUpdates(mergedFileUpdates, fileUpdates);
+        this.mergeFileUpdates(mergedFileUpdates, result.fileUpdates);
+        skippedSkillsCount = result.skippedSkillsCount;
 
         this.logger.info('Default skills deployed for coding agent', {
           codingAgent,
-          createOrUpdateCount: fileUpdates.createOrUpdate.length,
-          deleteCount: fileUpdates.delete.length,
+          createOrUpdateCount: result.fileUpdates.createOrUpdate.length,
+          deleteCount: result.fileUpdates.delete.length,
+          skippedSkillsCount: result.skippedSkillsCount,
         });
       }
     }
@@ -93,9 +97,10 @@ export class DeployDefaultSkillsUseCase
       organizationId: command.organizationId,
       totalCreateOrUpdateCount: mergedFileUpdates.createOrUpdate.length,
       totalDeleteCount: mergedFileUpdates.delete.length,
+      skippedSkillsCount,
     });
 
-    return { fileUpdates: mergedFileUpdates };
+    return { fileUpdates: mergedFileUpdates, skippedSkillsCount };
   }
 
   private mergeFileUpdates(target: FileUpdates, source: FileUpdates): void {

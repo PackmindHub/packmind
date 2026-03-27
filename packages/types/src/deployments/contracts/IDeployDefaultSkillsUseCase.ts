@@ -11,6 +11,7 @@ export type DeployDefaultSkillsCommand = PackmindCommand & {
 
 export type DeployDefaultSkillsResponse = {
   fileUpdates: FileUpdates;
+  skippedSkillsCount: number;
 };
 
 export type IDeployDefaultSkillsUseCase = IUseCase<

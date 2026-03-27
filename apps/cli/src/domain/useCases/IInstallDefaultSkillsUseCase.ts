@@ -10,6 +10,7 @@ export type IInstallDefaultSkillsResult = {
   filesCreated: number;
   filesUpdated: number;
   errors: string[];
+  skippedSkillsCount: number;
 };
 
 export type IInstallDefaultSkillsUseCase = IPublicUseCase<
