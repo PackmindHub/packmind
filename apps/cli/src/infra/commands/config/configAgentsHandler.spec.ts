@@ -125,6 +125,10 @@ describe('configAgentsHandler', () => {
     it('includes gitlab_duo agent', () => {
       expect(SELECTABLE_AGENTS).toContain('gitlab_duo');
     });
+
+    it('includes opencode agent', () => {
+      expect(SELECTABLE_AGENTS).toContain('opencode');
+    });
   });
 
   describe('AGENT_DISPLAY_NAMES', () => {
@@ -158,6 +162,10 @@ describe('configAgentsHandler', () => {
 
     it('maps packmind to Packmind', () => {
       expect(AGENT_DISPLAY_NAMES.packmind).toBe('Packmind');
+    });
+
+    it('maps opencode to OpenCode', () => {
+      expect(AGENT_DISPLAY_NAMES.opencode).toBe('OpenCode');
     });
   });
 
