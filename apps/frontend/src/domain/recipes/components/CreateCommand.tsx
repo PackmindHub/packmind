@@ -25,7 +25,7 @@ export const CreateCommand = () => {
   const createMutation = useCreateRecipeMutation();
   const { data: existingRecipes } = useGetRecipesQuery();
   const existingCommandNames = useMemo(
-    () => (existingRecipes?.recipes ?? []).map((r) => r.name),
+    () => (existingRecipes ?? []).map((r) => r.name),
     [existingRecipes],
   );
 

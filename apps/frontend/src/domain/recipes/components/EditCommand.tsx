@@ -28,7 +28,7 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
   const updateMutation = useUpdateRecipeMutation();
   const { data: existingRecipes } = useGetRecipesQuery();
   const existingCommandNames = useMemo(
-    () => (existingRecipes?.recipes ?? []).map((r) => r.name),
+    () => (existingRecipes ?? []).map((r) => r.name),
     [existingRecipes],
   );
 
