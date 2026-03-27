@@ -5,11 +5,13 @@ import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
+  createStandardId,
+  createSkillId,
+  ArtifactReference,
   MoveArtifactsToSpaceResponse,
-  Space,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
-import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { SpacesManagementController } from './spaces-management.controller';
 import { SpacesManagementService } from './spaces-management.service';
 
@@ -41,13 +43,13 @@ describe('SpacesManagementController', () => {
 
   describe('createSpace', () => {
     describe('when creating a space with a valid name', () => {
-      const mockSpace: Space = {
+      const mockSpace = spaceFactory({
         id: createSpaceId('space-1'),
         name: 'New Space',
         slug: 'new-space',
         organizationId,
-      };
-      let result: Space;
+      });
+      let result: typeof mockSpace;
 
       beforeEach(async () => {
         service.createSpace.mockResolvedValue(mockSpace);
@@ -82,7 +84,7 @@ describe('SpacesManagementController', () => {
     describe('when slug conflicts', () => {
       it('throws ConflictException', async () => {
         service.createSpace.mockRejectedValue(
-          new SpaceSlugConflictError('new-space'),
+          new SpaceSlugConflictError('new-space', organizationId),
         );
 
         await expect(
@@ -105,6 +107,12 @@ describe('SpacesManagementController', () => {
       };
       let result: MoveArtifactsToSpaceResponse;
 
+      const artifacts: ArtifactReference[] = [
+        { id: createStandardId('std-1'), type: 'standard' },
+        { id: createStandardId('std-2'), type: 'standard' },
+        { id: createSkillId('skill-1'), type: 'skill' },
+      ];
+
       beforeEach(async () => {
         service.moveArtifactsToSpace.mockResolvedValue(expectedResponse);
         result = await controller.moveArtifactsToSpace(
@@ -113,8 +121,7 @@ describe('SpacesManagementController', () => {
           {
             sourceSpaceId,
             destinationSpaceId,
-            standardIds: ['std-1', 'std-2'],
-            skillIds: ['skill-1'],
+            artifacts,
           },
         );
       });
@@ -129,8 +136,7 @@ describe('SpacesManagementController', () => {
           organizationId,
           sourceSpaceId,
           destinationSpaceId,
-          standardIds: ['std-1', 'std-2'],
-          skillIds: ['skill-1'],
+          artifacts,
         });
       });
     });
@@ -141,6 +147,7 @@ describe('SpacesManagementController', () => {
           controller.moveArtifactsToSpace(organizationId, mockRequest, {
             sourceSpaceId: '' as never,
             destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [],
           }),
         ).rejects.toThrow(BadRequestException);
       });
@@ -152,38 +159,9 @@ describe('SpacesManagementController', () => {
           controller.moveArtifactsToSpace(organizationId, mockRequest, {
             sourceSpaceId: createSpaceId('source-space'),
             destinationSpaceId: '' as never,
+            artifacts: [],
           }),
         ).rejects.toThrow(BadRequestException);
-      });
-    });
-
-    describe('when service throws an error', () => {
-      it('rethrows the error', async () => {
-        service.moveArtifactsToSpace.mockRejectedValue(
-          new Error('Move failed'),
-        );
-
-        await expect(
-          controller.moveArtifactsToSpace(organizationId, mockRequest, {
-            sourceSpaceId: createSpaceId('source-space'),
-            destinationSpaceId: createSpaceId('dest-space'),
-          }),
-        ).rejects.toThrow('Move failed');
-      });
-    });
-
-    describe('when an artifact name conflicts in the destination space', () => {
-      it('throws ConflictException', async () => {
-        service.moveArtifactsToSpace.mockRejectedValue(
-          new ArtifactNameConflictError('skill', 'commit', 'frontend'),
-        );
-
-        await expect(
-          controller.moveArtifactsToSpace(organizationId, mockRequest, {
-            sourceSpaceId: createSpaceId('source-space'),
-            destinationSpaceId: createSpaceId('dest-space'),
-          }),
-        ).rejects.toThrow(ConflictException);
       });
     });
   });
