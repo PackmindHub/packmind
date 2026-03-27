@@ -25,6 +25,7 @@ import {
   StandardDeletedEvent,
   UserId,
 } from '@packmind/types';
+import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 
@@ -97,6 +98,14 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
         organizationId,
       );
     }
+
+    await this.validateNoNameConflicts(
+      command.artifacts,
+      command.destinationSpaceId,
+      destinationSpace.name,
+      organizationId,
+      userId,
+    );
 
     const ctx: MoveContext = {
       sourceSpaceId: command.sourceSpaceId,
@@ -185,6 +194,84 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
         source: ctx.source,
       }),
     );
+  }
+
+  private async validateNoNameConflicts(
+    artifacts: ArtifactReference[],
+    destinationSpaceId: SpaceId,
+    destinationSpaceName: string,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<void> {
+    const standardArtifacts = artifacts.filter((a) => a.type === 'standard');
+    const skillArtifacts = artifacts.filter((a) => a.type === 'skill');
+    const commandArtifacts = artifacts.filter((a) => a.type === 'command');
+
+    if (standardArtifacts.length > 0) {
+      const destStandards = await this.standardsPort.listStandardsBySpace(
+        destinationSpaceId,
+        organizationId,
+        userId as unknown as string,
+      );
+      const destSlugs = new Set(destStandards.map((s) => s.slug));
+
+      for (const artifact of standardArtifacts) {
+        const standard = await this.standardsPort.getStandard(
+          (artifact as ArtifactReference<'standard'>).id,
+        );
+        if (standard && destSlugs.has(standard.slug)) {
+          throw new ArtifactNameConflictError(
+            'standard',
+            standard.name,
+            destinationSpaceName,
+          );
+        }
+      }
+    }
+
+    if (skillArtifacts.length > 0) {
+      const destSkills = await this.skillsPort.listSkillsBySpace(
+        destinationSpaceId,
+        organizationId,
+        userId as unknown as string,
+      );
+      const destSlugs = new Set(destSkills.map((s) => s.slug));
+
+      for (const artifact of skillArtifacts) {
+        const skill = await this.skillsPort.getSkill(
+          (artifact as ArtifactReference<'skill'>).id,
+        );
+        if (skill && destSlugs.has(skill.slug)) {
+          throw new ArtifactNameConflictError(
+            'skill',
+            skill.name,
+            destinationSpaceName,
+          );
+        }
+      }
+    }
+
+    if (commandArtifacts.length > 0) {
+      const destRecipes = await this.recipesPort.listRecipesBySpace({
+        spaceId: destinationSpaceId,
+        organizationId: organizationId as unknown as string,
+        userId: userId as unknown as string,
+      });
+      const destSlugs = new Set(destRecipes.map((r) => r.slug));
+
+      for (const artifact of commandArtifacts) {
+        const recipe = await this.recipesPort.getRecipeByIdInternal(
+          (artifact as ArtifactReference<'command'>).id,
+        );
+        if (recipe && destSlugs.has(recipe.slug)) {
+          throw new ArtifactNameConflictError(
+            'command',
+            recipe.name,
+            destinationSpaceName,
+          );
+        }
+      }
+    }
   }
 
   private emitMovedEvent(

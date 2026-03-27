@@ -12,6 +12,9 @@
     "@packmind/logger": "*",
     "@packmind/accounts": "*",
     "@packmind/spaces": "*",
+    "@packmind/standards": "*",
+    "@packmind/skills": "*",
+    "@packmind/recipes": "*",
     "@packmind/test-utils": "*",
     "typeorm": "0.3.28"
   }

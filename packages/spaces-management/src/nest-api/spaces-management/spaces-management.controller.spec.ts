@@ -9,6 +9,7 @@ import {
   Space,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
+import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { SpacesManagementController } from './spaces-management.controller';
 import { SpacesManagementService } from './spaces-management.service';
 
@@ -168,6 +169,21 @@ describe('SpacesManagementController', () => {
             destinationSpaceId: createSpaceId('dest-space'),
           }),
         ).rejects.toThrow('Move failed');
+      });
+    });
+
+    describe('when an artifact name conflicts in the destination space', () => {
+      it('throws ConflictException', async () => {
+        service.moveArtifactsToSpace.mockRejectedValue(
+          new ArtifactNameConflictError('skill', 'commit', 'frontend'),
+        );
+
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+          }),
+        ).rejects.toThrow(ConflictException);
       });
     });
   });

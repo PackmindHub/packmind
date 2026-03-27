@@ -18,6 +18,7 @@ import {
   Space,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
+import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { SpacesManagementService } from './spaces-management.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 
@@ -128,6 +129,10 @@ export class SpacesManagementController {
         ...body,
       });
     } catch (error) {
+      if (error instanceof ArtifactNameConflictError) {
+        throw new ConflictException(error.message);
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(

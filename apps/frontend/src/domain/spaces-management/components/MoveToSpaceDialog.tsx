@@ -12,6 +12,7 @@ import {
 import { ArtifactReference, ArtifactType, SpaceId } from '@packmind/types';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import { useMoveArtifactsToSpaceMutation } from '../api/queries/SpacesManagementQueries';
 
 export type MoveArtifactType = 'standard' | 'skill' | 'recipe';
@@ -93,10 +94,12 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
       setDestinationSpaceId(undefined);
       setOpen(false);
       onSuccess();
-    } catch {
+    } catch (error) {
       pmToaster.create({
         title: 'Error',
-        description: `Failed to move ${label}s`,
+        description: isPackmindConflictError(error)
+          ? error.serverError.data.message
+          : `Failed to move ${label}s`,
         type: 'error',
       });
     }
