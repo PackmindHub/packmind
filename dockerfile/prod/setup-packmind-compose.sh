@@ -23,6 +23,6 @@ curl -fsSL -o setup-production-secrets.sh https://raw.githubusercontent.com/Pack
 curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/PackmindHub/packmind/refs/heads/main/dockerfile/prod/docker-compose.yml
 chmod +x setup-production-secrets.sh
 ./setup-production-secrets.sh
-docker compose up -d
+PACKMIND_TAG=latest-enterprise docker compose up -d
 
 echo "✅ By default, Packmind runs on http:/localhost:8081"
