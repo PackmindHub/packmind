@@ -3,6 +3,7 @@
 ## Added
 
 - `lint` command now supports negative globs in standard scopes, starting with `!`
+- Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
 
 ## Changed
 
