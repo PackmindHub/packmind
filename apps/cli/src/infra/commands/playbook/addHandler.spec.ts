@@ -1637,7 +1637,7 @@ describe('playbookAddHandler', () => {
         );
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          '.packmind/standards/empty.md is not a valid artifact. Expected a markdown heading (# Name) followed by content.',
+          `.packmind/standards/empty.md is not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
         );
       });
 
