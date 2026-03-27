@@ -6,8 +6,9 @@ import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
 import { ANALYZE_STANDARDS } from './skills/packmind-update-playbook/steps/analyze-standards';
 import { ANALYZE_COMMANDS } from './skills/packmind-update-playbook/steps/analyze-commands';
 import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-skills';
-import { APPLY_CHANGES } from './skills/packmind-update-playbook/steps/apply-changes';
 import { skillMd } from './skills/packmind-update-playbook/skill.md';
+import { APPLY_CHANGES_0210 } from './skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes';
+import { APPLY_CHANGES_0230 } from './skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes';
 
 export class UpdatePlaybookDeployerV2
   extends AbstractDefaultSkillDeployer
@@ -39,8 +40,12 @@ export class UpdatePlaybookDeployerV2
           content: ANALYZE_SKILLS,
         },
         {
-          path: `${basePath}/steps/apply-changes.md`,
-          content: APPLY_CHANGES,
+          path: `${basePath}/packmind-versions/0.21.0/apply-changes.md`,
+          content: APPLY_CHANGES_0210,
+        },
+        {
+          path: `${basePath}/packmind-versions/0.23.0/apply-changes.md`,
+          content: APPLY_CHANGES_0230,
         },
         {
           path: `${basePath}/references/agent-skills-specification.md`,
@@ -58,6 +63,10 @@ export class UpdatePlaybookDeployerV2
         },
         {
           path: `${basePath}/references/domain-skills.md`,
+          type: DeleteItemType.File,
+        },
+        {
+          path: `${basePath}/steps/apply-changes.md`,
           type: DeleteItemType.File,
         },
       ],
