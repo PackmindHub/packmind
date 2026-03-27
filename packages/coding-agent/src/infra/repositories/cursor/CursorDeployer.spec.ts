@@ -15,6 +15,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { skillVersionFactory } from '@packmind/skills/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CursorDeployer', () => {
   let deployer: CursorDeployer;
@@ -940,8 +941,9 @@ describe('CursorDeployer', () => {
           item.path.startsWith('.cursor/skills/'),
         );
 
-        // Should include: 7 default skills + 1 managed skill = 8 total
-        expect(skillDeleteItems).toHaveLength(8);
+        expect(skillDeleteItems).toHaveLength(
+          DefaultSkillsDeployer.getDefaultSkillSlugs().length + 1,
+        );
       });
     });
   });
