@@ -4,6 +4,7 @@ import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { recipesSchemas } from '@packmind/recipes';
 import { skillsSchemas } from '@packmind/skills';
+import { skillVersionFactory } from '@packmind/skills/test';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 import {
@@ -260,6 +261,51 @@ describe('OpenCode Deployment Integration', () => {
         (s) => s.key === 'Packmind standards',
       );
       expect(section?.content).toContain(standard.name);
+    });
+  });
+
+  describe('when deploying a single skill', () => {
+    let defaultTarget: Target;
+    let fileUpdates: {
+      createOrUpdate: FileModification[];
+      delete: { path: string }[];
+    };
+    let skillFile: FileModification | undefined;
+    const skillSlug = 'my-opencode-skill';
+
+    beforeEach(async () => {
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+
+      const skillVersion = skillVersionFactory({
+        name: 'My OpenCode Skill',
+        slug: skillSlug,
+        description: 'A skill for testing OpenCode deployment',
+        prompt: 'Do the skill thing',
+      });
+
+      fileUpdates = await deployerService.aggregateSkillDeployments(
+        [skillVersion],
+        gitRepo,
+        [defaultTarget],
+        ['opencode'],
+      );
+
+      skillFile = fileUpdates.createOrUpdate.find((file) =>
+        file.path.startsWith('.opencode/skills/'),
+      );
+    });
+
+    it('creates the skill file in .opencode/skills/', () => {
+      expect(skillFile).toBeDefined();
+    });
+
+    it('uses correct path for SKILL.md', () => {
+      expect(skillFile?.path).toBe(`.opencode/skills/${skillSlug}/SKILL.md`);
     });
   });
 });

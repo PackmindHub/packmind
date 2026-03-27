@@ -495,7 +495,7 @@ describe('DeployerService', () => {
       });
     });
 
-    describe('when both opencode and agents_md are active (Rule 9)', () => {
+    describe('when both opencode and agents_md are active', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
@@ -887,7 +887,7 @@ describe('DeployerService', () => {
       ).rejects.toThrow('Artifact deployment failed');
     });
 
-    describe('when both opencode and agents_md are active (Rule 9)', () => {
+    describe('when both opencode and agents_md are active', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
