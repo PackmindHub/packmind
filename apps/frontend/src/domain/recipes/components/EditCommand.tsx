@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { useUpdateRecipeMutation } from '../api/queries/RecipesQueries';
+import React, { useState, useMemo } from 'react';
+import {
+  useUpdateRecipeMutation,
+  useGetRecipesQuery,
+} from '../api/queries/RecipesQueries';
 import { Recipe } from '@packmind/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -23,6 +26,11 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
   } | null>(null);
 
   const updateMutation = useUpdateRecipeMutation();
+  const { data: existingRecipes } = useGetRecipesQuery();
+  const existingCommandNames = useMemo(
+    () => (existingRecipes?.recipes ?? []).map((r) => r.name),
+    [existingRecipes],
+  );
 
   const handleSubmit = (data: CommandFormData) => {
     if (!organization?.id || !spaceId) {
@@ -74,6 +82,7 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
       <CommandForm
         mode="edit"
         recipe={recipe}
+        existingCommandNames={existingCommandNames}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isPending={updateMutation.isPending}
