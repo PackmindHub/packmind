@@ -33,6 +33,7 @@ export default function OrgStandardsIndex() {
     >
       <PMVStack align="stretch" gap={6}>
         <StandardsList
+          key={spaceSlug}
           orgSlug={organization.slug}
           onEmptyStateChange={setIsEmpty}
         />
