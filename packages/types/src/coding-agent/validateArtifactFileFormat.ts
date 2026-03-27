@@ -4,7 +4,7 @@ import { ArtifactType } from '../deployments';
 // downstream by parseSkillDirectory (checks for SKILL.md, frontmatter name, etc.).
 export const ACCEPTED_ARTIFACT_EXTENSIONS: Record<ArtifactType, string[]> = {
   command: ['.md'],
-  standard: ['.md'],
+  standard: ['.md', '.mdc'],
   skill: [],
 };
 

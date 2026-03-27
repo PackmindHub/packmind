@@ -52,6 +52,15 @@ describe('validateArtifactFileFormat', () => {
       ).toEqual({ valid: true });
     });
 
+    it('accepts .mdc files', () => {
+      expect(
+        validateArtifactFileFormat(
+          '.cursor/rules/packmind/standard-foo.mdc',
+          'standard',
+        ),
+      ).toEqual({ valid: true });
+    });
+
     it('rejects .py files', () => {
       const result = validateArtifactFileFormat(
         '.packmind/standards/foo.py',
