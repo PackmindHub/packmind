@@ -3,6 +3,7 @@ import { PackmindListener } from '@packmind/node-utils';
 import {
   ArtefactRemovedFromPackageEvent,
   CommandDeletedEvent,
+  PlaybookArtefactMovedEvent,
   SkillDeletedEvent,
   StandardDeletedEvent,
 } from '@packmind/types';
@@ -25,6 +26,10 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
     this.subscribe(
       ArtefactRemovedFromPackageEvent,
       this.handleArtefactRemovedFromPackage,
+    );
+    this.subscribe(
+      PlaybookArtefactMovedEvent,
+      this.handlePlaybookArtefactMoved,
     );
   }
 
@@ -138,5 +143,24 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
         },
       );
     }
+  };
+
+  private handlePlaybookArtefactMoved = async (
+    event: PlaybookArtefactMovedEvent,
+  ): Promise<void> => {
+    const {
+      artifactType,
+      oldArtifactId,
+      newArtifactId,
+      sourceSpaceId,
+      destinationSpaceId,
+    } = event.payload;
+    this.logger.info('Handling PlaybookArtefactMovedEvent', {
+      artifactType,
+      oldArtifactId,
+      newArtifactId,
+      sourceSpaceId,
+      destinationSpaceId,
+    });
   };
 }

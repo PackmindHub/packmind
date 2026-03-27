@@ -82,17 +82,23 @@ describe('MoveArtifactsToSpaceUseCase', () => {
 
     standardsPort = {
       markStandardAsMoved: jest.fn().mockResolvedValue(undefined),
-      duplicateStandardToSpace: jest.fn().mockResolvedValue({}),
+      duplicateStandardToSpace: jest
+        .fn()
+        .mockResolvedValue({ id: createStandardId('new-standard-id') }),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     skillsPort = {
       markSkillAsMoved: jest.fn().mockResolvedValue(undefined),
-      duplicateSkillToSpace: jest.fn().mockResolvedValue({}),
+      duplicateSkillToSpace: jest
+        .fn()
+        .mockResolvedValue({ id: createSkillId('new-skill-id') }),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     recipesPort = {
       markRecipeAsMoved: jest.fn().mockResolvedValue(undefined),
-      duplicateRecipeToSpace: jest.fn().mockResolvedValue({}),
+      duplicateRecipeToSpace: jest
+        .fn()
+        .mockResolvedValue({ id: createRecipeId('new-recipe-id') }),
     } as unknown as jest.Mocked<IRecipesPort>;
 
     eventEmitterService = {
@@ -283,6 +289,8 @@ describe('MoveArtifactsToSpaceUseCase', () => {
             expect.objectContaining({
               payload: expect.objectContaining({
                 artifactType: 'standard',
+                oldArtifactId: standardId1,
+                newArtifactId: createStandardId('new-standard-id'),
                 sourceSpaceId,
                 destinationSpaceId,
                 userId,
@@ -383,6 +391,8 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           expect.objectContaining({
             payload: expect.objectContaining({
               artifactType: 'skill',
+              oldArtifactId: skillId1,
+              newArtifactId: createSkillId('new-skill-id'),
               sourceSpaceId,
               destinationSpaceId,
               userId,
@@ -476,6 +486,8 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           expect.objectContaining({
             payload: expect.objectContaining({
               artifactType: 'command',
+              oldArtifactId: recipeId1,
+              newArtifactId: createRecipeId('new-recipe-id'),
               sourceSpaceId,
               destinationSpaceId,
               userId,

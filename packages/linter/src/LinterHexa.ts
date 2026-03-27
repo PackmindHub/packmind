@@ -24,6 +24,7 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { LinterAdapter } from './application/adapter/LinterAdapter';
+import { LinterListener } from './application/listeners/LinterListener';
 import { DetectionProgramService } from './application/services/DetectionProgramService';
 import { ILinterDelayedJobs } from './domain/jobs/ILinterDelayedJobs';
 import { AssessRuleDetectionJobFactory } from './infra/AssessRuleDetectionJobFactory';
@@ -51,6 +52,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
   private readonly linterRepositories: LinterRepositories;
   private readonly detectionProgramService: DetectionProgramService;
   private readonly adapter: LinterAdapter;
+  private readonly linterListener: LinterListener;
   private linterAstAdapter: ILinterAstPort | null = null;
   private standardsPort: IStandardsPort | null = null;
 
@@ -108,6 +110,8 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         hexaFactory,
         executeLinterProgramsUseCase,
       });
+
+      this.linterListener = new LinterListener(this.adapter.getPort());
 
       this.logger.debug(
         'Repository aggregator, service aggregator, and adapter created successfully',
@@ -215,6 +219,8 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         linterDelayedJobs,
         eventEmitterService,
       });
+
+      this.linterListener.initialize(eventEmitterService);
 
       this.logger.info('LinterHexa initialized successfully');
 

@@ -8,6 +8,7 @@ import {
   StandardDeletedEvent,
   SkillDeletedEvent,
   ArtefactRemovedFromPackageEvent,
+  PlaybookArtefactMovedEvent,
   createSpaceId,
   createOrganizationId,
   createUserId,
@@ -207,6 +208,26 @@ describe('ChangeManagementListener', () => {
           await new Promise((resolve) => setTimeout(resolve, 10));
         }).not.toThrow();
       });
+    });
+  });
+
+  describe('when PlaybookArtefactMovedEvent is emitted', () => {
+    it('handles the event without error', async () => {
+      const event = new PlaybookArtefactMovedEvent({
+        artifactType: 'standard',
+        oldArtifactId: 'old-standard-id',
+        newArtifactId: 'new-standard-id',
+        sourceSpaceId: spaceId,
+        destinationSpaceId: createSpaceId('dest-space'),
+        userId,
+        organizationId,
+        source: 'ui',
+      });
+
+      await expect(async () => {
+        eventService.emit(event);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }).not.toThrow();
     });
   });
 });

@@ -119,7 +119,7 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     artifact: ArtifactReference<'standard'>,
     ctx: MoveContext,
   ): Promise<void> {
-    await this.standardsPort.duplicateStandardToSpace(
+    const newStandard = await this.standardsPort.duplicateStandardToSpace(
       artifact.id,
       ctx.destinationSpaceId,
       ctx.userId,
@@ -128,7 +128,7 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       artifact.id,
       ctx.destinationSpaceId,
     );
-    this.emitMovedEvent(artifact.type, ctx);
+    this.emitMovedEvent(artifact.type, artifact.id, newStandard.id, ctx);
     this.eventEmitterService.emit(
       new StandardDeletedEvent({
         standardId: artifact.id,
@@ -144,13 +144,13 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     artifact: ArtifactReference<'skill'>,
     ctx: MoveContext,
   ): Promise<void> {
-    await this.skillsPort.duplicateSkillToSpace(
+    const newSkill = await this.skillsPort.duplicateSkillToSpace(
       artifact.id,
       ctx.destinationSpaceId,
       ctx.userId,
     );
     await this.skillsPort.markSkillAsMoved(artifact.id, ctx.destinationSpaceId);
-    this.emitMovedEvent(artifact.type, ctx);
+    this.emitMovedEvent(artifact.type, artifact.id, newSkill.id, ctx);
     this.eventEmitterService.emit(
       new SkillDeletedEvent({
         skillId: artifact.id,
@@ -166,7 +166,7 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     artifact: ArtifactReference<'command'>,
     ctx: MoveContext,
   ): Promise<void> {
-    await this.recipesPort.duplicateRecipeToSpace(
+    const newRecipe = await this.recipesPort.duplicateRecipeToSpace(
       artifact.id,
       ctx.destinationSpaceId,
       ctx.userId,
@@ -175,7 +175,7 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       artifact.id,
       ctx.destinationSpaceId,
     );
-    this.emitMovedEvent(artifact.type, ctx);
+    this.emitMovedEvent(artifact.type, artifact.id, newRecipe.id, ctx);
     this.eventEmitterService.emit(
       new CommandDeletedEvent({
         id: artifact.id,
@@ -187,10 +187,17 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     );
   }
 
-  private emitMovedEvent(artifactType: ArtifactType, ctx: MoveContext): void {
+  private emitMovedEvent(
+    artifactType: ArtifactType,
+    oldArtifactId: string,
+    newArtifactId: string,
+    ctx: MoveContext,
+  ): void {
     this.eventEmitterService.emit(
       new PlaybookArtefactMovedEvent({
         artifactType,
+        oldArtifactId,
+        newArtifactId,
         sourceSpaceId: ctx.sourceSpaceId,
         destinationSpaceId: ctx.destinationSpaceId,
         userId: ctx.userId,

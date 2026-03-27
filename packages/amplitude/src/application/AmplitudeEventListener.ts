@@ -364,6 +364,8 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       'playbook_artefact_moved',
       (payload) => ({
         artifactType: payload.artifactType,
+        oldArtifactId: payload.oldArtifactId,
+        newArtifactId: payload.newArtifactId,
         sourceSpaceId: payload.sourceSpaceId,
         destinationSpaceId: payload.destinationSpaceId,
       }),

@@ -555,6 +555,8 @@ describe('AmplitudeEventListener', () => {
         userId: createUserId('user-123'),
         organizationId: createOrganizationId('org-456'),
         artifactType: 'standard',
+        oldArtifactId: 'old-standard-id',
+        newArtifactId: 'new-standard-id',
         sourceSpaceId: createSpaceId('space-source'),
         destinationSpaceId: createSpaceId('space-dest'),
         source: 'ui',
@@ -570,6 +572,8 @@ describe('AmplitudeEventListener', () => {
         'playbook_artefact_moved',
         {
           artifactType: 'standard',
+          oldArtifactId: 'old-standard-id',
+          newArtifactId: 'new-standard-id',
           sourceSpaceId: 'space-source',
           destinationSpaceId: 'space-dest',
           source: 'ui',
