@@ -3,14 +3,17 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
 import { getSkillMd } from './skills/packmind-update-playbook/skill';
 import { AGENT_SKILLS_SPECIFICATION } from './skills/packmind-update-playbook/references/agent-skills-specification';
+import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
 import { ANALYZE_STANDARDS } from './skills/packmind-update-playbook/steps/analyze-standards';
 import { ANALYZE_COMMANDS } from './skills/packmind-update-playbook/steps/analyze-commands';
 import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-skills';
 import { APPLY_CHANGES } from './skills/packmind-update-playbook/steps/apply-changes';
 
-export class UpdatePlaybookDeployer implements ISkillDeployer {
-  public readonly slug = 'packmind-update-playbook';
-  public readonly minimumVersion = '0.21.0';
+export class UpdatePlaybookDeployer
+  extends AbstractDefaultSkillDeployer
+  implements ISkillDeployer
+{  public readonly slug = 'packmind-update-playbook';
+  protected readonly minimumVersion = '0.21.0';
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-update-playbook`;

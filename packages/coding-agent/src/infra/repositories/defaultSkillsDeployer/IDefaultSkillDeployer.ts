@@ -1,10 +1,9 @@
 import { FileUpdates } from '@packmind/types';
 
-type IntString = `${bigint}`;
-type SemVer = `${IntString}.${IntString}.${IntString}`;
-
 export interface ISkillDeployer {
   slug: string;
-  minimumVersion: SemVer | 'unreleased';
+
+  isSupportedByCliVersion(cliVersion: string | undefined): boolean;
+
   deploy(agentName: string, skillsFolderPath: string): FileUpdates;
 }
