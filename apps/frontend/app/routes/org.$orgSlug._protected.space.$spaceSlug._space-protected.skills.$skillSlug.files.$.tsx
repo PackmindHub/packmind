@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useOutletContext, useParams } from 'react-router';
 import { PMVStack } from '@packmind/ui';
 import { createSkillFileId, SkillFile } from '@packmind/types';
@@ -34,14 +34,8 @@ export default function SkillFilesRouteModule() {
     [latestVersion],
   );
 
-  const topRef = useRef<HTMLDivElement>(null);
-
   // Determine selected file path, default to SKILL.md
   const selectedFilePath = filePath || SKILL_MD_FILENAME;
-
-  useEffect(() => {
-    topRef.current?.scrollIntoView({ block: 'start' });
-  }, [selectedFilePath]);
 
   // Find the selected file
   const selectedFile = useMemo(() => {
@@ -54,7 +48,7 @@ export default function SkillFilesRouteModule() {
   const showDescriptionBox = selectedFile?.path === SKILL_MD_FILENAME;
 
   return (
-    <div ref={topRef}>
+    <div>
       <PMVStack align="stretch" gap={6}>
         {showDescriptionBox && (
           <SkillFrontmatterInfo skillVersion={latestVersion} />
