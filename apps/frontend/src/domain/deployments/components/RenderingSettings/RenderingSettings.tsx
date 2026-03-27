@@ -25,6 +25,7 @@ type RenderingItem = {
 
 const RENDER_MODE_TO_VALUE: Record<RenderMode, string> = {
   [RenderMode.PACKMIND]: 'packmind',
+  [RenderMode.OPENCODE]: 'opencode',
   [RenderMode.AGENTS_MD]: 'agents-md',
   [RenderMode.GH_COPILOT]: 'github-copilot',
   [RenderMode.CURSOR]: 'cursor',
@@ -36,6 +37,7 @@ const RENDER_MODE_TO_VALUE: Record<RenderMode, string> = {
 
 const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
   packmind: RenderMode.PACKMIND,
+  opencode: RenderMode.OPENCODE,
   'agents-md': RenderMode.AGENTS_MD,
   'github-copilot': RenderMode.GH_COPILOT,
   cursor: RenderMode.CURSOR,
@@ -47,6 +49,7 @@ const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
 
 const DEFAULT_FORMATS: RenderingItem[] = [
   { value: 'packmind', name: 'Packmind', checked: true, disabled: true },
+  { value: 'opencode', name: 'OpenCode', checked: false },
   { value: 'agents-md', name: 'AGENTS.md', checked: true },
   { value: 'github-copilot', name: 'Github Copilot', checked: false },
   { value: 'cursor', name: 'Cursor', checked: false },

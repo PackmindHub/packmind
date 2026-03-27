@@ -225,6 +225,22 @@ describe('AgentArtifactDetectionService', () => {
       });
     });
 
+    describe('when .opencode/ directory exists', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, '.opencode'), { recursive: true });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('returns opencode agent', () => {
+        expect(result).toContainEqual({
+          agent: 'opencode',
+          artifactPath: path.join(tempDir, '.opencode'),
+        });
+      });
+    });
+
     describe('when multiple agent artifacts exist', () => {
       let result: DetectedAgentArtifact[];
 

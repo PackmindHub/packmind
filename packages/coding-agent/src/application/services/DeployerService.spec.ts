@@ -494,6 +494,55 @@ describe('DeployerService', () => {
         expect(result.delete).toHaveLength(0);
       });
     });
+
+    describe('when both opencode and agents_md are active', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        const opencodeDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'opencode content' },
+            ],
+            delete: [],
+          },
+        );
+        const agentsMdDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'agents_md content' },
+            ],
+            delete: [],
+          },
+        );
+
+        registry.registerDeployer('opencode', opencodeDeployer);
+        registry.registerDeployer('agents_md', agentsMdDeployer);
+
+        result = await service.aggregateStandardsDeployments(
+          mockStandardVersions,
+          mockGitRepo,
+          [mockTarget],
+          ['opencode', 'agents_md'],
+        );
+      });
+
+      it('returns a single AGENTS.md entry', () => {
+        const agentsMdFiles = result.createOrUpdate.filter(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFiles).toHaveLength(1);
+      });
+
+      it('uses agents_md content for AGENTS.md', () => {
+        const agentsMdFile = result.createOrUpdate.find(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFile?.content).toBe('agents_md content');
+      });
+    });
   });
 
   describe('aggregateArtifactRendering', () => {
@@ -836,6 +885,68 @@ describe('DeployerService', () => {
           existingFiles,
         ),
       ).rejects.toThrow('Artifact deployment failed');
+    });
+
+    describe('when both opencode and agents_md are active', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        const opencodeDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'opencode content' },
+              { path: '.opencode/commands/cmd.md', content: 'command content' },
+            ],
+            delete: [],
+          },
+        );
+        const agentsMdDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'agents_md content' },
+            ],
+            delete: [],
+          },
+        );
+
+        registry.registerDeployer('opencode', opencodeDeployer);
+        registry.registerDeployer('agents_md', agentsMdDeployer);
+
+        result = await service.aggregateArtifactRendering(
+          mockRecipeVersions,
+          mockStandardVersions,
+          [],
+          ['opencode', 'agents_md'],
+          new Map(),
+        );
+      });
+
+      it('returns a single AGENTS.md entry', () => {
+        const agentsMdFiles = result.createOrUpdate.filter(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFiles).toHaveLength(1);
+      });
+
+      it('uses agents_md content for AGENTS.md', () => {
+        const agentsMdFile = result.createOrUpdate.find(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFile?.content).toBe('agents_md content');
+      });
+
+      it('preserves opencode-only files', () => {
+        const commandFile = result.createOrUpdate.find(
+          (f) => f.path === '.opencode/commands/cmd.md',
+        );
+        expect(commandFile).toBeDefined();
+      });
     });
 
     describe('when handling all supported coding agents', () => {

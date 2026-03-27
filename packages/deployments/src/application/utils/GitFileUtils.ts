@@ -16,6 +16,7 @@ export function getFilePathForAgent(agent: CodingAgent): string {
     packmind: '.packmind.md',
     gitlab_duo: '.gitlab/duo/chat-rules.md',
     continue: '.continue/rules/packmind-recipes-index.md',
+    opencode: 'AGENTS.md',
   };
 
   return agentToFile[agent];

@@ -29,6 +29,7 @@ Standards are placed in specific folders that your AI assistant monitors. Once d
 | GitLab Duo     | `.gitlab/duo/chat-rules.md` file      |
 | Junie          | `.junie/guidelines.md` file           |
 | AGENTS.md      | `AGENTS.md` file (in repository root) |
+| OpenCode       | `AGENTS.md` file (in repository root) |
 
 <Tip>
   Standards work automatically—you don't need to do anything special to activate
@@ -38,7 +39,7 @@ Standards are placed in specific folders that your AI assistant monitors. Once d
 
 ### How Single-File Rendering Works
 
-Some AI assistants (**AGENTS.md**, **GitLab Duo**, **Junie**) use a single shared file rather than a dedicated folder for standards. Because you may want to add your own instructions to these files, Packmind uses HTML comment markers to delineate its managed section:
+Some AI assistants (**AGENTS.md**, **GitLab Duo**, **Junie**, **OpenCode**) use a single shared file rather than a dedicated folder for standards. Because you may want to add your own instructions to these files, Packmind uses HTML comment markers to delineate its managed section:
 
 ```
 <!-- start: Packmind standards -->
@@ -62,15 +63,16 @@ For other AI assistants (GitLab Duo, Junie, AGENTS.md), standards are included i
 
 Commands are placed in specific locations, but unlike standards, you need to invoke them manually when you want to use them.
 
-| AI Assistant   | Where Commands Are Rendered | How to Use                                  |
-| -------------- | --------------------------- | ------------------------------------------- |
-| Claude Code    | `.claude/commands/` folder  | Type `/command-name` in chat                |
-| Cursor         | `.cursor/commands/` folder  | Type `/command-name` in chat                |
-| GitHub Copilot | `.github/prompts/`          | Type `/command-name` in chat                |
-| Continue       | `.continue/prompts/`        | Type `/command-name` in chat                |
-| GitLab Duo     | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
-| Junie          | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
-| AGENTS.md      | Not rendered (use source)   | Execute @.packmind/commands/command-name.md |
+| AI Assistant   | Where Commands Are Rendered  | How to Use                                  |
+| -------------- | ---------------------------- | ------------------------------------------- |
+| Claude Code    | `.claude/commands/` folder   | Type `/command-name` in chat                |
+| Cursor         | `.cursor/commands/` folder   | Type `/command-name` in chat                |
+| GitHub Copilot | `.github/prompts/`           | Type `/command-name` in chat                |
+| Continue       | `.continue/prompts/`         | Type `/command-name` in chat                |
+| GitLab Duo     | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
+| Junie          | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
+| AGENTS.md      | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
+| OpenCode       | `.opencode/commands/` folder | Type `/command-name` in chat                |
 
 ### Using Slash Commands (Claude Code, Cursor, GitHub Copilot, Continue)
 
@@ -107,12 +109,13 @@ Skills are folders of instructions, scripts, and resources that AI agents can di
 | Claude Code    | `.claude/skills/{skill-slug}/SKILL.md`     |
 | Cursor         | `.cursor/skills/{skill-slug}/SKILL.md`     |
 | GitLab Duo     | `.gitlab/duo/skills/{skill-slug}/SKILL.md` |
+| OpenCode       | `.opencode/skills/{skill-slug}/SKILL.md`   |
 
 Skills contain YAML frontmatter with metadata (name, description, license, compatibility, allowed-tools) followed by the skill instructions.
 
 <Note>
-  Skills are currently available for GitHub Copilot, Claude Code, Cursor, and
-  GitLab Duo. Other AI assistants do not support skill rendering.
+  Skills are currently available for GitHub Copilot, Claude Code, Cursor, GitLab
+  Duo, and OpenCode. Other AI assistants do not support skill rendering.
 </Note>
 
 ## The Source Files

@@ -1439,7 +1439,7 @@ describe('DiffArtefactsUseCase', () => {
       );
     });
 
-    it('returns diff payload with body-only values', async () => {
+    it('returns diff payload with full content including frontmatter', async () => {
       const result = await useCase.execute({
         ...defaultGitInfo,
         packagesSlugs: ['test-package'],
@@ -1451,8 +1451,10 @@ describe('DiffArtefactsUseCase', () => {
           filePath: '.packmind/commands/my-command.md',
           type: ChangeProposalType.updateCommandDescription,
           payload: {
-            oldValue: 'This is a marvelous command',
-            newValue: 'This is a modified command',
+            oldValue:
+              "---\ndescription: 'My command'\nagent: 'agent'\n---\n\nThis is a marvelous command",
+            newValue:
+              "---\ndescription: 'My command'\nagent: 'agent'\n---\n\nThis is a modified command",
           },
           artifactName: 'My Command',
           artifactType: 'command',
@@ -1487,14 +1489,28 @@ describe('DiffArtefactsUseCase', () => {
       );
     });
 
-    it('returns empty result', async () => {
+    it('returns diff result with full content including changed frontmatter', async () => {
       const result = await useCase.execute({
         ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
 
-      expect(result).toEqual([]);
+      expect(result).toEqual([
+        {
+          filePath: '.packmind/commands/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: {
+            oldValue: "---\ndescription: 'Old description'\n---\n\nSame body",
+            newValue:
+              "---\ndescription: 'New description'\nagent: 'added-agent'\n---\n\nSame body",
+          },
+          artifactName: 'My Command',
+          artifactType: 'command',
+          artifactId: 'artifact-fm2',
+          spaceId: 'space-fm2',
+        },
+      ]);
     });
   });
 
