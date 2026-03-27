@@ -30,6 +30,10 @@ import {
   RecomputeConflictsCommand,
   RecomputeConflictsResponse,
 } from '../contracts/IRecomputeConflicts';
+import {
+  MigrateChangeProposalsForMovedArtefactCommand,
+  MigrateChangeProposalsForMovedArtefactResponse,
+} from '../contracts/IMigrateChangeProposalsForMovedArtefactUseCase';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { RecipeId } from '../../recipes/RecipeId';
 import { SkillId } from '../../skills/SkillId';
@@ -70,4 +74,8 @@ export interface IPlaybookChangeManagementPort {
   recomputeConflicts(
     command: RecomputeConflictsCommand,
   ): Promise<RecomputeConflictsResponse>;
+
+  migrateChangeProposalsForMovedArtefact(
+    command: MigrateChangeProposalsForMovedArtefactCommand,
+  ): Promise<MigrateChangeProposalsForMovedArtefactResponse>;
 }

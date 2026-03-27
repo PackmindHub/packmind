@@ -69,6 +69,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
 
       this.changeManagementListener = new ChangeManagementListener(
         this.playbookChangeManagementServices.getChangeProposalService(),
+        this.playbookChangeManagementAdapter,
       );
 
       this.logger.info('PlaybookChangeManagementHexa construction completed');

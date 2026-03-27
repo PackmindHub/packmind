@@ -7,6 +7,7 @@ import {
   SkillDeletedEvent,
   StandardDeletedEvent,
 } from '@packmind/types';
+import { PlaybookChangeManagementAdapter } from '../adapters/PlaybookChangeManagementAdapter';
 import { ChangeProposalService } from '../services/ChangeProposalService';
 
 const origin = 'ChangeManagementListener';
@@ -14,6 +15,7 @@ const origin = 'ChangeManagementListener';
 export class ChangeManagementListener extends PackmindListener<ChangeProposalService> {
   constructor(
     adapter: ChangeProposalService,
+    private readonly changeManagementAdapter: PlaybookChangeManagementAdapter,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(adapter);
@@ -148,19 +150,29 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
   private handlePlaybookArtefactMoved = async (
     event: PlaybookArtefactMovedEvent,
   ): Promise<void> => {
-    const {
-      artifactType,
-      oldArtifactId,
-      newArtifactId,
-      sourceSpaceId,
-      destinationSpaceId,
-    } = event.payload;
-    this.logger.info('Handling PlaybookArtefactMovedEvent', {
-      artifactType,
-      oldArtifactId,
-      newArtifactId,
-      sourceSpaceId,
-      destinationSpaceId,
-    });
+    const { oldArtifactId, newArtifactId, sourceSpaceId, destinationSpaceId } =
+      event.payload;
+
+    try {
+      await this.changeManagementAdapter.migrateChangeProposalsForMovedArtefact(
+        {
+          userId: event.payload.userId,
+          organizationId: event.payload.organizationId,
+          source: event.payload.source,
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId: oldArtifactId,
+          newArtefactId: newArtifactId,
+        },
+      );
+    } catch (error) {
+      this.logger.error('Failed to migrate proposals for moved artefact', {
+        oldArtifactId,
+        newArtifactId,
+        sourceSpaceId,
+        destinationSpaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 }

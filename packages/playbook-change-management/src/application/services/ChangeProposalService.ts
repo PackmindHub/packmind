@@ -315,6 +315,53 @@ export class ChangeProposalService {
     });
   }
 
+  async migrateProposalsForMovedArtefact(params: {
+    sourceSpaceId: SpaceId;
+    destinationSpaceId: SpaceId;
+    oldArtefactId: string;
+    newArtefactId: string;
+  }): Promise<void> {
+    const { sourceSpaceId, destinationSpaceId, oldArtefactId, newArtefactId } =
+      params;
+
+    const existingProposals = await this.repository.findByArtefactId(
+      sourceSpaceId,
+      oldArtefactId,
+    );
+
+    const copies = existingProposals.map((proposal) => ({
+      ...proposal,
+      id: createChangeProposalId(uuidv4()),
+      artefactId: newArtefactId as typeof proposal.artefactId,
+      spaceId: destinationSpaceId,
+    }));
+
+    await this.dataSource.manager.transaction(async (entityManager) => {
+      for (const copy of copies) {
+        await entityManager.save(ChangeProposalSchema, copy);
+      }
+
+      await entityManager
+        .getRepository(ChangeProposalSchema)
+        .createQueryBuilder()
+        .softDelete()
+        .where('space_id = :spaceId', { spaceId: sourceSpaceId })
+        .andWhere('artefact_id = :artefactId', {
+          artefactId: oldArtefactId,
+        })
+        .execute();
+    });
+
+    this.logger.info('Migrated change proposals for moved artefact', {
+      sourceSpaceId,
+      destinationSpaceId,
+      oldArtefactId,
+      newArtefactId,
+      copiedCount: copies.length,
+      softDeletedCount: existingProposals.length,
+    });
+  }
+
   async findProposalsByArtefact(
     spaceId: SpaceId,
     artefactId: StandardId | RecipeId | SkillId,

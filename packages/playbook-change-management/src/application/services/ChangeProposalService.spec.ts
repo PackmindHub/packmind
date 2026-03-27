@@ -665,6 +665,228 @@ describe('ChangeProposalService', () => {
     });
   });
 
+  describe('migrateProposalsForMovedArtefact', () => {
+    const sourceSpaceId = createSpaceId('source-space');
+    const destinationSpaceId = createSpaceId('dest-space');
+    const oldArtefactId = createStandardId('old-artefact');
+    const newArtefactId = 'new-artefact-id';
+
+    const createProposal = <T extends ChangeProposalType>(
+      type: T,
+      status: ChangeProposalStatus = ChangeProposalStatus.pending,
+    ): ChangeProposal<T> => ({
+      id: createChangeProposalId(`cp-${Math.random()}`),
+      type,
+      artefactId: oldArtefactId as ChangeProposal<T>['artefactId'],
+      artefactVersion: 1,
+      spaceId: sourceSpaceId,
+      payload: {
+        oldValue: 'old',
+        newValue: 'new',
+      } as ChangeProposal<T>['payload'],
+      captureMode: ChangeProposalCaptureMode.commit,
+      message: 'test message',
+      status,
+      decision: null,
+      createdBy: createUserId('user-id'),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-02'),
+    });
+
+    let mockEntityManager: {
+      save: jest.Mock;
+      getRepository: jest.Mock;
+    };
+    let mockQueryBuilder: {
+      softDelete: jest.Mock;
+      where: jest.Mock;
+      andWhere: jest.Mock;
+      execute: jest.Mock;
+    };
+
+    beforeEach(() => {
+      mockQueryBuilder = {
+        softDelete: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue(undefined),
+      };
+      mockEntityManager = {
+        save: jest.fn().mockResolvedValue(undefined),
+        getRepository: jest.fn().mockReturnValue({
+          createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+        }),
+      };
+      (dataSource.manager.transaction as jest.Mock).mockImplementation(
+        async (cb: (em: typeof mockEntityManager) => Promise<void>) => {
+          await cb(mockEntityManager);
+        },
+      );
+    });
+
+    describe('when old artefact has proposals', () => {
+      const pendingProposal = createProposal(
+        ChangeProposalType.updateStandardName,
+        ChangeProposalStatus.pending,
+      );
+      const appliedProposal = createProposal(
+        ChangeProposalType.addRule,
+        ChangeProposalStatus.applied,
+      );
+      const rejectedProposal = createProposal(
+        ChangeProposalType.updateStandardDescription,
+        ChangeProposalStatus.rejected,
+      );
+
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue([
+          pendingProposal,
+          appliedProposal,
+          rejectedProposal,
+        ]);
+      });
+
+      it('fetches proposals from the source space', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        expect(repository.findByArtefactId).toHaveBeenCalledWith(
+          sourceSpaceId,
+          oldArtefactId,
+        );
+      });
+
+      it('saves copies with new artefactId and spaceId', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        expect(mockEntityManager.save).toHaveBeenCalledTimes(3);
+        expect(mockEntityManager.save).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            artefactId: newArtefactId,
+            spaceId: destinationSpaceId,
+          }),
+        );
+      });
+
+      it('generates distinct IDs for copies', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        const savedIds = (mockEntityManager.save as jest.Mock).mock.calls.map(
+          ([, proposal]: [unknown, ChangeProposal<ChangeProposalType>]) =>
+            proposal.id,
+        );
+        const uniqueIds = new Set(savedIds);
+        expect(uniqueIds.size).toBe(3);
+      });
+
+      it('preserves original proposal fields in the copy', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        expect(mockEntityManager.save).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            type: pendingProposal.type,
+            message: pendingProposal.message,
+            captureMode: pendingProposal.captureMode,
+            createdBy: pendingProposal.createdBy,
+            status: pendingProposal.status,
+          }),
+        );
+      });
+
+      it('copies proposals regardless of status', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        const savedStatuses = (
+          mockEntityManager.save as jest.Mock
+        ).mock.calls.map(
+          ([, proposal]: [unknown, ChangeProposal<ChangeProposalType>]) =>
+            proposal.status,
+        );
+        expect(savedStatuses).toEqual([
+          ChangeProposalStatus.pending,
+          ChangeProposalStatus.applied,
+          ChangeProposalStatus.rejected,
+        ]);
+      });
+
+      it('soft-deletes all originals in the source space', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        expect(mockQueryBuilder.softDelete).toHaveBeenCalled();
+        expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+          'space_id = :spaceId',
+          { spaceId: sourceSpaceId },
+        );
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          'artefact_id = :artefactId',
+          { artefactId: oldArtefactId },
+        );
+        expect(mockQueryBuilder.execute).toHaveBeenCalled();
+      });
+    });
+
+    describe('when old artefact has no proposals', () => {
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue([]);
+      });
+
+      it('does not save any copies', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        expect(mockEntityManager.save).not.toHaveBeenCalled();
+      });
+
+      it('still executes soft-delete query', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
+        expect(mockQueryBuilder.execute).toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('findProposalsByArtefact', () => {
     const standardId = createStandardId('standard-1');
     const recipeId = createRecipeId('recipe-1');

@@ -3,6 +3,7 @@ import { stubLogger } from '@packmind/test-utils';
 import { DataSource } from 'typeorm';
 import { ChangeManagementListener } from './ChangeManagementListener';
 import { ChangeProposalService } from '../services/ChangeProposalService';
+import { PlaybookChangeManagementAdapter } from '../adapters/PlaybookChangeManagementAdapter';
 import {
   CommandDeletedEvent,
   StandardDeletedEvent,
@@ -21,6 +22,7 @@ import {
 describe('ChangeManagementListener', () => {
   let eventService: PackmindEventEmitterService;
   let mockChangeProposalService: jest.Mocked<ChangeProposalService>;
+  let mockAdapter: jest.Mocked<PlaybookChangeManagementAdapter>;
   let listener: ChangeManagementListener;
   let mockDataSource: DataSource;
 
@@ -40,8 +42,13 @@ describe('ChangeManagementListener', () => {
       cancelPendingByArtefactId: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    mockAdapter = {
+      migrateChangeProposalsForMovedArtefact: jest.fn().mockResolvedValue({}),
+    } as unknown as jest.Mocked<PlaybookChangeManagementAdapter>;
+
     listener = new ChangeManagementListener(
       mockChangeProposalService,
+      mockAdapter,
       stubLogger(),
     );
     listener.initialize(eventService);
@@ -212,22 +219,59 @@ describe('ChangeManagementListener', () => {
   });
 
   describe('when PlaybookArtefactMovedEvent is emitted', () => {
-    it('handles the event without error', async () => {
+    const destinationSpaceId = createSpaceId('dest-space');
+
+    it('calls migrateChangeProposalsForMovedArtefact with correct command', async () => {
       const event = new PlaybookArtefactMovedEvent({
         artifactType: 'standard',
         oldArtifactId: 'old-standard-id',
         newArtifactId: 'new-standard-id',
         sourceSpaceId: spaceId,
-        destinationSpaceId: createSpaceId('dest-space'),
+        destinationSpaceId,
         userId,
         organizationId,
         source: 'ui',
       });
 
-      await expect(async () => {
-        eventService.emit(event);
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }).not.toThrow();
+      eventService.emit(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(
+        mockAdapter.migrateChangeProposalsForMovedArtefact,
+      ).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        source: 'ui',
+        sourceSpaceId: spaceId,
+        destinationSpaceId,
+        oldArtefactId: 'old-standard-id',
+        newArtefactId: 'new-standard-id',
+      });
+    });
+
+    describe('when migrateChangeProposalsForMovedArtefact throws', () => {
+      it('does not propagate the error', async () => {
+        mockAdapter.migrateChangeProposalsForMovedArtefact.mockRejectedValueOnce(
+          new Error('DB error'),
+        );
+
+        const event = new PlaybookArtefactMovedEvent({
+          artifactType: 'standard',
+          oldArtifactId: 'old-standard-id',
+          newArtifactId: 'new-standard-id',
+          sourceSpaceId: spaceId,
+          destinationSpaceId,
+          userId,
+          organizationId,
+          source: 'ui',
+        });
+
+        await expect(async () => {
+          eventService.emit(event);
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }).not.toThrow();
+      });
     });
   });
 });

@@ -32,6 +32,8 @@ import {
   ListChangeProposalsByArtefactResponse,
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
+  MigrateChangeProposalsForMovedArtefactCommand,
+  MigrateChangeProposalsForMovedArtefactResponse,
   RecomputeConflictsCommand,
   RecomputeConflictsResponse,
   RecipeId,
@@ -46,6 +48,7 @@ import { ListChangeProposalsByArtefactUseCase } from '../useCases/listChangeProp
 import { ListChangeProposalsBySpaceUseCase } from '../useCases/listChangeProposalsBySpace/ListChangeProposalsBySpaceUseCase';
 import { BatchCreateChangeProposalsUseCase } from '../useCases/batchCreateChangeProposals/BatchCreateChangeProposalsUseCase';
 import { CheckChangeProposalsUseCase } from '../useCases/checkChangeProposals/CheckChangeProposalsUseCase';
+import { MigrateChangeProposalsForMovedArtefactUseCase } from '../useCases/migrateChangeProposalsForMovedArtefact/MigrateChangeProposalsForMovedArtefactUseCase';
 import { RecomputeConflictsUseCase } from '../useCases/recomputeConflicts/RecomputeConflictsUseCase';
 import { IChangeProposalValidator } from '../validators/IChangeProposalValidator';
 import { CommandChangeProposalValidator } from '../validators/CommandChangeProposalValidator';
@@ -71,6 +74,7 @@ export class PlaybookChangeManagementAdapter
     StandardId | RecipeId | SkillId
   >;
   private _listChangeProposalsBySpace!: ListChangeProposalsBySpaceUseCase;
+  private _migrateChangeProposalsForMovedArtefact!: MigrateChangeProposalsForMovedArtefactUseCase;
   private _recomputeConflicts!: RecomputeConflictsUseCase;
 
   constructor(
@@ -128,6 +132,12 @@ export class PlaybookChangeManagementAdapter
     command: RecomputeConflictsCommand,
   ): Promise<RecomputeConflictsResponse> {
     return this._recomputeConflicts.execute(command);
+  }
+
+  async migrateChangeProposalsForMovedArtefact(
+    command: MigrateChangeProposalsForMovedArtefactCommand,
+  ): Promise<MigrateChangeProposalsForMovedArtefactResponse> {
+    return this._migrateChangeProposalsForMovedArtefact.execute(command);
   }
 
   public async initialize(ports: {
@@ -275,6 +285,9 @@ export class PlaybookChangeManagementAdapter
       changeProposalService,
     );
 
+    this._migrateChangeProposalsForMovedArtefact =
+      new MigrateChangeProposalsForMovedArtefactUseCase(changeProposalService);
+
     this._recomputeConflicts = new RecomputeConflictsUseCase(
       accountsPort,
       spacesPort,
@@ -296,6 +309,7 @@ export class PlaybookChangeManagementAdapter
       this._createChangeProposal !== undefined &&
       this._listChangeProposalsByArtefact !== undefined &&
       this._listChangeProposalsBySpace !== undefined &&
+      this._migrateChangeProposalsForMovedArtefact !== undefined &&
       this._recomputeConflicts !== undefined
     );
   }
