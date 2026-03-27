@@ -2,7 +2,7 @@ import { PMBox, PMText } from '@packmind/ui';
 import { useMemo } from 'react';
 import { Rule, Standard } from '@packmind/types';
 import { serializeStandardToMarkdown } from '../../utils/serializeArtifactToMarkdown';
-import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
+import { ArtifactResultFilePreview } from '../../../artifacts/components/ArtifactResultFilePreview';
 
 interface StandardOriginalTabContentProps {
   standard: Standard;

@@ -1,6 +1,6 @@
 import { PMBox, PMText } from '@packmind/ui';
 import { Recipe } from '@packmind/types';
-import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
+import { ArtifactResultFilePreview } from '../../../artifacts/components/ArtifactResultFilePreview';
 
 interface OriginalTabContentProps {
   recipe: Recipe;

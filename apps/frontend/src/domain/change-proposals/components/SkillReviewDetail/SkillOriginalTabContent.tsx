@@ -5,7 +5,7 @@ import { SKILL_MD_PATH } from '../../utils/groupSkillProposalsByFile';
 import { serializeSkillToMarkdown } from '../../utils/serializeArtifactToMarkdown';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { SkillFilePreview } from '../../../skills/components/SkillFilePreview';
-import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
+import { ArtifactResultFilePreview } from '../../../artifacts/components/ArtifactResultFilePreview';
 
 interface SkillOriginalTabContentProps {
   skill: Skill;

@@ -13,8 +13,8 @@ import { RiClaudeLine } from 'react-icons/ri';
 import { VscVscode } from 'react-icons/vsc';
 import { CursorIcon } from '@packmind/assets/icons/CursorIcon';
 import { LuDownload } from 'react-icons/lu';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 
 type AgentOption = {
   value: CodingAgent;

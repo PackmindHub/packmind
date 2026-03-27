@@ -4,7 +4,7 @@ import { ChangeProposalId, ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { applyRecipeProposals } from '../../utils/applyRecipeProposals';
 import { PREVIEW_RECIPE_VERSION_ID } from '../../utils/changeProposalHelpers';
-import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
+import { ArtifactResultFilePreview } from '../../../artifacts/components/ArtifactResultFilePreview';
 
 interface ResultTabContentProps {
   recipe: Recipe;

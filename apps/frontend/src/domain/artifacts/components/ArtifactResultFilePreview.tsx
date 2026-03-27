@@ -12,7 +12,7 @@ import {
 import { PreviewArtifactRenderingCommand } from '@packmind/types';
 import { CopyMarkdownButton } from './CopyMarkdownButton';
 import { DownloadAsAgentButton } from './DownloadAsAgentButton';
-import { stripFrontmatter } from '../../utils/stripFrontmatter';
+import { stripFrontmatter } from '../utils/stripFrontmatter';
 
 interface ArtifactResultFilePreviewProps {
   fileName?: string;

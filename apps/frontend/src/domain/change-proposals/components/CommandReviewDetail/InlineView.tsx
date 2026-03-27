@@ -3,7 +3,7 @@ import { PMBox, PMHeading, PMMarkdownViewer, PMText } from '@packmind/ui';
 import { ChangeProposalType, Recipe } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { buildDiffSections } from '../../utils/buildDiffSections';
-import { stripFrontmatter } from '../../utils/stripFrontmatter';
+import { stripFrontmatter } from '../../../artifacts/utils/stripFrontmatter';
 import { DiffBlock } from '../shared/DiffBlock';
 
 interface InlineViewProps {

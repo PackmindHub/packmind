@@ -2,7 +2,7 @@ import { PMBadge, PMBox, PMHStack, PMText } from '@packmind/ui';
 import { PreviewArtifactRenderingCommand } from '@packmind/types';
 import { RelativeTime } from './RelativeTime';
 import { ReviewActionButtons } from '../ReviewActionButtons';
-import { DownloadAsAgentButton } from './DownloadAsAgentButton';
+import { DownloadAsAgentButton } from '../../../artifacts/components/DownloadAsAgentButton';
 
 interface CreationReviewHeaderProps {
   artefactName: string;

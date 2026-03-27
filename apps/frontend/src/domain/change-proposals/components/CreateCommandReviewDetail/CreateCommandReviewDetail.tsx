@@ -9,7 +9,7 @@ import { PREVIEW_RECIPE_VERSION_ID } from '../../utils/changeProposalHelpers';
 import { routes } from '../../../../shared/utils/routes';
 import { useCreationReviewDetail } from '../../hooks/useCreationReviewDetail';
 import { useUserLookup } from '../../hooks/useUserLookup';
-import { stripFrontmatter } from '../../utils/stripFrontmatter';
+import { stripFrontmatter } from '../../../artifacts/utils/stripFrontmatter';
 import { SubmissionBanner } from '../SubmissionBanner';
 import { CreationReviewHeader } from '../shared/CreationReviewHeader';
 import { ProposalMessage } from '../shared/ProposalMessage';

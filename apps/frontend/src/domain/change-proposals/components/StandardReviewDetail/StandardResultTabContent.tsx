@@ -10,7 +10,7 @@ import { ChangeProposalWithConflicts } from '../../types';
 import { applyStandardProposals } from '../../utils/applyStandardProposals';
 import { PREVIEW_STANDARD_VERSION_ID } from '../../utils/changeProposalHelpers';
 import { serializeStandardToMarkdown } from '../../utils/serializeArtifactToMarkdown';
-import { ArtifactResultFilePreview } from '../shared/ArtifactResultFilePreview';
+import { ArtifactResultFilePreview } from '../../../artifacts/components/ArtifactResultFilePreview';
 
 interface StandardResultTabContentProps {
   standard: Standard;
