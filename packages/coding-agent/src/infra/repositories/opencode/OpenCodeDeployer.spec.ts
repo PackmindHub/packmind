@@ -163,6 +163,40 @@ describe('OpenCodeDeployer', () => {
         expect(agentsMdFile).toBeUndefined();
       });
     });
+
+    describe('with all four OpenCode frontmatter fields', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
+      >;
+      const fullFrontmatterContent =
+        '---\ndescription: "Full command"\nagent: build\nmodel: gpt-4o\nsubtask: true\n---\nDo the full thing';
+
+      beforeEach(async () => {
+        const recipe = recipeFactory({
+          name: 'Full Command',
+          slug: 'full-command',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-full'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: fullFrontmatterContent,
+          version: 1,
+          userId: createUserId('user-1'),
+        };
+
+        result = await deployer.generateFileUpdatesForRecipes([recipeVersion]);
+      });
+
+      it('writes the command file with all four frontmatter fields preserved', () => {
+        const commandFile = result.createOrUpdate.find((f) =>
+          f.path.includes('.opencode/commands/'),
+        );
+        expect(commandFile?.content).toBe(fullFrontmatterContent);
+      });
+    });
   });
 
   describe('deployStandards', () => {

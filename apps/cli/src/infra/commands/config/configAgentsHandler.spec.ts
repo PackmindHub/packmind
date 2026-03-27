@@ -877,7 +877,7 @@ describe('configAgentsHandler', () => {
 
         await configAgentsHandler(deps);
 
-        // SELECTABLE_AGENTS[0]=claude, [2]=copilot, [4]=junie
+        // SELECTABLE_AGENTS[0]=claude, [2]=copilot, [4]=continue
         expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
           '/project',
           ['claude', 'copilot', 'continue'],
