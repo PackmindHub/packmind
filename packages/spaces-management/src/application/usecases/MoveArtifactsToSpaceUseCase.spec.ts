@@ -11,6 +11,7 @@ import {
   ISpacesPort,
   IStandardsPort,
   MoveArtifactsToSpaceCommand,
+  StandardDeletedEvent,
 } from '@packmind/types';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
@@ -273,8 +274,8 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           );
         });
 
-        it('emits one event per standard', () => {
-          expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
+        it('emits two events per standard (moved + deleted)', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(4);
         });
 
         it('emits a PlaybookArtefactMovedEvent with standard artifact type', () => {
@@ -290,6 +291,29 @@ describe('MoveArtifactsToSpaceUseCase', () => {
             }),
           );
         });
+
+        it('emits a StandardDeletedEvent for each moved standard', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledWith(
+            expect.any(StandardDeletedEvent),
+          );
+        });
+      });
+
+      it('emits a StandardDeletedEvent with the source space', async () => {
+        await useCase.execute(
+          buildCommand({ artifacts: [{ id: standardId1, type: 'standard' }] }),
+        );
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              standardId: standardId1,
+              spaceId: sourceSpaceId,
+              userId,
+              organizationId,
+            }),
+          }),
+        );
       });
     });
 
@@ -361,6 +385,23 @@ describe('MoveArtifactsToSpaceUseCase', () => {
               artifactType: 'skill',
               sourceSpaceId,
               destinationSpaceId,
+              userId,
+              organizationId,
+            }),
+          }),
+        );
+      });
+
+      it('emits a SkillDeletedEvent with the source space', async () => {
+        await useCase.execute(
+          buildCommand({ artifacts: [{ id: skillId1, type: 'skill' }] }),
+        );
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              skillId: skillId1,
+              spaceId: sourceSpaceId,
               userId,
               organizationId,
             }),
@@ -443,6 +484,23 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           }),
         );
       });
+
+      it('emits a CommandDeletedEvent with the source space', async () => {
+        await useCase.execute(
+          buildCommand({ artifacts: [{ id: recipeId1, type: 'command' }] }),
+        );
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              id: recipeId1,
+              spaceId: sourceSpaceId,
+              userId,
+              organizationId,
+            }),
+          }),
+        );
+      });
     });
 
     describe('when moving multiple artifact types at once', () => {
@@ -464,7 +522,7 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         expect(result).toEqual({ movedCount: 3 });
       });
 
-      it('emits one event per artifact', async () => {
+      it('emits two events per artifact (moved + deleted)', async () => {
         await useCase.execute(
           buildCommand({
             artifacts: [
@@ -475,7 +533,7 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           }),
         );
 
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(3);
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(6);
       });
     });
 

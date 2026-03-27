@@ -7,6 +7,7 @@ import {
 import {
   ArtifactReference,
   ArtifactType,
+  CommandDeletedEvent,
   createOrganizationId,
   createUserId,
   IAccountsPort,
@@ -19,7 +20,9 @@ import {
   OrganizationId,
   PackmindEventSource,
   PlaybookArtefactMovedEvent,
+  SkillDeletedEvent,
   SpaceId,
+  StandardDeletedEvent,
   UserId,
 } from '@packmind/types';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
@@ -126,6 +129,15 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       ctx.destinationSpaceId,
     );
     this.emitMovedEvent(artifact.type, ctx);
+    this.eventEmitterService.emit(
+      new StandardDeletedEvent({
+        standardId: artifact.id,
+        spaceId: ctx.sourceSpaceId,
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+        source: ctx.source,
+      }),
+    );
   }
 
   private async moveSkill(
@@ -139,6 +151,15 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     );
     await this.skillsPort.markSkillAsMoved(artifact.id, ctx.destinationSpaceId);
     this.emitMovedEvent(artifact.type, ctx);
+    this.eventEmitterService.emit(
+      new SkillDeletedEvent({
+        skillId: artifact.id,
+        spaceId: ctx.sourceSpaceId,
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+        source: ctx.source,
+      }),
+    );
   }
 
   private async moveRecipe(
@@ -155,6 +176,15 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       ctx.destinationSpaceId,
     );
     this.emitMovedEvent(artifact.type, ctx);
+    this.eventEmitterService.emit(
+      new CommandDeletedEvent({
+        id: artifact.id,
+        spaceId: ctx.sourceSpaceId,
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+        source: ctx.source,
+      }),
+    );
   }
 
   private emitMovedEvent(artifactType: ArtifactType, ctx: MoveContext): void {
