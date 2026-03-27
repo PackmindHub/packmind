@@ -164,5 +164,17 @@ describe('SpacesManagementController', () => {
         ).rejects.toThrow(BadRequestException);
       });
     });
+
+    describe('when artifacts is empty', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [],
+          }),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
   });
 });

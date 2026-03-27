@@ -112,6 +112,10 @@ export class SpacesManagementController {
       );
     }
 
+    if (!body.artifacts?.length) {
+      throw new BadRequestException('artifacts must not be empty');
+    }
+
     this.logger.info(
       'POST /organizations/:orgId/spaces-management/move - Moving artifacts',
       {
