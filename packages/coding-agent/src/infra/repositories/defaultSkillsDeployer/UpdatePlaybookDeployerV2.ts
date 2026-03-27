@@ -1,27 +1,30 @@
 import { DeleteItemType, FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
-import { getSkillMd } from './skills/packmind-update-playbook/skill';
 import { AGENT_SKILLS_SPECIFICATION } from './skills/packmind-update-playbook/references/agent-skills-specification';
 import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
 import { ANALYZE_STANDARDS } from './skills/packmind-update-playbook/steps/analyze-standards';
 import { ANALYZE_COMMANDS } from './skills/packmind-update-playbook/steps/analyze-commands';
 import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-skills';
 import { APPLY_CHANGES } from './skills/packmind-update-playbook/steps/apply-changes';
+import { skillMd } from './skills/packmind-update-playbook/skill.md';
 
-export class UpdatePlaybookDeployer
+export class UpdatePlaybookDeployerV2
   extends AbstractDefaultSkillDeployer
   implements ISkillDeployer
 {
-  public readonly slug = 'packmind-update-playbook';
-  protected readonly minimumVersion = '0.21.0';
+  public readonly slug = 'packmind-update-playbook-v2';
+  protected readonly minimumVersion = 'unreleased';
 
-  deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
-    const basePath = `${skillsFolderPath}packmind-update-playbook`;
+  deploy(agentName: string, skillsFolderPath: string): FileUpdates {
+    const basePath = `${skillsFolderPath}${this.slug}`;
 
     return {
       createOrUpdate: [
-        { path: `${basePath}/SKILL.md`, content: getSkillMd() },
+        {
+          path: `${basePath}/SKILL.md`,
+          content: this.getSkillMd(agentName, skillMd),
+        },
         { path: `${basePath}/LICENSE.txt`, content: LICENSE_TXT },
         {
           path: `${basePath}/steps/analyze-standards.md`,
