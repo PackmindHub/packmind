@@ -10,13 +10,13 @@ import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway'
  * Agents available for selection (packmind excluded - always active)
  */
 export const SELECTABLE_AGENTS: CodingAgent[] = [
-  'claude',
-  'cursor',
-  'copilot',
   'agents_md',
+  'claude',
   'continue',
-  'junie',
+  'copilot',
+  'cursor',
   'gitlab_duo',
+  'junie',
   'opencode',
 ];
 
