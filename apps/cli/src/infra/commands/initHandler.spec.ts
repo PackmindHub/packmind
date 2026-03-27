@@ -74,6 +74,7 @@ describe('initHandler', () => {
         filesCreated: 0,
         filesUpdated: 0,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       await initHandler(deps);
@@ -118,6 +119,7 @@ describe('initHandler', () => {
         filesCreated: 0,
         filesUpdated: 0,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       await initHandler(deps);
@@ -148,6 +150,7 @@ describe('initHandler', () => {
         filesCreated: 3,
         filesUpdated: 2,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       result = await initHandler(deps);
@@ -204,6 +207,7 @@ describe('initHandler', () => {
         filesCreated: 5,
         filesUpdated: 0,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       await initHandler(deps);
@@ -228,6 +232,7 @@ describe('initHandler', () => {
         filesCreated: 0,
         filesUpdated: 4,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       await initHandler(deps);
@@ -254,6 +259,7 @@ describe('initHandler', () => {
         filesCreated: 0,
         filesUpdated: 0,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       result = await initHandler(deps);
@@ -304,6 +310,7 @@ describe('initHandler', () => {
         filesCreated: 0,
         filesUpdated: 0,
         errors: skillErrors,
+        skippedSkillsCount: 0,
       });
 
       result = await initHandler(deps);
@@ -343,6 +350,7 @@ describe('initHandler', () => {
         filesCreated: 0,
         filesUpdated: 0,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       await initHandler(deps);
@@ -364,6 +372,7 @@ describe('initHandler', () => {
         filesCreated: 0,
         filesUpdated: 0,
         errors: [],
+        skippedSkillsCount: 0,
       });
 
       await initHandler(deps);
