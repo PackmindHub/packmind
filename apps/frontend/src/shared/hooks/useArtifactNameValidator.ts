@@ -14,8 +14,9 @@ export function useArtifactNameValidator(
 
   return useCallback(
     (name: string) => {
-      if (!name.trim()) return null;
-      if (namesSet.has(name.toLowerCase())) {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      if (namesSet.has(trimmed.toLowerCase())) {
         return 'An artifact with this name already exists in this space';
       }
       return null;

@@ -77,4 +77,16 @@ describe('useArtifactNameValidator', () => {
       expect(result.current('   ')).toBeNull();
     });
   });
+
+  describe('when name has leading/trailing whitespace matching an existing name', () => {
+    it('returns error message after trimming', () => {
+      const { result } = renderHook(() =>
+        useArtifactNameValidator(existingNames),
+      );
+
+      expect(result.current('  My Standard  ')).toBe(
+        'An artifact with this name already exists in this space',
+      );
+    });
+  });
 });

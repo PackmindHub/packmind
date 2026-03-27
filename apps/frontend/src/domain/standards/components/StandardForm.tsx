@@ -138,6 +138,14 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     e.preventDefault();
 
     // Validation
+    if (hasNameError) {
+      setAlert({
+        type: 'error',
+        message: nameError!,
+      });
+      return;
+    }
+
     if (!name.trim()) {
       setAlert({
         type: 'error',

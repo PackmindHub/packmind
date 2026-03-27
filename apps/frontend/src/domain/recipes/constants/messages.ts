@@ -4,7 +4,6 @@ export const RECIPE_MESSAGES = {
     nameRequired: 'Command name is required',
     descriptionRequired: 'Command description is required',
     contentRequired: 'Command content is required',
-    nameAlreadyExists: 'A command with this name already exists in this space',
     slugInvalid:
       'Slug must contain only lowercase letters, numbers, and hyphens',
   },

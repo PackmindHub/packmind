@@ -74,6 +74,14 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
     e.preventDefault();
     setAlert(null);
 
+    if (hasNameError) {
+      setAlert({
+        type: 'error',
+        message: nameError!,
+      });
+      return;
+    }
+
     if (!name.trim()) {
       setAlert({
         type: 'error',

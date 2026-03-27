@@ -3,7 +3,6 @@ export const STANDARD_MESSAGES = {
   validation: {
     nameRequired: 'Standard name is required',
     descriptionRequired: 'Standard description is required',
-    nameAlreadyExists: 'A standard with this name already exists in this space',
     scopeRequiresPositivePattern:
       'Scope must include at least one positive pattern. Negative patterns (starting with !) can only be used alongside positive patterns.',
   },
