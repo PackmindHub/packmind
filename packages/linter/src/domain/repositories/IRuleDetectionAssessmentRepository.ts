@@ -10,4 +10,5 @@ export interface IRuleDetectionAssessmentRepository extends IRepository<RuleDete
   ): Promise<RuleDetectionAssessment | null>;
   findByRuleId(ruleId: RuleId): Promise<RuleDetectionAssessment[]>;
   update(assessment: RuleDetectionAssessment): Promise<RuleDetectionAssessment>;
+  softDeleteByRuleId(ruleId: RuleId): Promise<void>;
 }

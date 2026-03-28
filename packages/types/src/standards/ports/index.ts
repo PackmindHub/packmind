@@ -1,2 +1,2 @@
 export { IStandardsPortName } from './IStandardsPort';
-export type { IStandardsPort } from './IStandardsPort';
+export type { DuplicateStandardResult, IStandardsPort } from './IStandardsPort';

@@ -24,4 +24,5 @@ export interface IDetectionProgramRepository extends IRepository<DetectionProgra
     detectionProgramId: DetectionProgramId,
     status: DetectionStatus,
   ): Promise<void>;
+  softDeleteByRuleId(ruleId: RuleId): Promise<void>;
 }

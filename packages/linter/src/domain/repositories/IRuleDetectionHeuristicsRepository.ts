@@ -23,4 +23,6 @@ export interface IRuleDetectionHeuristicsRepository {
   getHeuristicsById(
     id: DetectionHeuristicsId,
   ): Promise<DetectionHeuristics | null>;
+
+  softDeleteByRuleId(ruleId: RuleId): Promise<void>;
 }

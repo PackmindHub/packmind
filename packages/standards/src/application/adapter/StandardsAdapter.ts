@@ -26,6 +26,7 @@ import {
   ILlmPortName,
   ISpacesPort,
   ISpacesPortName,
+  DuplicateStandardResult,
   IStandardsPort,
   ListStandardsBySpaceCommand,
   OrganizationId,
@@ -566,7 +567,7 @@ export class StandardsAdapter
     standardId: StandardId,
     destinationSpaceId: SpaceId,
     newUserId: UserId,
-  ): Promise<Standard> {
+  ): Promise<DuplicateStandardResult> {
     return this.services
       .getStandardService()
       .duplicateStandardToSpace(standardId, destinationSpaceId, newUserId);

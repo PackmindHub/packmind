@@ -8,6 +8,7 @@ export type CopyDetectionProgramsToNewRuleCommand = PackmindCommand & {
 
 export type CopyDetectionProgramsToNewRuleResponse = {
   copiedProgramsCount: number;
+  copiedMetadataCount: number;
 };
 
 export type ICopyDetectionProgramsToNewRule = IUseCase<

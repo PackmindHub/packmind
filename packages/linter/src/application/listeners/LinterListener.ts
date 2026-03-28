@@ -1,6 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindListener } from '@packmind/node-utils';
-import { ILinterPort, PlaybookArtefactMovedEvent } from '@packmind/types';
+import {
+  createRuleId,
+  ILinterPort,
+  PlaybookArtefactMovedEvent,
+} from '@packmind/types';
 
 const origin = 'LinterListener';
 
@@ -28,13 +32,29 @@ export class LinterListener extends PackmindListener<ILinterPort> {
       newArtifactId,
       sourceSpaceId,
       destinationSpaceId,
+      ruleMappings,
     } = event.payload;
+
     this.logger.info('Handling PlaybookArtefactMovedEvent', {
       artifactType,
       oldArtifactId,
       newArtifactId,
       sourceSpaceId,
       destinationSpaceId,
+      ruleMappingsCount: ruleMappings?.length ?? 0,
+    });
+
+    if (artifactType !== 'standard' || !ruleMappings?.length) {
+      return;
+    }
+
+    await this.adapter.moveLinterArtefactsToNewRules({
+      ruleMappings: ruleMappings.map((m) => ({
+        oldRuleId: createRuleId(m.oldRuleId),
+        newRuleId: createRuleId(m.newRuleId),
+      })),
+      userId: event.payload.userId,
+      organizationId: event.payload.organizationId,
     });
   };
 }

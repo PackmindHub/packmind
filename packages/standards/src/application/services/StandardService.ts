@@ -10,9 +10,11 @@ import {
   createRuleId,
   createStandardId,
   createStandardVersionId,
+  DuplicateStandardResult,
   GitCommit,
   OrganizationId,
   QueryOption,
+  RuleId,
   SpaceId,
   Standard,
   StandardId,
@@ -277,7 +279,7 @@ export class StandardService {
     standardId: StandardId,
     destinationSpaceId: SpaceId,
     newUserId: UserId,
-  ): Promise<Standard> {
+  ): Promise<DuplicateStandardResult> {
     this.logger.info('Duplicating standard to space', {
       standardId,
       destinationSpaceId,
@@ -306,6 +308,7 @@ export class StandardService {
         movedTo: null,
       };
       const savedStandard = await this.standardRepository.add(newStandard);
+      const ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }> = [];
 
       // 3. Read all versions for this standard
       const versions =
@@ -340,6 +343,7 @@ export class StandardService {
             content: rule.content,
             standardVersionId: newVersionId,
           });
+          ruleMappings.push({ oldRuleId: rule.id, newRuleId });
 
           // 7. Read all examples for this rule
           const examples = await this.ruleExampleRepository.findByRuleId(
@@ -364,9 +368,10 @@ export class StandardService {
         newStandardId,
         destinationSpaceId,
         versionsCount: versions.length,
+        ruleMappingsCount: ruleMappings.length,
       });
 
-      return savedStandard;
+      return { standard: savedStandard, ruleMappings };
     } catch (error) {
       this.logger.error('Failed to duplicate standard to space', {
         standardId,
