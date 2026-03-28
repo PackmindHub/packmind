@@ -58,6 +58,10 @@ import {
   TrackLinterExecutionCommand,
   TrackLinterExecutionResponse,
 } from '../contracts/ITrackLinterExecutionUseCase';
+import type {
+  MoveLinterArtefactsToNewRulesCommand,
+  MoveLinterArtefactsToNewRulesResponse,
+} from '../contracts/IMoveLinterArtefactsToNewRules';
 
 export const ILinterPortName = 'ILinterPort' as const;
 
@@ -181,4 +185,8 @@ export interface ILinterPort {
   trackLinterExecution(
     command: TrackLinterExecutionCommand,
   ): Promise<TrackLinterExecutionResponse>;
+
+  moveLinterArtefactsToNewRules(
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<MoveLinterArtefactsToNewRulesResponse>;
 }

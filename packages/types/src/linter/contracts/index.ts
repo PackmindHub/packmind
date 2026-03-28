@@ -5,6 +5,8 @@ export * from './ICopyDetectionHeuristics';
 export * from './ICopyDetectionProgramsToNewRule';
 export * from './ICopyLinterArtefacts';
 export * from './ICopyRuleDetectionAssessments';
+export * from './IMoveLinterArtefactsToNewRules';
+export * from './ISoftDeleteLinterArtefactsByRule';
 export * from './ICreateDetectionHeuristics';
 export * from './ICreateDetectionProgram';
 export * from './ICreateEmptyRuleDetectionAssessment';

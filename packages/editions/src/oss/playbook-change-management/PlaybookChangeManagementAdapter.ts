@@ -15,6 +15,8 @@ import {
   ListChangeProposalsByArtefactResponse,
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
+  MigrateChangeProposalsForMovedArtefactCommand,
+  MigrateChangeProposalsForMovedArtefactResponse,
   RecipeId,
   RecomputeConflictsCommand,
   RecomputeConflictsResponse,
@@ -76,6 +78,13 @@ export class PlaybookChangeManagementAdapter implements IPlaybookChangeManagemen
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: RecomputeConflictsCommand,
   ): Promise<RecomputeConflictsResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  migrateChangeProposalsForMovedArtefact(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: MigrateChangeProposalsForMovedArtefactCommand,
+  ): Promise<MigrateChangeProposalsForMovedArtefactResponse> {
     throw new Error('Method not implemented.');
   }
 }
