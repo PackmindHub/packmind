@@ -218,6 +218,54 @@ describe('ChangeManagementListener', () => {
     });
   });
 
+  describe('when PlaybookArtefactMovedEvent is emitted followed by a delete event for the same artifact', () => {
+    const destinationSpaceId = createSpaceId('dest-space');
+    const standardId = createStandardId('standard-moved');
+
+    it('skips cancellation for the delete event while migration is in progress', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      let resolveMigration: () => void = () => {};
+      const migrationPromise = new Promise<void>((resolve) => {
+        resolveMigration = resolve;
+      });
+      mockAdapter.migrateChangeProposalsForMovedArtefact.mockReturnValue(
+        migrationPromise,
+      );
+
+      const movedEvent = new PlaybookArtefactMovedEvent({
+        artifactType: 'standard',
+        oldArtifactId: standardId,
+        newArtifactId: 'new-standard-id',
+        sourceSpaceId: spaceId,
+        destinationSpaceId,
+        userId,
+        organizationId,
+        source: 'ui',
+      });
+
+      const deletedEvent = new StandardDeletedEvent({
+        standardId,
+        spaceId,
+        organizationId,
+        userId,
+        source: 'ui',
+      });
+
+      // Both events emitted synchronously — move first, then delete
+      eventService.emit(movedEvent);
+      eventService.emit(deletedEvent);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(
+        mockChangeProposalService.cancelPendingByArtefactId,
+      ).not.toHaveBeenCalled();
+
+      resolveMigration();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+  });
+
   describe('when PlaybookArtefactMovedEvent is emitted', () => {
     const destinationSpaceId = createSpaceId('dest-space');
 

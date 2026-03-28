@@ -13,6 +13,10 @@ import { ChangeProposalService } from '../services/ChangeProposalService';
 const origin = 'ChangeManagementListener';
 
 export class ChangeManagementListener extends PackmindListener<ChangeProposalService> {
+  // Tracks artifacts currently being migrated (move in progress).
+  // Used to prevent delete handlers from cancelling proposals that migration will soft-delete.
+  private readonly migratingArtifacts = new Set<string>();
+
   constructor(
     adapter: ChangeProposalService,
     private readonly changeManagementAdapter: PlaybookChangeManagementAdapter,
@@ -39,6 +43,15 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
     event: CommandDeletedEvent,
   ): Promise<void> => {
     const { id: recipeId, spaceId, userId } = event.payload;
+
+    if (this.isBeingMigrated(spaceId, recipeId)) {
+      this.logger.info(
+        'Skipping cancellation for deleted command — migration in progress',
+        { recipeId, spaceId },
+      );
+      return;
+    }
+
     this.logger.info(
       'Handling CommandDeletedEvent — cancelling pending proposals',
       { recipeId, spaceId },
@@ -66,6 +79,15 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
     event: StandardDeletedEvent,
   ): Promise<void> => {
     const { standardId, spaceId, userId } = event.payload;
+
+    if (this.isBeingMigrated(spaceId, standardId)) {
+      this.logger.info(
+        'Skipping cancellation for deleted standard — migration in progress',
+        { standardId, spaceId },
+      );
+      return;
+    }
+
     this.logger.info(
       'Handling StandardDeletedEvent — cancelling pending proposals',
       { standardId, spaceId },
@@ -93,6 +115,15 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
     event: SkillDeletedEvent,
   ): Promise<void> => {
     const { skillId, spaceId, userId } = event.payload;
+
+    if (this.isBeingMigrated(spaceId, skillId)) {
+      this.logger.info(
+        'Skipping cancellation for deleted skill — migration in progress',
+        { skillId, spaceId },
+      );
+      return;
+    }
+
     this.logger.info(
       'Handling SkillDeletedEvent — cancelling pending proposals',
       { skillId, spaceId },
@@ -147,11 +178,22 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
     }
   };
 
+  private migrationKey(spaceId: string, artefactId: string): string {
+    return `${spaceId}:${artefactId}`;
+  }
+
+  private isBeingMigrated(spaceId: string, artefactId: string): boolean {
+    return this.migratingArtifacts.has(this.migrationKey(spaceId, artefactId));
+  }
+
   private handlePlaybookArtefactMoved = async (
     event: PlaybookArtefactMovedEvent,
   ): Promise<void> => {
     const { oldArtifactId, newArtifactId, sourceSpaceId, destinationSpaceId } =
       event.payload;
+
+    const key = this.migrationKey(sourceSpaceId, oldArtifactId);
+    this.migratingArtifacts.add(key);
 
     try {
       await this.changeManagementAdapter.migrateChangeProposalsForMovedArtefact(
@@ -173,6 +215,8 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
         destinationSpaceId,
         error: error instanceof Error ? error.message : String(error),
       });
+    } finally {
+      this.migratingArtifacts.delete(key);
     }
   };
 }
