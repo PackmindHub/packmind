@@ -8,7 +8,8 @@ import { getSkillsBySpaceKey } from '../../../skills/api/queryKeys';
 import { getStandardsBySpaceKey } from '../../../standards/api/queryKeys';
 import { getRecipesBySpaceKey } from '../../../recipes/api/queryKeys';
 import { LIST_PACKAGES_BY_SPACE_KEY } from '../../../deployments/api/queryKeys';
-import { GET_GROUPED_CHANGE_PROPOSALS_KEY } from '../../../change-proposals/api/queryKeys';
+import { CHANGE_PROPOSALS_QUERY_SCOPE } from '../../../change-proposals/api/queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 
 const CREATE_SPACE_MUTATION_KEY = 'createSpace';
 
@@ -80,7 +81,7 @@ export const useMoveArtifactsToSpaceMutation = () => {
           queryKey: LIST_PACKAGES_BY_SPACE_KEY,
         }),
         queryClient.invalidateQueries({
-          queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+          queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
         }),
       ]);
     },
