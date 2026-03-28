@@ -33,10 +33,9 @@ describe('LinterListener', () => {
     eventService = new PackmindEventEmitterService(mockDataSource);
 
     mockLinterPort = {
-      moveLinterArtefactsToNewRules: jest.fn().mockResolvedValue({
-        copiedCount: 3,
-        softDeletedCount: 1,
-      }),
+      dispatchMoveLinterArtefactsToNewRules: jest
+        .fn()
+        .mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ILinterPort>;
 
     listener = new LinterListener(mockLinterPort, stubLogger());
@@ -65,36 +64,36 @@ describe('LinterListener', () => {
       });
     });
 
-    it('calls moveLinterArtefactsToNewRules on the adapter', async () => {
-      eventService.emit(event);
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(mockLinterPort.moveLinterArtefactsToNewRules).toHaveBeenCalledWith(
-        {
-          ruleMappings: [
-            {
-              oldRuleId: createRuleId(oldRuleId),
-              newRuleId: createRuleId(newRuleId),
-            },
-          ],
-          userId,
-          organizationId,
-        },
-      );
-    });
-
-    it('calls moveLinterArtefactsToNewRules exactly once', async () => {
+    it('calls dispatchMoveLinterArtefactsToNewRules on the adapter', async () => {
       eventService.emit(event);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(
-        mockLinterPort.moveLinterArtefactsToNewRules,
+        mockLinterPort.dispatchMoveLinterArtefactsToNewRules,
+      ).toHaveBeenCalledWith({
+        ruleMappings: [
+          {
+            oldRuleId: createRuleId(oldRuleId),
+            newRuleId: createRuleId(newRuleId),
+          },
+        ],
+        userId,
+        organizationId,
+      });
+    });
+
+    it('calls dispatchMoveLinterArtefactsToNewRules exactly once', async () => {
+      eventService.emit(event);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(
+        mockLinterPort.dispatchMoveLinterArtefactsToNewRules,
       ).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('when PlaybookArtefactMovedEvent is emitted for a non-standard artifact', () => {
-    it('does not call moveLinterArtefactsToNewRules', async () => {
+    it('does not call dispatchMoveLinterArtefactsToNewRules', async () => {
       const event = new PlaybookArtefactMovedEvent({
         artifactType: 'skill',
         oldArtifactId: 'old-skill-id',
@@ -110,13 +109,13 @@ describe('LinterListener', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(
-        mockLinterPort.moveLinterArtefactsToNewRules,
+        mockLinterPort.dispatchMoveLinterArtefactsToNewRules,
       ).not.toHaveBeenCalled();
     });
   });
 
   describe('when PlaybookArtefactMovedEvent is emitted without rule mappings', () => {
-    it('does not call moveLinterArtefactsToNewRules', async () => {
+    it('does not call dispatchMoveLinterArtefactsToNewRules', async () => {
       const event = new PlaybookArtefactMovedEvent({
         artifactType: 'standard',
         oldArtifactId: 'old-standard-id',
@@ -132,13 +131,13 @@ describe('LinterListener', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(
-        mockLinterPort.moveLinterArtefactsToNewRules,
+        mockLinterPort.dispatchMoveLinterArtefactsToNewRules,
       ).not.toHaveBeenCalled();
     });
   });
 
   describe('when PlaybookArtefactMovedEvent is emitted with empty rule mappings', () => {
-    it('does not call moveLinterArtefactsToNewRules', async () => {
+    it('does not call dispatchMoveLinterArtefactsToNewRules', async () => {
       const event = new PlaybookArtefactMovedEvent({
         artifactType: 'standard',
         oldArtifactId: 'old-standard-id',
@@ -155,7 +154,7 @@ describe('LinterListener', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(
-        mockLinterPort.moveLinterArtefactsToNewRules,
+        mockLinterPort.dispatchMoveLinterArtefactsToNewRules,
       ).not.toHaveBeenCalled();
     });
   });

@@ -280,4 +280,11 @@ export class LinterAdapter implements ILinterPort {
       softDeletedCount: 0,
     };
   }
+
+  async dispatchMoveLinterArtefactsToNewRules(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 }

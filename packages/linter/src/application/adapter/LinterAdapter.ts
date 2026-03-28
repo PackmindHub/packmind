@@ -600,4 +600,10 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   ): Promise<MoveLinterArtefactsToNewRulesResponse> {
     return this._moveLinterArtefactsToNewRulesUseCase.execute(command);
   }
+
+  async dispatchMoveLinterArtefactsToNewRules(
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<void> {
+    await this.linterDelayedJobs.moveLinterArtefactsDelayedJob.addJob(command);
+  }
 }

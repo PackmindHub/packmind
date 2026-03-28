@@ -48,7 +48,7 @@ export class LinterListener extends PackmindListener<ILinterPort> {
       return;
     }
 
-    await this.adapter.moveLinterArtefactsToNewRules({
+    await this.adapter.dispatchMoveLinterArtefactsToNewRules({
       ruleMappings: ruleMappings.map((m) => ({
         oldRuleId: createRuleId(m.oldRuleId),
         newRuleId: createRuleId(m.newRuleId),

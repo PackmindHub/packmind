@@ -29,6 +29,7 @@ import { DetectionProgramService } from './application/services/DetectionProgram
 import { ILinterDelayedJobs } from './domain/jobs/ILinterDelayedJobs';
 import { AssessRuleDetectionJobFactory } from './infra/AssessRuleDetectionJobFactory';
 import { GenerateProgramJobFactory } from './infra/GenerateProgramJobFactory';
+import { MoveLinterArtefactsJobFactory } from './infra/MoveLinterArtefactsJobFactory';
 import { LinterRepositories } from './infra/repositories/LinterRepositories';
 
 const origin = 'LinterHexa';
@@ -282,9 +283,27 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       throw new Error('DelayedJob not found for AssessRuleDetectionJobFactory');
     }
 
+    // Register move linter artefacts job queue with JobsService
+    const moveLinterArtefactsJobFactory = new MoveLinterArtefactsJobFactory(
+      this.linterRepositories,
+      getLinterAdapter,
+    );
+
+    jobsService.registerJobQueue(
+      moveLinterArtefactsJobFactory.getQueueName(),
+      moveLinterArtefactsJobFactory,
+    );
+
+    await moveLinterArtefactsJobFactory.createQueue();
+
+    if (!moveLinterArtefactsJobFactory.delayedJob) {
+      throw new Error('DelayedJob not found for MoveLinterArtefactsJobFactory');
+    }
+
     return {
       generateProgramDelayedJob: generateProgramJobFactory.delayedJob,
       assessRuleDetectionDelayedJob: assessRuleDetectionJobFactory.delayedJob,
+      moveLinterArtefactsDelayedJob: moveLinterArtefactsJobFactory.delayedJob,
     };
   }
 

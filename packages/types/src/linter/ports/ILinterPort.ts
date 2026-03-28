@@ -195,4 +195,8 @@ export interface ILinterPort {
   moveLinterArtefactsToNewRules(
     command: MoveLinterArtefactsToNewRulesCommand,
   ): Promise<MoveLinterArtefactsToNewRulesResponse>;
+
+  dispatchMoveLinterArtefactsToNewRules(
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<void>;
 }
