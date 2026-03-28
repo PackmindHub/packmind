@@ -762,7 +762,7 @@ describe('ChangeProposalService', () => {
         );
       });
 
-      it('saves copies with new artefactId and spaceId', async () => {
+      it('saves a copy for each proposal', async () => {
         await service.migrateProposalsForMovedArtefact({
           sourceSpaceId,
           destinationSpaceId,
@@ -771,6 +771,16 @@ describe('ChangeProposalService', () => {
         });
 
         expect(mockEntityManager.save).toHaveBeenCalledTimes(3);
+      });
+
+      it('saves copies with new artefactId and spaceId', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
         expect(mockEntityManager.save).toHaveBeenCalledWith(
           expect.anything(),
           expect.objectContaining({
@@ -837,7 +847,7 @@ describe('ChangeProposalService', () => {
         ]);
       });
 
-      it('soft-deletes all originals in the source space', async () => {
+      it('soft-deletes originals in the source space', async () => {
         await service.migrateProposalsForMovedArtefact({
           sourceSpaceId,
           destinationSpaceId,
@@ -846,14 +856,44 @@ describe('ChangeProposalService', () => {
         });
 
         expect(mockQueryBuilder.softDelete).toHaveBeenCalled();
+      });
+
+      it('filters soft-delete by source spaceId', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
         expect(mockQueryBuilder.where).toHaveBeenCalledWith(
           'space_id = :spaceId',
           { spaceId: sourceSpaceId },
         );
+      });
+
+      it('filters soft-delete by old artefactId', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
         expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
           'artefact_id = :artefactId',
           { artefactId: oldArtefactId },
         );
+      });
+
+      it('executes the soft-delete query', async () => {
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+        });
+
         expect(mockQueryBuilder.execute).toHaveBeenCalled();
       });
     });
