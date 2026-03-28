@@ -238,4 +238,28 @@ export class DetectionProgramRepository
       throw error;
     }
   }
+
+  async softDeleteByRuleId(ruleId: RuleId): Promise<void> {
+    this.logger.info('Soft-deleting detection programs by rule ID', {
+      ruleId,
+    });
+
+    try {
+      const result = await this.repository.softDelete({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ruleId: ruleId as any, // TypeORM compatibility with branded types
+      });
+
+      this.logger.info('Detection programs soft-deleted by rule ID', {
+        ruleId,
+        affectedRows: result.affected,
+      });
+    } catch (error) {
+      this.logger.error('Failed to soft-delete detection programs by rule ID', {
+        ruleId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

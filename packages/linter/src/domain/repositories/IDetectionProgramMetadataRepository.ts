@@ -12,6 +12,10 @@ export interface IDetectionProgramMetadataRepository extends IRepository<Detecti
     opts?: QueryOption,
   ): Promise<DetectionProgramMetadata | null>;
 
+  findByDetectionProgramIds(
+    detectionProgramIds: DetectionProgramId[],
+  ): Promise<DetectionProgramMetadata[]>;
+
   addLog(
     log: ExecutionLog,
     detectionProgramId: DetectionProgramId,
@@ -25,5 +29,9 @@ export interface IDetectionProgramMetadataRepository extends IRepository<Detecti
   updateTokensUsed(
     tokens: TokensUsed,
     detectionProgramId: DetectionProgramId,
+  ): Promise<void>;
+
+  softDeleteByDetectionProgramIds(
+    detectionProgramIds: DetectionProgramId[],
   ): Promise<void>;
 }

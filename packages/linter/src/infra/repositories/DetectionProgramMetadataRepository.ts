@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractRepository, localDataSource } from '@packmind/node-utils';
 import {
@@ -50,6 +50,98 @@ export class DetectionProgramMetadataRepository
       detectionProgramId: entity.detectionProgramId,
       taskId: entity.taskId,
     };
+  }
+
+  async findByDetectionProgramIds(
+    detectionProgramIds: DetectionProgramId[],
+  ): Promise<DetectionProgramMetadata[]> {
+    this.logger.info('Finding metadata by detection program IDs', {
+      count: detectionProgramIds.length,
+    });
+
+    if (detectionProgramIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const metadata = await this.repository.find({
+        where: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          detectionProgramId: In(detectionProgramIds as any[]),
+        },
+        relations: ['logs'],
+      });
+
+      this.logger.info('Metadata found by detection program IDs', {
+        requestedCount: detectionProgramIds.length,
+        foundCount: metadata.length,
+      });
+
+      return metadata;
+    } catch (error) {
+      this.logger.error('Failed to find metadata by detection program IDs', {
+        count: detectionProgramIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async softDeleteByDetectionProgramIds(
+    detectionProgramIds: DetectionProgramId[],
+  ): Promise<void> {
+    this.logger.info(
+      'Soft-deleting metadata and execution logs by detection program IDs',
+      { count: detectionProgramIds.length },
+    );
+
+    if (detectionProgramIds.length === 0) {
+      return;
+    }
+
+    try {
+      // Find metadata IDs first to soft-delete associated execution logs
+      const metadata = await this.repository.find({
+        where: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          detectionProgramId: In(detectionProgramIds as any[]),
+        },
+        select: ['id'],
+      });
+
+      if (metadata.length > 0) {
+        const metadataIds = metadata.map((m) => m.id);
+
+        // Soft-delete execution logs first
+        await this.executionLogRepository.softDelete({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          detectionProgramMetadataId: In(metadataIds as any[]),
+        });
+
+        // Then soft-delete metadata
+        await this.repository.softDelete({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          detectionProgramId: In(detectionProgramIds as any[]),
+        });
+      }
+
+      this.logger.info(
+        'Successfully soft-deleted metadata and execution logs',
+        {
+          metadataCount: metadata.length,
+          detectionProgramIdsCount: detectionProgramIds.length,
+        },
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to soft-delete metadata by detection program IDs',
+        {
+          count: detectionProgramIds.length,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
   }
 
   async findByDetectionProgramId(

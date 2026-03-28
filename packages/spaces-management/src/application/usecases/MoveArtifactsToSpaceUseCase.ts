@@ -119,16 +119,23 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     artifact: ArtifactReference<'standard'>,
     ctx: MoveContext,
   ): Promise<void> {
-    const newStandard = await this.standardsPort.duplicateStandardToSpace(
-      artifact.id,
-      ctx.destinationSpaceId,
-      ctx.userId,
-    );
+    const { standard: newStandard, ruleMappings } =
+      await this.standardsPort.duplicateStandardToSpace(
+        artifact.id,
+        ctx.destinationSpaceId,
+        ctx.userId,
+      );
     await this.standardsPort.markStandardAsMoved(
       artifact.id,
       ctx.destinationSpaceId,
     );
-    this.emitMovedEvent(artifact.type, artifact.id, newStandard.id, ctx);
+    this.emitMovedEvent(
+      artifact.type,
+      artifact.id,
+      newStandard.id,
+      ctx,
+      ruleMappings,
+    );
     this.eventEmitterService.emit(
       new StandardDeletedEvent({
         standardId: artifact.id,
@@ -192,6 +199,7 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     oldArtifactId: string,
     newArtifactId: string,
     ctx: MoveContext,
+    ruleMappings?: Array<{ oldRuleId: string; newRuleId: string }>,
   ): void {
     this.eventEmitterService.emit(
       new PlaybookArtefactMovedEvent({
@@ -203,6 +211,7 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
         userId: ctx.userId,
         organizationId: ctx.organizationId,
         source: ctx.source,
+        ruleMappings,
       }),
     );
   }

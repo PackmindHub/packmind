@@ -48,6 +48,8 @@ import {
   CopyDetectionHeuristicsResponse,
   CopyLinterArtefactsCommand,
   CopyLinterArtefactsResponse,
+  MoveLinterArtefactsToNewRulesCommand,
+  MoveLinterArtefactsToNewRulesResponse,
   GetDetectionProgramsForPackagesCommand,
   GetDetectionProgramsForPackagesResponse,
   CreateEmptyRuleDetectionAssessmentCommand,
@@ -177,6 +179,7 @@ export class LinterAdapter implements ILinterPort {
   ): Promise<CopyDetectionProgramsToNewRuleResponse> {
     return {
       copiedProgramsCount: 0,
+      copiedMetadataCount: 0,
     };
   }
 
@@ -246,6 +249,7 @@ export class LinterAdapter implements ILinterPort {
       copiedHeuristicsCount: 0,
       copiedAssessmentsCount: 0,
       copiedProgramsCount: 0,
+      copiedMetadataCount: 0,
     };
   }
 
@@ -265,5 +269,15 @@ export class LinterAdapter implements ILinterPort {
 
   trackLinterExecution(): Promise<TrackLinterExecutionResponse> {
     throw new Error('Method not implemented.');
+  }
+
+  async moveLinterArtefactsToNewRules(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<MoveLinterArtefactsToNewRulesResponse> {
+    return {
+      copiedCount: 0,
+      softDeletedCount: 0,
+    };
   }
 }

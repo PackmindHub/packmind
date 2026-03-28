@@ -36,6 +36,7 @@ export class CopyLinterArtefactsUseCase implements ICopyLinterArtefacts {
         copiedHeuristicsCount: heuristicsResult.copiedHeuristicsCount,
         copiedAssessmentsCount: assessmentsResult.copiedAssessmentsCount,
         copiedProgramsCount: programsResult.copiedProgramsCount,
+        copiedMetadataCount: programsResult.copiedMetadataCount,
       };
 
       this.logger.info('Successfully copied all linter artefacts', {

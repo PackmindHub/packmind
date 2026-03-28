@@ -43,7 +43,7 @@ export class CopyDetectionProgramsToNewRuleUseCase implements ICopyDetectionProg
         this.logger.info('No detection programs found for old rule', {
           oldRuleId: command.oldRuleId,
         });
-        return { copiedProgramsCount: 0 };
+        return { copiedProgramsCount: 0, copiedMetadataCount: 0 };
       }
 
       this.logger.debug('Found detection programs to copy', {
@@ -82,7 +82,56 @@ export class CopyDetectionProgramsToNewRuleUseCase implements ICopyDetectionProg
         }),
       );
 
-      // 3. Get all ActiveDetectionPrograms for the old rule
+      // 3. Copy DetectionProgramMetadata and ExecutionLogs
+      const oldProgramIds = Array.from(oldToNewProgramIdMap.keys());
+      const metadataEntries = await this.repositories
+        .getDetectionProgramMetadataRepository()
+        .findByDetectionProgramIds(oldProgramIds);
+
+      let copiedMetadataCount = 0;
+      if (metadataEntries.length > 0) {
+        await Promise.all(
+          metadataEntries.map(async (oldMetadata) => {
+            const newDetectionProgramId = oldToNewProgramIdMap.get(
+              oldMetadata.detectionProgramId,
+            );
+            if (!newDetectionProgramId) {
+              return;
+            }
+
+            const newMetadataId = uuidv4();
+            const newMetadata = {
+              ...oldMetadata,
+              id: newMetadataId,
+              detectionProgramId: newDetectionProgramId,
+              logs: null, // Logs are stored separately in their own table
+            };
+
+            await this.repositories
+              .getDetectionProgramMetadataRepository()
+              .add(newMetadata);
+
+            // Copy execution logs if present
+            if (oldMetadata.logs && oldMetadata.logs.length > 0) {
+              for (const log of oldMetadata.logs) {
+                await this.repositories
+                  .getDetectionProgramMetadataRepository()
+                  .addLog(log, newDetectionProgramId);
+              }
+            }
+
+            copiedMetadataCount++;
+          }),
+        );
+
+        this.logger.debug('Copied detection program metadata', {
+          copiedMetadataCount,
+          oldRuleId: command.oldRuleId,
+          newRuleId: command.newRuleId,
+        });
+      }
+
+      // 4. Get all ActiveDetectionPrograms for the old rule
       const oldActivePrograms = await this.repositories
         .getActiveDetectionProgramRepository()
         .findByRuleIdWithPrograms(command.oldRuleId);
@@ -95,10 +144,13 @@ export class CopyDetectionProgramsToNewRuleUseCase implements ICopyDetectionProg
             copiedProgramsCount: oldDetectionPrograms.length,
           },
         );
-        return { copiedProgramsCount: oldDetectionPrograms.length };
+        return {
+          copiedProgramsCount: oldDetectionPrograms.length,
+          copiedMetadataCount,
+        };
       }
 
-      // 4. Copy all ActiveDetectionPrograms with updated references
+      // 5. Copy all ActiveDetectionPrograms with updated references
       await Promise.all(
         oldActivePrograms.map(async (oldActiveProgram) => {
           const newActiveDetectionProgram: ActiveDetectionProgram = {
@@ -140,9 +192,13 @@ export class CopyDetectionProgramsToNewRuleUseCase implements ICopyDetectionProg
         newRuleId: command.newRuleId,
         copiedProgramsCount: oldDetectionPrograms.length,
         copiedActiveCount: oldActivePrograms.length,
+        copiedMetadataCount,
       });
 
-      return { copiedProgramsCount: oldDetectionPrograms.length };
+      return {
+        copiedProgramsCount: oldDetectionPrograms.length,
+        copiedMetadataCount,
+      };
     } catch (error) {
       this.logger.error('Failed to copy detection programs to new rule', {
         oldRuleId: command.oldRuleId,

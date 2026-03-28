@@ -51,6 +51,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       };
       const programsResponse: CopyDetectionProgramsToNewRuleResponse = {
         copiedProgramsCount: 5,
+        copiedMetadataCount: 2,
       };
 
       linterPort.copyDetectionHeuristics.mockResolvedValue(heuristicsResponse);
@@ -67,6 +68,7 @@ describe('CopyLinterArtefactsUseCase', () => {
         copiedHeuristicsCount: 2,
         copiedAssessmentsCount: 3,
         copiedProgramsCount: 5,
+        copiedMetadataCount: 2,
       });
     });
 
@@ -79,6 +81,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 0,
+        copiedMetadataCount: 0,
       });
 
       await useCase.execute(command);
@@ -95,6 +98,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 0,
+        copiedMetadataCount: 0,
       });
 
       await useCase.execute(command);
@@ -113,6 +117,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 0,
+        copiedMetadataCount: 0,
       });
 
       await useCase.execute(command);
@@ -131,6 +136,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 1,
+        copiedMetadataCount: 0,
       });
 
       await useCase.execute(command);
@@ -147,6 +153,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 1,
+        copiedMetadataCount: 0,
       });
 
       await useCase.execute(command);
@@ -163,6 +170,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 1,
+        copiedMetadataCount: 0,
       });
 
       await useCase.execute(command);
@@ -183,6 +191,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 0,
+        copiedMetadataCount: 0,
       });
 
       const result = await useCase.execute(command);
@@ -191,6 +200,7 @@ describe('CopyLinterArtefactsUseCase', () => {
         copiedHeuristicsCount: 0,
         copiedAssessmentsCount: 0,
         copiedProgramsCount: 0,
+        copiedMetadataCount: 0,
       });
     });
   });
@@ -270,6 +280,7 @@ describe('CopyLinterArtefactsUseCase', () => {
         });
         linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
           copiedProgramsCount: 7,
+          copiedMetadataCount: 3,
         });
       });
 
@@ -302,6 +313,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       });
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 1,
+        copiedMetadataCount: 0,
       });
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -317,6 +329,7 @@ describe('CopyLinterArtefactsUseCase', () => {
       linterPort.copyRuleDetectionAssessments.mockRejectedValue(error);
       linterPort.copyDetectionProgramsToNewRule.mockResolvedValue({
         copiedProgramsCount: 1,
+        copiedMetadataCount: 0,
       });
 
       await expect(useCase.execute(command)).rejects.toThrow(

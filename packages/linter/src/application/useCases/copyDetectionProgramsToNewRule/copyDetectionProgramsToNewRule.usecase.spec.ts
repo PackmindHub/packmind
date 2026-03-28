@@ -1,10 +1,15 @@
 import { CopyDetectionProgramsToNewRuleUseCase } from './copyDetectionProgramsToNewRule.usecase';
 import { IDetectionProgramRepository } from '../../../domain/repositories/IDetectionProgramRepository';
 import { IActiveDetectionProgramRepository } from '../../../domain/repositories/IActiveDetectionProgramRepository';
+import { IDetectionProgramMetadataRepository } from '../../../domain/repositories/IDetectionProgramMetadataRepository';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { createOrganizationId, createUserId } from '@packmind/types';
+import {
+  createOrganizationId,
+  createUserId,
+  DetectionProgramMetadata,
+} from '@packmind/types';
 import {
   ActiveDetectionProgram,
   createRuleId,
@@ -16,6 +21,7 @@ import {
 import {
   detectionProgramFactory,
   activeDetectionProgramFactory,
+  detectionProgramMetadataFactory,
 } from '../../../../test';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -23,6 +29,7 @@ describe('CopyDetectionProgramsToNewRuleUseCase', () => {
   let useCase: CopyDetectionProgramsToNewRuleUseCase;
   let detectionProgramRepository: jest.Mocked<IDetectionProgramRepository>;
   let activeDetectionProgramRepository: jest.Mocked<IActiveDetectionProgramRepository>;
+  let detectionProgramMetadataRepository: jest.Mocked<IDetectionProgramMetadataRepository>;
   let repositories: jest.Mocked<ILinterRepositories>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -57,6 +64,20 @@ describe('CopyDetectionProgramsToNewRuleUseCase', () => {
       list: jest.fn(),
     } as unknown as jest.Mocked<IActiveDetectionProgramRepository>;
 
+    detectionProgramMetadataRepository = {
+      add: jest.fn().mockImplementation(async (m) => m),
+      findByDetectionProgramId: jest.fn(),
+      findByDetectionProgramIds: jest.fn().mockResolvedValue([]),
+      addLog: jest.fn(),
+      updateProgramDescription: jest.fn(),
+      updateTokensUsed: jest.fn(),
+      softDeleteByDetectionProgramIds: jest.fn(),
+      deleteById: jest.fn(),
+      restoreById: jest.fn(),
+      findById: jest.fn(),
+      list: jest.fn(),
+    } as unknown as jest.Mocked<IDetectionProgramMetadataRepository>;
+
     repositories = {
       getDetectionProgramRepository: jest
         .fn()
@@ -64,6 +85,9 @@ describe('CopyDetectionProgramsToNewRuleUseCase', () => {
       getActiveDetectionProgramRepository: jest
         .fn()
         .mockReturnValue(activeDetectionProgramRepository),
+      getDetectionProgramMetadataRepository: jest
+        .fn()
+        .mockReturnValue(detectionProgramMetadataRepository),
     } as unknown as jest.Mocked<ILinterRepositories>;
 
     stubbedLogger = stubLogger();
@@ -369,6 +393,122 @@ describe('CopyDetectionProgramsToNewRuleUseCase', () => {
       it('calls add on active detection program repository twice', () => {
         expect(activeDetectionProgramRepository.add).toHaveBeenCalledTimes(2);
       });
+    });
+  });
+
+  describe('when old rule has detection programs with metadata', () => {
+    let result: { copiedProgramsCount: number; copiedMetadataCount: number };
+    let detectionProgram: DetectionProgram;
+    let metadata: DetectionProgramMetadata;
+
+    beforeEach(async () => {
+      detectionProgram = detectionProgramFactory({
+        ruleId: oldRuleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        version: 1,
+      });
+
+      metadata = detectionProgramMetadataFactory({
+        detectionProgramId: detectionProgram.id,
+        programDescription: 'Detects unused imports',
+        tokens: { input: 100, output: 200 },
+        logs: [
+          { timestamp: Date.now(), message: 'AI_AGENT_PROGRAM_SUCCESSFUL' },
+        ],
+      });
+
+      detectionProgramRepository.findByRuleId.mockResolvedValue([
+        detectionProgram,
+      ]);
+      activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+        [],
+      );
+      detectionProgramRepository.add.mockImplementation(
+        async (program: DetectionProgram) => program,
+      );
+      detectionProgramMetadataRepository.findByDetectionProgramIds.mockResolvedValue(
+        [metadata],
+      );
+
+      result = await useCase.execute({
+        oldRuleId,
+        newRuleId,
+        organizationId,
+        userId,
+      });
+    });
+
+    it('returns copied metadata count of 1', () => {
+      expect(result.copiedMetadataCount).toBe(1);
+    });
+
+    it('adds metadata with new detection program ID', () => {
+      expect(detectionProgramMetadataRepository.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          programDescription: 'Detects unused imports',
+          tokens: { input: 100, output: 200 },
+        }),
+      );
+    });
+
+    it('generates new ID for copied metadata', () => {
+      const addedMetadata =
+        detectionProgramMetadataRepository.add.mock.calls[0][0];
+      expect(addedMetadata.id).not.toBe(metadata.id);
+    });
+
+    it('maps metadata to new detection program ID', () => {
+      const addedMetadata =
+        detectionProgramMetadataRepository.add.mock.calls[0][0];
+      expect(addedMetadata.detectionProgramId).not.toBe(detectionProgram.id);
+    });
+
+    it('copies execution logs to new metadata', () => {
+      expect(detectionProgramMetadataRepository.addLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'AI_AGENT_PROGRAM_SUCCESSFUL',
+        }),
+        expect.any(String),
+      );
+    });
+  });
+
+  describe('when old rule has detection programs without metadata', () => {
+    let result: { copiedProgramsCount: number; copiedMetadataCount: number };
+
+    beforeEach(async () => {
+      const detectionProgram = detectionProgramFactory({
+        ruleId: oldRuleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+      });
+
+      detectionProgramRepository.findByRuleId.mockResolvedValue([
+        detectionProgram,
+      ]);
+      activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+        [],
+      );
+      detectionProgramRepository.add.mockImplementation(
+        async (program: DetectionProgram) => program,
+      );
+      detectionProgramMetadataRepository.findByDetectionProgramIds.mockResolvedValue(
+        [],
+      );
+
+      result = await useCase.execute({
+        oldRuleId,
+        newRuleId,
+        organizationId,
+        userId,
+      });
+    });
+
+    it('returns zero copied metadata count', () => {
+      expect(result.copiedMetadataCount).toBe(0);
+    });
+
+    it('does not call add on metadata repository', () => {
+      expect(detectionProgramMetadataRepository.add).not.toHaveBeenCalled();
     });
   });
 

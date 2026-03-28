@@ -40,6 +40,8 @@ import {
   CopyDetectionProgramsToNewRuleResponse,
   CopyLinterArtefactsCommand,
   CopyLinterArtefactsResponse,
+  MoveLinterArtefactsToNewRulesCommand,
+  MoveLinterArtefactsToNewRulesResponse,
   CopyRuleDetectionAssessmentsCommand,
   CopyRuleDetectionAssessmentsResponse,
   CreateDetectionHeuristicsCommand,
@@ -87,6 +89,8 @@ import { ComputeRuleLanguageDetectionStatusUseCase } from '../useCases/computeRu
 import { CopyDetectionHeuristicsUseCase } from '../useCases/copyDetectionHeuristics/copyDetectionHeuristics.usecase';
 import { CopyDetectionProgramsToNewRuleUseCase } from '../useCases/copyDetectionProgramsToNewRule/copyDetectionProgramsToNewRule.usecase';
 import { CopyLinterArtefactsUseCase } from '../useCases/copyLinterArtefacts/copyLinterArtefacts.usecase';
+import { MoveLinterArtefactsToNewRulesUseCase } from '../useCases/moveLinterArtefactsToNewRules/moveLinterArtefactsToNewRules.usecase';
+import { SoftDeleteLinterArtefactsByRuleUseCase } from '../useCases/softDeleteLinterArtefactsByRule/softDeleteLinterArtefactsByRule.usecase';
 import { CopyRuleDetectionAssessmentsUseCase } from '../useCases/copyRuleDetectionAssessments/copyRuleDetectionAssessments.usecase';
 import { CreateDetectionHeuristicsUseCase } from '../useCases/createDetectionHeuristics/createDetectionHeuristics.usecase';
 import { CreateEmptyRuleDetectionAssessmentUseCase } from '../useCases/createEmptyRuleDetectionAssessment/createEmptyRuleDetectionAssessment.usecase';
@@ -187,6 +191,8 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   private _getDetectionProgramsForPackagesUseCase!: GetDetectionProgramsForPackagesUseCase;
   private _createEmptyRuleDetectionAssessmentUseCase!: CreateEmptyRuleDetectionAssessmentUseCase;
   private _trackLinterExecutionUseCase!: TrackLinterExecutionUseCase;
+  private _softDeleteLinterArtefactsByRuleUseCase!: SoftDeleteLinterArtefactsByRuleUseCase;
+  private _moveLinterArtefactsToNewRulesUseCase!: MoveLinterArtefactsToNewRulesUseCase;
 
   constructor({
     hexaFactory,
@@ -383,6 +389,15 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     this._trackLinterExecutionUseCase = new TrackLinterExecutionUseCase(
       ports.eventEmitterService,
     );
+
+    this._softDeleteLinterArtefactsByRuleUseCase =
+      new SoftDeleteLinterArtefactsByRuleUseCase(this.repositories);
+
+    this._moveLinterArtefactsToNewRulesUseCase =
+      new MoveLinterArtefactsToNewRulesUseCase(
+        this,
+        this._softDeleteLinterArtefactsByRuleUseCase,
+      );
   }
 
   public isReady(): boolean {
@@ -578,5 +593,11 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
 
   async trackLinterExecution(command: TrackLinterExecutionCommand) {
     return this._trackLinterExecutionUseCase.execute(command);
+  }
+
+  async moveLinterArtefactsToNewRules(
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<MoveLinterArtefactsToNewRulesResponse> {
+    return this._moveLinterArtefactsToNewRulesUseCase.execute(command);
   }
 }
