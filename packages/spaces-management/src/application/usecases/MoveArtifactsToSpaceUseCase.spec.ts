@@ -86,9 +86,10 @@ describe('MoveArtifactsToSpaceUseCase', () => {
 
     standardsPort = {
       markStandardAsMoved: jest.fn().mockResolvedValue(undefined),
-      duplicateStandardToSpace: jest
-        .fn()
-        .mockResolvedValue({ id: createStandardId('new-standard-id') }),
+      duplicateStandardToSpace: jest.fn().mockResolvedValue({
+        standard: { id: createStandardId('new-standard-id') },
+        ruleMappings: [],
+      }),
       getStandard: jest.fn().mockResolvedValue(null),
       listStandardsBySpace: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
@@ -245,7 +246,10 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         });
         standardsPort.duplicateStandardToSpace.mockImplementation(async () => {
           callOrder.push('duplicate');
-          return {} as never;
+          return {
+            standard: { id: createStandardId('new-standard-id') },
+            ruleMappings: [],
+          } as never;
         });
 
         await useCase.execute(
