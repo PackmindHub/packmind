@@ -51,6 +51,8 @@ import type {
   GetDetectionHeuristicsResponse,
   CreateDetectionHeuristicsCommand,
   CreateDetectionHeuristicsResponse,
+  UpdateActiveDetectionProgramSeverityCommand,
+  UpdateActiveDetectionProgramSeverityResponse,
 } from '../contracts';
 import { DetectionProgram } from '../DetectionProgram';
 import { RuleDetectionAssessment } from '../RuleDetectionAssessment';
@@ -89,6 +91,10 @@ export interface ILinterPort {
   updateActiveDetectionProgram(
     command: UpdateActiveDetectionProgramCommand,
   ): Promise<ActiveDetectionProgram>;
+
+  updateActiveDetectionProgramSeverity(
+    command: UpdateActiveDetectionProgramSeverityCommand,
+  ): Promise<UpdateActiveDetectionProgramSeverityResponse>;
 
   getActiveDetectionProgramById(
     activeDetectionProgramId: ActiveDetectionProgramId,
@@ -189,4 +195,8 @@ export interface ILinterPort {
   moveLinterArtefactsToNewRules(
     command: MoveLinterArtefactsToNewRulesCommand,
   ): Promise<MoveLinterArtefactsToNewRulesResponse>;
+
+  dispatchMoveLinterArtefactsToNewRules(
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<void>;
 }
