@@ -7,19 +7,7 @@ import {
 } from '@packmind/ui';
 import { ArtifactType } from '@packmind/types';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
-import { MoveToSpaceDialog, MoveArtifactType } from './MoveToSpaceDialog';
-
-const ARTIFACT_TYPE_TO_MOVE_TYPE: Record<ArtifactType, MoveArtifactType> = {
-  standard: 'standard',
-  skill: 'skill',
-  command: 'recipe',
-};
-
-const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
-  standard: 'standard',
-  skill: 'skill',
-  command: 'command',
-};
+import { MoveToSpaceDialog } from './MoveToSpaceDialog';
 
 interface SpacesManagementActionsProps {
   artifactType: ArtifactType;
@@ -57,7 +45,7 @@ export function SpacesManagementActions({
       <MoveToSpaceDialog
         open={moveDialogOpen}
         setOpen={setMoveDialogOpen}
-        artifactType={ARTIFACT_TYPE_TO_MOVE_TYPE[artifactType]}
+        artifactType={artifactType}
         selectedIds={selectedIds}
         onSuccess={onSuccess}
       />

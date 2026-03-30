@@ -15,26 +15,18 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import { useMoveArtifactsToSpaceMutation } from '../api/queries/SpacesManagementQueries';
 
-export type MoveArtifactType = 'standard' | 'skill' | 'recipe';
-
 interface MoveToSpaceDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  artifactType: MoveArtifactType;
+  artifactType: ArtifactType;
   selectedIds: string[];
   onSuccess: () => void;
 }
 
-const ARTIFACT_TYPE_LABELS: Record<MoveArtifactType, string> = {
+const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
   standard: 'standard',
   skill: 'skill',
-  recipe: 'command',
-};
-
-const MOVE_ARTIFACT_TYPE_MAP: Record<MoveArtifactType, ArtifactType> = {
-  standard: 'standard',
-  skill: 'skill',
-  recipe: 'command',
+  command: 'command',
 };
 
 export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
@@ -69,14 +61,14 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
 
   const label = ARTIFACT_TYPE_LABELS[artifactType];
   const count = selectedIds.length;
+  const pluralLabel = count > 1 ? `${label}s` : label;
 
   const handleMove = async () => {
     if (!destinationSpaceId) return;
 
-    const type = MOVE_ARTIFACT_TYPE_MAP[artifactType];
     const artifacts: ArtifactReference[] = selectedIds.map((id) => ({
       id,
-      type,
+      type: artifactType,
     })) as ArtifactReference[];
 
     try {
@@ -85,13 +77,13 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
         artifacts,
       });
 
+      const movedLabel = result.movedCount > 1 ? `${label}s` : label;
       pmToaster.create({
         title: 'Moved successfully',
-        description: `${result.movedCount} ${label}${result.movedCount > 1 ? 's' : ''} moved to the selected space`,
+        description: `${result.movedCount} ${movedLabel} moved to the selected space`,
         type: 'success',
       });
 
-      setDestinationSpaceId(undefined);
       setOpen(false);
       onSuccess();
     } catch (error) {
@@ -116,8 +108,8 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
           }
         }
       }}
-      size={'lg'}
-      scrollBehavior={'inside'}
+      size="lg"
+      scrollBehavior="inside"
       closeOnInteractOutside={false}
     >
       <PMDialog.Backdrop />
@@ -125,8 +117,7 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
         <PMDialog.Content>
           <PMDialog.Header>
             <PMDialog.Title>
-              Move {count} {label}
-              {count > 1 ? 's' : ''} to another space
+              Move {count} {pluralLabel} to another space
             </PMDialog.Title>
             <PMDialog.CloseTrigger asChild>
               <PMCloseButton />
@@ -134,9 +125,8 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
           </PMDialog.Header>
           <PMDialog.Body>
             <PMText mb={4}>
-              Select the destination space for the selected {label}
-              {count > 1 ? 's' : ''}. They will be removed from the current
-              space.
+              Select the destination space for the selected {pluralLabel}. They
+              will be removed from the current space.
             </PMText>
             <PMSelect.Root
               collection={spaceCollection}
@@ -145,7 +135,12 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
                 setDestinationSpaceId(e.value[0] as SpaceId);
               }}
             >
-              <PMSelectTrigger placeholder="Select a destination space" />
+              <PMSelectTrigger
+                mt={4}
+                placeholder="Select a destination space"
+                borderColor="border.tertiary"
+                borderWidth="1px"
+              />
               <PMSelect.Positioner>
                 <PMSelect.Content zIndex={1500}>
                   {spaceCollection.items.map((item) => (
@@ -172,7 +167,7 @@ export const MoveToSpaceDialog: React.FC<MoveToSpaceDialogProps> = ({
               loading={moveArtifactsMutation.isPending}
               disabled={!destinationSpaceId}
             >
-              {moveArtifactsMutation.isPending ? 'Moving...' : 'Move'}
+              Move
             </PMButton>
           </PMDialog.Footer>
         </PMDialog.Content>
