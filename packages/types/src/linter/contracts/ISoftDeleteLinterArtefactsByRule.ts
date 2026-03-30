@@ -5,7 +5,7 @@ export type SoftDeleteLinterArtefactsByRuleCommand = PackmindCommand & {
   ruleId: RuleId;
 };
 
-export type SoftDeleteLinterArtefactsByRuleResponse = void;
+export type SoftDeleteLinterArtefactsByRuleResponse = Record<string, never>;
 
 export type ISoftDeleteLinterArtefactsByRule = IUseCase<
   SoftDeleteLinterArtefactsByRuleCommand,
