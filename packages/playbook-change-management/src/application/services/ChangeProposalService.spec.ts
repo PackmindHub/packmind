@@ -1011,35 +1011,37 @@ describe('ChangeProposalService', () => {
         );
       });
 
-      it('leaves updateRule proposals unchanged when no matching mapping exists', async () => {
-        const unmappedRuleId = createRuleId('unmapped-rule');
-        const payload = {
-          targetId: unmappedRuleId,
-          oldValue: 'old',
-          newValue: 'new',
-        };
-        const proposal = createRuleProposal(
-          ChangeProposalType.updateRule,
-          payload,
-        );
-        repository.findByArtefactId.mockResolvedValue([proposal]);
+      describe('when no matching mapping exists', () => {
+        it('leaves updateRule proposals unchanged', async () => {
+          const unmappedRuleId = createRuleId('unmapped-rule');
+          const payload = {
+            targetId: unmappedRuleId,
+            oldValue: 'old',
+            newValue: 'new',
+          };
+          const proposal = createRuleProposal(
+            ChangeProposalType.updateRule,
+            payload,
+          );
+          repository.findByArtefactId.mockResolvedValue([proposal]);
 
-        await service.migrateProposalsForMovedArtefact({
-          sourceSpaceId,
-          destinationSpaceId,
-          oldArtefactId,
-          newArtefactId,
-          ruleMappings,
-        });
+          await service.migrateProposalsForMovedArtefact({
+            sourceSpaceId,
+            destinationSpaceId,
+            oldArtefactId,
+            newArtefactId,
+            ruleMappings,
+          });
 
-        expect(mockEntityManager.save).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining({
-            payload: expect.objectContaining({
-              targetId: unmappedRuleId,
+          expect(mockEntityManager.save).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({
+              payload: expect.objectContaining({
+                targetId: unmappedRuleId,
+              }),
             }),
-          }),
-        );
+          );
+        });
       });
     });
 
