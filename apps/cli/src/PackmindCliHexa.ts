@@ -42,6 +42,10 @@ import {
   IWhoamiResult,
 } from './domain/useCases/IWhoamiUseCase';
 import {
+  ICheckCliVersionCommand,
+  ICheckCliVersionResult,
+} from './domain/useCases/ICheckCliVersionUseCase';
+import {
   ISetupMcpCommand,
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
@@ -318,6 +322,12 @@ export class PackmindCliHexa {
 
   public async whoami(command: IWhoamiCommand): Promise<IWhoamiResult> {
     return this.hexa.useCases.whoami.execute(command);
+  }
+
+  public async checkCliVersion(
+    command: ICheckCliVersionCommand,
+  ): Promise<ICheckCliVersionResult | null> {
+    return this.hexa.useCases.checkCliVersion.execute(command);
   }
 
   public async setupMcp(command: ISetupMcpCommand): Promise<ISetupMcpResult> {

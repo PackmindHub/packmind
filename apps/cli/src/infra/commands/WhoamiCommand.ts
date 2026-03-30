@@ -8,6 +8,10 @@ import {
   logConsole,
 } from '../utils/consoleLogger';
 import { IWhoamiResult } from '../../domain/useCases/IWhoamiUseCase';
+import { displayVersionNotice } from './versionCheckNotice';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../../../package.json');
 
 function formatExpiresAt(expiresAt: Date): string {
   const now = new Date();
@@ -59,6 +63,10 @@ export const whoamiCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
+    const versionCheckPromise = packmindCliHexa.checkCliVersion({
+      currentVersion: CLI_VERSION,
+    });
+
     const result = await packmindCliHexa.whoami({});
 
     if (!result.isAuthenticated) {
@@ -79,6 +87,7 @@ export const whoamiCommand = command({
     }
 
     displayAuthInfo(result);
+    displayVersionNotice(await versionCheckPromise);
 
     if (result.isExpired) {
       process.exit(1);
