@@ -57,7 +57,10 @@
       "features/detection/ProgramEditor": [
         "apps/frontend/src/domain/detection/components/ProgramEditor"
       ],
-      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"]
+      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"],
+      "@packmind/playbook-bulk-apply": [
+        "packages/playbook-bulk-apply/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]
