@@ -1,5 +1,5 @@
 function escapeSingleQuotes(value: string): string {
-  return value.replaceAll("'", "''");
+  return value.replace(/'/g, "''");
 }
 
 export function serializeStandardToMarkdown(applied: {
