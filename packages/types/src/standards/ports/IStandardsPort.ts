@@ -21,6 +21,11 @@ import { StandardVersionId } from '../StandardVersionId';
 
 export const IStandardsPortName = 'IStandardsPort' as const;
 
+export type DuplicateStandardResult = {
+  standard: Standard;
+  ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }>;
+};
+
 export interface IStandardsPort {
   getStandard(id: StandardId): Promise<Standard | null>;
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null>;
@@ -73,7 +78,7 @@ export interface IStandardsPort {
     standardId: StandardId,
     destinationSpaceId: SpaceId,
     newUserId: UserId,
-  ): Promise<Standard>;
+  ): Promise<DuplicateStandardResult>;
   markStandardAsMoved(
     standardId: StandardId,
     destinationSpaceId: SpaceId,

@@ -12,6 +12,7 @@ import {
   Target,
 } from '@packmind/types';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CopilotDeployer', () => {
   let deployer: CopilotDeployer;
@@ -370,8 +371,9 @@ describe('CopilotDeployer', () => {
           item.path.startsWith('.github/skills/'),
         );
 
-        // Should include: 7 default skills + 1 managed skill = 8 total
-        expect(skillDeleteItems).toHaveLength(8);
+        expect(skillDeleteItems).toHaveLength(
+          DefaultSkillsDeployer.getDefaultSkillSlugs().length + 1,
+        );
       });
     });
   });

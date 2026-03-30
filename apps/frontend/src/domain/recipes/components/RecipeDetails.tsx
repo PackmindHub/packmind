@@ -38,7 +38,7 @@ import { ProposeChangeModal } from './ProposeChangeModal';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
 import { RecipeVersionHistoryHeader } from './RecipeVersionHistoryHeader';
 import { useListChangeProposalsByRecipeQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
-import { ArtifactResultFilePreview } from '@packmind/proprietary/frontend/domain/change-proposals/components/shared/ArtifactResultFilePreview';
+import { ArtifactResultFilePreview } from '../../artifacts/components/ArtifactResultFilePreview';
 
 interface RecipeDetailsProps {
   id: RecipeId;

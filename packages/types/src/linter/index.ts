@@ -9,4 +9,5 @@ export * from './GenerateProgramInput';
 export * from './GenerateProgramOutput';
 export * from './RuleDetectionAssessment';
 export * from './contracts';
+export * from './events';
 export * from './ports';

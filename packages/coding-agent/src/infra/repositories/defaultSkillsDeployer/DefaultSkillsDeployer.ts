@@ -1,5 +1,4 @@
 import { FileUpdates } from '@packmind/types';
-import semver from 'semver';
 import { CliListCommandsDeployer } from './CliListCommandsDeployer';
 import { CreateCommandDeployer } from './CreateCommandDeployer';
 import { CreatePackageDeployer } from './CreatePackageDeployer';
@@ -8,6 +7,7 @@ import { CreateStandardDeployer } from './CreateStandardDeployer';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
 import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
+import { UpdatePlaybookDeployerV2 } from './UpdatePlaybookDeployerV2';
 
 export type DeployDefaultSkillsOptions = {
   cliVersion?: string;
@@ -28,6 +28,7 @@ export class DefaultSkillsDeployer {
     new CreatePackageDeployer(),
     new CliListCommandsDeployer(),
     new UpdatePlaybookDeployer(),
+    new UpdatePlaybookDeployerV2(),
   ];
 
   constructor(
@@ -44,6 +45,7 @@ export class DefaultSkillsDeployer {
       'packmind-create-package',
       'packmind-cli-list-commands',
       'packmind-update-playbook',
+      'packmind-update-playbook-v2',
     ];
   }
 
@@ -77,17 +79,9 @@ export class DefaultSkillsDeployer {
       return this.skillDeployers;
     }
 
-    return this.skillDeployers.filter((deployer) => {
-      if (deployer.minimumVersion === 'unreleased') {
-        return false;
-      }
-
-      if (cliVersion) {
-        return semver.lte(deployer.minimumVersion, cliVersion);
-      }
-
-      return true;
-    });
+    return this.skillDeployers.filter((deployer) =>
+      deployer.isSupportedByCliVersion(cliVersion),
+    );
   }
 
   private countSkippedDeployers(options: DeployDefaultSkillsOptions): number {
@@ -99,8 +93,8 @@ export class DefaultSkillsDeployer {
 
     return this.skillDeployers.filter(
       (deployer) =>
-        deployer.minimumVersion !== 'unreleased' &&
-        semver.gt(deployer.minimumVersion, cliVersion),
+        !deployer.isSupportedByCliVersion(cliVersion) &&
+        !deployer.isBetaSkill(),
     ).length;
   }
 }
