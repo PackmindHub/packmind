@@ -74,7 +74,7 @@ jobs:
 
       - name: Send report to Slack
         if: always() && hashFiles('doc-audit-report.md') != ''
-        uses: archive/github-actions-slack@v2.10.1
+        uses: archive/github-actions-slack@7c99f4beb8bd5cc9bcb5f52f2e4d1ad5651b0021
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: ${{ secrets.SLACK_CHANNEL_ID }}
