@@ -4,6 +4,8 @@ import { Standard } from '@packmind/types';
 import { testWithApi } from '../../fixtures/packmindTest';
 import { apiStandardFactory } from '../../domain/apiDataFactories/apiStandardFactory';
 import { apiPackageFactory } from '../../domain/apiDataFactories/apiPackageFactory';
+import { apiSkillFactory } from '../../domain/apiDataFactories/apiSkillFactory';
+import assert from 'node:assert';
 
 const test = testWithApi.extend<{
   userData: { email: string; password: string };
@@ -94,5 +96,42 @@ test.describe('Move artifacts between spaces', () => {
     const packagesPage2 = await frontendPackage.openPackages();
     const uiPackage = await packagesPage2.openPackage('ui');
     expect(await uiPackage.isPackageEmpty()).toBe(true);
+  });
+
+  test('displays error when moving a skill to a space where same name exists', async ({
+    packmindApi,
+    dashboardPage,
+  }) => {
+    // Create backend and frontend spaces via UI
+    const backendDashboard = await dashboardPage.createSpace('backend');
+    const frontendDashboard = await backendDashboard.createSpace('frontend');
+
+    // Get space IDs via API
+    const spaces = await packmindApi.listSpaces();
+    const backendSpace = spaces.find((s) => s.name === 'backend');
+    const frontendSpace = spaces.find((s) => s.name === 'frontend');
+
+    assert(backendSpace, 'Backend space not found');
+    assert(frontendSpace, 'Frontend space not found');
+
+    // Upload skill "commit" in both spaces via API
+    await apiSkillFactory(packmindApi, {
+      name: 'commit',
+      spaceId: backendSpace.id,
+    });
+    await apiSkillFactory(packmindApi, {
+      name: 'commit',
+      spaceId: frontendSpace.id,
+    });
+
+    // Navigate to backend space, open skills
+    const backendDash = await frontendDashboard.navigateToSpace('backend');
+    const skillsPage = await backendDash.openSkills();
+
+    // Select the "commit" skill and try to move to frontend
+    await skillsPage.selectSkillByName('commit');
+    const errorMessage = await skillsPage.moveToSpaceExpectingError('frontend');
+
+    expect(errorMessage).toContain('already exists');
   });
 });
