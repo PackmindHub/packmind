@@ -17,6 +17,7 @@ export const SELECTABLE_AGENTS: CodingAgent[] = [
   'cursor',
   'gitlab_duo',
   'junie',
+  'codex',
   'opencode',
 ];
 
@@ -30,6 +31,7 @@ export const AGENT_DISPLAY_NAMES: Record<CodingAgent, string> = {
   agents_md: 'AGENTS.md',
   gitlab_duo: 'GitLab Duo',
   opencode: 'OpenCode',
+  codex: 'Codex',
 };
 
 type AgentChoice = {

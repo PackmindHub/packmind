@@ -129,6 +129,10 @@ describe('configAgentsHandler', () => {
     it('includes opencode agent', () => {
       expect(SELECTABLE_AGENTS).toContain('opencode');
     });
+
+    it('includes codex agent', () => {
+      expect(SELECTABLE_AGENTS).toContain('codex');
+    });
   });
 
   describe('AGENT_DISPLAY_NAMES', () => {
@@ -166,6 +170,10 @@ describe('configAgentsHandler', () => {
 
     it('maps opencode to OpenCode', () => {
       expect(AGENT_DISPLAY_NAMES.opencode).toBe('OpenCode');
+    });
+
+    it('maps codex to Codex', () => {
+      expect(AGENT_DISPLAY_NAMES.codex).toBe('Codex');
     });
   });
 

@@ -241,6 +241,56 @@ describe('AgentArtifactDetectionService', () => {
       });
     });
 
+    describe('when .agents/skills/ directory exists at root', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, '.agents/skills'), {
+          recursive: true,
+        });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('returns codex agent', () => {
+        expect(result).toContainEqual({
+          agent: 'codex',
+          artifactPath: path.join(tempDir, '.agents/skills'),
+        });
+      });
+    });
+
+    describe('when .agents/skills/ directory exists in a nested subdirectory', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, 'apps/my-app/.agents/skills'), {
+          recursive: true,
+        });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('returns codex agent', () => {
+        expect(result).toContainEqual({
+          agent: 'codex',
+          artifactPath: path.join(tempDir, 'apps/my-app/.agents/skills'),
+        });
+      });
+    });
+
+    describe('when .agents/ exists without skills/ subdirectory', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, '.agents'), { recursive: true });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('does not detect codex agent', () => {
+        const codexResults = result.filter((r) => r.agent === 'codex');
+        expect(codexResults).toHaveLength(0);
+      });
+    });
+
     describe('when multiple agent artifacts exist', () => {
       let result: DetectedAgentArtifact[];
 
