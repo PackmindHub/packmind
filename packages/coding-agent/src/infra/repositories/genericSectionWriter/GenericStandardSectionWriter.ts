@@ -80,7 +80,7 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
       'Summary unavailable';
 
     const lines: string[] = [
-      `## Standard: ${standardVersion.name}`,
+      `# Standard: ${standardVersion.name}`,
       '',
       `${summary} :`,
       ...this.formatRulesList(rules),

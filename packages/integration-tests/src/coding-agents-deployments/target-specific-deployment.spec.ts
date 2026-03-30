@@ -338,7 +338,7 @@ class MyService {
 
       it('includes standard header', () => {
         expect(deployedFile.content).toContain(
-          '## Standard: IDE Code Quality Standards',
+          '# Standard: IDE Code Quality Standards',
         );
       });
 

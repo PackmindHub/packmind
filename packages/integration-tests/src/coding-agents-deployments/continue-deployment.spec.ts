@@ -583,7 +583,7 @@ describe('Continue Deployment Integration', () => {
       const standardFile = pathMap.get(
         `.continue/rules/packmind/standard-${standard.slug}.md`,
       );
-      expect(standardFile?.content).toContain(`## Standard: ${standard.name}`);
+      expect(standardFile?.content).toContain(`# Standard: ${standard.name}`);
     });
   });
 
