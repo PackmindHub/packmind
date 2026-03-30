@@ -411,4 +411,9 @@ export class StandardService {
       throw error;
     }
   }
+
+  async hardDeleteStandard(standardId: StandardId): Promise<void> {
+    this.logger.info('Hard deleting standard', { standardId });
+    await this.standardRepository.hardDeleteById(standardId);
+  }
 }

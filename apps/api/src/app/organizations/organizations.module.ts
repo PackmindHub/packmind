@@ -10,6 +10,7 @@ import { OrganizationMcpModule } from './mcp/mcp.module';
 import { OrganizationSkillsModule } from './skills/skills.module';
 import { SpacesManagementModule } from '@packmind/spaces-management';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { PlaybookModule } from './playbook/playbook.module';
 
 /**
  * Root module for organization-scoped routes
@@ -40,6 +41,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
     OrganizationMcpModule,
     OrganizationSkillsModule,
     SpacesManagementModule,
+    PlaybookModule,
   ],
   controllers: [OrganizationsController],
   providers: [

@@ -10,6 +10,7 @@ import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
+import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import {
   BaseHexa,
@@ -80,6 +81,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       SkillsHexa,
       SpacesManagementHexa, // Must come after Spaces, Accounts, Standards, Skills, Recipes
       PlaybookChangeManagementHexa,
+      PlaybookBulkApplyHexa,
       CodingAgentHexa,
       DeploymentsHexa,
       ...apiHexaPlugins,

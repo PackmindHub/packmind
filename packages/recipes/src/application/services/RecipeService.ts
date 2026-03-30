@@ -249,6 +249,11 @@ export class RecipeService {
     }
   }
 
+  async hardDeleteRecipe(recipeId: RecipeId): Promise<void> {
+    this.logger.info('Hard deleting recipe', { recipeId });
+    await this.recipeRepository.hardDeleteById(recipeId);
+  }
+
   async duplicateRecipeToSpace(
     recipeId: RecipeId,
     destinationSpaceId: SpaceId,

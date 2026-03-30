@@ -74,6 +74,7 @@ export interface IStandardsPort {
   ): Promise<CreateStandardSamplesResponse>;
   updateStandard(command: UpdateStandardCommand): Promise<Standard>;
   deleteStandard(command: DeleteStandardCommand): Promise<void>;
+  hardDeleteStandard(standardId: StandardId): Promise<void>;
   duplicateStandardToSpace(
     standardId: StandardId,
     destinationSpaceId: SpaceId,

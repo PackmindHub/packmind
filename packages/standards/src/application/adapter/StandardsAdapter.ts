@@ -581,4 +581,9 @@ export class StandardsAdapter
       .getStandardService()
       .markStandardAsMoved(standardId, destinationSpaceId);
   }
+
+  async hardDeleteStandard(standardId: StandardId): Promise<void> {
+    this.logger.info('Hard deleting standard', { standardId });
+    await this.services.getStandardService().hardDeleteStandard(standardId);
+  }
 }

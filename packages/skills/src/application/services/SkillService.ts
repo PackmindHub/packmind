@@ -368,4 +368,9 @@ export class SkillService {
       throw error;
     }
   }
+
+  async hardDeleteSkill(skillId: SkillId): Promise<void> {
+    this.logger.info('Hard deleting skill', { skillId });
+    await this.skillRepository.hardDeleteById(skillId);
+  }
 }
