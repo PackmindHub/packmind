@@ -6,10 +6,10 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/types": "0.0.1",
-    "@packmind/logger": "0.0.1",
-    "@packmind/node-utils": "0.0.1",
-    "@packmind/test-utils": "0.0.1",
+    "@packmind/types": "*",
+    "@packmind/logger": "*",
+    "@packmind/node-utils": "*",
+    "@packmind/test-utils": "*",
     "typeorm": "0.3.28",
     "uuid": "^11.1.0"
   }
