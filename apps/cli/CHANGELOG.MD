@@ -6,6 +6,7 @@
 - `lint` command now supports negative globs in standard scopes, starting with `!`
 - `playbook submit` now checks for duplicate artifact names before submitting creation proposals. If an artifact with the same name (case-insensitive) already exists in the target space, the submission is rejected with a clear error message.
 - Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
+- Support Codex as a new AI coding agent target for `config agents` with recursive `.agents/skills` detection
 
 ## Changed
 
