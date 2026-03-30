@@ -57,6 +57,29 @@ jobs:
             echo "No report file found." >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      - name: Prepare Slack message
+        if: always() && hashFiles('doc-audit-report.md') != ''
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MAX_LENGTH=3800
+          REPORT=$(cat doc-audit-report.md)
+          if [ ${#REPORT} -gt $MAX_LENGTH ]; then
+            REPORT="${REPORT:0:$MAX_LENGTH}..."$'\n\n'"Full report: $RUN_URL"
+          else
+            REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
+          fi
+          echo "SLACK_REPORT_CONTENT<<SLACKEOF" >> "$GITHUB_ENV"
+          echo "$REPORT" >> "$GITHUB_ENV"
+          echo "SLACKEOF" >> "$GITHUB_ENV"
+
+      - name: Send report to Slack
+        if: always() && hashFiles('doc-audit-report.md') != ''
+        uses: archive/github-actions-slack@v2.10.1
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-text: ${{ env.SLACK_REPORT_CONTENT }}
+
       - name: Upload reports artifact
         if: always()
         uses: actions/upload-artifact@v4
