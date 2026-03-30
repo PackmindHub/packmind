@@ -52,6 +52,8 @@ export class SoftDeleteLinterArtefactsByRuleUseCase implements ISoftDeleteLinter
         'Successfully soft-deleted all linter artefacts for rule',
         { ruleId },
       );
+
+      return {} as SoftDeleteLinterArtefactsByRuleResponse;
     } catch (error) {
       this.logger.error('Failed to soft-delete linter artefacts for rule', {
         ruleId,
