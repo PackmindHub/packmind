@@ -53,12 +53,12 @@ const DEFAULT_FORMATS: RenderingItem[] = [
   { value: 'packmind', name: 'Packmind', checked: true, disabled: true },
   { value: 'agents-md', name: 'AGENTS.md', checked: true },
   { value: 'claude', name: 'Claude Code', checked: false },
+  { value: 'codex', name: 'Codex', checked: false },
   { value: 'continue', name: 'Continue', checked: false },
   { value: 'cursor', name: 'Cursor', checked: false },
   { value: 'github-copilot', name: 'Github Copilot', checked: false },
   { value: 'gitlab_duo', name: 'Gitlab Duo', checked: false },
   { value: 'junie', name: 'Junie', checked: false },
-  { value: 'codex', name: 'Codex', checked: false },
   { value: 'opencode', name: 'OpenCode', checked: false },
 ];
 

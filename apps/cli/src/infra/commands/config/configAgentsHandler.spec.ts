@@ -885,10 +885,10 @@ describe('configAgentsHandler', () => {
 
         await configAgentsHandler(deps);
 
-        // SELECTABLE_AGENTS[0]=agents_md, [2]=continue, [4]=cursor
+        // SELECTABLE_AGENTS[0]=agents_md, [2]=codex, [4]=copilot
         expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
           '/project',
-          ['agents_md', 'continue', 'cursor'],
+          ['agents_md', 'codex', 'copilot'],
         );
       });
 

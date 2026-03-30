@@ -12,12 +12,12 @@ import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway'
 export const SELECTABLE_AGENTS: CodingAgent[] = [
   'agents_md',
   'claude',
+  'codex',
   'continue',
   'copilot',
   'cursor',
   'gitlab_duo',
   'junie',
-  'codex',
   'opencode',
 ];
 
