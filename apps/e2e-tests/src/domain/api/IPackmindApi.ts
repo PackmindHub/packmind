@@ -4,6 +4,7 @@ import {
   Space,
   ICreatePackageUseCase,
   INotifyDistributionUseCase,
+  IUploadSkillUseCase,
 } from '@packmind/types';
 
 export interface IPackmindApi {
@@ -11,4 +12,5 @@ export interface IPackmindApi {
   createStandard: Gateway<ICreateStandardUseCase>;
   createPackage: Gateway<ICreatePackageUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
+  uploadSkill: Gateway<IUploadSkillUseCase>;
 }
