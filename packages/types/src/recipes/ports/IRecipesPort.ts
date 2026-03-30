@@ -132,6 +132,11 @@ export interface IRecipesPort {
   ): Promise<UpdateRecipeFromUIResponse>;
 
   /**
+   * Hard-delete a recipe (permanent, no soft-delete). Used for rollback only.
+   */
+  hardDeleteRecipe(recipeId: RecipeId): Promise<void>;
+
+  /**
    * Duplicate a recipe and its full entity graph into a destination space.
    */
   duplicateRecipeToSpace(
