@@ -475,13 +475,16 @@ describe('updateHandler', () => {
     });
 
     describe('when running as packmind', () => {
-      it('creates packmind-cli symlink', () => {
+      beforeEach(() => {
         createForwardCompatSymlink('/usr/local/bin/packmind', 'linux');
+      });
 
-        expect(fs.symlinkSync).toHaveBeenCalledWith(
-          'packmind',
-          '/usr/local/bin/packmind-cli',
-        );
+      it('does not create any symlink', () => {
+        expect(fs.symlinkSync).not.toHaveBeenCalled();
+      });
+
+      it('does not remove any file', () => {
+        expect(fs.unlinkSync).not.toHaveBeenCalled();
       });
     });
 

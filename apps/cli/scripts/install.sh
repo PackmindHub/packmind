@@ -254,8 +254,11 @@ install_binary() {
             ;;
     esac
     alias_path="${INSTALL_DIR}/${alias_name}"
-    ln -sf "$target_name" "$alias_path"
-    info "Created symlink: $alias_path -> $target_name"
+    if ln -sf "$target_name" "$alias_path" 2>/dev/null; then
+        info "Created symlink: $alias_path -> $target_name"
+    else
+        warn "Could not create symlink: $alias_path -> $target_name (non-critical)"
+    fi
 }
 
 # Auto-login if credentials provided

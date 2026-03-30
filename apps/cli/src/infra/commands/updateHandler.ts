@@ -152,18 +152,12 @@ export function createForwardCompatSymlink(
   const aliasName = `packmind${ext}`;
   const currentBasename = path.basename(currentPath);
 
-  let symlinkName: string;
-  let targetName: string;
-
-  if (currentBasename === primaryName) {
-    targetName = primaryName;
-    symlinkName = aliasName;
-  } else if (currentBasename === aliasName) {
-    targetName = aliasName;
-    symlinkName = primaryName;
-  } else {
+  if (currentBasename !== primaryName) {
     return;
   }
+
+  const targetName = primaryName;
+  const symlinkName = aliasName;
 
   const symlinkPath = path.join(dir, symlinkName);
   try {

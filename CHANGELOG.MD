@@ -2,9 +2,6 @@
 
 ## Added
 
-- CLI can now also be invoked as `packmind` (alias for `packmind-cli`)
-- `packmind` symlink automatically created on install and self-update
-
 ## Changed
 
 ## Fixed
