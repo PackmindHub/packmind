@@ -277,7 +277,7 @@ describe(
         });
 
         it('includes standard header', () => {
-          expect(standardFile?.content).toContain('## Standard: Test Standard');
+          expect(standardFile?.content).toContain('# Standard: Test Standard');
         });
 
         it('includes first rule content', () => {
@@ -399,7 +399,7 @@ describe(
           const standardFile = pathMap.get(
             '.claude/rules/packmind/standard-test-standard.md',
           );
-          expect(standardFile?.content).toContain('## Standard: Test Standard');
+          expect(standardFile?.content).toContain('# Standard: Test Standard');
         });
       });
     });
@@ -586,7 +586,7 @@ describe(
         });
 
         it('includes standard header', () => {
-          expect(standardFile.content).toContain('## Standard: Test Standard');
+          expect(standardFile.content).toContain('# Standard: Test Standard');
         });
 
         it('includes first rule content', () => {

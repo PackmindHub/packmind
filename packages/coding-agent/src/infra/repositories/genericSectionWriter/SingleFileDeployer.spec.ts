@@ -575,7 +575,7 @@ describe('SingleFileDeployer', () => {
           (s) => s.key === 'Packmind standards',
         );
         expect(standardsSection!.content).toContain(
-          '## Standard: Test Standard',
+          '# Standard: Test Standard',
         );
       });
 
@@ -629,7 +629,7 @@ describe('SingleFileDeployer', () => {
           (s) => s.key === 'Packmind standards',
         );
         expect(standardsSection!.content).toContain(
-          '## Standard: Test Standard',
+          '# Standard: Test Standard',
         );
       });
     });
