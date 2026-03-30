@@ -2023,10 +2023,48 @@ describe('playbookAddHandler', () => {
       ]);
     });
 
-    it('exits with 1 (case-insensitive match)', async () => {
+    it('exits with 1 (slug match)', async () => {
       await playbookAddHandler(buildDeps());
 
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when creating a standard with a name that conflicts after slug normalization', () => {
+    beforeEach(() => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+      (mockPackmindCliHexa.listStandards as jest.Mock).mockResolvedValue([
+        {
+          id: 'std-1',
+          slug: 'bon-ete',
+          name: 'Bon été',
+          description: '',
+          spaceId: 'space-123',
+        },
+      ]);
+    });
+
+    describe('when the new name resolves to the same slug', () => {
+      it('exits with 1', async () => {
+        mockReadFile.mockReturnValue(
+          `---\nname: Bon ete\ndescription: test\nscope: "**/*.ts"\n---\n# Bon ete\n\nSome description`,
+        );
+        const { parseStandardMd } = jest.requireMock(
+          '../../../application/utils/parseStandardMd',
+        );
+        parseStandardMd.mockReturnValue({
+          name: 'Bon ete',
+          description: 'Some description',
+          scope: '**/*.ts',
+          rules: [],
+        });
+
+        await playbookAddHandler(
+          buildDeps({ filePath: '.packmind/standards/bon-ete.md' }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
     });
   });
 

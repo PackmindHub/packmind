@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import slug from 'slug';
 
 import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
 import { parseCommandFile } from '../../../application/utils/parseCommandFile';
@@ -409,7 +410,7 @@ export async function playbookAddHandler(
         spaceId,
       );
       const nameExists = existingNames.some(
-        (name) => name.toLowerCase() === artifactName.toLowerCase(),
+        (name) => slug(name) === slug(artifactName),
       );
       if (nameExists) {
         logErrorConsole(
