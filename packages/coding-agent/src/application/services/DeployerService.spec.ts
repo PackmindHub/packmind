@@ -949,6 +949,220 @@ describe('DeployerService', () => {
       });
     });
 
+    describe('when codex and agents_md are active', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        const codexDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'codex content' },
+              {
+                path: '.agents/skills/my-skill/SKILL.md',
+                content: 'skill content',
+              },
+            ],
+            delete: [],
+          },
+        );
+        const agentsMdDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'agents_md content' },
+            ],
+            delete: [],
+          },
+        );
+
+        registry.registerDeployer('codex', codexDeployer);
+        registry.registerDeployer('agents_md', agentsMdDeployer);
+
+        result = await service.aggregateArtifactRendering(
+          mockRecipeVersions,
+          mockStandardVersions,
+          [],
+          ['codex', 'agents_md'],
+          new Map(),
+        );
+      });
+
+      it('suppresses codex AGENTS.md writes', () => {
+        const agentsMdFiles = result.createOrUpdate.filter(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFiles).toHaveLength(1);
+      });
+
+      it('uses agents_md content for AGENTS.md', () => {
+        const agentsMdFile = result.createOrUpdate.find(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFile?.content).toBe('agents_md content');
+      });
+
+      it('preserves codex skill files', () => {
+        const skillFile = result.createOrUpdate.find(
+          (f) => f.path === '.agents/skills/my-skill/SKILL.md',
+        );
+        expect(skillFile).toBeDefined();
+      });
+    });
+
+    describe('when codex and opencode are active', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        const codexDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [{ path: 'AGENTS.md', content: 'codex content' }],
+            delete: [],
+          },
+        );
+        const opencodeDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'opencode content' },
+            ],
+            delete: [],
+          },
+        );
+
+        registry.registerDeployer('codex', codexDeployer);
+        registry.registerDeployer('opencode', opencodeDeployer);
+
+        result = await service.aggregateArtifactRendering(
+          mockRecipeVersions,
+          mockStandardVersions,
+          [],
+          ['codex', 'opencode'],
+          new Map(),
+        );
+      });
+
+      it('suppresses codex AGENTS.md writes in favor of opencode', () => {
+        const agentsMdFiles = result.createOrUpdate.filter(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFiles).toHaveLength(1);
+      });
+
+      it('uses opencode content for AGENTS.md', () => {
+        const agentsMdFile = result.createOrUpdate.find(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFile?.content).toBe('opencode content');
+      });
+    });
+
+    describe('when codex, opencode, and agents_md are all active', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        const codexDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [{ path: 'AGENTS.md', content: 'codex content' }],
+            delete: [],
+          },
+        );
+        const opencodeDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'opencode content' },
+            ],
+            delete: [],
+          },
+        );
+        const agentsMdDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: 'AGENTS.md', content: 'agents_md content' },
+            ],
+            delete: [],
+          },
+        );
+
+        registry.registerDeployer('codex', codexDeployer);
+        registry.registerDeployer('opencode', opencodeDeployer);
+        registry.registerDeployer('agents_md', agentsMdDeployer);
+
+        result = await service.aggregateArtifactRendering(
+          mockRecipeVersions,
+          mockStandardVersions,
+          [],
+          ['codex', 'opencode', 'agents_md'],
+          new Map(),
+        );
+      });
+
+      it('returns a single AGENTS.md entry', () => {
+        const agentsMdFiles = result.createOrUpdate.filter(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFiles).toHaveLength(1);
+      });
+
+      it('uses agents_md content as highest priority', () => {
+        const agentsMdFile = result.createOrUpdate.find(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFile?.content).toBe('agents_md content');
+      });
+    });
+
+    describe('when only codex is active', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        const codexDeployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [{ path: 'AGENTS.md', content: 'codex content' }],
+            delete: [],
+          },
+        );
+
+        registry.registerDeployer('codex', codexDeployer);
+
+        result = await service.aggregateArtifactRendering(
+          mockRecipeVersions,
+          mockStandardVersions,
+          [],
+          ['codex'],
+          new Map(),
+        );
+      });
+
+      it('preserves codex AGENTS.md writes', () => {
+        const agentsMdFile = result.createOrUpdate.find(
+          (f) => f.path === 'AGENTS.md',
+        );
+        expect(agentsMdFile?.content).toBe('codex content');
+      });
+    });
+
     describe('when handling all supported coding agents', () => {
       const agents: CodingAgent[] = [
         'claude',
