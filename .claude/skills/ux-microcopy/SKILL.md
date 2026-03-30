@@ -1,5 +1,5 @@
 ---
-name: ux-microcopy
+name: 'ux-microcopy'
 description: 'This skill provides senior UX writing expertise for crafting user-facing microcopy. It should be used when writing or reviewing UI text such as blank states, error messages, success messages, confirmation dialogs, tooltips, form labels, validation messages, loading states, onboarding text, CTAs, or any frontend component that communicates intention to the user. Also triggers when writing CLI output messages (progress feedback, errors, success confirmations, usage hints). Triggers on user-facing string literals in frontend code, empty state components, error boundaries, toast/notification text, modal copy, placeholder text, and CLI console.log/chalk/ora output messages.'
 ---
 

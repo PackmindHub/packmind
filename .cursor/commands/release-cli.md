@@ -67,8 +67,11 @@ Create a CLI release with version {{version}}. Follow these steps:
      ```
      [Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/{{version}}...HEAD
      ```
+   * Update the version in apps/cli/package.json to `{{version}}-next`
 
-   * Commit with message: `chore(cli): prepare next development cycle`
+   * Run `npm install` to update `package-lock.json` with the new version
+
+   * Commit with message: `chore(cli): prepare next development cycle` (this commit will include apps/cli/package.json, package-lock.json, and apps/cli/CHANGELOG.MD)
 
 6. **Push all commits** to GitHub
 

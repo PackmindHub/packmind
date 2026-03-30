@@ -1,6 +1,6 @@
 ---
-name: qa-review
-description: Review a user story implementation against its Example Mapping (EM) specification.
+name: 'qa-review'
+description: 'Review a user story implementation against its Example Mapping (EM) specification.'
 argument-hint: '["em-file-path"]'
 disable-model-invocation: true
 ---

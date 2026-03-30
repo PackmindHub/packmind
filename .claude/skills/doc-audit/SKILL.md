@@ -1,11 +1,11 @@
 ---
-name: doc-audit
-description: 'Audit Packmind end-user documentation (apps/doc/) for broken links, outdated CLI references, non-existent concepts, misleading information, missing coverage, and undocumented feature areas. Produces a structured markdown report at project root. Use when docs may have drifted from the codebase, before a release, or on a regular cadence.'
+name: 'doc-audit'
+description: 'Audit Packmind end-user documentation (apps/doc/) for broken links, outdated CLI references, non-existent concepts, misleading information, and missing coverage. Produces a structured markdown report at project root. Use when docs may have drifted from the codebase, before a release, or on a regular cadence.'
 ---
 
 # Documentation Audit
 
-Detect outdated, broken, or misleading documentation and identify undocumented feature areas by cross-referencing MDX pages against the actual codebase. Produces a structured `doc-audit-report.md` at the project root.
+Detect outdated, broken, or misleading documentation by cross-referencing MDX pages against the actual codebase. Produces a structured `doc-audit-report.md` at the project root.
 
 **This skill only detects issues — it does not fix them.**
 
@@ -43,55 +43,53 @@ Compile these into a **ground truth summary** string formatted as:
 
 ## Phase 2: Launch Parallel Sub-Agents
 
-Dynamically distribute MDX files across parallel Explore sub-agents based on the actual pages discovered in Phase 1.
+Launch **5 Explore sub-agents** in parallel (`subagent_type: Explore`), one per section group. Each agent receives:
+- The ground truth summary from Phase 1
+- The full contents of `references/section-audit-instructions.md` (read this file and include its contents in each prompt)
+- Its assigned section and list of MDX files to audit
 
-### Dynamic Agent Assignment
+### Agent Assignments
 
-1. **Group by top-level directory** — from the MDX files globbed in Phase 1, group them by their first path segment (e.g., `getting-started/`, `concepts/`, `tools/`, `governance/`, `administration/`, `security/`, `linter/`, `playbook-maintenance/`). Root-level files (`index.mdx`, `home.mdx`, etc.) form their own "root" group.
-2. **Merge small groups** — combine groups with fewer than 3 files into adjacent groups to avoid launching agents with very little work.
-3. **Distribute across N agents** — aim for roughly balanced workload (similar page count per agent). Typically 4–6 agents, but adjust based on total page count.
-4. **Launch agents in parallel** (`subagent_type: Explore`) — each agent receives:
-   - The ground truth summary from Phase 1
-   - The full contents of `references/section-audit-instructions.md` (read this file and include its contents in each prompt)
-   - Its assigned section name(s) and the specific list of MDX files to audit
+| Agent | Sections | Pages to Audit |
+|-------|----------|----------------|
+| 1 | Getting Started + root pages | `index.mdx`, `home.mdx` + all `getting-started/*.mdx` |
+| 2 | Concepts | All `concepts/*.mdx` + `tools/import-from-knowledge-base.mdx` |
+| 3 | Tools & Integrations | `tools/cli.mdx` |
+| 4 | Governance + Playbook Maintenance + Linter | All `governance/*.mdx` + `playbook-maintenance/*.mdx` + `linter/*.mdx` |
+| 5 | Administration + Security | All `administration/*.mdx` + `security/*.mdx` |
 
 ### Agent Prompt Template
 
-Each agent's prompt should use the template from `references/section-audit-agent-prompt.md`, with the placeholders filled in.
+Each agent's prompt should follow this structure:
+
+```
+You are auditing the {section_name} section of the Packmind documentation.
+
+## Your Assigned Pages
+{list of MDX file paths to read and audit}
+
+## Ground Truth
+{ground truth summary from Phase 1}
+
+## Audit Instructions
+{full contents of references/section-audit-instructions.md}
+
+Read each assigned MDX page completely and apply all detection categories. Return your findings in the exact format specified in the instructions.
+```
 
 ### Sequential Fallback
 
 If the Agent tool is unavailable, perform the audit sequentially: read each section's pages one by one and apply the same checks from `references/section-audit-instructions.md` directly.
 
-## Phase 3: Consolidate Raw Findings
+## Phase 3: Consolidate Report
 
 After all sub-agents complete:
 
 1. **Collect** all findings from the 5 agents
 2. **Deduplicate** — remove exact duplicates (same page, same line, same issue)
-3. **Compile** into a single raw findings list, preserving the structured format from each agent
-
-Do **not** write the report yet — pass the raw findings to Phase 4 first.
-
-## Phase 4: Review and Filter
-
-Launch a single **general-purpose sub-agent** (`subagent_type: general-purpose`) to independently review the raw findings. This agent acts as a skeptical external reviewer — its job is to verify each finding against the actual codebase and filter out false positives.
-
-### Reviewer Agent Prompt
-
-The reviewer agent's prompt should use the template from `references/reviewer-agent-prompt.md`, with the placeholders filled in.
-
-### Sequential Fallback
-
-If the Agent tool is unavailable, perform the review yourself: for each finding, read the referenced file and verify the claim before including it in the report.
-
-## Phase 5: Write Report
-
-Using only the **verified findings** from Phase 4:
-
-1. **Sort** by severity: ERROR first, then WARNING
-2. **Group** by category within each severity level
-3. **Write** the report to `doc-audit-report.md` at the project root
+3. **Sort** by severity: ERROR first, then WARNING, then INFO
+4. **Group** by category within each severity level
+5. **Write** the report to `doc-audit-report.md` at the project root
 
 ### Report Format
 
@@ -104,6 +102,7 @@ Generated: {date} | Pages audited: {count}
 |----------|-------|
 | ERROR    | N     |
 | WARNING  | N     |
+| INFO     | N     |
 
 ## Errors
 
@@ -119,11 +118,13 @@ Generated: {date} | Pages audited: {count}
 - **{page}** (line ~{N}): References `{concept}` — not found in codebase
 [... more findings]
 
+## Warnings
+
 ### [D] Misleading Information
 - **{page}** (line ~{N}): "{quoted text}" — {reason}
 [... more findings]
 
-## Warnings
+## Info
 
 ### [E] Missing Documentation Coverage
 - CLI command `{cmd}` has no documentation
@@ -133,39 +134,7 @@ Generated: {date} | Pages audited: {count}
 
 **Omit any category section that has zero findings.** Only include sections with actual results.
 
-After writing the report, proceed to Phase 6 before printing the summary.
-
-## Phase 6: Detect Opportunities
-
-After Phase 5, launch a **single general-purpose sub-agent** (`subagent_type: general-purpose`) to identify higher-level functional areas with no documentation coverage.
-
-### Agent Prompt
-
-The agent's prompt should use the template from `references/opportunities-agent-prompt.md`, with the `{ground truth summary from Phase 1}` placeholder filled in from Phase 1.
-
-### Sequential Fallback
-
-If the Agent tool is unavailable, perform the opportunity detection yourself: scan the four codebase sources listed in the prompt template, cross-reference against docs, and compile findings directly.
-
-### Append to Report
-
-After the agent completes, append an `## Opportunities` section to the existing `doc-audit-report.md`:
-
-```markdown
-## Opportunities
-
-Functional areas discovered in the codebase with no documentation coverage:
-
-### {Feature Area Name}
-- {Brief description of undocumented capability}
-```
-
-**Omit the Opportunities section entirely if no undocumented areas are found.**
-
-### Print Summary
-
-After Phase 6, print a brief summary:
+After writing the report, print a brief summary:
 - Total issues found per severity
-- Number of undocumented feature areas (opportunities) found
 - Top 3 most problematic pages (by issue count)
 - The report file path
