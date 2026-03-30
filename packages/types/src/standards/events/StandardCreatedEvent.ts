@@ -14,7 +14,7 @@ export type StandardCreationMethod = 'blank' | 'sample' | 'mcp' | 'cli';
 export interface StandardCreatedPayload {
   standardId: StandardId;
   spaceId: SpaceId;
-  method?: StandardCreationMethod;
+  method: StandardCreationMethod;
 }
 
 export class StandardCreatedEvent extends UserEvent<StandardCreatedPayload> {
