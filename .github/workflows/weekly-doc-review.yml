@@ -65,3 +65,30 @@ jobs:
           path: doc-audit-report.md
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Read report content
+        id: read-report
+        if: always() && hashFiles('doc-audit-report.md') != ''
+        run: |
+          REPORT=$(cat doc-audit-report.md)
+          # Truncate if too long for Slack (limit ~3000 chars to stay safe)
+          if [ ${#REPORT} -gt 3000 ]; then
+            REPORT="${REPORT:0:3000}... _(truncated, see full report in GitHub Actions)_"
+          fi
+          {
+            echo "report<<EOF"
+            echo "$REPORT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Send report to Slack
+        if: always() && steps.read-report.outputs.report != ''
+        uses: archive/github-actions-slack@v2.10.1
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: ${{ secrets.SLACK_DOC_AUDIT_CHANNEL_ID }}
+          slack-text: |
+            📝 *Weekly Documentation Audit Report*
+            _Run: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}>_
+
+            ${{ steps.read-report.outputs.report }}
