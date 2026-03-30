@@ -370,15 +370,14 @@ export async function playbookAddHandler(
     spaceId = allSpaces[0].id;
     spaceName = allSpaces[0].name;
   } else {
-    // For updates, use the deployed context space as default.
+    // For updates, use the lock file entry's space (authoritative source).
     // For new artifacts, always require --space when multiple spaces exist.
-    const isExistingArtifact =
+    const existingLockEntry =
       earlyLockFile &&
       findLockFileEntryForPath(normalizedFilePath, earlyLockFile.artifacts);
-    const deployedSpaceId = deployedContext?.spaceId;
 
-    if (isExistingArtifact && deployedSpaceId) {
-      spaceId = deployedSpaceId;
+    if (existingLockEntry) {
+      spaceId = existingLockEntry.spaceId;
       spaceName = allSpaces.find((s) => s.id === spaceId)?.name;
     } else {
       logErrorConsole(
