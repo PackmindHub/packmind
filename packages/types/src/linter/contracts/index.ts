@@ -27,7 +27,6 @@ export * from './IStartProgramGeneration';
 export * from './IStartRuleDetectionAssessmentUseCase';
 export * from './ITestProgramExecutionUseCase';
 export * from './IUpdateActiveDetectionProgram';
-export * from './IUpdateActiveDetectionProgramSeverity';
 export * from './IUpdateDetectionProgram';
 export * from './IUpdateDetectionProgramStatus';
 export * from './IUpdateRuleDetectionHeuristics';
