@@ -50,6 +50,7 @@ on:
 jobs:
   hadolint:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,6 +72,7 @@ jobs:
 
   build-scan-push:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 30
     # Both editions: main branch and release tags
     if: |
       github.ref == 'refs/heads/main' ||

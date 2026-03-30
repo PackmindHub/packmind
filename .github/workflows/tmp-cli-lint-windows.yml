@@ -11,6 +11,7 @@ on:
 jobs:
   cli-lint-windows:
     runs-on: depot-windows-2025-4
+    timeout-minutes: 30
     name: CLI lint on Windows
 
     steps:

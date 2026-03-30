@@ -31,6 +31,7 @@ env:
 jobs:
   sign-macos-cli:
     runs-on: depot-macos-15
+    timeout-minutes: 30
     outputs:
       version: ${{ steps.get-version.outputs.version }}
     
@@ -129,6 +130,7 @@ jobs:
 
   publish-npm:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 30
     needs: sign-macos-cli
 
     steps:
@@ -167,6 +169,7 @@ jobs:
 
   create-github-release:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 30
     needs: [sign-macos-cli, publish-npm]
     permissions:
       contents: write
