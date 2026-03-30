@@ -14,6 +14,7 @@ export const VALID_CODING_AGENTS: readonly CodingAgent[] = [
   'gitlab_duo',
   'continue',
   'opencode',
+  'codex',
 ] as const;
 
 /**

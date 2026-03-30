@@ -24,6 +24,7 @@ export type MultiFileCodingAgent = Extract<
   | 'packmind'
   | 'gitlab_duo'
   | 'opencode'
+  | 'codex'
 >;
 
 /**
@@ -74,5 +75,10 @@ export const CODING_AGENT_ARTEFACT_PATHS: Record<
     command: '.opencode/commands/',
     standard: '',
     skill: '.opencode/skills/',
+  },
+  codex: {
+    command: '',
+    standard: '',
+    skill: '.agents/skills/',
   },
 };

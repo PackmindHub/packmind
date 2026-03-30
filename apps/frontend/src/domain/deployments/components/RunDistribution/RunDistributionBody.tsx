@@ -50,6 +50,7 @@ export const RunDistributionBodyImpl: React.FC = () => {
       [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
       [RenderMode.CONTINUE]: 'Continue',
       [RenderMode.OPENCODE]: 'OpenCode',
+      [RenderMode.CODEX]: 'Codex',
     };
     return activeRenderModes.map((mode) => labels[mode] ?? mode).join(', ');
   }, [activeRenderModes]);
