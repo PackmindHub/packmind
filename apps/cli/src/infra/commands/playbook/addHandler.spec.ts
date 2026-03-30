@@ -1445,13 +1445,51 @@ describe('playbookAddHandler', () => {
       });
 
       describe('when no --space flag is provided', () => {
-        it('uses deployed context space', async () => {
+        it('uses lock file entry spaceId', async () => {
           await playbookAddHandler(buildDeps());
 
           expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
             expect.objectContaining({
               spaceId: 'space-123',
               spaceName: 'Global',
+              changeType: 'updated',
+            }),
+          );
+        });
+      });
+
+      describe('when lock file entry spaceId differs from default space', () => {
+        beforeEach(() => {
+          mockLockFileRepository.read.mockResolvedValue({
+            lockfileVersion: 1,
+            packageSlugs: ['my-package'],
+            agents: ['claude'],
+            installedAt: '2026-03-17T00:00:00.000Z',
+            cliVersion: '1.0.0',
+            targetId: 'target-456',
+            artifacts: {
+              'my-command': {
+                name: 'My Command',
+                type: 'command',
+                id: 'artifact-cmd-1',
+                version: 1,
+                spaceId: 'space-456',
+                packageIds: ['pkg-1'],
+                files: [
+                  { path: '.claude/commands/my-command.md', agent: 'claude' },
+                ],
+              },
+            },
+          });
+        });
+
+        it('uses the lock file entry spaceId, not the default space', async () => {
+          await playbookAddHandler(buildDeps());
+
+          expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+            expect.objectContaining({
+              spaceId: 'space-456',
+              spaceName: 'Team Backend',
               changeType: 'updated',
             }),
           );
@@ -1637,7 +1675,7 @@ describe('playbookAddHandler', () => {
         );
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          '.packmind/standards/empty.md is not a valid artifact. Expected a markdown heading (# Name) followed by content.',
+          `.packmind/standards/empty.md is not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
         );
       });
 

@@ -9,34 +9,8 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-03-24T09:00:25.172Z",
+  "installedAt": "2026-03-30T08:35:08.925Z",
   "artifacts": {
-    "standard:nestjs-module-hierarchy": {
-      "name": "NestJS Module Hierarchy",
-      "type": "standard",
-      "id": "f6404dc7-632c-4ee6-9f56-723990dd5e39",
-      "version": 3,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["a37068f3-1193-458b-bfa1-f62bd5f33a83"],
-      "files": [
-        {
-          "path": ".packmind/standards/nestjs-module-hierarchy.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-nestjs-module-hierarchy.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-nestjs-module-hierarchy.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-nestjs-module-hierarchy.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:rest-api-endpoint-design": {
       "name": "REST API Endpoint Design",
       "type": "standard",
@@ -59,6 +33,32 @@
         },
         {
           "path": ".cursor/rules/packmind/standard-rest-api-endpoint-design.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:nestjs-module-hierarchy": {
+      "name": "NestJS Module Hierarchy",
+      "type": "standard",
+      "id": "f6404dc7-632c-4ee6-9f56-723990dd5e39",
+      "version": 3,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["a37068f3-1193-458b-bfa1-f62bd5f33a83"],
+      "files": [
+        {
+          "path": ".packmind/standards/nestjs-module-hierarchy.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-nestjs-module-hierarchy.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-nestjs-module-hierarchy.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-nestjs-module-hierarchy.mdc",
           "agent": "cursor"
         }
       ]

@@ -185,15 +185,13 @@ export class StandardRepository
     });
 
     try {
-      await this.repository.manager.transaction(async (transaction) => {
-        await transaction.update(
-          StandardSchema,
+      await this.repository.manager.transaction(async (manager) => {
+        const transactionalRepository = manager.getRepository(StandardSchema);
+        await transactionalRepository.update(
           { id: standardId },
-          {
-            movedTo: destinationSpaceId,
-          },
+          { movedTo: destinationSpaceId },
         );
-        await transaction.softDelete(StandardSchema, { id: standardId });
+        await transactionalRepository.softDelete({ id: standardId });
       });
 
       this.logger.info('Standard marked as moved successfully', {

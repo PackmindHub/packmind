@@ -23,13 +23,13 @@ export const PackageDistributionList: React.FC<
     useGetUsersInMyOrganizationQuery();
 
   const buildUserMap = (
-    data: { users: Array<{ userId: string; email: string }> } | undefined,
+    data: { users: Array<{ userId: string; displayName: string }> } | undefined,
   ): Record<string, string> => {
     if (!data) return { 'N/A': 'Unknown User' };
     return {
       'N/A': 'Unknown User',
       ...Object.fromEntries(
-        data.users.map((user) => [user.userId, user.email.split('@')[0]]),
+        data.users.map((user) => [user.userId, user.displayName]),
       ),
     };
   };

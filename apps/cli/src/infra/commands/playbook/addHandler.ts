@@ -301,7 +301,7 @@ export async function playbookAddHandler(
         const lenient = parseLenientStandard(localContent);
         if (!lenient) {
           logErrorConsole(
-            `${filePath} is not a valid artifact. Expected a markdown heading (# Name) followed by content.`,
+            `${filePath} is not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
           );
           exit(1);
           return;
@@ -370,15 +370,14 @@ export async function playbookAddHandler(
     spaceId = allSpaces[0].id;
     spaceName = allSpaces[0].name;
   } else {
-    // For updates, use the deployed context space as default.
+    // For updates, use the lock file entry's space (authoritative source).
     // For new artifacts, always require --space when multiple spaces exist.
-    const isExistingArtifact =
+    const existingLockEntry =
       earlyLockFile &&
       findLockFileEntryForPath(normalizedFilePath, earlyLockFile.artifacts);
-    const deployedSpaceId = deployedContext?.spaceId;
 
-    if (isExistingArtifact && deployedSpaceId) {
-      spaceId = deployedSpaceId;
+    if (existingLockEntry) {
+      spaceId = existingLockEntry.spaceId;
       spaceName = allSpaces.find((s) => s.id === spaceId)?.name;
     } else {
       logErrorConsole(

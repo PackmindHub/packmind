@@ -1,5 +1,5 @@
 ---
-description: 'Create a Packmind release by verifying a clean git state, bumping versions and updating the changelog, tagging and pushing the release, then reopening an Unreleased section to ensure consistent, traceable release workflows when publishing a new version.'
+description: 'Create and push a Packmind release by verifying a clean git state, bumping package versions, updating CHANGELOG links and dates, tagging `release/{{version}}`, and preparing the next Unreleased section to ensure a consistent, traceable release workflow when publishing a new version.'
 agent: 'agent'
 ---
 
@@ -8,24 +8,37 @@ Create a Packmind release with version {{version}}. Follow these steps:
 1. **Verify clean git status**: Check that `git status` shows no uncommitted changes. If there are changes, fail and ask the user to commit or stash them first.
 
 2. **Update package.json files and CHANGELOG.MD for release (First commit)**:
+
    * Update the version in `package.json` to `{{version}}`
+
    * Update the version in `apps/api/docker-package.json` to `{{version}}`
+
    * Run `npm install` to update `package-lock.json` with the new version
-   * In CHANGELOG.md:
+
+   * In CHANGELOG.MD:
+
      * drop the empty sections under \[Unreleased]
+
      * Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
+
      * Update the unreleased comparison link at the bottom to point to the new release:
+
        ```
        [{{version}}]: https://github.com/PackmindHub/packmind/compare/release/{{previous_version}}...release/{{version}}
        ```
+
      * Extract the previous version from the existing comparison links inCHANGELOG.MD
-   * Commit with message: `chore: release {{version}}` (this commit will include package.json, apps/api/docker-package.json, package-lock.json, and CHANGELOG.md)
+
+   * Commit with message: `chore: release {{version}}` (this commit will include package.json, apps/api/docker-package.json, package-lock.json, and CHANGELOG.MD)
 
 3. **Create and push release tag**:
+
    * Create tag: `release/{{version}}`
+
    * Push the tag to GitHub
 
 4. **Prepare next development cycle (Second commit)**:
+
    * Add a new `[Unreleased]` section at the top of CHANGELOG.MD:
 
      ```markdown
@@ -41,6 +54,7 @@ Create a Packmind release with version {{version}}. Follow these steps:
      ```
 
    * Add the unreleased comparison link at the bottom:
+
      ```
      [Unreleased]: https://github.com/PackmindHub/packmind/compare/release/{{version}}...HEAD
      ```
@@ -54,5 +68,7 @@ Create a Packmind release with version {{version}}. Follow these steps:
 Important notes:
 
 * Do NOT use `--no-verify` when committing
+
 * Verify each commit was successful before proceeding to the next step
+
 * The date must be in ISO 8601 format (YYYY-MM-DD)

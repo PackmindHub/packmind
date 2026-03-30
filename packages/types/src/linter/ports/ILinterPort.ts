@@ -51,6 +51,8 @@ import type {
   GetDetectionHeuristicsResponse,
   CreateDetectionHeuristicsCommand,
   CreateDetectionHeuristicsResponse,
+  UpdateActiveDetectionProgramSeverityCommand,
+  UpdateActiveDetectionProgramSeverityResponse,
 } from '../contracts';
 import { DetectionProgram } from '../DetectionProgram';
 import { RuleDetectionAssessment } from '../RuleDetectionAssessment';
@@ -58,6 +60,10 @@ import {
   TrackLinterExecutionCommand,
   TrackLinterExecutionResponse,
 } from '../contracts/ITrackLinterExecutionUseCase';
+import type {
+  MoveLinterArtefactsToNewRulesCommand,
+  MoveLinterArtefactsToNewRulesResponse,
+} from '../contracts/IMoveLinterArtefactsToNewRules';
 
 export const ILinterPortName = 'ILinterPort' as const;
 
@@ -85,6 +91,10 @@ export interface ILinterPort {
   updateActiveDetectionProgram(
     command: UpdateActiveDetectionProgramCommand,
   ): Promise<ActiveDetectionProgram>;
+
+  updateActiveDetectionProgramSeverity(
+    command: UpdateActiveDetectionProgramSeverityCommand,
+  ): Promise<UpdateActiveDetectionProgramSeverityResponse>;
 
   getActiveDetectionProgramById(
     activeDetectionProgramId: ActiveDetectionProgramId,
@@ -181,4 +191,12 @@ export interface ILinterPort {
   trackLinterExecution(
     command: TrackLinterExecutionCommand,
   ): Promise<TrackLinterExecutionResponse>;
+
+  moveLinterArtefactsToNewRules(
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<MoveLinterArtefactsToNewRulesResponse>;
+
+  dispatchMoveLinterArtefactsToNewRules(
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<void>;
 }

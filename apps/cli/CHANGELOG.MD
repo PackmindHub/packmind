@@ -2,12 +2,16 @@
 
 ## Added
 
+- `whoami` command now displays an update notice when a newer CLI version is available on GitHub
 - `lint` command now supports negative globs in standard scopes, starting with `!`
+- `playbook submit` now checks for duplicate artifact names before submitting creation proposals. If an artifact with the same name (case-insensitive) already exists in the target space, the submission is rejected with a clear error message.
 - Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
 
 ## Changed
 
 ## Fixed
+
+- Notify the user when default skills are skipped when running `packmind skills init` due to an old version of the cli.
 
 ## Removed
 

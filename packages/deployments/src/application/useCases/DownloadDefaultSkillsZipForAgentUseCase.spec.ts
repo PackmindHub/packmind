@@ -60,7 +60,10 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
       };
 
       beforeEach(async () => {
-        deployer.deployDefaultSkills.mockResolvedValue(fileUpdates);
+        deployer.deployDefaultSkills.mockResolvedValue({
+          fileUpdates,
+          skippedSkillsCount: 0,
+        });
         result = await useCase.execute(command);
       });
 
@@ -146,8 +149,11 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
 
       beforeEach(async () => {
         deployer.deployDefaultSkills.mockResolvedValue({
-          createOrUpdate: [],
-          delete: [],
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [],
+          },
+          skippedSkillsCount: 0,
         });
         result = await useCase.execute(command);
       });
@@ -208,7 +214,10 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
       };
 
       beforeEach(async () => {
-        deployer.deployDefaultSkills.mockResolvedValue(fileUpdates);
+        deployer.deployDefaultSkills.mockResolvedValue({
+          fileUpdates,
+          skippedSkillsCount: 0,
+        });
         result = await useCase.execute(command);
       });
 
@@ -248,14 +257,17 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
 
     beforeEach(async () => {
       deployer.deployDefaultSkills.mockResolvedValue({
-        createOrUpdate: [
-          {
-            path: 'image.png',
-            content: binaryContent,
-            isBase64: true,
-          },
-        ],
-        delete: [],
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'image.png',
+              content: binaryContent,
+              isBase64: true,
+            },
+          ],
+          delete: [],
+        },
+        skippedSkillsCount: 0,
       });
       result = await useCase.execute({ agent: 'claude' });
     });

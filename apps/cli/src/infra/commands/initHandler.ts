@@ -9,6 +9,7 @@ import {
   logInfoConsole,
   logConsole,
   formatCommand,
+  logWarningConsole,
 } from '../utils/consoleLogger';
 import { IInstallDefaultSkillsResult } from '../../domain/useCases/IInstallDefaultSkillsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
@@ -77,6 +78,12 @@ export async function initHandler(
   }
 
   const totalFiles = result.filesCreated + result.filesUpdated;
+
+  if (result.skippedSkillsCount > 0) {
+    logWarningConsole(
+      `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of packmind-cli. Run "${formatCommand('packmind-cli update')}" to get the latest version.`,
+    );
+  }
 
   if (totalFiles === 0) {
     logInfoConsole('Default skills are already up to date.');

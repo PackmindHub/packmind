@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { useCreateRecipeMutation } from '../api/queries/RecipesQueries';
+import React, { useState, useMemo } from 'react';
+import {
+  useCreateRecipeMutation,
+  useGetRecipesQuery,
+} from '../api/queries/RecipesQueries';
 import { Recipe } from '@packmind/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -20,6 +23,11 @@ export const CreateCommand = () => {
   } | null>(null);
 
   const createMutation = useCreateRecipeMutation();
+  const { data: existingRecipes } = useGetRecipesQuery();
+  const existingCommandNames = useMemo(
+    () => (existingRecipes ?? []).map((r) => r.name),
+    [existingRecipes],
+  );
 
   const handleSubmit = (data: CommandFormData) => {
     if (!organization?.id || !spaceId) {
@@ -77,6 +85,7 @@ export const CreateCommand = () => {
     <MarkdownEditorProvider>
       <CommandForm
         mode="create"
+        existingCommandNames={existingCommandNames}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isPending={createMutation.isPending}

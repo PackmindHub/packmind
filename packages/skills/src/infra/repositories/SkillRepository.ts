@@ -147,15 +147,13 @@ export class SkillRepository
     });
 
     try {
-      await this.repository.manager.transaction(async (transaction) => {
-        await transaction.update(
-          SkillSchema,
+      await this.repository.manager.transaction(async (manager) => {
+        const transactionalRepository = manager.getRepository(SkillSchema);
+        await transactionalRepository.update(
           { id: skillId },
-          {
-            movedTo: destinationSpaceId,
-          },
+          { movedTo: destinationSpaceId },
         );
-        await transaction.softDelete(SkillSchema, { id: skillId });
+        await transactionalRepository.softDelete({ id: skillId });
       });
 
       this.logger.info('Skill marked as moved successfully', {

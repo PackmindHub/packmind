@@ -32,9 +32,10 @@ const createMockDeployer = (
     generateRemovalFileUpdates: jest.fn(),
     generateAgentCleanupFileUpdates: jest.fn(),
     deployArtifacts: jest.fn(),
-    deployDefaultSkills: jest
-      .fn()
-      .mockResolvedValue({ createOrUpdate: [], delete: [] }),
+    deployDefaultSkills: jest.fn().mockResolvedValue({
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skippedSkillsCount: 0,
+    }),
     getSkillsFolderPath: jest.fn(),
     ...overrides,
   }) as unknown as jest.Mocked<ICodingAgentDeployer>;
@@ -140,6 +141,10 @@ describe('DeployDefaultSkillsUseCase', () => {
       });
     });
 
+    it('returns 0 skipped skills count', () => {
+      expect(result.skippedSkillsCount).toBe(0);
+    });
+
     it('calls resolveActiveCodingAgents with organization id', () => {
       expect(
         renderModeConfigurationService.resolveActiveCodingAgents,
@@ -175,7 +180,9 @@ describe('DeployDefaultSkillsUseCase', () => {
         );
 
         mockDeployer = createMockDeployer({
-          deployDefaultSkills: jest.fn().mockResolvedValue(fileUpdates),
+          deployDefaultSkills: jest
+            .fn()
+            .mockResolvedValue({ fileUpdates, skippedSkillsCount: 0 }),
         });
 
         deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
@@ -185,6 +192,10 @@ describe('DeployDefaultSkillsUseCase', () => {
 
       it('returns file updates from deployer', () => {
         expect(result.fileUpdates).toEqual(fileUpdates);
+      });
+
+      it('returns skipped skills count from deployer', () => {
+        expect(result.skippedSkillsCount).toBe(0);
       });
 
       it('calls getDeployer with claude', () => {
@@ -239,13 +250,16 @@ describe('DeployDefaultSkillsUseCase', () => {
 
       claudeDeployer = createMockDeployer({
         deployDefaultSkills: jest.fn().mockResolvedValue({
-          createOrUpdate: [
-            {
-              path: '.claude/skills/packmind/skill-creator/SKILL.md',
-              content: 'claude skill',
-            },
-          ],
-          delete: [],
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/packmind/skill-creator/SKILL.md',
+                content: 'claude skill',
+              },
+            ],
+            delete: [],
+          },
+          skippedSkillsCount: 0,
         }),
       });
 
@@ -295,13 +309,16 @@ describe('DeployDefaultSkillsUseCase', () => {
     beforeEach(async () => {
       claudeDeployer = createMockDeployer({
         deployDefaultSkills: jest.fn().mockResolvedValue({
-          createOrUpdate: [
-            {
-              path: '.claude/skills/packmind/skill-creator/SKILL.md',
-              content: 'claude skill',
-            },
-          ],
-          delete: [],
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/packmind/skill-creator/SKILL.md',
+                content: 'claude skill',
+              },
+            ],
+            delete: [],
+          },
+          skippedSkillsCount: 0,
         }),
       });
 
@@ -385,25 +402,31 @@ describe('DeployDefaultSkillsUseCase', () => {
     beforeEach(async () => {
       claudeDeployer = createMockDeployer({
         deployDefaultSkills: jest.fn().mockResolvedValue({
-          createOrUpdate: [
-            {
-              path: '.claude/skills/packmind/SKILL.md',
-              content: 'claude skill',
-            },
-          ],
-          delete: [],
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/packmind/SKILL.md',
+                content: 'claude skill',
+              },
+            ],
+            delete: [],
+          },
+          skippedSkillsCount: 2,
         }),
       });
 
       cursorDeployer = createMockDeployer({
         deployDefaultSkills: jest.fn().mockResolvedValue({
-          createOrUpdate: [
-            {
-              path: '.cursor/skills/packmind/SKILL.md',
-              content: 'cursor skill',
-            },
-          ],
-          delete: [],
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.cursor/skills/packmind/SKILL.md',
+                content: 'cursor skill',
+              },
+            ],
+            delete: [],
+          },
+          skippedSkillsCount: 2,
         }),
       });
 

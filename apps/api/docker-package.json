@@ -32,7 +32,7 @@
     "http-proxy-middleware": "^3.0.5",
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^7.0.6",
+    "nodemailer": "^8.0.4",
     "openai": "^6.9.0",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.1.13",

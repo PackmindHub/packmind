@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '@packmind/recipes/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillVersionFactory } from '@packmind/skills/test';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('ClaudeDeployer', () => {
   let deployer: ClaudeDeployer;
@@ -913,7 +914,7 @@ describe('ClaudeDeployer', () => {
         );
 
         const standardFile = result.createOrUpdate[0];
-        expect(standardFile.content).toContain('## Standard: Test Standard');
+        expect(standardFile.content).toContain('# Standard: Test Standard');
       });
 
       it('includes first rule in content', async () => {
@@ -4280,8 +4281,9 @@ describe('ClaudeDeployer', () => {
           item.path.startsWith('.claude/skills/'),
         );
 
-        // Should include: 7 default skills + 1 managed skill = 8 total
-        expect(skillDeleteItems).toHaveLength(8);
+        expect(skillDeleteItems).toHaveLength(
+          DefaultSkillsDeployer.getDefaultSkillSlugs().length + 1,
+        );
       });
     });
   });

@@ -34,7 +34,7 @@ export default function SkillsIndexRouteModule() {
       }
     >
       <PMVStack align="stretch" gap={6}>
-        <SkillsList orgSlug={organization.slug} />
+        <SkillsList key={spaceSlug} orgSlug={organization.slug} />
       </PMVStack>
     </PMPage>
   );
