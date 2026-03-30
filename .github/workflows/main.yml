@@ -23,7 +23,6 @@ jobs:
   # Stage 1: Build and Test
   build:
     uses: ./.github/workflows/build.yml
-    timeout-minutes: 30
     with:
       node-version: 22.17.0
     secrets:
@@ -34,7 +33,6 @@ jobs:
   quality:
     needs: [build]
     uses: ./.github/workflows/quality.yml
-    timeout-minutes: 30
     with:
       node-version: 22.17.0
       cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
@@ -49,7 +47,6 @@ jobs:
     needs: [build, quality]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/docker.yml
-    timeout-minutes: 30
     with:
       api-artifact: ${{ needs.build.outputs.api-artifact }}
       frontend-artifact: ${{ needs.build.outputs.frontend-artifact }}
@@ -67,7 +64,6 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/publish-cli-release.yml
-    timeout-minutes: 30
     with:
       cli-artifact: ${{ needs.build.outputs.cli-artifact }}
     secrets:
@@ -86,7 +82,6 @@ jobs:
     needs: [build, quality, docker]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/deploy-staging-and-release.yml
-    timeout-minutes: 30
     with:
       node-version: 22.17.0
       helm-charts-repository: ${{ vars.HELM_CHARTS_REPOSITORY || 'PackmindHub/packmind-ai-helm-charts' }}
@@ -102,4 +97,3 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/release.yml
-    timeout-minutes: 30
