@@ -18,6 +18,9 @@
       ],
       "@packmind/playbook-change-management/test": [
         "packages/playbook-change-management/test/index.ts"
+      ],
+      "@packmind/playbook-bulk-apply": [
+        "packages/playbook-bulk-apply/src/index.ts"
       ]
     }
   }
