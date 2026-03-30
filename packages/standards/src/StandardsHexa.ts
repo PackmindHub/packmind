@@ -17,7 +17,6 @@ import {
   ILlmPortName,
   ISpacesPort,
   ISpacesPortName,
-  IStandardsPort,
   IStandardsPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
@@ -35,7 +34,7 @@ const origin = 'StandardsHexa';
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
  */
-export class StandardsHexa extends BaseHexa<BaseHexaOpts, IStandardsPort> {
+export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   public readonly standardsRepositories: StandardsRepositories;
   public readonly standardsServices: StandardsServices;
   private readonly adapter: StandardsAdapter;
@@ -143,8 +142,8 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, IStandardsPort> {
    * This adapter implements IStandardsPort and can be injected into other domains.
    * The adapter is available immediately after construction.
    */
-  public getAdapter(): IStandardsPort {
-    return this.adapter.getPort();
+  public getAdapter(): StandardsAdapter {
+    return this.adapter.getPort() as StandardsAdapter;
   }
 
   /**
