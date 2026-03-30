@@ -52,6 +52,8 @@ export class MoveLinterArtefactsToNewRulesUseCase implements IMoveLinterArtefact
         ruleMappings.map(async ({ oldRuleId }) => {
           await this.softDeleteLinterArtefactsByRuleUseCase.execute({
             ruleId: oldRuleId,
+            userId,
+            organizationId,
           });
           softDeletedCount++;
         }),

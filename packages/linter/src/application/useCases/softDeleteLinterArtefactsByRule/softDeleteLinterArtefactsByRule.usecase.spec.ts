@@ -1,6 +1,8 @@
 import {
   createDetectionProgramId,
+  createOrganizationId,
   createRuleId,
+  createUserId,
   ProgrammingLanguage,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
@@ -13,6 +15,8 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
   let repositories: jest.Mocked<ILinterRepositories>;
 
   const ruleId = createRuleId(uuidv4());
+  const userId = createUserId(uuidv4());
+  const organizationId = createOrganizationId(uuidv4());
 
   const mockDetectionProgramRepo = {
     softDeleteByRuleId: jest.fn(),
@@ -75,7 +79,7 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
 
   describe('when executing soft-delete for a rule', () => {
     it('calls softDeleteByRuleId on detection program repository', async () => {
-      await useCase.execute({ ruleId });
+      await useCase.execute({ ruleId, userId, organizationId });
 
       expect(mockDetectionProgramRepo.softDeleteByRuleId).toHaveBeenCalledWith(
         ruleId,
@@ -83,7 +87,7 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
     });
 
     it('calls deleteByRuleId on active detection program repository', async () => {
-      await useCase.execute({ ruleId });
+      await useCase.execute({ ruleId, userId, organizationId });
 
       expect(
         mockActiveDetectionProgramRepo.deleteByRuleId,
@@ -91,7 +95,7 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
     });
 
     it('calls softDeleteByRuleId on rule detection assessment repository', async () => {
-      await useCase.execute({ ruleId });
+      await useCase.execute({ ruleId, userId, organizationId });
 
       expect(
         mockRuleDetectionAssessmentRepo.softDeleteByRuleId,
@@ -99,7 +103,7 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
     });
 
     it('calls softDeleteByRuleId on detection heuristics repository', async () => {
-      await useCase.execute({ ruleId });
+      await useCase.execute({ ruleId, userId, organizationId });
 
       expect(
         mockRuleDetectionHeuristicsRepo.softDeleteByRuleId,
@@ -117,7 +121,7 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
         { id: programId2, ruleId, language: ProgrammingLanguage.PYTHON },
       ]);
 
-      await useCase.execute({ ruleId });
+      await useCase.execute({ ruleId, userId, organizationId });
     });
 
     it('calls softDeleteByDetectionProgramIds with the program IDs', () => {
@@ -133,9 +137,9 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
         new Error('Detection program soft-delete failed'),
       );
 
-      await expect(useCase.execute({ ruleId })).rejects.toThrow(
-        'Detection program soft-delete failed',
-      );
+      await expect(
+        useCase.execute({ ruleId, userId, organizationId }),
+      ).rejects.toThrow('Detection program soft-delete failed');
     });
 
     it('throws the error from active detection program repository', async () => {
@@ -143,9 +147,9 @@ describe('SoftDeleteLinterArtefactsByRuleUseCase', () => {
         new Error('Active detection program delete failed'),
       );
 
-      await expect(useCase.execute({ ruleId })).rejects.toThrow(
-        'Active detection program delete failed',
-      );
+      await expect(
+        useCase.execute({ ruleId, userId, organizationId }),
+      ).rejects.toThrow('Active detection program delete failed');
     });
   });
 });

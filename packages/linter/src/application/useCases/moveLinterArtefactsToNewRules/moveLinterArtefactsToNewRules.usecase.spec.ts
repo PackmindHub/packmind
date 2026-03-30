@@ -69,6 +69,8 @@ describe('MoveLinterArtefactsToNewRulesUseCase', () => {
 
       expect(softDeleteUseCase.execute).toHaveBeenCalledWith({
         ruleId: oldRuleId1,
+        userId,
+        organizationId,
       });
     });
 
