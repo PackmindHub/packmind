@@ -12,7 +12,9 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../test/recipeFactory';
+import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
+import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import {
   CreateRecipeData,
   RecipeService,
@@ -22,6 +24,7 @@ import {
 describe('RecipeService', () => {
   let recipeService: RecipeService;
   let recipeRepository: IRecipeRepository;
+  let recipeVersionRepository: IRecipeVersionRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -36,9 +39,23 @@ describe('RecipeService', () => {
       markAsMoved: jest.fn(),
     };
 
+    recipeVersionRepository = {
+      add: jest.fn(),
+      findById: jest.fn(),
+      deleteById: jest.fn(),
+      restoreById: jest.fn(),
+      findByRecipeId: jest.fn(),
+      findLatestByRecipeId: jest.fn(),
+      findByRecipeIdAndVersion: jest.fn(),
+    };
+
     stubbedLogger = stubLogger();
 
-    recipeService = new RecipeService(recipeRepository, stubbedLogger);
+    recipeService = new RecipeService(
+      recipeRepository,
+      recipeVersionRepository,
+      stubbedLogger,
+    );
   });
 
   afterEach(() => {
@@ -63,6 +80,7 @@ describe('RecipeService', () => {
       savedRecipe = {
         id: createRecipeId(uuidv4()),
         ...recipeData,
+        movedTo: null,
       };
 
       recipeRepository.add = jest.fn().mockResolvedValue(savedRecipe);
@@ -204,6 +222,7 @@ describe('RecipeService', () => {
           id: recipeId,
           ...updateData,
           spaceId: existingRecipe.spaceId,
+          movedTo: null,
         };
 
         recipeRepository.findById = jest.fn().mockResolvedValue(existingRecipe);
@@ -357,6 +376,219 @@ describe('RecipeService', () => {
             destinationSpaceId,
           ),
         ).rejects.toThrow(`Recipe with id ${nonExistentRecipeId} not found`);
+      });
+    });
+  });
+
+  describe('duplicateRecipeToSpace', () => {
+    const destinationSpaceId = createSpaceId(uuidv4());
+    const newUserId = createUserId(uuidv4());
+
+    describe('when the recipe exists', () => {
+      let recipeId: RecipeId;
+      let original: Recipe;
+      let savedRecipe: Recipe;
+      let version: ReturnType<typeof recipeVersionFactory>;
+
+      beforeEach(() => {
+        recipeId = createRecipeId(uuidv4());
+        original = recipeFactory({ id: recipeId });
+
+        version = recipeVersionFactory({ recipeId });
+
+        savedRecipe = recipeFactory({
+          name: original.name,
+          slug: original.slug,
+          content: original.content,
+          userId: newUserId,
+          spaceId: destinationSpaceId,
+          movedTo: null,
+        });
+
+        recipeRepository.findById = jest.fn().mockResolvedValue(original);
+        recipeRepository.add = jest.fn().mockResolvedValue(savedRecipe);
+        recipeVersionRepository.findByRecipeId = jest
+          .fn()
+          .mockResolvedValue([version]);
+        recipeVersionRepository.add = jest.fn().mockResolvedValue(version);
+      });
+
+      it('creates a new recipe in the destination space', async () => {
+        await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(recipeRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: original.name,
+            slug: original.slug,
+            content: original.content,
+            spaceId: destinationSpaceId,
+            userId: newUserId,
+            movedTo: null,
+          }),
+        );
+      });
+
+      it('copies all versions linked to the new recipe', async () => {
+        await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(recipeVersionRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: version.name,
+            slug: version.slug,
+            content: version.content,
+            version: version.version,
+          }),
+        );
+      });
+
+      it('returns the duplicated recipe', async () => {
+        const result = await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(result).toEqual(savedRecipe);
+      });
+
+      it('uses the provided newUserId for the duplicated recipe', async () => {
+        await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(recipeRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: newUserId,
+          }),
+        );
+      });
+
+      it('sets movedTo to null on the duplicated recipe', async () => {
+        await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(recipeRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            movedTo: null,
+          }),
+        );
+      });
+    });
+
+    describe('when the recipe has multiple versions', () => {
+      let recipeId: RecipeId;
+      let original: Recipe;
+      let version1: ReturnType<typeof recipeVersionFactory>;
+      let version2: ReturnType<typeof recipeVersionFactory>;
+
+      beforeEach(() => {
+        recipeId = createRecipeId(uuidv4());
+        original = recipeFactory({ id: recipeId });
+
+        version1 = recipeVersionFactory({ recipeId, version: 1 });
+        version2 = recipeVersionFactory({ recipeId, version: 2 });
+
+        recipeRepository.findById = jest.fn().mockResolvedValue(original);
+        recipeRepository.add = jest.fn().mockResolvedValue(original);
+        recipeVersionRepository.findByRecipeId = jest
+          .fn()
+          .mockResolvedValue([version1, version2]);
+        recipeVersionRepository.add = jest.fn().mockResolvedValue(version1);
+      });
+
+      it('copies all versions', async () => {
+        await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(recipeVersionRepository.add).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('when the recipe does not exist', () => {
+      let nonExistentRecipeId: RecipeId;
+
+      beforeEach(() => {
+        nonExistentRecipeId = createRecipeId(uuidv4());
+        recipeRepository.findById = jest.fn().mockResolvedValue(null);
+      });
+
+      it('throws an error with the correct message', async () => {
+        await expect(
+          recipeService.duplicateRecipeToSpace(
+            nonExistentRecipeId,
+            destinationSpaceId,
+            newUserId,
+          ),
+        ).rejects.toThrow(`Recipe with id ${nonExistentRecipeId} not found`);
+      });
+    });
+
+    describe('when the recipe has no versions', () => {
+      let recipeId: RecipeId;
+      let original: Recipe;
+      let savedRecipe: Recipe;
+
+      beforeEach(() => {
+        recipeId = createRecipeId(uuidv4());
+        original = recipeFactory({ id: recipeId });
+        savedRecipe = recipeFactory({
+          name: original.name,
+          spaceId: destinationSpaceId,
+          userId: newUserId,
+          movedTo: null,
+        });
+
+        recipeRepository.findById = jest.fn().mockResolvedValue(original);
+        recipeRepository.add = jest.fn().mockResolvedValue(savedRecipe);
+        recipeVersionRepository.findByRecipeId = jest
+          .fn()
+          .mockResolvedValue([]);
+      });
+
+      it('creates the recipe', async () => {
+        await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(recipeRepository.add).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not create any versions', async () => {
+        await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(recipeVersionRepository.add).not.toHaveBeenCalled();
+      });
+
+      it('returns the duplicated recipe', async () => {
+        const result = await recipeService.duplicateRecipeToSpace(
+          recipeId,
+          destinationSpaceId,
+          newUserId,
+        );
+
+        expect(result).toEqual(savedRecipe);
       });
     });
   });
