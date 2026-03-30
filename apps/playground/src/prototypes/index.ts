@@ -4,6 +4,7 @@ import ReviewChangesGroupViewPrototype from './review-changes-group-view/ReviewC
 import ReviewChangesDrillDownViewPrototype from './review-changes-drill-down-view/ReviewChangesDrillDownViewPrototype';
 import ArtifactRemovedPrototype from './artifact-removed/ArtifactRemovedPrototype';
 import SidebarWithSpacesPrototype from './sidebar-with-spaces/SidebarWithSpacesPrototype';
+import StandardDetailRedesignPrototype from './standard-detail-redesign/StandardDetailRedesignPrototype';
 
 export interface Prototype {
   name: string;
@@ -30,5 +31,11 @@ export const prototypes: Prototype[] = [
     name: 'Sidebar with spaces',
     description: 'Organization sidebar with spaces navigation',
     component: SidebarWithSpacesPrototype,
+  },
+  {
+    name: 'Standard detail — redesign',
+    description:
+      'Content-first standard page with tabs and rule drawer instead of sidebar',
+    component: StandardDetailRedesignPrototype,
   },
 ];

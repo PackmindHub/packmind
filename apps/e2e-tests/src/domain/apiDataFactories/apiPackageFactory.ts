@@ -12,7 +12,10 @@ export async function apiPackageFactory(
 ): Promise<Package> {
   const spaces = await packmindApi.listSpaces();
   const spaceId = spaces[0].id;
-  const packageData = packageFactory({ spaceId, name: data?.name });
+  const packageData = packageFactory({
+    spaceId,
+    ...(data?.name ? { name: data.name } : {}),
+  });
 
   const response = await packmindApi.createPackage({
     ...packageData,
