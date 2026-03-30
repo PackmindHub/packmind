@@ -1,13 +1,13 @@
+import { PackmindCommand, IUseCase } from '../../UseCase';
 import { RuleId } from '../../standards';
 
-export type SoftDeleteLinterArtefactsByRuleCommand = {
+export type SoftDeleteLinterArtefactsByRuleCommand = PackmindCommand & {
   ruleId: RuleId;
 };
 
-export type SoftDeleteLinterArtefactsByRuleResponse = void;
+export type SoftDeleteLinterArtefactsByRuleResponse = Record<string, never>;
 
-export interface ISoftDeleteLinterArtefactsByRule {
-  execute(
-    command: SoftDeleteLinterArtefactsByRuleCommand,
-  ): Promise<SoftDeleteLinterArtefactsByRuleResponse>;
-}
+export type ISoftDeleteLinterArtefactsByRule = IUseCase<
+  SoftDeleteLinterArtefactsByRuleCommand,
+  SoftDeleteLinterArtefactsByRuleResponse
+>;

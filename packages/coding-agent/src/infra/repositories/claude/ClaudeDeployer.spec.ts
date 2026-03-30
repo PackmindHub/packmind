@@ -914,7 +914,7 @@ describe('ClaudeDeployer', () => {
         );
 
         const standardFile = result.createOrUpdate[0];
-        expect(standardFile.content).toContain('## Standard: Test Standard');
+        expect(standardFile.content).toContain('# Standard: Test Standard');
       });
 
       it('includes first rule in content', async () => {

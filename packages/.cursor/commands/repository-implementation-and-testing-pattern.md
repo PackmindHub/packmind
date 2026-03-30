@@ -98,21 +98,38 @@ export class EntityRepository
 
 ### Step 3: Create Test Factory
 
-Create a factory for generating test entities using the Factory pattern from @packmind/shared/test. Provide reasonable defaults for all required fields.
+Create a factory for generating test entities using the Factory pattern from @packmind/test-utils. Define 3-5 realistic varied instances and use `randomIn()` to select one, with partial overrides spread last.
 
 ```typescript
-import { Factory } from '@packmind/shared/test';
+import { Factory, randomIn } from '@packmind/test-utils';
 import { Entity, createEntityId } from '../src/domain/entities/Entity';
 import { createOrganizationId } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
 
 export const entityFactory: Factory<Entity> = (entity?: Partial<Entity>) => {
+  const entities: Entity[] = [
+    {
+      id: createEntityId(uuidv4()),
+      name: 'User Permissions',
+      slug: 'user-permissions',
+      organizationId: createOrganizationId(uuidv4()),
+    },
+    {
+      id: createEntityId(uuidv4()),
+      name: 'Billing Configuration',
+      slug: 'billing-configuration',
+      organizationId: createOrganizationId(uuidv4()),
+    },
+    {
+      id: createEntityId(uuidv4()),
+      name: 'Notification Preferences',
+      slug: 'notification-preferences',
+      organizationId: createOrganizationId(uuidv4()),
+    },
+  ];
+
   return {
-    id: createEntityId(uuidv4()),
-    name: 'Test Entity',
-    slug: 'test-entity',
-    organizationId: createOrganizationId(uuidv4()),
-    // Add other required fields with reasonable defaults
+    ...randomIn(entities),
     ...entity,
   };
 };

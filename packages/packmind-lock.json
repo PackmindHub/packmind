@@ -9,7 +9,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-03-24T09:00:26.574Z",
+  "installedAt": "2026-03-30T08:35:10.599Z",
   "artifacts": {
     "command:create-new-package-in-monorepo": {
       "name": "Create New Package",
@@ -41,7 +41,7 @@
       "name": "Repository Implementation and Testing Pattern",
       "type": "command",
       "id": "d08e183f-beff-431e-9b0e-d21ffb64014c",
-      "version": 1,
+      "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": ["ae8e4f15-d900-40f6-8a8c-b18e33ed8f41"],
       "files": [

@@ -4,6 +4,7 @@
 
 - CLI can now also be invoked as `packmind` (alias for `packmind-cli`)
 - `packmind` symlink automatically created on install and self-update
+- `whoami` command now displays an update notice when a newer CLI version is available on GitHub
 - `lint` command now supports negative globs in standard scopes, starting with `!`
 - `playbook submit` now checks for duplicate artifact names before submitting creation proposals. If an artifact with the same name (case-insensitive) already exists in the target space, the submission is rejected with a clear error message.
 

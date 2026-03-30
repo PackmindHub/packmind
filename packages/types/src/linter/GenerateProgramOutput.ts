@@ -14,4 +14,5 @@ export interface GenerateProgramOutput {
   mode: DetectionModeEnum;
   sourceCodeState: SourceCodeState;
   activeDetectionProgramId: ActiveDetectionProgramId;
+  generatedHeuristics?: string[] | null;
 }

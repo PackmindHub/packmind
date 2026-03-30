@@ -45,6 +45,15 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
+## Standard: REST API Endpoint Design
+
+Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent. :
+* Create one endpoint per business action rather than a single endpoint handling multiple actions via request body
+* Only include resource IDs from the ownership chain in the route — omit IDs of related but non-parent resources
+* Use dedicated POST action endpoints (e.g., `/reject`, `/accept`) instead of a generic PATCH with a status field in the body
+
+Full standard is available here for further request: [REST API Endpoint Design](.packmind/standards/rest-api-endpoint-design.md)
+
 ## Standard: NestJS Module Hierarchy
 
 Enforce a NestJS module structure where AppModule configures all hierarchical routes via RouterModule.register() and each resource lives in its own module with empty @Controller() paths, URL-mirroring directories, explicit parent IDs (using @Param('orgId')), and command-object service inputs to improve maintainability, scalability, and separation of concerns. :
@@ -58,13 +67,4 @@ Enforce a NestJS module structure where AppModule configures all hierarchical ro
 * Use organization ID from route parameters (@Param('orgId')) instead of extracting it from AuthRequest to ensure consistency with the URL hierarchy
 
 Full standard is available here for further request: [NestJS Module Hierarchy](.packmind/standards/nestjs-module-hierarchy.md)
-
-## Standard: REST API Endpoint Design
-
-Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent. :
-* Create one endpoint per business action rather than a single endpoint handling multiple actions via request body
-* Only include resource IDs from the ownership chain in the route — omit IDs of related but non-parent resources
-* Use dedicated POST action endpoints (e.g., `/reject`, `/accept`) instead of a generic PATCH with a status field in the body
-
-Full standard is available here for further request: [REST API Endpoint Design](.packmind/standards/rest-api-endpoint-design.md)
 <!-- end: Packmind standards -->

@@ -179,7 +179,7 @@
     "isbot": "^4.4.0",
     "jsonwebtoken": "^9.0.3",
     "marked": "^16.2.1",
-    "nodemailer": "^8.0.1",
+    "nodemailer": "^8.0.4",
     "open": "^11.0.0",
     "openai": "^6.9.0",
     "pg": "^8.16.3",

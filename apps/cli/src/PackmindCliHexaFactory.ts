@@ -29,6 +29,8 @@ import { ILogoutUseCase } from './domain/useCases/ILogoutUseCase';
 import { LogoutUseCase } from './application/useCases/LogoutUseCase';
 import { IWhoamiUseCase } from './domain/useCases/IWhoamiUseCase';
 import { WhoamiUseCase } from './application/useCases/WhoamiUseCase';
+import { ICheckCliVersionUseCase } from './domain/useCases/ICheckCliVersionUseCase';
+import { CheckCliVersionUseCase } from './application/useCases/CheckCliVersionUseCase';
 import { ISetupMcpUseCase } from './domain/useCases/ISetupMcpUseCase';
 import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
 import { McpConfigService } from './application/services/McpConfigService';
@@ -68,6 +70,7 @@ export class PackmindCliHexaFactory {
     login: ILoginUseCase;
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
+    checkCliVersion: ICheckCliVersionUseCase;
     setupMcp: ISetupMcpUseCase;
     listStandards: IListStandardsUseCase;
     listCommands: IListCommandsUseCase;
@@ -121,6 +124,7 @@ export class PackmindCliHexaFactory {
       login: new LoginUseCase(),
       logout: new LogoutUseCase(),
       whoami: new WhoamiUseCase(),
+      checkCliVersion: new CheckCliVersionUseCase(),
       setupMcp: new SetupMcpUseCase({
         gateway: this.repositories.packmindGateway,
         mcpConfigService: new McpConfigService(),

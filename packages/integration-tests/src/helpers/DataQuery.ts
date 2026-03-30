@@ -39,8 +39,6 @@ export class DataQuery {
       .listRecipeVersions(recipe.id);
     const expectedVersion = version ?? recipe.version;
 
-    console.log({ recipeVersions, expectedVersion });
-
     for (const recipeVersion of recipeVersions) {
       if (recipeVersion.version === expectedVersion) {
         return recipeVersion;

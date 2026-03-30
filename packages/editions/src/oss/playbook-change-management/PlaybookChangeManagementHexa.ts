@@ -30,6 +30,10 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
     return IPlaybookChangeManagementPortName;
   }
 
+  async cleanup(): Promise<void> {
+    // Nothing to cleanup in OSS edition
+  }
+
   destroy(): void {
     /* empty */
   }
