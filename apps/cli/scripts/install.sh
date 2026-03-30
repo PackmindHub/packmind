@@ -243,6 +243,22 @@ install_binary() {
     esac
 
     success "Installed to: $target_path"
+
+    # Create forward-compatible symlink: packmind -> packmind-cli
+    case "$PLATFORM" in
+        windows-*)
+            alias_name="packmind.exe"
+            ;;
+        *)
+            alias_name="packmind"
+            ;;
+    esac
+    alias_path="${INSTALL_DIR}/${alias_name}"
+    if ln -sf "$target_name" "$alias_path" 2>/dev/null; then
+        info "Created symlink: $alias_path -> $target_name"
+    else
+        warn "Could not create symlink: $alias_path -> $target_name (non-critical)"
+    fi
 }
 
 # Auto-login if credentials provided

@@ -7,6 +7,7 @@ import {
   unlinkSync,
   statSync,
   realpathSync,
+  symlinkSync,
 } from 'fs';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
@@ -141,6 +142,39 @@ async function downloadExecutable(
   );
 }
 
+export function createForwardCompatSymlink(
+  currentPath: string,
+  platform: string,
+): void {
+  const dir = path.dirname(currentPath);
+  const ext = platform === 'win32' ? '.exe' : '';
+  const primaryName = `packmind-cli${ext}`;
+  const aliasName = `packmind${ext}`;
+  const currentBasename = path.basename(currentPath);
+
+  if (currentBasename !== primaryName) {
+    return;
+  }
+
+  const targetName = primaryName;
+  const symlinkName = aliasName;
+
+  const symlinkPath = path.join(dir, symlinkName);
+  try {
+    unlinkSync(symlinkPath);
+  } catch {
+    // May not exist
+  }
+  try {
+    symlinkSync(targetName, symlinkPath);
+    logInfoConsole(
+      `Created forward-compatible symlink: ${symlinkPath} -> ${targetName}`,
+    );
+  } catch {
+    // Non-critical: symlink creation may fail (e.g., Windows without admin)
+  }
+}
+
 function updateViaNpm(version: string): void {
   logInfoConsole(`Updating via npm to version ${version}...`);
   execSync(`npm install -g ${NPM_PACKAGE}@${version}`, {
@@ -166,6 +200,9 @@ async function updateViaExecutableReplace(
     if (deps.platform !== 'win32') {
       chmodSync(currentPath, 0o755);
     }
+
+    // Create forward-compatible symlink (mirrors install.sh behavior)
+    createForwardCompatSymlink(currentPath, deps.platform);
   } catch (error) {
     // Clean up temp file on failure
     try {
