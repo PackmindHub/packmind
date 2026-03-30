@@ -68,9 +68,10 @@ jobs:
           else
             REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
           fi
-          echo "SLACK_REPORT_CONTENT<<SLACKEOF" >> "$GITHUB_ENV"
+          EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
+          echo "SLACK_REPORT_CONTENT<<${EOF_DELIMITER}" >> "$GITHUB_ENV"
           echo "$REPORT" >> "$GITHUB_ENV"
-          echo "SLACKEOF" >> "$GITHUB_ENV"
+          echo "${EOF_DELIMITER}" >> "$GITHUB_ENV"
 
       - name: Send report to Slack
         if: always() && hashFiles('doc-audit-report.md') != ''
