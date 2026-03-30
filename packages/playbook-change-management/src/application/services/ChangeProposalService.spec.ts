@@ -5,6 +5,7 @@ import {
   ChangeProposalType,
   createChangeProposalId,
   createRecipeId,
+  createRuleId,
   createSkillId,
   createSpaceId,
   createStandardId,
@@ -895,6 +896,150 @@ describe('ChangeProposalService', () => {
         });
 
         expect(mockQueryBuilder.execute).toHaveBeenCalled();
+      });
+    });
+
+    describe('when ruleMappings are provided', () => {
+      const oldRuleId = createRuleId('old-rule-1');
+      const newRuleId = createRuleId('new-rule-1');
+      const ruleMappings = [
+        { oldRuleId: oldRuleId as string, newRuleId: newRuleId as string },
+      ];
+
+      const createRuleProposal = <T extends ChangeProposalType>(
+        type: T,
+        payload: ChangeProposal<T>['payload'],
+      ): ChangeProposal<T> => ({
+        id: createChangeProposalId(`cp-${Math.random()}`),
+        type,
+        artefactId: oldArtefactId as ChangeProposal<T>['artefactId'],
+        artefactVersion: 1,
+        spaceId: sourceSpaceId,
+        payload,
+        captureMode: ChangeProposalCaptureMode.commit,
+        message: 'test message',
+        status: ChangeProposalStatus.pending,
+        decision: null,
+        createdBy: createUserId('user-id'),
+        resolvedBy: null,
+        resolvedAt: null,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-02'),
+      });
+
+      it('remaps targetId in updateRule proposals', async () => {
+        const updateRuleProposal = createRuleProposal(
+          ChangeProposalType.updateRule,
+          {
+            targetId: oldRuleId,
+            oldValue: 'old content',
+            newValue: 'new content',
+          },
+        );
+        repository.findByArtefactId.mockResolvedValue([updateRuleProposal]);
+
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+          ruleMappings,
+        });
+
+        expect(mockEntityManager.save).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              targetId: newRuleId,
+            }),
+          }),
+        );
+      });
+
+      it('remaps targetId and item.id in deleteRule proposals', async () => {
+        const deleteRuleProposal = createRuleProposal(
+          ChangeProposalType.deleteRule,
+          {
+            targetId: oldRuleId,
+            item: { id: oldRuleId, content: 'rule content' },
+          },
+        );
+        repository.findByArtefactId.mockResolvedValue([deleteRuleProposal]);
+
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+          ruleMappings,
+        });
+
+        expect(mockEntityManager.save).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              targetId: newRuleId,
+              item: expect.objectContaining({ id: newRuleId }),
+            }),
+          }),
+        );
+      });
+
+      it('leaves addRule proposals unchanged', async () => {
+        const addRulePayload = {
+          item: { content: 'new rule content' },
+        };
+        const addRuleProposal = createRuleProposal(
+          ChangeProposalType.addRule,
+          addRulePayload,
+        );
+        repository.findByArtefactId.mockResolvedValue([addRuleProposal]);
+
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+          ruleMappings,
+        });
+
+        expect(mockEntityManager.save).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            payload: addRulePayload,
+          }),
+        );
+      });
+
+      it('leaves updateRule proposals unchanged when no matching mapping exists', async () => {
+        const unmappedRuleId = createRuleId('unmapped-rule');
+        const payload = {
+          targetId: unmappedRuleId,
+          oldValue: 'old',
+          newValue: 'new',
+        };
+        const proposal = createRuleProposal(
+          ChangeProposalType.updateRule,
+          payload,
+        );
+        repository.findByArtefactId.mockResolvedValue([proposal]);
+
+        await service.migrateProposalsForMovedArtefact({
+          sourceSpaceId,
+          destinationSpaceId,
+          oldArtefactId,
+          newArtefactId,
+          ruleMappings,
+        });
+
+        expect(mockEntityManager.save).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              targetId: unmappedRuleId,
+            }),
+          }),
+        );
       });
     });
 

@@ -7,12 +7,18 @@ import {
   ChangeProposalPayload,
   ChangeProposalStatus,
   ChangeProposalType,
+  CollectionItemDeletePayload,
+  CollectionItemUpdatePayload,
   CreateChangeProposalCommand,
   createChangeProposalId,
+  createRuleId,
   createUserId,
   CreationChangeProposalTypes,
   PendingChangeProposal,
   RecipeId,
+  Rule,
+  RuleId,
+  RuleMapping,
   SkillId,
   SpaceId,
   StandardId,
@@ -320,13 +326,23 @@ export class ChangeProposalService {
     destinationSpaceId: SpaceId;
     oldArtefactId: string;
     newArtefactId: string;
+    ruleMappings?: RuleMapping[];
   }): Promise<void> {
-    const { sourceSpaceId, destinationSpaceId, oldArtefactId, newArtefactId } =
-      params;
+    const {
+      sourceSpaceId,
+      destinationSpaceId,
+      oldArtefactId,
+      newArtefactId,
+      ruleMappings,
+    } = params;
 
     const existingProposals = await this.repository.findByArtefactId(
       sourceSpaceId,
       oldArtefactId,
+    );
+
+    const ruleIdMap = new Map(
+      (ruleMappings ?? []).map((m) => [m.oldRuleId, m.newRuleId]),
     );
 
     const copies = existingProposals.map((proposal) => ({
@@ -334,6 +350,7 @@ export class ChangeProposalService {
       id: createChangeProposalId(uuidv4()),
       artefactId: newArtefactId as typeof proposal.artefactId,
       spaceId: destinationSpaceId,
+      payload: this.remapRuleIdsInPayload(proposal, ruleIdMap),
     }));
 
     await this.dataSource.manager.transaction(async (entityManager) => {
@@ -360,6 +377,43 @@ export class ChangeProposalService {
       copiedCount: copies.length,
       softDeletedCount: existingProposals.length,
     });
+  }
+
+  private remapRuleIdsInPayload(
+    proposal: ChangeProposal,
+    ruleIdMap: Map<string, string>,
+  ): ChangeProposalPayload {
+    if (ruleIdMap.size === 0) {
+      return proposal.payload;
+    }
+
+    if (proposal.type === ChangeProposalType.updateRule) {
+      const payload = proposal.payload as CollectionItemUpdatePayload<RuleId>;
+      const newRuleId = ruleIdMap.get(payload.targetId);
+      if (newRuleId) {
+        return {
+          ...payload,
+          targetId: createRuleId(newRuleId),
+        } as ChangeProposalPayload;
+      }
+    }
+
+    if (proposal.type === ChangeProposalType.deleteRule) {
+      const payload = proposal.payload as CollectionItemDeletePayload<
+        Omit<Rule, 'standardVersionId'>
+      >;
+      const newRuleId = ruleIdMap.get(payload.targetId);
+      if (newRuleId) {
+        const remappedId = createRuleId(newRuleId);
+        return {
+          ...payload,
+          targetId: remappedId,
+          item: { ...payload.item, id: remappedId },
+        } as ChangeProposalPayload;
+      }
+    }
+
+    return proposal.payload;
   }
 
   async findProposalsByArtefact(

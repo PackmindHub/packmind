@@ -205,6 +205,7 @@ export class ChangeManagementListener extends PackmindListener<ChangeProposalSer
           destinationSpaceId,
           oldArtefactId: oldArtifactId,
           newArtefactId: newArtifactId,
+          ruleMappings: event.payload.ruleMappings,
         },
       );
     } catch (error) {
