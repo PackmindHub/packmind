@@ -29,32 +29,6 @@ export class PackagePage
     return result;
   }
 
-  async isPackageEmpty(): Promise<boolean> {
-    // Wait for package content to load (loading spinner disappears, content tab renders)
-    await this.page.getByRole('tab', { name: 'Content' }).waitFor();
-    await this.page
-      .getByText('This package is empty')
-      .waitFor({ timeout: 10000 });
-    return true;
-  }
-
-  async listStandardsInPackage(): Promise<{ name: string }[]> {
-    const standardsSection = this.page
-      .locator('[id*="content-content"]')
-      .locator('table')
-      .first();
-    const rows = standardsSection.locator('tbody tr');
-    const count = await rows.count();
-    const result: { name: string }[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const name = await rows.nth(i).locator('a').innerText();
-      result.push({ name: name.trim() });
-    }
-
-    return result;
-  }
-
   expectedUrl() {
     return /packages\/[0-9a-f-]+$/;
   }

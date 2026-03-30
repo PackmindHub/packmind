@@ -10,8 +10,6 @@ import {
   IPageFactory,
   ISettingsPage,
   ISignUpPage,
-  ISkillsPage,
-  IStandardsPage,
   IStartTrialAgentPage,
   IStartTrialAgentSelectorPage,
   IStartTrialPage,
@@ -22,8 +20,6 @@ import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CliSetupPage } from './pages/CliSetupPage';
 import { UsersSettingsPage } from './pages/UsersSettingsPage';
-import { SkillsPage } from './pages/SkillsPage';
-import { StandardsPage } from './pages/StandardsPage';
 import { PackagesPage } from './pages/PackagesPage';
 import { PackagePage } from './pages/PackagePage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -58,14 +54,6 @@ export class PageFactory implements IPageFactory {
 
   async getUsersSettingsPage(): Promise<IUsersSettingsPage> {
     return this.getPageInstance(UsersSettingsPage);
-  }
-
-  getSkillsPage(): Promise<ISkillsPage> {
-    return this.getPageInstance(SkillsPage);
-  }
-
-  getStandardsPage(): Promise<IStandardsPage> {
-    return this.getPageInstance(StandardsPage);
   }
 
   getPackagesPage(): Promise<IPackagesPage> {
