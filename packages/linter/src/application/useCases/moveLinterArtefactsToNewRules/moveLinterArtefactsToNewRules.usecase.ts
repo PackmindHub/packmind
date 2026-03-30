@@ -9,6 +9,9 @@ import type { SoftDeleteLinterArtefactsByRuleUseCase } from '../softDeleteLinter
 
 const origin = 'MoveLinterArtefactsToNewRulesUseCase';
 
+// This use case is invoked from MoveLinterArtefactsDelayedJob (BullMQ background job),
+// where authentication/authorization was already verified before dispatch.
+// It does not extend AbstractMemberUseCase because member validation is unnecessary here.
 export class MoveLinterArtefactsToNewRulesUseCase implements IMoveLinterArtefactsToNewRules {
   constructor(
     private readonly linterPort: ILinterPort,
@@ -29,42 +32,46 @@ export class MoveLinterArtefactsToNewRulesUseCase implements IMoveLinterArtefact
 
     try {
       // Phase 1: Copy all artefacts from old rules to new rules
-      let totalCopied = 0;
-      await Promise.all(
-        ruleMappings.map(async ({ oldRuleId, newRuleId }) => {
-          const result = await this.linterPort.copyLinterArtefacts({
+      const copyResults = await Promise.all(
+        ruleMappings.map(({ oldRuleId, newRuleId }) =>
+          this.linterPort.copyLinterArtefacts({
             oldRuleId,
             newRuleId,
             organizationId,
             userId,
-          });
-          totalCopied +=
-            result.copiedProgramsCount +
-            result.copiedAssessmentsCount +
-            result.copiedHeuristicsCount +
-            result.copiedMetadataCount;
-        }),
+          }),
+        ),
+      );
+      const totalCopied = copyResults.reduce(
+        (sum, r) =>
+          sum +
+          r.copiedProgramsCount +
+          r.copiedAssessmentsCount +
+          r.copiedHeuristicsCount +
+          r.copiedMetadataCount,
+        0,
       );
 
       // Phase 2: Soft-delete all old artefacts
-      let softDeletedCount = 0;
       await Promise.all(
-        ruleMappings.map(async ({ oldRuleId }) => {
-          await this.softDeleteLinterArtefactsByRuleUseCase.execute({
+        ruleMappings.map(({ oldRuleId }) =>
+          this.softDeleteLinterArtefactsByRuleUseCase.execute({
             ruleId: oldRuleId,
             userId,
             organizationId,
-          });
-          softDeletedCount++;
-        }),
+          }),
+        ),
       );
 
       this.logger.info('Successfully moved all linter artefacts to new rules', {
         totalCopied,
-        softDeletedCount,
+        softDeletedCount: ruleMappings.length,
       });
 
-      return { copiedCount: totalCopied, softDeletedCount };
+      return {
+        copiedCount: totalCopied,
+        softDeletedCount: ruleMappings.length,
+      };
     } catch (error) {
       this.logger.error('Failed to move linter artefacts to new rules', {
         ruleMappingsCount: ruleMappings.length,
