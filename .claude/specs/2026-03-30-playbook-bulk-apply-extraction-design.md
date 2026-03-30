@@ -1,38 +1,29 @@
 # Playbook Bulk Apply — Extraction Design Spec
 
-**Goal:** Extract the `ApplyPlaybookUseCase` from `packages/editions/src/oss/playbook-change-management/` into a new standalone hexagonal package `packages/playbook-bulk-apply/` with its own port, adapter, and hexa facade.
+**Goal:** Extract the `ApplyPlaybookUseCase` from `packages/editions/src/oss/playbook-change-management/` into its own edition module `packages/editions/src/oss/playbook-bulk-apply/` with a dedicated port, adapter, and hexa facade.
 
 **Scope:**
-- In: New package creation, new port/types, move use case + tests, rewire API, clean up editions and dead `packages/playbook-change-management/` directory
+- In: New edition module, new port/types, move use case + tests, rewire API, clean up dead `packages/playbook-change-management/` directory
 - Out: No changes to the `hardDelete` methods on recipes/skills/standards/AbstractRepository (those stay as-is), no changes to the change proposal flow
 
 ## Architecture
 
-The new `packages/playbook-bulk-apply/` package follows the same hexagonal conventions as `packages/recipes/`, `packages/skills/`, etc.
+Following the existing convention for edition-dependent domains (e.g., `playbook-change-management`, `linter`, `amplitude`), **all code lives inside the editions package** with a TSConfig alias making it importable as `@packmind/playbook-bulk-apply`.
 
-Since this domain has **no entities, no repositories, and no schemas** (it orchestrates other domains), the structure is simplified:
+There is **no standalone `packages/playbook-bulk-apply/` directory**. This matches how `@packmind/playbook-change-management` currently works — the alias resolves to `packages/editions/src/index.ts`.
+
+### Directory structure inside editions
 
 ```
-packages/playbook-bulk-apply/
-├── src/
-│   ├── index.ts                           # Public exports
-│   ├── PlaybookBulkApplyHexa.ts           # Facade
-│   └── application/
-│       ├── adapter/
-│       │   └── PlaybookBulkApplyAdapter.ts  # Implements IPlaybookBulkApplyPort
-│       └── useCases/
-│           └── applyPlaybook/
-│               ├── ApplyPlaybookUseCase.ts
-│               └── ApplyPlaybookUseCase.spec.ts
-├── package.json
-├── project.json
-├── tsconfig.json
-├── tsconfig.lib.json
-├── tsconfig.spec.json
-└── jest.config.ts
+packages/editions/src/oss/playbook-bulk-apply/
+├── index.ts                           # Barrel: exports Hexa, Adapter
+├── PlaybookBulkApplyHexa.ts           # Facade
+├── PlaybookBulkApplyAdapter.ts        # Implements IPlaybookBulkApplyPort
+├── ApplyPlaybookUseCase.ts            # Moved from playbook-change-management
+└── ApplyPlaybookUseCase.spec.ts       # Moved from playbook-change-management
 ```
 
-No `domain/`, `infra/`, or `test/` directories — there are no entities or repositories to define.
+Since this domain has **no entities, no repositories, and no schemas** (it orchestrates other domains), there is no `domain/`, `infra/`, or `test/` sub-structure.
 
 ## Data Model
 
@@ -50,12 +41,12 @@ packages/types/src/playbookBulkApply/
 │   └── IApplyPlaybookUseCase.ts    # Moved from playbookChangeManagement/contracts/
 └── ports/
     ├── index.ts
-    └── IPlaybookBulkApplyPort.ts   # New port with single method: applyPlaybook()
+    └── IPlaybookBulkApplyPort.ts   # New port with single method
 ```
 
-The `IApplyPlaybookUseCase.ts` contract (command, response, types) moves from `packages/types/src/playbookChangeManagement/contracts/` to the new location.
+**Cross-domain type dependency:** `IApplyPlaybookUseCase.ts` imports types from `playbookChangeManagement` (`CreationChangeProposalTypes`, `NewSkillPayload`, `NewStandardPayload`, `NewCommandPayload`). These imports will use `../playbookChangeManagement/...` relative paths since both live under `packages/types/src/`. This is acceptable — the bulk apply domain depends on change proposal type definitions.
 
-The `IPlaybookChangeManagementPort` loses the `applyPlaybook` method — it goes back to its pre-change state.
+**Import path changes:** Moving the contract file means updating relative imports (`../../UseCase` → same, `../ChangeProposalType` → `../../playbookChangeManagement/ChangeProposalType`, etc.).
 
 Port definition:
 
@@ -66,6 +57,8 @@ export interface IPlaybookBulkApplyPort {
   applyPlaybook(command: ApplyPlaybookCommand): Promise<ApplyPlaybookResponse>;
 }
 ```
+
+The `IPlaybookChangeManagementPort` reverts to its pre-change state — loses the `applyPlaybook` method.
 
 ## Use Cases / Services
 
@@ -82,67 +75,72 @@ The adapter is thin — single method delegating to the use case.
 
 ## Edition Wiring
 
-The `@packmind/playbook-bulk-apply` path alias is added to:
-- `tsconfig.paths.oss.json` — pointing to `packages/editions/src/index.ts` (same pattern as other edition-dependent packages)
-- `tsconfig.paths.proprietary.json` — pointing to `packages/editions/src/index.ts`
-- `tsconfig.base.effective.json` — same
+TSConfig alias `@packmind/playbook-bulk-apply` is added to:
+- `tsconfig.paths.oss.json` — `["packages/editions/src/index.ts"]`
+- `tsconfig.paths.proprietary.json` — `["packages/editions/src/index.ts"]`
+- `tsconfig.base.effective.json` — `["packages/editions/src/index.ts"]`
 
-The editions barrel (`packages/editions/src/index.ts` and `packages/editions/src/oss/index.ts`) re-exports from the new internal module.
-
-A new directory `packages/editions/src/oss/playbook-bulk-apply/` contains the edition-specific `PlaybookBulkApplyHexa` and `PlaybookBulkApplyAdapter` that import the use case from the actual package.
-
-**Wait — correction:** Looking at how other packages work (e.g., `@packmind/playbook-change-management` resolves to `packages/editions/src/index.ts` in OSS), the pattern is:
-
-1. The "real" package at `packages/playbook-bulk-apply/` contains the use case + spec
-2. The hexa + adapter live in `packages/editions/src/oss/playbook-bulk-apply/`
-3. The TSConfig alias `@packmind/playbook-bulk-apply` points to `packages/editions/src/index.ts` in OSS mode
-
-This means we do NOT create `PlaybookBulkApplyHexa.ts` or `PlaybookBulkApplyAdapter.ts` inside `packages/playbook-bulk-apply/`. They stay in editions. The package only holds the use case.
-
-**Actually — second correction:** Looking more carefully at the existing pattern:
-
-- `packages/playbook-change-management/` is a dead directory. The entire hexa+adapter+use case lives in `packages/editions/src/oss/playbook-change-management/`. The `@packmind/playbook-change-management` import resolves to `packages/editions/src/index.ts`.
-
-So the convention is: **edition-dependent domains live entirely inside editions**, with a TSConfig alias making them importable as `@packmind/<name>`.
-
-For `playbook-bulk-apply`, the cleanest approach matching existing conventions:
-
-1. **All code** (hexa, adapter, use case, spec) goes in `packages/editions/src/oss/playbook-bulk-apply/`
-2. **TSConfig alias** `@packmind/playbook-bulk-apply` → `packages/editions/src/index.ts`
-3. **No standalone package** at `packages/playbook-bulk-apply/` (matching how playbook-change-management actually works)
-4. **Types/contracts** go in `packages/types/src/playbookBulkApply/`
+The editions barrel exports are updated:
+- `packages/editions/src/index.ts` — adds `export * from './oss/playbook-bulk-apply'`
+- `packages/editions/src/oss/playbook-bulk-apply/index.ts` — exports `PlaybookBulkApplyHexa`, `PlaybookBulkApplyAdapter`
 
 ## API Surface
 
-The `PlaybookService` in `apps/api/src/app/organizations/playbook/playbook.service.ts` changes to inject `IPlaybookBulkApplyPort` instead of `IPlaybookChangeManagementPort`.
+### PlaybookService
+`apps/api/src/app/organizations/playbook/playbook.service.ts` changes to inject `IPlaybookBulkApplyPort` instead of `IPlaybookChangeManagementPort`.
 
-New injection token `PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN` + `InjectPlaybookBulkApplyAdapter` decorator in `HexaRegistryModule`.
+### HexaRegistryModule
+`apps/api/src/app/shared/HexaRegistryModule.ts`:
+- New token: `PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN = 'PLAYBOOK_BULK_APPLY_ADAPTER'`
+- New adapter provider factory using `PlaybookBulkApplyHexa`
+- Added to `exports` array
 
-The `PlaybookBulkApplyHexa` is registered in:
-- `HexaRegistryModule.register()` hexas array (app.module.ts)
-- `PackmindApp.ts` initialization
+### HexaInjection
+`apps/api/src/app/shared/HexaInjection.ts`:
+- New decorator: `InjectPlaybookBulkApplyAdapter`
+- Import new token
+
+### PackmindApp
+`apps/api/src/app/shared/PackmindApp.ts`:
+- Import `PlaybookBulkApplyHexa` from `@packmind/playbook-bulk-apply`
+- Add to hexa registration array (after all domain hexas it depends on: accounts, skills, standards, recipes, spaces)
+
+### app.module.ts
+`apps/api/src/app/app.module.ts`:
+- Import `PlaybookBulkApplyHexa` from `@packmind/playbook-bulk-apply`
+- Add to `HexaRegistryModule.register({ hexas: [...] })`
 
 ## Changes to Existing Code
 
-### Reverts to `playbook-change-management` in editions:
-- `PlaybookChangeManagementAdapter.ts` — remove `applyPlaybook` method, remove `initialize()`, remove `ApplyPlaybookUseCase` import
-- `PlaybookChangeManagementHexa.ts` — revert initialize to no-op (OSS stub)
+### Reverts to `playbook-change-management` in editions
+- `PlaybookChangeManagementAdapter.ts` — remove `applyPlaybook` method, remove `initialize()` method, remove `ApplyPlaybookUseCase` import, remove port imports (IAccountsPort, IRecipesPort, etc.). Adapter becomes a pure stub where all methods throw "not implemented".
+- `PlaybookChangeManagementHexa.ts` — revert `initialize()` to no-op (remove port retrievals from registry). Constructor stays the same.
 
-### Reverts to types:
-- `IPlaybookChangeManagementPort` — remove `applyPlaybook` method
+### Reverts to types
+- `IPlaybookChangeManagementPort` — remove `applyPlaybook` method and its import
 - `playbookChangeManagement/contracts/index.ts` — remove `IApplyPlaybookUseCase` re-export
 
-### Cleanup:
-- Delete `packages/playbook-change-management/` directory (dead)
+### Cleanup
+- Delete `packages/playbook-change-management/` directory. This is a dead Nx project (has `project.json`) that resolves entirely via TSConfig alias to editions. De-registration steps:
+  - Remove the directory
+  - Remove entries from `tsconfig.base.effective.json` if pointing to this directory (they point to editions, so likely no change needed)
+  - Verify no `nx.json` or workspace references break
 
 ## Testing Approach
 
-- Unit tests for `ApplyPlaybookUseCase` — moved as-is from editions (already comprehensive with 591 lines covering all scenarios)
+- Unit tests for `ApplyPlaybookUseCase` — moved as-is from editions (comprehensive: success paths, failure + rollback, space validation, rollback failure tolerance)
 - No integration tests needed — the use case mocks all ports
-- Build verification: `nx build editions`, `nx lint editions`, `nx test editions`
+- Build verification across all affected projects:
+  - `nx test editions` — use case tests
+  - `nx lint editions` — lint the new module
+  - `nx build editions` — build verification
+  - `nx test api` — API wiring tests
+  - `nx lint api` — API lint
+  - `nx build api` — API build
 
 ## Out of Scope
 
 - Changes to `hardDeleteById` on `AbstractRepository` or `hardDelete*` methods on domain ports — these are general-purpose additions
 - Any change to the change proposal flow
 - Proprietary edition changes
+- Integration tests (TestApp.ts references to playbook-change-management — these import the hexa which still exists, just without applyPlaybook)
