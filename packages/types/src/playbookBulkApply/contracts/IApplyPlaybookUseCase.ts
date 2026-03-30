@@ -3,19 +3,11 @@ import { SpaceId } from '../../spaces';
 import { StandardId } from '../../standards';
 import { RecipeId } from '../../recipes/RecipeId';
 import { SkillId } from '../../skills/SkillId';
-import { TargetId } from '../../deployments';
-import { CreationChangeProposalTypes } from '../../playbookChangeManagement/ChangeProposalType';
-import {
-  NewSkillPayload,
-  NewStandardPayload,
-  NewCommandPayload,
-} from '../../playbookChangeManagement/ChangeProposalPayload';
+import { ChangeProposalType } from '../../playbookChangeManagement/ChangeProposalType';
+import { BatchCreateChangeProposalItem } from '../../playbookChangeManagement/contracts/IBatchCreateChangeProposalsUseCase';
 
-export type ApplyPlaybookProposalItem = {
+export type ApplyPlaybookProposalItem = BatchCreateChangeProposalItem & {
   spaceId: SpaceId;
-  type: CreationChangeProposalTypes;
-  payload: NewSkillPayload | NewStandardPayload | NewCommandPayload;
-  targetId: TargetId;
 };
 
 export type ApplyPlaybookCommand = PackmindCommand & {
@@ -36,7 +28,7 @@ export type ApplyPlaybookResponse =
       success: false;
       error: {
         index: number;
-        type: CreationChangeProposalTypes;
+        type: ChangeProposalType;
         message: string;
       };
     };

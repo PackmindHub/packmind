@@ -52,7 +52,7 @@ export class PlaybookBulkApplyHexa extends BaseHexa<
     return IPlaybookBulkApplyPortName;
   }
 
-  async destroy(): Promise<void> {
+  destroy(): void {
     // No cleanup needed
   }
 }
