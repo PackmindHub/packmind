@@ -241,7 +241,7 @@ Once the skill is validated and ready for distribution, use packmind-cli to add 
 **Before running the command**, verify that packmind-cli is available (see Prerequisites section). If not installed, install it first.
 
 ```bash
-packmind-cli skills add <path/to/skill-folder>
+packmind-cli skills add <path/to/skill-folder-or-parent> [additional-skill-folders-or-parents...]
 ```
 
-This command registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents.
+This command registers one or more skills with Packmind. Each path can point to a skill folder directly or to a parent folder that contains multiple skill folders.

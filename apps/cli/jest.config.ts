@@ -12,6 +12,6 @@ export default {
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/apps/cli',
   transformIgnorePatterns: [
-    '/node_modules/(?!(chalk|#ansi-styles|#supports-color)/)',
+    '/node_modules/(?!(chalk|#ansi-styles|#supports-color|strip-ansi|ansi-regex)/)',
   ],
 };
