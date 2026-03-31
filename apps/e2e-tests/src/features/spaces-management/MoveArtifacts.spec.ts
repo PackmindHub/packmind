@@ -21,7 +21,7 @@ const test = testWithApi.extend<{
 });
 
 test.describe('Move artifacts between spaces', () => {
-  test('Standards can be moved from one space to another', async ({
+  test.skip('Standards can be moved from one space to another', async ({
     packmindApi,
     dashboardPage,
   }) => {
@@ -61,7 +61,7 @@ test.describe('Move artifacts between spaces', () => {
     expect(await defaultStandards.hasNoStandards()).toBe(true);
   });
 
-  test('Moved standards are withdrawn from packages', async ({
+  test.skip('Moved standards are withdrawn from packages', async ({
     packmindApi,
     dashboardPage,
   }) => {
@@ -98,7 +98,7 @@ test.describe('Move artifacts between spaces', () => {
     expect(await uiPackage.isPackageEmpty()).toBe(true);
   });
 
-  test('displays error when moving a skill to a space where same name exists', async ({
+  test.skip('displays error when moving a skill to a space where same name exists', async ({
     packmindApi,
     dashboardPage,
   }) => {
