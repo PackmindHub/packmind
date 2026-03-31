@@ -1,4 +1,9 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useImperativeHandle,
+} from 'react';
 import {
   OrganizationId,
   ProgrammingLanguage,
@@ -23,6 +28,11 @@ interface RuleExamplesManagerProps {
   onLanguageChange?: (lang: ProgrammingLanguage) => void;
   onCancelCreation?: () => void;
   allowLanguageSelection?: boolean;
+  hideAddButton?: boolean;
+}
+
+export interface RuleExamplesManagerHandle {
+  addExample: () => void;
 }
 
 export interface NewExample {
@@ -33,15 +43,22 @@ export interface NewExample {
   isNew: true;
 }
 
-export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
-  standardId,
-  ruleId,
-  selectedLanguage,
-  forceCreate = false,
-  onLanguageChange,
-  onCancelCreation,
-  allowLanguageSelection = false,
-}) => {
+export const RuleExamplesManager = React.forwardRef<
+  RuleExamplesManagerHandle,
+  RuleExamplesManagerProps
+>(function RuleExamplesManager(
+  {
+    standardId,
+    ruleId,
+    selectedLanguage,
+    forceCreate = false,
+    onLanguageChange,
+    onCancelCreation,
+    allowLanguageSelection = false,
+    hideAddButton = false,
+  },
+  ref,
+) {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const [newExamples, setNewExamples] = useState<NewExample[]>([]);
@@ -71,6 +88,14 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
 
     setNewExamples((prev) => [...prev, newExample]);
   }, [ruleId, selectedLanguage]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      addExample: handleCreateNewExample,
+    }),
+    [handleCreateNewExample],
+  );
 
   // Automatically trigger creation when forceCreate becomes true
   React.useEffect(() => {
@@ -179,7 +204,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
 
   return (
     <PMVStack alignItems={'stretch'} gap="4" width={'full'}>
-      {!forceCreate && (
+      {!forceCreate && !hideAddButton && (
         <PMBox alignSelf="flex-start">
           <PMButton
             variant="primary"
@@ -232,4 +257,4 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
       )}
     </PMVStack>
   );
-};
+});

@@ -4,6 +4,7 @@ import {
   ICreatePackageUseCase,
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
+  IListStandardsBySpaceUseCase,
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
   PublicGateway,
@@ -33,6 +34,7 @@ export interface IPackageGateway {
 
 export interface IStandardGateway {
   create: Gateway<ICreateStandardUseCase>;
+  list: Gateway<IListStandardsBySpaceUseCase>;
 }
 
 export interface IPackmindGateway {
