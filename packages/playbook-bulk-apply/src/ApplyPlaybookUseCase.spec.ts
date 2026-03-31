@@ -143,13 +143,6 @@ describe('ApplyPlaybookUseCase', () => {
                 description: 'A skill',
                 prompt: 'Do things',
                 skillMdPermissions: 'rw-r--r--',
-                files: [
-                  {
-                    path: 'SKILL.md',
-                    content: 'skill content',
-                    permissions: 'rw-r--r--',
-                  },
-                ],
               },
               targetId: createTargetId('target-1'),
             },
@@ -190,6 +183,81 @@ describe('ApplyPlaybookUseCase', () => {
 
       it('creates one command', () => {
         expect(result.success && result.created.commands).toHaveLength(1);
+      });
+
+      it('includes a SKILL.md file in uploadSkill call', () => {
+        const callArgs = skillsPort.uploadSkill.mock.calls[0][0];
+        const skillMdFile = callArgs.files.find(
+          (f: { path: string }) => f.path === 'SKILL.md',
+        );
+        expect(skillMdFile).toBeDefined();
+      });
+
+      it('reconstructs SKILL.md with frontmatter and prompt body', () => {
+        const callArgs = skillsPort.uploadSkill.mock.calls[0][0];
+        const skillMdFile = callArgs.files.find(
+          (f: { path: string }) => f.path === 'SKILL.md',
+        );
+        expect(skillMdFile.content).toContain('name: my-skill');
+      });
+    });
+
+    describe('when submitting a skill with optional fields and supporting files', () => {
+      beforeEach(async () => {
+        const command = buildCommand({
+          proposals: [
+            {
+              spaceId,
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'full-skill',
+                description: 'A complete skill',
+                prompt: 'Full prompt content',
+                skillMdPermissions: 'rw-r--r--',
+                license: 'MIT',
+                compatibility: 'claude-code',
+                allowedTools: 'Read,Write',
+                metadata: { author: 'test' },
+                additionalProperties: { userInvocable: true },
+                files: [
+                  {
+                    path: 'helper.ts',
+                    content: 'export const x = 1;',
+                    permissions: 'rw-r--r--',
+                  },
+                ],
+              },
+              targetId: createTargetId('target-1'),
+            },
+          ],
+        });
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('includes license in SKILL.md frontmatter', () => {
+        const callArgs = skillsPort.uploadSkill.mock.calls[0][0];
+        const skillMdFile = callArgs.files.find(
+          (f: { path: string }) => f.path === 'SKILL.md',
+        );
+        expect(skillMdFile.content).toContain('license: MIT');
+      });
+
+      it('includes allowed-tools in SKILL.md frontmatter', () => {
+        const callArgs = skillsPort.uploadSkill.mock.calls[0][0];
+        const skillMdFile = callArgs.files.find(
+          (f: { path: string }) => f.path === 'SKILL.md',
+        );
+        expect(skillMdFile.content).toContain('allowed-tools: Read,Write');
+      });
+
+      it('passes supporting files alongside SKILL.md', () => {
+        const callArgs = skillsPort.uploadSkill.mock.calls[0][0];
+        expect(callArgs.files).toHaveLength(2);
       });
     });
 
