@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, unlinkSync, rmSync } from 'fs';
 import { execSync } from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { command, option, optional, string } from 'cmd-ts';
+import { command, flag, option, optional, string } from 'cmd-ts';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PlaybookLocalRepository } from '../../repositories/PlaybookLocalRepository';
@@ -46,8 +46,13 @@ export const submitPlaybookCommand = command({
       short: 'm',
       description: 'Message describing the intent behind the proposed changes',
     }),
+    noReview: flag({
+      long: 'no-review',
+      description:
+        'Apply changes directly without creating proposals for review',
+    }),
   },
-  handler: async ({ message }) => {
+  handler: async ({ message, noReview }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
     const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(
@@ -64,6 +69,7 @@ export const submitPlaybookCommand = command({
       cwd: process.cwd(),
       exit: process.exit,
       message,
+      noReview,
       openEditor: (prefill: string) => openEditorForMessage(prefill),
       unlinkSync: (p: string) => unlinkSync(p),
       rmSync: (p: string, opts?: { recursive?: boolean }) => rmSync(p, opts),
