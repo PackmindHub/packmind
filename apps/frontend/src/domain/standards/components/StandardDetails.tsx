@@ -205,7 +205,7 @@ export const StandardDetails = ({
   }
 
   const tabs = [
-    { value: 'summary', triggerLabel: 'Summary' },
+    { value: 'summary', triggerLabel: 'Overview' },
     { value: 'distribution', triggerLabel: 'Distribution' },
   ];
 
