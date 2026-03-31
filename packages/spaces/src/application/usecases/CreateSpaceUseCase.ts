@@ -39,6 +39,7 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
       spaceName.value,
       createOrganizationId(command.organizationId),
       false,
+      command.type,
     );
 
     this.eventEmitterService.emit(

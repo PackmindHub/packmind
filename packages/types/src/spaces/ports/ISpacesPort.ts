@@ -80,4 +80,21 @@ export interface ISpacesPort {
     organizationId: OrganizationId,
     role: UserSpaceRole,
   ): Promise<UserSpaceMembership>;
+
+  /**
+   * Add a user membership to a space.
+   */
+  addSpaceMembership(membership: {
+    userId: UserId;
+    spaceId: SpaceId;
+    role: UserSpaceRole;
+  }): Promise<UserSpaceMembership>;
+
+  /**
+   * Find all space memberships for a user within an organization.
+   */
+  findMembershipsByUserAndOrganization(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<UserSpaceMembership[]>;
 }
