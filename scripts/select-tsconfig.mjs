@@ -56,7 +56,17 @@ function main() {
     },
   };
 
-  writeJson(OUT, effective);
+  const effectiveJson = JSON.stringify(effective, null, 2) + '\n';
+  if (fs.existsSync(OUT)) {
+    const existing = fs.readFileSync(OUT, 'utf8');
+    if (existing === effectiveJson) {
+      console.log(
+        `[select-tsconfig] ${path.basename(OUT)} already up to date, skipping write`,
+      );
+      return;
+    }
+  }
+  fs.writeFileSync(OUT, effectiveJson);
   console.log(
     `[select-tsconfig] PACKMIND_EDITION=${PACKMIND_EDITION} -> ${path.basename(OUT)} (base + ${path.basename(PATHS)})`,
   );

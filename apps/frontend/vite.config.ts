@@ -55,9 +55,30 @@ export default defineConfig(() => {
     },
     server: {
       port: 4200,
-      host: 'localhost',
+      host: process.env.NX_WATCHER ? '0.0.0.0' : 'localhost',
       allowedHosts: ['frontend'],
       proxy,
+      hmr: process.env.NX_WATCHER
+        ? {
+            // In Docker, the browser connects via localhost:4200 (port mapping)
+            // but the server binds to 0.0.0.0:4200 inside the container.
+            // Explicit clientPort ensures the HMR WebSocket connects correctly.
+            clientPort: 4200,
+          }
+        : true,
+      watch: {
+        usePolling: !!process.env.NX_WATCHER,
+        interval: 1000,
+        ignored: [
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/dist/**',
+          '**/tmp/**',
+          '**/.react-router/**',
+          '**/tsconfig.base.effective.json',
+          '**/*.tsbuildinfo',
+        ],
+      },
     },
     preview: {
       port: 4200,
