@@ -33,7 +33,7 @@ export const RuleSummaryTable = ({
   const columns = useMemo<PMTableColumn[]>(
     () => [
       { key: 'name', header: 'Name', grow: true },
-      { key: 'linter', header: 'Linter status', grow: true },
+      { key: 'linter', header: 'Linter status' },
       { key: 'severity', header: 'Severity' },
     ],
     [],
