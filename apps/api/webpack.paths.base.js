@@ -24,9 +24,9 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     '@packmind/llm': join(__dirname, '../../packages/llm/src'),
     '@packmind/skills': join(__dirname, '../../packages/skills/src'),
     '@packmind/editions': join(__dirname, '../../packages/editions/src'),
-    '@packmind/playbook-bulk-apply': join(
+    '@packmind/playbook-change-applier': join(
       __dirname,
-      '../../packages/playbook-bulk-apply/src',
+      '../../packages/playbook-change-applier/src',
     ),
   };
 };

@@ -1,5 +1,5 @@
 {
-  "name": "@packmind/playbook-bulk-apply",
+  "name": "@packmind/playbook-change-applier",
   "version": "0.0.1",
   "private": true,
   "type": "commonjs",

@@ -3,8 +3,8 @@ import {
   ApplyPlaybookResponse,
 } from '../contracts/IApplyPlaybookUseCase';
 
-export const IPlaybookBulkApplyPortName = 'IPlaybookBulkApplyPort';
+export const IPlaybookChangeApplierPortName = 'IPlaybookChangeApplierPort';
 
-export interface IPlaybookBulkApplyPort {
+export interface IPlaybookChangeApplierPort {
   applyPlaybook(command: ApplyPlaybookCommand): Promise<ApplyPlaybookResponse>;
 }

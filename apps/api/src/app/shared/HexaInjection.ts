@@ -13,7 +13,7 @@ import {
   CODING_AGENT_ADAPTER_TOKEN,
   LLM_ADAPTER_TOKEN,
   PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
-  PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN,
+  PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN,
 } from './HexaRegistryModule';
 
 /**
@@ -80,5 +80,5 @@ export const InjectCodingAgentAdapter = () =>
 export const InjectLlmAdapter = () => Inject(LLM_ADAPTER_TOKEN);
 export const InjectPlaybookChangeManagementAdapter = () =>
   Inject(PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN);
-export const InjectPlaybookBulkApplyAdapter = () =>
-  Inject(PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN);
+export const InjectPlaybookChangeApplierAdapter = () =>
+  Inject(PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN);

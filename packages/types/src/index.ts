@@ -17,4 +17,4 @@ export * from './sse';
 export * from './database/types';
 export * from './events';
 export * from './playbookChangeManagement';
-export * from './playbookBulkApply';
+export * from './playbookChangeApplier';

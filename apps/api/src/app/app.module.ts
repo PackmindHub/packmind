@@ -22,7 +22,7 @@ import {
   ImportPracticeLegacyHexa,
 } from '@packmind/import-practices-legacy';
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
-import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
+import { PlaybookChangeApplierHexa } from '@packmind/playbook-change-applier';
 import {
   PlaybookChangeManagementHexa,
   playbookChangeManagementSchemas,
@@ -115,7 +115,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         ImportPracticeLegacyHexa, // After StandardsHexa (depends on Linter/Standards ports)
         SpacesManagementHexa, // Must come after Spaces, Accounts, Standards, Skills, Recipes
         PlaybookChangeManagementHexa,
-        PlaybookBulkApplyHexa,
+        PlaybookChangeApplierHexa,
         CodingAgentHexa,
         DeploymentsHexa,
       ],

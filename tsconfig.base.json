@@ -58,8 +58,8 @@
         "apps/frontend/src/domain/detection/components/ProgramEditor"
       ],
       "packmind-plugin": ["tools/packmind-plugin/src/index.ts"],
-      "@packmind/playbook-bulk-apply": [
-        "packages/playbook-bulk-apply/src/index.ts"
+      "@packmind/playbook-change-applier": [
+        "packages/playbook-change-applier/src/index.ts"
       ]
     }
   },

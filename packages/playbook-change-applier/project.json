@@ -1,0 +1,20 @@
+{
+  "name": "playbook-change-applier",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/playbook-change-applier/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/playbook-change-applier",
+        "tsConfig": "packages/playbook-change-applier/tsconfig.lib.json",
+        "packageJson": "packages/playbook-change-applier/package.json",
+        "main": "packages/playbook-change-applier/src/index.ts",
+        "assets": ["packages/playbook-change-applier/*.md"]
+      }
+    }
+  }
+}

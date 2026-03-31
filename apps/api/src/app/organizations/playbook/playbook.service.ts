@@ -2,15 +2,15 @@ import { Injectable } from '@nestjs/common';
 import {
   ApplyPlaybookCommand,
   ApplyPlaybookResponse,
-  IPlaybookBulkApplyPort,
+  IPlaybookChangeApplierPort,
 } from '@packmind/types';
-import { InjectPlaybookBulkApplyAdapter } from '../../shared/HexaInjection';
+import { InjectPlaybookChangeApplierAdapter } from '../../shared/HexaInjection';
 
 @Injectable()
 export class PlaybookService {
   constructor(
-    @InjectPlaybookBulkApplyAdapter()
-    private readonly adapter: IPlaybookBulkApplyPort,
+    @InjectPlaybookChangeApplierAdapter()
+    private readonly adapter: IPlaybookChangeApplierPort,
   ) {}
 
   async applyPlaybook(
