@@ -7,7 +7,7 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/editions';
 import { LlmHexa } from '@packmind/llm';
-import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
+import { PlaybookChangeApplierHexa } from '@packmind/playbook-change-applier';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { PackmindLogger } from '@packmind/logger';
 import {
@@ -29,7 +29,7 @@ import {
   IGitPort,
   ILinterPort,
   ILlmPort,
-  IPlaybookBulkApplyPort,
+  IPlaybookChangeApplierPort,
   IPlaybookChangeManagementPort,
   IRecipesPort,
   ISkillsPort,
@@ -85,7 +85,8 @@ export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
 export const LLM_ADAPTER_TOKEN = 'LLM_ADAPTER';
 export const PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN =
   'PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER';
-export const PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN = 'PLAYBOOK_BULK_APPLY_ADAPTER';
+export const PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN =
+  'PLAYBOOK_CHANGE_APPLIER_ADAPTER';
 
 /**
  * NestJS Module for integrating HexaRegistry with dependency injection.
@@ -136,7 +137,7 @@ export class HexaRegistryModule {
         CODING_AGENT_ADAPTER_TOKEN,
         LLM_ADAPTER_TOKEN,
         PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
-        PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN,
+        PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN,
       ],
     };
   }
@@ -391,15 +392,19 @@ export class HexaRegistryModule {
       inject: [HEXA_REGISTRY_TOKEN],
     });
 
-    // PlaybookBulkApply adapter
+    // PlaybookChangeApplier adapter
     providers.push({
-      provide: PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN,
-      useFactory: (registry: HexaRegistry): IPlaybookBulkApplyPort | null => {
+      provide: PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN,
+      useFactory: (
+        registry: HexaRegistry,
+      ): IPlaybookChangeApplierPort | null => {
         try {
-          const playbookBulkApplyHexa = registry.get(PlaybookBulkApplyHexa);
-          return playbookBulkApplyHexa.getAdapter();
+          const playbookChangeApplierHexa = registry.get(
+            PlaybookChangeApplierHexa,
+          );
+          return playbookChangeApplierHexa.getAdapter();
         } catch {
-          // PlaybookBulkApplyHexa not available
+          // PlaybookChangeApplierHexa not available
         }
         return null;
       },

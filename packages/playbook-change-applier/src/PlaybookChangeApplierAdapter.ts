@@ -2,7 +2,7 @@ import {
   ApplyPlaybookCommand,
   ApplyPlaybookResponse,
   IAccountsPort,
-  IPlaybookBulkApplyPort,
+  IPlaybookChangeApplierPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -10,7 +10,7 @@ import {
 } from '@packmind/types';
 import { ApplyPlaybookUseCase } from './ApplyPlaybookUseCase';
 
-export class PlaybookBulkApplyAdapter implements IPlaybookBulkApplyPort {
+export class PlaybookChangeApplierAdapter implements IPlaybookChangeApplierPort {
   private applyPlaybookUseCase: ApplyPlaybookUseCase | null = null;
 
   async initialize(ports: {

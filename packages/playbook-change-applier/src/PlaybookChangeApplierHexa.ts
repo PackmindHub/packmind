@@ -2,8 +2,8 @@ import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
-  IPlaybookBulkApplyPort,
-  IPlaybookBulkApplyPortName,
+  IPlaybookChangeApplierPort,
+  IPlaybookChangeApplierPortName,
   IRecipesPort,
   IRecipesPortName,
   ISkillsPort,
@@ -14,17 +14,17 @@ import {
   IStandardsPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { PlaybookBulkApplyAdapter } from './PlaybookBulkApplyAdapter';
+import { PlaybookChangeApplierAdapter } from './PlaybookChangeApplierAdapter';
 
-export class PlaybookBulkApplyHexa extends BaseHexa<
+export class PlaybookChangeApplierHexa extends BaseHexa<
   BaseHexaOpts,
-  IPlaybookBulkApplyPort
+  IPlaybookChangeApplierPort
 > {
-  protected adapter: PlaybookBulkApplyAdapter;
+  protected adapter: PlaybookChangeApplierAdapter;
 
   constructor(dataSource: DataSource, opts?: Partial<BaseHexaOpts>) {
     super(dataSource, opts);
-    this.adapter = new PlaybookBulkApplyAdapter();
+    this.adapter = new PlaybookChangeApplierAdapter();
   }
 
   async initialize(registry: HexaRegistry): Promise<void> {
@@ -44,12 +44,12 @@ export class PlaybookBulkApplyHexa extends BaseHexa<
     });
   }
 
-  public getAdapter(): IPlaybookBulkApplyPort {
+  public getAdapter(): IPlaybookChangeApplierPort {
     return this.adapter;
   }
 
   public getPortName(): string {
-    return IPlaybookBulkApplyPortName;
+    return IPlaybookChangeApplierPortName;
   }
 
   destroy(): void {

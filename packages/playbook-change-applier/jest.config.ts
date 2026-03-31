@@ -9,13 +9,13 @@ import {
 } from '../../jest-utils';
 
 export default {
-  displayName: 'playbook-bulk-apply',
+  displayName: 'playbook-change-applier',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
   transform: swcTransform,
   transformIgnorePatterns: standardTransformIgnorePatterns,
   moduleFileExtensions: standardModuleFileExtensions,
-  coverageDirectory: '../../coverage/packages/playbook-bulk-apply',
+  coverageDirectory: '../../coverage/packages/playbook-change-applier',
   moduleNameMapper: pathsToModuleNameMapper(
     compilerOptions.paths,
     '<rootDir>/../../',
