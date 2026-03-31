@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import { stringify as stringifyYaml } from 'yaml';
 import {
   ApplyPlaybookCommand,
   ApplyPlaybookProposalItem,
@@ -21,6 +22,10 @@ import {
   createSkillId,
   createStandardId,
   createUserId,
+  UploadSkillFileInput,
+  CAMEL_TO_YAML_KEY,
+  camelToKebab,
+  sortAdditionalPropertiesKeys,
 } from '@packmind/types';
 
 const origin = 'ApplyPlaybookUseCase';
@@ -201,15 +206,57 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     }
   }
 
-  private buildSkillFiles(payload: NewSkillPayload) {
-    return (
+  private buildSkillFiles(payload: NewSkillPayload): UploadSkillFileInput[] {
+    const skillMdFile: UploadSkillFileInput = {
+      path: 'SKILL.md',
+      content: this.buildSkillMdContent(payload),
+      permissions: payload.skillMdPermissions,
+      isBase64: false,
+    };
+
+    const supportingFiles: UploadSkillFileInput[] =
       payload.files?.map((f) => ({
         path: f.path,
         content: f.content,
         permissions: f.permissions,
         isBase64: f.isBase64 ?? false,
-      })) ?? []
-    );
+      })) ?? [];
+
+    return [skillMdFile, ...supportingFiles];
+  }
+
+  private buildSkillMdContent(payload: NewSkillPayload): string {
+    const frontmatter: Record<string, unknown> = {
+      name: payload.name,
+      description: payload.description,
+    };
+
+    if (payload.license) {
+      frontmatter['license'] = payload.license;
+    }
+    if (payload.compatibility) {
+      frontmatter['compatibility'] = payload.compatibility;
+    }
+    if (payload.allowedTools) {
+      frontmatter['allowed-tools'] = payload.allowedTools;
+    }
+    if (payload.metadata && Object.keys(payload.metadata).length > 0) {
+      frontmatter['metadata'] = payload.metadata;
+    }
+    if (
+      payload.additionalProperties &&
+      Object.keys(payload.additionalProperties).length > 0
+    ) {
+      for (const [camelKey, value] of sortAdditionalPropertiesKeys(
+        payload.additionalProperties,
+      )) {
+        const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
+        frontmatter[yamlKey] = value;
+      }
+    }
+
+    const yamlBlock = stringifyYaml(frontmatter).trimEnd();
+    return `---\n${yamlBlock}\n---\n\n${payload.prompt}`;
   }
 
   private normalizeScope(scope: string[] | string | null): string | null {
