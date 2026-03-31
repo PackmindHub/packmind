@@ -1,4 +1,5 @@
 import { ISpaceRepository } from './ISpaceRepository';
+import { IUserSpaceMembershipRepository } from './IUserSpaceMembershipRepository';
 
 /**
  * ISpacesRepositories - Repository aggregator interface for the Spaces domain
@@ -12,4 +13,9 @@ export interface ISpacesRepositories {
    * Get the space repository instance
    */
   getSpaceRepository(): ISpaceRepository;
+
+  /**
+   * Get the user space membership repository instance
+   */
+  getUserSpaceMembershipRepository(): IUserSpaceMembershipRepository;
 }
