@@ -12,6 +12,7 @@ import {
   PMText,
   PMButton,
   PMEmptyState,
+  PMAlert,
 } from '@packmind/ui';
 import {
   Rule,
@@ -200,6 +201,14 @@ export const RuleDetails = ({
       triggerLabel: 'Code examples',
       content: (
         <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
+          <PMAlert.Root status="info">
+            <PMAlert.Indicator />
+            <PMAlert.Description>
+              Code examples are used for documentation and linter detection
+              only. They are not included when rendering the standard for AI
+              agents.
+            </PMAlert.Description>
+          </PMAlert.Root>
           <RuleExamplesManager
             standardId={standardId}
             ruleId={rule.id}

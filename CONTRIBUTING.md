@@ -13,6 +13,31 @@ docker compose --profile=dev up
 
 The app should be available at [http://localhost:4200](http://localhost:4200)
 
+## Switching packmind-cli versions (pvm)
+
+`pvm` is a lightweight dev tool (inspired by nvm) to manage multiple packmind-cli versions locally.
+
+Source it into your shell:
+
+```shell
+source scripts/pvm.sh
+```
+
+To load it automatically, add this to your `.zshrc` or `.bashrc`:
+
+```shell
+[ -s "/path/to/packmind/scripts/pvm.sh" ] && . "/path/to/packmind/scripts/pvm.sh"
+```
+
+Then use it:
+
+```shell
+pvm ls            # list available versions from GitHub releases
+pvm use 0.24.0    # switch to a version (downloads if not installed)
+```
+
+Versions are stored in `~/.pvm/versions/`.
+
 ## Releasing
 
 Update the [CHANGELOG](./CHANGELOG.MD) file:
