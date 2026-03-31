@@ -61,7 +61,7 @@ test.describe('Move artifacts between spaces', () => {
     expect(await defaultStandards.hasNoStandards()).toBe(true);
   });
 
-  test.skip('Moved standards are withdrawn from packages', async ({
+  test('Moved standards are withdrawn from packages', async ({
     packmindApi,
     dashboardPage,
   }) => {
@@ -98,7 +98,7 @@ test.describe('Move artifacts between spaces', () => {
     expect(await uiPackage.isPackageEmpty()).toBe(true);
   });
 
-  test.skip('displays error when moving a skill to a space where same name exists', async ({
+  test('displays error when moving a skill to a space where same name exists', async ({
     packmindApi,
     dashboardPage,
   }) => {
@@ -123,6 +123,9 @@ test.describe('Move artifacts between spaces', () => {
       name: 'commit',
       spaceId: frontendSpace.id,
     });
+
+    // Reload to clear TanStack Query cache after API data creation
+    await frontendDashboard.reload();
 
     // Navigate to backend space, open skills
     const backendDash = await frontendDashboard.navigateToSpace('backend');
