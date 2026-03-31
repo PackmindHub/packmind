@@ -1,5 +1,6 @@
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { version } from '../../../package.json';
+import { isCommunityEditionError } from '../../domain/errors/CommunityEditionError';
 
 interface IAuthContext {
   host: string;
@@ -99,6 +100,11 @@ export class PackmindHttpClient {
 
       return response.json();
     } catch (error: unknown) {
+      // Re-throw errors thrown by onError callbacks without wrapping them
+      if (isCommunityEditionError(error)) {
+        throw error;
+      }
+
       const err = error as {
         code?: string;
         name?: string;
