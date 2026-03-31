@@ -549,6 +549,8 @@ export async function playbookSubmitHandler(
   let resolvedMessage: string;
   if (message) {
     resolvedMessage = message;
+  } else if (noReview) {
+    resolvedMessage = '';
   } else {
     const prefill = buildEditorPrefill(changes);
     const editorResult = openEditor(prefill);
