@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router';
-import { PMPage, PMVStack, PMBox } from '@packmind/ui';
+import { PMPage, PMVStack, PMBox, PMButton } from '@packmind/ui';
+import { LuArrowLeft } from 'react-icons/lu';
 import { StandardForm } from '../../src/domain/standards/components/StandardForm';
 import { useGetStandardByIdQuery } from '../../src/domain/standards/api/queries/StandardsQueries';
 import { StandardId } from '@packmind/types';
@@ -46,14 +47,26 @@ export default function EditStandardRouteModule() {
     );
   }
 
+  const standard = getStandardByIdResponse.standard;
+
   return (
-    <MarkdownEditorProvider>
-      <StandardForm
-        mode="edit"
-        standard={getStandardByIdResponse.standard}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-      />
-    </MarkdownEditorProvider>
+    <PMPage
+      title="Edit standard"
+      actions={
+        <PMButton variant="tertiary" size="sm" onClick={handleCancel}>
+          <LuArrowLeft />
+          Back to standard
+        </PMButton>
+      }
+    >
+      <MarkdownEditorProvider>
+        <StandardForm
+          mode="edit"
+          standard={standard}
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
+        />
+      </MarkdownEditorProvider>
+    </PMPage>
   );
 }
