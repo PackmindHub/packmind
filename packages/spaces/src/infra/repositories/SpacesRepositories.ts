@@ -1,8 +1,11 @@
 import { DataSource } from 'typeorm';
 import { ISpacesRepositories } from '../../domain/repositories/ISpacesRepositories';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
+import { IUserSpaceMembershipRepository } from '../../domain/repositories/IUserSpaceMembershipRepository';
 import { SpaceRepository } from './SpaceRepository';
+import { UserSpaceMembershipRepository } from './UserSpaceMembershipRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
+import { UserSpaceMembershipSchema } from '../schemas/UserSpaceMembershipSchema';
 
 /**
  * SpacesRepositories - Repository aggregator implementation for the Spaces domain
@@ -13,15 +16,22 @@ import { SpaceSchema } from '../schemas/SpaceSchema';
  */
 export class SpacesRepositories implements ISpacesRepositories {
   private readonly spaceRepository: ISpaceRepository;
+  private readonly userSpaceMembershipRepository: IUserSpaceMembershipRepository;
 
   constructor(private readonly dataSource: DataSource) {
-    // Initialize all repositories with their respective schemas
     this.spaceRepository = new SpaceRepository(
       this.dataSource.getRepository(SpaceSchema),
+    );
+    this.userSpaceMembershipRepository = new UserSpaceMembershipRepository(
+      this.dataSource.getRepository(UserSpaceMembershipSchema),
     );
   }
 
   getSpaceRepository(): ISpaceRepository {
     return this.spaceRepository;
+  }
+
+  getUserSpaceMembershipRepository(): IUserSpaceMembershipRepository {
+    return this.userSpaceMembershipRepository;
   }
 }
