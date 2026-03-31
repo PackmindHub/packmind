@@ -2,6 +2,7 @@ import React from 'react';
 import {
   PMAvatar,
   PMBox,
+  PMIconButton,
   PMSeparator,
   PMStatus,
   PMText,
@@ -13,9 +14,11 @@ import {
   LuGitPullRequestArrow,
   LuHouse,
   LuPackage,
+  LuSlidersHorizontal,
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import { useNavigate } from 'react-router';
 import type { Space } from '@packmind/types';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
 import { routes } from '../../../../shared/utils/routes';
@@ -147,6 +150,8 @@ function ExpandedSpaceNavBlock({
   isSelected,
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
+  const navigate = useNavigate();
+
   return (
     <PMBox>
       {!isActive && (
@@ -160,7 +165,13 @@ function ExpandedSpaceNavBlock({
 
       {isActive && (
         <PMBox mt={1} bg="background.secondary" borderRadius="md" py={1.5}>
-          <PMBox paddingX={3} paddingY={1}>
+          <PMBox
+            paddingX={3}
+            paddingY={1}
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+          >
             <PMText
               fontSize="xs"
               fontWeight="semibold"
@@ -178,6 +189,17 @@ function ExpandedSpaceNavBlock({
               </PMStatus.Root>
               {space.name}
             </PMText>
+            <PMIconButton
+              aria-label="Space settings"
+              size="2xs"
+              variant="ghost"
+              onClick={() =>
+                navigate(routes.space.toSettings(orgSlug, space.slug))
+              }
+              data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+            >
+              <LuSlidersHorizontal />
+            </PMIconButton>
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
