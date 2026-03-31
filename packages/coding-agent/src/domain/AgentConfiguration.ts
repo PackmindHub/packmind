@@ -14,4 +14,5 @@ export const AGENT_FILE_PATHS: Record<CodingAgent, string> = {
   gitlab_duo: '.gitlab/duo/chat-rules.md',
   continue: '.continue/rules/packmind-recipes-index.md',
   opencode: 'AGENTS.md',
+  codex: 'AGENTS.md',
 };

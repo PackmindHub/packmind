@@ -12,6 +12,7 @@ import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway'
 export const SELECTABLE_AGENTS: CodingAgent[] = [
   'agents_md',
   'claude',
+  'codex',
   'continue',
   'copilot',
   'cursor',
@@ -30,6 +31,7 @@ export const AGENT_DISPLAY_NAMES: Record<CodingAgent, string> = {
   agents_md: 'AGENTS.md',
   gitlab_duo: 'GitLab Duo',
   opencode: 'OpenCode',
+  codex: 'Codex',
 };
 
 type AgentChoice = {

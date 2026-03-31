@@ -12,5 +12,6 @@ export * from './infra/repositories/cursor/CursorDeployer';
 export * from './infra/repositories/copilot/CopilotDeployer';
 export * from './infra/repositories/continue/ContinueDeployer';
 export * from './infra/repositories/opencode/OpenCodeDeployer';
+export * from './infra/repositories/codex/CodexDeployer';
 export * from './infra/repositories/CodingAgentDeployerRegistry';
 export * from './CodingAgentHexa';

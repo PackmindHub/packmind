@@ -49,6 +49,7 @@ const AGENT_PARSERS: Record<
   copilot: parseCopilotStandard,
   gitlab_duo: () => null, // single-file agent: standards can't be parsed individually
   opencode: () => null, // single-file agent: standards are embedded in AGENTS.md
+  codex: () => null, // single-file agent: standards are embedded in AGENTS.md
 };
 
 /**

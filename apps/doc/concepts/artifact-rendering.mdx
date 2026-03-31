@@ -30,6 +30,7 @@ Standards are placed in specific folders that your AI assistant monitors. Once d
 | Junie          | `.junie/guidelines.md` file           |
 | AGENTS.md      | `AGENTS.md` file (in repository root) |
 | OpenCode       | `AGENTS.md` file (in repository root) |
+| Codex          | `AGENTS.md` file (in repository root) |
 
 <Tip>
   Standards work automatically—you don't need to do anything special to activate
@@ -39,7 +40,7 @@ Standards are placed in specific folders that your AI assistant monitors. Once d
 
 ### How Single-File Rendering Works
 
-Some AI assistants (**AGENTS.md**, **GitLab Duo**, **Junie**, **OpenCode**) use a single shared file rather than a dedicated folder for standards. Because you may want to add your own instructions to these files, Packmind uses HTML comment markers to delineate its managed section:
+Some AI assistants (**AGENTS.md**, **GitLab Duo**, **Junie**, **OpenCode**, **Codex**) use a single shared file rather than a dedicated folder for standards. Because you may want to add your own instructions to these files, Packmind uses HTML comment markers to delineate its managed section:
 
 ```
 <!-- start: Packmind standards -->
@@ -73,6 +74,7 @@ Commands are placed in specific locations, but unlike standards, you need to inv
 | Junie          | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
 | AGENTS.md      | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
 | OpenCode       | `.opencode/commands/` folder | Type `/command-name` in chat                |
+| Codex          | Not rendered (use source)    | Execute @.packmind/commands/command-name.md |
 
 ### Using Slash Commands (Claude Code, Cursor, GitHub Copilot, Continue)
 
@@ -86,7 +88,7 @@ The AI assistant will recognize the command and execute the instructions defined
 
 ### Direct Source File Invocation (GitLab Duo, Junie, AGENTS.md)
 
-For AI assistants without native command rendering (**GitLab Duo**, **Junie**, and **AGENTS.md**), commands are not rendered in agent-specific files. Instead, you must reference the source command file directly from the `.packmind/commands/` folder:
+For AI assistants without native command rendering (**GitLab Duo**, **Junie**, **AGENTS.md**, and **Codex**), commands are not rendered in agent-specific files. Instead, you must reference the source command file directly from the `.packmind/commands/` folder:
 
 ```
 Execute @.packmind/commands/create-new-use-case.md
@@ -110,12 +112,13 @@ Skills are folders of instructions, scripts, and resources that AI agents can di
 | Cursor         | `.cursor/skills/{skill-slug}/SKILL.md`     |
 | GitLab Duo     | `.gitlab/duo/skills/{skill-slug}/SKILL.md` |
 | OpenCode       | `.opencode/skills/{skill-slug}/SKILL.md`   |
+| Codex          | `.agents/skills/{skill-slug}/SKILL.md`     |
 
 Skills contain YAML frontmatter with metadata (name, description, license, compatibility, allowed-tools) followed by the skill instructions.
 
 <Note>
   Skills are currently available for GitHub Copilot, Claude Code, Cursor, GitLab
-  Duo, and OpenCode. Other AI assistants do not support skill rendering.
+  Duo, OpenCode, and Codex. Other AI assistants do not support skill rendering.
 </Note>
 
 ## The Source Files
@@ -163,7 +166,7 @@ These source files are the single source of truth. The files in AI assistant-spe
 
 **Solution**:
 
-1. Skills are only rendered for GitHub Copilot, Claude Code, Cursor, and GitLab Duo
+1. Skills are only rendered for GitHub Copilot, Claude Code, Cursor, GitLab Duo, OpenCode, and Codex
 2. Check the `.packmind/skills/` folder for the source files
 3. For GitHub Copilot: Check `.github/skills/{skill-slug}/SKILL.md`
 4. For Claude Code: Check `.claude/skills/{skill-slug}/SKILL.md`

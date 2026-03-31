@@ -129,7 +129,7 @@ export class DeployerService {
             gitRepo,
             target,
           );
-          const updates = this.suppressOpenCodeAgentsMdIfAgentsMdActive(
+          const updates = this.suppressAgentsMdWritesForLowerPriorityAgents(
             agent,
             rawUpdates,
             codingAgents,
@@ -270,7 +270,7 @@ export class DeployerService {
           standardVersions,
           skillVersions,
         );
-        const updates = this.suppressOpenCodeAgentsMdIfAgentsMdActive(
+        const updates = this.suppressAgentsMdWritesForLowerPriorityAgents(
           agent,
           rawUpdates,
           codingAgents,
@@ -306,19 +306,37 @@ export class DeployerService {
   }
 
   /**
-   * Rule 9: when both `opencode` and `agents_md` are active, `agents_md`
-   * takes ownership of AGENTS.md. Filter out any AGENTS.md write from the
-   * `opencode` deployer so the intent is explicit and not an accident of
-   * iteration order.
+   * Agents that write to AGENTS.md, ordered from lowest to highest priority.
+   * When multiple are active, only the highest-priority agent writes to AGENTS.md.
    */
-  private suppressOpenCodeAgentsMdIfAgentsMdActive(
+  private static readonly AGENTS_MD_WRITERS: CodingAgent[] = [
+    'codex',
+    'opencode',
+    'agents_md',
+  ];
+
+  /**
+   * When multiple agents write to AGENTS.md, suppress writes from lower-priority
+   * agents so only the highest-priority active agent owns the file.
+   */
+  private suppressAgentsMdWritesForLowerPriorityAgents(
     agent: CodingAgent,
     updates: FileUpdates,
     codingAgents: CodingAgent[],
   ): FileUpdates {
-    if (agent !== 'opencode' || !codingAgents.includes('agents_md')) {
+    const writerIndex = DeployerService.AGENTS_MD_WRITERS.indexOf(agent);
+    if (writerIndex === -1) {
       return updates;
     }
+
+    const hasHigherPriorityWriter = DeployerService.AGENTS_MD_WRITERS.slice(
+      writerIndex + 1,
+    ).some((higher) => codingAgents.includes(higher));
+
+    if (!hasHigherPriorityWriter) {
+      return updates;
+    }
+
     return {
       ...updates,
       createOrUpdate: updates.createOrUpdate.filter(

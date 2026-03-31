@@ -19,6 +19,7 @@ describe('VALID_CODING_AGENTS', () => {
       'gitlab_duo',
       'continue',
       'opencode',
+      'codex',
     ]);
   });
 });

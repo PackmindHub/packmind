@@ -129,6 +129,10 @@ describe('configAgentsHandler', () => {
     it('includes opencode agent', () => {
       expect(SELECTABLE_AGENTS).toContain('opencode');
     });
+
+    it('includes codex agent', () => {
+      expect(SELECTABLE_AGENTS).toContain('codex');
+    });
   });
 
   describe('AGENT_DISPLAY_NAMES', () => {
@@ -166,6 +170,10 @@ describe('configAgentsHandler', () => {
 
     it('maps opencode to OpenCode', () => {
       expect(AGENT_DISPLAY_NAMES.opencode).toBe('OpenCode');
+    });
+
+    it('maps codex to Codex', () => {
+      expect(AGENT_DISPLAY_NAMES.codex).toBe('Codex');
     });
   });
 
@@ -877,10 +885,10 @@ describe('configAgentsHandler', () => {
 
         await configAgentsHandler(deps);
 
-        // SELECTABLE_AGENTS[0]=agents_md, [2]=continue, [4]=cursor
+        // SELECTABLE_AGENTS[0]=agents_md, [2]=codex, [4]=copilot
         expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
           '/project',
-          ['agents_md', 'continue', 'cursor'],
+          ['agents_md', 'codex', 'copilot'],
         );
       });
 

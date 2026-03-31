@@ -345,6 +345,7 @@ const RenderModes: React.FunctionComponent<{ renderModes: RenderMode[] }> = ({
     [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
     [RenderMode.CONTINUE]: 'Continue',
     [RenderMode.OPENCODE]: 'OpenCode',
+    [RenderMode.CODEX]: 'Codex',
   };
   const formattedNames = renderModes.map(
     (renderMode) => formatNames[renderMode],
