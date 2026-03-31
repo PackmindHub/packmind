@@ -9,13 +9,14 @@ import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-
 import { skillMd } from './skills/packmind-update-playbook/skill.md';
 import { APPLY_CHANGES_0210 } from './skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes';
 import { APPLY_CHANGES_0230 } from './skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes';
+import { APPLY_CHANGES_0240 } from './skills/packmind-update-playbook/packmind-versions/0.24.0/apply-changes';
 
 export class UpdatePlaybookDeployerV2
   extends AbstractDefaultSkillDeployer
   implements ISkillDeployer
 {
   public readonly slug = 'packmind-update-playbook-v2';
-  protected readonly minimumVersion = 'unreleased';
+  protected readonly minimumVersion = '0.23.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}${this.slug}`;
@@ -46,6 +47,10 @@ export class UpdatePlaybookDeployerV2
         {
           path: `${basePath}/packmind-versions/0.23.0/apply-changes.md`,
           content: APPLY_CHANGES_0230,
+        },
+        {
+          path: `${basePath}/packmind-versions/0.24.0/apply-changes.md`,
+          content: APPLY_CHANGES_0240,
         },
         {
           path: `${basePath}/references/agent-skills-specification.md`,
