@@ -1,7 +1,9 @@
 import {
+  ApplyPlaybookResponse,
   BatchCreateChangeProposalsResponse,
   CheckChangeProposalsResponse,
   Gateway,
+  IApplyPlaybookUseCase,
   IBatchCreateChangeProposalsUseCase,
   ICheckChangeProposalsUseCase,
 } from '@packmind/types';
@@ -27,6 +29,17 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
             throw new CommunityEditionError('change proposals');
           }
         },
+      },
+    );
+  };
+
+  batchApply: Gateway<IApplyPlaybookUseCase> = async (command) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<ApplyPlaybookResponse>(
+      `/api/v0/organizations/${organizationId}/playbook/apply`,
+      {
+        method: 'POST',
+        body: { proposals: command.proposals },
       },
     );
   };

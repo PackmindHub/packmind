@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 
 import {
+  ApplyPlaybookProposalItem,
   ChangeProposalArtefactId,
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
@@ -47,6 +48,7 @@ export type PlaybookSubmitHandlerDependencies = {
   cwd: string;
   exit: (code: number) => void;
   message: string | undefined;
+  noReview: boolean;
   openEditor: (prefill: string) => string | null;
   unlinkSync: (filePath: string) => void;
   rmSync: (dirPath: string, options?: { recursive?: boolean }) => void;
@@ -532,6 +534,7 @@ export async function playbookSubmitHandler(
     cwd,
     exit,
     message,
+    noReview,
     openEditor,
   } = deps;
 
@@ -738,6 +741,60 @@ export async function playbookSubmitHandler(
 
   // Submit
   const packmindGateway = packmindCliHexa.getPackmindGateway();
+
+  if (noReview) {
+    const applyProposals: ApplyPlaybookProposalItem[] = allProposals.map(
+      (p) => ({
+        spaceId: p.spaceId as SpaceId,
+        type: p.type,
+        artefactId:
+          p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
+        payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
+        captureMode: ChangeProposalCaptureMode.commit,
+        targetId: (p.targetId ?? '') as TargetId,
+      }),
+    );
+
+    if (applyProposals.length === 0) {
+      logConsole('Nothing to apply directly.');
+      exit(0);
+      return;
+    }
+
+    const response = await packmindGateway.changeProposals.batchApply({
+      proposals: applyProposals,
+      message: resolvedMessage,
+    });
+
+    if (!response.success) {
+      logErrorConsole(`Error: ${response.error.message}`);
+      exit(1);
+      return;
+    }
+
+    for (const [spaceId, filePaths] of filePathsBySpaceId) {
+      for (const filePath of filePaths) {
+        playbookLocalRepository.removeChange(filePath, spaceId);
+      }
+    }
+
+    const parts: string[] = [];
+    const { standards, commands, skills } = response.created;
+    if (standards.length > 0)
+      parts.push(
+        `${standards.length} standard${standards.length !== 1 ? 's' : ''}`,
+      );
+    if (commands.length > 0)
+      parts.push(
+        `${commands.length} command${commands.length !== 1 ? 's' : ''}`,
+      );
+    if (skills.length > 0)
+      parts.push(`${skills.length} skill${skills.length !== 1 ? 's' : ''}`);
+    logSuccessConsole(`${parts.join(', ')} created`);
+    exit(0);
+    return;
+  }
+
   let totalCreated = 0;
   let totalSkipped = 0;
   let hasErrors = false;
