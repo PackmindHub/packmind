@@ -19,8 +19,6 @@ const PATHS = path.join(
 const OUT = path.join(ROOT, 'tsconfig.base.effective.json');
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
-const writeJson = (p, obj) =>
-  fs.writeFileSync(p, JSON.stringify(obj, null, 2) + '\n');
 
 function validateNxPaths(paths) {
   if (!paths) return;
