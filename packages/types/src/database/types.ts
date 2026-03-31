@@ -28,4 +28,5 @@ export interface IRepository<Entity extends { id: string }> {
   findById(id: Entity['id'], opts?: QueryOption): Promise<Entity | null>;
   deleteById(entityId: Entity['id'], deletedBy?: string): Promise<void>;
   restoreById(entityId: Entity['id']): Promise<void>;
+  hardDeleteById(entityId: Entity['id']): Promise<void>;
 }

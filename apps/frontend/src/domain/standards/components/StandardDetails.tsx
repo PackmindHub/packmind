@@ -1,13 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
-import { PMPage, PMVStack, PMText, PMAlert, PMGrid, PMBox } from '@packmind/ui';
-import {
-  useGetStandardsQuery,
-  useGetStandardVersionsQuery,
-  useGetRulesByStandardIdQuery,
-  useDeleteStandardMutation,
-} from '../api/queries/StandardsQueries';
-
+import { PMBox, PMText, PMAlert, PMPage, PMTabs, PMButton } from '@packmind/ui';
 import {
   Rule,
   Standard,
@@ -16,15 +9,19 @@ import {
   ChangeProposalStatus,
 } from '@packmind/types';
 import { useListChangeProposalsByStandardQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import {
+  useGetRulesByStandardIdQuery,
+  useGetStandardVersionsQuery,
+  useDeleteStandardMutation,
+} from '../api/queries/StandardsQueries';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { routes } from '../../../shared/utils/routes';
 import { StandardVersionHistoryHeader } from './StandardVersionHistoryHeader';
-import { StandardDetailsSidebar } from './StandardDetailsSidebar';
-import { useStandardSectionNavigation } from '../hooks/useStandardSectionNavigation';
-import { RuleActions, SummaryActions } from './StandardDetailsActions';
+import { SummaryActions } from './StandardDetailsActions';
 import { useStandardEditionFeatures } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { LuArrowLeft } from 'react-icons/lu';
 
 interface StandardDetailsProps {
   standard: Standard;
@@ -61,13 +58,6 @@ export const StandardDetails = ({
     useGetStandardVersionsQuery(standard.id);
 
   const {
-    data: availableStandards = {
-      standards: [],
-    },
-    isLoading: standardsLoading,
-  } = useGetStandardsQuery();
-
-  const {
     data: rules,
     isLoading: rulesLoading,
     isError: rulesError,
@@ -87,22 +77,6 @@ export const StandardDetails = ({
 
   const { ruleLanguages } = useStandardEditionFeatures(standard.id);
 
-  const {
-    activeSection,
-    currentRuleId,
-    showSummaryActions,
-    showRuleActions,
-    handleSectionSelect,
-    handleBackToSummary,
-    getPathForNavKey,
-  } = useStandardSectionNavigation({
-    standardId: standard.id,
-    orgSlug,
-    spaceSlug,
-    rules,
-    rulesLoading,
-    rulesError,
-  });
   const sortedRules = useMemo<Rule[] | undefined>(() => {
     if (!rules) {
       return undefined;
@@ -115,18 +89,17 @@ export const StandardDetails = ({
     );
   }, [rules]);
 
-  const selectedRule = useMemo(() => {
-    if (!currentRuleId || !sortedRules) {
-      return undefined;
-    }
-    return sortedRules.find((rule) => rule.id === currentRuleId);
-  }, [currentRuleId, sortedRules]);
+  const currentRuleId = useMemo(() => {
+    const match = /\/rule\/([^/]+)$/.exec(pathname);
+    return match ? match[1] : undefined;
+  }, [pathname]);
 
-  const pageTitle = isEditing
-    ? undefined
-    : selectedRule
-      ? selectedRule.content
-      : standard.name;
+  const isRuleView = !!currentRuleId;
+
+  const activeTab = useMemo(() => {
+    if (pathname.endsWith('/deployment')) return 'distribution';
+    return 'summary';
+  }, [pathname]);
 
   const deleteStandardMutation = useDeleteStandardMutation();
 
@@ -149,26 +122,27 @@ export const StandardDetails = ({
     ],
   );
 
-  const availableStandardOptions = useMemo<Standard[]>(() => {
-    if (!availableStandards) {
-      return [];
+  // Redirect to summary if the current rule no longer exists
+  useEffect(() => {
+    if (!currentRuleId || rulesLoading || rulesError) return;
+    const hasRule = sortedRules?.some((rule) => rule.id === currentRuleId);
+    if (!hasRule && orgSlug && spaceSlug) {
+      navigate(
+        routes.space.toStandardSummary(orgSlug, spaceSlug, standard.id),
+        { replace: true },
+      );
     }
+  }, [
+    currentRuleId,
+    sortedRules,
+    rulesLoading,
+    rulesError,
+    navigate,
+    orgSlug,
+    spaceSlug,
+    standard.id,
+  ]);
 
-    if (Array.isArray(availableStandards)) {
-      return availableStandards;
-    }
-
-    if (
-      'standards' in availableStandards &&
-      Array.isArray(availableStandards.standards)
-    ) {
-      return availableStandards.standards;
-    }
-
-    return [];
-  }, [availableStandards]);
-
-  // Early return if no standardId is provided
   if (!standard) {
     return <PMText color="error">No standard ID provided.</PMText>;
   }
@@ -180,7 +154,6 @@ export const StandardDetails = ({
       await deleteStandardMutation.mutateAsync(standard.id);
       setDeleteModalOpen(false);
 
-      // Navigate immediately after successful deletion
       if (orgSlug && spaceSlug) {
         navigate(routes.space.toStandards(orgSlug, spaceSlug));
         return;
@@ -196,105 +169,97 @@ export const StandardDetails = ({
     }
   };
 
-  const handleStandardSelect = (nextStandardId: string) => {
-    if (!orgSlug || !spaceSlug) {
-      return;
-    }
-
-    navigate(
-      routes.space.toStandardSummary(orgSlug, spaceSlug, nextStandardId),
-    );
-  };
-
   const handleEdit = () => {
-    if (!orgSlug || !spaceSlug) {
-      return;
-    }
-
+    if (!orgSlug || !spaceSlug) return;
     navigate(routes.space.toStandardEdit(orgSlug, spaceSlug, standard.id));
   };
 
-  const handleDeleteRequest = () => {
-    setDeleteModalOpen(true);
+  const handleDeleteRequest = () => setDeleteModalOpen(true);
+  const handleDeleteDialogChange = (isOpen: boolean) =>
+    setDeleteModalOpen(isOpen);
+
+  const handleBackToSummary = () => {
+    if (!orgSlug || !spaceSlug) return;
+    navigate(routes.space.toStandardSummary(orgSlug, spaceSlug, standard.id));
   };
 
-  const handleDeleteDialogChange = (isOpen: boolean) => {
-    setDeleteModalOpen(isOpen);
+  const handleTabChange = (details: { value: string }) => {
+    if (!orgSlug || !spaceSlug) return;
+    if (details.value === 'distribution') {
+      navigate(
+        routes.space.toStandardDeployment(orgSlug, spaceSlug, standard.id),
+      );
+    } else {
+      navigate(routes.space.toStandardSummary(orgSlug, spaceSlug, standard.id));
+    }
   };
+
+  // When editing, render only the outlet (edit form handles its own layout)
+  if (isEditing) {
+    return <Outlet context={outletContext} />;
+  }
+
+  const tabs = [
+    { value: 'summary', triggerLabel: 'Summary' },
+    { value: 'distribution', triggerLabel: 'Distribution' },
+  ];
 
   return (
-    <PMGrid
-      height="full"
-      gridTemplateColumns={{
-        base: 'minmax(240px, 270px) minmax(0, 1fr)',
-      }}
-      alignItems="start"
-      overflowX="auto"
+    <PMPage
+      title={standard.name}
+      breadcrumbComponent={
+        <StandardVersionHistoryHeader
+          standard={standard}
+          versions={versions}
+          isLoading={versionsLoading}
+          orgSlug={orgSlug}
+        />
+      }
+      actions={
+        isRuleView ? (
+          <PMButton variant="tertiary" size="sm" onClick={handleBackToSummary}>
+            <LuArrowLeft />
+            Back to standard
+          </PMButton>
+        ) : (
+          <SummaryActions
+            onEdit={handleEdit}
+            onDeleteRequest={handleDeleteRequest}
+            onDeleteDialogChange={handleDeleteDialogChange}
+            onConfirmDelete={handleDelete}
+            isDeleteDialogOpen={deleteModalOpen}
+            isDeleting={deleteStandardMutation.isPending}
+            deleteDialogMessage={STANDARD_MESSAGES.confirmation.deleteStandard(
+              standard.name,
+            )}
+            pendingCount={pendingCount}
+            standardId={standard.id}
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+          />
+        )
+      }
     >
-      <StandardDetailsSidebar
-        standard={standard}
-        standards={availableStandardOptions}
-        activeSection={activeSection}
-        onSectionSelect={handleSectionSelect}
-        onStandardChange={handleStandardSelect}
-        isStandardSelectDisabled={!orgSlug || !spaceSlug}
-        standardsLoading={standardsLoading}
-        rules={sortedRules}
-        rulesLoading={rulesLoading}
-        rulesError={rulesError}
-        getPathForNavKey={getPathForNavKey}
-      />
+      {deleteAlert && (
+        <PMAlert.Root status={deleteAlert.type} width="lg">
+          <PMAlert.Indicator />
+          <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
+        </PMAlert.Root>
+      )}
 
-      <PMPage
-        title={pageTitle}
-        breadcrumbComponent={
-          !showRuleActions ? (
-            <StandardVersionHistoryHeader
-              standard={standard}
-              versions={versions}
-              isLoading={versionsLoading}
-              orgSlug={orgSlug}
-            />
-          ) : undefined
-        }
-        isFullWidth
-        actions={
-          showSummaryActions ? (
-            <SummaryActions
-              onEdit={handleEdit}
-              onDeleteRequest={handleDeleteRequest}
-              onDeleteDialogChange={handleDeleteDialogChange}
-              onConfirmDelete={handleDelete}
-              isDeleteDialogOpen={deleteModalOpen}
-              isDeleting={deleteStandardMutation.isPending}
-              deleteDialogMessage={
-                standard
-                  ? STANDARD_MESSAGES.confirmation.deleteStandard(standard.name)
-                  : 'Are you sure you want to delete this standard?'
-              }
-              pendingCount={pendingCount}
-              standardId={standard.id}
-              orgSlug={orgSlug}
-              spaceSlug={spaceSlug}
-            />
-          ) : showRuleActions ? (
-            <RuleActions onBackToSummary={handleBackToSummary} />
-          ) : undefined
-        }
-      >
-        {deleteAlert && (
-          <PMAlert.Root status={deleteAlert.type} width="lg" mb={4}>
-            <PMAlert.Indicator />
-            <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
-          </PMAlert.Root>
-        )}
+      {!isRuleView && (
+        <PMTabs
+          tabs={tabs}
+          defaultValue="summary"
+          value={activeTab}
+          onValueChange={handleTabChange}
+          mb="4"
+        />
+      )}
 
-        <PMVStack align="stretch" gap={6}>
-          <PMBox width="full">
-            <Outlet context={outletContext} />
-          </PMBox>
-        </PMVStack>
-      </PMPage>
-    </PMGrid>
+      <PMBox width="full">
+        <Outlet context={outletContext} />
+      </PMBox>
+    </PMPage>
   );
 };

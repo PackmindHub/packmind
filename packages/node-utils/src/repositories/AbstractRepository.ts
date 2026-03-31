@@ -105,6 +105,30 @@ export abstract class AbstractRepository<
     }
   }
 
+  async hardDeleteById(id: Entity['id']): Promise<void> {
+    this.logger.info(`Hard deleting ${this.entityName} by ID`, { id });
+
+    try {
+      const result = await this.repository.delete({
+        id,
+      } as FindOptionsWhere<Entity>);
+
+      if (result.affected === 0) {
+        this.logger.warn(`No ${this.entityName} found for hard deletion`, {
+          id,
+        });
+        throw new Error(`No ${this.entityName} with id ${id} found`);
+      }
+      this.logger.info(`Successfully hard deleted ${this.entityName}`, { id });
+    } catch (error) {
+      this.logger.error(`Failed to hard delete ${this.entityName} by ID`, {
+        id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async restoreById(id: Entity['id']): Promise<void> {
     try {
       const result = await this.restore(id);

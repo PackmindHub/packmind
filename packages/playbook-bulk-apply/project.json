@@ -1,0 +1,20 @@
+{
+  "name": "playbook-bulk-apply",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/playbook-bulk-apply/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/playbook-bulk-apply",
+        "tsConfig": "packages/playbook-bulk-apply/tsconfig.lib.json",
+        "packageJson": "packages/playbook-bulk-apply/package.json",
+        "main": "packages/playbook-bulk-apply/src/index.ts",
+        "assets": ["packages/playbook-bulk-apply/*.md"]
+      }
+    }
+  }
+}

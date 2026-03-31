@@ -2,18 +2,27 @@
 
 ## Added
 
-- `whoami` command now displays an update notice when a newer CLI version is available on GitHub
-- `lint` command now supports negative globs in standard scopes, starting with `!`
-- `playbook submit` now checks for duplicate artifact names before submitting creation proposals. If an artifact with the same name (case-insensitive) already exists in the target space, the submission is rejected with a clear error message.
 - Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
 
 ## Changed
 
 ## Fixed
 
-- Notify the user when default skills are skipped when running `packmind skills init` due to an old version of the cli.
-
 ## Removed
+
+# [0.24.0] - 2026-03-30
+
+## Added
+
+- CLI can now also be invoked as `packmind` (alias for `packmind-cli`)
+- `packmind` symlink automatically created on install and self-update
+- `whoami` command now displays an update notice when a newer CLI version is available on GitHub
+- `lint` command now supports negative globs in standard scopes, starting with `!`
+- `playbook submit` now checks for duplicate artifact names before submitting creation proposals. If an artifact with the same name (case-insensitive) already exists in the target space, the submission is rejected with a clear error message.
+
+## Fixed
+
+- Notify the user when default skills are skipped when running `packmind skills init` due to an old version of the cli.
 
 # [0.23.0] - 2026-03-25
 
@@ -284,7 +293,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.23.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.24.0...HEAD
+[0.24.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.23.0...release-cli/0.24.0
 [0.23.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.22.0...release-cli/0.23.0
 [0.22.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.1...release-cli/0.22.0
 [0.21.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.0...release-cli/0.21.1
