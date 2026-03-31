@@ -21,7 +21,7 @@ const test = testWithApi.extend<{
 });
 
 test.describe('Move artifacts between spaces', () => {
-  test.skip('Standards can be moved from one space to another', async ({
+  test('Standards can be moved from one space to another', async ({
     packmindApi,
     dashboardPage,
   }) => {
@@ -45,6 +45,9 @@ test.describe('Move artifacts between spaces', () => {
 
     // Move all standards to target space
     await standardsPage.moveToSpace('target');
+
+    // Reload to clear TanStack Query cache after move
+    await standardsPage.reload();
 
     // Verify: navigate to target space and check standards are there
     const targetDashboard2 = await standardsPage.navigateToSpace('target');
