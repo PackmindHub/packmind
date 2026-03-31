@@ -7,11 +7,13 @@ import { AmplitudeHexa } from '@packmind/amplitude';
 import { apiHexaPlugins } from '@packmind/plugins';
 import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
+import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SkillsHexa } from '@packmind/skills';
+import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
@@ -59,7 +61,9 @@ describe('PackmindApp API', () => {
         LinterHexa,
         StandardsHexa,
         SkillsHexa,
+        SpacesManagementHexa,
         PlaybookChangeManagementHexa,
+        PlaybookBulkApplyHexa,
         CodingAgentHexa,
         DeploymentsHexa,
         ...apiHexaPlugins,

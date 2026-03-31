@@ -7,12 +7,16 @@ export enum RenderMode {
   PACKMIND = 'PACKMIND',
   GITLAB_DUO = 'GITLAB_DUO',
   CONTINUE = 'CONTINUE',
+  OPENCODE = 'OPENCODE',
+  CODEX = 'CODEX',
 }
 
 export const REQUIRED_RENDER_MODE = RenderMode.PACKMIND;
 
 export const RENDER_MODE_ORDER: RenderMode[] = [
   RenderMode.PACKMIND,
+  RenderMode.CODEX,
+  RenderMode.OPENCODE,
   RenderMode.AGENTS_MD,
   RenderMode.JUNIE,
   RenderMode.GH_COPILOT,

@@ -1,17 +1,19 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   PMPageSection,
-  PMTabs,
+  PMTabsCompound,
   PMVStack,
   PMBox,
   PMSelect,
   PMSelectTrigger,
   pmCreateListCollection,
   PMHStack,
-  PMText,
+  PMField,
   PMButton,
   PMEmptyState,
+  PMAlert,
+  PMPortal,
 } from '@packmind/ui';
 import {
   Rule,
@@ -21,8 +23,12 @@ import {
   OrganizationId,
   SpaceId,
 } from '@packmind/types';
-import { RuleExamplesManager } from './RuleExamplesManager';
+import {
+  RuleExamplesManager,
+  RuleExamplesManagerHandle,
+} from './RuleExamplesManager';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
+import { LuPlus } from 'react-icons/lu';
 import { useGetRuleExamplesQuery } from '../api/queries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
@@ -43,6 +49,7 @@ export const RuleDetails = ({
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const [searchParams, setSearchParams] = useSearchParams();
+  const examplesManagerRef = useRef<RuleExamplesManagerHandle>(null);
 
   // Initialize state from URL parameters
   const getInitialTab = (): RuleDetailsTab => {
@@ -194,45 +201,6 @@ export const RuleDetails = ({
     updateTabWithUrl('examples');
   };
 
-  const tabs = [
-    {
-      value: 'examples',
-      triggerLabel: 'Code examples',
-      content: (
-        <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
-          <RuleExamplesManager
-            standardId={standardId}
-            ruleId={rule.id}
-            selectedLanguage={selectedLanguage}
-            forceCreate={!selectedLanguageHasExamples}
-            onLanguageChange={setSelectedLanguage}
-            onCancelCreation={() => undefined}
-          />
-        </PMVStack>
-      ),
-    },
-    {
-      value: 'detection',
-      triggerLabel: 'Linter',
-      disabled: !selectedLanguageHasExamples,
-      content: (
-        <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
-          <PMPageSection>
-            <ProgramEditor
-              standardId={standardId}
-              ruleId={rule.id}
-              detectionLanguages={detectionLanguages.map((language) =>
-                language.toString(),
-              )}
-              selectedLanguage={selectedLanguage}
-              onNavigateToExamples={handleNavigateToExamples}
-            />
-          </PMPageSection>
-        </PMVStack>
-      ),
-    },
-  ];
-
   if (isLoadingExamples) {
     return null; // Or a spinner
   }
@@ -277,53 +245,119 @@ export const RuleDetails = ({
 
   return (
     <PMVStack position="relative" gap={4} width="100%" alignItems="flex-start">
-      <PMHStack>
-        <PMText whiteSpace="nowrap">Language : </PMText>
-        <PMBox width="200px">
-          <PMSelect.Root
-            collection={languageCollection}
-            value={[selectedLanguage]}
-            onValueChange={(e) => {
-              const newLanguage = e.value[0] as ProgrammingLanguage;
-              updateLanguageWithUrl(newLanguage);
-            }}
-          >
-            <PMSelectTrigger placeholder="Select a language" />
-            <PMSelect.Positioner>
-              <PMSelect.Content zIndex={1500}>
-                {configuredLanguages.length > 0 && (
-                  <PMSelect.ItemGroup>
-                    <PMSelect.ItemGroupLabel>
-                      Configured Languages
-                    </PMSelect.ItemGroupLabel>
-                    {configuredLanguages.map((item) => (
-                      <PMSelect.Item item={item} key={item.value}>
-                        {item.label}
-                      </PMSelect.Item>
-                    ))}
-                  </PMSelect.ItemGroup>
-                )}
-                <PMSelect.CollapsibleItemGroup label="Add a language">
-                  {otherLanguages.map((item) => (
-                    <PMSelect.Item item={item} key={item.value}>
-                      {item.label}
-                    </PMSelect.Item>
-                  ))}
-                </PMSelect.CollapsibleItemGroup>
-              </PMSelect.Content>
-            </PMSelect.Positioner>
-          </PMSelect.Root>
-        </PMBox>
-      </PMHStack>
-      <PMTabs
+      <PMTabsCompound.Root
         defaultValue={defaultTab}
         value={currentTab}
-        onValueChange={(details) =>
+        onValueChange={(details: { value: string }) =>
           updateTabWithUrl(details.value as RuleDetailsTab)
         }
-        tabs={tabs}
         width="100%"
-      />
+      >
+        <PMTabsCompound.List>
+          <PMTabsCompound.Trigger value="examples">
+            Code examples
+          </PMTabsCompound.Trigger>
+          <PMTabsCompound.Trigger
+            value="detection"
+            disabled={!selectedLanguageHasExamples}
+          >
+            Linter
+          </PMTabsCompound.Trigger>
+          <PMHStack ml="auto" gap={3} alignItems="center">
+            <PMField.Root>
+              <PMHStack gap={2} alignItems="center">
+                <PMField.Label mb={0}>Language</PMField.Label>
+                <PMBox width="200px">
+                  <PMSelect.Root
+                    collection={languageCollection}
+                    value={[selectedLanguage]}
+                    onValueChange={(e) => {
+                      const newLanguage = e.value[0] as ProgrammingLanguage;
+                      updateLanguageWithUrl(newLanguage);
+                    }}
+                  >
+                    <PMSelectTrigger placeholder="Select a language" />
+                    <PMPortal>
+                      <PMSelect.Positioner>
+                        <PMSelect.Content zIndex={1500}>
+                          {configuredLanguages.length > 0 && (
+                            <PMSelect.ItemGroup>
+                              <PMSelect.ItemGroupLabel>
+                                Configured Languages
+                              </PMSelect.ItemGroupLabel>
+                              {configuredLanguages.map((item) => (
+                                <PMSelect.Item item={item} key={item.value}>
+                                  {item.label}
+                                </PMSelect.Item>
+                              ))}
+                            </PMSelect.ItemGroup>
+                          )}
+                          <PMSelect.CollapsibleItemGroup label="Add a language">
+                            {otherLanguages.map((item) => (
+                              <PMSelect.Item item={item} key={item.value}>
+                                {item.label}
+                              </PMSelect.Item>
+                            ))}
+                          </PMSelect.CollapsibleItemGroup>
+                        </PMSelect.Content>
+                      </PMSelect.Positioner>
+                    </PMPortal>
+                  </PMSelect.Root>
+                </PMBox>
+              </PMHStack>
+            </PMField.Root>
+            {currentTab === 'examples' && (
+              <PMButton
+                variant="primary"
+                size="sm"
+                onClick={() => examplesManagerRef.current?.addExample()}
+              >
+                <LuPlus />
+                Add Example
+              </PMButton>
+            )}
+          </PMHStack>
+        </PMTabsCompound.List>
+
+        <PMTabsCompound.Content value="examples">
+          <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
+            <PMAlert.Root status="info">
+              <PMAlert.Indicator />
+              <PMAlert.Description>
+                Code examples are used for documentation and linter detection
+                only. They are not included when rendering the standard for AI
+                agents.
+              </PMAlert.Description>
+            </PMAlert.Root>
+            <RuleExamplesManager
+              ref={examplesManagerRef}
+              standardId={standardId}
+              ruleId={rule.id}
+              selectedLanguage={selectedLanguage}
+              forceCreate={!selectedLanguageHasExamples}
+              onLanguageChange={setSelectedLanguage}
+              onCancelCreation={() => undefined}
+              hideAddButton
+            />
+          </PMVStack>
+        </PMTabsCompound.Content>
+
+        <PMTabsCompound.Content value="detection">
+          <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
+            <PMPageSection>
+              <ProgramEditor
+                standardId={standardId}
+                ruleId={rule.id}
+                detectionLanguages={detectionLanguages.map((language) =>
+                  language.toString(),
+                )}
+                selectedLanguage={selectedLanguage}
+                onNavigateToExamples={handleNavigateToExamples}
+              />
+            </PMPageSection>
+          </PMVStack>
+        </PMTabsCompound.Content>
+      </PMTabsCompound.Root>
     </PMVStack>
   );
 };

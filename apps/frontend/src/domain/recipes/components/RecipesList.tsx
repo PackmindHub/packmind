@@ -38,6 +38,7 @@ import {
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -421,6 +422,12 @@ export const RecipesList = ({
               open={deleteDialogOpen}
               onOpenChange={({ open }) => setDeleteDialogOpen(open)}
               isLoading={deleteBatchMutation.isPending}
+            />
+            <SpacesManagementActions
+              artifactType="command"
+              selectedIds={selectedRecipeIds}
+              isSomeSelected={isSomeSelected}
+              onSuccess={() => setSelectedRecipeIds([])}
             />
             <PMButton
               variant="secondary"

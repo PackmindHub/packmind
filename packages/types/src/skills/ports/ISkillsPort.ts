@@ -1,4 +1,5 @@
 import { OrganizationId } from '../../accounts/Organization';
+import { UserId } from '../../accounts/User';
 import type { QueryOption } from '../../database/types';
 import { SpaceId } from '../../spaces/SpaceId';
 import { Skill } from '../Skill';
@@ -39,4 +40,14 @@ export interface ISkillsPort {
   saveSkillVersion(command: SaveSkillVersionCommand): Promise<SkillVersion>;
   uploadSkill(command: UploadSkillCommand): Promise<UploadSkillResponse>;
   deleteSkill(command: DeleteSkillCommand): Promise<{ success: boolean }>;
+  hardDeleteSkill(skillId: SkillId): Promise<void>;
+  duplicateSkillToSpace(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Skill>;
+  markSkillAsMoved(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void>;
 }

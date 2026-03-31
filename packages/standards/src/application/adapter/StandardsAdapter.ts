@@ -26,6 +26,7 @@ import {
   ILlmPortName,
   ISpacesPort,
   ISpacesPortName,
+  DuplicateStandardResult,
   IStandardsPort,
   ListStandardsBySpaceCommand,
   OrganizationId,
@@ -560,5 +561,29 @@ export class StandardsAdapter
     command: CreateStandardSamplesCommand,
   ): Promise<CreateStandardSamplesResponse> {
     return this._createStandardSamples.execute(command);
+  }
+
+  async duplicateStandardToSpace(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<DuplicateStandardResult> {
+    return this.services
+      .getStandardService()
+      .duplicateStandardToSpace(standardId, destinationSpaceId, newUserId);
+  }
+
+  async markStandardAsMoved(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    return this.services
+      .getStandardService()
+      .markStandardAsMoved(standardId, destinationSpaceId);
+  }
+
+  async hardDeleteStandard(standardId: StandardId): Promise<void> {
+    this.logger.info('Hard deleting standard', { standardId });
+    await this.services.getStandardService().hardDeleteStandard(standardId);
   }
 }

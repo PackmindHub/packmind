@@ -7,10 +7,13 @@ export interface IPackmindPage {
 
 export interface IPackmindAppPage extends IPackmindPage {
   openStandards(): Promise<IStandardsPage>;
+  openSkills(): Promise<ISkillsPage>;
   openCommands(): Promise<ICommandsPage>;
   openPackages(): Promise<IPackagesPage>;
   openSettings(): Promise<ISettingsPage>;
   openIntegrations(): Promise<ICliSetupPage>;
+  createSpace(name: string): Promise<IDashboardPage>;
+  navigateToSpace(spaceName: string): Promise<IDashboardPage>;
   signOut(): Promise<void>;
 }
 
@@ -26,6 +29,19 @@ export interface IStandardsPage extends IPackmindAppPage {
   listStandards(): Promise<{ name: string }[]>;
   openCreateStandards(): Promise<ICreateStandardPage>;
   openStandard(name: string): Promise<IStandardPage>;
+  selectStandardByName(name: string): Promise<void>;
+  selectAll(): Promise<void>;
+  moveToSpace(spaceName: string): Promise<void>;
+  hasNoStandards(): Promise<boolean>;
+}
+
+export interface ISkillsPage extends IPackmindAppPage {
+  listSkills(): Promise<{ name: string }[]>;
+  selectSkillByName(name: string): Promise<void>;
+  selectAll(): Promise<void>;
+  moveToSpace(spaceName: string): Promise<void>;
+  moveToSpaceExpectingError(spaceName: string): Promise<string>;
+  hasNoSkills(): Promise<boolean>;
 }
 
 export interface IStandardPage extends IPackmindAppPage {
@@ -39,6 +55,8 @@ export interface IPackagesPage extends IPackmindAppPage {
 export interface IPackagePage extends IPackmindAppPage {
   openDistributionsTab(): Promise<void>;
   listDistributions(): Promise<{ target: string; author: string }[]>;
+  isPackageEmpty(): Promise<boolean>;
+  listStandardsInPackage(): Promise<{ name: string }[]>;
 }
 
 export interface ICreateStandardPage extends IPackmindAppPage {
@@ -110,6 +128,8 @@ export interface IPageFactory {
   getDashboardPage(): Promise<IDashboardPage>;
   getCliSetupPage(): Promise<ICliSetupPage>;
   getUsersSettingsPage(): Promise<IUsersSettingsPage>;
+  getSkillsPage(): Promise<ISkillsPage>;
+  getStandardsPage(): Promise<IStandardsPage>;
   getPackagesPage(): Promise<IPackagesPage>;
   getPackagePage(): Promise<IPackagePage>;
   getSettingsPage(): Promise<ISettingsPage>;

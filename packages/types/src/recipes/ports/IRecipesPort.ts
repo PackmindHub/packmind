@@ -1,4 +1,5 @@
 import { OrganizationId } from '../../accounts/Organization';
+import { UserId } from '../../accounts/User';
 import {
   CaptureRecipeCommand,
   CaptureRecipeWithPackagesCommand,
@@ -129,4 +130,22 @@ export interface IRecipesPort {
   updateRecipeFromUI(
     command: UpdateRecipeFromUICommand,
   ): Promise<UpdateRecipeFromUIResponse>;
+
+  /**
+   * Hard-delete a recipe (permanent, no soft-delete). Used for rollback only.
+   */
+  hardDeleteRecipe(recipeId: RecipeId): Promise<void>;
+
+  /**
+   * Duplicate a recipe and its full entity graph into a destination space.
+   */
+  duplicateRecipeToSpace(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Recipe>;
+  markRecipeAsMoved(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void>;
 }

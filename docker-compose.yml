@@ -147,15 +147,15 @@ services:
         if [ -n "${CI:-}" ]; then
           echo "[frontend] CI mode -> WITHOUT daemon"
           export NX_DAEMON=false
-          exec npx nx run frontend:dev --host=0.0.0.0
+          exec npx nx run frontend:dev
         fi
         echo "[frontend] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[frontend] Daemon OK -> WITH daemon"
-          exec npx nx run frontend:dev --host=0.0.0.0
+          exec npx nx run frontend:dev
         else
           echo "[frontend] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run frontend:dev --host=0.0.0.0 --no-daemon
+          exec NX_DAEMON=false npx nx run frontend:dev --no-daemon
         fi
       '
     environment:
@@ -165,6 +165,8 @@ services:
       API_PORT: 3000
       MCP_HOSTNAME: 'mcp-server'
       MCP_PORT: 3001
+      CHOKIDAR_USEPOLLING: '1'
+      CHOKIDAR_INTERVAL: '1000'
 
     volumes:
       - .:/packmind

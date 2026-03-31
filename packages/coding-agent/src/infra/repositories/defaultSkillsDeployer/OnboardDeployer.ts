@@ -7,10 +7,14 @@ import { TEST_DATA_CONSTRUCTION } from './skills/packmind-onboard/references/tes
 import { FILE_TEMPLATE_CONSISTENCY } from './skills/packmind-onboard/references/file-template-consistency';
 import { CI_LOCAL_WORKFLOW_PARITY } from './skills/packmind-onboard/references/ci-local-workflow-parity';
 import { ROLE_TAXONOMY_DRIFT } from './skills/packmind-onboard/references/role-taxonomy-drift';
+import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
 
-export class OnboardDeployer implements ISkillDeployer {
+export class OnboardDeployer
+  extends AbstractDefaultSkillDeployer
+  implements ISkillDeployer
+{
   public readonly slug = 'packmind-onboard';
-  public readonly minimumVersion = '0.16.0';
+  protected readonly minimumVersion = '0.16.0';
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-onboard`;

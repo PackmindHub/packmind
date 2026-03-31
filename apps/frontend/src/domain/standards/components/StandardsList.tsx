@@ -36,6 +36,7 @@ import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/Deplo
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -435,6 +436,12 @@ export const StandardsList = ({
                 open={deleteModalOpen}
                 onOpenChange={(details) => setDeleteModalOpen(details.open)}
                 isLoading={deleteBatchMutation.isPending}
+              />
+              <SpacesManagementActions
+                artifactType="standard"
+                selectedIds={selectedStandardIds}
+                isSomeSelected={isSomeSelected}
+                onSuccess={() => setSelectedStandardIds([])}
               />
               <PMButton
                 variant="secondary"

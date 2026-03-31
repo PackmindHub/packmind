@@ -27,16 +27,25 @@ describe('PackmindCliHexa', () => {
 
   describe('normalizePackageSlugs', () => {
     describe('when all slugs are already prefixed', () => {
-      it('returns slugs as-is without calling getSpaces', async () => {
-        const getSpacesSpy = jest.spyOn(hexa, 'getSpaces');
+      describe('returns slugs as-is without calling getSpaces', () => {
+        let result: string[];
+        let getSpacesSpy: jest.SpyInstance;
 
-        const result = await hexa.normalizePackageSlugs([
-          '@my-space/pkg-a',
-          '@my-space/pkg-b',
-        ]);
+        beforeEach(async () => {
+          getSpacesSpy = jest.spyOn(hexa, 'getSpaces');
+          result = await hexa.normalizePackageSlugs([
+            '@my-space/pkg-a',
+            '@my-space/pkg-b',
+          ]);
+        });
 
-        expect(result).toEqual(['@my-space/pkg-a', '@my-space/pkg-b']);
-        expect(getSpacesSpy).not.toHaveBeenCalled();
+        it('returns slugs as-is', () => {
+          expect(result).toEqual(['@my-space/pkg-a', '@my-space/pkg-b']);
+        });
+
+        it('does not call getSpaces', () => {
+          expect(getSpacesSpy).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -99,21 +108,23 @@ describe('PackmindCliHexa', () => {
         expect(result).toEqual([]);
       });
 
-      it('throws when the organization has multiple spaces and any slug is unprefixed', async () => {
-        jest.spyOn(hexa, 'getSpaces').mockResolvedValue([
-          spaceFactory({
-            slug: 'space-a',
-            isDefaultSpace: true,
-          }),
-          spaceFactory({
-            slug: 'space-b',
-            isDefaultSpace: false,
-          }),
-        ]);
+      describe('when the organization has multiple spaces and any slug is unprefixed', () => {
+        it('throws', async () => {
+          jest.spyOn(hexa, 'getSpaces').mockResolvedValue([
+            spaceFactory({
+              slug: 'space-a',
+              isDefaultSpace: true,
+            }),
+            spaceFactory({
+              slug: 'space-b',
+              isDefaultSpace: false,
+            }),
+          ]);
 
-        await expect(
-          hexa.normalizePackageSlugs(['unprefixed-pkg']),
-        ).rejects.toThrow('@space-a/my-package');
+          await expect(
+            hexa.normalizePackageSlugs(['unprefixed-pkg']),
+          ).rejects.toThrow('@space-a/my-package');
+        });
       });
     });
   });

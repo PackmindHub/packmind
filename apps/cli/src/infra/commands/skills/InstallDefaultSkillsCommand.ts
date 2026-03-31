@@ -5,6 +5,8 @@ import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
+  logWarningConsole,
+  formatCommand,
 } from '../../utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
@@ -31,6 +33,12 @@ export const installDefaultSkillsCommand = command({
         includeBeta,
         cliVersion: includeBeta ? undefined : CLI_VERSION,
       });
+
+      if (result.skippedSkillsCount > 0) {
+        logWarningConsole(
+          `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of packmind-cli. Run "${formatCommand('packmind-cli update')}" to get the latest version.`,
+        );
+      }
 
       if (result.errors.length > 0) {
         for (const error of result.errors) {

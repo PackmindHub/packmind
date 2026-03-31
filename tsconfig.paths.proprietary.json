@@ -11,13 +11,16 @@
         "packages/import-practices-legacy/src/index.ts"
       ],
       "@packmind/spaces-management": [
-        "apps/api/src/app/organizations/spaces-management/index.ts"
+        "packages/spaces-management/src/index.ts"
       ],
       "@packmind/playbook-change-management": [
         "packages/playbook-change-management/src/index.ts"
       ],
       "@packmind/playbook-change-management/test": [
         "packages/playbook-change-management/test/index.ts"
+      ],
+      "@packmind/playbook-bulk-apply": [
+        "packages/playbook-bulk-apply/src/index.ts"
       ]
     }
   }

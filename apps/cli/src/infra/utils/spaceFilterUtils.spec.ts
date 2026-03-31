@@ -7,8 +7,10 @@ const spaces: Space[] = [
 ];
 
 describe('resolveSpaceFromArgs', () => {
-  it('returns null when spaceArg is undefined', () => {
-    expect(resolveSpaceFromArgs(undefined, spaces)).toBeNull();
+  describe('when spaceArg is undefined', () => {
+    it('returns null', () => {
+      expect(resolveSpaceFromArgs(undefined, spaces)).toBeNull();
+    });
   });
 
   it('finds space by slug', () => {
@@ -19,7 +21,9 @@ describe('resolveSpaceFromArgs', () => {
     expect(resolveSpaceFromArgs('@my-space', spaces)).toEqual(spaces[0]);
   });
 
-  it('returns null when no match found', () => {
-    expect(resolveSpaceFromArgs('nonexistent', spaces)).toBeNull();
+  describe('when no match found', () => {
+    it('returns null', () => {
+      expect(resolveSpaceFromArgs('nonexistent', spaces)).toBeNull();
+    });
   });
 });

@@ -48,9 +48,35 @@ on:
         value: ${{ jobs.build-scan-push.outputs.version }}
 
 jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile.api
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: dockerfile/Dockerfile.api
+
+      - name: Lint Dockerfile.frontend
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: dockerfile/Dockerfile.frontend
+
+      - name: Lint Dockerfile.mcp
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: dockerfile/Dockerfile.mcp
+
   build-scan-push:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 30
     # Build+scan on all branches; push steps have their own ref guards
+    if: |
+      github.ref == 'refs/heads/main' ||
+      startsWith(github.ref, 'refs/tags/release/')
     outputs:
       # On main: outputs SHA tag (what's actually pushed)
       # On release/*: outputs version tag (what's actually pushed)

@@ -1,5 +1,6 @@
 export * from './domain/AgentConfiguration';
 export * from './domain/repository/ICodingAgentDeployer';
+export { DefaultSkillsDeployResult } from './infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer';
 export * from './domain/repository/ICodingAgentDeployerRegistry';
 export * from './application/services/DeployerService';
 export * from './application/services/CodingAgentServices';
@@ -10,5 +11,7 @@ export * from './infra/repositories/claude/ClaudeDeployer';
 export * from './infra/repositories/cursor/CursorDeployer';
 export * from './infra/repositories/copilot/CopilotDeployer';
 export * from './infra/repositories/continue/ContinueDeployer';
+export * from './infra/repositories/opencode/OpenCodeDeployer';
+export * from './infra/repositories/codex/CodexDeployer';
 export * from './infra/repositories/CodingAgentDeployerRegistry';
 export * from './CodingAgentHexa';

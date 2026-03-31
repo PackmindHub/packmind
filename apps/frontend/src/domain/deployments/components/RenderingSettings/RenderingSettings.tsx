@@ -25,6 +25,7 @@ type RenderingItem = {
 
 const RENDER_MODE_TO_VALUE: Record<RenderMode, string> = {
   [RenderMode.PACKMIND]: 'packmind',
+  [RenderMode.OPENCODE]: 'opencode',
   [RenderMode.AGENTS_MD]: 'agents-md',
   [RenderMode.GH_COPILOT]: 'github-copilot',
   [RenderMode.CURSOR]: 'cursor',
@@ -32,10 +33,12 @@ const RENDER_MODE_TO_VALUE: Record<RenderMode, string> = {
   [RenderMode.JUNIE]: 'junie',
   [RenderMode.GITLAB_DUO]: 'gitlab_duo',
   [RenderMode.CONTINUE]: 'continue',
+  [RenderMode.CODEX]: 'codex',
 };
 
 const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
   packmind: RenderMode.PACKMIND,
+  opencode: RenderMode.OPENCODE,
   'agents-md': RenderMode.AGENTS_MD,
   'github-copilot': RenderMode.GH_COPILOT,
   cursor: RenderMode.CURSOR,
@@ -43,17 +46,20 @@ const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
   junie: RenderMode.JUNIE,
   gitlab_duo: RenderMode.GITLAB_DUO,
   continue: RenderMode.CONTINUE,
+  codex: RenderMode.CODEX,
 };
 
 const DEFAULT_FORMATS: RenderingItem[] = [
   { value: 'packmind', name: 'Packmind', checked: true, disabled: true },
   { value: 'agents-md', name: 'AGENTS.md', checked: true },
-  { value: 'github-copilot', name: 'Github Copilot', checked: false },
-  { value: 'cursor', name: 'Cursor', checked: false },
   { value: 'claude', name: 'Claude Code', checked: false },
-  { value: 'junie', name: 'Junie', checked: false },
-  { value: 'gitlab_duo', name: 'Gitlab Duo', checked: false },
+  { value: 'codex', name: 'Codex', checked: false },
   { value: 'continue', name: 'Continue', checked: false },
+  { value: 'cursor', name: 'Cursor', checked: false },
+  { value: 'github-copilot', name: 'Github Copilot', checked: false },
+  { value: 'gitlab_duo', name: 'Gitlab Duo', checked: false },
+  { value: 'junie', name: 'Junie', checked: false },
+  { value: 'opencode', name: 'OpenCode', checked: false },
 ];
 
 type RenderingSettingsContextValue = {

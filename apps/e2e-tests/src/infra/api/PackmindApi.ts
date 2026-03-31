@@ -5,6 +5,7 @@ import {
   ICreateStandardUseCase,
   ICreatePackageUseCase,
   INotifyDistributionUseCase,
+  IUploadSkillUseCase,
 } from '@packmind/types';
 import { IPackmindApi } from '../../domain/api/IPackmindApi';
 import { APIRequestContext, expect } from '@playwright/test';
@@ -107,6 +108,14 @@ export class PackmindApi implements IPackmindApi {
 
   notifyDistribution: Gateway<INotifyDistributionUseCase> = async (command) => {
     return this.post('/deployments', command, 201);
+  };
+
+  uploadSkill: Gateway<IUploadSkillUseCase> = async (command) => {
+    return this.post(
+      `/spaces/${command.spaceId}/skills/upload`,
+      { files: command.files },
+      201,
+    );
   };
 
   private async get<T>(url: string, expectedStatus = 200): Promise<T> {

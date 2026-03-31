@@ -6,6 +6,7 @@ import { DetectionHeuristics } from '../DetectionHeuristics';
 export type CreateDetectionHeuristicsCommand = PackmindCommand & {
   ruleId: RuleId;
   language: ProgrammingLanguage;
+  heuristics?: string[];
 };
 
 export type CreateDetectionHeuristicsResponse = {

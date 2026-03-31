@@ -110,9 +110,14 @@ describe('CreatePackageUseCase', () => {
       );
     });
 
-    it('does not call the packages gateway', async () => {
-      await expect(useCase.execute({ name: 'My Package' })).rejects.toThrow();
-      expect(mockPackagesGateway.create).not.toHaveBeenCalled();
+    describe('does not call the packages gateway', () => {
+      beforeEach(async () => {
+        await expect(useCase.execute({ name: 'My Package' })).rejects.toThrow();
+      });
+
+      it('does not call create', () => {
+        expect(mockPackagesGateway.create).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -150,11 +155,16 @@ describe('CreatePackageUseCase', () => {
       ).rejects.toThrow("Space 'unknown-space' not found.");
     });
 
-    it('does not call the packages gateway', async () => {
-      await expect(
-        useCase.execute({ name: 'My Package', spaceSlug: 'unknown-space' }),
-      ).rejects.toThrow();
-      expect(mockPackagesGateway.create).not.toHaveBeenCalled();
+    describe('does not call the packages gateway', () => {
+      beforeEach(async () => {
+        await expect(
+          useCase.execute({ name: 'My Package', spaceSlug: 'unknown-space' }),
+        ).rejects.toThrow();
+      });
+
+      it('does not call create', () => {
+        expect(mockPackagesGateway.create).not.toHaveBeenCalled();
+      });
     });
   });
 });

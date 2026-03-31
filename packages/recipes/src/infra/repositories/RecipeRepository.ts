@@ -7,6 +7,7 @@ import {
   OrganizationId,
   QueryOption,
   Recipe,
+  RecipeId,
   SpaceId,
   UserId,
 } from '@packmind/types';
@@ -141,6 +142,38 @@ export class RecipeRepository
     } catch (error) {
       this.logger.error('Failed to find recipes with scope by space ID', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async markAsMoved(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    this.logger.info('Marking recipe as moved', {
+      recipeId,
+      destinationSpaceId,
+    });
+
+    try {
+      await this.repository.manager.transaction(async (manager) => {
+        const transactionalRepository = manager.getRepository(RecipeSchema);
+        await transactionalRepository.update(
+          { id: recipeId },
+          { movedTo: destinationSpaceId },
+        );
+        await transactionalRepository.softDelete({ id: recipeId });
+      });
+
+      this.logger.info('Recipe marked as moved successfully', {
+        recipeId,
+        destinationSpaceId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to mark recipe as moved', {
+        recipeId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

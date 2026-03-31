@@ -33,6 +33,7 @@ import {
   SpaceId,
   UpdateSkillCommand,
   UploadSkillCommand,
+  UserId,
   UploadSkillResponse,
   createSkillId,
   createSkillVersionId,
@@ -457,5 +458,29 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
 
   public createUserIdFromString(id: string) {
     return createUserId(id);
+  }
+
+  async duplicateSkillToSpace(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Skill> {
+    return this.services
+      .getSkillService()
+      .duplicateSkillToSpace(skillId, destinationSpaceId, newUserId);
+  }
+
+  async markSkillAsMoved(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    return this.services
+      .getSkillService()
+      .markSkillAsMoved(skillId, destinationSpaceId);
+  }
+
+  async hardDeleteSkill(skillId: SkillId): Promise<void> {
+    this.logger.info('Hard deleting skill', { skillId });
+    await this.services.getSkillService().hardDeleteSkill(skillId);
   }
 }

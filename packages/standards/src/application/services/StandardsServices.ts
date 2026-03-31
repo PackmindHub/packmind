@@ -18,6 +18,9 @@ export class StandardsServices {
   ) {
     this.standardService = new StandardService(
       this.standardsRepositories.getStandardRepository(),
+      this.standardsRepositories.getStandardVersionRepository(),
+      this.standardsRepositories.getRuleRepository(),
+      this.standardsRepositories.getRuleExampleRepository(),
     );
     this.standardVersionService = new StandardVersionService(
       this.standardsRepositories.getStandardVersionRepository(),

@@ -21,6 +21,11 @@ import { StandardVersionId } from '../StandardVersionId';
 
 export const IStandardsPortName = 'IStandardsPort' as const;
 
+export type DuplicateStandardResult = {
+  standard: Standard;
+  ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }>;
+};
+
 export interface IStandardsPort {
   getStandard(id: StandardId): Promise<Standard | null>;
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null>;
@@ -69,4 +74,14 @@ export interface IStandardsPort {
   ): Promise<CreateStandardSamplesResponse>;
   updateStandard(command: UpdateStandardCommand): Promise<Standard>;
   deleteStandard(command: DeleteStandardCommand): Promise<void>;
+  hardDeleteStandard(standardId: StandardId): Promise<void>;
+  duplicateStandardToSpace(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<DuplicateStandardResult>;
+  markStandardAsMoved(
+    standardId: StandardId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void>;
 }

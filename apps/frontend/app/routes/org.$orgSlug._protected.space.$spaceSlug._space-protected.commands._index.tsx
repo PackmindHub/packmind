@@ -30,6 +30,7 @@ export default function OrgCommandsIndex() {
     >
       <PMVStack align="stretch" gap={6}>
         <RecipesList
+          key={spaceSlug}
           orgSlug={organization.slug}
           onEmptyStateChange={setIsEmpty}
         />

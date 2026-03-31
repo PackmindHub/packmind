@@ -124,10 +124,15 @@ export class DeployerService {
           const deployer = this.codingAgentRepositories
             .getDeployerRegistry()
             .getDeployer(agent);
-          const updates = await deployer.deployStandards(
+          const rawUpdates = await deployer.deployStandards(
             standardVersions,
             gitRepo,
             target,
+          );
+          const updates = this.suppressAgentsMdWritesForLowerPriorityAgents(
+            agent,
+            rawUpdates,
+            codingAgents,
           );
           allUpdates.push(updates);
           this.logger.debug(
@@ -260,10 +265,15 @@ export class DeployerService {
           hasExistingContent: existingContent.length > 0,
         });
 
-        const updates = await deployer.deployArtifacts(
+        const rawUpdates = await deployer.deployArtifacts(
           recipeVersions,
           standardVersions,
           skillVersions,
+        );
+        const updates = this.suppressAgentsMdWritesForLowerPriorityAgents(
+          agent,
+          rawUpdates,
+          codingAgents,
         );
 
         allUpdates.push(updates);
@@ -293,6 +303,49 @@ export class DeployerService {
 
   private getFilePathForAgent(agent: CodingAgent): string {
     return AGENT_FILE_PATHS[agent];
+  }
+
+  /**
+   * Agents that write to AGENTS.md, ordered from lowest to highest priority.
+   * When multiple are active, only the highest-priority agent writes to AGENTS.md.
+   */
+  private static readonly AGENTS_MD_WRITERS: CodingAgent[] = [
+    'codex',
+    'opencode',
+    'agents_md',
+  ];
+
+  /**
+   * When multiple agents write to AGENTS.md, suppress writes from lower-priority
+   * agents so only the highest-priority active agent owns the file.
+   */
+  private suppressAgentsMdWritesForLowerPriorityAgents(
+    agent: CodingAgent,
+    updates: FileUpdates,
+    codingAgents: CodingAgent[],
+  ): FileUpdates {
+    const writerIndex = DeployerService.AGENTS_MD_WRITERS.indexOf(agent);
+    if (writerIndex === -1) {
+      return updates;
+    }
+
+    const hasHigherPriorityWriter = DeployerService.AGENTS_MD_WRITERS.slice(
+      writerIndex + 1,
+    ).some((higher) => codingAgents.includes(higher));
+
+    if (!hasHigherPriorityWriter) {
+      return updates;
+    }
+
+    return {
+      ...updates,
+      createOrUpdate: updates.createOrUpdate.filter(
+        (f) => !f.path.endsWith(AGENT_FILE_PATHS['agents_md']),
+      ),
+      delete: updates.delete.filter(
+        (f) => !f.path.endsWith(AGENT_FILE_PATHS['agents_md']),
+      ),
+    };
   }
 
   private mergeFileUpdates(updates: FileUpdates[]): FileUpdates {

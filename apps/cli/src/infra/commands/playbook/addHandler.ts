@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import slug from 'slug';
 
 import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
 import { parseCommandFile } from '../../../application/utils/parseCommandFile';
@@ -19,7 +20,13 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { normalizePath } from '../../../application/utils/pathUtils';
-import { ArtifactType, MultiFileCodingAgent, Space } from '@packmind/types';
+import {
+  ArtifactType,
+  MultiFileCodingAgent,
+  Space,
+  SpaceId,
+  validateArtifactFileFormat,
+} from '@packmind/types';
 import {
   findLockFileEntryForPath,
   findLockFileEntryAndFileForPath,
@@ -207,6 +214,16 @@ export async function playbookAddHandler(
     codingAgent = artefactResult.codingAgent;
   }
 
+  const formatValidation = validateArtifactFileFormat(
+    absolutePath,
+    artifactType,
+  );
+  if (!formatValidation.valid) {
+    logErrorConsole(formatValidation.reason);
+    exit(1);
+    return;
+  }
+
   // Read local content
   let localContent: string;
   let artifactName: string;
@@ -282,9 +299,11 @@ export async function playbookAddHandler(
       if (parsed) {
         artifactName = parsed.name;
       } else {
-        const lenient = parseLenientStandard(localContent, absolutePath);
+        const lenient = parseLenientStandard(localContent);
         if (!lenient) {
-          logErrorConsole('File is empty.');
+          logErrorConsole(
+            `${filePath} is not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
+          );
           exit(1);
           return;
         }
@@ -337,14 +356,27 @@ export async function playbookAddHandler(
   let spaceName: string | undefined;
   const allSpaces = await packmindCliHexa.getSpaces();
 
+  // If the artifact exists in the lock file, validate its space is still accessible
+  const existingLockEntry =
+    earlyLockFile &&
+    findLockFileEntryForPath(normalizedFilePath, earlyLockFile.artifacts);
+  if (
+    existingLockEntry &&
+    !spaceSlug &&
+    !allSpaces.some((s) => s.id === existingLockEntry.spaceId)
+  ) {
+    logErrorConsole(
+      `Cannot add changes to this ${artifactType}: the space it belongs to is not available to you.\nUse --space to stage it as a new artifact in an accessible space:\n${formatSpaceList(allSpaces)}`,
+    );
+    exit(1);
+    return;
+  }
+
   if (spaceSlug) {
-    const normalizedSlug = spaceSlug.startsWith('@')
-      ? spaceSlug.slice(1)
-      : spaceSlug;
-    const matchedSpace = allSpaces.find((s) => s.slug === normalizedSlug);
+    const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
     if (!matchedSpace) {
       logErrorConsole(
-        `Space "${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
+        `Space "@${spaceSlug}" not found. Available spaces:\n${formatSpaceList(allSpaces)}`,
       );
       exit(1);
       return;
@@ -355,15 +387,10 @@ export async function playbookAddHandler(
     spaceId = allSpaces[0].id;
     spaceName = allSpaces[0].name;
   } else {
-    // For updates, use the deployed context space as default.
+    // For updates, use the lock file entry's space (authoritative source).
     // For new artifacts, always require --space when multiple spaces exist.
-    const isExistingArtifact =
-      earlyLockFile &&
-      findLockFileEntryForPath(normalizedFilePath, earlyLockFile.artifacts);
-    const deployedSpaceId = deployedContext?.spaceId;
-
-    if (isExistingArtifact && deployedSpaceId) {
-      spaceId = deployedSpaceId;
+    if (existingLockEntry) {
+      spaceId = existingLockEntry.spaceId;
       spaceName = allSpaces.find((s) => s.id === spaceId)?.name;
     } else {
       logErrorConsole(
@@ -383,6 +410,34 @@ export async function playbookAddHandler(
     );
     if (matchingEntry && matchingEntry.spaceId === spaceId) {
       changeType = 'updated';
+    }
+  }
+
+  // Check name uniqueness for new artifacts
+  if (changeType === 'created') {
+    try {
+      const existingNames = await listExistingArtifactNames(
+        packmindCliHexa,
+        artifactType,
+        spaceId,
+      );
+      const nameExists = existingNames.some(
+        (name) => slug(name) === slug(artifactName),
+      );
+      if (nameExists) {
+        logErrorConsole(
+          `A ${artifactType} named "${artifactName}" already exists in Packmind.`,
+        );
+        exit(1);
+        return;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logErrorConsole(
+        `Failed to check for existing ${artifactType}s: ${errorMessage}`,
+      );
+      exit(1);
+      return;
     }
   }
 
@@ -453,6 +508,33 @@ export async function playbookAddHandler(
     `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook${spaceInfo}. ${formatLabel(codingAgent)}`,
   );
   exit(0);
+}
+
+async function listExistingArtifactNames(
+  packmindCliHexa: PackmindCliHexa,
+  artifactType: ArtifactType,
+  spaceId: string,
+): Promise<string[]> {
+  switch (artifactType) {
+    case 'skill': {
+      const skills = await packmindCliHexa.listSkills({
+        spaceId: spaceId as SpaceId,
+      });
+      return skills.map((s) => s.name);
+    }
+    case 'command': {
+      const commands = await packmindCliHexa.listCommands({
+        spaceId: spaceId as SpaceId,
+      });
+      return commands.map((c) => c.name);
+    }
+    case 'standard': {
+      const standards = await packmindCliHexa.listStandards({
+        spaceId: spaceId as SpaceId,
+      });
+      return standards.map((s) => s.name);
+    }
+  }
 }
 
 export function formatSpaceList(spaces: Space[]): string {

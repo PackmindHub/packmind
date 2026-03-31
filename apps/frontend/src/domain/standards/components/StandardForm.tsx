@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   PMBox,
   PMVStack,
@@ -15,7 +15,9 @@ import {
   useCreateStandardMutation,
   useUpdateStandardMutation,
   useGetRulesByStandardIdQuery,
+  useGetStandardsQuery,
 } from '../api/queries/StandardsQueries';
+import { useArtifactNameValidator } from '../../../shared/hooks/useArtifactNameValidator';
 import {
   createRuleId,
   RuleId,
@@ -28,6 +30,15 @@ import { STANDARD_MESSAGES } from '../constants/messages';
 import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+
+function hasOnlyNegativePatterns(scope: string): boolean {
+  if (!scope.trim()) return false;
+  const patterns = scope
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  return patterns.length > 0 && !patterns.some((p) => !p.startsWith('!'));
+}
 
 interface Rule {
   content: string;
@@ -78,6 +89,18 @@ export const StandardForm: React.FC<StandardFormProps> = ({
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const { data: existingStandards } = useGetStandardsQuery();
+  const existingNames = useMemo(
+    () => (existingStandards?.standards ?? []).map((s) => s.name),
+    [existingStandards],
+  );
+  const validateName = useArtifactNameValidator(
+    existingNames,
+    mode === 'edit' ? standard?.name : undefined,
+  );
+  const nameError = validateName(name);
+  const hasNameError = nameError !== null;
+
   // Initialize rules from fetched data for edit mode
   useEffect(() => {
     if (mode === 'edit' && fetchedRules && fetchedRules.length > 0) {
@@ -115,6 +138,14 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     e.preventDefault();
 
     // Validation
+    if (hasNameError) {
+      setAlert({
+        type: 'error',
+        message: nameError!,
+      });
+      return;
+    }
+
     if (!name.trim()) {
       setAlert({
         type: 'error',
@@ -127,6 +158,14 @@ export const StandardForm: React.FC<StandardFormProps> = ({
       setAlert({
         type: 'error',
         message: STANDARD_MESSAGES.validation.descriptionRequired,
+      });
+      return;
+    }
+
+    if (hasOnlyNegativePatterns(scope)) {
+      setAlert({
+        type: 'error',
+        message: STANDARD_MESSAGES.validation.scopeRequiresPositivePattern,
       });
       return;
     }
@@ -196,7 +235,10 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     }
   };
 
-  const isFormValid = name.trim() && description.trim();
+  const hasScopeError = hasOnlyNegativePatterns(scope);
+
+  const isFormValid =
+    name.trim() && description.trim() && !hasScopeError && !hasNameError;
 
   if (mode === 'edit' && rulesLoading) {
     return <PMText>Loading rules...</PMText>;
@@ -225,41 +267,48 @@ export const StandardForm: React.FC<StandardFormProps> = ({
       )}
       <PMVStack gap={10} alignItems={'flex-start'}>
         {mode === 'edit' && (
-          <PMEditable.Root
-            defaultValue={name}
-            onValueChange={(details) => setName(details.value)}
-            activationMode="click"
-            disabled={isPending}
-            placeholder="Enter standard name"
-            width="full"
-          >
-            <PMHStack gap={2} alignItems="center">
-              <PMEditable.Preview
+          <>
+            <PMEditable.Root
+              defaultValue={name}
+              onValueChange={(details) => setName(details.value)}
+              activationMode="click"
+              disabled={isPending}
+              placeholder="Enter standard name"
+              width="full"
+            >
+              <PMHStack gap={2} alignItems="center">
+                <PMEditable.Preview
+                  fontSize="2xl"
+                  fontWeight="bold"
+                  cursor="pointer"
+                  _hover={{ bg: 'background.tertiary' }}
+                  minW="200px"
+                  px={2}
+                  mx={-2}
+                />
+                <PMEditable.EditTrigger asChild>
+                  <PMIconButton
+                    aria-label="Edit standard name"
+                    variant="ghost"
+                    size="xs"
+                  >
+                    <LuPencilLine />
+                  </PMIconButton>
+                </PMEditable.EditTrigger>
+              </PMHStack>
+              <PMEditable.Input
                 fontSize="2xl"
                 fontWeight="bold"
-                cursor="pointer"
-                _hover={{ bg: 'background.tertiary' }}
-                minW="200px"
-                px={2}
-                mx={-2}
+                px={0}
+                width="full"
               />
-              <PMEditable.EditTrigger asChild>
-                <PMIconButton
-                  aria-label="Edit standard name"
-                  variant="ghost"
-                  size="xs"
-                >
-                  <LuPencilLine />
-                </PMIconButton>
-              </PMEditable.EditTrigger>
-            </PMHStack>
-            <PMEditable.Input
-              fontSize="2xl"
-              fontWeight="bold"
-              px={0}
-              width="full"
-            />
-          </PMEditable.Root>
+            </PMEditable.Root>
+            {nameError && (
+              <PMText color="error" fontSize="sm">
+                {nameError}
+              </PMText>
+            )}
+          </>
         )}
 
         {mode === 'edit' ? (
@@ -281,7 +330,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
               borderColor="border.primary"
               p={4}
             >
-              <PMField.Root required>
+              <PMField.Root required invalid={hasNameError}>
                 <PMField.Label>
                   Name
                   <PMField.RequiredIndicator />
@@ -293,7 +342,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
                   disabled={isPending}
                 />
                 <PMField.HelperText />
-                <PMField.ErrorText />
+                <PMField.ErrorText>{nameError}</PMField.ErrorText>
               </PMField.Root>
 
               <PMField.Root required maxW={'100%'}>
@@ -389,18 +438,22 @@ export const StandardForm: React.FC<StandardFormProps> = ({
             <PMField.Root>
               <PMField.Label>Scope</PMField.Label>
               <PMInput
-                placeholder="**/*.spec.ts,**/*.test.ts"
+                placeholder="**/*.spec.ts,!**/generated/**"
                 value={scope}
                 onChange={(e) => setScope(e.target.value)}
                 disabled={isPending}
-                title="Define which files this standard applies to using glob patterns. Leave empty to apply to all files."
+                title="Define which files this standard applies to using glob patterns. Prefix a pattern with ! to exclude files. Leave empty to apply to all files."
               />
               <PMField.HelperText>
                 Optional: Use glob patterns to target specific files (e.g.,
                 **/*.spec.ts for test files, src/domain/**/* for domain folder).
-                Separate multiple patterns with commas.
+                Prefix a pattern with ! to exclude files (e.g.,
+                !**/generated/**). Separate multiple patterns with commas.
               </PMField.HelperText>
-              <PMField.ErrorText />
+              <PMField.ErrorText>
+                {hasScopeError &&
+                  STANDARD_MESSAGES.validation.scopeRequiresPositivePattern}
+              </PMField.ErrorText>
             </PMField.Root>
           </PMFieldset.Content>
         </PMFieldset.Root>

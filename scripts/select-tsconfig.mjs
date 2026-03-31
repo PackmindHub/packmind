@@ -19,8 +19,6 @@ const PATHS = path.join(
 const OUT = path.join(ROOT, 'tsconfig.base.effective.json');
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
-const writeJson = (p, obj) =>
-  fs.writeFileSync(p, JSON.stringify(obj, null, 2) + '\n');
 
 function validateNxPaths(paths) {
   if (!paths) return;
@@ -56,7 +54,17 @@ function main() {
     },
   };
 
-  writeJson(OUT, effective);
+  const effectiveJson = JSON.stringify(effective, null, 2) + '\n';
+  if (fs.existsSync(OUT)) {
+    const existing = fs.readFileSync(OUT, 'utf8');
+    if (existing === effectiveJson) {
+      console.log(
+        `[select-tsconfig] ${path.basename(OUT)} already up to date, skipping write`,
+      );
+      return;
+    }
+  }
+  fs.writeFileSync(OUT, effectiveJson);
   console.log(
     `[select-tsconfig] PACKMIND_EDITION=${PACKMIND_EDITION} -> ${path.basename(OUT)} (base + ${path.basename(PATHS)})`,
   );

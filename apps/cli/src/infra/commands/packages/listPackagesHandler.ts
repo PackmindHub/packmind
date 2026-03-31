@@ -108,10 +108,7 @@ export async function listPackagesHandler(
     const matchedSpace = resolveSpaceFromArgs(args.space, allSpaces);
 
     if (args.space && !matchedSpace) {
-      const slug = args.space.startsWith('@')
-        ? args.space.slice(1)
-        : args.space;
-      logErrorConsole(`Space '@${slug}' not found.`);
+      logErrorConsole(`Space "@${args.space}" not found.`);
       logInfoConsole(
         `Available spaces: ${allSpaces.map((s) => `@${s.slug}`).join(', ')}`,
       );
@@ -127,7 +124,7 @@ export async function listPackagesHandler(
     if (packages.length === 0) {
       logConsole(
         matchedSpace
-          ? `No packages found in space '@${matchedSpace.slug}'.`
+          ? `No packages found in space "@${matchedSpace.slug}".`
           : 'No packages found.',
       );
       exit(0);

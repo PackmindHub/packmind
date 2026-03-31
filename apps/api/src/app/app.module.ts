@@ -22,6 +22,7 @@ import {
   ImportPracticeLegacyHexa,
 } from '@packmind/import-practices-legacy';
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
+import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
 import {
   PlaybookChangeManagementHexa,
   playbookChangeManagementSchemas,
@@ -52,8 +53,12 @@ import { OrganizationGitRepositoriesModule } from './organizations/git/repositor
 import { OrganizationLlmModule } from './organizations/llm/llm.module';
 import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
 import { OrganizationSkillsModule } from './organizations/skills/skills.module';
-import { SpacesManagementModule } from '@packmind/spaces-management';
+import {
+  SpacesManagementHexa,
+  SpacesManagementModule,
+} from '@packmind/spaces-management';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
+import { PlaybookModule } from './organizations/playbook/playbook.module';
 import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
 import { TrialModule } from './trial/trial.module';
@@ -108,7 +113,9 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
         ImportPracticeLegacyHexa, // After StandardsHexa (depends on Linter/Standards ports)
+        SpacesManagementHexa, // Must come after Spaces, Accounts, Standards, Skills, Recipes
         PlaybookChangeManagementHexa,
+        PlaybookBulkApplyHexa,
         CodingAgentHexa,
         DeploymentsHexa,
       ],
@@ -184,6 +191,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'spaces-management',
             module: SpacesManagementModule,
+          },
+          {
+            path: 'playbook',
+            module: PlaybookModule,
           },
           {
             path: 'spaces',

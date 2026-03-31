@@ -1,8 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
+import { ISkillVersionRepository } from '../../domain/repositories/ISkillVersionRepository';
+import { ISkillFileRepository } from '../../domain/repositories/ISkillFileRepository';
 import { ISkillRepository } from '../../domain/repositories/ISkillRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  createSkillFileId,
   createSkillId,
+  createSkillVersionId,
   OrganizationId,
   QueryOption,
   SpaceId,
@@ -45,6 +49,8 @@ export type UpdateSkillData = {
 export class SkillService {
   constructor(
     private readonly skillRepository: ISkillRepository,
+    private readonly skillVersionRepository: ISkillVersionRepository,
+    private readonly skillFileRepository: ISkillFileRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('SkillService initialized');
@@ -232,5 +238,139 @@ export class SkillService {
       });
       throw error;
     }
+  }
+
+  async duplicateSkillToSpace(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Skill> {
+    this.logger.info('Duplicating skill to space', {
+      skillId,
+      destinationSpaceId,
+    });
+
+    try {
+      // 1. Read the original skill
+      const original = await this.skillRepository.findById(skillId);
+      if (!original) {
+        throw new Error(`Skill with id ${skillId} not found`);
+      }
+
+      // 2. Create new skill with fresh ID
+      const newSkillId = createSkillId(uuidv4());
+      const now = new Date();
+      const newSkill: Skill = {
+        id: newSkillId,
+        name: original.name,
+        slug: original.slug,
+        description: original.description,
+        prompt: original.prompt,
+        allowedTools: original.allowedTools,
+        license: original.license,
+        compatibility: original.compatibility,
+        metadata: original.metadata,
+        additionalProperties: original.additionalProperties,
+        version: original.version,
+        userId: newUserId,
+        spaceId: destinationSpaceId,
+        movedTo: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const savedSkill = await this.skillRepository.add(newSkill);
+
+      // 3. Read all versions for this skill
+      const versions = await this.skillVersionRepository.findBySkillId(skillId);
+
+      for (const version of versions) {
+        // 4. Create new version with fresh ID, linked to new skill
+        const newVersionId = createSkillVersionId(uuidv4());
+        await this.skillVersionRepository.add({
+          id: newVersionId,
+          skillId: newSkillId,
+          version: version.version,
+          userId: version.userId,
+          name: version.name,
+          slug: version.slug,
+          description: version.description,
+          prompt: version.prompt,
+          allowedTools: version.allowedTools,
+          license: version.license,
+          compatibility: version.compatibility,
+          metadata: version.metadata,
+          additionalProperties: version.additionalProperties,
+        });
+
+        // 5. Read all files for this version
+        const files = await this.skillFileRepository.findBySkillVersionId(
+          version.id,
+        );
+
+        if (files.length > 0) {
+          // 6. Create new files with fresh IDs, linked to new version
+          const newFiles = files.map((file) => ({
+            id: createSkillFileId(uuidv4()),
+            skillVersionId: newVersionId,
+            path: file.path,
+            content: file.content,
+            permissions: file.permissions,
+            isBase64: file.isBase64,
+          }));
+          await this.skillFileRepository.addMany(newFiles);
+        }
+      }
+
+      this.logger.info('Skill duplicated to space successfully', {
+        originalSkillId: skillId,
+        newSkillId,
+        destinationSpaceId,
+        versionsCount: versions.length,
+      });
+
+      return savedSkill;
+    } catch (error) {
+      this.logger.error('Failed to duplicate skill to space', {
+        skillId,
+        destinationSpaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async markSkillAsMoved(
+    skillId: SkillId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    this.logger.info('Marking skill as moved', {
+      skillId,
+      destinationSpaceId,
+    });
+
+    try {
+      const skill = await this.skillRepository.findById(skillId);
+      if (!skill) {
+        throw new Error(`Skill with id ${skillId} not found`);
+      }
+
+      await this.skillRepository.markAsMoved(skillId, destinationSpaceId);
+
+      this.logger.info('Skill marked as moved successfully', {
+        skillId,
+        destinationSpaceId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to mark skill as moved', {
+        skillId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async hardDeleteSkill(skillId: SkillId): Promise<void> {
+    this.logger.info('Hard deleting skill', { skillId });
+    await this.skillRepository.hardDeleteById(skillId);
   }
 }

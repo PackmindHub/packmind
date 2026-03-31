@@ -10,6 +10,7 @@ import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
+import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import {
   BaseHexa,
@@ -22,6 +23,7 @@ import {
 } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SkillsHexa } from '@packmind/skills';
+import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
@@ -77,7 +79,9 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
       StandardsHexa,
       SkillsHexa,
+      SpacesManagementHexa, // Must come after Spaces, Accounts, Standards, Skills, Recipes
       PlaybookChangeManagementHexa,
+      PlaybookBulkApplyHexa,
       CodingAgentHexa,
       DeploymentsHexa,
       ...apiHexaPlugins,

@@ -7,6 +7,7 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/editions';
 import { LlmHexa } from '@packmind/llm';
+import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { PackmindLogger } from '@packmind/logger';
 import {
@@ -18,6 +19,7 @@ import {
 } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SkillsHexa } from '@packmind/skills';
+import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import {
@@ -27,9 +29,11 @@ import {
   IGitPort,
   ILinterPort,
   ILlmPort,
+  IPlaybookBulkApplyPort,
   IPlaybookChangeManagementPort,
   IRecipesPort,
   ISkillsPort,
+  ISpacesManagementPort,
   ISpacesPort,
   IStandardsPort,
 } from '@packmind/types';
@@ -76,10 +80,12 @@ export const STANDARDS_ADAPTER_TOKEN = 'STANDARDS_ADAPTER';
 export const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 export const SPACES_ADAPTER_TOKEN = 'SPACES_ADAPTER';
 export const LINTER_ADAPTER_TOKEN = 'LINTER_ADAPTER';
+export const SPACES_MANAGEMENT_ADAPTER_TOKEN = 'SPACES_MANAGEMENT_ADAPTER';
 export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
 export const LLM_ADAPTER_TOKEN = 'LLM_ADAPTER';
 export const PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN =
   'PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER';
+export const PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN = 'PLAYBOOK_BULK_APPLY_ADAPTER';
 
 /**
  * NestJS Module for integrating HexaRegistry with dependency injection.
@@ -126,9 +132,11 @@ export class HexaRegistryModule {
         GIT_ADAPTER_TOKEN,
         SPACES_ADAPTER_TOKEN,
         LINTER_ADAPTER_TOKEN,
+        SPACES_MANAGEMENT_ADAPTER_TOKEN,
         CODING_AGENT_ADAPTER_TOKEN,
         LLM_ADAPTER_TOKEN,
         PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
+        PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN,
       ],
     };
   }
@@ -319,6 +327,21 @@ export class HexaRegistryModule {
       inject: [HEXA_REGISTRY_TOKEN],
     });
 
+    // SpacesManagement adapter
+    providers.push({
+      provide: SPACES_MANAGEMENT_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): ISpacesManagementPort | null => {
+        try {
+          const spacesManagementHexa = registry.get(SpacesManagementHexa);
+          return spacesManagementHexa.getAdapter();
+        } catch {
+          // SpacesManagementHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
     // CodingAgent adapter
     providers.push({
       provide: CODING_AGENT_ADAPTER_TOKEN,
@@ -362,6 +385,21 @@ export class HexaRegistryModule {
           return playbookChangeManagementHexa.getAdapter();
         } catch {
           // PlaybookChangeManagementHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // PlaybookBulkApply adapter
+    providers.push({
+      provide: PLAYBOOK_BULK_APPLY_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): IPlaybookBulkApplyPort | null => {
+        try {
+          const playbookBulkApplyHexa = registry.get(PlaybookBulkApplyHexa);
+          return playbookBulkApplyHexa.getAdapter();
+        } catch {
+          // PlaybookBulkApplyHexa not available
         }
         return null;
       },

@@ -3,6 +3,7 @@ import {
   OrganizationId,
   QueryOption,
   Skill,
+  SkillId,
   SpaceId,
   UserId,
 } from '@packmind/types';
@@ -17,4 +18,5 @@ export interface ISkillRepository extends IRepository<Skill> {
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]>;
   findByUserId(userId: UserId): Promise<Skill[]>;
+  markAsMoved(skillId: SkillId, destinationSpaceId: SpaceId): Promise<void>;
 }

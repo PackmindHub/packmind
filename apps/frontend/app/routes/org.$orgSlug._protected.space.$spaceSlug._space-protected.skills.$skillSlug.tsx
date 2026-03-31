@@ -292,6 +292,8 @@ export default function SkillDetailLayoutRouteModule() {
             )}
             pendingCount={pendingCount}
             skillId={skillWithFiles.skill.id}
+            organizationId={organization.id}
+            spaceId={skillWithFiles.skill.spaceId}
             orgSlug={orgSlug}
             spaceSlug={spaceSlug}
           />

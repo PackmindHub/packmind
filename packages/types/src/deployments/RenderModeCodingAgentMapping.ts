@@ -3,6 +3,7 @@ import { RenderMode } from './RenderMode';
 
 export const RENDER_MODE_TO_CODING_AGENT: Record<RenderMode, CodingAgent> = {
   [RenderMode.PACKMIND]: CodingAgents.packmind,
+  [RenderMode.OPENCODE]: CodingAgents.opencode,
   [RenderMode.AGENTS_MD]: CodingAgents.agents_md,
   [RenderMode.JUNIE]: CodingAgents.junie,
   [RenderMode.GH_COPILOT]: CodingAgents.copilot,
@@ -10,6 +11,7 @@ export const RENDER_MODE_TO_CODING_AGENT: Record<RenderMode, CodingAgent> = {
   [RenderMode.CURSOR]: CodingAgents.cursor,
   [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,
   [RenderMode.CONTINUE]: CodingAgents.continue,
+  [RenderMode.CODEX]: CodingAgents.codex,
 };
 
 export const CODING_AGENT_TO_RENDER_MODE: Partial<

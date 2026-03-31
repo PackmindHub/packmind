@@ -30,6 +30,7 @@ on:
 jobs:
   gitguardian-scan:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     name: GitGuardian scan
 
     steps:
@@ -48,6 +49,7 @@ jobs:
 
   lint-and-format:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     strategy:
       matrix:
         node-version: ["${{ inputs.node-version }}"]
@@ -75,6 +77,7 @@ jobs:
 
   sonarqube:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     strategy:
       matrix:
         node-version: ["${{ inputs.node-version }}"]
@@ -104,6 +107,7 @@ jobs:
 
   packmind-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     name: Run Packmind CLI
 
     steps:
@@ -129,6 +133,7 @@ jobs:
   check-cli-sync:
     if: vars.PACKMIND_EDITION == 'proprietary'
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     name: Check CLI source parity with OSS
 
     steps:

@@ -26,4 +26,27 @@ describe('handleScope', () => {
       expect(handleScope(['a', 'b, c, '])).toEqual(['a', 'b', 'c']);
     });
   });
+
+  describe('negative glob patterns', () => {
+    describe('when splitting a string with mixed patterns', () => {
+      it('preserves ! prefix', () => {
+        expect(handleScope('**/*.ts, !**/test/**')).toEqual([
+          '**/*.ts',
+          '!**/test/**',
+        ]);
+      });
+    });
+
+    it('preserves ! prefix for only-negative pattern string', () => {
+      expect(handleScope('!**/test/**')).toEqual(['!**/test/**']);
+    });
+
+    describe('when splitting an array with multiple negatives', () => {
+      it('preserves ! prefix', () => {
+        expect(
+          handleScope(['**/*.ts', '!**/vendor/**, !**/generated/**']),
+        ).toEqual(['**/*.ts', '!**/vendor/**', '!**/generated/**']);
+      });
+    });
+  });
 });

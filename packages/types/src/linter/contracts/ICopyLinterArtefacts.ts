@@ -10,6 +10,7 @@ export type CopyLinterArtefactsResponse = {
   copiedHeuristicsCount: number;
   copiedAssessmentsCount: number;
   copiedProgramsCount: number;
+  copiedMetadataCount: number;
 };
 
 export type ICopyLinterArtefacts = IUseCase<

@@ -76,13 +76,18 @@ describe('listSkillsHandler', () => {
       );
     });
 
-    it('displays space headers', () => {
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Space "Space A"'),
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Space "Space B"'),
-      );
+    describe('displays space headers', () => {
+      it('displays Space A header', () => {
+        expect(console.log).toHaveBeenCalledWith(
+          expect.stringContaining('Space "Space A"'),
+        );
+      });
+
+      it('displays Space B header', () => {
+        expect(console.log).toHaveBeenCalledWith(
+          expect.stringContaining('Space "Space B"'),
+        );
+      });
     });
 
     it('exits with code 0', () => {
@@ -158,7 +163,7 @@ describe('listSkillsHandler', () => {
     it('logs an error about the missing space', () => {
       expect(console.error).toHaveBeenCalledWith(
         expect.anything(),
-        expect.stringContaining('Space "unknown" not found.'),
+        expect.stringContaining('Space "@unknown" not found.'),
       );
     });
 
@@ -196,7 +201,7 @@ describe('listSkillsHandler', () => {
 
     it('displays space-specific empty message', () => {
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('No skills found in space "space-a".'),
+        expect.stringContaining('No skills found in space "@space-a".'),
       );
     });
 

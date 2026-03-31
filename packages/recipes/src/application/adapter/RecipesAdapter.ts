@@ -31,6 +31,7 @@ import {
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
   UpdateRecipesFromGitHubCommand,
+  UserId,
   UpdateRecipesFromGitLabCommand,
 } from '@packmind/types';
 import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
@@ -378,5 +379,29 @@ export class RecipesAdapter
     const recipeVersionService = this.recipesServices.getRecipeVersionService();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return recipeVersionService.getRecipeVersionById(id as any);
+  }
+
+  async duplicateRecipeToSpace(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+    newUserId: UserId,
+  ): Promise<Recipe> {
+    return this.recipesServices
+      .getRecipeService()
+      .duplicateRecipeToSpace(recipeId, destinationSpaceId, newUserId);
+  }
+
+  async markRecipeAsMoved(
+    recipeId: RecipeId,
+    destinationSpaceId: SpaceId,
+  ): Promise<void> {
+    return this.recipesServices
+      .getRecipeService()
+      .markRecipeAsMoved(recipeId, destinationSpaceId);
+  }
+
+  async hardDeleteRecipe(recipeId: RecipeId): Promise<void> {
+    this.logger.info('Hard deleting recipe', { recipeId });
+    await this.recipesServices.getRecipeService().hardDeleteRecipe(recipeId);
   }
 }

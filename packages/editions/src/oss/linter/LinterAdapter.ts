@@ -48,12 +48,16 @@ import {
   CopyDetectionHeuristicsResponse,
   CopyLinterArtefactsCommand,
   CopyLinterArtefactsResponse,
+  MoveLinterArtefactsToNewRulesCommand,
+  MoveLinterArtefactsToNewRulesResponse,
   GetDetectionProgramsForPackagesCommand,
   GetDetectionProgramsForPackagesResponse,
   CreateEmptyRuleDetectionAssessmentCommand,
   CreateEmptyRuleDetectionAssessmentResponse,
   ILinterPort,
   TrackLinterExecutionResponse,
+  UpdateActiveDetectionProgramSeverityCommand,
+  UpdateActiveDetectionProgramSeverityResponse,
 } from '@packmind/types';
 import { LinterUsecases } from '.';
 
@@ -94,6 +98,12 @@ export class LinterAdapter implements ILinterPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: UpdateActiveDetectionProgramCommand,
   ): Promise<ActiveDetectionProgram> {
+    throw new Error('Method not implemented.');
+  }
+  updateActiveDetectionProgramSeverity(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: UpdateActiveDetectionProgramSeverityCommand,
+  ): Promise<UpdateActiveDetectionProgramSeverityResponse> {
     throw new Error('Method not implemented.');
   }
   getActiveDetectionProgramById(
@@ -169,6 +179,7 @@ export class LinterAdapter implements ILinterPort {
   ): Promise<CopyDetectionProgramsToNewRuleResponse> {
     return {
       copiedProgramsCount: 0,
+      copiedMetadataCount: 0,
     };
   }
 
@@ -238,6 +249,7 @@ export class LinterAdapter implements ILinterPort {
       copiedHeuristicsCount: 0,
       copiedAssessmentsCount: 0,
       copiedProgramsCount: 0,
+      copiedMetadataCount: 0,
     };
   }
 
@@ -256,6 +268,23 @@ export class LinterAdapter implements ILinterPort {
   }
 
   trackLinterExecution(): Promise<TrackLinterExecutionResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  async moveLinterArtefactsToNewRules(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<MoveLinterArtefactsToNewRulesResponse> {
+    return {
+      copiedCount: 0,
+      softDeletedCount: 0,
+    };
+  }
+
+  async dispatchMoveLinterArtefactsToNewRules(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: MoveLinterArtefactsToNewRulesCommand,
+  ): Promise<void> {
     throw new Error('Method not implemented.');
   }
 }

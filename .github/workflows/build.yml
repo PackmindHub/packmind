@@ -43,6 +43,7 @@ on:
 jobs:
   build-api:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       artifact-name: api-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
@@ -85,6 +86,7 @@ jobs:
 
   build-frontend:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       artifact-name: frontend-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
@@ -133,6 +135,7 @@ jobs:
 
   build-mcp-server:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       artifact-name: mcp-server-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
@@ -171,6 +174,7 @@ jobs:
 
   build-packages:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       standard-samples-artifact: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
@@ -209,6 +213,7 @@ jobs:
 
   build-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       artifact-name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
       cli-executables-artifact: cli-executables-${{ steps.get-version.outputs.version }}

@@ -1,15 +1,11 @@
 import { command, positional, string, optional, option } from 'cmd-ts';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { createStandardHandler } from './standards/createStandardHandler';
+import { originSkillOption } from './sharedOptions';
+import { SpaceSlug } from './customParameters/SpaceSlug';
 import {
-  logSuccessConsole,
   logErrorConsole,
   logConsole,
   formatCommand,
 } from '../utils/consoleLogger';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { CreateStandardFromPlaybookUseCase } from '../../application/useCases/CreateStandardFromPlaybookUseCase';
-import { originSkillOption } from './sharedOptions';
 
 export const createStandardCommand = command({
   name: 'create',
@@ -25,46 +21,17 @@ export const createStandardCommand = command({
       long: 'space',
       description:
         'Slug of the space in which to create the standard (with or without leading @)',
-      type: optional(string),
+      type: optional(SpaceSlug),
     }),
     originSkill: originSkillOption,
   },
-  handler: async ({ file, space, originSkill }) => {
-    try {
-      const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
-      const hexa = new PackmindCliHexa(packmindLogger);
-      const gateway = hexa.getPackmindGateway();
-      const useCase = new CreateStandardFromPlaybookUseCase(
-        gateway,
-        hexa.getSpaceService(),
-      );
-
-      const result = await createStandardHandler(
-        file,
-        useCase,
-        originSkill,
-        space ?? undefined,
-      );
-
-      if (result.success) {
-        logSuccessConsole(
-          `Standard "${result.standardName}" created successfully (ID: ${result.standardId})`,
-        );
-        process.exit(0);
-      } else {
-        logErrorConsole(`Failed to create standard: ${result.error}`);
-        if (result.error?.includes('Multiple spaces found')) {
-          logConsole(
-            `\nExample: ${formatCommand(`packmind-cli standards create --space <slug> ${file ?? '<file>'}`)}`,
-          );
-        }
-        process.exit(1);
-      }
-    } catch (e) {
-      logErrorConsole(
-        `Error: ${e instanceof Error ? e.message : 'Unknown error'}`,
-      );
-      process.exit(1);
-    }
+  handler: async () => {
+    logErrorConsole(
+      'Command "packmind-cli standards create" has been removed.',
+    );
+    logConsole(
+      `Use ${formatCommand('packmind-cli playbook add <path>')} instead.`,
+    );
+    process.exit(1);
   },
 });

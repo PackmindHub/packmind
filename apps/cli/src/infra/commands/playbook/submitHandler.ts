@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 
 import {
+  ApplyPlaybookProposalItem,
   ChangeProposalArtefactId,
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
@@ -29,6 +30,7 @@ import {
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
+import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
@@ -46,6 +48,7 @@ export type PlaybookSubmitHandlerDependencies = {
   cwd: string;
   exit: (code: number) => void;
   message: string | undefined;
+  noReview: boolean;
   openEditor: (prefill: string) => string | null;
   unlinkSync: (filePath: string) => void;
   rmSync: (dirPath: string, options?: { recursive?: boolean }) => void;
@@ -121,7 +124,7 @@ function buildCreatedStandardProposals(
     ];
   }
 
-  const lenient = parseLenientStandard(entry.content, entry.filePath);
+  const lenient = parseLenientStandard(entry.content);
   if (lenient) {
     return [
       {
@@ -131,7 +134,7 @@ function buildCreatedStandardProposals(
           name: lenient.name,
           description: lenient.description,
           scope: '',
-          rules: [],
+          rules: lenient.rules.map((r) => ({ content: r })),
         },
         targetId: entry.targetId,
         spaceId: entry.spaceId,
@@ -449,6 +452,78 @@ function findDeployedContentForPath(
   return match?.content ?? null;
 }
 
+async function checkForDuplicateNames(
+  createdEntries: PlaybookChangeEntry[],
+  packmindGateway: IPackmindGateway,
+): Promise<string[]> {
+  const errors: string[] = [];
+
+  // Group by (spaceId, artifactType)
+  const groups = new Map<string, PlaybookChangeEntry[]>();
+  for (const entry of createdEntries) {
+    const key = `${entry.spaceId}:${entry.artifactType}`;
+    const existing = groups.get(key) ?? [];
+    existing.push(entry);
+    groups.set(key, existing);
+  }
+
+  // Check duplicates among staged entries themselves
+  for (const [, entries] of groups) {
+    const seen = new Map<string, string>();
+    for (const entry of entries) {
+      const lowerName = entry.artifactName.toLowerCase();
+      if (seen.has(lowerName)) {
+        errors.push(
+          `A ${entry.artifactType} named "${entry.artifactName}" is staged multiple times. Remove the duplicate with "playbook unstage" or rename the artifact.`,
+        );
+      } else {
+        seen.set(lowerName, entry.artifactName);
+      }
+    }
+  }
+
+  // Fetch existing artifacts and check collisions
+  for (const [key, entries] of groups) {
+    const [rawSpaceId, artifactType] = key.split(':');
+    const typedSpaceId = rawSpaceId as SpaceId;
+    try {
+      let existingNames: string[] = [];
+      if (artifactType === 'standard') {
+        const response = await packmindGateway.standards.list({
+          spaceId: typedSpaceId,
+        });
+        existingNames = response.standards.map((s) => s.name);
+      } else if (artifactType === 'command') {
+        const response = await packmindGateway.commands.list({
+          spaceId: typedSpaceId,
+        });
+        existingNames = response.recipes.map((r) => r.name);
+      } else if (artifactType === 'skill') {
+        const response = await packmindGateway.skills.list({
+          spaceId: typedSpaceId,
+        });
+        existingNames = response.map((s) => s.name);
+      }
+
+      const existingNamesLower = new Set(
+        existingNames.map((n) => n.toLowerCase()),
+      );
+
+      for (const entry of entries) {
+        if (existingNamesLower.has(entry.artifactName.toLowerCase())) {
+          errors.push(
+            `A ${entry.artifactType} named "${entry.artifactName}" already exists in this space. Use "playbook unstage" to remove it or rename the artifact.`,
+          );
+        }
+      }
+    } catch {
+      // Gateway failure — skip pre-flight check for this group
+    }
+  }
+
+  return errors;
+}
+
 export async function playbookSubmitHandler(
   deps: PlaybookSubmitHandlerDependencies,
 ): Promise<void> {
@@ -459,6 +534,7 @@ export async function playbookSubmitHandler(
     cwd,
     exit,
     message,
+    noReview,
     openEditor,
   } = deps;
 
@@ -473,6 +549,8 @@ export async function playbookSubmitHandler(
   let resolvedMessage: string;
   if (message) {
     resolvedMessage = message;
+  } else if (noReview) {
+    resolvedMessage = '';
   } else {
     const prefill = buildEditorPrefill(changes);
     const editorResult = openEditor(prefill);
@@ -488,6 +566,22 @@ export async function playbookSubmitHandler(
       return;
     }
     resolvedMessage = stripped;
+  }
+
+  // Pre-flight: check for duplicate artifact names
+  const createdEntries = changes.filter((c) => c.changeType === 'created');
+  if (createdEntries.length > 0) {
+    const duplicateErrors = await checkForDuplicateNames(
+      createdEntries,
+      packmindCliHexa.getPackmindGateway(),
+    );
+    if (duplicateErrors.length > 0) {
+      for (const error of duplicateErrors) {
+        logErrorConsole(error);
+      }
+      exit(1);
+      return;
+    }
   }
 
   // Per-target lock file resolution cache
@@ -649,6 +743,60 @@ export async function playbookSubmitHandler(
 
   // Submit
   const packmindGateway = packmindCliHexa.getPackmindGateway();
+
+  if (noReview) {
+    const applyProposals: ApplyPlaybookProposalItem[] = allProposals.map(
+      (p) => ({
+        spaceId: p.spaceId as SpaceId,
+        type: p.type,
+        artefactId:
+          p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
+        payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
+        captureMode: ChangeProposalCaptureMode.commit,
+        targetId: (p.targetId ?? '') as TargetId,
+      }),
+    );
+
+    if (applyProposals.length === 0) {
+      logConsole('Nothing to apply directly.');
+      exit(0);
+      return;
+    }
+
+    const response = await packmindGateway.changeProposals.batchApply({
+      proposals: applyProposals,
+      message: resolvedMessage,
+    });
+
+    if (!response.success) {
+      logErrorConsole(`Error: ${response.error.message}`);
+      exit(1);
+      return;
+    }
+
+    for (const [spaceId, filePaths] of filePathsBySpaceId) {
+      for (const filePath of filePaths) {
+        playbookLocalRepository.removeChange(filePath, spaceId);
+      }
+    }
+
+    const parts: string[] = [];
+    const { standards, commands, skills } = response.created;
+    if (standards.length > 0)
+      parts.push(
+        `${standards.length} standard${standards.length !== 1 ? 's' : ''}`,
+      );
+    if (commands.length > 0)
+      parts.push(
+        `${commands.length} command${commands.length !== 1 ? 's' : ''}`,
+      );
+    if (skills.length > 0)
+      parts.push(`${skills.length} skill${skills.length !== 1 ? 's' : ''}`);
+    logSuccessConsole(`${parts.join(', ')} created`);
+    exit(0);
+    return;
+  }
+
   let totalCreated = 0;
   let totalSkipped = 0;
   let hasErrors = false;
