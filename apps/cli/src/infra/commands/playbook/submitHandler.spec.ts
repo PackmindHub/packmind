@@ -8,6 +8,7 @@ import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepos
 import { PlaybookChangeEntry } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { createMockPackmindGateway } from '../../../mocks/createMockGateways';
 import { ChangeProposalType, ChangeProposalCaptureMode } from '@packmind/types';
+import { CommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 
 jest.mock('../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
@@ -15,6 +16,7 @@ jest.mock('../../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logWarningConsole: jest.fn(),
+  formatCommand: (text: string) => text,
 }));
 
 const STANDARD_CONTENT = [
@@ -2686,6 +2688,34 @@ describe('playbookSubmitHandler', () => {
 
         expect(mockExit).toHaveBeenCalledWith(1);
       });
+    });
+  });
+
+  describe('when batchCreate throws CommunityEditionError', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
+      mockGateway.changeProposals.batchCreate.mockRejectedValue(
+        new CommunityEditionError('change proposals'),
+      );
+    });
+
+    it('logs error with --no-review hint', async () => {
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
+      await playbookSubmitHandler(
+        buildDeps({ message: 'test', noReview: false }),
+      );
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('--no-review'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookSubmitHandler(
+        buildDeps({ message: 'test', noReview: false }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
 });

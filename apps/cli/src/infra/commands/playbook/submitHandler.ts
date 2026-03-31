@@ -25,12 +25,15 @@ import {
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import {
+  formatCommand,
   logConsole,
   logErrorConsole,
+  logInfoConsole,
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
 import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
+import { isCommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
@@ -802,18 +805,33 @@ export async function playbookSubmitHandler(
   let hasErrors = false;
 
   for (const [spaceId, proposals] of proposalsBySpaceId) {
-    const response = await packmindGateway.changeProposals.batchCreate({
-      spaceId: spaceId as SpaceId,
-      proposals: proposals.map((p) => ({
-        type: p.type,
-        artefactId:
-          p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
-        payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
-        captureMode: ChangeProposalCaptureMode.commit,
-        message: resolvedMessage,
-        targetId: (p.targetId ?? '') as TargetId,
-      })),
-    });
+    let response: Awaited<
+      ReturnType<typeof packmindGateway.changeProposals.batchCreate>
+    >;
+    try {
+      response = await packmindGateway.changeProposals.batchCreate({
+        spaceId: spaceId as SpaceId,
+        proposals: proposals.map((p) => ({
+          type: p.type,
+          artefactId:
+            p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
+          payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
+          captureMode: ChangeProposalCaptureMode.commit,
+          message: resolvedMessage,
+          targetId: (p.targetId ?? '') as TargetId,
+        })),
+      });
+    } catch (error) {
+      if (isCommunityEditionError(error)) {
+        logErrorConsole(error.message);
+        logInfoConsole(
+          `Run ${formatCommand('`packmind-cli playbook submit --no-review`')} to apply changes directly.`,
+        );
+        exit(1);
+        return;
+      }
+      throw error;
+    }
 
     totalCreated += response.created;
     totalSkipped += response.skipped;
