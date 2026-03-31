@@ -4,11 +4,18 @@ import { RecipeId, Package, StandardId } from '@packmind/types';
 
 export async function apiPackageFactory(
   packmindApi: IPackmindApi,
-  data?: Partial<{ standardIds: StandardId[]; recipesIds: RecipeId[] }>,
+  data?: Partial<{
+    name: string;
+    standardIds: StandardId[];
+    recipesIds: RecipeId[];
+  }>,
 ): Promise<Package> {
   const spaces = await packmindApi.listSpaces();
   const spaceId = spaces[0].id;
-  const packageData = packageFactory({ spaceId });
+  const packageData = packageFactory({
+    spaceId,
+    ...(data?.name ? { name: data.name } : {}),
+  });
 
   const response = await packmindApi.createPackage({
     ...packageData,

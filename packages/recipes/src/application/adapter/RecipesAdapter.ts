@@ -399,4 +399,9 @@ export class RecipesAdapter
       .getRecipeService()
       .markRecipeAsMoved(recipeId, destinationSpaceId);
   }
+
+  async hardDeleteRecipe(recipeId: RecipeId): Promise<void> {
+    this.logger.info('Hard deleting recipe', { recipeId });
+    await this.recipesServices.getRecipeService().hardDeleteRecipe(recipeId);
+  }
 }

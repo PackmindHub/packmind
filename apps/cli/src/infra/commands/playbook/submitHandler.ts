@@ -132,7 +132,7 @@ function buildCreatedStandardProposals(
           name: lenient.name,
           description: lenient.description,
           scope: '',
-          rules: [],
+          rules: lenient.rules.map((r) => ({ content: r })),
         },
         targetId: entry.targetId,
         spaceId: entry.spaceId,

@@ -1,10 +1,11 @@
 {
   "name": "@packmind/cli",
-  "version": "0.23.0",
+  "version": "0.24.0-next",
   "description": "A command-line interface for Packmind linting and code quality checks",
   "private": false,
   "bin": {
-    "packmind-cli": "./main.cjs"
+    "packmind-cli": "./main.cjs",
+    "packmind": "./main.cjs"
   },
   "main": "./main.cjs",
   "files": [

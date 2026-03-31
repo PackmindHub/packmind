@@ -1,0 +1,16 @@
+{
+  "name": "@packmind/playbook-bulk-apply",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@packmind/types": "*",
+    "@packmind/logger": "*",
+    "@packmind/node-utils": "*",
+    "@packmind/test-utils": "*",
+    "typeorm": "0.3.28",
+    "uuid": "^11.1.0"
+  }
+}
