@@ -49,21 +49,32 @@ jest.mock(
 jest.mock('./RuleExamplesManager', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
-  const RuleExamplesManagerMock = (props: {
-    selectedLanguage: string;
-    forceCreate?: boolean;
-  }) => (
-    <div data-testid="rule-examples-manager">
-      <span data-testid="selected-language">{props.selectedLanguage}</span>
-      <span data-testid="force-create">
-        {props.forceCreate ? 'true' : 'false'}
-      </span>
-    </div>
+  const RuleExamplesManagerMock = React.forwardRef(
+    (
+      props: {
+        selectedLanguage: string;
+        forceCreate?: boolean;
+      },
+      ref: React.Ref<unknown>,
+    ) => {
+      React.useImperativeHandle(ref, () => ({
+        addExample: jest.fn(),
+      }));
+      return (
+        <div data-testid="rule-examples-manager">
+          <span data-testid="selected-language">{props.selectedLanguage}</span>
+          <span data-testid="force-create">
+            {props.forceCreate ? 'true' : 'false'}
+          </span>
+        </div>
+      );
+    },
   );
 
   return {
     __esModule: true,
     RuleExamplesManager: RuleExamplesManagerMock,
+    RuleExamplesManagerHandle: {},
   };
 });
 
@@ -153,7 +164,7 @@ describe('RuleDetails - language selector and states', () => {
         />,
       );
 
-      const languageLabel = screen.getByText('Language :');
+      const languageLabel = screen.getByText('Language');
       const languageContainer = languageLabel.closest('div') as HTMLElement;
       const triggerCombobox = within(languageContainer).getByRole('combobox');
       await user.click(triggerCombobox);
@@ -200,7 +211,7 @@ describe('RuleDetails - language selector and states', () => {
         />,
       );
 
-      const languageLabel = screen.getByText('Language :');
+      const languageLabel = screen.getByText('Language');
       const languageContainer = languageLabel.closest('div') as HTMLElement;
       const triggerCombobox = within(languageContainer).getByRole('combobox');
       await user.click(triggerCombobox);
