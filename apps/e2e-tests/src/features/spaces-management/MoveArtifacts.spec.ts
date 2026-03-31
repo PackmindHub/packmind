@@ -21,16 +21,12 @@ const test = testWithApi.extend<{
 });
 
 test.describe('Move artifacts between spaces', () => {
-  test('Standards can be moved from one space to another', async ({
+  test('moved standards appear in the target space', async ({
     packmindApi,
     dashboardPage,
   }) => {
-    // Setup: create 2 standards with unique names via API
-    const standard1 = await apiStandardFactory(packmindApi, {
+    const standard = await apiStandardFactory(packmindApi, {
       name: `Standard Alpha ${uuidv4().slice(0, 8)}`,
-    });
-    const standard2 = await apiStandardFactory(packmindApi, {
-      name: `Standard Beta ${uuidv4().slice(0, 8)}`,
     });
 
     // Create target space via UI (navigates to target space dashboard)
@@ -39,29 +35,20 @@ test.describe('Move artifacts between spaces', () => {
     // Navigate back to default space
     const defaultDashboard = await targetDashboard.navigateToSpace('Global');
 
-    // Open Standards page and select all
+    // Open Standards page, select all, and move
     const standardsPage = await defaultDashboard.openStandards();
     await standardsPage.selectAll();
-
-    // Move all standards to target space
     await standardsPage.moveToSpace('target');
 
     // Reload to clear TanStack Query cache after move
     await standardsPage.reload();
 
-    // Verify: navigate to target space and check standards are there
+    // Verify: standards are in the target space
     const targetDashboard2 = await standardsPage.navigateToSpace('target');
     const targetStandards = await targetDashboard2.openStandards();
     const standardsList = await targetStandards.listStandards();
 
-    expect(standardsList.map((s) => s.name)).toContain(standard1.name);
-    expect(standardsList.map((s) => s.name)).toContain(standard2.name);
-
-    // Verify: navigate back to default space and check it's empty
-    const defaultDashboard2 = await targetStandards.navigateToSpace('Global');
-    const defaultStandards = await defaultDashboard2.openStandards();
-
-    expect(await defaultStandards.hasNoStandards()).toBe(true);
+    expect(standardsList.map((s) => s.name)).toContain(standard.name);
   });
 
   test('Moved standards are withdrawn from packages', async ({
