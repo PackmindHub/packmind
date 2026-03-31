@@ -5,7 +5,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
-import { LinterHexa } from '@packmind/editions';
+import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
 import { PlaybookBulkApplyHexa } from '@packmind/playbook-bulk-apply';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
