@@ -1510,6 +1510,93 @@ describe('playbookAddHandler', () => {
         });
       });
     });
+
+    describe('when the artifact lock file space is not available to the user', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue(
+          MULTI_SPACE_LIST,
+        );
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-999',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+      });
+
+      describe('without --space flag', () => {
+        it('logs an error telling the user the space is not available', async () => {
+          const { logErrorConsole } = jest.requireMock(
+            '../../utils/consoleLogger',
+          );
+
+          await playbookAddHandler(buildDeps());
+
+          expect(logErrorConsole).toHaveBeenCalledWith(
+            expect.stringContaining('Cannot add changes to this command'),
+          );
+        });
+
+        it('hints to use --space to stage as a new artifact', async () => {
+          const { logErrorConsole } = jest.requireMock(
+            '../../utils/consoleLogger',
+          );
+
+          await playbookAddHandler(buildDeps());
+
+          expect(logErrorConsole).toHaveBeenCalledWith(
+            expect.stringContaining('--space'),
+          );
+        });
+
+        it('exits with 1', async () => {
+          await playbookAddHandler(buildDeps());
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+
+        it('does not add to playbook', async () => {
+          await playbookAddHandler(buildDeps());
+
+          expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('with --space flag pointing to an accessible space', () => {
+        it('stages as a created change in the specified space', async () => {
+          await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
+
+          expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+            expect.objectContaining({
+              spaceId: 'space-456',
+              spaceName: 'Team Backend',
+              changeType: 'created',
+            }),
+          );
+        });
+
+        it('exits with 0', async () => {
+          await playbookAddHandler(buildDeps({ spaceSlug: 'team-backend' }));
+
+          expect(mockExit).toHaveBeenCalledWith(0);
+        });
+      });
+    });
   });
 
   describe('configDir in playbook entries', () => {

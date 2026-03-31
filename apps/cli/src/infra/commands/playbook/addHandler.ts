@@ -356,6 +356,22 @@ export async function playbookAddHandler(
   let spaceName: string | undefined;
   const allSpaces = await packmindCliHexa.getSpaces();
 
+  // If the artifact exists in the lock file, validate its space is still accessible
+  const existingLockEntry =
+    earlyLockFile &&
+    findLockFileEntryForPath(normalizedFilePath, earlyLockFile.artifacts);
+  if (
+    existingLockEntry &&
+    !spaceSlug &&
+    !allSpaces.some((s) => s.id === existingLockEntry.spaceId)
+  ) {
+    logErrorConsole(
+      `Cannot add changes to this ${artifactType}: the space it belongs to is not available to you.\nUse --space to stage it as a new artifact in an accessible space:\n${formatSpaceList(allSpaces)}`,
+    );
+    exit(1);
+    return;
+  }
+
   if (spaceSlug) {
     const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
     if (!matchedSpace) {
@@ -373,10 +389,6 @@ export async function playbookAddHandler(
   } else {
     // For updates, use the lock file entry's space (authoritative source).
     // For new artifacts, always require --space when multiple spaces exist.
-    const existingLockEntry =
-      earlyLockFile &&
-      findLockFileEntryForPath(normalizedFilePath, earlyLockFile.artifacts);
-
     if (existingLockEntry) {
       spaceId = existingLockEntry.spaceId;
       spaceName = allSpaces.find((s) => s.id === spaceId)?.name;
