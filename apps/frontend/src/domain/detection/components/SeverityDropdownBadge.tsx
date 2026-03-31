@@ -19,13 +19,13 @@ interface SeverityOptionConfig {
 
 const SEVERITY_CONFIG: Record<DetectionSeverity, SeverityOptionConfig> = {
   [DetectionSeverity.ERROR]: {
-    text: 'Error',
+    text: 'Report as error',
     variant: 'danger',
     Icon: LuOctagonAlert,
     iconColor: 'red.300',
   },
   [DetectionSeverity.WARNING]: {
-    text: 'Warning',
+    text: 'Report as warning',
     variant: 'warning',
     Icon: LuTriangleAlert,
     iconColor: 'yellow.500',
@@ -33,8 +33,8 @@ const SEVERITY_CONFIG: Record<DetectionSeverity, SeverityOptionConfig> = {
 };
 
 const SEVERITY_OPTIONS = [
-  { value: DetectionSeverity.ERROR, label: 'Error' },
-  { value: DetectionSeverity.WARNING, label: 'Warning' },
+  { value: DetectionSeverity.ERROR, label: 'Report as error' },
+  { value: DetectionSeverity.WARNING, label: 'Report as warning' },
 ];
 
 export const SeverityDropdownBadge: FC<SeverityDropdownBadgeProps> = ({

@@ -21,7 +21,7 @@ describe('SeverityDropdownBadge', () => {
       </UIProvider>,
     );
 
-    expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.getByText('Report as error')).toBeInTheDocument();
   });
 
   it('renders warning text when severity is WARNING', () => {
@@ -34,7 +34,7 @@ describe('SeverityDropdownBadge', () => {
       </UIProvider>,
     );
 
-    expect(screen.getByText('Warning')).toBeInTheDocument();
+    expect(screen.getByText('Report as warning')).toBeInTheDocument();
   });
 
   describe('when clicking the badge and selecting a different severity', () => {
@@ -51,8 +51,8 @@ describe('SeverityDropdownBadge', () => {
         </UIProvider>,
       );
 
-      await user.click(screen.getByText('Error'));
-      await user.click(screen.getByText('Warning'));
+      await user.click(screen.getByText('Report as error'));
+      await user.click(screen.getByText('Report as warning'));
 
       expect(onSeverityChange).toHaveBeenCalledWith(DetectionSeverity.WARNING);
     });
@@ -68,7 +68,7 @@ describe('SeverityDropdownBadge', () => {
         </UIProvider>,
       );
 
-      await user.click(screen.getByText('Error'));
+      await user.click(screen.getByText('Report as error'));
 
       expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
