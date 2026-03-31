@@ -2,6 +2,8 @@
 
 ## Added
 
+- Support OpenCode as a new AI coding agent: standards rendered in `AGENTS.md`, commands and skills deployed to `.opencode/commands/` and `.opencode/skills/`
+
 ## Changed
 
 ## Fixed

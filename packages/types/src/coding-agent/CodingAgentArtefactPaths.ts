@@ -17,7 +17,13 @@ export type CodingAgentArtefactPaths = {
  */
 export type MultiFileCodingAgent = Extract<
   CodingAgent,
-  'claude' | 'cursor' | 'copilot' | 'continue' | 'packmind' | 'gitlab_duo'
+  | 'claude'
+  | 'cursor'
+  | 'copilot'
+  | 'continue'
+  | 'packmind'
+  | 'gitlab_duo'
+  | 'opencode'
 >;
 
 /**
@@ -63,5 +69,10 @@ export const CODING_AGENT_ARTEFACT_PATHS: Record<
     command: '',
     standard: '',
     skill: '.gitlab/duo/skills/',
+  },
+  opencode: {
+    command: '.opencode/commands/',
+    standard: '',
+    skill: '.opencode/skills/',
   },
 };

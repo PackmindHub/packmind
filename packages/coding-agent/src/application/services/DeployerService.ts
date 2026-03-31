@@ -124,10 +124,15 @@ export class DeployerService {
           const deployer = this.codingAgentRepositories
             .getDeployerRegistry()
             .getDeployer(agent);
-          const updates = await deployer.deployStandards(
+          const rawUpdates = await deployer.deployStandards(
             standardVersions,
             gitRepo,
             target,
+          );
+          const updates = this.suppressOpenCodeAgentsMdIfAgentsMdActive(
+            agent,
+            rawUpdates,
+            codingAgents,
           );
           allUpdates.push(updates);
           this.logger.debug(
@@ -260,10 +265,15 @@ export class DeployerService {
           hasExistingContent: existingContent.length > 0,
         });
 
-        const updates = await deployer.deployArtifacts(
+        const rawUpdates = await deployer.deployArtifacts(
           recipeVersions,
           standardVersions,
           skillVersions,
+        );
+        const updates = this.suppressOpenCodeAgentsMdIfAgentsMdActive(
+          agent,
+          rawUpdates,
+          codingAgents,
         );
 
         allUpdates.push(updates);
@@ -293,6 +303,31 @@ export class DeployerService {
 
   private getFilePathForAgent(agent: CodingAgent): string {
     return AGENT_FILE_PATHS[agent];
+  }
+
+  /**
+   * Rule 9: when both `opencode` and `agents_md` are active, `agents_md`
+   * takes ownership of AGENTS.md. Filter out any AGENTS.md write from the
+   * `opencode` deployer so the intent is explicit and not an accident of
+   * iteration order.
+   */
+  private suppressOpenCodeAgentsMdIfAgentsMdActive(
+    agent: CodingAgent,
+    updates: FileUpdates,
+    codingAgents: CodingAgent[],
+  ): FileUpdates {
+    if (agent !== 'opencode' || !codingAgents.includes('agents_md')) {
+      return updates;
+    }
+    return {
+      ...updates,
+      createOrUpdate: updates.createOrUpdate.filter(
+        (f) => !f.path.endsWith(AGENT_FILE_PATHS['agents_md']),
+      ),
+      delete: updates.delete.filter(
+        (f) => !f.path.endsWith(AGENT_FILE_PATHS['agents_md']),
+      ),
+    };
   }
 
   private mergeFileUpdates(updates: FileUpdates[]): FileUpdates {

@@ -3,7 +3,6 @@ import { diffLines } from 'diff';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
-import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { IDiffStrategy } from './IDiffStrategy';
 import { DiffableFile } from './DiffableFile';
 
@@ -24,9 +23,7 @@ export class CommandDiffStrategy implements IDiffStrategy {
       return [];
     }
 
-    const serverBody = stripFrontmatter(file.content);
-    const localBody = stripFrontmatter(localContent);
-    const changes = diffLines(serverBody, localBody);
+    const changes = diffLines(file.content, localContent);
     const hasDifferences = changes.some(
       (change) => change.added || change.removed,
     );
@@ -40,8 +37,8 @@ export class CommandDiffStrategy implements IDiffStrategy {
         filePath: file.path,
         type: ChangeProposalType.updateCommandDescription,
         payload: {
-          oldValue: serverBody,
-          newValue: localBody,
+          oldValue: file.content,
+          newValue: localContent,
         },
         artifactName: file.artifactName,
         artifactType: file.artifactType,

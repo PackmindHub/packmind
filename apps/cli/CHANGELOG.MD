@@ -2,6 +2,8 @@
 
 ## Added
 
+- Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
+
 ## Changed
 
 ## Fixed

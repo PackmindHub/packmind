@@ -125,6 +125,10 @@ describe('configAgentsHandler', () => {
     it('includes gitlab_duo agent', () => {
       expect(SELECTABLE_AGENTS).toContain('gitlab_duo');
     });
+
+    it('includes opencode agent', () => {
+      expect(SELECTABLE_AGENTS).toContain('opencode');
+    });
   });
 
   describe('AGENT_DISPLAY_NAMES', () => {
@@ -158,6 +162,10 @@ describe('configAgentsHandler', () => {
 
     it('maps packmind to Packmind', () => {
       expect(AGENT_DISPLAY_NAMES.packmind).toBe('Packmind');
+    });
+
+    it('maps opencode to OpenCode', () => {
+      expect(AGENT_DISPLAY_NAMES.opencode).toBe('OpenCode');
     });
   });
 
@@ -869,10 +877,10 @@ describe('configAgentsHandler', () => {
 
         await configAgentsHandler(deps);
 
-        // SELECTABLE_AGENTS[0]=claude, [2]=copilot, [4]=junie
+        // SELECTABLE_AGENTS[0]=agents_md, [2]=continue, [4]=cursor
         expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
           '/project',
-          ['claude', 'copilot', 'continue'],
+          ['agents_md', 'continue', 'cursor'],
         );
       });
 
@@ -887,7 +895,7 @@ describe('configAgentsHandler', () => {
 
         expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
           '/project',
-          ['claude', 'cursor'],
+          ['agents_md', 'claude'],
         );
       });
 
@@ -902,7 +910,7 @@ describe('configAgentsHandler', () => {
 
         expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
           '/project',
-          ['claude', 'cursor'],
+          ['agents_md', 'claude'],
         );
       });
 
