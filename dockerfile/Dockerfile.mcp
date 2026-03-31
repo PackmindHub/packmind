@@ -5,9 +5,9 @@ ENV NODE_ENV=production
 # Update OpenSSL and install required system dependencies
 RUN apk update && \
     apk add --no-cache \
-        openssl \
-        bash \
-        ca-certificates
+        openssl=3.5.5-r0 \
+        bash=5.3.3-r1 \
+        ca-certificates=20251003-r0
 
 # Use the existing node user from the base image
 USER node
