@@ -42,3 +42,6 @@ apps/mcp-server/key.pem
 
 # Git worktrees
 .worktrees/
+
+.claude/worktrees
+.claude/settings.local.json

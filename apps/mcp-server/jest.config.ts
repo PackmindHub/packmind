@@ -1,14 +1,14 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const { compilerOptions } = require('../../tsconfig.base.effective.json');
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import {
+ 
+const {
   pathsToModuleNameMapper,
   swcTransformWithDecorators,
   standardTransformIgnorePatterns,
   standardModuleFileExtensions,
-} from '../../jest-utils';
+} = require('../../jest-utils.ts');
 
-export default {
+module.exports = {
   displayName: 'mcp-server',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
