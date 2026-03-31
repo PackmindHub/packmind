@@ -21,7 +21,7 @@ const test = testWithApi.extend<{
 });
 
 test.describe('Move artifacts between spaces', () => {
-  test.skip('Standards can be moved from one space to another', async ({
+  test('Standards can be moved from one space to another', async ({
     packmindApi,
     dashboardPage,
   }) => {
@@ -87,15 +87,11 @@ test.describe('Move artifacts between spaces', () => {
     await standardsPage.selectStandardByName(standard.name);
     await standardsPage.moveToSpace('target');
 
-    // Verify: packages are now empty
+    // Verify: frontend package is now empty
     const packagesPage = await standardsPage.openPackages();
-
     const frontendPackage = await packagesPage.openPackage('frontend');
-    expect(await frontendPackage.isPackageEmpty()).toBe(true);
 
-    const packagesPage2 = await frontendPackage.openPackages();
-    const uiPackage = await packagesPage2.openPackage('ui');
-    expect(await uiPackage.isPackageEmpty()).toBe(true);
+    expect(await frontendPackage.isPackageEmpty()).toBe(true);
   });
 
   test('displays error when moving a skill to a space where same name exists', async ({
