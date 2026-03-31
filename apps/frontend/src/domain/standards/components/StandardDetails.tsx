@@ -96,6 +96,11 @@ export const StandardDetails = ({
 
   const isRuleView = !!currentRuleId;
 
+  const currentRule = useMemo(() => {
+    if (!currentRuleId || !sortedRules) return undefined;
+    return sortedRules.find((rule) => rule.id === currentRuleId);
+  }, [currentRuleId, sortedRules]);
+
   const activeTab = useMemo(() => {
     if (pathname.endsWith('/deployment')) return 'distribution';
     return 'summary';
@@ -206,7 +211,7 @@ export const StandardDetails = ({
 
   return (
     <PMPage
-      title={standard.name}
+      title={currentRule?.content ?? standard.name}
       breadcrumbComponent={
         <StandardVersionHistoryHeader
           standard={standard}
