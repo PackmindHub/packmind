@@ -19,9 +19,9 @@ export type ApplyPlaybookResponse =
   | {
       success: true;
       created: {
-        standards: StandardId[];
-        commands: RecipeId[];
-        skills: SkillId[];
+        standards: Array<{ id: StandardId; slug: string }>;
+        commands: Array<{ id: RecipeId; slug: string }>;
+        skills: Array<{ id: SkillId; slug: string }>;
       };
     }
   | {

@@ -78,7 +78,7 @@ describe('ApplyPlaybookUseCase', () => {
 
     skillsPort = {
       uploadSkill: jest.fn().mockResolvedValue({
-        skill: { id: createSkillId(uuidv4()) } as Skill,
+        skill: { id: createSkillId(uuidv4()), slug: 'my-skill' } as Skill,
         versionCreated: true,
       }),
       hardDeleteSkill: jest.fn().mockResolvedValue(undefined),
@@ -87,6 +87,7 @@ describe('ApplyPlaybookUseCase', () => {
     standardsPort = {
       createStandardWithExamples: jest.fn().mockResolvedValue({
         id: createStandardId(uuidv4()),
+        slug: 'my-standard',
       } as Standard),
       hardDeleteStandard: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IStandardsPort>;
@@ -94,6 +95,7 @@ describe('ApplyPlaybookUseCase', () => {
     recipesPort = {
       captureRecipe: jest.fn().mockResolvedValue({
         id: createRecipeId(uuidv4()),
+        slug: 'my-command',
       } as Recipe),
       hardDeleteRecipe: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IRecipesPort>;
