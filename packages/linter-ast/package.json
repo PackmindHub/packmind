@@ -5,7 +5,5 @@
   "type": "commonjs",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "dependencies": {
-    "web-tree-sitter": "^0.25.0"
-  }
+  "dependencies": {}
 }
