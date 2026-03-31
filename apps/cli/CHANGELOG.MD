@@ -2,6 +2,9 @@
 
 ## Added
 
+- Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
+- Support Codex as a new AI coding agent target for `config agents` with recursive `.agents/skills` detection
+
 ## Changed
 
 ## Fixed

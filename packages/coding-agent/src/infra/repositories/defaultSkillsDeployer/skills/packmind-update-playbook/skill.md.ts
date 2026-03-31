@@ -4,9 +4,9 @@ export const skillMd: SkillMD = {
   fontmatter:
     'description: Use when updating, adding, fixing, changing, or deprecating Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook", "deprecate a standard". Also triggers — even without an explicit request — whenever the conversation reveals an opportunity: a new coding convention was just agreed on, a recurring pattern emerged, a workflow changed, a rule was found outdated, or the user says things like "we always do X", "let us remember to Y", "that is the pattern we use". If there is any chance the conversation established a convention or exposed a gap, invoke this skill proactively. This skill defines a mandatory workflow: do NOT edit artifact files directly — follow all phases regardless of change size.',
   title: 'Update Playbook',
-  versions: ['0.21.0', '0.23.0'],
+  versions: ['0.21.0', '0.23.0', '0.24.0'],
   getPrompt(): string {
-    return `Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating or updating. Produce a structured change report, then apply approved changes.
+    return `Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating or updating. Produce a structured change report, then apply approved changes using the \`playbook\` CLI workflow.
 
 **⚠️ MANDATORY WORKFLOW — This skill defines a strict sequence: Understanding Your Request → Summarizing Changes → Analyzing Playbook → Change Report → Applying Changes. Do NOT skip steps or edit artifact files directly. Even for a single-line change, follow every step. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
 
@@ -100,6 +100,7 @@ After all subagents complete, consolidate their reports. **Before numbering, ded
 
 <!-- Only include sections that have changes. Omit empty sections entirely. -->
 <!-- Ordering reflects priority: skill accuracy first, then standards, then commands. -->
+<!-- New commands have a high bar — see domain-commands.md for criteria. -->
 
 ### Skill Updates
 1. [skill] <name>: <what changed and why>
