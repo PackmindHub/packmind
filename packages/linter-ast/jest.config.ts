@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+const { readFileSync } = require('node:fs');
+const { resolve } = require('node:path');
 
 /**
  * Nx loads Jest configs through ts-node without inheriting the root
@@ -12,15 +12,15 @@ const { compilerOptions } = JSON.parse(
     'utf-8',
   ),
 );
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import {
+ 
+const {
   pathsToModuleNameMapper,
   swcTransform,
   standardTransformIgnorePatterns,
   standardModuleFileExtensions,
-} from '../../jest-utils';
+} = require('../../jest-utils.ts');
 
-export default {
+module.exports = {
   displayName: 'linter-ast',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',

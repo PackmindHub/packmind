@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Field, Stack } from '@chakra-ui/react';
 import { PMTextArea } from './PMTextArea';
 

@@ -1,10 +1,10 @@
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import {
+ 
+const {
   swcTransformWithDefineFields,
   standardModuleFileExtensions,
-} from '../../jest-utils';
+} = require('../../jest-utils.ts');
 
-export default {
+module.exports = {
   displayName: 'cli-e2e-tests',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',

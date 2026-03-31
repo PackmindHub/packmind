@@ -1,7 +1,10 @@
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import { swcTransform, standardModuleFileExtensions } from '../../jest-utils';
+ 
+const {
+  swcTransform,
+  standardModuleFileExtensions,
+} = require('../../jest-utils.ts');
 
-export default {
+module.exports = {
   displayName: 'llm',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
