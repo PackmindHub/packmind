@@ -1,0 +1,26 @@
+{
+  "name": "spaces-management",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/spaces-management/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/spaces-management/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/spaces-management",
+        "tsConfig": "packages/spaces-management/tsconfig.lib.json",
+        "packageJson": "packages/spaces-management/package.json",
+        "main": "packages/spaces-management/src/index.ts",
+        "assets": ["packages/spaces-management/*.md"]
+      }
+    }
+  }
+}
