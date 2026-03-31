@@ -13,6 +13,7 @@ import {
   PMButton,
   PMEmptyState,
   PMAlert,
+  PMPortal,
 } from '@packmind/ui';
 import {
   Rule,
@@ -276,29 +277,31 @@ export const RuleDetails = ({
                     }}
                   >
                     <PMSelectTrigger placeholder="Select a language" />
-                    <PMSelect.Positioner>
-                      <PMSelect.Content zIndex={1500}>
-                        {configuredLanguages.length > 0 && (
-                          <PMSelect.ItemGroup>
-                            <PMSelect.ItemGroupLabel>
-                              Configured Languages
-                            </PMSelect.ItemGroupLabel>
-                            {configuredLanguages.map((item) => (
+                    <PMPortal>
+                      <PMSelect.Positioner>
+                        <PMSelect.Content zIndex={1500}>
+                          {configuredLanguages.length > 0 && (
+                            <PMSelect.ItemGroup>
+                              <PMSelect.ItemGroupLabel>
+                                Configured Languages
+                              </PMSelect.ItemGroupLabel>
+                              {configuredLanguages.map((item) => (
+                                <PMSelect.Item item={item} key={item.value}>
+                                  {item.label}
+                                </PMSelect.Item>
+                              ))}
+                            </PMSelect.ItemGroup>
+                          )}
+                          <PMSelect.CollapsibleItemGroup label="Add a language">
+                            {otherLanguages.map((item) => (
                               <PMSelect.Item item={item} key={item.value}>
                                 {item.label}
                               </PMSelect.Item>
                             ))}
-                          </PMSelect.ItemGroup>
-                        )}
-                        <PMSelect.CollapsibleItemGroup label="Add a language">
-                          {otherLanguages.map((item) => (
-                            <PMSelect.Item item={item} key={item.value}>
-                              {item.label}
-                            </PMSelect.Item>
-                          ))}
-                        </PMSelect.CollapsibleItemGroup>
-                      </PMSelect.Content>
-                    </PMSelect.Positioner>
+                          </PMSelect.CollapsibleItemGroup>
+                        </PMSelect.Content>
+                      </PMSelect.Positioner>
+                    </PMPortal>
                   </PMSelect.Root>
                 </PMBox>
               </PMHStack>
