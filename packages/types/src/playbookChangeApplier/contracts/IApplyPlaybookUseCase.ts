@@ -4,10 +4,15 @@ import { StandardId } from '../../standards';
 import { RecipeId } from '../../recipes/RecipeId';
 import { SkillId } from '../../skills/SkillId';
 import { ChangeProposalType } from '../../playbookChangeManagement/ChangeProposalType';
-import { BatchCreateChangeProposalItem } from '../../playbookChangeManagement/contracts/IBatchCreateChangeProposalsUseCase';
+import { ChangeProposalPayload } from '../../playbookChangeManagement/ChangeProposalPayload';
+import { TargetId } from '../../deployments';
 
-export type ApplyPlaybookProposalItem = BatchCreateChangeProposalItem & {
+export type ApplyPlaybookProposalItem = {
   spaceId: SpaceId;
+  type: ChangeProposalType;
+  artefactId: StandardId | RecipeId | SkillId | null;
+  payload: ChangeProposalPayload<ChangeProposalType>;
+  targetId?: TargetId;
 };
 
 export type ApplyPlaybookCommand = PackmindCommand & {
@@ -22,6 +27,11 @@ export type ApplyPlaybookResponse =
         standards: Array<{ id: StandardId; slug: string }>;
         commands: Array<{ id: RecipeId; slug: string }>;
         skills: Array<{ id: SkillId; slug: string }>;
+      };
+      updated: {
+        standards: StandardId[];
+        commands: RecipeId[];
+        skills: SkillId[];
       };
     }
   | {

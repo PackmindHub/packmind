@@ -99,6 +99,11 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           .filter((a) => a.type === 'skill')
           .map((a) => ({ id: a.id as SkillId, slug: a.slug })),
       },
+      updated: {
+        standards: [],
+        commands: [],
+        skills: [],
+      },
     };
   }
 
