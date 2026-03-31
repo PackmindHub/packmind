@@ -10,6 +10,8 @@ import {
   ISkillsPort,
   ISkillsPortName,
   ISpacesManagementPort,
+  CreateSpaceCommand,
+  CreateSpaceResponse,
   ISpacesPort,
   ISpacesPortName,
   IStandardsPort,
@@ -17,6 +19,7 @@ import {
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
 } from '@packmind/types';
+import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { MoveArtifactsToSpaceUseCase } from '../usecases/MoveArtifactsToSpaceUseCase';
 
 /**
@@ -32,6 +35,11 @@ export class SpacesManagementAdapter
   private skillsPort!: ISkillsPort;
   private recipesPort!: IRecipesPort;
   private eventEmitterService!: PackmindEventEmitterService;
+
+  async createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
+    const useCase = new CreateSpaceUseCase(this.spacesPort);
+    return useCase.execute(command);
+  }
 
   async moveArtifactsToSpace(
     command: MoveArtifactsToSpaceCommand,

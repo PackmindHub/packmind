@@ -4,7 +4,6 @@ import {
   CreateSpaceCommand,
   CreateSpaceResponse,
   ISpacesManagementPort,
-  ISpacesPort,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
 } from '@packmind/types';
@@ -17,10 +16,6 @@ export class SpacesManagementService {
     private readonly logger: PackmindLogger,
   ) {}
 
-  private get spacesPort(): ISpacesPort {
-    return this.spacesManagementHexa.getSpacesPort();
-  }
-
   private get spacesManagementAdapter(): ISpacesManagementPort {
     return this.spacesManagementHexa.getAdapter();
   }
@@ -29,7 +24,7 @@ export class SpacesManagementService {
     this.logger.info('Creating space', {
       organizationId: command.organizationId,
     });
-    return this.spacesPort.createSpace(command);
+    return this.spacesManagementAdapter.createSpace(command);
   }
 
   async moveArtifactsToSpace(
