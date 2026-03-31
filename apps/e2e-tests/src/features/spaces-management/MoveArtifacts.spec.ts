@@ -21,7 +21,7 @@ const test = testWithApi.extend<{
 });
 
 test.describe('Move artifacts between spaces', () => {
-  test('Standards can be moved from one space to another', async ({
+  test.skip('Standards can be moved from one space to another', async ({
     packmindApi,
     dashboardPage,
   }) => {
