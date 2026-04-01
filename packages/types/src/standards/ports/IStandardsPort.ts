@@ -68,6 +68,7 @@ export interface IStandardsPort {
     disableTriggerAssessment?: boolean;
     source?: PackmindEventSource;
     method?: StandardCreationMethod;
+    directUpdate?: boolean;
   }): Promise<Standard>;
   createStandardSamples(
     command: CreateStandardSamplesCommand,

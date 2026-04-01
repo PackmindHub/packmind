@@ -20,6 +20,7 @@ export type CreateStandardWithExamplesCommand = PackmindCommand & {
    * The method used to create this standard.
    */
   method?: StandardCreationMethod;
+  directUpdate?: boolean;
 };
 
 export type CreateStandardWithExamplesResponse = {

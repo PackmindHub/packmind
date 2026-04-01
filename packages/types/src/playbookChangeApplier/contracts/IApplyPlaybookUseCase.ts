@@ -18,6 +18,7 @@ export type ApplyPlaybookProposalItem = {
 export type ApplyPlaybookCommand = PackmindCommand & {
   proposals: ApplyPlaybookProposalItem[];
   message: string;
+  directUpdate?: boolean;
 };
 
 export type ApplyPlaybookResponse =

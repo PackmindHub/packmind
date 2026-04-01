@@ -470,6 +470,7 @@ export class StandardsAdapter
     source?: PackmindEventSource;
     method?: StandardCreationMethod;
     originSkill?: string;
+    directUpdate?: boolean;
   }): Promise<Standard> {
     if (!params.spaceId) {
       throw new Error(
