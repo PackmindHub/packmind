@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
@@ -26,6 +26,7 @@ describe('OrganizationsSpacesStandardsController', () => {
       getStandardsBySpace: jest.fn(),
       updateStandard: jest.fn(),
       createStandardSamples: jest.fn(),
+      getLatestVersionNumber: jest.fn(),
     } as unknown as jest.Mocked<StandardsService>;
 
     logger = stubLogger();
@@ -648,6 +649,68 @@ describe('OrganizationsSpacesStandardsController', () => {
           request,
         ),
       ).rejects.toThrow('Database error');
+    });
+  });
+
+  describe('getStandardLatestVersion', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const standardId = createStandardId('standard-1');
+    const userId = createUserId('user-1');
+
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+    } as unknown as AuthenticatedRequest;
+
+    describe('when service returns a version number', () => {
+      let result: { version: number };
+
+      beforeEach(async () => {
+        standardsService.getLatestVersionNumber.mockResolvedValue(3);
+        result = await controller.getStandardLatestVersion(
+          orgId,
+          spaceId,
+          standardId,
+          request,
+        );
+      });
+
+      it('returns the version number', () => {
+        expect(result).toEqual({ version: 3 });
+      });
+
+      it('calls service with correct params', () => {
+        expect(standardsService.getLatestVersionNumber).toHaveBeenCalledWith({
+          standardId,
+          organizationId: orgId,
+          spaceId,
+          userId,
+        });
+      });
+    });
+
+    describe('when service returns null', () => {
+      it('throws NotFoundException', async () => {
+        standardsService.getLatestVersionNumber.mockResolvedValue(null);
+
+        await expect(
+          controller.getStandardLatestVersion(
+            orgId,
+            spaceId,
+            standardId,
+            request,
+          ),
+        ).rejects.toThrow(NotFoundException);
+      });
     });
   });
 });
