@@ -120,7 +120,7 @@ export async function listAgentsHandler(
 
   const allAgents: CodingAgent[] = [
     ...new Set(fileConfigs.flatMap((f) => f.agents)),
-  ].sort();
+  ].sort((a, b) => a.localeCompare(b));
 
   const sortedFiles = [...fileConfigs].sort((a, b) => {
     const depthA = a.path.split('/').length;
