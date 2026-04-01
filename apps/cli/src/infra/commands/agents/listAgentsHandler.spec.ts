@@ -1,5 +1,8 @@
 import * as fsPromises from 'fs/promises';
+import { RenderMode } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
+import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
+import { createMockDeploymentGateway } from '../../../mocks/createMockGateways';
 import {
   listAgentsHandler,
   ListAgentsHandlerDependencies,
@@ -256,34 +259,204 @@ describe('listAgentsHandler', () => {
       mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
     });
 
-    it('displays a message that no agents are configured', async () => {
-      await listAgentsHandler({}, deps);
+    describe('when no deploymentGateway is provided', () => {
+      it('displays a message that no agents are configured', async () => {
+        await listAgentsHandler({}, deps);
 
-      const lines = getLoggedLines();
-      const messageLine = lines.find((l) => l.includes('No agents configured'));
-      expect(messageLine).toBeDefined();
+        const lines = getLoggedLines();
+        const messageLine = lines.find((l) =>
+          l.includes('No agents configured'),
+        );
+        expect(messageLine).toBeDefined();
+      });
+
+      it('lists the root packmind.json path', async () => {
+        await listAgentsHandler({}, deps);
+
+        const lines = getLoggedLines();
+        expect(lines.some((l) => l.includes('./packmind.json'))).toBe(true);
+      });
+
+      it('lists the descendant packmind.json path', async () => {
+        await listAgentsHandler({}, deps);
+
+        const lines = getLoggedLines();
+        expect(lines.some((l) => l.includes('./apps/api/packmind.json'))).toBe(
+          true,
+        );
+      });
+
+      it('exits with code 0', async () => {
+        await listAgentsHandler({}, deps);
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+  });
+
+  describe('when org-level default agents fallback is used', () => {
+    let mockDeploymentGateway: jest.Mocked<IDeploymentGateway>;
+
+    beforeEach(() => {
+      mockDeploymentGateway = createMockDeploymentGateway();
     });
 
-    it('lists the root packmind.json path', async () => {
-      await listAgentsHandler({}, deps);
+    describe('when all files have no local agents and org defaults exist', () => {
+      beforeEach(() => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+          '/project/apps/api',
+        ]);
+        mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+        mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+          configuration: {
+            id: 'config-1',
+            organizationId: 'org-1',
+            activeRenderModes: [RenderMode.CLAUDE, RenderMode.CURSOR],
+          },
+        });
+      });
 
-      const lines = getLoggedLines();
-      expect(lines.some((l) => l.includes('./packmind.json'))).toBe(true);
+      it('displays org default agents in the matrix', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        const headerLine = lines.find(
+          (l) => l.includes('claude') && l.includes('cursor'),
+        );
+        expect(headerLine).toBeDefined();
+      });
+
+      it('shows checkmarks for org default agents on all files', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        const dataLines = lines.filter((l) => l.includes('./'));
+        expect(dataLines.every((l) => l.includes('\u2713'))).toBe(true);
+      });
+
+      it('does not display the no-agents-configured message', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        expect(lines.some((l) => l.includes('No agents configured'))).toBe(
+          false,
+        );
+      });
     });
 
-    it('lists the descendant packmind.json path', async () => {
-      await listAgentsHandler({}, deps);
+    describe('when some files have local agents and some do not', () => {
+      beforeEach(() => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+          '/project/apps/api',
+        ]);
+        mockConfigRepository.readConfig
+          .mockResolvedValueOnce({
+            packages: {},
+            agents: ['claude', 'copilot'],
+          })
+          .mockResolvedValueOnce({ packages: {} });
+        mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+          configuration: {
+            id: 'config-1',
+            organizationId: 'org-1',
+            activeRenderModes: [RenderMode.CURSOR, RenderMode.PACKMIND],
+          },
+        });
+      });
 
-      const lines = getLoggedLines();
-      expect(lines.some((l) => l.includes('./apps/api/packmind.json'))).toBe(
-        true,
-      );
+      it('preserves local agents on files that have them', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        const rootLine = lines.find((l) => l.startsWith('./packmind.json'));
+        expect(rootLine).toContain('\u2713');
+      });
+
+      it('applies org defaults to files without local agents', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        const apiLine = lines.find((l) =>
+          l.includes('./apps/api/packmind.json'),
+        );
+        expect(apiLine).toContain('\u2713');
+      });
+
+      it('includes both local and org agents in the header', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        const headerLine = lines.find(
+          (l) =>
+            l.includes('claude') &&
+            l.includes('copilot') &&
+            l.includes('cursor') &&
+            l.includes('packmind'),
+        );
+        expect(headerLine).toBeDefined();
+      });
     });
 
-    it('exits with code 0', async () => {
-      await listAgentsHandler({}, deps);
+    describe('when the API call fails', () => {
+      beforeEach(() => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+        mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+        mockDeploymentGateway.getRenderModeConfiguration.mockRejectedValue(
+          new Error('Unauthorized'),
+        );
+      });
 
-      expect(mockExit).toHaveBeenCalledWith(0);
+      it('falls back to the no-agents-configured message', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        expect(lines.some((l) => l.includes('No agents configured'))).toBe(
+          true,
+        );
+      });
+    });
+
+    describe('when the org has no configuration', () => {
+      beforeEach(() => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+        mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+        mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+          configuration: null,
+        });
+      });
+
+      it('falls back to the no-agents-configured message', async () => {
+        await listAgentsHandler(
+          {},
+          { ...deps, deploymentGateway: mockDeploymentGateway },
+        );
+
+        const lines = getLoggedLines();
+        expect(lines.some((l) => l.includes('No agents configured'))).toBe(
+          true,
+        );
+      });
     });
   });
 });

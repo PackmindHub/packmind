@@ -1,4 +1,6 @@
 import { command, option, string } from 'cmd-ts';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { listAgentsHandler } from './agents/listAgentsHandler';
 
@@ -16,12 +18,15 @@ export const listAgentsCommand = command({
     }),
   },
   handler: async ({ path: pathArg }) => {
+    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
+    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
     const configRepository = new ConfigFileRepository();
 
     await listAgentsHandler(
       { path: pathArg || undefined },
       {
         configRepository,
+        deploymentGateway: packmindCliHexa.getPackmindGateway().deployment,
         exit: process.exit,
         getCwd: () => process.cwd(),
       },

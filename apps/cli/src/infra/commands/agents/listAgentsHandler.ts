@@ -1,7 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { CodingAgent } from '@packmind/types';
+import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
+import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
 import {
   logConsole,
   logErrorConsole,
@@ -16,6 +17,7 @@ export type ListAgentsHandlerArgs = {
 
 export type ListAgentsHandlerDependencies = {
   configRepository: IConfigFileRepository;
+  deploymentGateway?: IDeploymentGateway;
   exit: (code: number) => void;
   getCwd: () => string;
 };
@@ -105,6 +107,17 @@ export async function listAgentsHandler(
     return;
   }
 
+  const filesWithoutAgents = fileConfigs.filter((f) => f.agents.length === 0);
+
+  if (filesWithoutAgents.length > 0 && deps.deploymentGateway) {
+    const orgAgents = await fetchOrgDefaultAgents(deps.deploymentGateway);
+    if (orgAgents.length > 0) {
+      for (const file of filesWithoutAgents) {
+        file.agents = orgAgents;
+      }
+    }
+  }
+
   const allAgents: CodingAgent[] = [
     ...new Set(fileConfigs.flatMap((f) => f.agents)),
   ].sort();
@@ -134,4 +147,20 @@ export async function listAgentsHandler(
   logConsole('');
 
   exit(0);
+}
+
+async function fetchOrgDefaultAgents(
+  deploymentGateway: IDeploymentGateway,
+): Promise<CodingAgent[]> {
+  try {
+    const result = await deploymentGateway.getRenderModeConfiguration({});
+    if (result.configuration) {
+      return result.configuration.activeRenderModes
+        .map((mode) => RENDER_MODE_TO_CODING_AGENT[mode])
+        .filter((agent): agent is CodingAgent => agent !== undefined);
+    }
+  } catch {
+    // Silently fall back when not authenticated or API unavailable
+  }
+  return [];
 }
