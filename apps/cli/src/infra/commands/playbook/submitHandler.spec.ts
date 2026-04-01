@@ -2743,6 +2743,69 @@ describe('playbookSubmitHandler', () => {
       );
     });
 
+    it('does not open the editor', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(mockOpenEditor).not.toHaveBeenCalled();
+    });
+
+    describe('when entry has changeType updated', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'updated',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard.md',
+          }),
+        ]);
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/my-standard': {
+              name: 'My Standard',
+              type: 'standard',
+              id: 'std-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/my-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+        mockGateway.deployment.getContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                content:
+                  '# My Standard\n\nOld description.\n\n## Rules\n\n* Old rule',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+      });
+
+      it('calls batchApply with update proposals', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockGateway.changeProposals.batchApply).toHaveBeenCalled();
+      });
+    });
+
     it('logs success message', async () => {
       const { logSuccessConsole } = jest.requireMock(
         '../../utils/consoleLogger',
