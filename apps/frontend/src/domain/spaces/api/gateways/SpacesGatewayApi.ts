@@ -36,20 +36,20 @@ export class SpacesGatewayApi
 
   async listSpaceMembers(
     orgId: string,
-    spaceSlug: string,
+    spaceId: string,
   ): Promise<ListSpaceMembersResponse> {
     return this._api.get<ListSpaceMembersResponse>(
-      `${this._endpoint}/${orgId}/spaces/${spaceSlug}/members`,
+      `${this._endpoint}/${orgId}/spaces/${spaceId}/members`,
     );
   }
 
   async addMembersToSpace(
     orgId: string,
-    spaceSlug: string,
+    spaceId: string,
     members: SpaceMemberEntry[],
   ): Promise<AddMembersToSpaceResponse> {
     return this._api.post<AddMembersToSpaceResponse>(
-      `${this._endpoint}/${orgId}/spaces/${spaceSlug}/members`,
+      `${this._endpoint}/${orgId}/spaces/${spaceId}/members`,
       { members },
     );
   }

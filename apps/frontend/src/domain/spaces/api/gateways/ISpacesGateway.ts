@@ -10,11 +10,11 @@ export interface ISpacesGateway {
   getSpaceBySlug(slug: string, orgId: string): Promise<Space>;
   listSpaceMembers(
     orgId: string,
-    spaceSlug: string,
+    spaceId: string,
   ): Promise<ListSpaceMembersResponse>;
   addMembersToSpace(
     orgId: string,
-    spaceSlug: string,
+    spaceId: string,
     members: SpaceMemberEntry[],
   ): Promise<AddMembersToSpaceResponse>;
 }

@@ -51,28 +51,28 @@ export const useGetSpaceBySlugQuery = (slug: string) => {
   return useQuery(getSpaceBySlugQueryOptions(slug, orgId || ''));
 };
 
-export const getSpaceMembersQueryOptions = (orgId: string, spaceSlug: string) =>
+export const getSpaceMembersQueryOptions = (orgId: string, spaceId: string) =>
   queryOptions({
-    queryKey: spacesQueryKeys.members(orgId, spaceSlug),
+    queryKey: spacesQueryKeys.members(orgId, spaceId),
     queryFn: () => {
-      if (!orgId || !spaceSlug) {
+      if (!orgId || !spaceId) {
         throw new Error(
-          'Organization ID and space slug are required to fetch space members',
+          'Organization ID and space ID are required to fetch space members',
         );
       }
-      return spacesGateway.listSpaceMembers(orgId, spaceSlug);
+      return spacesGateway.listSpaceMembers(orgId, spaceId);
     },
-    enabled: !!orgId && !!spaceSlug,
+    enabled: !!orgId && !!spaceId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-export const useGetSpaceMembersQuery = (spaceSlug: string) => {
+export const useGetSpaceMembersQuery = (spaceId: string) => {
   const { organization } = useAuthContext();
   const orgId = organization?.id;
-  return useQuery(getSpaceMembersQueryOptions(orgId || '', spaceSlug));
+  return useQuery(getSpaceMembersQueryOptions(orgId || '', spaceId));
 };
 
-export const useAddMembersToSpaceMutation = (spaceSlug: string) => {
+export const useAddMembersToSpaceMutation = (spaceId: string) => {
   const queryClient = useQueryClient();
   const { organization } = useAuthContext();
 
@@ -81,16 +81,12 @@ export const useAddMembersToSpaceMutation = (spaceSlug: string) => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to add members');
       }
-      return spacesGateway.addMembersToSpace(
-        organization.id,
-        spaceSlug,
-        members,
-      );
+      return spacesGateway.addMembersToSpace(organization.id, spaceId, members);
     },
     onSuccess: async () => {
       if (organization?.id) {
         await queryClient.invalidateQueries({
-          queryKey: spacesQueryKeys.members(organization.id, spaceSlug),
+          queryKey: spacesQueryKeys.members(organization.id, spaceId),
         });
       }
     },

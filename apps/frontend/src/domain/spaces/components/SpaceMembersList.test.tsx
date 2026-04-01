@@ -6,7 +6,24 @@ import { UIProvider } from '@packmind/ui';
 import type { UserId, UserOrganizationRole } from '@packmind/types';
 
 import * as AuthContextModule from '../../accounts/hooks/useAuthContext';
+import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
+import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
 import { SpaceMembersList } from './SpaceMembersList';
+
+jest.mock('../api/queries/SpacesQueries', () => ({
+  ...jest.requireActual('../api/queries/SpacesQueries'),
+  useGetSpaceMembersQuery: jest.fn(),
+}));
+
+jest.mock('../hooks/useCurrentSpace', () => ({
+  ...jest.requireActual('../hooks/useCurrentSpace'),
+  useCurrentSpace: jest.fn(),
+}));
+
+const mockUseGetSpaceMembersQuery =
+  useGetSpaceMembersQuery as jest.MockedFunction<
+    typeof useGetSpaceMembersQuery
+  >;
 
 jest.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
@@ -72,6 +89,16 @@ describe('SpaceMembersList', () => {
   };
 
   beforeEach(() => {
+    jest.spyOn(UseCurrentSpaceModule, 'useCurrentSpace').mockReturnValue({
+      spaceId: 'space-1',
+      spaceSlug: 'test-space',
+      spaceName: 'Test Space',
+      space: undefined,
+      isLoading: false,
+      error: null,
+      isReady: true,
+    } as unknown as ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>);
+
     jest.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
       user: mockUser,
       organization: mockOrganization,
@@ -81,6 +108,38 @@ describe('SpaceMembersList', () => {
       getUserOrganizations: jest.fn(),
       validateAndSwitchIfNeeded: jest.fn(),
     } as unknown as ReturnType<typeof AuthContextModule.useAuthContext>);
+
+    mockUseGetSpaceMembersQuery.mockReturnValue({
+      data: {
+        members: [
+          {
+            userId: 'current-user-id',
+            spaceId: 'space-1',
+            displayName: 'current.user@test.com',
+            role: 'admin',
+          },
+          {
+            userId: '1',
+            spaceId: 'space-1',
+            displayName: 'john.doe',
+            role: 'admin',
+          },
+          {
+            userId: '2',
+            spaceId: 'space-1',
+            displayName: 'jane.smith',
+            role: 'member',
+          },
+          {
+            userId: '3',
+            spaceId: 'space-1',
+            displayName: 'bob.martin',
+            role: 'member',
+          },
+        ],
+      },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useGetSpaceMembersQuery>);
   });
 
   afterEach(() => {

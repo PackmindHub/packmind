@@ -6,12 +6,23 @@ import { UIProvider } from '@packmind/ui';
 
 import { AddSpaceMembersDialog } from './AddSpaceMembersDialog';
 import { useAddMembersToSpaceMutation } from '../api/queries/SpacesQueries';
+import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 import { SpaceMember } from './SpaceMembersTable';
 
 jest.mock('../api/queries/SpacesQueries', () => ({
   ...jest.requireActual('../api/queries/SpacesQueries'),
   useAddMembersToSpaceMutation: jest.fn(),
 }));
+
+jest.mock('../../accounts/api/queries/UserQueries', () => ({
+  ...jest.requireActual('../../accounts/api/queries/UserQueries'),
+  useGetUsersInMyOrganizationQuery: jest.fn(),
+}));
+
+const mockUseGetUsersInMyOrganizationQuery =
+  useGetUsersInMyOrganizationQuery as jest.MockedFunction<
+    typeof useGetUsersInMyOrganizationQuery
+  >;
 
 const mockUseAddMembersToSpaceMutation =
   useAddMembersToSpaceMutation as jest.MockedFunction<
@@ -53,12 +64,24 @@ describe('AddSpaceMembersDialog', () => {
   const defaultProps = {
     open: true,
     setOpen: jest.fn(),
-    spaceSlug: 'my-space',
+    spaceId: 'space-id-1',
     existingMembers: [] as SpaceMember[],
   };
 
   beforeEach(() => {
     mockUseAddMembersToSpaceMutation.mockReturnValue(createMockMutation());
+    mockUseGetUsersInMyOrganizationQuery.mockReturnValue({
+      data: {
+        users: [
+          { userId: '10', displayName: 'alice.wilson', role: 'member' },
+          { userId: '11', displayName: 'charlie.brown', role: 'member' },
+          { userId: '12', displayName: 'diana.prince', role: 'member' },
+          { userId: '13', displayName: 'edward.norton', role: 'member' },
+          { userId: '14', displayName: 'fiona.apple', role: 'member' },
+        ],
+      },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useGetUsersInMyOrganizationQuery>);
   });
 
   afterEach(() => {
