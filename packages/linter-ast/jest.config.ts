@@ -12,7 +12,7 @@ const { compilerOptions } = JSON.parse(
     'utf-8',
   ),
 );
- 
+
 const {
   pathsToModuleNameMapper,
   swcTransform,

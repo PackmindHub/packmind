@@ -1,6 +1,5 @@
- 
 const { compilerOptions } = require('../../tsconfig.base.json');
- 
+
 const {
   pathsToModuleNameMapper,
   swcTransform,
