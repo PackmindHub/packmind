@@ -98,9 +98,6 @@ export default defineConfig(() => {
       outDir: '../../dist/apps/frontend',
       emptyOutDir: true,
       reportCompressedSize: true,
-      commonjsOptions: {
-        transformMixedEsModules: true,
-      },
     },
     test: {
       watch: false,
