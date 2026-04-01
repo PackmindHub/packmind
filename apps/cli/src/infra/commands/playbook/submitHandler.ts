@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as yaml from 'yaml';
+import slug from 'slug';
 
 import {
   ApplyPlaybookProposalItem,
@@ -474,13 +475,13 @@ async function checkForDuplicateNames(
   for (const [, entries] of groups) {
     const seen = new Map<string, string>();
     for (const entry of entries) {
-      const lowerName = entry.artifactName.toLowerCase();
-      if (seen.has(lowerName)) {
+      const sluggedName = slug(entry.artifactName);
+      if (seen.has(sluggedName)) {
         errors.push(
           `A ${entry.artifactType} named "${entry.artifactName}" is staged multiple times. Remove the duplicate with "playbook unstage" or rename the artifact.`,
         );
       } else {
-        seen.set(lowerName, entry.artifactName);
+        seen.set(sluggedName, entry.artifactName);
       }
     }
   }
@@ -508,12 +509,10 @@ async function checkForDuplicateNames(
         existingNames = response.map((s) => s.name);
       }
 
-      const existingNamesLower = new Set(
-        existingNames.map((n) => n.toLowerCase()),
-      );
+      const existingNamesSlugged = new Set(existingNames.map((n) => slug(n)));
 
       for (const entry of entries) {
-        if (existingNamesLower.has(entry.artifactName.toLowerCase())) {
+        if (existingNamesSlugged.has(slug(entry.artifactName))) {
           errors.push(
             `A ${entry.artifactType} named "${entry.artifactName}" already exists in this space. Use "playbook unstage" to remove it or rename the artifact.`,
           );
@@ -835,10 +834,21 @@ export async function playbookSubmitHandler(
       return;
     }
 
-    const response = await packmindGateway.changeProposals.batchApply({
-      proposals: applyProposals,
-      message: resolvedMessage,
-    });
+    let response: Awaited<
+      ReturnType<typeof packmindGateway.changeProposals.batchApply>
+    >;
+    try {
+      response = await packmindGateway.changeProposals.batchApply({
+        proposals: applyProposals,
+        message: resolvedMessage,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logErrorConsole(`Failed to apply changes: ${errorMessage}`);
+      exit(1);
+      return;
+    }
 
     if (!response.success) {
       logErrorConsole(`Error: ${response.error.message}`);
