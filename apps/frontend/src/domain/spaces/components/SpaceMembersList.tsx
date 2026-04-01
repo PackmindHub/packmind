@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import { useParams } from 'react-router';
 
-import { PMButton, PMHStack, PMIcon, PMPageSection } from '@packmind/ui';
+import { PMButton, PMIcon, PMPageSection } from '@packmind/ui';
 
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { SpaceMember, SpaceMembersTable } from './SpaceMembersTable';
