@@ -15,7 +15,11 @@ import {
   OrganizationId,
   Space,
   SpaceId,
+  UserId,
+  UserSpaceMembership,
+  UserSpaceRole,
 } from '@packmind/types';
+
 import type { SpacesHexa } from '../../SpacesHexa';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
@@ -80,6 +84,19 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     const spaceService = this.hexa.getSpaceService();
     const useCase = new GetDefaultSpaceUseCase(spaceService, this.accountsPort);
     return useCase.execute(command);
+  }
+
+  async addMemberToDefaultSpace(
+    userId: UserId,
+    organizationId: OrganizationId,
+    role: UserSpaceRole,
+  ): Promise<UserSpaceMembership> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.addMemberToDefaultSpace(
+      userId,
+      organizationId,
+      role,
+    );
   }
 
   /**

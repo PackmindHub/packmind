@@ -10,6 +10,8 @@ import {
   Organization,
   createOrganizationId,
   User,
+  ISpacesPort,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,6 +20,7 @@ describe('CreateOrganizationUseCase', () => {
   let mockOrganizationService: jest.Mocked<OrganizationService>;
   let mockUserService: jest.Mocked<UserService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: PackmindLogger;
 
   beforeEach(() => {
@@ -34,12 +37,18 @@ describe('CreateOrganizationUseCase', () => {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
+    mockSpacesPort = {
+      createDefaultSpace: jest.fn().mockResolvedValue(undefined),
+      addMemberToDefaultSpace: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     stubbedLogger = stubLogger();
 
     createOrganizationUseCase = new CreateOrganizationUseCase(
       mockOrganizationService,
       mockUserService,
       mockEventEmitterService,
+      mockSpacesPort,
       stubbedLogger,
     );
   });
@@ -125,6 +134,62 @@ describe('CreateOrganizationUseCase', () => {
           expect(
             mockUserService.addOrganizationMembership,
           ).toHaveBeenCalledWith(mockUser, mockOrganization.id, 'admin');
+        });
+
+        it('creates default space for organization', async () => {
+          await createOrganizationUseCase.execute(validCommand);
+
+          expect(mockSpacesPort.createDefaultSpace).toHaveBeenCalledWith(
+            mockOrganization.id,
+          );
+        });
+
+        it('adds user as admin to default space', async () => {
+          await createOrganizationUseCase.execute(validCommand);
+
+          expect(mockSpacesPort.addMemberToDefaultSpace).toHaveBeenCalledWith(
+            userId,
+            mockOrganization.id,
+            UserSpaceRole.ADMIN,
+          );
+        });
+
+        describe('when space creation fails', () => {
+          beforeEach(() => {
+            mockSpacesPort.createDefaultSpace.mockRejectedValue(
+              new Error('Space creation failed'),
+            );
+          });
+
+          it('does not attempt to add space membership', async () => {
+            await createOrganizationUseCase.execute(validCommand);
+
+            expect(
+              mockSpacesPort.addMemberToDefaultSpace,
+            ).not.toHaveBeenCalled();
+          });
+
+          it('still returns created organization', async () => {
+            const result =
+              await createOrganizationUseCase.execute(validCommand);
+
+            expect(result).toEqual({ organization: mockOrganization });
+          });
+        });
+
+        describe('when space membership creation fails', () => {
+          beforeEach(() => {
+            mockSpacesPort.addMemberToDefaultSpace.mockRejectedValue(
+              new Error('Membership creation failed'),
+            );
+          });
+
+          it('still returns created organization', async () => {
+            const result =
+              await createOrganizationUseCase.execute(validCommand);
+
+            expect(result).toEqual({ organization: mockOrganization });
+          });
         });
       });
 

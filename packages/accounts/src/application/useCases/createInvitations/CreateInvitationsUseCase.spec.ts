@@ -5,8 +5,10 @@ import {
   createOrganizationId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   Organization,
   User,
+  UserSpaceRole,
 } from '@packmind/types';
 import {
   invitationFactory,
@@ -27,6 +29,7 @@ describe('CreateInvitationsUseCase', () => {
   let mockGetOrganizationById: jest.Mock;
   let mockUserService: jest.Mocked<UserService>;
   let mockInvitationService: jest.Mocked<InvitationService>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let organization: Organization;
   const organizationId = createOrganizationId('org-123');
   const inviter = userFactory({
@@ -78,6 +81,10 @@ describe('CreateInvitationsUseCase', () => {
       userId: createUserId('test'),
     });
 
+    mockSpacesPort = {
+      addMemberToDefaultSpace: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     organization = organizationFactory({ id: organizationId });
 
     mockGetOrganizationById.mockResolvedValue(organization);
@@ -87,6 +94,7 @@ describe('CreateInvitationsUseCase', () => {
       accountsPort,
       mockUserService,
       mockInvitationService,
+      mockSpacesPort,
       stubLogger(),
     );
   });
@@ -685,5 +693,139 @@ describe('CreateInvitationsUseCase', () => {
     await expect(useCase.execute(command)).rejects.toBeInstanceOf(
       UserNotFoundError,
     );
+  });
+
+  describe('when inviting a new user with space membership', () => {
+    it('adds user to default space with matching role', async () => {
+      const createdUser = userFactory({
+        id: createUserId('user-new'),
+        email: 'new@packmind.com',
+        active: false,
+        memberships: [],
+      });
+      const userWithMembership = {
+        ...createdUser,
+        memberships: [
+          {
+            userId: createdUser.id,
+            organizationId,
+            role: 'member' as const,
+          },
+        ],
+      };
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValueOnce(null);
+      mockUserService.createInactiveUser.mockResolvedValue(createdUser);
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+      mockInvitationService.createInvitations.mockResolvedValue([
+        {
+          email: 'new@packmind.com',
+          invitation: invitationFactory(),
+          userId: createdUser.id,
+        },
+      ]);
+
+      await useCase.execute({
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: ['new@packmind.com'],
+        role: 'member',
+      });
+
+      expect(mockSpacesPort.addMemberToDefaultSpace).toHaveBeenCalledWith(
+        userWithMembership.id,
+        organizationId,
+        UserSpaceRole.MEMBER,
+      );
+    });
+  });
+
+  describe('when adding an active user directly with space membership', () => {
+    it('adds user to default space', async () => {
+      const activeUser = userFactory({
+        id: createUserId('active-user'),
+        email: 'active@packmind.com',
+        active: true,
+        memberships: [],
+      });
+      const userWithMembership = {
+        ...activeUser,
+        memberships: [
+          {
+            userId: activeUser.id,
+            organizationId,
+            role: 'admin' as const,
+          },
+        ],
+      };
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        activeUser,
+      );
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+
+      await useCase.execute({
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: ['active@packmind.com'],
+        role: 'admin',
+      });
+
+      expect(mockSpacesPort.addMemberToDefaultSpace).toHaveBeenCalledWith(
+        userWithMembership.id,
+        organizationId,
+        UserSpaceRole.ADMIN,
+      );
+    });
+  });
+
+  describe('when space membership creation fails during invitation', () => {
+    it('still completes the invitation successfully', async () => {
+      mockSpacesPort.addMemberToDefaultSpace.mockRejectedValue(
+        new Error('Space error'),
+      );
+
+      const createdUser = userFactory({
+        email: 'new@packmind.com',
+        active: false,
+        memberships: [],
+      });
+      const userWithMembership = {
+        ...createdUser,
+        memberships: [
+          {
+            userId: createdUser.id,
+            organizationId,
+            role: 'admin' as const,
+          },
+        ],
+      };
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValueOnce(null);
+      mockUserService.createInactiveUser.mockResolvedValue(createdUser);
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+      mockInvitationService.createInvitations.mockResolvedValue([
+        {
+          email: 'new@packmind.com',
+          invitation: invitationFactory(),
+          userId: createdUser.id,
+        },
+      ]);
+
+      const result = await useCase.execute({
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: ['new@packmind.com'],
+        role: 'admin',
+      });
+
+      expect(result.created).toHaveLength(1);
+    });
   });
 });

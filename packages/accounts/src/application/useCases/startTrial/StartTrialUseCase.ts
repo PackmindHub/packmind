@@ -12,6 +12,7 @@ import {
   AnonymousTrialStartedEvent,
   UserSignedUpEvent,
   OrganizationCreatedEvent,
+  UserSpaceRole,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -24,7 +25,7 @@ export class StartTrialUseCase implements IStartTrial {
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly spacesPort?: ISpacesPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly deploymentPort?: IDeploymentPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -47,21 +48,16 @@ export class StartTrialUseCase implements IStartTrial {
         await this.organizationService.createOrganization(organizationName);
 
       // Create default "Global" space for the organization
-      if (this.spacesPort) {
-        this.logger.info(
-          'Creating default Global space for trial organization',
-          {
-            organizationId: organization.id,
-          },
-        );
-        try {
-          await this.spacesPort.createDefaultSpace(organization.id);
-        } catch (error) {
-          this.logger.error('Failed to create default Global space for trial', {
-            organizationId: organization.id,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
+      this.logger.info('Creating default Global space for trial organization', {
+        organizationId: organization.id,
+      });
+      try {
+        await this.spacesPort.createDefaultSpace(organization.id);
+      } catch (error) {
+        this.logger.error('Failed to create default Global space for trial', {
+          organizationId: organization.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
 
       // Create trial user
@@ -72,6 +68,31 @@ export class StartTrialUseCase implements IStartTrial {
         organization.id,
         { trial: true },
       );
+
+      // Add trial user to default space
+      try {
+        await this.spacesPort.addMemberToDefaultSpace(
+          createUserId(user.id),
+          organization.id,
+          UserSpaceRole.ADMIN,
+        );
+        this.logger.info(
+          'Trial user added to default space membership successfully',
+          {
+            userId: user.id,
+            organizationId: organization.id,
+          },
+        );
+      } catch (error) {
+        this.logger.error(
+          'Failed to add trial user to default space membership',
+          {
+            userId: user.id,
+            organizationId: organization.id,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
 
       // Emit sign-up event
       this.eventEmitterService.emit(

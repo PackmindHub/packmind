@@ -6,6 +6,7 @@ import {
   createUserId,
   ISpacesPort,
   OrganizationCreatedEvent,
+  UserSpaceRole,
 } from '@packmind/types';
 import {
   ICreateOrganizationUseCase,
@@ -20,7 +21,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly spacesPort?: ISpacesPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('CreateOrganizationUseCase initialized');
@@ -76,21 +77,32 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
       );
 
       // Create default "Global" space for the organization
-      if (this.spacesPort) {
-        this.logger.info('Creating default Global space for organization', {
+      this.logger.info('Creating default Global space for organization', {
+        organizationId: organization.id,
+      });
+      try {
+        await this.spacesPort.createDefaultSpace(organization.id);
+        this.logger.info('Default Global space created successfully', {
           organizationId: organization.id,
         });
-        try {
-          await this.spacesPort.createDefaultSpace(organization.id);
-          this.logger.info('Default Global space created successfully', {
+
+        await this.spacesPort.addMemberToDefaultSpace(
+          createUserId(userId),
+          organization.id,
+          UserSpaceRole.ADMIN,
+        );
+        this.logger.info(
+          'User added to default space membership successfully',
+          {
+            userId,
             organizationId: organization.id,
-          });
-        } catch (error) {
-          this.logger.error('Failed to create default Global space', {
-            organizationId: organization.id,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
+          },
+        );
+      } catch (error) {
+        this.logger.error('Failed to create default Global space', {
+          organizationId: organization.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
 
       this.eventEmitterService.emit(

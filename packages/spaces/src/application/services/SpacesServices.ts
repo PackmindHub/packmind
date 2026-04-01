@@ -1,4 +1,5 @@
 import { SpaceService } from './SpaceService';
+import { UserSpaceMembershipService } from './UserSpaceMembershipService';
 import { ISpacesRepositories } from '../../domain/repositories/ISpacesRepositories';
 
 /**
@@ -13,15 +14,24 @@ import { ISpacesRepositories } from '../../domain/repositories/ISpacesRepositori
  */
 export class SpacesServices {
   private readonly spaceService: SpaceService;
+  private readonly userSpaceMembershipService: UserSpaceMembershipService;
 
   constructor(private readonly spacesRepositories: ISpacesRepositories) {
     // Initialize all services with their respective repositories from the aggregator
     this.spaceService = new SpaceService(
       this.spacesRepositories.getSpaceRepository(),
     );
+    this.userSpaceMembershipService = new UserSpaceMembershipService(
+      this.spacesRepositories.getUserSpaceMembershipRepository(),
+      this.spacesRepositories.getSpaceRepository(),
+    );
   }
 
   getSpaceService(): SpaceService {
     return this.spaceService;
+  }
+
+  getUserSpaceMembershipService(): UserSpaceMembershipService {
+    return this.userSpaceMembershipService;
   }
 }
