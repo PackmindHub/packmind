@@ -47,7 +47,8 @@ function formatMatrix(
   for (const file of files) {
     const agentSet = new Set(file.agents);
     const row =
-      formatFilePath(file.path.padEnd(pathColumnWidth)) +
+      formatFilePath(file.path) +
+      ''.padEnd(pathColumnWidth - file.path.length) +
       agents
         .map((a) => (agentSet.has(a) ? '\u2713' : '-').padEnd(columnWidth))
         .join('');
@@ -108,9 +109,12 @@ export async function listAgentsHandler(
     ...new Set(fileConfigs.flatMap((f) => f.agents)),
   ].sort();
 
-  const sortedFiles = [...fileConfigs].sort((a, b) =>
-    a.path.localeCompare(b.path),
-  );
+  const sortedFiles = [...fileConfigs].sort((a, b) => {
+    const depthA = a.path.split('/').length;
+    const depthB = b.path.split('/').length;
+    if (depthA !== depthB) return depthA - depthB;
+    return a.path.localeCompare(b.path);
+  });
 
   if (allAgents.length === 0) {
     logConsole('\nNo agents configured in any packmind.json file.\n');

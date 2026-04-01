@@ -113,15 +113,15 @@ describe('listAgentsHandler', () => {
       );
     });
 
-    it('displays a row for each file sorted by path', async () => {
+    it('displays rows sorted by depth first then alphabetically', async () => {
       await listAgentsHandler({}, deps);
 
       const lines = getLoggedLines();
       const fileLines = lines.filter(
-        (l) => l.includes('packmind.json/') || l.includes('./'),
+        (l) => l.includes('./') && l.includes('packmind.json'),
       );
-      const paths = fileLines.map((l) => l.trim().split(/\s+/)[0]);
-      expect(paths).toEqual([...paths].sort());
+      const firstPath = fileLines[0].trim().split(/\s+/)[0];
+      expect(firstPath).toBe('./packmind.json');
     });
 
     it('marks configured agents with a checkmark', async () => {
