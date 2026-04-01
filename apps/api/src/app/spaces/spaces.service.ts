@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort, OrganizationId, SpaceId } from '@packmind/types';
+import {
+  ISpacesPort,
+  ListUserSpacesResponse,
+  OrganizationId,
+  SpaceId,
+  UserId,
+} from '@packmind/types';
 import { InjectSpacesAdapter } from '../shared/HexaInjection';
 
 @Injectable()
@@ -13,6 +19,14 @@ export class SpacesService {
   async listSpacesByOrganization(organizationId: OrganizationId) {
     this.logger.info('Listing spaces by organization', { organizationId });
     return this.spacesAdapter.listSpacesByOrganization(organizationId);
+  }
+
+  async listUserSpaces(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<ListUserSpacesResponse> {
+    this.logger.info('Listing user spaces', { organizationId });
+    return this.spacesAdapter.listUserSpaces({ userId, organizationId });
   }
 
   async getSpaceBySlug(slug: string, organizationId: OrganizationId) {

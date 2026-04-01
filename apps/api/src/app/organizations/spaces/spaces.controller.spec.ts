@@ -1,6 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createSpaceId, Space } from '@packmind/types';
+import {
+  createOrganizationId,
+  createSpaceId,
+  createUserId,
+  ListUserSpacesResponse,
+  Space,
+} from '@packmind/types';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SpacesService } from '../../spaces/spaces.service';
 import { OrganizationsSpacesController } from './spaces.controller';
 
@@ -9,9 +16,15 @@ describe('OrganizationsSpacesController', () => {
   let spacesService: jest.Mocked<SpacesService>;
   let logger: jest.Mocked<PackmindLogger>;
 
+  const userId = createUserId('test-user-id');
+  const mockReq = {
+    user: { userId },
+  } as unknown as AuthenticatedRequest;
+
   beforeEach(() => {
     logger = stubLogger();
     spacesService = {
+      listUserSpaces: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
     } as unknown as jest.Mocked<SpacesService>;
@@ -23,7 +36,7 @@ describe('OrganizationsSpacesController', () => {
   });
 
   describe('listSpaces', () => {
-    describe('when listing spaces', () => {
+    describe('when listing user spaces', () => {
       const orgId = createOrganizationId('test-org-id');
       const mockSpaces: Space[] = [
         {
@@ -39,19 +52,24 @@ describe('OrganizationsSpacesController', () => {
           organizationId: orgId,
         },
       ];
-      let result: Space[];
+      const mockResponse: ListUserSpacesResponse = {
+        spaces: mockSpaces,
+        discoverableSpaces: [],
+      };
+      let result: ListUserSpacesResponse;
 
       beforeEach(async () => {
-        spacesService.listSpacesByOrganization.mockResolvedValue(mockSpaces);
-        result = await controller.listSpaces(orgId);
+        spacesService.listUserSpaces.mockResolvedValue(mockResponse);
+        result = await controller.listSpaces(mockReq, orgId);
       });
 
-      it('returns all spaces for the organization', () => {
-        expect(result).toEqual(mockSpaces);
+      it('returns user spaces for the organization', () => {
+        expect(result).toEqual(mockResponse);
       });
 
-      it('calls service with correct organization ID', () => {
-        expect(spacesService.listSpacesByOrganization).toHaveBeenCalledWith(
+      it('calls service with correct user ID and organization ID', () => {
+        expect(spacesService.listUserSpaces).toHaveBeenCalledWith(
+          userId,
           orgId,
         );
       });

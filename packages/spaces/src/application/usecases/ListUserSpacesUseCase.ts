@@ -3,18 +3,29 @@ import {
   ListUserSpacesCommand,
   ListUserSpacesResponse,
   OrganizationId,
+  Space,
+  UserId,
 } from '@packmind/types';
-import { SpaceService } from '../services/SpaceService';
+import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 
 export class ListUserSpacesUseCase implements IListUserSpaces {
-  constructor(private readonly spaceService: SpaceService) {}
+  constructor(
+    private readonly userSpaceMembershipService: UserSpaceMembershipService,
+  ) {}
 
   async execute(
     command: ListUserSpacesCommand,
   ): Promise<ListUserSpacesResponse> {
-    const spaces = await this.spaceService.listSpacesByOrganization(
-      command.organizationId as OrganizationId,
-    );
+    const memberships =
+      await this.userSpaceMembershipService.findMembershipsByUserAndOrganization(
+        command.userId as UserId,
+        command.organizationId as OrganizationId,
+      );
+
+    const spaces = memberships
+      .map((m) => m.space)
+      .filter((s): s is Space => s !== undefined);
+
     return {
       spaces,
       discoverableSpaces: [],

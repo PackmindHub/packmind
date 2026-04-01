@@ -1,4 +1,4 @@
-import { Space } from '@packmind/types';
+import { ListUserSpacesResponse, Space } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { ISpacesGateway } from './ISpacesGateway';
 import {
@@ -15,11 +15,13 @@ export class SpacesGatewayApi
     super('/organizations');
   }
 
-  async getSpaces(orgId: string): Promise<Space[]> {
+  async getUserSpaces(orgId: string): Promise<ListUserSpacesResponse> {
     if (!orgId) {
       throw new Error('Organization ID is required to fetch spaces');
     }
-    return this._api.get<Space[]>(`${this._endpoint}/${orgId}/spaces`);
+    return this._api.get<ListUserSpacesResponse>(
+      `${this._endpoint}/${orgId}/spaces`,
+    );
   }
 
   async getSpaceBySlug(slug: string, orgId: string): Promise<Space> {
