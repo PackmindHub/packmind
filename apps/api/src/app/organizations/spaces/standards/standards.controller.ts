@@ -24,6 +24,7 @@ import {
   Standard,
   StandardId,
   StandardVersion,
+  UserId,
 } from '@packmind/types';
 import { StandardsService } from './standards.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -464,21 +465,24 @@ export class OrganizationsSpacesStandardsController {
    */
   @Get(':standardId/latest-version')
   async getStandardLatestVersion(
-    @Param('orgId') organizationId: string,
-    @Param('spaceId') spaceId: string,
-    @Param('standardId') standardId: string,
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('standardId') standardId: StandardId,
     @Req() request: AuthenticatedRequest,
   ): Promise<{ version: number }> {
-    const userId = request.user.userId;
+    const userId = request.user.userId as UserId;
     this.logger.info('Getting latest version for standard', {
       organizationId,
       standardId,
       userId: userId.substring(0, 6) + '*',
     });
 
-    const version = await this.standardsService.getLatestVersionNumber(
-      standardId as StandardId,
-    );
+    const version = await this.standardsService.getLatestVersionNumber({
+      standardId,
+      organizationId,
+      spaceId,
+      userId,
+    });
 
     if (version === null) {
       throw new NotFoundException(`Standard ${standardId} not found`);

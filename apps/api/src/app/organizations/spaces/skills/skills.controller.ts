@@ -28,6 +28,7 @@ import {
   SpaceId,
   UploadSkillFileInput,
   UploadSkillResponse,
+  UserId,
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -188,24 +189,24 @@ export class OrganizationsSpacesSkillsController {
    */
   @Get(':skillId/latest-version')
   async getSkillLatestVersion(
-    @Param('orgId') organizationId: string,
-    @Param('spaceId') spaceId: string,
-    @Param('skillId') skillId: string,
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
     @Req() request: AuthenticatedRequest,
   ): Promise<{ version: number }> {
-    const userId = request.user.userId;
+    const userId = request.user.userId as UserId;
     this.logger.info('Getting latest version for skill', {
       organizationId,
       skillId,
       userId: userId.substring(0, 6) + '*',
     });
 
-    const version = await this.skillsService.getLatestVersionNumber(
-      skillId as SkillId,
-      spaceId as SpaceId,
-      organizationId as OrganizationId,
-      userId as UserId,
-    );
+    const version = await this.skillsService.getLatestVersionNumber({
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+    });
 
     if (version === null) {
       throw new NotFoundException(`Skill ${skillId} not found`);

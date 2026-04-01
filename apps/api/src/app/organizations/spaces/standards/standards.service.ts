@@ -25,6 +25,13 @@ import {
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../../shared/HexaInjection';
 
+type GetStandardLatestVersionCommand = {
+  standardId: StandardId;
+  organizationId: OrganizationId;
+  spaceId: SpaceId;
+  userId: UserId;
+};
+
 @Injectable()
 export class StandardsService {
   constructor(
@@ -134,10 +141,18 @@ export class StandardsService {
     });
   }
 
-  async getLatestVersionNumber(id: StandardId): Promise<number | null> {
+  async getLatestVersionNumber(
+    command: GetStandardLatestVersionCommand,
+  ): Promise<number | null> {
+    const standardResponse = await this.standardsHexa
+      .getAdapter()
+      .getStandardById(command);
+    if (!standardResponse?.standard) return null;
+    if (standardResponse.standard.spaceId !== command.spaceId) return null;
+
     const version = await this.standardsHexa
       .getAdapter()
-      .getLatestStandardVersion(id);
+      .getLatestStandardVersion(command.standardId);
     return version?.version ?? null;
   }
 
