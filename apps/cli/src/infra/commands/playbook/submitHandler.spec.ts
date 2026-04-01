@@ -2728,6 +2728,16 @@ describe('playbookSubmitHandler', () => {
       );
     });
 
+    it('passes directUpdate: true to batchApply', async () => {
+      await playbookSubmitHandler(
+        buildDeps({ message: 'My commit message', noReview: true }),
+      );
+
+      expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+        expect.objectContaining({ directUpdate: true }),
+      );
+    });
+
     it('logs success message', async () => {
       const { logSuccessConsole } = jest.requireMock(
         '../../utils/consoleLogger',

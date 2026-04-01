@@ -842,6 +842,7 @@ export async function playbookSubmitHandler(
       response = await packmindGateway.changeProposals.batchApply({
         proposals: applyProposals,
         message: resolvedMessage,
+        directUpdate: true,
       });
     } catch (error) {
       const errorMessage =
