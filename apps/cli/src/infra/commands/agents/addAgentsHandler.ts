@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { CodingAgent } from '@packmind/types';
+import { CodingAgent, PackmindFileConfig } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
 import {
   logConsole,
@@ -81,22 +81,22 @@ export async function addAgentsHandler(
     await configRepository.findDescendantConfigs(startDirectory);
   const allDirs = [startDirectory, ...descendantDirs];
 
-  const configDirs: string[] = [];
+  type ConfigEntry = { dir: string; config: PackmindFileConfig };
+  const validEntries: ConfigEntry[] = [];
   for (const dir of allDirs) {
-    const exists = await configRepository.configExists(dir);
-    if (exists) configDirs.push(dir);
+    const config = await configRepository.readConfig(dir);
+    if (config !== null) validEntries.push({ dir, config });
   }
 
-  if (configDirs.length === 0) {
+  if (validEntries.length === 0) {
     logWarningConsole('No packmind.json files found.');
     exit(0);
     return;
   }
 
-  for (const dir of configDirs) {
+  for (const { dir, config } of validEntries) {
     const relPath = getRelativePath(dir, startDirectory);
-    const config = await configRepository.readConfig(dir);
-    const existingAgents = config?.agents ?? [];
+    const existingAgents = config.agents ?? [];
 
     const alreadyPresent = agentsToAdd.filter((a) =>
       existingAgents.includes(a),

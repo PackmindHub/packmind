@@ -92,7 +92,7 @@ describe('addAgentsHandler', () => {
   describe('when no packmind.json files are found', () => {
     beforeEach(() => {
       mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
-      mockConfigRepository.configExists.mockResolvedValue(false);
+      mockConfigRepository.readConfig.mockResolvedValue(null);
     });
 
     it('logs a warning', async () => {
@@ -113,7 +113,6 @@ describe('addAgentsHandler', () => {
   describe('when the agent is already configured in a file', () => {
     beforeEach(() => {
       mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
-      mockConfigRepository.configExists.mockResolvedValue(true);
       mockConfigRepository.readConfig.mockResolvedValue({
         packages: {},
         agents: ['claude', 'cursor'],
@@ -140,7 +139,6 @@ describe('addAgentsHandler', () => {
       mockConfigRepository.findDescendantConfigs.mockResolvedValue([
         '/project/apps/api',
       ]);
-      mockConfigRepository.configExists.mockResolvedValue(true);
       mockConfigRepository.readConfig.mockResolvedValue({
         packages: {},
         agents: ['cursor'],
@@ -178,6 +176,27 @@ describe('addAgentsHandler', () => {
       expect(warnCalls.some((m) => m.includes('packmind-cli install'))).toBe(
         true,
       );
+    });
+  });
+
+  describe('when startDirectory has a malformed packmind.json', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue(null);
+    });
+
+    it('logs a warning that no files were found', async () => {
+      await addAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
+        'No packmind.json files found.',
+      );
+    });
+
+    it('does not call updateAgentsConfig', async () => {
+      await addAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockConfigRepository.updateAgentsConfig).not.toHaveBeenCalled();
     });
   });
 
