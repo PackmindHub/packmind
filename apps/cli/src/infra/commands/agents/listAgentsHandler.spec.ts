@@ -154,20 +154,20 @@ describe('listAgentsHandler', () => {
       expect(cliLine).toContain('-');
     });
 
-    it('shows "local" source for files with local agents', async () => {
+    it('shows local source label for files with local agents', async () => {
       await listAgentsHandler({}, deps);
 
       const lines = getLoggedLines();
       const rootLine = lines.find((l) => l.startsWith('./packmind.json'));
-      expect(rootLine).toContain('local');
+      expect(rootLine).toContain('local (`agents` property in packmind.json)');
     });
 
-    it('shows "organization" source for files without local agents', async () => {
+    it('shows organization source label for files without local agents', async () => {
       await listAgentsHandler({}, deps);
 
       const lines = getLoggedLines();
       const cliLine = lines.find((l) => l.includes('./apps/cli/packmind.json'));
-      expect(cliLine).toContain('organization');
+      expect(cliLine).toContain('Organization settings');
     });
 
     it('exits with code 0', async () => {
@@ -359,7 +359,7 @@ describe('listAgentsHandler', () => {
         expect(dataLines.every((l) => l.includes('\u2713'))).toBe(true);
       });
 
-      it('shows "organization" source for files using org defaults', async () => {
+      it('shows organization source label for files using org defaults', async () => {
         await listAgentsHandler(
           {},
           { ...deps, deploymentGateway: mockDeploymentGateway },
@@ -367,7 +367,9 @@ describe('listAgentsHandler', () => {
 
         const lines = getLoggedLines();
         const dataLines = lines.filter((l) => l.includes('./'));
-        expect(dataLines.every((l) => l.includes('organization'))).toBe(true);
+        expect(
+          dataLines.every((l) => l.includes('Organization settings')),
+        ).toBe(true);
       });
 
       it('does not display the no-agents-configured message', async () => {
@@ -414,7 +416,7 @@ describe('listAgentsHandler', () => {
         expect(rootLine).toContain('\u2713');
       });
 
-      it('shows "local" source for files with local agents', async () => {
+      it('shows local source label for files with local agents', async () => {
         await listAgentsHandler(
           {},
           { ...deps, deploymentGateway: mockDeploymentGateway },
@@ -422,7 +424,9 @@ describe('listAgentsHandler', () => {
 
         const lines = getLoggedLines();
         const rootLine = lines.find((l) => l.startsWith('./packmind.json'));
-        expect(rootLine).toContain('local');
+        expect(rootLine).toContain(
+          'local (`agents` property in packmind.json)',
+        );
       });
 
       it('applies org defaults to files without local agents', async () => {
@@ -438,7 +442,7 @@ describe('listAgentsHandler', () => {
         expect(apiLine).toContain('\u2713');
       });
 
-      it('shows "organization" source for files using org defaults', async () => {
+      it('shows organization source label for files using org defaults', async () => {
         await listAgentsHandler(
           {},
           { ...deps, deploymentGateway: mockDeploymentGateway },
@@ -448,7 +452,7 @@ describe('listAgentsHandler', () => {
         const apiLine = lines.find((l) =>
           l.includes('./apps/api/packmind.json'),
         );
-        expect(apiLine).toContain('organization');
+        expect(apiLine).toContain('Organization settings');
       });
 
       it('includes both local and org agents in the header', async () => {

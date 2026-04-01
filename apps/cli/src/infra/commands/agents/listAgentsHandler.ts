@@ -32,7 +32,10 @@ type FileAgentConfig = {
   source: AgentSource;
 };
 
-const SOURCE_COLUMN_HEADER = 'source';
+const SOURCE_LABELS: Record<AgentSource, string> = {
+  local: 'local (`agents` property in packmind.json)',
+  organization: 'Organization settings',
+};
 
 function formatMatrix(
   files: FileAgentConfig[],
@@ -46,7 +49,7 @@ function formatMatrix(
   const header =
     ''.padEnd(pathColumnWidth) +
     agents.map((a) => formatBold(a.padEnd(columnWidth))).join('') +
-    formatBold(SOURCE_COLUMN_HEADER);
+    formatBold('source');
   lines.push(header);
 
   for (const file of files) {
@@ -57,7 +60,7 @@ function formatMatrix(
       agents
         .map((a) => (agentSet.has(a) ? '\u2713' : '-').padEnd(columnWidth))
         .join('') +
-      file.source;
+      SOURCE_LABELS[file.source];
     lines.push(row);
   }
 
