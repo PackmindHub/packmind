@@ -74,6 +74,7 @@ export class CreateStandardWithExamplesUsecase {
       source = 'ui',
       method = 'blank',
       originSkill,
+      directUpdate,
     } = command;
 
     const organizationId = createOrganizationId(orgId);
@@ -219,6 +220,7 @@ export class CreateStandardWithExamplesUsecase {
           source,
           method,
           originSkill,
+          directUpdate,
         }),
       );
 

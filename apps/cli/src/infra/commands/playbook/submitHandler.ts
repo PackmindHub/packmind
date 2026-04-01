@@ -10,7 +10,10 @@ import {
   ChangeProposalType,
   FileModification,
   NewSkillPayload,
+  RecipeId,
+  SkillId,
   SpaceId,
+  StandardId,
   TargetId,
 } from '@packmind/types';
 import { parseSkillMd } from '@packmind/node-utils';
@@ -820,10 +823,8 @@ export async function playbookSubmitHandler(
       (p) => ({
         spaceId: p.spaceId as SpaceId,
         type: p.type,
-        artefactId:
-          p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
+        artefactId: p.artefactId as StandardId | RecipeId | SkillId | null,
         payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
-        captureMode: ChangeProposalCaptureMode.commit,
         targetId: (p.targetId ?? '') as TargetId,
       }),
     );
@@ -841,6 +842,7 @@ export async function playbookSubmitHandler(
       response = await packmindGateway.changeProposals.batchApply({
         proposals: applyProposals,
         message: resolvedMessage,
+        directUpdate: true,
       });
     } catch (error) {
       const errorMessage =

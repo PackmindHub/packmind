@@ -11,6 +11,7 @@ export type UploadSkillFileInput = {
 export type UploadSkillCommand = PackmindCommand & {
   files: UploadSkillFileInput[];
   spaceId: string;
+  directUpdate?: boolean;
 };
 
 export type UploadSkillResponse = {

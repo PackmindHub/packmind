@@ -41,6 +41,7 @@ export interface ISkillsPort {
   uploadSkill(command: UploadSkillCommand): Promise<UploadSkillResponse>;
   deleteSkill(command: DeleteSkillCommand): Promise<{ success: boolean }>;
   hardDeleteSkill(skillId: SkillId): Promise<void>;
+  hardDeleteSkillVersion(versionId: SkillVersionId): Promise<void>;
   duplicateSkillToSpace(
     skillId: SkillId,
     destinationSpaceId: SpaceId,

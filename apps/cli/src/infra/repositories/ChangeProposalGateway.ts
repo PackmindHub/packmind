@@ -39,7 +39,7 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
       `/api/v0/organizations/${organizationId}/playbook/apply`,
       {
         method: 'POST',
-        body: { proposals: command.proposals },
+        body: { proposals: command.proposals, message: command.message },
       },
     );
   };

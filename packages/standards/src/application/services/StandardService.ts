@@ -18,6 +18,7 @@ import {
   SpaceId,
   Standard,
   StandardId,
+  StandardVersionId,
   UserId,
 } from '@packmind/types';
 
@@ -415,5 +416,10 @@ export class StandardService {
   async hardDeleteStandard(standardId: StandardId): Promise<void> {
     this.logger.info('Hard deleting standard', { standardId });
     await this.standardRepository.hardDeleteById(standardId);
+  }
+
+  async hardDeleteStandardVersion(versionId: StandardVersionId): Promise<void> {
+    this.logger.info('Hard deleting standard version', { versionId });
+    await this.standardVersionRepository.hardDeleteById(versionId);
   }
 }

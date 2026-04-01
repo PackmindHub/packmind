@@ -470,6 +470,7 @@ export class StandardsAdapter
     source?: PackmindEventSource;
     method?: StandardCreationMethod;
     originSkill?: string;
+    directUpdate?: boolean;
   }): Promise<Standard> {
     if (!params.spaceId) {
       throw new Error(
@@ -585,5 +586,12 @@ export class StandardsAdapter
   async hardDeleteStandard(standardId: StandardId): Promise<void> {
     this.logger.info('Hard deleting standard', { standardId });
     await this.services.getStandardService().hardDeleteStandard(standardId);
+  }
+
+  async hardDeleteStandardVersion(versionId: StandardVersionId): Promise<void> {
+    this.logger.info('Hard deleting standard version', { versionId });
+    await this.services
+      .getStandardService()
+      .hardDeleteStandardVersion(versionId);
   }
 }

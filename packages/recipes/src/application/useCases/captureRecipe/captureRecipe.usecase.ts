@@ -172,6 +172,7 @@ export class CaptureRecipeUsecase
           userId,
           source,
           originSkill,
+          directUpdate: command.directUpdate,
         }),
       );
 

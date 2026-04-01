@@ -12,6 +12,7 @@ import {
   QueryOption,
   Recipe,
   RecipeId,
+  RecipeVersionId,
   SpaceId,
   UserId,
 } from '@packmind/types';
@@ -252,6 +253,11 @@ export class RecipeService {
   async hardDeleteRecipe(recipeId: RecipeId): Promise<void> {
     this.logger.info('Hard deleting recipe', { recipeId });
     await this.recipeRepository.hardDeleteById(recipeId);
+  }
+
+  async hardDeleteRecipeVersion(versionId: RecipeVersionId): Promise<void> {
+    this.logger.info('Hard deleting recipe version', { versionId });
+    await this.recipeVersionRepository.hardDeleteById(versionId);
   }
 
   async duplicateRecipeToSpace(

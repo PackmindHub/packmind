@@ -364,6 +364,7 @@ export class UploadSkillUseCase
           source,
           fileCount: supportingFiles.length,
           originSkill,
+          directUpdate: command.directUpdate,
         }),
       );
 

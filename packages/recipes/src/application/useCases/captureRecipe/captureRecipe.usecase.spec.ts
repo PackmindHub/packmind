@@ -14,6 +14,7 @@ import {
   OrganizationId,
   Recipe,
   RecipeSlugAlreadyExistsError,
+  CommandCreatedEvent,
   Space,
   SpaceId,
   User,
@@ -1377,6 +1378,87 @@ describe('CaptureRecipeUsecase', () => {
 
           expect(mockSlug).toHaveBeenCalledWith('Test Recipe');
         });
+      });
+    });
+
+    describe('when directUpdate is provided', () => {
+      it('includes directUpdate in CommandCreatedEvent payload', async () => {
+        const command: CaptureRecipeCommand = {
+          name: 'Test Recipe',
+          spaceId,
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId,
+          userId,
+          directUpdate: true,
+        };
+
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: command.name,
+          slug: 'test-recipe',
+          content: command.summary,
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        await captureRecipeUsecase.execute(command);
+
+        const emittedEvent = eventEmitterService.emit.mock
+          .calls[0][0] as CommandCreatedEvent;
+        expect(emittedEvent.payload.directUpdate).toBe(true);
+      });
+    });
+
+    describe('when directUpdate is not provided', () => {
+      it('has undefined directUpdate in CommandCreatedEvent payload', async () => {
+        const command: CaptureRecipeCommand = {
+          name: 'Test Recipe',
+          spaceId,
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId,
+          userId,
+        };
+
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: command.name,
+          slug: 'test-recipe',
+          content: command.summary,
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        await captureRecipeUsecase.execute(command);
+
+        const emittedEvent = eventEmitterService.emit.mock
+          .calls[0][0] as CommandCreatedEvent;
+        expect(emittedEvent.payload.directUpdate).toBeUndefined();
       });
     });
 

@@ -5,6 +5,7 @@ import { RecipeId } from '../RecipeId';
 export interface CommandCreatedPayload {
   id: RecipeId;
   spaceId: SpaceId;
+  directUpdate?: boolean;
 }
 
 export class CommandCreatedEvent extends UserEvent<CommandCreatedPayload> {

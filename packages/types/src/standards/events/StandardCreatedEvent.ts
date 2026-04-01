@@ -15,6 +15,7 @@ export interface StandardCreatedPayload {
   standardId: StandardId;
   spaceId: SpaceId;
   method: StandardCreationMethod;
+  directUpdate?: boolean;
 }
 
 export class StandardCreatedEvent extends UserEvent<StandardCreatedPayload> {

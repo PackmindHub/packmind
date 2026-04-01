@@ -483,4 +483,9 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     this.logger.info('Hard deleting skill', { skillId });
     await this.services.getSkillService().hardDeleteSkill(skillId);
   }
+
+  async hardDeleteSkillVersion(versionId: SkillVersionId): Promise<void> {
+    this.logger.info('Hard deleting skill version', { versionId });
+    await this.services.getSkillService().hardDeleteSkillVersion(versionId);
+  }
 }
