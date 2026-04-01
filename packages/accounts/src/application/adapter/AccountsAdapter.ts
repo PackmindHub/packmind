@@ -292,6 +292,7 @@ export class AccountsAdapter
       this,
       this.accountsServices.getUserService(),
       this.accountsServices.getInvitationService(),
+      this.spacesPort,
     );
     this._activateUserAccount = new ActivateUserAccountUseCase(
       this.accountsServices.getUserService(),
@@ -375,7 +376,7 @@ export class AccountsAdapter
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
       ports.eventEmitterService,
-      this.spacesPort ?? undefined,
+      this.spacesPort,
       this.deploymentPort ?? undefined,
     );
     this.logger.debug('Start trial use case initialized');

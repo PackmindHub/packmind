@@ -11,6 +11,7 @@ import {
   SignUpWithOrganizationResponse,
   User,
   UserSignedUpEvent,
+  UserSpaceRole,
 } from '@packmind/types';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
@@ -22,7 +23,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly spacesPort?: ISpacesPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('SignUpWithOrganizationUseCase initialized');
@@ -102,6 +103,8 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
         throw new Error(`Authentication type not found: ${method}`);
       }
 
+      await this.addMemberToDefaultSpace(user, organization.id);
+
       this.logger.info('User signed up with organization successfully', {
         userId: user.id,
         email,
@@ -145,10 +148,6 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
   private async tryCreateDefaultSpace(
     organizationId: OrganizationId,
   ): Promise<void> {
-    if (!this.spacesPort) {
-      return;
-    }
-
     this.logger.info('Creating default Global space for organization', {
       organizationId,
     });
@@ -160,6 +159,29 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
       });
     } catch (error) {
       this.logger.error('Failed to create default Global space', {
+        organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  private async addMemberToDefaultSpace(
+    user: User,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    try {
+      await this.spacesPort.addMemberToDefaultSpace(
+        createUserId(user.id),
+        organizationId,
+        UserSpaceRole.ADMIN,
+      );
+      this.logger.info('User added to default space membership successfully', {
+        userId: user.id,
+        organizationId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to add user to default space membership', {
+        userId: user.id,
         organizationId,
         error: error instanceof Error ? error.message : String(error),
       });

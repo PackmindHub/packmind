@@ -1,6 +1,8 @@
 import { OrganizationId } from '../../accounts/Organization';
+import { UserId } from '../../accounts/User';
 import { Space } from '../Space';
 import { SpaceId } from '../SpaceId';
+import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
 import {
   CreateSpaceCommand,
   CreateSpaceResponse,
@@ -68,4 +70,14 @@ export interface ISpacesPort {
   getDefaultSpace(
     command: GetDefaultSpaceCommand,
   ): Promise<GetDefaultSpaceResponse>;
+
+  /**
+   * Add a user as a member of the default space for an organization.
+   * Finds the default space and creates the membership.
+   */
+  addMemberToDefaultSpace(
+    userId: UserId,
+    organizationId: OrganizationId,
+    role: UserSpaceRole,
+  ): Promise<UserSpaceMembership>;
 }
