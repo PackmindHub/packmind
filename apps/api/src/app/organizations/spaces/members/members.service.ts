@@ -28,26 +28,24 @@ export class SpaceMembersService {
   }) {
     const memberships = await this.spacesAdapter.listSpaceMembers({
       userId: command.userId,
-      organizationId: command.organizationId as unknown as string,
+      organizationId: command.organizationId,
       spaceId: command.spaceId,
     });
 
     const orgUsers = await this.accountsAdapter.listOrganizationUsers({
       userId: command.userId,
-      organizationId: command.organizationId as unknown as string,
+      organizationId: command.organizationId,
     });
 
     const displayNameMap = new Map(
-      orgUsers.users.map((u) => [u.userId as unknown as string, u.displayName]),
+      orgUsers.users.map((u) => [u.userId, u.displayName]),
     );
 
     return {
       members: memberships.map((m) => ({
-        userId: m.userId as unknown as string,
-        spaceId: m.spaceId as unknown as string,
-        displayName:
-          displayNameMap.get(m.userId as unknown as string) ??
-          (m.userId as unknown as string),
+        userId: m.userId,
+        spaceId: m.spaceId,
+        displayName: displayNameMap.get(m.userId) ?? m.userId,
         role: m.role,
       })),
     };
@@ -61,7 +59,7 @@ export class SpaceMembersService {
   }) {
     const memberships = await this.spacesAdapter.addMembersToSpace({
       userId: command.userId,
-      organizationId: command.organizationId as unknown as string,
+      organizationId: command.organizationId,
       spaceId: command.spaceId,
       members: command.members.map((m) => ({
         userId: m.userId as UserId,
@@ -71,8 +69,8 @@ export class SpaceMembersService {
 
     return {
       memberships: memberships.map((m) => ({
-        userId: m.userId as unknown as string,
-        spaceId: m.spaceId as unknown as string,
+        userId: m.userId,
+        spaceId: m.spaceId,
         role: m.role,
       })),
     };
