@@ -109,7 +109,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
   async executeForMembers(
     command: ApplyPlaybookCommand & MemberContext,
   ): Promise<ApplyPlaybookResponse> {
-    const { proposals, userId, organizationId } = command;
+    const { proposals, userId, organizationId, directUpdate } = command;
 
     const validationError = await this.validateSpaces(
       proposals,
@@ -144,6 +144,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
             step.proposal,
             userId,
             organizationId,
+            directUpdate,
           );
           rollbackEntries.push({
             action: 'created',
@@ -396,6 +397,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     proposal: ApplyPlaybookProposalItem,
     userId: string,
     organizationId: string,
+    directUpdate?: boolean,
   ): Promise<{ type: 'standard' | 'recipe' | 'skill'; id: string }> {
     const brandedUserId = createUserId(userId);
     const brandedOrgId = createOrganizationId(organizationId);
@@ -410,6 +412,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           source,
           spaceId: proposal.spaceId,
           files: this.buildSkillFiles(payload),
+          ...(directUpdate !== undefined && { directUpdate }),
         });
         return {
           type: 'skill',
@@ -429,6 +432,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           summary: null,
           scope: this.normalizeScope(payload.scope),
           rules: payload.rules.map((r) => ({ content: r.content })),
+          ...(directUpdate !== undefined && { directUpdate }),
         });
         return {
           type: 'standard',
@@ -445,6 +449,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           spaceId: proposal.spaceId,
           name: payload.name,
           content: payload.content,
+          ...(directUpdate !== undefined && { directUpdate }),
         });
         return {
           type: 'recipe',

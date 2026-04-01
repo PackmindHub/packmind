@@ -1066,4 +1066,94 @@ describe('ApplyPlaybookUseCase', () => {
       });
     });
   });
+
+  describe('directUpdate forwarding', () => {
+    describe('when directUpdate is true', () => {
+      beforeEach(async () => {
+        const command = buildCommand({
+          directUpdate: true,
+          proposals: [
+            {
+              spaceId,
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'skill',
+                description: 'desc',
+                prompt: 'p',
+                skillMdPermissions: 'rw-r--r--',
+              },
+              targetId: createTargetId('target-1'),
+            },
+            {
+              spaceId,
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'std',
+                description: 'desc',
+                scope: null,
+                rules: [{ content: 'rule' }],
+              },
+              targetId: createTargetId('target-1'),
+            },
+            {
+              spaceId,
+              type: ChangeProposalType.createCommand,
+              payload: { name: 'cmd', content: 'content' },
+              targetId: createTargetId('target-1'),
+            },
+          ],
+        });
+
+        result = await useCase.execute(command);
+      });
+
+      it('forwards directUpdate to uploadSkill', () => {
+        expect(skillsPort.uploadSkill.mock.calls[0][0]).toHaveProperty(
+          'directUpdate',
+          true,
+        );
+      });
+
+      it('forwards directUpdate to createStandardWithExamples', () => {
+        expect(
+          standardsPort.createStandardWithExamples.mock.calls[0][0],
+        ).toHaveProperty('directUpdate', true);
+      });
+
+      it('forwards directUpdate to captureRecipe', () => {
+        expect(recipesPort.captureRecipe.mock.calls[0][0]).toHaveProperty(
+          'directUpdate',
+          true,
+        );
+      });
+    });
+
+    describe('when directUpdate is not set', () => {
+      beforeEach(async () => {
+        const command = buildCommand({
+          proposals: [
+            {
+              spaceId,
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'skill',
+                description: 'desc',
+                prompt: 'p',
+                skillMdPermissions: 'rw-r--r--',
+              },
+              targetId: createTargetId('target-1'),
+            },
+          ],
+        });
+
+        result = await useCase.execute(command);
+      });
+
+      it('does not include directUpdate in uploadSkill', () => {
+        expect(skillsPort.uploadSkill.mock.calls[0][0]).not.toHaveProperty(
+          'directUpdate',
+        );
+      });
+    });
+  });
 });
