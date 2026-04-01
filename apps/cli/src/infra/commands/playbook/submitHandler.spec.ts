@@ -2802,7 +2802,14 @@ describe('playbookSubmitHandler', () => {
       it('calls batchApply with update proposals', async () => {
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
-        expect(mockGateway.changeProposals.batchApply).toHaveBeenCalled();
+        expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            proposals: expect.arrayContaining([
+              expect.objectContaining({ artefactId: 'std-1' }),
+            ]),
+            directUpdate: true,
+          }),
+        );
       });
     });
 
@@ -2929,6 +2936,16 @@ describe('playbookSubmitHandler', () => {
         expect(logInfoConsole).not.toHaveBeenCalledWith(
           expect.stringContaining('packages add'),
         );
+      });
+
+      it('logs fallback message instead of success', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith('No changes were applied.');
       });
     });
 

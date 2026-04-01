@@ -864,51 +864,35 @@ export async function playbookSubmitHandler(
       }
     }
 
-    const createdParts: string[] = [];
-    const updatedParts: string[] = [];
-    const {
-      standards: createdStandards,
-      commands: createdCommands,
-      skills: createdSkills,
-    } = response.created;
-    const {
-      standards: updatedStandards,
-      commands: updatedCommands,
-      skills: updatedSkills,
-    } = response.updated;
+    const formatCount = (items: unknown[], noun: string): string | null =>
+      items.length > 0
+        ? `${items.length} ${noun}${items.length !== 1 ? 's' : ''}`
+        : null;
 
-    if (createdStandards.length > 0)
-      createdParts.push(
-        `${createdStandards.length} standard${createdStandards.length !== 1 ? 's' : ''}`,
-      );
-    if (createdCommands.length > 0)
-      createdParts.push(
-        `${createdCommands.length} command${createdCommands.length !== 1 ? 's' : ''}`,
-      );
-    if (createdSkills.length > 0)
-      createdParts.push(
-        `${createdSkills.length} skill${createdSkills.length !== 1 ? 's' : ''}`,
-      );
+    const collectParts = (counts: {
+      standards: unknown[];
+      commands: unknown[];
+      skills: unknown[];
+    }): string[] =>
+      [
+        formatCount(counts.standards, 'standard'),
+        formatCount(counts.commands, 'command'),
+        formatCount(counts.skills, 'skill'),
+      ].filter((p): p is string => p !== null);
 
-    if (updatedStandards.length > 0)
-      updatedParts.push(
-        `${updatedStandards.length} standard${updatedStandards.length !== 1 ? 's' : ''}`,
-      );
-    if (updatedCommands.length > 0)
-      updatedParts.push(
-        `${updatedCommands.length} command${updatedCommands.length !== 1 ? 's' : ''}`,
-      );
-    if (updatedSkills.length > 0)
-      updatedParts.push(
-        `${updatedSkills.length} skill${updatedSkills.length !== 1 ? 's' : ''}`,
-      );
+    const createdParts = collectParts(response.created);
+    const updatedParts = collectParts(response.updated);
 
     const messageParts: string[] = [];
     if (createdParts.length > 0)
       messageParts.push(`${createdParts.join(', ')} created`);
     if (updatedParts.length > 0)
       messageParts.push(`${updatedParts.join(', ')} updated`);
-    if (messageParts.length > 0) logSuccessConsole(messageParts.join(', '));
+    if (messageParts.length > 0) {
+      logSuccessConsole(messageParts.join(', '));
+    } else {
+      logInfoConsole('No changes were applied.');
+    }
 
     const createTypes = new Set([
       ChangeProposalType.createStandard,

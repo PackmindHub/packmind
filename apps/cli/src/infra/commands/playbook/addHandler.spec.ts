@@ -2383,7 +2383,68 @@ describe('playbookAddHandler', () => {
       );
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('outdated'),
+        expect.stringContaining('local: v1, remote: v4'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not stage the change', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when getLatestVersion rejects', () => {
+    beforeEach(() => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+      (fs.statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
+
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'std-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      });
+      mockGetLatestVersion.mockRejectedValue(new Error('Network timeout'));
+    });
+
+    it('logs version check failure message', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to check artifact version'),
       );
     });
 
