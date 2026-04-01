@@ -864,19 +864,51 @@ export async function playbookSubmitHandler(
       }
     }
 
-    const parts: string[] = [];
-    const { standards, commands, skills } = response.created;
-    if (standards.length > 0)
-      parts.push(
-        `${standards.length} standard${standards.length !== 1 ? 's' : ''}`,
+    const createdParts: string[] = [];
+    const updatedParts: string[] = [];
+    const {
+      standards: createdStandards,
+      commands: createdCommands,
+      skills: createdSkills,
+    } = response.created;
+    const {
+      standards: updatedStandards,
+      commands: updatedCommands,
+      skills: updatedSkills,
+    } = response.updated;
+
+    if (createdStandards.length > 0)
+      createdParts.push(
+        `${createdStandards.length} standard${createdStandards.length !== 1 ? 's' : ''}`,
       );
-    if (commands.length > 0)
-      parts.push(
-        `${commands.length} command${commands.length !== 1 ? 's' : ''}`,
+    if (createdCommands.length > 0)
+      createdParts.push(
+        `${createdCommands.length} command${createdCommands.length !== 1 ? 's' : ''}`,
       );
-    if (skills.length > 0)
-      parts.push(`${skills.length} skill${skills.length !== 1 ? 's' : ''}`);
-    logSuccessConsole(`${parts.join(', ')} created`);
+    if (createdSkills.length > 0)
+      createdParts.push(
+        `${createdSkills.length} skill${createdSkills.length !== 1 ? 's' : ''}`,
+      );
+
+    if (updatedStandards.length > 0)
+      updatedParts.push(
+        `${updatedStandards.length} standard${updatedStandards.length !== 1 ? 's' : ''}`,
+      );
+    if (updatedCommands.length > 0)
+      updatedParts.push(
+        `${updatedCommands.length} command${updatedCommands.length !== 1 ? 's' : ''}`,
+      );
+    if (updatedSkills.length > 0)
+      updatedParts.push(
+        `${updatedSkills.length} skill${updatedSkills.length !== 1 ? 's' : ''}`,
+      );
+
+    const messageParts: string[] = [];
+    if (createdParts.length > 0)
+      messageParts.push(`${createdParts.join(', ')} created`);
+    if (updatedParts.length > 0)
+      messageParts.push(`${updatedParts.join(', ')} updated`);
+    if (messageParts.length > 0) logSuccessConsole(messageParts.join(', '));
 
     const createTypes = new Set([
       ChangeProposalType.createStandard,

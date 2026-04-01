@@ -2715,6 +2715,11 @@ describe('playbookSubmitHandler', () => {
           commands: [],
           skills: [],
         },
+        updated: {
+          standards: [],
+          commands: [],
+          skills: [],
+        },
       });
     });
 
@@ -2813,6 +2818,11 @@ describe('playbookSubmitHandler', () => {
             commands: [{ id: 'cmd-1', slug: 'my-command' }],
             skills: [],
           },
+          updated: {
+            standards: [],
+            commands: [],
+            skills: [],
+          },
         });
       });
 
@@ -2838,6 +2848,11 @@ describe('playbookSubmitHandler', () => {
             commands: [],
             skills: [],
           },
+          updated: {
+            standards: [],
+            commands: [],
+            skills: [],
+          },
         });
       });
 
@@ -2850,6 +2865,74 @@ describe('playbookSubmitHandler', () => {
 
         expect(logInfoConsole).not.toHaveBeenCalledWith(
           expect.stringContaining('packages add'),
+        );
+      });
+    });
+
+    describe('when batchApply returns updated artifacts', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: { standards: [], commands: [], skills: [] },
+          updated: {
+            standards: ['std-1'],
+            commands: [],
+            skills: [],
+          },
+        });
+      });
+
+      it('logs updated count in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('updated'),
+        );
+      });
+    });
+
+    describe('when batchApply returns both created and updated artifacts', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: {
+            standards: [{ id: 'std-1', slug: 'my-standard' }],
+            commands: [],
+            skills: [],
+          },
+          updated: {
+            standards: [],
+            commands: ['cmd-1'],
+            skills: [],
+          },
+        });
+      });
+
+      it('logs created in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('created'),
+        );
+      });
+
+      it('logs updated in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('updated'),
         );
       });
     });
