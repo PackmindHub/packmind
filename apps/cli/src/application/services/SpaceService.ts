@@ -6,13 +6,20 @@ export class SpaceService implements ISpaceService {
   constructor(private readonly spaceGateway: ISpacesGateway) {}
 
   async getSpaces(): Promise<Space[]> {
-    const spaces = await this.spaceGateway.getUserSpaces({});
-    if (!Array.isArray(spaces)) {
-      throw new Error(
-        `Unexpected response from spaces API: ${JSON.stringify(spaces)}`,
-      );
+    const response = await this.spaceGateway.getUserSpaces({});
+
+    // Support both Space[] (new API) and { spaces: Space[] } (backward compat)
+    if (Array.isArray(response)) {
+      return response;
     }
-    return spaces;
+
+    if (response && Array.isArray((response as { spaces: Space[] }).spaces)) {
+      return (response as { spaces: Space[] }).spaces;
+    }
+
+    throw new Error(
+      `Unexpected response from spaces API: ${JSON.stringify(response)}`,
+    );
   }
 
   async getDefaultSpace(): Promise<Space> {
