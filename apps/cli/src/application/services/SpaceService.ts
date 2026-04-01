@@ -6,8 +6,7 @@ export class SpaceService implements ISpaceService {
   constructor(private readonly spaceGateway: ISpacesGateway) {}
 
   async getSpaces(): Promise<Space[]> {
-    const { spaces } = await this.spaceGateway.getUserSpaces({});
-    return spaces;
+    return await this.spaceGateway.getUserSpaces({});
   }
 
   async getDefaultSpace(): Promise<Space> {
