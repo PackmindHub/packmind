@@ -1,6 +1,11 @@
 import { Space } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { ISpacesGateway } from './ISpacesGateway';
+import {
+  AddMembersToSpaceResponse,
+  ListSpaceMembersResponse,
+  SpaceMemberEntry,
+} from '../../types';
 
 export class SpacesGatewayApi
   extends PackmindGateway
@@ -25,5 +30,25 @@ export class SpacesGatewayApi
       throw new Error('Space slug is required to fetch space');
     }
     return this._api.get<Space>(`${this._endpoint}/${orgId}/spaces/${slug}`);
+  }
+
+  async listSpaceMembers(
+    orgId: string,
+    spaceSlug: string,
+  ): Promise<ListSpaceMembersResponse> {
+    return this._api.get<ListSpaceMembersResponse>(
+      `${this._endpoint}/${orgId}/spaces/${spaceSlug}/members`,
+    );
+  }
+
+  async addMembersToSpace(
+    orgId: string,
+    spaceSlug: string,
+    members: SpaceMemberEntry[],
+  ): Promise<AddMembersToSpaceResponse> {
+    return this._api.post<AddMembersToSpaceResponse>(
+      `${this._endpoint}/${orgId}/spaces/${spaceSlug}/members`,
+      { members },
+    );
   }
 }

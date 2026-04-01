@@ -1,7 +1,13 @@
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { spacesGateway } from '../gateways';
 import { spacesQueryKeys } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { SpaceMemberEntry } from '../../types';
 
 export const getSpacesQueryOptions = (orgId: string) =>
   queryOptions({
@@ -43,4 +49,50 @@ export const useGetSpaceBySlugQuery = (slug: string) => {
   // Only pass orgId if it exists, otherwise pass undefined to ensure query is disabled
   const orgId = organization?.id;
   return useQuery(getSpaceBySlugQueryOptions(slug, orgId || ''));
+};
+
+export const getSpaceMembersQueryOptions = (orgId: string, spaceSlug: string) =>
+  queryOptions({
+    queryKey: spacesQueryKeys.members(orgId, spaceSlug),
+    queryFn: () => {
+      if (!orgId || !spaceSlug) {
+        throw new Error(
+          'Organization ID and space slug are required to fetch space members',
+        );
+      }
+      return spacesGateway.listSpaceMembers(orgId, spaceSlug);
+    },
+    enabled: !!orgId && !!spaceSlug,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+export const useGetSpaceMembersQuery = (spaceSlug: string) => {
+  const { organization } = useAuthContext();
+  const orgId = organization?.id;
+  return useQuery(getSpaceMembersQueryOptions(orgId || '', spaceSlug));
+};
+
+export const useAddMembersToSpaceMutation = (spaceSlug: string) => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async (members: SpaceMemberEntry[]) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to add members');
+      }
+      return spacesGateway.addMembersToSpace(
+        organization.id,
+        spaceSlug,
+        members,
+      );
+    },
+    onSuccess: async () => {
+      if (organization?.id) {
+        await queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.members(organization.id, spaceSlug),
+        });
+      }
+    },
+  });
 };
