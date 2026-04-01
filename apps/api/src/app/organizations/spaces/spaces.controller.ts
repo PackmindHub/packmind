@@ -1,6 +1,11 @@
 import { Controller, Get, Param, Request, UseGuards } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { OrganizationId, Space, UserId } from '@packmind/types';
+import {
+  ListUserSpacesResponse,
+  OrganizationId,
+  Space,
+  UserId,
+} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SpacesService } from '../../spaces/spaces.service';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
@@ -36,18 +41,12 @@ export class OrganizationsSpacesController {
   async listSpaces(
     @Request() req: AuthenticatedRequest,
     @Param('orgId') orgId: OrganizationId,
-  ): Promise<{ spaces: Space[] }> {
+  ): Promise<ListUserSpacesResponse> {
     this.logger.info('GET /organizations/:orgId/spaces - Listing user spaces', {
       organizationId: orgId,
     });
 
-    const spaces = await this.spacesService.listUserSpaces(
-      req.user.userId as UserId,
-      orgId,
-    );
-
-    // Wrap in { spaces } for backward compatibility with CLI ≤0.24.0
-    return { spaces };
+    return this.spacesService.listUserSpaces(req.user.userId as UserId, orgId);
   }
 
   /**
