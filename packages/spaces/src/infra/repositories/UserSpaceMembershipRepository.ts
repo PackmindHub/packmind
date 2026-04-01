@@ -29,11 +29,7 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     });
 
     try {
-      const result = await this.repository.manager.transaction(
-        async (manager) => {
-          return manager.save(UserSpaceMembershipSchema, membership);
-        },
-      );
+      const result = await this.repository.save(membership);
 
       this.logger.info('Membership added', {
         userId: membership.userId,
@@ -54,18 +50,12 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     this.logger.info('Removing membership', { userId, spaceId });
 
     try {
-      const result = await this.repository.manager.transaction(
-        async (manager) => {
-          const deleteResult = await manager.delete(UserSpaceMembershipSchema, {
-            userId,
-            spaceId,
-          });
+      const deleteResult = await this.repository.delete({
+        userId,
+        spaceId,
+      });
 
-          return deleteResult.affected ?? 0;
-        },
-      );
-
-      const removed = result > 0;
+      const removed = (deleteResult.affected ?? 0) > 0;
       this.logger.info('Membership removal attempted', {
         userId,
         spaceId,
