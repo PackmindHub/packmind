@@ -2,19 +2,21 @@ import { Repository } from 'typeorm';
 import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import {
   OrganizationSchema,
-  UserSchema,
   UserOrganizationMembershipSchema,
+  UserSchema,
 } from '@packmind/accounts';
 import { SpaceSchema } from '../schemas/SpaceSchema';
 import { UserSpaceMembershipSchema } from '../schemas/UserSpaceMembershipSchema';
 import { spaceFactory } from '../../../test';
 import {
-  createUserId,
-  createSpaceId,
   createOrganizationId,
+  createSpaceId,
+  createUserId,
   Organization,
   Space,
+  UserId,
   UserSpaceMembership,
+  UserSpaceRole,
   WithTimestamps,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -78,7 +80,7 @@ describe('UserSpaceMembershipRepository', () => {
       .save({
         userId,
         organizationId: organization.id,
-        role: 'member',
+        role: UserSpaceRole.MEMBER,
       });
     return userId;
   };
@@ -90,7 +92,7 @@ describe('UserSpaceMembershipRepository', () => {
     const membership: UserSpaceMembership = {
       userId,
       spaceId: space.id,
-      role: 'member',
+      role: UserSpaceRole.MEMBER,
       ...overrides,
     };
     return repository.addMembership(membership);
@@ -99,20 +101,26 @@ describe('UserSpaceMembershipRepository', () => {
   describe('.addMembership', () => {
     describe('when adding a valid membership', () => {
       let result: UserSpaceMembership;
-      let userId: ReturnType<typeof createUserId>;
+      let userId: UserId;
 
       beforeEach(async () => {
         userId = await createUserInOrg();
         result = await repository.addMembership({
           userId,
           spaceId: space.id,
-          role: 'member',
+          role: UserSpaceRole.MEMBER,
         });
       });
 
-      it('returns the created membership', () => {
+      it('returns the correct userId', () => {
         expect(result.userId).toEqual(userId);
+      });
+
+      it('returns the correct spaceId', () => {
         expect(result.spaceId).toEqual(space.id);
+      });
+
+      it('returns the correct role', () => {
         expect(result.role).toBe('member');
       });
 
@@ -127,7 +135,7 @@ describe('UserSpaceMembershipRepository', () => {
 
   describe('.removeMembership', () => {
     describe('when membership exists', () => {
-      let userId: ReturnType<typeof createUserId>;
+      let userId: UserId;
       let removed: boolean;
 
       beforeEach(async () => {
@@ -168,9 +176,13 @@ describe('UserSpaceMembershipRepository', () => {
         userId = membership.userId;
       });
 
-      it('returns the membership', async () => {
+      it('returns a non-null result', async () => {
         const found = await repository.findMembership(userId, space.id);
         expect(found).not.toBeNull();
+      });
+
+      it('returns the correct userId', async () => {
+        const found = await repository.findMembership(userId, space.id);
         expect(found?.userId).toEqual(userId);
       });
     });
@@ -188,16 +200,20 @@ describe('UserSpaceMembershipRepository', () => {
 
   describe('.findByUserId', () => {
     describe('when user has memberships', () => {
-      let userId: ReturnType<typeof createUserId>;
+      let userId: UserId;
 
       beforeEach(async () => {
         const membership = await createMembership();
         userId = membership.userId;
       });
 
-      it('returns all memberships for the user', async () => {
+      it('returns one membership', async () => {
         const memberships = await repository.findByUserId(userId);
         expect(memberships).toHaveLength(1);
+      });
+
+      it('returns the membership with the correct userId', async () => {
+        const memberships = await repository.findByUserId(userId);
         expect(memberships[0].userId).toEqual(userId);
       });
     });
@@ -236,19 +252,26 @@ describe('UserSpaceMembershipRepository', () => {
 
   describe('.findByUserAndOrganization', () => {
     describe('when user has memberships in the organization', () => {
-      let userId: ReturnType<typeof createUserId>;
+      let userId: UserId;
 
       beforeEach(async () => {
         const membership = await createMembership();
         userId = membership.userId;
       });
 
-      it('returns memberships for spaces in that organization', async () => {
+      it('returns one membership', async () => {
         const memberships = await repository.findByUserAndOrganization(
           userId,
           organization.id,
         );
         expect(memberships).toHaveLength(1);
+      });
+
+      it('returns the membership with the correct userId', async () => {
+        const memberships = await repository.findByUserAndOrganization(
+          userId,
+          organization.id,
+        );
         expect(memberships[0].userId).toEqual(userId);
       });
     });
