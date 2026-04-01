@@ -1,11 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { LuPlus } from 'react-icons/lu';
+import { useParams } from 'react-router';
+
+import { PMButton, PMHStack, PMIcon, PMPageSection } from '@packmind/ui';
 
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { SpaceMember, SpaceMembersTable } from './SpaceMembersTable';
+import { AddSpaceMembersDialog } from './AddSpaceMembersDialog';
 
 export function SpaceMembersList() {
   const { user } = useAuthContext();
+  const { spaceSlug } = useParams<{ spaceSlug: string }>();
   const currentUserId = user?.id;
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // TODO: replace with actual data fetching
   const members = useMemo<SpaceMember[]>(
@@ -26,5 +33,30 @@ export function SpaceMembersList() {
     [currentUserId, user?.email],
   );
 
-  return <SpaceMembersTable members={members} currentUserId={currentUserId} />;
+  return (
+    <PMPageSection
+      title="Members"
+      backgroundColor="primary"
+      cta={
+        <PMButton
+          variant="primary"
+          size="sm"
+          onClick={() => setAddDialogOpen(true)}
+        >
+          <PMIcon>
+            <LuPlus />
+          </PMIcon>
+          Add members
+        </PMButton>
+      }
+    >
+      <SpaceMembersTable members={members} currentUserId={currentUserId} />
+      <AddSpaceMembersDialog
+        open={addDialogOpen}
+        setOpen={setAddDialogOpen}
+        spaceSlug={spaceSlug ?? ''}
+        existingMembers={members}
+      />
+    </PMPageSection>
+  );
 }

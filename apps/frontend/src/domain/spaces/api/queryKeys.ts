@@ -5,6 +5,7 @@ export const SPACES_SCOPE = 'spaces' as const;
 export enum SpaceQueryKey {
   LIST = 'list',
   DETAIL = 'detail',
+  MEMBERS = 'members',
 }
 
 export const spacesQueryKeys = {
@@ -14,4 +15,6 @@ export const spacesQueryKeys = {
   details: () => [...spacesQueryKeys.all, SpaceQueryKey.DETAIL] as const,
   detail: (orgId: string, spaceSlug: string) =>
     [...spacesQueryKeys.details(), orgId, spaceSlug] as const,
+  members: (orgId: string, spaceSlug: string) =>
+    [...spacesQueryKeys.all, SpaceQueryKey.MEMBERS, orgId, spaceSlug] as const,
 };
