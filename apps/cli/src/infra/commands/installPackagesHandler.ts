@@ -410,7 +410,7 @@ async function executeInstallForDirectory(
         log: () => {
           /* empty */
         },
-        gitRoot,
+        gitRoot: gitRoot ?? undefined,
       });
     }
 
