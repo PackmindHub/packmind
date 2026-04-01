@@ -15,6 +15,7 @@ export class UpdatePlaybookDeployer
 {
   public readonly slug = 'packmind-update-playbook';
   protected readonly minimumVersion = '0.21.0';
+  protected override maximumVersion = null;
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-update-playbook`;

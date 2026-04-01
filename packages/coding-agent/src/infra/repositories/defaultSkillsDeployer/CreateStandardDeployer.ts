@@ -11,6 +11,7 @@ export class CreateStandardDeployer
 {
   public readonly slug = 'packmind-create-standard';
   protected readonly minimumVersion = '0.14.0';
+  protected override maximumVersion = null;
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-standard`;

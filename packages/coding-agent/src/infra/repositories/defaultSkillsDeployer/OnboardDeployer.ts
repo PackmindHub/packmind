@@ -15,6 +15,7 @@ export class OnboardDeployer
 {
   public readonly slug = 'packmind-onboard';
   protected readonly minimumVersion = '0.16.0';
+  protected override maximumVersion = null;
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-onboard`;
