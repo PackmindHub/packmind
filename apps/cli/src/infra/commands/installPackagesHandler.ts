@@ -313,6 +313,31 @@ async function executeInstallForDirectory(
   const normalizedConfigPackages =
     await packmindCliHexa.normalizePackageSlugs(configPackages);
 
+  // Collect git info for distribution history lookup (to detect removed agents)
+  let gitRemoteUrl: string | undefined;
+  let gitBranch: string | undefined;
+  let relativePath: string | undefined;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(directory);
+  if (gitRoot) {
+    try {
+      gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+      gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+
+      relativePath = directory.startsWith(gitRoot)
+        ? directory.slice(gitRoot.length)
+        : '/';
+      if (!relativePath.startsWith('/')) {
+        relativePath = '/' + relativePath;
+      }
+      if (!relativePath.endsWith('/')) {
+        relativePath = relativePath + '/';
+      }
+    } catch {
+      // Git info collection failed, continue without it
+    }
+  }
+
   try {
     // Show fetching message
     const packageCount = normalizedConfigPackages.length;
@@ -327,6 +352,9 @@ async function executeInstallForDirectory(
       baseDirectory: directory,
       packagesSlugs: normalizedConfigPackages,
       previousPackagesSlugs: normalizedConfigPackages, // Pass for consistency
+      gitRemoteUrl,
+      gitBranch,
+      relativePath,
       agents: configAgents, // Pass agents from config if present
     });
 
