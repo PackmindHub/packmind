@@ -304,6 +304,8 @@ This presents an interactive prompt where you can select from supported AI codin
 - **Junie** - Artifacts in `.junie/` directory
 - **AGENTS.md** - Single `AGENTS.md` file at project root
 - **GitLab Duo** - Artifacts in `.gitlab/duo/` directory
+- **OpenCode** - Artifacts in `.opencode/` directory
+- **Codex** - Artifacts in `.agents/` directory
 
 The command auto-detects existing agent configurations in your project and pre-selects them. Your selection is saved to `packmind.json`.
 
@@ -311,6 +313,77 @@ The command auto-detects existing agent configurations in your project and pre-s
   **Auto-detection** — If you already have agent configuration files (like
   `.cursor/` or `.claude/`), they will be automatically pre-selected when you
   run this command.
+</Tip>
+
+## Agents Command
+
+Manage AI coding agents configured in your `packmind.json` files. Unlike `config agents` which uses an interactive prompt, the `agents` command provides programmatic subcommands for listing, adding, and removing agents — useful for scripting and CI workflows.
+
+### Agents List
+
+Display all configured coding agents across `packmind.json` files in a matrix view:
+
+```bash
+packmind-cli agents list
+```
+
+The output shows a matrix with file paths as rows and agent names as columns, using checkmarks (✓) and dashes (-) to indicate which agents are configured in each file. Each file also shows its source — whether agents are configured locally (via the `agents` property in `packmind.json`) or inherited from organization settings.
+
+Use `--path` to scope the listing to a specific directory:
+
+```bash
+packmind-cli agents list --path ./apps/api
+```
+
+### Agents Add
+
+Add one or more coding agents to all `packmind.json` files:
+
+```bash
+packmind-cli agents add claude cursor
+```
+
+Use `--path` to target a specific directory:
+
+```bash
+packmind-cli agents add --path ./packages/core claude
+```
+
+If the targeted files currently inherit agent configuration from organization settings, a confirmation prompt warns that adding local agents will override the organization-level defaults.
+
+### Agents Remove
+
+Remove one or more coding agents from all `packmind.json` files:
+
+```bash
+packmind-cli agents rm cursor copilot
+```
+
+Use `--path` to target a specific directory:
+
+```bash
+packmind-cli agents rm --path ./apps/frontend claude
+```
+
+When all agents are removed from a file, the `agents` property is deleted entirely and the file reverts to organization-level defaults.
+
+### Supported Agents
+
+| Identifier   | Agent          |
+| ------------ | -------------- |
+| `claude`     | Claude Code    |
+| `cursor`     | Cursor         |
+| `copilot`    | GitHub Copilot |
+| `continue`   | Continue.dev   |
+| `junie`      | Junie          |
+| `agents_md`  | AGENTS.md      |
+| `gitlab_duo` | GitLab Duo     |
+| `opencode`   | OpenCode       |
+| `codex`      | Codex          |
+
+<Tip>
+  After adding or removing agents, run `packmind-cli install` to deploy or clean
+  up the corresponding agent artifact files in your repository.
 </Tip>
 
 ## Setup MCP Command

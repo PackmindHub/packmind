@@ -4,6 +4,9 @@
 
 - Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
 - Support Codex as a new AI coding agent target for `config agents` with recursive `.agents/skills` detection
+- `agents list` command to display configured AI coding agents across all `packmind.json` files in a matrix view, with source tracking (local vs. organization settings)
+- `agents add` command to add coding agents to `packmind.json` files, with confirmation when overriding organization-level defaults
+- `agents rm` command to remove coding agents from `packmind.json` files, with automatic cleanup when all agents are removed
 
 ## Changed
 
