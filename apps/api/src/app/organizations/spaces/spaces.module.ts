@@ -5,6 +5,7 @@ import { OrganizationsSpacesStandardsModule } from './standards/standards.module
 import { OrganizationsSpacesPackagesModule } from './packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './skills/skills.module';
 import { OrganizationsSpacesChangeProposalsModule } from '@packmind/playbook-change-management';
+import { OrganizationsSpacesMembersModule } from './members/members.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { SpacesService } from '../../spaces/spaces.service';
 
@@ -36,6 +37,7 @@ import { SpacesService } from '../../spaces/spaces.service';
     OrganizationsSpacesPackagesModule,
     OrganizationsSpacesSkillsModule,
     OrganizationsSpacesChangeProposalsModule,
+    OrganizationsSpacesMembersModule,
   ],
   controllers: [OrganizationsSpacesController],
   providers: [
