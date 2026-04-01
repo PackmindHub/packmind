@@ -75,7 +75,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "copy-webpack-plugin": "^14.0.0",
-    "esbuild-loader": "^4.3.0",
+    "esbuild-loader": "^4.4.2",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "2.31.0",
