@@ -52,19 +52,15 @@ describe('OrganizationsSpacesController', () => {
           organizationId: orgId,
         },
       ];
-      const mockResponse: ListUserSpacesResponse = {
-        spaces: mockSpaces,
-        discoverableSpaces: [],
-      };
       let result: ListUserSpacesResponse;
 
       beforeEach(async () => {
-        spacesService.listUserSpaces.mockResolvedValue(mockResponse);
+        spacesService.listUserSpaces.mockResolvedValue(mockSpaces);
         result = await controller.listSpaces(mockReq, orgId);
       });
 
       it('returns user spaces for the organization', () => {
-        expect(result).toEqual(mockResponse);
+        expect(result).toEqual(mockSpaces);
       });
 
       it('calls service with correct user ID and organization ID', () => {

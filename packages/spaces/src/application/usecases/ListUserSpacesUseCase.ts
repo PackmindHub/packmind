@@ -22,13 +22,8 @@ export class ListUserSpacesUseCase implements IListUserSpaces {
         command.organizationId as OrganizationId,
       );
 
-    const spaces = memberships
+    return memberships
       .map((m) => m.space)
       .filter((s): s is Space => s !== undefined);
-
-    return {
-      spaces,
-      discoverableSpaces: [],
-    };
   }
 }
