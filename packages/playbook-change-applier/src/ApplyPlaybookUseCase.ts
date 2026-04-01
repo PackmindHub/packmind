@@ -31,9 +31,9 @@ import {
 const origin = 'ApplyPlaybookUseCase';
 
 type CreatedArtifact =
-  | { type: 'standard'; id: StandardId }
-  | { type: 'recipe'; id: RecipeId }
-  | { type: 'skill'; id: SkillId };
+  | { type: 'standard'; id: StandardId; slug: string }
+  | { type: 'recipe'; id: RecipeId; slug: string }
+  | { type: 'skill'; id: SkillId; slug: string };
 
 export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
   ApplyPlaybookCommand,
@@ -91,13 +91,13 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       created: {
         standards: created
           .filter((a) => a.type === 'standard')
-          .map((a) => a.id as StandardId),
+          .map((a) => ({ id: a.id as StandardId, slug: a.slug })),
         commands: created
           .filter((a) => a.type === 'recipe')
-          .map((a) => a.id as RecipeId),
+          .map((a) => ({ id: a.id as RecipeId, slug: a.slug })),
         skills: created
           .filter((a) => a.type === 'skill')
-          .map((a) => a.id as SkillId),
+          .map((a) => ({ id: a.id as SkillId, slug: a.slug })),
       },
     };
   }
@@ -145,7 +145,11 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           spaceId: proposal.spaceId,
           files: this.buildSkillFiles(payload),
         });
-        return { type: 'skill', id: createSkillId(result.skill.id) };
+        return {
+          type: 'skill',
+          id: createSkillId(result.skill.id),
+          slug: result.skill.slug,
+        };
       }
       case ChangeProposalType.createStandard: {
         const payload = proposal.payload as NewStandardPayload;
@@ -160,7 +164,11 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           scope: this.normalizeScope(payload.scope),
           rules: payload.rules.map((r) => ({ content: r.content })),
         });
-        return { type: 'standard', id: createStandardId(result.id) };
+        return {
+          type: 'standard',
+          id: createStandardId(result.id),
+          slug: result.slug,
+        };
       }
       case ChangeProposalType.createCommand: {
         const payload = proposal.payload as NewCommandPayload;
@@ -172,7 +180,11 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           name: payload.name,
           content: payload.content,
         });
-        return { type: 'recipe', id: createRecipeId(result.id) };
+        return {
+          type: 'recipe',
+          id: createRecipeId(result.id),
+          slug: result.slug,
+        };
       }
       default:
         throw new Error(`Unsupported proposal type: ${proposal.type}`);
