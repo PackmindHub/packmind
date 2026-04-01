@@ -113,7 +113,14 @@ export async function removeAgentsHandler(
       const remainingAgents = existingAgents.filter(
         (a) => !toRemove.includes(a),
       );
-      await configRepository.updateAgentsConfig(dir, remainingAgents);
+      if (remainingAgents.length === 0) {
+        await configRepository.deleteAgentsConfig(dir);
+        logWarningConsole(
+          `${relPath} now has no agents configured — no agent files will be rendered after install.`,
+        );
+      } else {
+        await configRepository.updateAgentsConfig(dir, remainingAgents);
+      }
       logSuccessConsole(`Updated ${relPath}`);
       anyUpdated = true;
     }

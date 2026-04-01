@@ -36,6 +36,7 @@ describe('listAgentsHandler', () => {
       findAllConfigsInTree: jest.fn(),
       updateConfig: jest.fn(),
       updateAgentsConfig: jest.fn(),
+      deleteAgentsConfig: jest.fn(),
     } as unknown as jest.Mocked<IConfigFileRepository>;
 
     mockExit = jest.fn();

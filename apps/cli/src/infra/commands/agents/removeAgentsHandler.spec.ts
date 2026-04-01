@@ -39,6 +39,7 @@ describe('removeAgentsHandler', () => {
       findAllConfigsInTree: jest.fn(),
       updateConfig: jest.fn(),
       updateAgentsConfig: jest.fn(),
+      deleteAgentsConfig: jest.fn(),
     } as unknown as jest.Mocked<IConfigFileRepository>;
 
     mockExit = jest.fn();
@@ -168,6 +169,45 @@ describe('removeAgentsHandler', () => {
       );
       expect(warnCalls.some((m) => m.includes('packmind-cli install'))).toBe(
         true,
+      );
+    });
+  });
+
+  describe('when removing the last agent from a file', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: ['claude'],
+      });
+      mockConfigRepository.deleteAgentsConfig.mockResolvedValue(undefined);
+    });
+
+    it('calls deleteAgentsConfig with the correct directory', async () => {
+      await removeAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockConfigRepository.deleteAgentsConfig).toHaveBeenCalledWith(
+        '/project',
+      );
+    });
+
+    it('does not call updateAgentsConfig', async () => {
+      await removeAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockConfigRepository.updateAgentsConfig).not.toHaveBeenCalled();
+    });
+
+    it('logs a success message', async () => {
+      await removeAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockLogger.logSuccessConsole).toHaveBeenCalledTimes(1);
+    });
+
+    it('warns that no agents will be rendered after install', async () => {
+      await removeAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('no agents'),
       );
     });
   });
