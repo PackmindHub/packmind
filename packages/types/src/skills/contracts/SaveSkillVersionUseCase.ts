@@ -3,7 +3,10 @@ import { SpaceId } from '../../spaces/SpaceId';
 import { SkillVersion } from '../SkillVersion';
 import { SkillFile } from '../SkillFile';
 
-export type SkillVersionInput = Omit<SkillVersion, 'id' | 'version'> & {
+export type SkillVersionInput = Omit<
+  SkillVersion,
+  'id' | 'version' | 'files'
+> & {
   files: Omit<SkillFile, 'id' | 'skillVersionId'>[];
 };
 
