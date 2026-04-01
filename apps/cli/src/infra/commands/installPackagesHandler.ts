@@ -32,20 +32,23 @@ async function notifyDistributionIfInGitRepo(params: {
   packages: string[];
   log: (msg: string) => void;
   agents?: CodingAgent[];
+  gitRoot?: string;
 }): Promise<boolean> {
   const { packmindCliHexa, cwd, packages, log, agents } = params;
 
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-  if (!gitRoot) {
+  const resolvedGitRoot =
+    params.gitRoot ?? (await packmindCliHexa.tryGetGitRepositoryRoot(cwd));
+  if (!resolvedGitRoot) {
     return false;
   }
 
   try {
-    const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
-    const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+    const gitRemoteUrl =
+      packmindCliHexa.getGitRemoteUrlFromPath(resolvedGitRoot);
+    const gitBranch = packmindCliHexa.getCurrentBranch(resolvedGitRoot);
 
-    let relativePath = cwd.startsWith(gitRoot)
-      ? cwd.slice(gitRoot.length)
+    let relativePath = cwd.startsWith(resolvedGitRoot)
+      ? cwd.slice(resolvedGitRoot.length)
       : '/';
     if (!relativePath.startsWith('/')) {
       relativePath = '/' + relativePath;
@@ -407,6 +410,7 @@ async function executeInstallForDirectory(
         log: () => {
           /* empty */
         },
+        gitRoot,
       });
     }
 

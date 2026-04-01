@@ -1,15 +1,13 @@
-import * as path from 'path';
-import * as fs from 'fs/promises';
 import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
 import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
 import {
   logConsole,
-  logErrorConsole,
   logWarningConsole,
   formatBold,
   formatFilePath,
 } from '../../utils/consoleLogger';
+import { getRelativePath, resolveStartDirectory } from './agentsHandlerUtils';
 
 export type ListAgentsHandlerArgs = {
   path?: string;
@@ -26,11 +24,6 @@ type FileAgentConfig = {
   path: string;
   agents: CodingAgent[];
 };
-
-function getRelativePath(dir: string, startDirectory: string): string {
-  if (dir === startDirectory) return './packmind.json';
-  return './' + path.relative(startDirectory, dir) + '/packmind.json';
-}
 
 function formatMatrix(
   files: FileAgentConfig[],
@@ -66,24 +59,8 @@ export async function listAgentsHandler(
 ): Promise<void> {
   const { configRepository, exit, getCwd } = deps;
 
-  let startDirectory = getCwd();
-
-  if (args.path) {
-    const resolvedPath = path.resolve(getCwd(), args.path);
-    try {
-      const stat = await fs.stat(resolvedPath);
-      if (!stat.isDirectory()) {
-        logErrorConsole(`Path is not a directory: ${resolvedPath}`);
-        exit(1);
-        return;
-      }
-      startDirectory = resolvedPath;
-    } catch {
-      logErrorConsole(`Path does not exist: ${resolvedPath}`);
-      exit(1);
-      return;
-    }
-  }
+  const startDirectory = await resolveStartDirectory(args, getCwd, exit);
+  if (!startDirectory) return;
 
   const descendantDirs =
     await configRepository.findDescendantConfigs(startDirectory);
