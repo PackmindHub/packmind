@@ -459,6 +459,35 @@ export class OrganizationsSpacesStandardsController {
   }
 
   /**
+   * Get the latest version number of a standard
+   * GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/latest-version
+   */
+  @Get(':standardId/latest-version')
+  async getStandardLatestVersion(
+    @Param('orgId') organizationId: string,
+    @Param('spaceId') spaceId: string,
+    @Param('standardId') standardId: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<{ version: number }> {
+    const userId = request.user.userId;
+    this.logger.info('Getting latest version for standard', {
+      organizationId,
+      standardId,
+      userId: userId.substring(0, 6) + '*',
+    });
+
+    const version = await this.standardsService.getLatestVersionNumber(
+      standardId as StandardId,
+    );
+
+    if (version === null) {
+      throw new NotFoundException(`Standard ${standardId} not found`);
+    }
+
+    return { version };
+  }
+
+  /**
    * Delete a standard within a space
    * DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId
    */

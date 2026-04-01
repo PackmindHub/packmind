@@ -412,6 +412,38 @@ export class OrganizationsSpacesRecipesController {
   }
 
   /**
+   * Get the latest version number of a recipe
+   * GET /organizations/:orgId/spaces/:spaceId/recipes/:id/latest-version
+   */
+  @Get(':id/latest-version')
+  async getRecipeLatestVersion(
+    @Param('orgId') organizationId: string,
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<{ version: number }> {
+    const userId = request.user.userId;
+    this.logger.info('Getting latest version for recipe', {
+      organizationId,
+      recipeId: id,
+      userId: userId.substring(0, 6) + '*',
+    });
+
+    const version = await this.recipesService.getLatestVersionNumber(
+      id as RecipeId,
+      organizationId as OrganizationId,
+      spaceId as SpaceId,
+      userId as UserId,
+    );
+
+    if (version === null) {
+      throw new NotFoundException(`Recipe ${id} not found`);
+    }
+
+    return { version };
+  }
+
+  /**
    * Get all versions of a recipe within a space
    * GET /organizations/:orgId/spaces/:spaceId/recipes/:id/versions
    */

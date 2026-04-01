@@ -183,6 +183,38 @@ export class OrganizationsSpacesSkillsController {
   }
 
   /**
+   * Get the latest version number of a skill
+   * GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/latest-version
+   */
+  @Get(':skillId/latest-version')
+  async getSkillLatestVersion(
+    @Param('orgId') organizationId: string,
+    @Param('spaceId') spaceId: string,
+    @Param('skillId') skillId: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<{ version: number }> {
+    const userId = request.user.userId;
+    this.logger.info('Getting latest version for skill', {
+      organizationId,
+      skillId,
+      userId: userId.substring(0, 6) + '*',
+    });
+
+    const version = await this.skillsService.getLatestVersionNumber(
+      skillId as SkillId,
+      spaceId as SpaceId,
+      organizationId as OrganizationId,
+      userId as UserId,
+    );
+
+    if (version === null) {
+      throw new NotFoundException(`Skill ${skillId} not found`);
+    }
+
+    return { version };
+  }
+
+  /**
    * Get all versions for a skill
    * GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/versions
    */

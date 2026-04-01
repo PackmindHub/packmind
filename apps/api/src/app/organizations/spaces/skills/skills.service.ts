@@ -103,6 +103,22 @@ export class SkillsService {
     });
   }
 
+  async getLatestVersionNumber(
+    skillId: SkillId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<number | null> {
+    const adapter = this.skillsHexa.getAdapter();
+    const { skillVersion } = await adapter.getLatestSkillVersionUseCase({
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+    });
+    return skillVersion?.version ?? null;
+  }
+
   async getSkillWithFilesById(
     skillId: SkillId,
     spaceId: SpaceId,

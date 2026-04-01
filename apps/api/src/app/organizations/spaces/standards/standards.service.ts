@@ -134,6 +134,13 @@ export class StandardsService {
     });
   }
 
+  async getLatestVersionNumber(id: StandardId): Promise<number | null> {
+    const version = await this.standardsHexa
+      .getAdapter()
+      .getLatestStandardVersion(id);
+    return version?.version ?? null;
+  }
+
   async getStandardVersionsById(id: StandardId): Promise<StandardVersion[]> {
     return this.standardsHexa.getAdapter().listStandardVersions(id);
   }

@@ -54,6 +54,21 @@ export class RecipesService {
     });
   }
 
+  async getLatestVersionNumber(
+    id: RecipeId,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    userId: UserId,
+  ): Promise<number | null> {
+    const recipe = await this.recipesAdapter.getRecipeById({
+      recipeId: id,
+      organizationId,
+      spaceId,
+      userId,
+    });
+    return recipe?.version ?? null;
+  }
+
   async addRecipe(
     recipe: Omit<
       RecipeVersion,
