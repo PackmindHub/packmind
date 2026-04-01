@@ -19,6 +19,7 @@ import {
 } from '@packmind/ui';
 
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
+import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 import { useAddMembersToSpaceMutation } from '../api/queries/SpacesQueries';
 import { SpaceMemberEntry, SpaceMemberRole } from '../types';
 import { SpaceMember } from './SpaceMembersTable';
@@ -82,38 +83,31 @@ function UserSearchCombobox({
 interface AddSpaceMembersDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  spaceSlug: string;
+  spaceId: string;
   existingMembers: SpaceMember[];
 }
-
-// TODO: replace mock data with useGetUsersInMyOrganizationQuery() once the backend is wired
-const MOCK_ORG_USERS = [
-  { userId: '10', displayName: 'alice.wilson' },
-  { userId: '11', displayName: 'charlie.brown' },
-  { userId: '12', displayName: 'diana.prince' },
-  { userId: '13', displayName: 'edward.norton' },
-  { userId: '14', displayName: 'fiona.apple' },
-];
 
 export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
   open,
   setOpen,
-  spaceSlug,
+  spaceId,
   existingMembers,
 }) => {
   const [selectedMembers, setSelectedMembers] = useState<SpaceMemberEntry[]>(
     [],
   );
   const { mutateAsync: addMembers, isPending } =
-    useAddMembersToSpaceMutation(spaceSlug);
+    useAddMembersToSpaceMutation(spaceId);
+  const { data: orgUsersData } = useGetUsersInMyOrganizationQuery();
+  const orgUsers = useMemo(() => orgUsersData?.users ?? [], [orgUsersData]);
 
   const comboboxItems = useMemo(() => {
     const existingIds = new Set(existingMembers.map((m) => m.id));
     const selectedIds = new Set(selectedMembers.map((m) => m.userId));
-    return MOCK_ORG_USERS.filter(
-      (u) => !existingIds.has(u.userId) && !selectedIds.has(u.userId),
-    ).map((u) => ({ label: u.displayName, value: u.userId }));
-  }, [existingMembers, selectedMembers]);
+    return orgUsers
+      .filter((u) => !existingIds.has(u.userId) && !selectedIds.has(u.userId))
+      .map((u) => ({ label: u.displayName, value: u.userId }));
+  }, [existingMembers, selectedMembers, orgUsers]);
 
   const comboboxKey = selectedMembers.map((m) => m.userId).join(',');
 
@@ -140,7 +134,7 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
   };
 
   const getDisplayName = (userId: string) =>
-    MOCK_ORG_USERS.find((u) => u.userId === userId)?.displayName ?? userId;
+    orgUsers.find((u) => u.userId === userId)?.displayName ?? userId;
 
   const handleSubmit = async () => {
     if (selectedMembers.length === 0) return;

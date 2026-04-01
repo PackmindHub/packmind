@@ -3,6 +3,8 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
+  AddMembersToSpaceCommand,
+  AddMembersToSpaceResponse,
   CreateSpaceCommand,
   CreateSpaceResponse,
   GetDefaultSpaceCommand,
@@ -10,6 +12,8 @@ import {
   IAccountsPort,
   IAccountsPortName,
   ISpacesPort,
+  ListSpaceMembersCommand,
+  ListSpaceMembersResponse,
   ListUserSpacesCommand,
   ListUserSpacesResponse,
   OrganizationId,
@@ -21,8 +25,10 @@ import {
 } from '@packmind/types';
 
 import type { SpacesHexa } from '../../SpacesHexa';
+import { AddMembersToSpaceUseCase } from '../usecases/AddMembersToSpaceUseCase';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
+import { ListSpaceMembersUseCase } from '../usecases/ListSpaceMembersUseCase';
 import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 
 /**
@@ -117,6 +123,28 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
       userId,
       organizationId,
     );
+  }
+
+  async listSpaceMembers(
+    command: ListSpaceMembersCommand,
+  ): Promise<ListSpaceMembersResponse> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new ListSpaceMembersUseCase(
+      membershipService,
+      this.accountsPort,
+    );
+    return useCase.execute(command);
+  }
+
+  async addMembersToSpace(
+    command: AddMembersToSpaceCommand,
+  ): Promise<AddMembersToSpaceResponse> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new AddMembersToSpaceUseCase(
+      membershipService,
+      this.accountsPort,
+    );
+    return useCase.execute(command);
   }
 
   /**

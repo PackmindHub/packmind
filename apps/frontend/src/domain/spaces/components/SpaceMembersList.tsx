@@ -1,37 +1,35 @@
 import { useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
-import { useParams } from 'react-router';
 
-import { PMButton, PMIcon, PMPageSection } from '@packmind/ui';
+import { PMButton, PMIcon, PMPageSection, PMSpinner } from '@packmind/ui';
 
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
+import { useCurrentSpace } from '../hooks/useCurrentSpace';
 import { SpaceMember, SpaceMembersTable } from './SpaceMembersTable';
 import { AddSpaceMembersDialog } from './AddSpaceMembersDialog';
 
 export function SpaceMembersList() {
   const { user } = useAuthContext();
-  const { spaceSlug } = useParams<{ spaceSlug: string }>();
+  const { spaceId } = useCurrentSpace();
   const currentUserId = user?.id;
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // TODO: replace with actual data fetching
+  const { data, isLoading } = useGetSpaceMembersQuery(spaceId ?? '');
+
   const members = useMemo<SpaceMember[]>(
-    () => [
-      ...(currentUserId
-        ? [
-            {
-              id: currentUserId,
-              displayName: user?.email ?? 'me',
-              role: 'admin' as const,
-            },
-          ]
-        : []),
-      { id: '1', displayName: 'john.doe', role: 'admin' },
-      { id: '2', displayName: 'jane.smith', role: 'member' },
-      { id: '3', displayName: 'bob.martin', role: 'member' },
-    ],
-    [currentUserId, user?.email],
+    () =>
+      (data?.members ?? []).map((m) => ({
+        id: m.userId,
+        displayName: m.displayName,
+        role: m.role,
+      })),
+    [data],
   );
+
+  if (isLoading) {
+    return <PMSpinner />;
+  }
 
   return (
     <PMPageSection
@@ -54,7 +52,7 @@ export function SpaceMembersList() {
       <AddSpaceMembersDialog
         open={addDialogOpen}
         setOpen={setAddDialogOpen}
-        spaceSlug={spaceSlug ?? ''}
+        spaceId={spaceId ?? ''}
         existingMembers={members}
       />
     </PMPageSection>

@@ -4,6 +4,10 @@ import { Space } from '../Space';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
 import {
+  AddMembersToSpaceCommand,
+  AddMembersToSpaceResponse,
+} from '../contracts/IAddMembersToSpaceUseCase';
+import {
   CreateSpaceCommand,
   CreateSpaceResponse,
 } from '../contracts/ICreateSpaceUseCase';
@@ -11,6 +15,10 @@ import {
   GetDefaultSpaceCommand,
   GetDefaultSpaceResponse,
 } from '../contracts/IGetDefaultSpace';
+import {
+  ListSpaceMembersCommand,
+  ListSpaceMembersResponse,
+} from '../contracts/IListSpaceMembersUseCase';
 import {
   ListUserSpacesCommand,
   ListUserSpacesResponse,
@@ -97,4 +105,18 @@ export interface ISpacesPort {
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<UserSpaceMembership[]>;
+
+  /**
+   * List all members of a specific space.
+   */
+  listSpaceMembers(
+    command: ListSpaceMembersCommand,
+  ): Promise<ListSpaceMembersResponse>;
+
+  /**
+   * Add multiple members to a space in batch.
+   */
+  addMembersToSpace(
+    command: AddMembersToSpaceCommand,
+  ): Promise<AddMembersToSpaceResponse>;
 }
