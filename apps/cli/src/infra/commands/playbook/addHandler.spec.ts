@@ -1041,7 +1041,9 @@ describe('playbookAddHandler', () => {
         buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
       );
 
-      expect(logInfoConsole).not.toHaveBeenCalled();
+      expect(logInfoConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
     });
   });
 

@@ -109,6 +109,9 @@ async function tryStageRemovedFromLockFile(
   logSuccessConsole(
     `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook${spaceInfo}`,
   );
+  logInfoConsole(
+    `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
+  );
   deps.exit(0);
   return true;
 }
@@ -532,6 +535,9 @@ export async function playbookAddHandler(
   const spaceInfo = spaceName ? ` in space "${spaceName}"` : '';
   logSuccessConsole(
     `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook${spaceInfo}. ${formatLabel(codingAgent)}`,
+  );
+  logInfoConsole(
+    `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
   );
   exit(0);
 }
