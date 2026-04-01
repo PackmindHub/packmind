@@ -73,8 +73,8 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   async listUserSpaces(
     command: ListUserSpacesCommand,
   ): Promise<ListUserSpacesResponse> {
-    const spaceService = this.hexa.getSpaceService();
-    const useCase = new ListUserSpacesUseCase(spaceService);
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new ListUserSpacesUseCase(membershipService);
     return useCase.execute(command);
   }
 

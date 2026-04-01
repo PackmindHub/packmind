@@ -1,4 +1,4 @@
-import { Space } from '@packmind/types';
+import { ListUserSpacesResponse, Space } from '@packmind/types';
 import {
   SpaceMemberEntry,
   ListSpaceMembersResponse,
@@ -6,7 +6,7 @@ import {
 } from '../../types';
 
 export interface ISpacesGateway {
-  getSpaces(orgId: string): Promise<Space[]>;
+  getUserSpaces(orgId: string): Promise<ListUserSpacesResponse>;
   getSpaceBySlug(slug: string, orgId: string): Promise<Space>;
   listSpaceMembers(
     orgId: string,

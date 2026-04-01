@@ -158,7 +158,7 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     try {
       const memberships = await this.repository
         .createQueryBuilder('membership')
-        .innerJoin('membership.space', 'space')
+        .innerJoinAndSelect('membership.space', 'space')
         .where('membership.userId = :userId', { userId })
         .andWhere('space.organizationId = :organizationId', { organizationId })
         .andWhere('space.deletedAt IS NULL')
