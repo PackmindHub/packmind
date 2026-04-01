@@ -98,16 +98,14 @@ describe('playbookSubmitHandler', () => {
         .mockResolvedValue([
           { id: 'space-123', slug: 'global', name: 'Global' },
         ]),
-      listPackages: jest
-        .fn()
-        .mockResolvedValue([
-          {
-            id: 'pkg-1',
-            slug: 'my-package',
-            name: 'My Package',
-            spaceId: 'space-123',
-          },
-        ]),
+      listPackages: jest.fn().mockResolvedValue([
+        {
+          id: 'pkg-1',
+          slug: 'my-package',
+          name: 'My Package',
+          spaceId: 'space-123',
+        },
+      ]),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -2832,6 +2830,82 @@ describe('playbookSubmitHandler', () => {
 
         expect(logInfoConsole).not.toHaveBeenCalledWith(
           expect.stringContaining('packages add'),
+        );
+      });
+    });
+
+    describe('when batchApply returns success: false', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: false,
+          error: { index: 0, type: 'standard', message: 'Duplicate name' },
+        });
+      });
+
+      it('logs the error message', async () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Duplicate name'),
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not remove staged entries', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when batchApply throws a network error', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockRejectedValue(
+          new Error('Network timeout'),
+        );
+      });
+
+      it('logs the error', async () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Network timeout'),
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not remove staged entries', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when batchApply succeeds', () => {
+      it('removes staged entries', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          makeEntry().filePath,
+          makeEntry().spaceId,
         );
       });
     });
