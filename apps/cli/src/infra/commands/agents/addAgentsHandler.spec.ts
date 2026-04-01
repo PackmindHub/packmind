@@ -132,6 +132,13 @@ describe('addAgentsHandler', () => {
 
       expect(mockConfigRepository.updateAgentsConfig).not.toHaveBeenCalled();
     });
+
+    it('does not show the install reminder', async () => {
+      await addAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      const warns = mockLogger.logWarningConsole.mock.calls.map(([m]) => m);
+      expect(warns.some((m) => m.includes('packmind-cli install'))).toBe(false);
+    });
   });
 
   describe('when adding a new agent to multiple files', () => {

@@ -94,6 +94,8 @@ export async function removeAgentsHandler(
     return;
   }
 
+  let anyUpdated = false;
+
   for (const { dir, config } of validEntries) {
     const relPath = getRelativePath(dir, startDirectory);
     const existingAgents = config.agents ?? [];
@@ -113,11 +115,14 @@ export async function removeAgentsHandler(
       );
       await configRepository.updateAgentsConfig(dir, remainingAgents);
       logSuccessConsole(`Updated ${relPath}`);
+      anyUpdated = true;
     }
   }
 
-  logWarningConsole(
-    'Run `packmind-cli install` to apply changes and remove agent artifacts.',
-  );
+  if (anyUpdated) {
+    logWarningConsole(
+      'Run `packmind-cli install` to apply changes and remove agent artifacts.',
+    );
+  }
   exit(0);
 }

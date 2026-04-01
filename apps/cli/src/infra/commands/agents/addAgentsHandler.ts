@@ -94,6 +94,8 @@ export async function addAgentsHandler(
     return;
   }
 
+  let anyUpdated = false;
+
   for (const { dir, config } of validEntries) {
     const relPath = getRelativePath(dir, startDirectory);
     const existingAgents = config.agents ?? [];
@@ -111,11 +113,14 @@ export async function addAgentsHandler(
       const mergedAgents = [...existingAgents, ...toAdd];
       await configRepository.updateAgentsConfig(dir, mergedAgents);
       logSuccessConsole(`Updated ${relPath}`);
+      anyUpdated = true;
     }
   }
 
-  logWarningConsole(
-    'Run `packmind-cli install` to apply changes and deploy agent artifacts.',
-  );
+  if (anyUpdated) {
+    logWarningConsole(
+      'Run `packmind-cli install` to apply changes and deploy agent artifacts.',
+    );
+  }
   exit(0);
 }
