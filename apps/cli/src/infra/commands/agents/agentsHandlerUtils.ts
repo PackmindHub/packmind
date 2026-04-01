@@ -1,5 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
+import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
 import { logErrorConsole } from '../../utils/consoleLogger';
 
 export function getRelativePath(dir: string, startDirectory: string): string {
@@ -32,4 +34,20 @@ export async function resolveStartDirectory(
   }
 
   return startDirectory;
+}
+
+export async function fetchOrgDefaultAgents(
+  deploymentGateway: IDeploymentGateway,
+): Promise<CodingAgent[]> {
+  try {
+    const result = await deploymentGateway.getRenderModeConfiguration({});
+    if (result.configuration) {
+      return result.configuration.activeRenderModes
+        .map((mode) => RENDER_MODE_TO_CODING_AGENT[mode])
+        .filter((agent): agent is CodingAgent => agent !== undefined);
+    }
+  } catch {
+    // Silently fall back when not authenticated or API unavailable
+  }
+  return [];
 }

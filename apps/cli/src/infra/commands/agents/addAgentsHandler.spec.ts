@@ -1,5 +1,8 @@
 import * as fsPromises from 'fs/promises';
+import { RenderMode } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
+import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
+import { createMockDeploymentGateway } from '../../../mocks/createMockGateways';
 import {
   addAgentsHandler,
   AddAgentsHandlerDependencies,
@@ -24,6 +27,7 @@ const mockLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 describe('addAgentsHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
   let mockExit: jest.Mock;
+  let mockPromptConfirm: jest.Mock;
   let deps: AddAgentsHandlerDependencies;
 
   beforeEach(() => {
@@ -43,10 +47,12 @@ describe('addAgentsHandler', () => {
     } as unknown as jest.Mocked<IConfigFileRepository>;
 
     mockExit = jest.fn();
+    mockPromptConfirm = jest.fn().mockResolvedValue(true);
     deps = {
       configRepository: mockConfigRepository,
       exit: mockExit,
       getCwd: () => '/project',
+      promptConfirm: mockPromptConfirm,
     };
   });
 
@@ -256,6 +262,320 @@ describe('addAgentsHandler', () => {
       );
 
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when files use organization-level agent defaults', () => {
+    let mockDeploymentGateway: jest.Mocked<IDeploymentGateway>;
+
+    beforeEach(() => {
+      mockDeploymentGateway = createMockDeploymentGateway();
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+      mockConfigRepository.updateAgentsConfig.mockResolvedValue();
+      mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+        configuration: {
+          id: 'config-1',
+          organizationId: 'org-1',
+          activeRenderModes: [RenderMode.CLAUDE, RenderMode.CURSOR],
+        },
+      });
+    });
+
+    it('displays a warning about overriding organization settings', async () => {
+      await addAgentsHandler(
+        { agentNames: ['copilot'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'currently use organization-level agent settings',
+        ),
+      );
+    });
+
+    it('lists the organization agents currently active', async () => {
+      await addAgentsHandler(
+        { agentNames: ['copilot'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('claude, cursor'),
+      );
+    });
+
+    it('warns that organization settings will no longer apply', async () => {
+      await addAgentsHandler(
+        { agentNames: ['copilot'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('NO LONGER apply'),
+      );
+    });
+
+    it('prompts the user for confirmation', async () => {
+      await addAgentsHandler(
+        { agentNames: ['copilot'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockPromptConfirm).toHaveBeenCalledWith('Do you want to proceed?');
+    });
+
+    describe('when the user confirms', () => {
+      beforeEach(() => {
+        mockPromptConfirm.mockResolvedValue(true);
+      });
+
+      it('proceeds with the update', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+          '/project',
+          ['copilot'],
+        );
+      });
+
+      it('logs a success message', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        expect(mockLogger.logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Updated'),
+        );
+      });
+    });
+
+    describe('when the user declines', () => {
+      beforeEach(() => {
+        mockPromptConfirm.mockResolvedValue(false);
+      });
+
+      it('does not update any files', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        expect(mockConfigRepository.updateAgentsConfig).not.toHaveBeenCalled();
+      });
+
+      it('logs an abort message', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        expect(mockLogger.logConsole).toHaveBeenCalledWith('Aborted.');
+      });
+
+      it('exits with code 0', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when some files have local agents and some do not', () => {
+      beforeEach(() => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+          '/project/apps/api',
+        ]);
+        mockConfigRepository.readConfig
+          .mockResolvedValueOnce({
+            packages: {},
+            agents: ['cursor'],
+          })
+          .mockResolvedValueOnce({ packages: {} });
+        mockPromptConfirm.mockResolvedValue(true);
+      });
+
+      it('includes the org-default file in the warning', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('./apps/api/packmind.json'),
+        );
+      });
+
+      it('does not include the locally configured file in the warning', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        const orgWarning = mockLogger.logWarningConsole.mock.calls.find(
+          ([msg]) => msg.includes('organization-level'),
+        );
+        expect(orgWarning![0]).not.toContain('./packmind.json');
+      });
+
+      it('updates both files after confirmation', async () => {
+        await addAgentsHandler(
+          { agentNames: ['copilot'] },
+          {
+            ...deps,
+            deploymentGateway: mockDeploymentGateway,
+          },
+        );
+
+        expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledTimes(
+          2,
+        );
+      });
+    });
+  });
+
+  describe('when no deploymentGateway is available', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+      mockConfigRepository.updateAgentsConfig.mockResolvedValue();
+    });
+
+    it('does not prompt for confirmation', async () => {
+      await addAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockPromptConfirm).not.toHaveBeenCalled();
+    });
+
+    it('proceeds with the update directly', async () => {
+      await addAgentsHandler({ agentNames: ['claude'] }, deps);
+
+      expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+        '/project',
+        ['claude'],
+      );
+    });
+  });
+
+  describe('when the API call fails', () => {
+    let mockDeploymentGateway: jest.Mocked<IDeploymentGateway>;
+
+    beforeEach(() => {
+      mockDeploymentGateway = createMockDeploymentGateway();
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+      mockConfigRepository.updateAgentsConfig.mockResolvedValue();
+      mockDeploymentGateway.getRenderModeConfiguration.mockRejectedValue(
+        new Error('Unauthorized'),
+      );
+    });
+
+    it('does not prompt for confirmation', async () => {
+      await addAgentsHandler(
+        { agentNames: ['claude'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockPromptConfirm).not.toHaveBeenCalled();
+    });
+
+    it('proceeds with the update directly', async () => {
+      await addAgentsHandler(
+        { agentNames: ['claude'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+        '/project',
+        ['claude'],
+      );
+    });
+  });
+
+  describe('when org has no configuration', () => {
+    let mockDeploymentGateway: jest.Mocked<IDeploymentGateway>;
+
+    beforeEach(() => {
+      mockDeploymentGateway = createMockDeploymentGateway();
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+      mockConfigRepository.updateAgentsConfig.mockResolvedValue();
+      mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+        configuration: null,
+      });
+    });
+
+    it('does not prompt for confirmation', async () => {
+      await addAgentsHandler(
+        { agentNames: ['claude'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockPromptConfirm).not.toHaveBeenCalled();
+    });
+
+    it('proceeds with the update directly', async () => {
+      await addAgentsHandler(
+        { agentNames: ['claude'] },
+        {
+          ...deps,
+          deploymentGateway: mockDeploymentGateway,
+        },
+      );
+
+      expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+        '/project',
+        ['claude'],
+      );
     });
   });
 });

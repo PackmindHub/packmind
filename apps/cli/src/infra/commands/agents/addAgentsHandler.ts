@@ -1,5 +1,6 @@
 import { CodingAgent, PackmindFileConfig } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
+import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
 import {
   logConsole,
   logErrorConsole,
@@ -10,7 +11,11 @@ import {
   AGENT_DISPLAY_NAMES,
   SELECTABLE_AGENTS,
 } from '../config/configAgentsHandler';
-import { getRelativePath, resolveStartDirectory } from './agentsHandlerUtils';
+import {
+  fetchOrgDefaultAgents,
+  getRelativePath,
+  resolveStartDirectory,
+} from './agentsHandlerUtils';
 
 export type AddAgentsHandlerArgs = {
   agentNames: string[];
@@ -19,8 +24,10 @@ export type AddAgentsHandlerArgs = {
 
 export type AddAgentsHandlerDependencies = {
   configRepository: IConfigFileRepository;
+  deploymentGateway?: IDeploymentGateway;
   exit: (code: number) => void;
   getCwd: () => string;
+  promptConfirm: (message: string) => Promise<boolean>;
 };
 
 export async function addAgentsHandler(
@@ -70,6 +77,38 @@ export async function addAgentsHandler(
     logWarningConsole('No packmind.json files found.');
     exit(0);
     return;
+  }
+
+  const filesWithoutLocalAgents = validEntries.filter(
+    (entry) => entry.config.agents === undefined,
+  );
+
+  if (filesWithoutLocalAgents.length > 0 && deps.deploymentGateway) {
+    const orgAgents = await fetchOrgDefaultAgents(deps.deploymentGateway);
+    if (orgAgents.length > 0) {
+      const filePaths = filesWithoutLocalAgents
+        .map((entry) => `  ${getRelativePath(entry.dir, getCwd())}`)
+        .join('\n');
+
+      const message =
+        `The following file(s) currently use organization-level agent settings:\n${filePaths}\n\n` +
+        `Organization agents currently active: ${orgAgents.join(', ')}\n\n` +
+        `By adding agent(s) manually, you will override the organization configuration\n` +
+        `for these file(s). After this change:\n` +
+        `  - Only the agent(s) you add will be configured locally.\n` +
+        `  - Organization-level settings will NO LONGER apply to these file(s).\n` +
+        `  - Any future changes to organization agents will NOT affect these file(s).\n\n` +
+        `To restore organization settings later, use: packmind-cli agents remove --all`;
+
+      logWarningConsole(message);
+
+      const confirmed = await deps.promptConfirm('Do you want to proceed?');
+      if (!confirmed) {
+        logConsole('Aborted.');
+        exit(0);
+        return;
+      }
+    }
   }
 
   let anyUpdated = false;

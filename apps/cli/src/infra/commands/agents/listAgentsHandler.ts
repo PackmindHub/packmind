@@ -1,4 +1,4 @@
-import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
+import { CodingAgent } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
 import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
 import {
@@ -7,7 +7,11 @@ import {
   formatBold,
   formatFilePath,
 } from '../../utils/consoleLogger';
-import { getRelativePath, resolveStartDirectory } from './agentsHandlerUtils';
+import {
+  fetchOrgDefaultAgents,
+  getRelativePath,
+  resolveStartDirectory,
+} from './agentsHandlerUtils';
 
 export type ListAgentsHandlerArgs = {
   path?: string;
@@ -20,10 +24,15 @@ export type ListAgentsHandlerDependencies = {
   getCwd: () => string;
 };
 
+type AgentSource = 'local' | 'organization';
+
 type FileAgentConfig = {
   path: string;
   agents: CodingAgent[];
+  source: AgentSource;
 };
+
+const SOURCE_COLUMN_HEADER = 'source';
 
 function formatMatrix(
   files: FileAgentConfig[],
@@ -36,7 +45,8 @@ function formatMatrix(
 
   const header =
     ''.padEnd(pathColumnWidth) +
-    agents.map((a) => formatBold(a.padEnd(columnWidth))).join('');
+    agents.map((a) => formatBold(a.padEnd(columnWidth))).join('') +
+    formatBold(SOURCE_COLUMN_HEADER);
   lines.push(header);
 
   for (const file of files) {
@@ -46,7 +56,8 @@ function formatMatrix(
       ''.padEnd(pathColumnWidth - file.path.length) +
       agents
         .map((a) => (agentSet.has(a) ? '\u2713' : '-').padEnd(columnWidth))
-        .join('');
+        .join('') +
+      file.source;
     lines.push(row);
   }
 
@@ -75,6 +86,7 @@ export async function listAgentsHandler(
     fileConfigs.push({
       path: getRelativePath(dir, getCwd()),
       agents: config.agents ?? [],
+      source: config.agents !== undefined ? 'local' : 'organization',
     });
   }
 
@@ -124,20 +136,4 @@ export async function listAgentsHandler(
   logConsole('');
 
   exit(0);
-}
-
-async function fetchOrgDefaultAgents(
-  deploymentGateway: IDeploymentGateway,
-): Promise<CodingAgent[]> {
-  try {
-    const result = await deploymentGateway.getRenderModeConfiguration({});
-    if (result.configuration) {
-      return result.configuration.activeRenderModes
-        .map((mode) => RENDER_MODE_TO_CODING_AGENT[mode])
-        .filter((agent): agent is CodingAgent => agent !== undefined);
-    }
-  } catch {
-    // Silently fall back when not authenticated or API unavailable
-  }
-  return [];
 }
