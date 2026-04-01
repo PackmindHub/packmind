@@ -18,6 +18,7 @@ import { SpacesServices } from './application/services/SpacesServices';
 import { SpaceService } from './application/services/SpaceService';
 import { ISpaceRepository } from './domain/repositories/ISpaceRepository';
 import { UserSpaceMembershipService } from './application/services/UserSpaceMembershipService';
+import { IUserSpaceMembershipRepository } from './domain/repositories/IUserSpaceMembershipRepository';
 
 const origin = 'SpacesHexa';
 
@@ -130,5 +131,9 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
    */
   public getUserSpaceMembershipService(): UserSpaceMembershipService {
     return this.spacesServices.getUserSpaceMembershipService();
+  }
+
+  public getUserSpaceMembershipRepository(): IUserSpaceMembershipRepository {
+    return this.spacesRepositories.getUserSpaceMembershipRepository();
   }
 }
