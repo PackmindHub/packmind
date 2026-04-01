@@ -97,7 +97,7 @@ export async function removeAgentsHandler(
   let anyUpdated = false;
 
   for (const { dir, config } of validEntries) {
-    const relPath = getRelativePath(dir, startDirectory);
+    const relPath = getRelativePath(dir, getCwd());
     const existingAgents = config.agents ?? [];
 
     const notPresent = agentsToRemove.filter(

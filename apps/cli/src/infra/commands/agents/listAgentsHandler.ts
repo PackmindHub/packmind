@@ -20,26 +20,41 @@ export type ListAgentsHandlerDependencies = {
   getCwd: () => string;
 };
 
-type AgentGroup = {
-  agents: CodingAgent[] | null;
-  paths: string[];
+type FileAgentConfig = {
+  path: string;
+  agents: CodingAgent[];
 };
-
-const NONE_KEY = '(none)';
-
-function getGroupKey(agents: CodingAgent[] | null): string {
-  if (!agents || agents.length === 0) return NONE_KEY;
-  return [...agents].sort().join(',');
-}
-
-function getGroupLabel(key: string, agents: CodingAgent[] | null): string {
-  if (key === NONE_KEY) return '(no agents configured)';
-  return [...(agents ?? [])].sort().join(', ');
-}
 
 function getRelativePath(dir: string, startDirectory: string): string {
   if (dir === startDirectory) return './packmind.json';
   return './' + path.relative(startDirectory, dir) + '/packmind.json';
+}
+
+function formatMatrix(
+  files: FileAgentConfig[],
+  agents: CodingAgent[],
+): string[] {
+  const pathColumnWidth = Math.max(...files.map((f) => f.path.length)) + 2;
+  const columnWidth = Math.max(...agents.map((a) => a.length), 1) + 2;
+
+  const lines: string[] = [];
+
+  const header =
+    ''.padEnd(pathColumnWidth) +
+    agents.map((a) => formatBold(a.padEnd(columnWidth))).join('');
+  lines.push(header);
+
+  for (const file of files) {
+    const agentSet = new Set(file.agents);
+    const row =
+      formatFilePath(file.path.padEnd(pathColumnWidth)) +
+      agents
+        .map((a) => (agentSet.has(a) ? '\u2713' : '-').padEnd(columnWidth))
+        .join('');
+    lines.push(row);
+  }
+
+  return lines;
 }
 
 export async function listAgentsHandler(
@@ -71,48 +86,48 @@ export async function listAgentsHandler(
     await configRepository.findDescendantConfigs(startDirectory);
   const allDirs = [startDirectory, ...descendantDirs];
 
-  const groups = new Map<string, AgentGroup>();
+  const fileConfigs: FileAgentConfig[] = [];
 
   for (const dir of allDirs) {
     const config = await configRepository.readConfig(dir);
     if (config === null) continue;
 
-    const agents =
-      config.agents && config.agents.length > 0 ? config.agents : null;
-    const key = getGroupKey(agents);
-    const relPath = getRelativePath(dir, startDirectory);
-
-    if (!groups.has(key)) {
-      groups.set(key, { agents, paths: [] });
-    }
-    groups.get(key)!.paths.push(relPath);
+    fileConfigs.push({
+      path: getRelativePath(dir, getCwd()),
+      agents: config.agents ?? [],
+    });
   }
 
-  if (groups.size === 0) {
+  if (fileConfigs.length === 0) {
     logWarningConsole('No packmind.json files found.');
     exit(0);
     return;
   }
 
-  logConsole('\nAgents configuration across packmind.json files:\n');
+  const allAgents: CodingAgent[] = [
+    ...new Set(fileConfigs.flatMap((f) => f.agents)),
+  ].sort();
 
-  const sortedEntries = [...groups.entries()].sort(([a], [b]) => {
-    if (a === NONE_KEY) return 1;
-    if (b === NONE_KEY) return -1;
-    return a.localeCompare(b);
-  });
+  const sortedFiles = [...fileConfigs].sort((a, b) =>
+    a.path.localeCompare(b.path),
+  );
 
-  for (const [key, group] of sortedEntries) {
-    const label = getGroupLabel(key, group.agents);
-    const count = group.paths.length;
-    logConsole(
-      `${formatBold(label)} (${count} ${count === 1 ? 'file' : 'files'})`,
-    );
-    for (const p of [...group.paths].sort()) {
-      logConsole(`  ${formatFilePath(p)}`);
+  if (allAgents.length === 0) {
+    logConsole('\nNo agents configured in any packmind.json file.\n');
+    for (const file of sortedFiles) {
+      logConsole(`  ${formatFilePath(file.path)}`);
     }
     logConsole('');
+    exit(0);
+    return;
   }
+
+  logConsole('');
+  const lines = formatMatrix(sortedFiles, allAgents);
+  for (const line of lines) {
+    logConsole(line);
+  }
+  logConsole('');
 
   exit(0);
 }

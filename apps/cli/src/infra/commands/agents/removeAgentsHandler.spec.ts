@@ -233,6 +233,31 @@ describe('removeAgentsHandler', () => {
     });
   });
 
+  describe('when --path is used', () => {
+    beforeEach(() => {
+      mockFs.stat.mockResolvedValue({
+        isDirectory: () => true,
+      } as fsPromises.Stats);
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: ['claude', 'cursor'],
+      });
+      mockConfigRepository.updateAgentsConfig.mockResolvedValue();
+    });
+
+    it('shows the path relative to cwd, not to the --path directory', async () => {
+      await removeAgentsHandler(
+        { agentNames: ['claude'], path: 'frontend' },
+        deps,
+      );
+
+      expect(mockLogger.logSuccessConsole).toHaveBeenCalledWith(
+        expect.stringContaining('./frontend/packmind.json'),
+      );
+    });
+  });
+
   describe('when --path points to a non-existent directory', () => {
     beforeEach(() => {
       mockFs.stat.mockRejectedValue({ code: 'ENOENT' });

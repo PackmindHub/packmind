@@ -18,6 +18,10 @@ jest.mock('../../utils/consoleLogger', () => ({
 const mockFs = fsPromises as jest.Mocked<typeof fsPromises>;
 const mockLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 
+function getLoggedLines(): string[] {
+  return mockLogger.logConsole.mock.calls.map(([msg]) => msg);
+}
+
 describe('listAgentsHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
   let mockExit: jest.Mock;
@@ -85,26 +89,92 @@ describe('listAgentsHandler', () => {
         .mockResolvedValueOnce({ packages: {} });
     });
 
-    it('groups configs with the same agents together', async () => {
+    it('displays a header row containing all agent names', async () => {
       await listAgentsHandler({}, deps);
 
-      const calls = mockLogger.logConsole.mock.calls.map(([msg]) => msg);
-      const groupLine = calls.find((c) => c.includes('claude, cursor'));
-      expect(groupLine).toContain('2 files');
+      const lines = getLoggedLines();
+      const headerLine = lines.find(
+        (l) =>
+          l.includes('claude') && l.includes('copilot') && l.includes('cursor'),
+      );
+      expect(headerLine).toBeDefined();
     });
 
-    it('shows configs with no agents in a separate group', async () => {
+    it('sorts agent names alphabetically in the header row', async () => {
       await listAgentsHandler({}, deps);
 
-      const calls = mockLogger.logConsole.mock.calls.map(([msg]) => msg);
-      const noneGroup = calls.find((c) => c.includes('no agents configured'));
-      expect(noneGroup).toBeDefined();
+      const lines = getLoggedLines();
+      const headerLine = lines.find(
+        (l) =>
+          l.includes('claude') && l.includes('copilot') && l.includes('cursor'),
+      )!;
+      expect(headerLine.indexOf('claude')).toBeLessThan(
+        headerLine.indexOf('cursor'),
+      );
+    });
+
+    it('displays a row for each file sorted by path', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      const fileLines = lines.filter(
+        (l) => l.includes('packmind.json/') || l.includes('./'),
+      );
+      const paths = fileLines.map((l) => l.trim().split(/\s+/)[0]);
+      expect(paths).toEqual([...paths].sort());
+    });
+
+    it('marks configured agents with a checkmark', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      const rootLine = lines.find((l) => l.startsWith('./packmind.json'));
+      expect(rootLine).toContain('\u2713');
+    });
+
+    it('does not show checkmarks for unconfigured agents', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      const cliLine = lines.find((l) => l.includes('./apps/cli/packmind.json'));
+      expect(cliLine).not.toContain('\u2713');
+    });
+
+    it('shows dashes for unconfigured agents', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      const cliLine = lines.find((l) => l.includes('./apps/cli/packmind.json'));
+      expect(cliLine).toContain('-');
     });
 
     it('exits with code 0', async () => {
       await listAgentsHandler({}, deps);
 
       expect(mockExit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('when --path is used', () => {
+    beforeEach(() => {
+      mockFs.stat.mockResolvedValue({
+        isDirectory: () => true,
+      } as fsPromises.Stats);
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: ['claude'],
+      });
+    });
+
+    it('shows the path relative to cwd in a matrix row', async () => {
+      await listAgentsHandler({ path: 'frontend' }, deps);
+
+      const lines = getLoggedLines();
+      const pathLine = lines.find((l) =>
+        l.includes('./frontend/packmind.json'),
+      );
+      expect(pathLine).toBeDefined();
     });
   });
 
@@ -161,12 +231,59 @@ describe('listAgentsHandler', () => {
       });
     });
 
-    it('shows a single group with the correct file count', async () => {
+    it('displays checkmarks for all files', async () => {
       await listAgentsHandler({}, deps);
 
-      const calls = mockLogger.logConsole.mock.calls.map(([msg]) => msg);
-      const groupLine = calls.find((c) => c.includes('claude, cursor'));
-      expect(groupLine).toContain('2 files');
+      const lines = getLoggedLines();
+      const dataLines = lines.filter((l) => l.includes('./'));
+      expect(dataLines.every((l) => l.includes('\u2713'))).toBe(true);
+    });
+
+    it('does not display dashes for any file', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      const dataLines = lines.filter((l) => l.includes('./'));
+      expect(dataLines.some((l) => l.includes('-'))).toBe(false);
+    });
+  });
+
+  describe('when no agents are configured in any file', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+        '/project/apps/api',
+      ]);
+      mockConfigRepository.readConfig.mockResolvedValue({ packages: {} });
+    });
+
+    it('displays a message that no agents are configured', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      const messageLine = lines.find((l) => l.includes('No agents configured'));
+      expect(messageLine).toBeDefined();
+    });
+
+    it('lists the root packmind.json path', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      expect(lines.some((l) => l.includes('./packmind.json'))).toBe(true);
+    });
+
+    it('lists the descendant packmind.json path', async () => {
+      await listAgentsHandler({}, deps);
+
+      const lines = getLoggedLines();
+      expect(lines.some((l) => l.includes('./apps/api/packmind.json'))).toBe(
+        true,
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await listAgentsHandler({}, deps);
+
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 });
