@@ -11,8 +11,8 @@ import {
   createTargetStandardDeploymentStatus,
   createDeployedRecipeInfo,
   targetFactory,
-} from '@packmind/deployments/test';
-import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
+  gitRepoFactory,
+} from '@packmind/test-utils';
 import { RepositoryDeploymentStatus, createTargetId } from '@packmind/types';
 
 const renderWithProvider = (ui: React.ReactElement) => {
