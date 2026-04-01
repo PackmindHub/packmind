@@ -3,7 +3,7 @@ import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { removeAgentsHandler } from './agents/removeAgentsHandler';
 
 export const removeAgentsCommand = command({
-  name: 'remove',
+  name: 'rm',
   description: 'Remove coding agents from packmind.json files',
   args: {
     path: option({

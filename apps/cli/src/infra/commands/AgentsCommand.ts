@@ -9,6 +9,6 @@ export const agentsCommand = subcommands({
   cmds: {
     list: listAgentsCommand,
     add: addAgentsCommand,
-    remove: removeAgentsCommand,
+    rm: removeAgentsCommand,
   },
 });
