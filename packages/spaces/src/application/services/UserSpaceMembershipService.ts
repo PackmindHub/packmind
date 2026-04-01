@@ -64,6 +64,10 @@ export class UserSpaceMembershipService {
     return this.userSpaceMembershipRepository.addMembership(membership);
   }
 
+  async listSpaceMembers(spaceId: SpaceId): Promise<UserSpaceMembership[]> {
+    return this.userSpaceMembershipRepository.findBySpaceId(spaceId);
+  }
+
   async findMembershipsByUserAndOrganization(
     userId: UserId,
     organizationId: OrganizationId,

@@ -1,3 +1,5 @@
+export * from './IAddMembersToSpaceUseCase';
 export * from './ICreateSpaceUseCase';
-export * from './IListUserSpaces';
 export * from './IGetDefaultSpace';
+export * from './IListSpaceMembersUseCase';
+export * from './IListUserSpaces';
