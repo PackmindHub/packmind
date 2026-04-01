@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "@types/nprogress": "0.2.3",
-    "nprogress": "0.2.0",
-    "react-router-dom": "^7.14.0-pre.0"
+    "nprogress": "0.2.0"
   }
 }

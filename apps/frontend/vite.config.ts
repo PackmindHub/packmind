@@ -52,7 +52,7 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: resolveAliases,
-      dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
+      dedupe: ['react', 'react-dom', 'react-router'],
     },
     server: {
       port: 4200,
