@@ -3,6 +3,7 @@ import {
   OrganizationId,
   SkillChangeProposalApplier,
   SkillId,
+  SkillVersionInput,
   SkillVersionWithFiles,
   SpaceId,
   UserId,
@@ -52,13 +53,15 @@ export class SkillChangesApplier
         metadata: version.metadata,
         allowedTools: version.allowedTools,
         additionalProperties: version.additionalProperties,
-        files: (version.files || []).map((f) => ({
-          path: f.path,
-          content: f.content,
-          permissions: f.permissions,
-          isBase64: f.isBase64,
-        })),
-      },
+        files: (version.files || []).map(
+          ({ path, content, permissions, isBase64 }) => ({
+            path,
+            content,
+            permissions,
+            isBase64,
+          }),
+        ),
+      } satisfies SkillVersionInput,
     });
     const files = await this.skillsPort.getSkillFiles(newVersion.id);
     return { ...newVersion, files };
