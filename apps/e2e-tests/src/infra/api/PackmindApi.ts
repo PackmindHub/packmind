@@ -95,7 +95,8 @@ export class PackmindApi implements IPackmindApi {
   ) {}
 
   async listSpaces(): Promise<Space[]> {
-    return this.get(`/spaces`);
+    const response = await this.get<{ spaces: Space[] }>(`/spaces`);
+    return response.spaces;
   }
 
   createStandard: Gateway<ICreateStandardUseCase> = async (command) => {
