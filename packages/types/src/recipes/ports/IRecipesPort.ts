@@ -17,7 +17,7 @@ import {
 } from '../contracts';
 import { Recipe } from '../Recipe';
 import { RecipeId } from '../RecipeId';
-import { RecipeVersion } from '../RecipeVersion';
+import { RecipeVersion, RecipeVersionId } from '../RecipeVersion';
 
 // QueryOption is now exported from @packmind/types/database/types
 import type { QueryOption } from '../../database/types';
@@ -135,6 +135,11 @@ export interface IRecipesPort {
    * Hard-delete a recipe (permanent, no soft-delete). Used for rollback only.
    */
   hardDeleteRecipe(recipeId: RecipeId): Promise<void>;
+
+  /**
+   * Hard-delete a recipe version (permanent). Used for rollback only.
+   */
+  hardDeleteRecipeVersion(versionId: RecipeVersionId): Promise<void>;
 
   /**
    * Duplicate a recipe and its full entity graph into a destination space.

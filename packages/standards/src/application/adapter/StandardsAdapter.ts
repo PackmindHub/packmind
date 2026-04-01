@@ -586,4 +586,11 @@ export class StandardsAdapter
     this.logger.info('Hard deleting standard', { standardId });
     await this.services.getStandardService().hardDeleteStandard(standardId);
   }
+
+  async hardDeleteStandardVersion(versionId: StandardVersionId): Promise<void> {
+    this.logger.info('Hard deleting standard version', { versionId });
+    await this.services
+      .getStandardService()
+      .hardDeleteStandardVersion(versionId);
+  }
 }
