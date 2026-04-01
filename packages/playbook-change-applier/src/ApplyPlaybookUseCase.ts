@@ -48,11 +48,6 @@ import { SkillChangesApplier } from './appliers/SkillChangesApplier';
 
 const origin = 'ApplyPlaybookUseCase';
 
-type CreatedArtifact =
-  | { type: 'standard'; id: StandardId; slug: string }
-  | { type: 'recipe'; id: RecipeId; slug: string }
-  | { type: 'skill'; id: SkillId; slug: string };
-
 const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.removeStandard,
   ChangeProposalType.removeCommand,
@@ -127,9 +122,9 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     const steps = this.buildExecutionPlan(proposals);
     const rollbackEntries: RollbackEntry[] = [];
     const createdIds: {
-      standards: StandardId[];
-      commands: RecipeId[];
-      skills: SkillId[];
+      standards: Array<{ id: StandardId; slug: string }>;
+      commands: Array<{ id: RecipeId; slug: string }>;
+      skills: Array<{ id: SkillId; slug: string }>;
     } = { standards: [], commands: [], skills: [] };
     const updatedIds: {
       standards: StandardId[];
@@ -151,7 +146,12 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
             type: artifact.type,
             id: artifact.id,
           });
-          this.addToIdBucket(createdIds, artifact.type, artifact.id);
+          this.addToIdBucket(
+            createdIds,
+            artifact.type,
+            artifact.id,
+            artifact.slug,
+          );
         } else {
           const result = await this.applyUpdateGroup(
             step,
@@ -163,7 +163,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
             type: result.type,
             newVersionId: result.newVersionId,
           });
-          this.addToIdBucket(
+          this.addToUpdatedBucket(
             updatedIds,
             result.type === 'recipe' ? 'recipe' : result.type,
             step.artefactId,
@@ -349,6 +349,29 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
 
   private addToIdBucket(
     bucket: {
+      standards: Array<{ id: StandardId; slug: string }>;
+      commands: Array<{ id: RecipeId; slug: string }>;
+      skills: Array<{ id: SkillId; slug: string }>;
+    },
+    type: 'standard' | 'recipe' | 'skill',
+    id: string,
+    slug: string,
+  ): void {
+    switch (type) {
+      case 'standard':
+        bucket.standards.push({ id: id as StandardId, slug });
+        break;
+      case 'recipe':
+        bucket.commands.push({ id: id as RecipeId, slug });
+        break;
+      case 'skill':
+        bucket.skills.push({ id: id as SkillId, slug });
+        break;
+    }
+  }
+
+  private addToUpdatedBucket(
+    bucket: {
       standards: StandardId[];
       commands: RecipeId[];
       skills: SkillId[];
@@ -398,7 +421,11 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     userId: string,
     organizationId: string,
     directUpdate?: boolean,
-  ): Promise<{ type: 'standard' | 'recipe' | 'skill'; id: string }> {
+  ): Promise<{
+    type: 'standard' | 'recipe' | 'skill';
+    id: string;
+    slug: string;
+  }> {
     const brandedUserId = createUserId(userId);
     const brandedOrgId = createOrganizationId(organizationId);
     const source = 'cli' as const;
