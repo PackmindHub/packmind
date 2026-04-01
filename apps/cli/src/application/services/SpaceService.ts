@@ -8,7 +8,7 @@ export class SpaceService implements ISpaceService {
   async getSpaces(): Promise<Space[]> {
     const response = await this.spaceGateway.getUserSpaces({});
 
-    // Support both Space[] (new API) and { spaces: Space[] } (backward compat)
+    // Support both Space[] (new API on /user-spaces) and { spaces: Space[] } (backward compat wrapper)
     if (Array.isArray(response)) {
       return response;
     }

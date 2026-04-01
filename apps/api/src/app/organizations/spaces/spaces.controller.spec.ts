@@ -4,6 +4,7 @@ import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  ListUserSpacesResponse,
   Space,
 } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -51,15 +52,15 @@ describe('OrganizationsSpacesController', () => {
           organizationId: orgId,
         },
       ];
-      let result: { spaces: Space[] };
+      let result: ListUserSpacesResponse;
 
       beforeEach(async () => {
         spacesService.listUserSpaces.mockResolvedValue(mockSpaces);
         result = await controller.listSpaces(mockReq, orgId);
       });
 
-      it('wraps spaces in an object for backward compatibility', () => {
-        expect(result).toEqual({ spaces: mockSpaces });
+      it('returns user spaces for the organization', () => {
+        expect(result).toEqual(mockSpaces);
       });
 
       it('calls service with correct user ID and organization ID', () => {

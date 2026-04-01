@@ -19,10 +19,9 @@ export class SpacesGatewayApi
     if (!orgId) {
       throw new Error('Organization ID is required to fetch spaces');
     }
-    const response = await this._api.get<{ spaces: Space[] }>(
+    return this._api.get<ListUserSpacesResponse>(
       `${this._endpoint}/${orgId}/spaces`,
     );
-    return response.spaces;
   }
 
   async getSpaceBySlug(slug: string, orgId: string): Promise<Space> {
