@@ -63,6 +63,7 @@ export default [
           allow: [
             '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
             '^@packmind/(deployments|git|recipes|standards|linter|analytics|spaces)/test',
+            '^@packmind/test-utils',
           ],
           depConstraints: [
             {
@@ -101,6 +102,7 @@ export default [
     files: ['**/jest.config.ts'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
+      '@nx/enforce-module-boundaries': 'off',
     },
   },
 ];
