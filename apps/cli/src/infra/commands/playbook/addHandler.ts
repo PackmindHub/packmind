@@ -109,6 +109,9 @@ async function tryStageRemovedFromLockFile(
   logSuccessConsole(
     `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook${spaceInfo}`,
   );
+  logInfoConsole(
+    `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
+  );
   deps.exit(0);
   return true;
 }
@@ -413,6 +416,32 @@ export async function playbookAddHandler(
     }
   }
 
+  // Check if artifact is outdated before staging updates
+  if (changeType === 'updated' && existingLockEntry) {
+    try {
+      const packmindGateway = packmindCliHexa.getPackmindGateway();
+      const { version: remoteVersion } =
+        await packmindGateway.deployment.getLatestVersion(
+          existingLockEntry.type,
+          existingLockEntry.id,
+          existingLockEntry.spaceId,
+        );
+
+      if (existingLockEntry.version < remoteVersion) {
+        logErrorConsole(
+          `"${artifactName}" is outdated (local: v${existingLockEntry.version}, remote: v${remoteVersion}).\nRun ${formatLabel('packmind-cli install')} to update before making changes.`,
+        );
+        exit(1);
+        return;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logErrorConsole(`Failed to check artifact version: ${errorMessage}`);
+      exit(1);
+      return;
+    }
+  }
+
   // Check name uniqueness for new artifacts
   if (changeType === 'created') {
     try {
@@ -506,6 +535,9 @@ export async function playbookAddHandler(
   const spaceInfo = spaceName ? ` in space "${spaceName}"` : '';
   logSuccessConsole(
     `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook${spaceInfo}. ${formatLabel(codingAgent)}`,
+  );
+  logInfoConsole(
+    `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
   );
   exit(0);
 }

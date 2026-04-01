@@ -25,6 +25,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       getRecipeVersionsById: jest.fn(),
       updateRecipeFromUI: jest.fn(),
       deleteRecipe: jest.fn(),
+      getLatestVersionNumber: jest.fn(),
     } as unknown as jest.Mocked<RecipesService>;
 
     logger = stubLogger();
@@ -542,6 +543,63 @@ describe('OrganizationsSpacesRecipesController', () => {
       ).rejects.toThrow(
         `Recipe ${recipeId} does not belong to space ${spaceId}`,
       );
+    });
+  });
+
+  describe('getRecipeLatestVersion', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const recipeId = createRecipeId('recipe-1');
+    const userId = createUserId('user-1');
+
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+    } as unknown as AuthenticatedRequest;
+
+    describe('when service returns a version number', () => {
+      let result: { version: number };
+
+      beforeEach(async () => {
+        recipesService.getLatestVersionNumber.mockResolvedValue(5);
+        result = await controller.getRecipeLatestVersion(
+          orgId,
+          spaceId,
+          recipeId,
+          request,
+        );
+      });
+
+      it('returns the version number', () => {
+        expect(result).toEqual({ version: 5 });
+      });
+
+      it('calls service with correct params', () => {
+        expect(recipesService.getLatestVersionNumber).toHaveBeenCalledWith({
+          recipeId,
+          organizationId: orgId,
+          spaceId,
+          userId,
+        });
+      });
+    });
+
+    describe('when service returns null', () => {
+      it('throws NotFoundException', async () => {
+        recipesService.getLatestVersionNumber.mockResolvedValue(null);
+
+        await expect(
+          controller.getRecipeLatestVersion(orgId, spaceId, recipeId, request),
+        ).rejects.toThrow(NotFoundException);
+      });
     });
   });
 });

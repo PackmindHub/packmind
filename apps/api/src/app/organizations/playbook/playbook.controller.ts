@@ -19,6 +19,7 @@ const origin = 'PlaybookController';
 class ApplyPlaybookBody {
   proposals!: ApplyPlaybookProposalItem[];
   message!: string;
+  directUpdate?: boolean;
 }
 
 @Controller()
@@ -48,6 +49,7 @@ export class PlaybookController {
       organizationId: orgId,
       proposals: body.proposals,
       message: body.message,
+      directUpdate: body.directUpdate,
     });
 
     if (!result.success) {

@@ -21,6 +21,7 @@ import {
   RecipeSlugAlreadyExistsError,
   RecipeVersion,
   SpaceId,
+  UserId,
 } from '@packmind/types';
 import { RecipesService } from './recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -409,6 +410,38 @@ export class OrganizationsSpacesRecipesController {
       );
       throw error;
     }
+  }
+
+  /**
+   * Get the latest version number of a recipe
+   * GET /organizations/:orgId/spaces/:spaceId/recipes/:id/latest-version
+   */
+  @Get(':id/latest-version')
+  async getRecipeLatestVersion(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('id') id: RecipeId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<{ version: number }> {
+    const userId = request.user.userId as UserId;
+    this.logger.info('Getting latest version for recipe', {
+      organizationId,
+      recipeId: id,
+      userId: userId.substring(0, 6) + '*',
+    });
+
+    const version = await this.recipesService.getLatestVersionNumber({
+      recipeId: id,
+      organizationId,
+      spaceId,
+      userId,
+    });
+
+    if (version === null) {
+      throw new NotFoundException(`Recipe ${id} not found`);
+    }
+
+    return { version };
   }
 
   /**

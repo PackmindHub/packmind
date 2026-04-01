@@ -19,6 +19,13 @@ import {
   InjectDeploymentAdapter,
 } from '../../../shared/HexaInjection';
 
+type GetRecipeLatestVersionCommand = {
+  recipeId: RecipeId;
+  organizationId: OrganizationId;
+  spaceId: SpaceId;
+  userId: UserId;
+};
+
 @Injectable()
 export class RecipesService {
   constructor(
@@ -52,6 +59,13 @@ export class RecipesService {
       spaceId,
       userId,
     });
+  }
+
+  async getLatestVersionNumber(
+    command: GetRecipeLatestVersionCommand,
+  ): Promise<number | null> {
+    const recipe = await this.recipesAdapter.getRecipeById(command);
+    return recipe?.version ?? null;
   }
 
   async addRecipe(

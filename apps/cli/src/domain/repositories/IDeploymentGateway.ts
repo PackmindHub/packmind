@@ -1,4 +1,5 @@
 import {
+  ArtifactType,
   Gateway,
   IGetContentByVersionsUseCase,
   IGetDeployedContentUseCase,
@@ -13,4 +14,9 @@ export interface IDeploymentGateway {
   getContentByVersions: Gateway<IGetContentByVersionsUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
   getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase>;
+  getLatestVersion(
+    type: ArtifactType,
+    id: string,
+    spaceId: string,
+  ): Promise<{ version: number }>;
 }
