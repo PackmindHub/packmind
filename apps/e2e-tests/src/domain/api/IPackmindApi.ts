@@ -1,14 +1,14 @@
 import {
   ICreateStandardUseCase,
   Gateway,
-  Space,
   ICreatePackageUseCase,
   INotifyDistributionUseCase,
   IUploadSkillUseCase,
+  IListUserSpaces,
 } from '@packmind/types';
 
 export interface IPackmindApi {
-  listSpaces: () => Promise<Space[]>;
+  listSpaces: Gateway<IListUserSpaces>;
   createStandard: Gateway<ICreateStandardUseCase>;
   createPackage: Gateway<ICreatePackageUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;

@@ -433,7 +433,7 @@ export class OrganizationsController {
   async listUserSpaces(
     @Param('orgId') organizationId: OrganizationId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<{ spaces: ListUserSpacesResponse }> {
+  ): Promise<ListUserSpacesResponse> {
     const userId = request.user.userId;
 
     this.logger.info(
@@ -441,13 +441,10 @@ export class OrganizationsController {
       { organizationId, userId },
     );
 
-    const spaces = await this.spacesAdapter.listUserSpaces({
+    return this.spacesAdapter.listUserSpaces({
       userId,
       organizationId,
     });
-
-    // Wrap in { spaces } for backward compatibility with CLI ≤0.24.0
-    return { spaces };
   }
 
   /**

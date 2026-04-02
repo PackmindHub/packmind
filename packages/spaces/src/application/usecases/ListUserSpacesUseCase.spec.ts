@@ -62,7 +62,7 @@ describe('ListUserSpacesUseCase', () => {
       it('returns spaces from memberships', async () => {
         const result = await useCase.execute(buildCommand());
 
-        expect(result).toEqual([space1, space2]);
+        expect(result).toEqual({ spaces: [space1, space2] });
       });
 
       it('calls membership service with correct params', async () => {
@@ -84,7 +84,7 @@ describe('ListUserSpacesUseCase', () => {
       it('returns an empty spaces list', async () => {
         const result = await useCase.execute(buildCommand());
 
-        expect(result).toEqual([]);
+        expect(result).toEqual({ spaces: [] });
       });
     });
 
@@ -114,7 +114,7 @@ describe('ListUserSpacesUseCase', () => {
       it('filters out memberships with undefined space', async () => {
         const result = await useCase.execute(buildCommand());
 
-        expect(result).toEqual([space1]);
+        expect(result).toEqual({ spaces: [space1] });
       });
     });
   });

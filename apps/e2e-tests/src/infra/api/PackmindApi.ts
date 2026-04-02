@@ -1,11 +1,11 @@
 import {
   Gateway,
-  Space,
   Organization,
   ICreateStandardUseCase,
   ICreatePackageUseCase,
   INotifyDistributionUseCase,
   IUploadSkillUseCase,
+  IListUserSpaces,
 } from '@packmind/types';
 import { IPackmindApi } from '../../domain/api/IPackmindApi';
 import { APIRequestContext, expect } from '@playwright/test';
@@ -94,9 +94,9 @@ export class PackmindApi implements IPackmindApi {
     public readonly apiKey: string,
   ) {}
 
-  async listSpaces(): Promise<Space[]> {
+  listSpaces: Gateway<IListUserSpaces> = async () => {
     return this.get(`/spaces`);
-  }
+  };
 
   createStandard: Gateway<ICreateStandardUseCase> = async (command) => {
     return this.post(`/spaces/${command.spaceId}/standards`, command, 201);
