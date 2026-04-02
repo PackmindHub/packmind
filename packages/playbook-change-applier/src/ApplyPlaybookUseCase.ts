@@ -48,9 +48,7 @@ import { SkillChangesApplier } from './appliers/SkillChangesApplier';
 
 const origin = 'ApplyPlaybookUseCase';
 
-const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.deleteRule,
-]);
+const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([]);
 
 const CREATION_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.createStandard,
