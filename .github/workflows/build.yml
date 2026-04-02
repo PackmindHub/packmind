@@ -374,7 +374,7 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384'
           CLI_BINARY_PATH: ${{ env.CLI_BINARY_PATH }}
-        run: ./node_modules/.bin/nx test cli-e2e-tests
+        run: ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache
 
       - name: Collect Docker container logs
         if: always()
