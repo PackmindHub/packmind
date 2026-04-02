@@ -148,6 +148,25 @@ describe('addAgentsHandler', () => {
     });
   });
 
+  describe('when duplicate agent names are provided', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: [],
+      });
+    });
+
+    it('deduplicates and writes each agent only once', async () => {
+      await addAgentsHandler({ agentNames: ['claude', 'claude'] }, deps);
+
+      expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+        expect.any(String),
+        ['claude'],
+      );
+    });
+  });
+
   describe('when adding a new agent to multiple files', () => {
     beforeEach(() => {
       mockConfigRepository.findDescendantConfigs.mockResolvedValue([

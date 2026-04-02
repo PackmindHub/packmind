@@ -54,7 +54,7 @@ export async function addAgentsHandler(
     return;
   }
 
-  const agentsToAdd = args.agentNames as CodingAgent[];
+  const agentsToAdd = [...new Set(args.agentNames)] as CodingAgent[];
 
   const startDirectory = await resolveStartDirectory(args, getCwd, exit);
   if (!startDirectory) return;
