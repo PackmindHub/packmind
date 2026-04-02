@@ -3,6 +3,7 @@ import { LuPlus } from 'react-icons/lu';
 
 import {
   PMButton,
+  PMConfirmationModal,
   PMHeading,
   PMIcon,
   PMPageSection,
@@ -24,6 +25,9 @@ export function SpaceMembersList() {
   const { spaceId, space } = useCurrentSpace();
   const currentUserId = user?.id;
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<SpaceMember | null>(
+    null,
+  );
 
   const { data, isLoading } = useGetSpaceMembersQuery(spaceId ?? '');
   const removeMutation = useRemoveMemberFromSpaceMutation(spaceId ?? '');
@@ -44,7 +48,18 @@ export function SpaceMembersList() {
   const isSpaceAdmin = currentUserMember?.role === 'admin';
 
   const handleRemoveMember = (memberId: string) => {
-    removeMutation.mutate(memberId);
+    const member = members.find((m) => m.id === memberId);
+    if (member) {
+      setMemberToRemove(member);
+    }
+  };
+
+  const handleConfirmRemove = () => {
+    if (memberToRemove) {
+      removeMutation.mutate(memberToRemove.id, {
+        onSettled: () => setMemberToRemove(null),
+      });
+    }
   };
 
   if (isLoading) {
@@ -87,6 +102,18 @@ export function SpaceMembersList() {
           setOpen={setAddDialogOpen}
           spaceId={spaceId ?? ''}
           existingMembers={members}
+        />
+        <PMConfirmationModal
+          trigger={<span />}
+          open={!!memberToRemove}
+          onOpenChange={({ open }) => {
+            if (!open) setMemberToRemove(null);
+          }}
+          title="Remove member"
+          message={`Are you sure you want to remove ${memberToRemove?.displayName ?? 'this member'} from the space?`}
+          confirmText="Remove"
+          onConfirm={handleConfirmRemove}
+          isLoading={removeMutation.isPending}
         />
       </PMVStack>
     </PMPageSection>
