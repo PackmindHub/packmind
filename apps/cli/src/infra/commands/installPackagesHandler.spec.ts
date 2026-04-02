@@ -273,6 +273,22 @@ describe('installPackagesHandler', () => {
         mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
       });
 
+      it('passes git info to installPackages for agent cleanup detection', async () => {
+        mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
+          deploymentId: 'deployment-123',
+        });
+
+        await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+        expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+          expect.objectContaining({
+            gitRemoteUrl: 'git@github.com:org/repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          }),
+        );
+      });
+
       describe('when notification succeeds', () => {
         let result: Awaited<ReturnType<typeof installPackagesHandler>>;
 
@@ -1679,6 +1695,39 @@ describe('installPackagesHandler', () => {
 
         it('calls installPackages for each directory', () => {
           expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledTimes(2);
+        });
+      });
+
+      describe('when in a git repo with agents configured', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+            agents: ['claude'],
+          });
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 1,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 0,
+            errors: [],
+          });
+          mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+            'git@github.com:org/repo.git',
+          );
+          mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+
+          await recursiveInstallHandler({}, deps);
+        });
+
+        it('passes git info and agents to installPackages for each directory', () => {
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              gitRemoteUrl: 'git@github.com:org/repo.git',
+              gitBranch: 'main',
+              agents: ['claude'],
+            }),
+          );
         });
       });
 

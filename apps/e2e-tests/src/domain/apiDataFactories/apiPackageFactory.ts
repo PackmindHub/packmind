@@ -10,7 +10,7 @@ export async function apiPackageFactory(
     recipesIds: RecipeId[];
   }>,
 ): Promise<Package> {
-  const spaces = await packmindApi.listSpaces();
+  const { spaces } = await packmindApi.listSpaces({});
   const spaceId = spaces[0].id;
   const packageData = packageFactory({
     spaceId,

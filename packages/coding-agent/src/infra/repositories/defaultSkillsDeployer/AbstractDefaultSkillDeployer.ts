@@ -1,4 +1,4 @@
-import { ISkillDeployer } from './IDefaultSkillDeployer';
+import { ISkillDeployer, SkillDeployOptions } from './IDefaultSkillDeployer';
 import { FileUpdates } from '@packmind/types';
 import semver from 'semver';
 
@@ -53,7 +53,11 @@ Remember this value as $PACKMIND_CLI_VERSION for the rest of the skill.
 `;
   }
 
-  abstract deploy(agentName: string, skillsFolderPath: string): FileUpdates;
+  abstract deploy(
+    agentName: string,
+    skillsFolderPath: string,
+    options?: SkillDeployOptions,
+  ): FileUpdates;
 
   private getFontMatter(skill: SkillMD, agentName: string): string {
     const fontMatter: string[] = [

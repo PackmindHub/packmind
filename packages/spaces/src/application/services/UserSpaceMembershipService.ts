@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   OrganizationId,
+  Space,
   SpaceId,
   UserId,
   UserSpaceMembership,
@@ -24,6 +25,7 @@ export class UserSpaceMembershipService {
     userId: UserId,
     organizationId: OrganizationId,
     role: UserSpaceRole,
+    createdBy: UserId,
   ): Promise<UserSpaceMembership> {
     this.logger.info('Adding member to default space', {
       userId,
@@ -45,6 +47,8 @@ export class UserSpaceMembershipService {
       userId,
       spaceId: defaultSpace.id,
       role,
+      createdBy,
+      updatedBy: createdBy,
     });
 
     this.logger.info('Member added to default space successfully', {
@@ -60,8 +64,12 @@ export class UserSpaceMembershipService {
     userId: UserId;
     spaceId: SpaceId;
     role: UserSpaceRole;
+    createdBy: UserId;
   }): Promise<UserSpaceMembership> {
-    return this.userSpaceMembershipRepository.addMembership(membership);
+    return this.userSpaceMembershipRepository.addMembership({
+      ...membership,
+      updatedBy: membership.createdBy,
+    });
   }
 
   async listSpaceMembers(spaceId: SpaceId): Promise<UserSpaceMembership[]> {
@@ -76,5 +84,23 @@ export class UserSpaceMembershipService {
       userId,
       organizationId,
     );
+  }
+
+  async findMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<UserSpaceMembership | null> {
+    return this.userSpaceMembershipRepository.findMembership(userId, spaceId);
+  }
+
+  async removeSpaceMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<boolean> {
+    return this.userSpaceMembershipRepository.removeMembership(userId, spaceId);
+  }
+
+  async getSpaceById(spaceId: SpaceId): Promise<Space | null> {
+    return this.spaceRepository.findById(spaceId);
   }
 }

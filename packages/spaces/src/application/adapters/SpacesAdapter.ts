@@ -17,6 +17,8 @@ import {
   ListUserSpacesCommand,
   ListUserSpacesResponse,
   OrganizationId,
+  RemoveMemberFromSpaceCommand,
+  RemoveMemberFromSpaceResponse,
   Space,
   SpaceId,
   UserId,
@@ -30,6 +32,7 @@ import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
 import { ListSpaceMembersUseCase } from '../usecases/ListSpaceMembersUseCase';
 import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
+import { RemoveMemberFromSpaceUseCase } from '../usecases/RemoveMemberFromSpaceUseCase';
 
 /**
  * SpacesAdapter - Implements the ISpacesPort interface for cross-domain access
@@ -96,12 +99,14 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     userId: UserId,
     organizationId: OrganizationId,
     role: UserSpaceRole,
+    createdBy: UserId,
   ): Promise<UserSpaceMembership> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     return membershipService.addMemberToDefaultSpace(
       userId,
       organizationId,
       role,
+      createdBy,
     );
   }
 
@@ -109,6 +114,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     userId: UserId;
     spaceId: SpaceId;
     role: UserSpaceRole;
+    createdBy: UserId;
   }): Promise<UserSpaceMembership> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     return membershipService.addSpaceMembership(membership);
@@ -141,6 +147,17 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<AddMembersToSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new AddMembersToSpaceUseCase(
+      membershipService,
+      this.accountsPort,
+    );
+    return useCase.execute(command);
+  }
+
+  async removeMemberFromSpace(
+    command: RemoveMemberFromSpaceCommand,
+  ): Promise<RemoveMemberFromSpaceResponse> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new RemoveMemberFromSpaceUseCase(
       membershipService,
       this.accountsPort,
     );

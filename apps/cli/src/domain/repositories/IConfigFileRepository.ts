@@ -84,4 +84,12 @@ export interface IConfigFileRepository {
     baseDirectory: string,
     agents: CodingAgent[],
   ): Promise<void>;
+
+  /**
+   * Removes the agents field from packmind.json entirely.
+   * Used when all agents have been removed to avoid writing an empty array.
+   *
+   * @param baseDirectory - The directory containing packmind.json
+   */
+  deleteAgentsConfig(baseDirectory: string): Promise<void>;
 }
