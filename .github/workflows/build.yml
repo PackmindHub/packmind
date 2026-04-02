@@ -423,8 +423,12 @@ jobs:
 
       - name: Install latest production CLI from npm
         run: |
-          npm install --no-save @packmind/cli
+          mkdir -p .production-cli
+          cd .production-cli
+          npm init -y --silent
+          npm install @packmind/cli
           CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
+          cd ..
           echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
           echo "CLI binary path: ${CLI_BINARY_PATH}"
           echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
