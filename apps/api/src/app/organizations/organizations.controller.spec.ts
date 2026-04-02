@@ -655,16 +655,10 @@ describe('OrganizationsController', () => {
     describe('when the organization has spaces', () => {
       const space1 = spaceFactory({ organizationId: orgId });
       const space2 = spaceFactory({ organizationId: orgId });
-      const mockSpaces: ListUserSpacesResponse = [space1, space2];
+      const mockSpaces: ListUserSpacesResponse = { spaces: [space1, space2] };
 
       beforeEach(() => {
         mockSpacesAdapter.listUserSpaces.mockResolvedValue(mockSpaces);
-      });
-
-      it('returns spaces wrapped for backward compatibility with CLI ≤0.24.0', async () => {
-        const result = await controller.listUserSpaces(orgId, mockRequest);
-
-        expect(result).toEqual({ spaces: mockSpaces });
       });
 
       it('calls adapter with correct command', async () => {

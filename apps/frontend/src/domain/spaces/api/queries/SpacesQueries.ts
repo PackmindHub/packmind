@@ -16,7 +16,8 @@ export const getSpacesQueryOptions = (orgId: string) =>
       if (!orgId) {
         throw new Error('Cannot fetch spaces: organization ID is required');
       }
-      return spacesGateway.getUserSpaces(orgId);
+      const response = await spacesGateway.getUserSpaces(orgId);
+      return response.spaces;
     },
     enabled: !!orgId,
     staleTime: 1000 * 60 * 10, // 10 minutes - spaces data is stable
