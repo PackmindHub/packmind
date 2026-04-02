@@ -8,7 +8,7 @@ import {
 } from '../helpers';
 import fs from 'fs';
 
-describeForVersion('>= 0.24.0', 'playbook submit --no-review', () => {
+describeForVersion('>= 0.24.0-next', 'playbook submit --no-review', () => {
   describeWithUserSignedUp('playbook submit --no-review', (getContext) => {
     let context: UserSignedUpContext;
 
