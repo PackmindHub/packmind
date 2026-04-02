@@ -14,7 +14,7 @@ import {
 } from '@packmind/ui';
 
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-import { SpaceMemberRole } from '../../types';
+import { SpaceMemberRole } from '../types';
 
 export interface SpaceMember {
   id: string;
