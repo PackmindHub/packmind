@@ -1,7 +1,7 @@
 import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
 export const skillMd: SkillMD = {
-  fontMatter: {
+  frontMatter: {
     description:
       'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to ${agentName}.',
     license: 'Complete terms in LICENSE.txt',

@@ -1,7 +1,7 @@
 import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
 export const skillMd: SkillMD = {
-  fontMatter: {
+  frontMatter: {
     description:
       'Complete automated onboarding: analyzes codebase, creates package, and generates standards & commands via CLI. Automatic package creation when none exist, user selection when packages are available.',
     license: 'Complete terms in LICENSE.txt',

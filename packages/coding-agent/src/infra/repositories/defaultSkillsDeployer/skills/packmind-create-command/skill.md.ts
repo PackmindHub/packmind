@@ -1,7 +1,7 @@
 import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
 export const skillMd: SkillMD = {
-  fontMatter: {
+  frontMatter: {
     description:
       'Guide for creating reusable commands via the Packmind CLI. This skill should be used when users want to create a new command that captures multi-step workflows, recipes, or task automation for distribution to ${agentName}.',
     license: 'Complete terms in LICENSE.txt',

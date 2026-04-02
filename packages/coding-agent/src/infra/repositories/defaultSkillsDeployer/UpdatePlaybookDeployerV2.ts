@@ -22,7 +22,7 @@ export class UpdatePlaybookDeployerV2
 {
   public readonly slug = 'packmind-update-playbook-v2';
   protected readonly minimumVersion = 'unreleased';
-  protected override maximumVersion = null;
+  protected override unsupportedFromVersion = null;
 
   deploy(
     agentName: string,

@@ -4,8 +4,10 @@ import {
   createMockPackmindRepositories,
   createMockConfigFileRepository,
 } from '../../mocks/createMockRepositories';
-import { createMockSkillsGateway } from '../../mocks/createMockGateways';
-import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import {
+  createMockSkillsGateway,
+  createMockPackmindGateway,
+} from '../../mocks/createMockGateways';
 
 jest.mock('fs/promises');
 

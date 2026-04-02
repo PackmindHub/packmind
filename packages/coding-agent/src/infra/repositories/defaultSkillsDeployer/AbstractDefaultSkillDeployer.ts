@@ -6,7 +6,7 @@ type IntString = `${bigint}`;
 export type SemVer = `${IntString}.${IntString}.${IntString}`;
 
 export type SkillMD = {
-  fontMatter: {
+  frontMatter: {
     description: string;
     license?: string;
     metadata?: Record<string, string>;
@@ -18,11 +18,11 @@ export type SkillMD = {
 
 export abstract class AbstractDefaultSkillDeployer implements ISkillDeployer {
   protected abstract minimumVersion: SemVer | 'unreleased';
-  protected abstract maximumVersion: SemVer | null;
+  protected abstract unsupportedFromVersion: SemVer | null;
   abstract slug: string;
 
   protected getSkillMd(agentName: string, skill: SkillMD) {
-    return `${this.getFontMatter(skill, agentName)}
+    return `${this.getFrontMatter(skill, agentName)}
 
 # ${skill.title}
 ${this.injectVersionsPrompt(skill.versions)}${skill.getPrompt(agentName)}
@@ -59,30 +59,30 @@ Remember this value as $PACKMIND_CLI_VERSION for the rest of the skill.
     options?: SkillDeployOptions,
   ): FileUpdates;
 
-  private getFontMatter(skill: SkillMD, agentName: string): string {
-    const fontMatter: string[] = [
+  private getFrontMatter(skill: SkillMD, agentName: string): string {
+    const frontMatter: string[] = [
       `name: '${this.slug}'`,
-      `description: '${skill.fontMatter.description}'`,
+      `description: '${skill.frontMatter.description}'`,
     ];
 
-    if (skill.fontMatter.license) {
-      fontMatter.push(`license: '${skill.fontMatter.license}'`);
+    if (skill.frontMatter.license) {
+      frontMatter.push(`license: '${skill.frontMatter.license}'`);
     }
 
-    const metadata: Record<string, string> = { ...skill.fontMatter.metadata };
-    if (this.maximumVersion) {
-      metadata['packmind-cli-version'] = `< ${this.maximumVersion}`;
+    const metadata: Record<string, string> = { ...skill.frontMatter.metadata };
+    if (this.unsupportedFromVersion) {
+      metadata['packmind-cli-version'] = `< ${this.unsupportedFromVersion}`;
     }
 
     if (Object.entries(metadata).length) {
-      fontMatter.push('metadata:');
+      frontMatter.push('metadata:');
       for (const [key, value] of Object.entries(metadata)) {
-        fontMatter.push(` ${key}: "${value}"`);
+        frontMatter.push(` ${key}: "${value}"`);
       }
     }
 
     return `---
-${fontMatter.join('\n')}
+${frontMatter.join('\n')}
 ---`.replace('${agentName}', agentName);
   }
 }

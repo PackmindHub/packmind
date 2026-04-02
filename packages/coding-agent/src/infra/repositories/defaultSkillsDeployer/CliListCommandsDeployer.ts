@@ -9,7 +9,7 @@ export class CliListCommandsDeployer
   extends AbstractDefaultSkillDeployer
   implements ISkillDeployer
 {
-  protected override maximumVersion = null;
+  protected override unsupportedFromVersion = null;
   public readonly slug = 'packmind-cli-list-commands';
   protected readonly minimumVersion = '0.15.0';
 

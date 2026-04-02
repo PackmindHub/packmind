@@ -16,7 +16,7 @@ export class CreateSkillDeployer
 {
   public readonly slug = 'packmind-create-skill';
   protected readonly minimumVersion = '0.14.0';
-  protected override maximumVersion: SemVer = '0.25.0';
+  protected override unsupportedFromVersion: SemVer = '0.25.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-skill`;

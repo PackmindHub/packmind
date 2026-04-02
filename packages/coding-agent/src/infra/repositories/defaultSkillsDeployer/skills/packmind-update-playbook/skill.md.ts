@@ -1,7 +1,7 @@
 import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
 export const skillMd: SkillMD = {
-  fontMatter: {
+  frontMatter: {
     description:
       'Use when updating, adding, fixing, changing, or deprecating Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook", "deprecate a standard". Also triggers — even without an explicit request — whenever the conversation reveals an opportunity: a new coding convention was just agreed on, a recurring pattern emerged, a workflow changed, a rule was found outdated, or the user says things like "we always do X", "let us remember to Y", "that is the pattern we use". If there is any chance the conversation established a convention or exposed a gap, invoke this skill proactively. This skill defines a mandatory workflow: do NOT edit artifact files directly — follow all phases regardless of change size.',
   },

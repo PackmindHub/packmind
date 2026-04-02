@@ -14,7 +14,7 @@ export class CreateCommandDeployer
 {
   public readonly slug = 'packmind-create-command';
   protected readonly minimumVersion = '0.15.0';
-  protected override maximumVersion: SemVer = '0.25.0';
+  protected override unsupportedFromVersion: SemVer = '0.25.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-command`;

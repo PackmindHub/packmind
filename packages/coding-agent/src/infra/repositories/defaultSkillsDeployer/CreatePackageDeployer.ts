@@ -11,7 +11,7 @@ export class CreatePackageDeployer
 {
   public readonly slug = 'packmind-create-package';
   protected readonly minimumVersion = '0.15.0';
-  protected override maximumVersion = null;
+  protected override unsupportedFromVersion = null;
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-package`;
