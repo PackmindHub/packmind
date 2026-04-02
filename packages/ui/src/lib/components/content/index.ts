@@ -31,3 +31,5 @@ export {
   PMTimelineDescription,
 } from './PMTimeline/PMTimeline';
 export { PMCarousel } from './PMCarousel/PMCarousel';
+export { PMColorSwatch } from './PMColorSwatch';
+export type { PMColorSwatchProps } from './PMColorSwatch';
