@@ -409,6 +409,34 @@ describe('playbookRmHandler', () => {
     });
   });
 
+  describe('when the artifact belongs to an inaccessible space', () => {
+    beforeEach(() => {
+      (mockPackmindCliHexa.getSpaces as jest.Mock).mockResolvedValue([]);
+    });
+
+    it('logs an error with the artifact type', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookRmHandler(buildDeps());
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        'Cannot remove this command: the space it belongs to is not available to you',
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookRmHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not stage anything', async () => {
+      await playbookRmHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when resolveDeployedContext returns null', () => {
     beforeEach(() => {
       const { resolveDeployedContext } = jest.requireMock(
