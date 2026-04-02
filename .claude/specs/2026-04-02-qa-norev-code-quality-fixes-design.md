@@ -24,7 +24,7 @@ No new domains, packages, or layers. All changes are within existing files:
 
 ### Finding 5: Type `collectParts` precisely
 **File:** `apps/cli/src/infra/commands/playbook/submitHandler.ts:872-881`
-**Change:** Replace `unknown[]` with the actual response shapes. The `created` bucket contains `Array<{ id: string; slug: string }>` and the `updated` bucket contains `string[]`. Type the parameter to reflect this.
+**Change:** Replace `unknown[]` with a type referencing the actual `ApplyPlaybookResponse` success shape from `@packmind/types`. The `created` and `updated` buckets use branded IDs (`StandardId`, `RecipeId`, `SkillId`), so reference the canonical type rather than hand-rolling approximate shapes. Since `collectParts` only uses `.length`, typing the values as `readonly unknown[]` per key is acceptable — but the outer parameter shape should match `ApplyPlaybookResponse['created']` or `ApplyPlaybookResponse['updated']` to avoid drift.
 
 ### Finding 7: Reorder `afterEach`/`beforeEach`
 **File:** `packages/playbook-change-applier/src/ApplyPlaybookUseCase.spec.ts:76-80`
@@ -32,9 +32,11 @@ No new domains, packages, or layers. All changes are within existing files:
 
 ### Finding 2 (adapted): Improve batchApply error message
 **File:** `apps/cli/src/infra/commands/playbook/submitHandler.ts:855-858`
-**Change:** Replace raw error passthrough with user-friendly messaging:
+**Change:** The `!response.success` branch (lines 855-858) currently shows `"Error: ${response.error.message}"` which passes through raw server errors. Replace with user-friendly messaging:
 - `"Failed to apply changes: <error.message>"`
 - `"Your playbook has not been modified. Fix the issue and retry."`
+
+Note: The catch block (lines 847-852) already uses `"Failed to apply changes: ${errorMessage}"` and is left unchanged.
 
 ### Finding 6: Extract `jest.requireMock` references
 **File:** `apps/cli/src/infra/commands/playbook/submitHandler.spec.ts`
@@ -43,8 +45,8 @@ No new domains, packages, or layers. All changes are within existing files:
 ### Gap 12: Improve multi-space partial failure UX
 **File:** `apps/cli/src/infra/commands/playbook/submitHandler.ts:918-1030`
 **Change:**
-- Build a `spaceNameById` map from `PlaybookChangeEntry.spaceName` before the loop
-- Track `succeededSpaces` and `failedSpaces` arrays per space
+- Build a `spaceNameById` map from `PlaybookChangeEntry.spaceName` before the loop. Use the first non-undefined `spaceName` for each `spaceId` (entries for the same space should have consistent names).
+- Replace existing `hasErrors`, `totalCreated`, `totalSkipped` tracking with `succeededSpaces` and `failedSpaces` arrays per space. The old counters become derivable from these arrays, avoiding dead code.
 - Report per-space results: `"Failed to submit to space 'Frontend': <errors>"`
 - On partial success: `"Submitted to: Frontend. Run 'packmind playbook submit' again to retry failed spaces."`
 - Fall back to space ID if `spaceName` is missing (legacy entries)
