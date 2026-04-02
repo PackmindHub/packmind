@@ -1,7 +1,7 @@
 ---
 applyTo: '**/*.ts'
 ---
-## Standard: Domain Events
+# Standard: Domain Events
 
 Standardize TypeScript domain events by defining `{EventName}Payload` interfaces and `Event`-suffixed classes in `packages/types/src/{domain}/events/` (barrel `index.ts`) extending `UserEvent`/`SystemEvent` with `static override readonly eventName` in `domain.entity.action` format, emitting via `eventEmitterService.emit(new MyEvent(payload))`, and handling via `PackmindListener<TAdapter>.registerHandlers()` with `this.subscribe(EventClass, this.handlerMethod)` and arrow-function handlers to enable decoupled cross-domain communication and reliable subscriptions. :
 * Define event classes in `packages/types/src/{domain}/events/` with an `index.ts` barrel file

@@ -11,6 +11,8 @@ export type UserSpaceMembership = {
   userId: UserId;
   spaceId: SpaceId;
   role: UserSpaceRole;
+  createdBy: UserId;
+  updatedBy: UserId;
   user?: User;
   space?: Space;
   createdAt?: Date;

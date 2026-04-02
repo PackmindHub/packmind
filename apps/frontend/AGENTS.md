@@ -46,14 +46,14 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-## Standard: Frontend testing
+# Standard: Frontend testing
 
 Enforce behavioral tests for components in files matching **/*.test.tsx using Jest and React Testing Library to assert functionality (e.g., that a button triggers the expected action) rather than mere presence, improving test reliability and preventing regressions. :
 * Do not write test checking if a button is there, check that it actually works as expected
 
 Full standard is available here for further request: [Frontend testing](.packmind/standards/frontend-testing.md)
 
-## Standard: Frontend Data Flow
+# Standard: Frontend Data Flow
 
 Standardize frontend route data flow using React Router v7 framework mode with TanStack Query by centralizing fetching in route clientLoaders via queryClient.ensureQueryData(), organizing reusable query options/hooks under apps/frontend/src/domain/{entity}/api/queries/, and consuming results with useLoaderData() to reduce intermediate loading states and improve consistency and reuse. :
 * Access data via query or mutation hooks in frontend route modules rather than calling gateways directly to maintain separation between data access and presentation layers
@@ -71,7 +71,7 @@ Standardize frontend route data flow using React Router v7 framework mode with T
 
 Full standard is available here for further request: [Frontend Data Flow](.packmind/standards/frontend-data-flow.md)
 
-## Standard: Frontend Navigation with React Router
+# Standard: Frontend Navigation with React Router
 
 Standardize frontend navigation using React Router v7 with centralized utilities in React applications to ensure consistent URL parameter handling and simplify navigation management, particularly when organizing and scoping URLs, across apps/frontend/**/*.tsx. :
 * Omit orgSlug and spaceSlug parameters to use current organization and space context by default and only specify them explicitly when navigating to a different organization or space.
@@ -83,7 +83,7 @@ Standardize frontend navigation using React Router v7 with centralized utilities
 
 Full standard is available here for further request: [Frontend Navigation with React Router](.packmind/standards/frontend-navigation-with-react-router.md)
 
-## Standard: Frontend Error Management
+# Standard: Frontend Error Management
 
 Establish frontend error management for apps/frontend/**/*.tsx that prescribes when to add React error boundaries beyond the global root.tsx fallback and how to handle errors they don't catch—such as event handlers, async code, SSR, or errors thrown in the boundary—by using TypeScript-typed guards (e.g., isPackmindError), try/catch for async operations, TanStack Query onError callbacks and mutation-pending checks to prevent double submissions, inline validation for expected API/user errors, and selective page- or component-level boundaries for isolated third-party widgets like CodeMirror, to reduce complexity, improve UX, and keep error flows maintainable in React/TypeScript projects built with Node.js and typical tooling (Vite/Webpack, ESLint/Prettier) and tested with Jest/Cypress. :
 * Avoid overusing error boundaries as they increase code complexity and make error flows harder to trace
@@ -98,7 +98,7 @@ Establish frontend error management for apps/frontend/**/*.tsx that prescribes w
 
 Full standard is available here for further request: [Frontend Error Management](.packmind/standards/frontend-error-management.md)
 
-## Standard: Jest Test Suite Organization and Patterns
+# Standard: Jest Test Suite Organization and Patterns
 
 Establish Jest test suite organization and patterns governing test file structure, describe/it hierarchy, typed mocking using jest.Mocked<ServiceType> and createMockInstance, factory-based test data and @packmind/types createUserId/createOrganizationId/createStandardId helpers, assertion conventions (single primary assertion, .not.toHaveBeenCalled()), test ordering (happy path, error cases, edge cases, complex scenarios), and validation/error-handling patterns for TypeScript/Node.js monorepo code (including Express or frontend React/Vue components where applicable) and toolchains (ESLint, Prettier, Webpack/Vite) with CI/infrastructure considerations (Docker, Kubernetes, AWS) to ensure reliable, maintainable, and debuggable unit and integration tests when writing or refactoring test suites with Jest. :
 * Define reusable test data at the describe block level before test cases when the data is shared across multiple tests
@@ -113,7 +113,7 @@ Establish Jest test suite organization and patterns governing test file structur
 
 Full standard is available here for further request: [Jest Test Suite Organization and Patterns](.packmind/standards/jest-test-suite-organization-and-patterns.md)
 
-## Standard: TanStack Query Key Management
+# Standard: TanStack Query Key Management
 
 Manage TanStack Query key structures using hierarchical prefix matching and dedicated queryKeys.ts files in React applications to ensure efficient cache invalidation and type-safe query management when handling cross-domain data operations. :
 * Define base query key arrays as const to enable precise invalidation patterns and avoid duplication

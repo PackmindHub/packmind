@@ -1,7 +1,7 @@
 ---
 applyTo: 'apps/cli/src/infra/repositories/*Gateway.ts'
 ---
-## Standard: CLI Gateway Implementation
+# Standard: CLI Gateway Implementation
 
 Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods to use PackmindHttpClient (getAuthContext and typed request<T> with options for non-GET), delegate to sub-gateways, and expose only Gateway<UseCase> interfaces to reduce boilerplate, enforce type safety, and keep authentication and error handling consistent. :
 * Define the method return type using `Promise<ResponseType>` for type safety

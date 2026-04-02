@@ -738,6 +738,7 @@ describe('CreateInvitationsUseCase', () => {
         userWithMembership.id,
         organizationId,
         UserSpaceRole.MEMBER,
+        inviter.id,
       );
     });
   });
@@ -779,6 +780,7 @@ describe('CreateInvitationsUseCase', () => {
         userWithMembership.id,
         organizationId,
         UserSpaceRole.ADMIN,
+        inviter.id,
       );
     });
   });

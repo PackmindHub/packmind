@@ -6,7 +6,7 @@ export async function apiStandardFactory(
   packmindApi: IPackmindApi,
   overrides?: Partial<{ name: string }>,
 ): Promise<Standard> {
-  const spaces = await packmindApi.listSpaces();
+  const { spaces } = await packmindApi.listSpaces({});
   const spaceId = spaces[0].id;
 
   const standardData = standardFactory({ spaceId, ...overrides });

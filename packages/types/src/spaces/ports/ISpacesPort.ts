@@ -8,6 +8,14 @@ import {
   AddMembersToSpaceResponse,
 } from '../contracts/IAddMembersToSpaceUseCase';
 import {
+  RemoveMemberFromSpaceCommand,
+  RemoveMemberFromSpaceResponse,
+} from '../contracts/IRemoveMemberFromSpaceUseCase';
+import {
+  UpdateMemberRoleCommand,
+  UpdateMemberRoleResponse,
+} from '../contracts/IUpdateMemberRoleUseCase';
+import {
   CreateSpaceCommand,
   CreateSpaceResponse,
 } from '../contracts/ICreateSpaceUseCase';
@@ -87,6 +95,7 @@ export interface ISpacesPort {
     userId: UserId,
     organizationId: OrganizationId,
     role: UserSpaceRole,
+    createdBy: UserId,
   ): Promise<UserSpaceMembership>;
 
   /**
@@ -96,6 +105,7 @@ export interface ISpacesPort {
     userId: UserId;
     spaceId: SpaceId;
     role: UserSpaceRole;
+    createdBy: UserId;
   }): Promise<UserSpaceMembership>;
 
   /**
@@ -119,4 +129,22 @@ export interface ISpacesPort {
   addMembersToSpace(
     command: AddMembersToSpaceCommand,
   ): Promise<AddMembersToSpaceResponse>;
+
+  /**
+   * Remove a member from a space.
+   * Requires the caller to be a space admin.
+   * Cannot remove from default space or remove self.
+   */
+  removeMemberFromSpace(
+    command: RemoveMemberFromSpaceCommand,
+  ): Promise<RemoveMemberFromSpaceResponse>;
+
+  /**
+   * Update a member's role in a space.
+   * Requires the caller to be a space admin.
+   * Cannot update own role.
+   */
+  updateMemberRole(
+    command: UpdateMemberRoleCommand,
+  ): Promise<UpdateMemberRoleResponse>;
 }

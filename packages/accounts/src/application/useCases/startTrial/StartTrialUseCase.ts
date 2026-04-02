@@ -75,6 +75,7 @@ export class StartTrialUseCase implements IStartTrial {
           createUserId(user.id),
           organization.id,
           UserSpaceRole.ADMIN,
+          createUserId(user.id),
         );
         this.logger.info(
           'Trial user added to default space membership successfully',

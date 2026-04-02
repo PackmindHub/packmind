@@ -48,17 +48,18 @@ import { SkillChangesApplier } from './appliers/SkillChangesApplier';
 
 const origin = 'ApplyPlaybookUseCase';
 
-const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.removeStandard,
-  ChangeProposalType.removeCommand,
-  ChangeProposalType.removeSkill,
-  ChangeProposalType.deleteRule,
-]);
+const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([]);
 
 const CREATION_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.createStandard,
   ChangeProposalType.createCommand,
   ChangeProposalType.createSkill,
+]);
+
+const REMOVAL_TYPES = new Set<ChangeProposalType>([
+  ChangeProposalType.removeStandard,
+  ChangeProposalType.removeCommand,
+  ChangeProposalType.removeSkill,
 ]);
 
 type RollbackEntry =
@@ -227,6 +228,8 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       const proposal = proposals[i];
       if (CREATION_TYPES.has(proposal.type)) {
         steps.push({ kind: 'create', proposalIndex: i, proposal });
+      } else if (REMOVAL_TYPES.has(proposal.type)) {
+        // Removal change proposals are ignored
       } else {
         const artefactId = proposal.artefactId as string;
         const existing = updateGroups.get(artefactId);
@@ -305,6 +308,8 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
         return new CommandChangesApplier(this.diffService, this.recipesPort);
       case 'skill':
         return new SkillChangesApplier(this.diffService, this.skillsPort);
+      default:
+        throw new Error(`Unsupported item type: ${itemType}`);
     }
   }
 
@@ -329,7 +334,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       resolvedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
-    } as ChangeProposal;
+    } satisfies ChangeProposal;
   }
 
   private getVersionId(
