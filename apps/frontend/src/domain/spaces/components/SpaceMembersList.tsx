@@ -16,7 +16,9 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import {
   useGetSpaceMembersQuery,
   useRemoveMemberFromSpaceMutation,
+  useUpdateMemberRoleMutation,
 } from '../api/queries/SpacesQueries';
+import { SpaceMemberRole } from '../types';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
 import { SpaceMember, SpaceMembersTable } from './SpaceMembersTable';
 import { AddSpaceMembersDialog } from './AddSpaceMembersDialog';
@@ -32,6 +34,7 @@ export function SpaceMembersList() {
 
   const { data, isLoading } = useGetSpaceMembersQuery(spaceId ?? '');
   const removeMutation = useRemoveMemberFromSpaceMutation(spaceId ?? '');
+  const updateRoleMutation = useUpdateMemberRoleMutation(spaceId ?? '');
 
   const members = useMemo<SpaceMember[]>(
     () =>
@@ -48,6 +51,28 @@ export function SpaceMembersList() {
   );
   const isSpaceAdmin = currentUserMember?.role === 'admin';
 
+  const handleUpdateMemberRole = (memberId: string, role: SpaceMemberRole) => {
+    updateRoleMutation.mutate(
+      { targetUserId: memberId, role },
+      {
+        onSuccess: () => {
+          pmToaster.create({
+            title: 'Role updated',
+            description: 'Member role has been updated.',
+            type: 'success',
+          });
+        },
+        onError: () => {
+          pmToaster.create({
+            title: 'Failed to update role',
+            description: 'An error occurred while updating the member role.',
+            type: 'error',
+          });
+        },
+      },
+    );
+  };
+
   const handleRemoveMember = (memberId: string) => {
     const member = members.find((m) => m.id === memberId);
     if (member) {
@@ -63,6 +88,14 @@ export function SpaceMembersList() {
             title: 'Member removed',
             description: `${memberToRemove.displayName} has been removed from the space.`,
             type: 'success',
+          });
+        },
+        onError: () => {
+          pmToaster.create({
+            title: 'Failed to remove member',
+            description:
+              'An error occurred while removing the member from the space.',
+            type: 'error',
           });
         },
         onSettled: () => setMemberToRemove(null),
@@ -104,6 +137,7 @@ export function SpaceMembersList() {
           isDefaultSpace={space?.isDefaultSpace}
           isSpaceAdmin={isSpaceAdmin}
           onRemoveMember={handleRemoveMember}
+          onUpdateMemberRole={handleUpdateMemberRole}
         />
         <AddSpaceMembersDialog
           open={addDialogOpen}

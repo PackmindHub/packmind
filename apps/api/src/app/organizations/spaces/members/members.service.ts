@@ -6,6 +6,7 @@ import {
   OrganizationId,
   RemoveMemberFromSpaceResponse,
   SpaceId,
+  UpdateMemberRoleResponse,
   UserId,
   UserSpaceRole,
 } from '@packmind/types';
@@ -88,6 +89,22 @@ export class SpaceMembersService {
       organizationId: command.organizationId,
       spaceId: command.spaceId,
       targetUserId: command.targetUserId,
+    });
+  }
+
+  async updateMemberRole(command: {
+    userId: string;
+    organizationId: OrganizationId;
+    spaceId: SpaceId;
+    targetUserId: UserId;
+    role: UserSpaceRole;
+  }): Promise<UpdateMemberRoleResponse> {
+    return this.spacesAdapter.updateMemberRole({
+      userId: command.userId,
+      organizationId: command.organizationId,
+      spaceId: command.spaceId,
+      targetUserId: command.targetUserId,
+      role: command.role,
     });
   }
 }

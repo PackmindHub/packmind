@@ -175,4 +175,35 @@ describe('SpaceMembersTable', () => {
       expect(onRemoveMember).toHaveBeenCalledWith('user-1');
     });
   });
+
+  describe('when onUpdateMemberRole is provided', () => {
+    it('calls onUpdateMemberRole when role select is changed by a space admin', async () => {
+      const onUpdateMemberRole = jest.fn();
+
+      renderWithProviders(
+        <SpaceMembersTable
+          members={members}
+          isSpaceAdmin={true}
+          onUpdateMemberRole={onUpdateMemberRole}
+        />,
+      );
+
+      const selects = screen.getAllByRole('combobox');
+      await userEvent.selectOptions(selects[1], 'admin');
+
+      expect(onUpdateMemberRole).toHaveBeenCalledWith('user-2', 'admin');
+    });
+  });
+
+  describe('when user is not a space admin', () => {
+    it('disables all role selects', () => {
+      renderWithProviders(
+        <SpaceMembersTable members={members} isSpaceAdmin={false} />,
+      );
+
+      const selects = screen.getAllByRole('combobox');
+
+      expect(selects.every((s) => s.hasAttribute('disabled'))).toBe(true);
+    });
+  });
 });

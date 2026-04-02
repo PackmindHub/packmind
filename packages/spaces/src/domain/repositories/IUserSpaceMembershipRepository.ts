@@ -1,4 +1,9 @@
-import { UserId, SpaceId, UserSpaceMembership } from '@packmind/types';
+import {
+  UserId,
+  SpaceId,
+  UserSpaceMembership,
+  UserSpaceRole,
+} from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 
 export interface IUserSpaceMembershipRepository {
@@ -14,4 +19,9 @@ export interface IUserSpaceMembershipRepository {
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<UserSpaceMembership[]>;
+  updateMembershipRole(
+    userId: UserId,
+    spaceId: SpaceId,
+    role: UserSpaceRole,
+  ): Promise<boolean>;
 }

@@ -6,6 +6,8 @@ import {
   ListSpaceMembersResponse,
   RemoveMemberFromSpaceResponse,
   SpaceMemberEntry,
+  SpaceMemberRole,
+  UpdateMemberRoleResponse,
 } from '../../types';
 
 export class SpacesGatewayApi
@@ -62,6 +64,18 @@ export class SpacesGatewayApi
   ): Promise<RemoveMemberFromSpaceResponse> {
     return this._api.delete<RemoveMemberFromSpaceResponse>(
       `${this._endpoint}/${orgId}/spaces/${spaceId}/members/${targetUserId}`,
+    );
+  }
+
+  async updateMemberRole(
+    orgId: string,
+    spaceId: string,
+    targetUserId: string,
+    role: SpaceMemberRole,
+  ): Promise<UpdateMemberRoleResponse> {
+    return this._api.patch<UpdateMemberRoleResponse>(
+      `${this._endpoint}/${orgId}/spaces/${spaceId}/members/${targetUserId}`,
+      { role },
     );
   }
 }

@@ -7,7 +7,7 @@ import {
 import { spacesGateway } from '../gateways';
 import { spacesQueryKeys } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { SpaceMemberEntry } from '../../types';
+import { SpaceMemberEntry, SpaceMemberRole } from '../../types';
 
 export const getSpacesQueryOptions = (orgId: string) =>
   queryOptions({
@@ -107,6 +107,38 @@ export const useRemoveMemberFromSpaceMutation = (spaceId: string) => {
         organization.id,
         spaceId,
         targetUserId,
+      );
+    },
+    onSuccess: async () => {
+      if (organization?.id) {
+        await queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.members(organization.id, spaceId),
+        });
+      }
+    },
+  });
+};
+
+export const useUpdateMemberRoleMutation = (spaceId: string) => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async ({
+      targetUserId,
+      role,
+    }: {
+      targetUserId: string;
+      role: SpaceMemberRole;
+    }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to update a member role');
+      }
+      return spacesGateway.updateMemberRole(
+        organization.id,
+        spaceId,
+        targetUserId,
+        role,
       );
     },
     onSuccess: async () => {

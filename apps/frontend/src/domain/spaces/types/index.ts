@@ -26,3 +26,7 @@ export type AddMembersToSpaceResponse = {
 export type RemoveMemberFromSpaceResponse = {
   removed: boolean;
 };
+
+export type UpdateMemberRoleResponse = {
+  updated: boolean;
+};

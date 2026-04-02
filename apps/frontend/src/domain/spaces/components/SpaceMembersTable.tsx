@@ -35,6 +35,7 @@ interface SpaceMembersTableProps {
   isDefaultSpace?: boolean;
   isSpaceAdmin?: boolean;
   onRemoveMember?: (memberId: string) => void;
+  onUpdateMemberRole?: (memberId: string, role: SpaceMemberRole) => void;
 }
 
 export function SpaceMembersTable({
@@ -43,6 +44,7 @@ export function SpaceMembersTable({
   isDefaultSpace,
   isSpaceAdmin,
   onRemoveMember,
+  onUpdateMemberRole,
 }: Readonly<SpaceMembersTableProps>) {
   const data = useMemo<PMTableRow[]>(
     () =>
@@ -68,8 +70,14 @@ export function SpaceMembersTable({
           role: (
             <PMNativeSelect
               size="sm"
-              defaultValue={member.role}
-              disabled={isCurrentUser}
+              value={member.role}
+              disabled={isCurrentUser || !isSpaceAdmin}
+              onChange={(e) =>
+                onUpdateMemberRole?.(
+                  member.id,
+                  e.currentTarget.value as SpaceMemberRole,
+                )
+              }
               items={[
                 { value: 'admin', label: 'Admin' },
                 { value: 'member', label: 'Member' },
@@ -91,7 +99,14 @@ export function SpaceMembersTable({
             ),
         };
       }),
-    [members, currentUserId, isDefaultSpace, isSpaceAdmin, onRemoveMember],
+    [
+      members,
+      currentUserId,
+      isDefaultSpace,
+      isSpaceAdmin,
+      onRemoveMember,
+      onUpdateMemberRole,
+    ],
   );
 
   return (
