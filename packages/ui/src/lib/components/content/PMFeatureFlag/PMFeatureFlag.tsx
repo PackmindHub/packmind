@@ -24,6 +24,8 @@ export const EDIT_CHANGE_PROPOSALS_FEATURE_KEY = 'edit-change-proposals';
 
 export const SPACES_MANAGEMENT_FEATURE_KEY = 'spaces-management';
 
+export const SPACE_SETTINGS_FEATURE_KEY = 'space-settings';
+
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
@@ -35,6 +37,7 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   ],
   [EDIT_CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [SPACES_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [SPACE_SETTINGS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const normalizeDomain = (domain: string): string =>

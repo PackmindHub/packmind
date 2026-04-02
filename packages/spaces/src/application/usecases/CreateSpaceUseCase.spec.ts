@@ -91,6 +91,7 @@ describe('CreateSpaceUseCase', () => {
           'My Space',
           organizationId,
           false,
+          undefined,
         );
       });
 
@@ -186,6 +187,7 @@ describe('CreateSpaceUseCase', () => {
           'My Space',
           organizationId,
           false,
+          undefined,
         );
       });
     });

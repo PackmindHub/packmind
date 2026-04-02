@@ -263,4 +263,42 @@ describe('DeploymentGateway', () => {
       });
     });
   });
+
+  describe('getLatestVersion', () => {
+    const spaceId = 'space-42';
+
+    beforeEach(() => {
+      mockHttpClient.request.mockResolvedValue({ version: 3 });
+    });
+
+    describe('when type is standard', () => {
+      it('calls httpClient with the standards path segment', async () => {
+        await gateway.getLatestVersion('standard', 'std-1', spaceId);
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/standards/std-1/latest-version`,
+        );
+      });
+    });
+
+    describe('when type is command', () => {
+      it('calls httpClient with the recipes path segment', async () => {
+        await gateway.getLatestVersion('command', 'cmd-1', spaceId);
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/recipes/cmd-1/latest-version`,
+        );
+      });
+    });
+
+    describe('when type is skill', () => {
+      it('calls httpClient with the skills path segment', async () => {
+        await gateway.getLatestVersion('skill', 'skill-1', spaceId);
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/skills/skill-1/latest-version`,
+        );
+      });
+    });
+  });
 });

@@ -68,6 +68,7 @@ export interface IStandardsPort {
     disableTriggerAssessment?: boolean;
     source?: PackmindEventSource;
     method?: StandardCreationMethod;
+    directUpdate?: boolean;
   }): Promise<Standard>;
   createStandardSamples(
     command: CreateStandardSamplesCommand,
@@ -75,6 +76,7 @@ export interface IStandardsPort {
   updateStandard(command: UpdateStandardCommand): Promise<Standard>;
   deleteStandard(command: DeleteStandardCommand): Promise<void>;
   hardDeleteStandard(standardId: StandardId): Promise<void>;
+  hardDeleteStandardVersion(versionId: StandardVersionId): Promise<void>;
   duplicateStandardToSpace(
     standardId: StandardId,
     destinationSpaceId: SpaceId,

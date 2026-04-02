@@ -1,6 +1,12 @@
 import { OrganizationId } from '../../accounts/Organization';
+import { UserId } from '../../accounts/User';
 import { Space } from '../Space';
 import { SpaceId } from '../SpaceId';
+import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
+import {
+  AddMembersToSpaceCommand,
+  AddMembersToSpaceResponse,
+} from '../contracts/IAddMembersToSpaceUseCase';
 import {
   CreateSpaceCommand,
   CreateSpaceResponse,
@@ -9,6 +15,10 @@ import {
   GetDefaultSpaceCommand,
   GetDefaultSpaceResponse,
 } from '../contracts/IGetDefaultSpace';
+import {
+  ListSpaceMembersCommand,
+  ListSpaceMembersResponse,
+} from '../contracts/IListSpaceMembersUseCase';
 import {
   ListUserSpacesCommand,
   ListUserSpacesResponse,
@@ -68,4 +78,45 @@ export interface ISpacesPort {
   getDefaultSpace(
     command: GetDefaultSpaceCommand,
   ): Promise<GetDefaultSpaceResponse>;
+
+  /**
+   * Add a user as a member of the default space for an organization.
+   * Finds the default space and creates the membership.
+   */
+  addMemberToDefaultSpace(
+    userId: UserId,
+    organizationId: OrganizationId,
+    role: UserSpaceRole,
+  ): Promise<UserSpaceMembership>;
+
+  /**
+   * Add a user membership to a space.
+   */
+  addSpaceMembership(membership: {
+    userId: UserId;
+    spaceId: SpaceId;
+    role: UserSpaceRole;
+  }): Promise<UserSpaceMembership>;
+
+  /**
+   * Find all space memberships for a user within an organization.
+   */
+  findMembershipsByUserAndOrganization(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<UserSpaceMembership[]>;
+
+  /**
+   * List all members of a specific space.
+   */
+  listSpaceMembers(
+    command: ListSpaceMembersCommand,
+  ): Promise<ListSpaceMembersResponse>;
+
+  /**
+   * Add multiple members to a space in batch.
+   */
+  addMembersToSpace(
+    command: AddMembersToSpaceCommand,
+  ): Promise<AddMembersToSpaceResponse>;
 }

@@ -28,6 +28,7 @@ import {
   SpaceId,
   UploadSkillFileInput,
   UploadSkillResponse,
+  UserId,
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -180,6 +181,38 @@ export class OrganizationsSpacesSkillsController {
       );
       throw error;
     }
+  }
+
+  /**
+   * Get the latest version number of a skill
+   * GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/latest-version
+   */
+  @Get(':skillId/latest-version')
+  async getSkillLatestVersion(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<{ version: number }> {
+    const userId = request.user.userId as UserId;
+    this.logger.info('Getting latest version for skill', {
+      organizationId,
+      skillId,
+      userId: userId.substring(0, 6) + '*',
+    });
+
+    const version = await this.skillsService.getLatestVersionNumber({
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+    });
+
+    if (version === null) {
+      throw new NotFoundException(`Skill ${skillId} not found`);
+    }
+
+    return { version };
   }
 
   /**

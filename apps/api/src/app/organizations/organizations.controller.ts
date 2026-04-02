@@ -441,7 +441,10 @@ export class OrganizationsController {
       { organizationId, userId },
     );
 
-    return this.spacesAdapter.listUserSpaces({ userId, organizationId });
+    return this.spacesAdapter.listUserSpaces({
+      userId,
+      organizationId,
+    });
   }
 
   /**

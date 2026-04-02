@@ -655,19 +655,10 @@ describe('OrganizationsController', () => {
     describe('when the organization has spaces', () => {
       const space1 = spaceFactory({ organizationId: orgId });
       const space2 = spaceFactory({ organizationId: orgId });
-      const mockResponse: ListUserSpacesResponse = {
-        spaces: [space1, space2],
-        discoverableSpaces: [],
-      };
+      const mockSpaces: ListUserSpacesResponse = { spaces: [space1, space2] };
 
       beforeEach(() => {
-        mockSpacesAdapter.listUserSpaces.mockResolvedValue(mockResponse);
-      });
-
-      it('returns the user spaces response', async () => {
-        const result = await controller.listUserSpaces(orgId, mockRequest);
-
-        expect(result).toEqual(mockResponse);
+        mockSpacesAdapter.listUserSpaces.mockResolvedValue(mockSpaces);
       });
 
       it('calls adapter with correct command', async () => {

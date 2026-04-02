@@ -1,11 +1,15 @@
 import React from 'react';
 import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
   PMAvatar,
   PMBox,
+  PMFeatureFlag,
+  PMIconButton,
   PMSeparator,
   PMStatus,
   PMText,
   PMTooltip,
+  SPACE_SETTINGS_FEATURE_KEY,
 } from '@packmind/ui';
 import {
   LuBookCheck,
@@ -13,11 +17,14 @@ import {
   LuGitPullRequestArrow,
   LuHouse,
   LuPackage,
+  LuSlidersHorizontal,
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import { useNavigate } from 'react-router';
 import type { Space } from '@packmind/types';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
 import { SidebarNavigationLink } from '../SidebarNavigation';
 import { useSidebarCollapse } from '../SidebarCollapseContext';
@@ -147,6 +154,9 @@ function ExpandedSpaceNavBlock({
   isSelected,
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
+  const navigate = useNavigate();
+  const { user } = useAuthContext();
+
   return (
     <PMBox>
       {!isActive && (
@@ -160,7 +170,13 @@ function ExpandedSpaceNavBlock({
 
       {isActive && (
         <PMBox mt={1} bg="background.secondary" borderRadius="md" py={1.5}>
-          <PMBox paddingX={3} paddingY={1}>
+          <PMBox
+            paddingX={3}
+            paddingY={1}
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+          >
             <PMText
               fontSize="xs"
               fontWeight="semibold"
@@ -178,6 +194,23 @@ function ExpandedSpaceNavBlock({
               </PMStatus.Root>
               {space.name}
             </PMText>
+            <PMFeatureFlag
+              featureKeys={[SPACE_SETTINGS_FEATURE_KEY]}
+              featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+              userEmail={user?.email}
+            >
+              <PMIconButton
+                aria-label="Space settings"
+                size="2xs"
+                variant="ghost"
+                onClick={() =>
+                  navigate(routes.space.toSettings(orgSlug, space.slug))
+                }
+                data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+              >
+                <LuSlidersHorizontal />
+              </PMIconButton>
+            </PMFeatureFlag>
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>

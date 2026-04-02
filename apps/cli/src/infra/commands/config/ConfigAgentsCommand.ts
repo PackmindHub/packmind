@@ -1,12 +1,15 @@
-import { command } from 'cmd-ts';
+import { command, subcommands } from 'cmd-ts';
 import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
 import { AgentArtifactDetectionService } from '../../../application/services/AgentArtifactDetectionService';
 import { configAgentsHandler } from './configAgentsHandler';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { addAgentsCommand } from './ConfigAgentsAddCommand';
+import { listAgentsCommand } from './ConfigAgentsListCommand';
+import { removeAgentsCommand } from './ConfigAgentsRemoveCommand';
 
-export const configAgentsCommand = command({
-  name: 'agents',
+const configAgentsSetupCommand = command({
+  name: 'setup',
   description: 'Configure which coding agents to generate artifacts for',
   args: {},
   handler: async () => {
@@ -22,5 +25,16 @@ export const configAgentsCommand = command({
       packmindGateway: packmindCliHexa.getPackmindGateway(),
       baseDirectory,
     });
+  },
+});
+
+export const configAgentsCommand = subcommands({
+  name: 'agents',
+  description: 'Manage coding agents configuration',
+  cmds: {
+    setup: configAgentsSetupCommand,
+    add: addAgentsCommand,
+    list: listAgentsCommand,
+    rm: removeAgentsCommand,
   },
 });

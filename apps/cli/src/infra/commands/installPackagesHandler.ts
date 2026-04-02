@@ -32,20 +32,23 @@ async function notifyDistributionIfInGitRepo(params: {
   packages: string[];
   log: (msg: string) => void;
   agents?: CodingAgent[];
+  gitRoot?: string;
 }): Promise<boolean> {
   const { packmindCliHexa, cwd, packages, log, agents } = params;
 
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-  if (!gitRoot) {
+  const resolvedGitRoot =
+    params.gitRoot ?? (await packmindCliHexa.tryGetGitRepositoryRoot(cwd));
+  if (!resolvedGitRoot) {
     return false;
   }
 
   try {
-    const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
-    const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+    const gitRemoteUrl =
+      packmindCliHexa.getGitRemoteUrlFromPath(resolvedGitRoot);
+    const gitBranch = packmindCliHexa.getCurrentBranch(resolvedGitRoot);
 
-    let relativePath = cwd.startsWith(gitRoot)
-      ? cwd.slice(gitRoot.length)
+    let relativePath = cwd.startsWith(resolvedGitRoot)
+      ? cwd.slice(resolvedGitRoot.length)
       : '/';
     if (!relativePath.startsWith('/')) {
       relativePath = '/' + relativePath;
@@ -313,6 +316,31 @@ async function executeInstallForDirectory(
   const normalizedConfigPackages =
     await packmindCliHexa.normalizePackageSlugs(configPackages);
 
+  // Collect git info for distribution history lookup (to detect removed agents)
+  let gitRemoteUrl: string | undefined;
+  let gitBranch: string | undefined;
+  let relativePath: string | undefined;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(directory);
+  if (gitRoot) {
+    try {
+      gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+      gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+
+      relativePath = directory.startsWith(gitRoot)
+        ? directory.slice(gitRoot.length)
+        : '/';
+      if (!relativePath.startsWith('/')) {
+        relativePath = '/' + relativePath;
+      }
+      if (!relativePath.endsWith('/')) {
+        relativePath = relativePath + '/';
+      }
+    } catch {
+      // Git info collection failed, continue without it
+    }
+  }
+
   try {
     // Show fetching message
     const packageCount = normalizedConfigPackages.length;
@@ -327,6 +355,9 @@ async function executeInstallForDirectory(
       baseDirectory: directory,
       packagesSlugs: normalizedConfigPackages,
       previousPackagesSlugs: normalizedConfigPackages, // Pass for consistency
+      gitRemoteUrl,
+      gitBranch,
+      relativePath,
       agents: configAgents, // Pass agents from config if present
     });
 
@@ -379,6 +410,7 @@ async function executeInstallForDirectory(
         log: () => {
           /* empty */
         },
+        gitRoot: gitRoot ?? undefined,
       });
     }
 

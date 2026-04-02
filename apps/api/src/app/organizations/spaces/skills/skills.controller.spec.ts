@@ -1,4 +1,8 @@
-import { BadRequestException, HttpStatus } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -26,6 +30,7 @@ describe('OrganizationsSpacesSkillsController', () => {
       getSkillsBySpace: jest.fn(),
       uploadSkill: jest.fn(),
       deleteSkill: jest.fn(),
+      getLatestVersionNumber: jest.fn(),
     } as unknown as jest.Mocked<SkillsService>;
 
     logger = stubLogger();
@@ -647,6 +652,63 @@ describe('OrganizationsSpacesSkillsController', () => {
         await expect(
           controller.deleteSkill(orgId, spaceId, skillId, request),
         ).rejects.toThrow('Skill not found');
+      });
+    });
+  });
+
+  describe('getSkillLatestVersion', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const skillId = createSkillId('skill-789');
+    const userId = createUserId('user-1');
+
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+    } as unknown as AuthenticatedRequest;
+
+    describe('when service returns a version number', () => {
+      let result: { version: number };
+
+      beforeEach(async () => {
+        skillsService.getLatestVersionNumber.mockResolvedValue(2);
+        result = await controller.getSkillLatestVersion(
+          orgId,
+          spaceId,
+          skillId,
+          request,
+        );
+      });
+
+      it('returns the version number', () => {
+        expect(result).toEqual({ version: 2 });
+      });
+
+      it('calls service with correct params', () => {
+        expect(skillsService.getLatestVersionNumber).toHaveBeenCalledWith({
+          skillId,
+          spaceId,
+          organizationId: orgId,
+          userId,
+        });
+      });
+    });
+
+    describe('when service returns null', () => {
+      it('throws NotFoundException', async () => {
+        skillsService.getLatestVersionNumber.mockResolvedValue(null);
+
+        await expect(
+          controller.getSkillLatestVersion(orgId, spaceId, skillId, request),
+        ).rejects.toThrow(NotFoundException);
       });
     });
   });

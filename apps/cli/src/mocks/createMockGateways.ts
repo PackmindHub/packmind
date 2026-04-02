@@ -43,6 +43,7 @@ export function createMockChangeProposalGateway(
 ): jest.Mocked<IChangeProposalGateway> {
   return {
     batchCreate: jest.fn(),
+    batchApply: jest.fn(),
     check: jest.fn(),
     ...overrides,
   };
@@ -133,6 +134,7 @@ export function createMockDeploymentGateway(
     getContentByVersions: jest.fn(),
     notifyDistribution: jest.fn(),
     getRenderModeConfiguration: jest.fn(),
+    getLatestVersion: jest.fn().mockResolvedValue({ version: 1 }),
     ...overrides,
   };
 }

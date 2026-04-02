@@ -3,10 +3,18 @@
  * This error should be caught and handled gracefully (exit 0 with a message).
  */
 export class CommunityEditionError extends Error {
+  public readonly isCommunityEditionError = true;
+
   constructor(feature: string) {
     super(
       `The "${feature}" feature is not available in Packmind Community Edition.`,
     );
     this.name = 'CommunityEditionError';
   }
+}
+
+export function isCommunityEditionError(
+  tbd: unknown,
+): tbd is CommunityEditionError {
+  return (tbd as CommunityEditionError).isCommunityEditionError;
 }

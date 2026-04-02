@@ -1,4 +1,5 @@
 import {
+  ArtifactType,
   Gateway,
   GetRenderModeConfigurationResult,
   IGetContentByVersionsUseCase,
@@ -114,4 +115,21 @@ export class DeploymentGateway implements IDeploymentGateway {
         `/api/v0/organizations/${organizationId}/deployments/renderModeConfiguration`,
       );
     };
+
+  public async getLatestVersion(
+    type: ArtifactType,
+    id: string,
+    spaceId: string,
+  ): Promise<{ version: number }> {
+    const { organizationId } = this.httpClient.getAuthContext();
+    const typeToPath: Record<ArtifactType, string> = {
+      standard: 'standards',
+      command: 'recipes',
+      skill: 'skills',
+    };
+    const pathSegment = typeToPath[type];
+    return this.httpClient.request<{ version: number }>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/${pathSegment}/${id}/latest-version`,
+    );
+  }
 }

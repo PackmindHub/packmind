@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as yaml from 'yaml';
+import slug from 'slug';
 
 import {
   ApplyPlaybookProposalItem,
@@ -9,7 +10,10 @@ import {
   ChangeProposalType,
   FileModification,
   NewSkillPayload,
+  RecipeId,
+  SkillId,
   SpaceId,
+  StandardId,
   TargetId,
 } from '@packmind/types';
 import { parseSkillMd } from '@packmind/node-utils';
@@ -25,12 +29,15 @@ import {
 import { normalizePath } from '../../../application/utils/pathUtils';
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
 import {
+  formatCommand,
   logConsole,
   logErrorConsole,
+  logInfoConsole,
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
 import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
+import { isCommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
@@ -471,13 +478,13 @@ async function checkForDuplicateNames(
   for (const [, entries] of groups) {
     const seen = new Map<string, string>();
     for (const entry of entries) {
-      const lowerName = entry.artifactName.toLowerCase();
-      if (seen.has(lowerName)) {
+      const sluggedName = slug(entry.artifactName);
+      if (seen.has(sluggedName)) {
         errors.push(
           `A ${entry.artifactType} named "${entry.artifactName}" is staged multiple times. Remove the duplicate with "playbook unstage" or rename the artifact.`,
         );
       } else {
-        seen.set(lowerName, entry.artifactName);
+        seen.set(sluggedName, entry.artifactName);
       }
     }
   }
@@ -505,12 +512,10 @@ async function checkForDuplicateNames(
         existingNames = response.map((s) => s.name);
       }
 
-      const existingNamesLower = new Set(
-        existingNames.map((n) => n.toLowerCase()),
-      );
+      const existingNamesSlugged = new Set(existingNames.map((n) => slug(n)));
 
       for (const entry of entries) {
-        if (existingNamesLower.has(entry.artifactName.toLowerCase())) {
+        if (existingNamesSlugged.has(slug(entry.artifactName))) {
           errors.push(
             `A ${entry.artifactType} named "${entry.artifactName}" already exists in this space. Use "playbook unstage" to remove it or rename the artifact.`,
           );
@@ -522,6 +527,75 @@ async function checkForDuplicateNames(
   }
 
   return errors;
+}
+
+async function fetchAvailablePackageSlugs(
+  packmindCliHexa: PackmindCliHexa,
+  spaceIds: SpaceId[],
+): Promise<string[]> {
+  try {
+    const allSpaces = await packmindCliHexa.getSpaces();
+    const relevantSpaces = allSpaces.filter((s) =>
+      spaceIds.includes(s.id as SpaceId),
+    );
+    const packagesBySpace = await Promise.all(
+      relevantSpaces.map(async (space) => ({
+        space,
+        packages: await packmindCliHexa.listPackages({
+          spaceId: space.id as SpaceId,
+        }),
+      })),
+    );
+    const multipleSpaces = relevantSpaces.length > 1;
+    return packagesBySpace.flatMap(({ space, packages }) =>
+      packages.map((pkg) =>
+        multipleSpaces ? `@${space.slug}/${pkg.slug}` : pkg.slug,
+      ),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function logPackageAddGuidance(
+  created: {
+    standards: Array<{ slug: string }>;
+    commands: Array<{ slug: string }>;
+    skills: Array<{ slug: string }>;
+  },
+  packageSlugs: string[],
+): void {
+  const { standards, commands, skills } = created;
+  const totalCount = standards.length + commands.length + skills.length;
+  if (totalCount === 0) return;
+
+  const pkgPlaceholder =
+    packageSlugs.length === 1 ? packageSlugs[0] : '<package-slug>';
+
+  if (totalCount === 1) {
+    logInfoConsole('To add the created artifact to a package, run:');
+    if (standards.length === 1) {
+      logInfoConsole(
+        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --standard ${standards[0].slug}\``)}`,
+      );
+    } else if (commands.length === 1) {
+      logInfoConsole(
+        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --command ${commands[0].slug}\``)}`,
+      );
+    } else if (skills.length === 1) {
+      logInfoConsole(
+        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --skill ${skills[0].slug}\``)}`,
+      );
+    }
+  } else {
+    logInfoConsole(
+      `To add the created artifacts to a package, use ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --standard <artifact-slug>\``)} for each artifact.`,
+    );
+  }
+
+  if (packageSlugs.length > 1) {
+    logInfoConsole(`  Available packages: ${packageSlugs.join(', ')}`);
+  }
 }
 
 export async function playbookSubmitHandler(
@@ -749,10 +823,8 @@ export async function playbookSubmitHandler(
       (p) => ({
         spaceId: p.spaceId as SpaceId,
         type: p.type,
-        artefactId:
-          p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
+        artefactId: p.artefactId as StandardId | RecipeId | SkillId | null,
         payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
-        captureMode: ChangeProposalCaptureMode.commit,
         targetId: (p.targetId ?? '') as TargetId,
       }),
     );
@@ -763,10 +835,22 @@ export async function playbookSubmitHandler(
       return;
     }
 
-    const response = await packmindGateway.changeProposals.batchApply({
-      proposals: applyProposals,
-      message: resolvedMessage,
-    });
+    let response: Awaited<
+      ReturnType<typeof packmindGateway.changeProposals.batchApply>
+    >;
+    try {
+      response = await packmindGateway.changeProposals.batchApply({
+        proposals: applyProposals,
+        message: resolvedMessage,
+        directUpdate: true,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logErrorConsole(`Failed to apply changes: ${errorMessage}`);
+      exit(1);
+      return;
+    }
 
     if (!response.success) {
       logErrorConsole(`Error: ${response.error.message}`);
@@ -780,19 +864,53 @@ export async function playbookSubmitHandler(
       }
     }
 
-    const parts: string[] = [];
-    const { standards, commands, skills } = response.created;
-    if (standards.length > 0)
-      parts.push(
-        `${standards.length} standard${standards.length !== 1 ? 's' : ''}`,
-      );
-    if (commands.length > 0)
-      parts.push(
-        `${commands.length} command${commands.length !== 1 ? 's' : ''}`,
-      );
-    if (skills.length > 0)
-      parts.push(`${skills.length} skill${skills.length !== 1 ? 's' : ''}`);
-    logSuccessConsole(`${parts.join(', ')} created`);
+    const formatCount = (items: unknown[], noun: string): string | null =>
+      items.length > 0
+        ? `${items.length} ${noun}${items.length !== 1 ? 's' : ''}`
+        : null;
+
+    const collectParts = (counts: {
+      standards: unknown[];
+      commands: unknown[];
+      skills: unknown[];
+    }): string[] =>
+      [
+        formatCount(counts.standards, 'standard'),
+        formatCount(counts.commands, 'command'),
+        formatCount(counts.skills, 'skill'),
+      ].filter((p): p is string => p !== null);
+
+    const createdParts = collectParts(response.created);
+    const updatedParts = collectParts(response.updated);
+
+    const messageParts: string[] = [];
+    if (createdParts.length > 0)
+      messageParts.push(`${createdParts.join(', ')} created`);
+    if (updatedParts.length > 0)
+      messageParts.push(`${updatedParts.join(', ')} updated`);
+    if (messageParts.length > 0) {
+      logSuccessConsole(messageParts.join(', '));
+    } else {
+      logInfoConsole('No changes were applied.');
+    }
+
+    const createTypes = new Set([
+      ChangeProposalType.createStandard,
+      ChangeProposalType.createCommand,
+      ChangeProposalType.createSkill,
+    ]);
+    const createdSpaceIds = [
+      ...new Set(
+        applyProposals
+          .filter((p) => createTypes.has(p.type))
+          .map((p) => p.spaceId),
+      ),
+    ];
+    const packageSlugs = await fetchAvailablePackageSlugs(
+      packmindCliHexa,
+      createdSpaceIds,
+    );
+    logPackageAddGuidance(response.created, packageSlugs);
     exit(0);
     return;
   }
@@ -802,18 +920,33 @@ export async function playbookSubmitHandler(
   let hasErrors = false;
 
   for (const [spaceId, proposals] of proposalsBySpaceId) {
-    const response = await packmindGateway.changeProposals.batchCreate({
-      spaceId: spaceId as SpaceId,
-      proposals: proposals.map((p) => ({
-        type: p.type,
-        artefactId:
-          p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
-        payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
-        captureMode: ChangeProposalCaptureMode.commit,
-        message: resolvedMessage,
-        targetId: (p.targetId ?? '') as TargetId,
-      })),
-    });
+    let response: Awaited<
+      ReturnType<typeof packmindGateway.changeProposals.batchCreate>
+    >;
+    try {
+      response = await packmindGateway.changeProposals.batchCreate({
+        spaceId: spaceId as SpaceId,
+        proposals: proposals.map((p) => ({
+          type: p.type,
+          artefactId:
+            p.artefactId as ChangeProposalArtefactId<ChangeProposalType>,
+          payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
+          captureMode: ChangeProposalCaptureMode.commit,
+          message: resolvedMessage,
+          targetId: (p.targetId ?? '') as TargetId,
+        })),
+      });
+    } catch (error) {
+      if (isCommunityEditionError(error)) {
+        logErrorConsole(error.message);
+        logInfoConsole(
+          `Run ${formatCommand('`packmind-cli playbook submit --no-review`')} to apply changes directly.`,
+        );
+        exit(1);
+        return;
+      }
+      throw error;
+    }
 
     totalCreated += response.created;
     totalSkipped += response.skipped;

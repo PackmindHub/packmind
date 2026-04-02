@@ -54,6 +54,7 @@ describe('playbookAddHandler', () => {
   let mockLockFileRepository: jest.Mocked<ILockFileRepository>;
   let mockGetDeployed: jest.Mock;
   let mockGetContentByVersions: jest.Mock;
+  let mockGetLatestVersion: jest.Mock;
 
   beforeEach(() => {
     // Default fs mocks for resolveSkillDirectoryRoot:
@@ -75,6 +76,8 @@ describe('playbookAddHandler', () => {
       targetId: 'target-456',
       resolvedAgents: [],
     });
+
+    mockGetLatestVersion = jest.fn().mockResolvedValue({ version: 1 });
 
     mockPackmindCliHexa = {
       getDefaultSpace: jest.fn().mockResolvedValue({
@@ -115,6 +118,7 @@ describe('playbookAddHandler', () => {
         deployment: {
           getDeployed: mockGetDeployed,
           getContentByVersions: mockGetContentByVersions,
+          getLatestVersion: mockGetLatestVersion,
         },
       }),
       listCommands: jest.fn().mockResolvedValue([]),
@@ -1037,7 +1041,9 @@ describe('playbookAddHandler', () => {
         buildDeps({ filePath: '.claude/skills/my-skill/SKILL.md' }),
       );
 
-      expect(logInfoConsole).not.toHaveBeenCalled();
+      expect(logInfoConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('Already up to date'),
+      );
     });
   });
 
@@ -2336,6 +2342,184 @@ describe('playbookAddHandler', () => {
       await playbookAddHandler(buildDeps());
 
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when lock file version is outdated', () => {
+    beforeEach(() => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+      (fs.statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
+
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'std-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      });
+      mockGetLatestVersion.mockResolvedValue({ version: 4 });
+    });
+
+    it('logs outdated error with version numbers', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('local: v1, remote: v4'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not stage the change', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when getLatestVersion rejects', () => {
+    beforeEach(() => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+      (fs.statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
+
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'std-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      });
+      mockGetLatestVersion.mockRejectedValue(new Error('Network timeout'));
+    });
+
+    it('logs version check failure message', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to check artifact version'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not stage the change', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when lock file version matches remote', () => {
+    beforeEach(() => {
+      mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
+      (fs.statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
+
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'std-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      });
+      mockGetLatestVersion.mockResolvedValue({ version: 1 });
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/my-standard.md',
+              content:
+                '# Old Standard\n\nOld description.\n\n## Rules\n\n* Old rule',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+    });
+
+    it('stages the change normally', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalled();
     });
   });
 });

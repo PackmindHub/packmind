@@ -8,6 +8,7 @@ import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepos
 import { PlaybookChangeEntry } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { createMockPackmindGateway } from '../../../mocks/createMockGateways';
 import { ChangeProposalType, ChangeProposalCaptureMode } from '@packmind/types';
+import { CommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 
 jest.mock('../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
@@ -15,6 +16,7 @@ jest.mock('../../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logWarningConsole: jest.fn(),
+  formatCommand: (text: string) => text,
 }));
 
 const STANDARD_CONTENT = [
@@ -91,6 +93,19 @@ describe('playbookSubmitHandler', () => {
         .mockReturnValue('git@github.com:org/repo.git'),
       getCurrentBranch: jest.fn().mockReturnValue('main'),
       getPackmindGateway: () => mockGateway,
+      getSpaces: jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'space-123', slug: 'global', name: 'Global' },
+        ]),
+      listPackages: jest.fn().mockResolvedValue([
+        {
+          id: 'pkg-1',
+          slug: 'my-package',
+          name: 'My Package',
+          spaceId: 'space-123',
+        },
+      ]),
     } as unknown as PackmindCliHexa;
 
     mockExit = jest.fn();
@@ -133,6 +148,7 @@ describe('playbookSubmitHandler', () => {
       cwd: '/project',
       exit: mockExit,
       message: undefined,
+      noReview: false,
       openEditor: mockOpenEditor,
       unlinkSync: jest.fn(),
       rmSync: jest.fn(),
@@ -2686,6 +2702,423 @@ describe('playbookSubmitHandler', () => {
 
         expect(mockExit).toHaveBeenCalledWith(1);
       });
+    });
+  });
+
+  describe('when --no-review flag is set', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
+      mockGateway.changeProposals.batchApply.mockResolvedValue({
+        success: true,
+        created: {
+          standards: [{ id: 'std-1', slug: 'my-standard' }],
+          commands: [],
+          skills: [],
+        },
+        updated: {
+          standards: [],
+          commands: [],
+          skills: [],
+        },
+      });
+    });
+
+    it('passes message to batchApply', async () => {
+      await playbookSubmitHandler(
+        buildDeps({ message: 'My commit message', noReview: true }),
+      );
+
+      expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'My commit message' }),
+      );
+    });
+
+    it('passes directUpdate: true to batchApply', async () => {
+      await playbookSubmitHandler(
+        buildDeps({ message: 'My commit message', noReview: true }),
+      );
+
+      expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+        expect.objectContaining({ directUpdate: true }),
+      );
+    });
+
+    it('does not open the editor', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(mockOpenEditor).not.toHaveBeenCalled();
+    });
+
+    describe('when entry has changeType updated', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'updated',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard.md',
+          }),
+        ]);
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/my-standard': {
+              name: 'My Standard',
+              type: 'standard',
+              id: 'std-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/my-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+        mockGateway.deployment.getContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                content:
+                  '# My Standard\n\nOld description.\n\n## Rules\n\n* Old rule',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+      });
+
+      it('calls batchApply with update proposals', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            proposals: expect.arrayContaining([
+              expect.objectContaining({ artefactId: 'std-1' }),
+            ]),
+            directUpdate: true,
+          }),
+        );
+      });
+    });
+
+    it('logs success message', async () => {
+      const { logSuccessConsole } = jest.requireMock(
+        '../../utils/consoleLogger',
+      );
+
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(logSuccessConsole).toHaveBeenCalledWith(
+        expect.stringContaining('created'),
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    describe('when a single standard is created', () => {
+      it('logs the exact packages add command with the standard and package slugs', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('--to my-package --standard my-standard'),
+        );
+      });
+    });
+
+    describe('when multiple packages are available in the space', () => {
+      beforeEach(() => {
+        (mockPackmindCliHexa.listPackages as jest.Mock).mockResolvedValue([
+          {
+            id: 'pkg-1',
+            slug: 'pkg-one',
+            name: 'Pkg One',
+            spaceId: 'space-123',
+          },
+          {
+            id: 'pkg-2',
+            slug: 'pkg-two',
+            name: 'Pkg Two',
+            spaceId: 'space-123',
+          },
+        ]);
+      });
+
+      it('shows available packages', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Available packages: pkg-one, pkg-two'),
+        );
+      });
+    });
+
+    describe('when multiple artifacts are created', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: {
+            standards: [
+              { id: 'std-1', slug: 'standard-one' },
+              { id: 'std-2', slug: 'standard-two' },
+            ],
+            commands: [{ id: 'cmd-1', slug: 'my-command' }],
+            skills: [],
+          },
+          updated: {
+            standards: [],
+            commands: [],
+            skills: [],
+          },
+        });
+      });
+
+      it('logs generic package add guidance', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('packages add'),
+        );
+      });
+    });
+
+    describe('when no artifacts are created (only updates)', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: {
+            standards: [],
+            commands: [],
+            skills: [],
+          },
+          updated: {
+            standards: [],
+            commands: [],
+            skills: [],
+          },
+        });
+      });
+
+      it('does not log package add guidance', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('packages add'),
+        );
+      });
+
+      it('logs fallback message instead of success', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith('No changes were applied.');
+      });
+    });
+
+    describe('when batchApply returns updated artifacts', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: { standards: [], commands: [], skills: [] },
+          updated: {
+            standards: ['std-1'],
+            commands: [],
+            skills: [],
+          },
+        });
+      });
+
+      it('logs updated count in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('updated'),
+        );
+      });
+    });
+
+    describe('when batchApply returns both created and updated artifacts', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: {
+            standards: [{ id: 'std-1', slug: 'my-standard' }],
+            commands: [],
+            skills: [],
+          },
+          updated: {
+            standards: [],
+            commands: ['cmd-1'],
+            skills: [],
+          },
+        });
+      });
+
+      it('logs created in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('created'),
+        );
+      });
+
+      it('logs updated in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('updated'),
+        );
+      });
+    });
+
+    describe('when batchApply returns success: false', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: false,
+          error: { index: 0, type: 'standard', message: 'Duplicate name' },
+        });
+      });
+
+      it('logs the error message', async () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Duplicate name'),
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not remove staged entries', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when batchApply throws a network error', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockRejectedValue(
+          new Error('Network timeout'),
+        );
+      });
+
+      it('logs the error', async () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Network timeout'),
+        );
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not remove staged entries', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when batchApply succeeds', () => {
+      it('removes staged entries', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          makeEntry().filePath,
+          makeEntry().spaceId,
+        );
+      });
+    });
+  });
+
+  describe('when batchCreate throws CommunityEditionError', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
+      mockGateway.changeProposals.batchCreate.mockRejectedValue(
+        new CommunityEditionError('change proposals'),
+      );
+    });
+
+    it('logs error with --no-review hint', async () => {
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
+      await playbookSubmitHandler(
+        buildDeps({ message: 'test', noReview: false }),
+      );
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('--no-review'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookSubmitHandler(
+        buildDeps({ message: 'test', noReview: false }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
 });

@@ -12,6 +12,7 @@ import {
   SpaceId,
   Skill,
   SkillId,
+  SkillVersionId,
   UserId,
 } from '@packmind/types';
 
@@ -372,5 +373,10 @@ export class SkillService {
   async hardDeleteSkill(skillId: SkillId): Promise<void> {
     this.logger.info('Hard deleting skill', { skillId });
     await this.skillRepository.hardDeleteById(skillId);
+  }
+
+  async hardDeleteSkillVersion(versionId: SkillVersionId): Promise<void> {
+    this.logger.info('Hard deleting skill version', { versionId });
+    await this.skillVersionRepository.hardDeleteById(versionId);
   }
 }

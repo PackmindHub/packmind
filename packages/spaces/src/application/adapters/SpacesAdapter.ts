@@ -3,6 +3,8 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
+  AddMembersToSpaceCommand,
+  AddMembersToSpaceResponse,
   CreateSpaceCommand,
   CreateSpaceResponse,
   GetDefaultSpaceCommand,
@@ -10,15 +12,23 @@ import {
   IAccountsPort,
   IAccountsPortName,
   ISpacesPort,
+  ListSpaceMembersCommand,
+  ListSpaceMembersResponse,
   ListUserSpacesCommand,
   ListUserSpacesResponse,
   OrganizationId,
   Space,
   SpaceId,
+  UserId,
+  UserSpaceMembership,
+  UserSpaceRole,
 } from '@packmind/types';
+
 import type { SpacesHexa } from '../../SpacesHexa';
+import { AddMembersToSpaceUseCase } from '../usecases/AddMembersToSpaceUseCase';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
+import { ListSpaceMembersUseCase } from '../usecases/ListSpaceMembersUseCase';
 import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 
 /**
@@ -69,8 +79,8 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   async listUserSpaces(
     command: ListUserSpacesCommand,
   ): Promise<ListUserSpacesResponse> {
-    const spaceService = this.hexa.getSpaceService();
-    const useCase = new ListUserSpacesUseCase(spaceService);
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new ListUserSpacesUseCase(membershipService);
     return useCase.execute(command);
   }
 
@@ -79,6 +89,61 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<GetDefaultSpaceResponse> {
     const spaceService = this.hexa.getSpaceService();
     const useCase = new GetDefaultSpaceUseCase(spaceService, this.accountsPort);
+    return useCase.execute(command);
+  }
+
+  async addMemberToDefaultSpace(
+    userId: UserId,
+    organizationId: OrganizationId,
+    role: UserSpaceRole,
+  ): Promise<UserSpaceMembership> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.addMemberToDefaultSpace(
+      userId,
+      organizationId,
+      role,
+    );
+  }
+
+  async addSpaceMembership(membership: {
+    userId: UserId;
+    spaceId: SpaceId;
+    role: UserSpaceRole;
+  }): Promise<UserSpaceMembership> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.addSpaceMembership(membership);
+  }
+
+  async findMembershipsByUserAndOrganization(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<UserSpaceMembership[]> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.findMembershipsByUserAndOrganization(
+      userId,
+      organizationId,
+    );
+  }
+
+  async listSpaceMembers(
+    command: ListSpaceMembersCommand,
+  ): Promise<ListSpaceMembersResponse> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new ListSpaceMembersUseCase(
+      membershipService,
+      this.accountsPort,
+    );
+    return useCase.execute(command);
+  }
+
+  async addMembersToSpace(
+    command: AddMembersToSpaceCommand,
+  ): Promise<AddMembersToSpaceResponse> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new AddMembersToSpaceUseCase(
+      membershipService,
+      this.accountsPort,
+    );
     return useCase.execute(command);
   }
 
