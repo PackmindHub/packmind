@@ -21,7 +21,7 @@ describeWithUserSignedUp('playbook submit --no-review', (getContext) => {
     );
   });
 
-  describe('when creating now artefacts using `playbook add`command', () => {
+  describe('when creating new artefacts using `playbook add`command', () => {
     let playbookSubmitResult: RunCliResult;
 
     beforeEach(async () => {

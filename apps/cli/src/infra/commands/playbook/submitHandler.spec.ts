@@ -1882,6 +1882,49 @@ describe('playbookSubmitHandler', () => {
 
         expect(mockExit).toHaveBeenCalledWith(0);
       });
+
+      it('logs a warning about affected packages', async () => {
+        const { logWarningConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ message: 'remove cmd' }));
+
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Some changes could not be applied: playbook submit does not allow remove artefacts',
+          ),
+        );
+      });
+
+      it('logs the affected package name', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ message: 'remove cmd' }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('My Package'),
+        );
+      });
+
+      describe('when listPackages returns empty', () => {
+        it('does not log affected packages', async () => {
+          (mockPackmindCliHexa.listPackages as jest.Mock).mockResolvedValue([]);
+          const { logWarningConsole } = jest.requireMock(
+            '../../utils/consoleLogger',
+          );
+
+          await playbookSubmitHandler(buildDeps({ message: 'remove cmd' }));
+
+          expect(logWarningConsole).not.toHaveBeenCalledWith(
+            expect.stringContaining(
+              'Some changes could not be applied: playbook submit does not allow remove artefacts',
+            ),
+          );
+        });
+      });
     });
 
     describe('removed standard', () => {
