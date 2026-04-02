@@ -1,15 +1,12 @@
 import { CodingAgent, PackmindFileConfig } from '@packmind/types';
-import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
+import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
 import {
   logConsole,
   logErrorConsole,
   logSuccessConsole,
   logWarningConsole,
-} from '../../utils/consoleLogger';
-import {
-  AGENT_DISPLAY_NAMES,
-  SELECTABLE_AGENTS,
-} from '../config/configAgentsHandler';
+} from '../../../utils/consoleLogger';
+import { AGENT_DISPLAY_NAMES, SELECTABLE_AGENTS } from '../configAgentsHandler';
 import { getRelativePath, resolveStartDirectory } from './agentsHandlerUtils';
 
 export type RemoveAgentsHandlerArgs = {

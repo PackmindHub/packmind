@@ -18,7 +18,6 @@ import { diffCommand } from './infra/commands/DiffCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
 import { playbookCommand } from './infra/commands/PlaybookCommand';
 import { spacesCommand } from './infra/commands/SpacesCommand';
-import { agentsCommand } from './infra/commands/AgentsCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
 import { initCommand } from './infra/commands/InitCommand';
 import { updateCommand } from './infra/commands/UpdateCommand';
@@ -96,7 +95,6 @@ const app = subcommands({
   name: 'packmind-cli',
   description: 'Packmind CLI tool',
   cmds: {
-    agents: agentsCommand,
     commands: commandsCommand,
     config: configCommand,
     diff: diffCommand,

@@ -1,20 +1,20 @@
 import * as fsPromises from 'fs/promises';
 import { RenderMode } from '@packmind/types';
-import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
-import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
-import { createMockDeploymentGateway } from '../../../mocks/createMockGateways';
+import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
+import { IDeploymentGateway } from '../../../../domain/repositories/IDeploymentGateway';
+import { createMockDeploymentGateway } from '../../../../mocks/createMockGateways';
 import {
   addAgentsHandler,
   AddAgentsHandlerDependencies,
 } from './addAgentsHandler';
-import * as consoleLogger from '../../utils/consoleLogger';
+import * as consoleLogger from '../../../utils/consoleLogger';
 
 jest.mock('fs/promises');
 jest.mock('inquirer', () => ({
   __esModule: true,
   default: { prompt: jest.fn() },
 }));
-jest.mock('../../utils/consoleLogger', () => ({
+jest.mock('../../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logSuccessConsole: jest.fn(),

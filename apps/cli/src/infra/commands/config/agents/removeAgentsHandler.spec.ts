@@ -1,17 +1,17 @@
 import * as fsPromises from 'fs/promises';
-import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
+import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
 import {
   removeAgentsHandler,
   RemoveAgentsHandlerDependencies,
 } from './removeAgentsHandler';
-import * as consoleLogger from '../../utils/consoleLogger';
+import * as consoleLogger from '../../../utils/consoleLogger';
 
 jest.mock('fs/promises');
 jest.mock('inquirer', () => ({
   __esModule: true,
   default: { prompt: jest.fn() },
 }));
-jest.mock('../../utils/consoleLogger', () => ({
+jest.mock('../../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logSuccessConsole: jest.fn(),

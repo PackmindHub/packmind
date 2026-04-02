@@ -10,6 +10,8 @@
 
 ## Changed
 
+- Move `agents list`, `agents add`, and `agents rm` subcommands under `config agents` (now `config agents list`, `config agents add`, `config agents rm`). The previous interactive `config agents` command is now available as `config agents setup`.
+
 ## Fixed
 
 ## Removed

@@ -1,5 +1,5 @@
 import { command, option, restPositionals, string } from 'cmd-ts';
-import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
 import { removeAgentsHandler } from './agents/removeAgentsHandler';
 
 export const removeAgentsCommand = command({

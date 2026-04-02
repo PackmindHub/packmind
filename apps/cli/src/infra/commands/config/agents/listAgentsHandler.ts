@@ -1,12 +1,12 @@
 import { CodingAgent } from '@packmind/types';
-import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
-import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
+import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
+import { IDeploymentGateway } from '../../../../domain/repositories/IDeploymentGateway';
 import {
   logConsole,
   logWarningConsole,
   formatBold,
   formatFilePath,
-} from '../../utils/consoleLogger';
+} from '../../../utils/consoleLogger';
 import {
   fetchOrgDefaultAgents,
   getRelativePath,

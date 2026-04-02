@@ -1,8 +1,8 @@
 import * as readline from 'readline';
 import { command, option, restPositionals, string } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
 import { addAgentsHandler } from './agents/addAgentsHandler';
 
 function createPromptConfirm(): (message: string) => Promise<boolean> {

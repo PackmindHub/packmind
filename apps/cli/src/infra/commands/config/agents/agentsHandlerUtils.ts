@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
-import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
-import { logErrorConsole } from '../../utils/consoleLogger';
+import { IDeploymentGateway } from '../../../../domain/repositories/IDeploymentGateway';
+import { logErrorConsole } from '../../../utils/consoleLogger';
 
 export function getRelativePath(dir: string, startDirectory: string): string {
   if (dir === startDirectory) return './packmind.json';

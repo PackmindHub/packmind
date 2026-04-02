@@ -1,7 +1,7 @@
 import { command, option, string } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
 import { listAgentsHandler } from './agents/listAgentsHandler';
 
 export const listAgentsCommand = command({

@@ -1,16 +1,16 @@
 import * as fsPromises from 'fs/promises';
 import { RenderMode } from '@packmind/types';
-import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
-import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
-import { createMockDeploymentGateway } from '../../../mocks/createMockGateways';
+import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
+import { IDeploymentGateway } from '../../../../domain/repositories/IDeploymentGateway';
+import { createMockDeploymentGateway } from '../../../../mocks/createMockGateways';
 import {
   listAgentsHandler,
   ListAgentsHandlerDependencies,
 } from './listAgentsHandler';
-import * as consoleLogger from '../../utils/consoleLogger';
+import * as consoleLogger from '../../../utils/consoleLogger';
 
 jest.mock('fs/promises');
-jest.mock('../../utils/consoleLogger', () => ({
+jest.mock('../../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logWarningConsole: jest.fn(),
@@ -424,9 +424,7 @@ describe('listAgentsHandler', () => {
 
         const lines = getLoggedLines();
         const rootLine = lines.find((l) => l.startsWith('./packmind.json'));
-        expect(rootLine).toContain(
-          'packmind.json',
-        );
+        expect(rootLine).toContain('packmind.json');
       });
 
       it('applies org defaults to files without local agents', async () => {
