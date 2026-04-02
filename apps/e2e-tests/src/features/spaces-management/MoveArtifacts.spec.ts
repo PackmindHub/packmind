@@ -93,7 +93,7 @@ test.describe('Move artifacts between spaces', () => {
     const frontendDashboard = await backendDashboard.createSpace('frontend');
 
     // Get space IDs via API
-    const spaces = await packmindApi.listSpaces();
+    const { spaces } = await packmindApi.listSpaces({});
     const backendSpace = spaces.find((s) => s.name === 'backend');
     const frontendSpace = spaces.find((s) => s.name === 'frontend');
 
