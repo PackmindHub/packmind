@@ -412,21 +412,22 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
 
-      - name: Install latest production CLI from npm
-        run: |
-          npm install -g @packmind/cli
-          echo "Installed CLI version: $(packmind-cli --version)"
-          CLI_BINARY_PATH="$(npm root -g)/@packmind/cli/main.cjs"
-          echo "CLI binary path: ${CLI_BINARY_PATH}"
-          ls -la "${CLI_BINARY_PATH}"
-          echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
+      - name: Build CLI locally (required by Nx project graph)
+        run: ./node_modules/.bin/nx run packmind-cli:build
 
       - name: Fix CLI artifacts permissions
         run: |
-          CLI_DIR="$(dirname "${CLI_BINARY_PATH}")"
-          chmod +x "${CLI_BINARY_PATH}" || true
-          chmod -R +r "${CLI_DIR}"
-          ls -la "${CLI_BINARY_PATH}"
+          chmod +x dist/apps/cli/main.cjs || true
+          chmod -R +r dist/apps/cli/
+          ls -la dist/apps/cli/
+
+      - name: Install latest production CLI from npm
+        run: |
+          npm install --no-save @packmind/cli
+          CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli/main.cjs'))")"
+          echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
+          echo "CLI binary path: ${CLI_BINARY_PATH}"
+          echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
 
       - name: Start docker compose for CLI E2E tests (production)
         uses: nick-fields/retry@v3
