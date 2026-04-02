@@ -1,6 +1,5 @@
- 
 const { compilerOptions } = require('../../tsconfig.base.effective.json');
- 
+
 const {
   pathsToModuleNameMapper,
   swcTransformWithDefineFields,

@@ -17,7 +17,6 @@ on:
       - 'release/*'
       - 'release-cli/*'
   pull_request:
-    branches: ['main']
 
 jobs:
   # Stage 1: Build and Test

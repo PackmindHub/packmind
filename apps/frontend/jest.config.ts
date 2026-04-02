@@ -1,7 +1,7 @@
 const { pathsToModuleNameMapper } = require('ts-jest');
 
 // Use require instead of import to avoid TypeScript compilation issues
- 
+
 const { compilerOptions } = require('../../tsconfig.base.effective.json');
 
 module.exports = {
@@ -16,7 +16,6 @@ module.exports = {
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
         useESM: true,
-        isolatedModules: true, // Faster compilation, less type checking
       },
     ],
   },
