@@ -57,24 +57,9 @@ describe('DefaultSkillsDeployer', () => {
         );
       });
 
-      it('deletes packmind-versions/next directory for update-playbook-v2', () => {
-        const deletePaths = result.fileUpdates.delete.map((d) => d.path);
+      it('excludes packmind-update-playbook-v2 (unreleased)', () => {
         expect(
-          deletePaths.some(
-            (p) =>
-              p.includes('packmind-update-playbook-v2') &&
-              p.includes('packmind-versions/next'),
-          ),
-        ).toBe(true);
-      });
-
-      it('excludes packmind-versions/next/apply-changes.md from createOrUpdate', () => {
-        expect(
-          paths.some(
-            (p) =>
-              p.includes('packmind-update-playbook-v2') &&
-              p.includes('packmind-versions/next'),
-          ),
+          paths.some((p) => p.includes('packmind-update-playbook-v2')),
         ).toBe(false);
       });
 
@@ -112,6 +97,12 @@ describe('DefaultSkillsDeployer', () => {
         expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
           true,
         );
+      });
+
+      it('includes packmind-update-playbook-v2', () => {
+        expect(
+          paths.some((p) => p.includes('packmind-update-playbook-v2')),
+        ).toBe(true);
       });
 
       it('includes packmind-versions/next/apply-changes.md for update-playbook-v2', () => {

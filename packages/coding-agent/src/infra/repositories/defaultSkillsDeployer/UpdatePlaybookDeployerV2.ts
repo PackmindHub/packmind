@@ -21,7 +21,7 @@ export class UpdatePlaybookDeployerV2
   implements ISkillDeployer
 {
   public readonly slug = 'packmind-update-playbook-v2';
-  protected readonly minimumVersion = '0.23.0';
+  protected readonly minimumVersion = 'unreleased';
 
   deploy(
     agentName: string,
