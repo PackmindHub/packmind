@@ -13,7 +13,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
-describeForVersion('>= 0.24.0', 'playbook add', () => {
+describeForVersion('> 0.24.0', 'playbook add', () => {
   describeWithUserSignedUp('playbook add', (getContext) => {
     let context: UserSignedUpContext;
 
