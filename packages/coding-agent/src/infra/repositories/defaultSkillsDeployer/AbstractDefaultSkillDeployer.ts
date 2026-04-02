@@ -44,7 +44,7 @@ ${skill.getPrompt(agentName)}
     return `Run "packmind-cli --version" to get the current cli installation.
     
 Find the highest version at or below the cli version in this list:
-${versions.join('\n')}.
+${versions.map((v) => `- ${v}`).join('\n')}
 Remember this value as $PACKMIND_CLI_VERSION for the rest of the skill.
 `;
   }
