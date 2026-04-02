@@ -33,7 +33,7 @@ type FileAgentConfig = {
 };
 
 const SOURCE_LABELS: Record<AgentSource, string> = {
-  local: 'local (`agents` property in packmind.json)',
+  local: 'packmind.json',
   organization: 'Organization settings',
 };
 
@@ -49,7 +49,7 @@ function formatMatrix(
   const header =
     ''.padEnd(pathColumnWidth) +
     agents.map((a) => formatBold(a.padEnd(columnWidth))).join('') +
-    formatBold('source');
+    formatBold('source (packmind.json or Organization settings)');
   lines.push(header);
 
   for (const file of files) {

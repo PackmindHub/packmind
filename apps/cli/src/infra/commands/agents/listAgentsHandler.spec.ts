@@ -101,7 +101,7 @@ describe('listAgentsHandler', () => {
           l.includes('claude') &&
           l.includes('copilot') &&
           l.includes('cursor') &&
-          l.includes('source'),
+          l.includes('source (packmind.json or Organization settings)'),
       );
       expect(headerLine).toBeDefined();
     });
@@ -159,7 +159,7 @@ describe('listAgentsHandler', () => {
 
       const lines = getLoggedLines();
       const rootLine = lines.find((l) => l.startsWith('./packmind.json'));
-      expect(rootLine).toContain('local (`agents` property in packmind.json)');
+      expect(rootLine).toContain('packmind.json');
     });
 
     it('shows organization source label for files without local agents', async () => {
@@ -425,7 +425,7 @@ describe('listAgentsHandler', () => {
         const lines = getLoggedLines();
         const rootLine = lines.find((l) => l.startsWith('./packmind.json'));
         expect(rootLine).toContain(
-          'local (`agents` property in packmind.json)',
+          'packmind.json',
         );
       });
 
