@@ -9,7 +9,8 @@ import {
 
 export const addSkillCommand = command({
   name: 'add',
-  description: 'Add a skill from a local directory to a Packmind organization',
+  description:
+    '[Deprecated] Add a skill from a local directory to a Packmind organization',
   args: {
     skillPath: positional({
       type: string,

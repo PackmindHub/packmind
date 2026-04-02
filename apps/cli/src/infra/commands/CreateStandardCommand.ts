@@ -9,7 +9,8 @@ import {
 
 export const createStandardCommand = command({
   name: 'create',
-  description: 'Create a coding standard from a playbook JSON file or stdin',
+  description:
+    '[Deprecated] Create a coding standard from a playbook JSON file or stdin',
   args: {
     file: positional({
       displayName: 'file',
