@@ -22,11 +22,14 @@ import {
   createRecipeVersionId,
   createRuleId,
   createSkillId,
+  createSkillFileId,
+  createSkillVersionId,
   createSpaceId,
   createStandardId,
   createStandardVersionId,
   createTargetId,
   createUserId,
+  SkillVersion,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { ApplyPlaybookUseCase } from './ApplyPlaybookUseCase';
@@ -1000,6 +1003,90 @@ describe('ApplyPlaybookUseCase', () => {
 
       it('returns the original error', () => {
         expect(!result.success && result.error.message).toBe('original error');
+      });
+    });
+
+    describe('when submitting a deleteSkillFile proposal', () => {
+      const skillId = createSkillId('existing-skill');
+      const skillVersionId = createSkillVersionId('skill-ver-1');
+      const newSkillVersionId = createSkillVersionId('skill-ver-2');
+      const fileId = createSkillFileId('file-to-delete');
+      const keptFileId = createSkillFileId('kept-file');
+
+      const skillVersion: SkillVersion = {
+        id: skillVersionId,
+        skillId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'A skill',
+        prompt: 'Do things',
+        version: 1,
+        userId,
+      };
+
+      beforeEach(async () => {
+        skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+        skillsPort.getSkillFiles.mockResolvedValue([
+          {
+            id: fileId,
+            skillVersionId,
+            path: 'agents/helper.md',
+            content: 'helper content',
+            permissions: 'rw-r--r--',
+            isBase64: false,
+          },
+          {
+            id: keptFileId,
+            skillVersionId,
+            path: 'SKILL.md',
+            content: 'skill content',
+            permissions: 'rw-r--r--',
+            isBase64: false,
+          },
+        ]);
+        skillsPort.saveSkillVersion.mockResolvedValue({
+          ...skillVersion,
+          id: newSkillVersionId,
+          version: 2,
+        });
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.deleteSkillFile,
+                artefactId: skillId,
+                payload: {
+                  targetId: fileId,
+                  item: {
+                    id: fileId,
+                    path: 'agents/helper.md',
+                    content: 'helper content',
+                    permissions: 'rw-r--r--',
+                    isBase64: false,
+                  },
+                },
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('includes the skill in updated list', () => {
+        expect(result.success && result.updated.skills).toEqual([skillId]);
+      });
+
+      it('saves a new version without the deleted file', () => {
+        const savedFiles =
+          skillsPort.saveSkillVersion.mock.calls[0][0].skillVersion.files;
+        expect(savedFiles).toEqual([
+          expect.objectContaining({ path: 'SKILL.md' }),
+        ]);
       });
     });
   });
