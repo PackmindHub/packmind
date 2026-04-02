@@ -8,7 +8,9 @@ import {
 if (isProductionMode()) {
   const cliPath = process.env['CLI_BINARY_PATH'];
   try {
-    const stdout = execSync(`"${cliPath}" --version`, {
+    const isJsFile = cliPath?.endsWith('.cjs') || cliPath?.endsWith('.js');
+    const cmd = isJsFile ? `node "${cliPath}" --version` : `"${cliPath}" --version`;
+    const stdout = execSync(cmd, {
       encoding: 'utf-8',
     });
     const match = stdout.match(/version\s+([\d.]+(?:-[\w.]+)?)/);

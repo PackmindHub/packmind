@@ -18,7 +18,12 @@ export function matchesVersionConstraint(range: string): boolean {
   if (!isProductionMode()) return true;
 
   const version = getCliVersion();
-  if (!version) return true;
+  if (!version) {
+    throw new Error(
+      '[cli-e2e] Production mode: CLI version could not be detected. ' +
+        'Set CLI_BINARY_PATH to a valid binary.',
+    );
+  }
 
   return satisfies(version, range);
 }
