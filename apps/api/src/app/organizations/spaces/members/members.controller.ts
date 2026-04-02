@@ -24,6 +24,7 @@ import {
   CannotRemoveFromDefaultSpaceError,
   CannotRemoveSelfError,
   CannotUpdateOwnRoleError,
+  MemberNotFoundError,
 } from '@packmind/spaces';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceMembersService } from './members.service';
@@ -144,6 +145,9 @@ export class SpaceMembersController {
         throw new ForbiddenException(error.message);
       }
       if (error instanceof CannotUpdateOwnRoleError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof MemberNotFoundError) {
         throw new BadRequestException(error.message);
       }
       throw error;

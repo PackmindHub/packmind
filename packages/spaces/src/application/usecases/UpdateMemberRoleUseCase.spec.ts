@@ -12,6 +12,7 @@ import { organizationFactory } from '@packmind/accounts/test/organizationFactory
 import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
 import { SpaceAdminRequiredError } from '../../domain/errors/SpaceAdminRequiredError';
 import { CannotUpdateOwnRoleError } from '../../domain/errors/CannotUpdateOwnRoleError';
+import { MemberNotFoundError } from '../../domain/errors/MemberNotFoundError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { UpdateMemberRoleUseCase } from './UpdateMemberRoleUseCase';
 
@@ -125,6 +126,32 @@ describe('UpdateMemberRoleUseCase', () => {
         await expect(useCase.execute(buildCommand())).rejects.toThrow(
           SpaceAdminRequiredError,
         );
+      });
+    });
+
+    describe('when the target user is not a space member', () => {
+      beforeEach(() => {
+        membershipService.findMembership
+          .mockResolvedValueOnce(
+            userSpaceMembershipFactory({
+              userId,
+              spaceId,
+              role: UserSpaceRole.ADMIN,
+            }),
+          )
+          .mockResolvedValueOnce(null);
+      });
+
+      it('throws MemberNotFoundError', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow(
+          MemberNotFoundError,
+        );
+      });
+
+      it('does not call updateMembershipRole', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow();
+
+        expect(membershipService.updateMembershipRole).not.toHaveBeenCalled();
       });
     });
 
