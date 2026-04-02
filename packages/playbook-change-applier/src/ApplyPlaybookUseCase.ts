@@ -49,9 +49,6 @@ import { SkillChangesApplier } from './appliers/SkillChangesApplier';
 const origin = 'ApplyPlaybookUseCase';
 
 const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.removeStandard,
-  ChangeProposalType.removeCommand,
-  ChangeProposalType.removeSkill,
   ChangeProposalType.deleteRule,
 ]);
 
@@ -59,6 +56,12 @@ const CREATION_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.createStandard,
   ChangeProposalType.createCommand,
   ChangeProposalType.createSkill,
+]);
+
+const REMOVAL_TYPES = new Set<ChangeProposalType>([
+  ChangeProposalType.removeStandard,
+  ChangeProposalType.removeCommand,
+  ChangeProposalType.removeSkill,
 ]);
 
 type RollbackEntry =
@@ -227,6 +230,8 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       const proposal = proposals[i];
       if (CREATION_TYPES.has(proposal.type)) {
         steps.push({ kind: 'create', proposalIndex: i, proposal });
+      } else if (REMOVAL_TYPES.has(proposal.type)) {
+        // Removal change proposals are ignored
       } else {
         const artefactId = proposal.artefactId as string;
         const existing = updateGroups.get(artefactId);

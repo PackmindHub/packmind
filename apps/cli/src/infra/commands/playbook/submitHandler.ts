@@ -47,6 +47,7 @@ import {
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
+import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -598,6 +599,43 @@ function logPackageAddGuidance(
   }
 }
 
+async function logRemovedPackagesNotification(
+  packmindCliHexa: PackmindCliHexa,
+  packageIds: Set<string>,
+): Promise<void> {
+  if (packageIds.size === 0) return;
+  try {
+    const [allPackages, allSpaces] = await Promise.all([
+      packmindCliHexa.listPackages({}),
+      packmindCliHexa.getSpaces(),
+    ]);
+    const affectedPackages = allPackages.filter((pkg) =>
+      packageIds.has(pkg.id as string),
+    );
+
+    if (affectedPackages.length === 0) return;
+
+    const buildUrl = resolveUrlBuilder((id) => `packages/${id}`);
+    const spaceById = new Map(allSpaces.map((s) => [s.id as string, s]));
+
+    logWarningConsole(
+      'Some changes could not be applied: playbook submit does not allow remove artefacts. Review the following affected packages:',
+    );
+    for (const pkg of affectedPackages) {
+      const space = spaceById.get(pkg.spaceId as string);
+      const spaceSlug = space?.slug ?? '';
+      const url = buildUrl(spaceSlug, pkg.id as string);
+      if (url) {
+        logInfoConsole(`  - ${pkg.name}: ${url}`);
+      } else {
+        logInfoConsole(`  - ${pkg.name}`);
+      }
+    }
+  } catch {
+    // Best effort — don't fail if package info can't be fetched
+  }
+}
+
 export async function playbookSubmitHandler(
   deps: PlaybookSubmitHandlerDependencies,
 ): Promise<void> {
@@ -799,6 +837,21 @@ export async function playbookSubmitHandler(
     return;
   }
 
+  // Collect packageIds from removal proposals for post-submit notification
+  const removalPackageIds = new Set<string>();
+  for (const proposal of allProposals) {
+    if (
+      proposal.type === ChangeProposalType.removeStandard ||
+      proposal.type === ChangeProposalType.removeCommand ||
+      proposal.type === ChangeProposalType.removeSkill
+    ) {
+      const payload = proposal.payload as { packageIds: string[] };
+      for (const id of payload.packageIds) {
+        removalPackageIds.add(id);
+      }
+    }
+  }
+
   // Group file paths by spaceId (for incremental clearing)
   const filePathsBySpaceId = new Map<string, Set<string>>();
   for (const entry of changes) {
@@ -863,6 +916,8 @@ export async function playbookSubmitHandler(
         playbookLocalRepository.removeChange(filePath, spaceId);
       }
     }
+
+    await logRemovedPackagesNotification(packmindCliHexa, removalPackageIds);
 
     const formatCount = (items: unknown[], noun: string): string | null =>
       items.length > 0
@@ -1029,6 +1084,8 @@ export async function playbookSubmitHandler(
     exit(1);
     return;
   }
+
+  await logRemovedPackagesNotification(packmindCliHexa, removalPackageIds);
 
   const parts: string[] = [];
   if (totalCreated > 0) {
