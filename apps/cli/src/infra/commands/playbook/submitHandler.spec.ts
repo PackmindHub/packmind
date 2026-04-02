@@ -1525,6 +1525,59 @@ describe('playbookSubmitHandler', () => {
       });
     });
 
+    describe('when submitting to multiple spaces', () => {
+      describe('when one space fails', () => {
+        beforeEach(() => {
+          mockPlaybookLocalRepository.getChanges.mockReturnValue([
+            makeEntry({ spaceId: 'space-1', spaceName: 'Frontend' }),
+            makeEntry({
+              spaceId: 'space-2',
+              spaceName: 'Backend',
+              filePath: '.packmind/standards/other.md',
+              artifactName: 'Other Standard',
+            }),
+          ]);
+          mockGateway.changeProposals.batchCreate
+            .mockResolvedValueOnce({ created: 1, skipped: 0, errors: [] })
+            .mockResolvedValueOnce({
+              created: 0,
+              skipped: 0,
+              errors: [{ index: 0, message: 'Space quota exceeded' }],
+            });
+        });
+
+        it('reports the failed space by name', async () => {
+          const { logErrorConsole } = jest.requireMock(
+            '../../utils/consoleLogger',
+          );
+
+          await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+          expect(logErrorConsole).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to submit to space 'Backend'"),
+          );
+        });
+
+        it('reports the succeeded space and retry guidance', async () => {
+          const { logWarningConsole } = jest.requireMock(
+            '../../utils/consoleLogger',
+          );
+
+          await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+          expect(logWarningConsole).toHaveBeenCalledWith(
+            expect.stringContaining('Submitted to: Frontend'),
+          );
+        });
+
+        it('exits with code 1', async () => {
+          await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+    });
+
     describe('updated standard without deployed content', () => {
       const LOCAL_STANDARD_CONTENT = [
         '# New Standard Name',

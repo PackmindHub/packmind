@@ -973,9 +973,18 @@ export async function playbookSubmitHandler(
     return;
   }
 
+  const spaceNameById = new Map<string, string>();
+  for (const change of changes) {
+    if (change.spaceName && !spaceNameById.has(change.spaceId)) {
+      spaceNameById.set(change.spaceId, change.spaceName);
+    }
+  }
+  const displaySpace = (id: string) => spaceNameById.get(id) ?? id;
+
   let totalCreated = 0;
   let totalSkipped = 0;
-  let hasErrors = false;
+  const succeededSpaces: string[] = [];
+  const failedSpaces: Array<{ spaceId: string; errors: string[] }> = [];
 
   for (const [spaceId, proposals] of proposalsBySpaceId) {
     let response: Awaited<
@@ -1044,12 +1053,13 @@ export async function playbookSubmitHandler(
           }
         }
       } else {
-        hasErrors = true;
-        for (const error of response.errors) {
-          logErrorConsole(`Error: ${error.message}`);
-        }
+        failedSpaces.push({
+          spaceId,
+          errors: response.errors.map((e) => e.message),
+        });
       }
     } else {
+      succeededSpaces.push(spaceId);
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
       for (const filePath of filePaths) {
         playbookLocalRepository.removeChange(filePath, spaceId);
@@ -1076,13 +1086,17 @@ export async function playbookSubmitHandler(
     }
   }
 
-  if (hasErrors) {
-    if (totalCreated > 0) {
-      logWarningConsole(
-        `Partially submitted: ${totalCreated} succeeded, some failed`,
+  if (failedSpaces.length > 0) {
+    for (const { spaceId, errors } of failedSpaces) {
+      logErrorConsole(
+        `Failed to submit to space '${displaySpace(spaceId)}': ${errors.join(', ')}`,
       );
-    } else {
-      logErrorConsole('Proposals failed to submit');
+    }
+    if (succeededSpaces.length > 0) {
+      logWarningConsole(
+        `Submitted to: ${succeededSpaces.map(displaySpace).join(', ')}. ` +
+          `Run 'packmind playbook submit' again to retry failed spaces.`,
+      );
     }
     exit(1);
     return;
