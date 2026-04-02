@@ -156,10 +156,22 @@ describe('playbookSubmitHandler', () => {
     };
   }
 
+  const {
+    logConsole,
+    logErrorConsole,
+    logInfoConsole,
+    logSuccessConsole,
+    logWarningConsole,
+  } = jest.requireMock('../../utils/consoleLogger') as {
+    logConsole: jest.Mock;
+    logErrorConsole: jest.Mock;
+    logInfoConsole: jest.Mock;
+    logSuccessConsole: jest.Mock;
+    logWarningConsole: jest.Mock;
+  };
+
   describe('when playbook is empty', () => {
     it('logs "Nothing to submit."', async () => {
-      const { logConsole } = jest.requireMock('../../utils/consoleLogger');
-
       await playbookSubmitHandler(buildDeps());
 
       expect(logConsole).toHaveBeenCalledWith('Nothing to submit.');
@@ -233,10 +245,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps());
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -258,10 +266,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps());
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -285,10 +289,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps());
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -1391,10 +1391,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('skips the proposal and warns', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1430,10 +1426,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -1465,10 +1457,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs error', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
         expect(logErrorConsole).toHaveBeenCalled();
@@ -1547,10 +1535,6 @@ describe('playbookSubmitHandler', () => {
         });
 
         it('reports the failed space by name', async () => {
-          const { logErrorConsole } = jest.requireMock(
-            '../../utils/consoleLogger',
-          );
-
           await playbookSubmitHandler(buildDeps({ message: 'test' }));
 
           expect(logErrorConsole).toHaveBeenCalledWith(
@@ -1559,10 +1543,6 @@ describe('playbookSubmitHandler', () => {
         });
 
         it('reports the succeeded space and retry guidance', async () => {
-          const { logWarningConsole } = jest.requireMock(
-            '../../utils/consoleLogger',
-          );
-
           await playbookSubmitHandler(buildDeps({ message: 'test' }));
 
           expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1643,10 +1623,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('warns about missing deployed content', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1655,10 +1631,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('suggests running packmind pull', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1727,10 +1699,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('warns about missing deployed content', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1739,10 +1707,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('suggests running packmind pull', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1813,8 +1777,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs informative message', async () => {
-        const { logConsole } = jest.requireMock('../../utils/consoleLogger');
-
         await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
 
         expect(logConsole).toHaveBeenCalledWith(
@@ -2165,10 +2127,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs a warning about the missing space', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'remove skill' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -2209,10 +2167,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs the error', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'create std' }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -2590,10 +2544,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs warning', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'remove missing' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -2628,10 +2578,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs error mentioning the artifact name', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'test' }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -2640,10 +2586,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs error mentioning playbook unstage', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'test' }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -2910,10 +2852,6 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs success message', async () => {
-      const { logSuccessConsole } = jest.requireMock(
-        '../../utils/consoleLogger',
-      );
-
       await playbookSubmitHandler(buildDeps({ noReview: true }));
 
       expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -2929,10 +2867,6 @@ describe('playbookSubmitHandler', () => {
 
     describe('when a single standard is created', () => {
       it('logs the exact packages add command with the standard and package slugs', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith(
@@ -2960,10 +2894,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('shows available packages', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith(
@@ -2993,10 +2923,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs generic package add guidance', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith(
@@ -3023,10 +2949,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('does not log package add guidance', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).not.toHaveBeenCalledWith(
@@ -3035,10 +2957,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs fallback message instead of success', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith('No changes were applied.');
@@ -3059,10 +2977,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs updated count in success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -3089,10 +3003,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs created in success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -3101,10 +3011,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs updated in success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -3122,10 +3028,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs the error message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -3134,10 +3036,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs recovery guidance', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith(
@@ -3166,10 +3064,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs the error', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -3211,7 +3105,6 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs error with --no-review hint', async () => {
-      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await playbookSubmitHandler(
         buildDeps({ message: 'test', noReview: false }),
       );
