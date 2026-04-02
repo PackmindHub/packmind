@@ -1,6 +1,10 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["@global/generic", "@global/playground"],
+  "packageSlugs": [
+    "@global/generic",
+    "@global/playground",
+    "@global/typescript"
+  ],
   "agents": [
     "agents_md",
     "claude",
@@ -9,7 +13,8 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-03-30T08:35:08.189Z",
+  "installedAt": "2026-04-01T20:54:00.500Z",
+  "targetId": "6a74b53a-55e3-47c2-821a-24b7753d80ac",
   "artifacts": {
     "command:release-app": {
       "name": "Release app",
@@ -345,6 +350,32 @@
         },
         {
           "path": ".cursor/commands/resume-handoff.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:back-end-typescript-clean-code-practices": {
+      "name": "Back-end TypeScript Clean Code Practices",
+      "type": "standard",
+      "id": "2e289137-cf3f-48a7-b6eb-bd2b4abf5caa",
+      "version": 8,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": ["84ca8613-6d7d-4cf5-8038-47b54d05c089"],
+      "files": [
+        {
+          "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-back-end-typescript-clean-code-practices.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-back-end-typescript-clean-code-practices.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-back-end-typescript-clean-code-practices.mdc",
           "agent": "cursor"
         }
       ]
