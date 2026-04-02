@@ -4,7 +4,7 @@ export * from './userFactory';
 export * from './fileHelpers';
 export * from './setupGitRepo';
 export * from './config';
-export * from './versionedTest';
+export * from './describeForVersion';
 export { isProductionMode } from './cliVersion';
 export { PackmindGateway } from './gateways/PackmindGateway';
 export type {

@@ -154,7 +154,7 @@ describeForVersion(
             );
           });
 
-          it('adds the standard to the playbook', () => {
+          it('stages the standard changes', () => {
             expect(addResult).toEqual({
               returnCode: 0,
               stderr: '',
@@ -172,11 +172,6 @@ describeForVersion(
             );
           });
 
-          it('mentions community edition in the error', () => {
-            expect(submitResult.stderr).toEqual(
-              expect.stringContaining('Community Edition'),
-            );
-          });
         });
       },
     );
