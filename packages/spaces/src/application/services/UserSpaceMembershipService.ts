@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   OrganizationId,
+  Space,
   SpaceId,
   UserId,
   UserSpaceMembership,
@@ -76,5 +77,23 @@ export class UserSpaceMembershipService {
       userId,
       organizationId,
     );
+  }
+
+  async findMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<UserSpaceMembership | null> {
+    return this.userSpaceMembershipRepository.findMembership(userId, spaceId);
+  }
+
+  async removeSpaceMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<boolean> {
+    return this.userSpaceMembershipRepository.removeMembership(userId, spaceId);
+  }
+
+  async getSpaceById(spaceId: SpaceId): Promise<Space | null> {
+    return this.spaceRepository.findById(spaceId);
   }
 }
