@@ -73,6 +73,7 @@ describe('CreateSpaceUseCase', () => {
         userId,
         spaceId: createdSpace.id,
         role: UserSpaceRole.ADMIN,
+        createdBy: userId,
       });
     });
 
