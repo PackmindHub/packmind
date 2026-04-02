@@ -152,6 +152,46 @@ describeWithUserSignedUp('install command', (getContext) => {
     });
   });
 
+  describe('when comparing scoped and unscoped slugs', () => {
+    let unscopedResult: RunCliResult;
+    let scopedResult: RunCliResult;
+
+    beforeEach(async () => {
+      fs.mkdirSync(`${context.testDir}/dir-unscoped`, { recursive: true });
+      fs.mkdirSync(`${context.testDir}/dir-scoped`, { recursive: true });
+
+      unscopedResult = await context.runCli(
+        `install ${pkg.slug} --path dir-unscoped`,
+      );
+      scopedResult = await context.runCli(
+        `install @${context.space.slug}/${pkg.slug} --path dir-scoped`,
+      );
+    });
+
+    it('succeeds with unscoped slug', () => {
+      expect(unscopedResult.returnCode).toBe(0);
+    });
+
+    it('succeeds with scoped slug', () => {
+      expect(scopedResult.returnCode).toBe(0);
+    });
+
+    it('normalizes the unscoped slug in packmind.json', () => {
+      const unscopedJson = readFile(
+        'dir-unscoped/packmind.json',
+        context.testDir,
+      );
+
+      expect(unscopedJson).toContain(`@${context.space.slug}/${pkg.slug}`);
+    });
+
+    it('keeps the scoped slug in packmind.json', () => {
+      const scopedJson = readFile('dir-scoped/packmind.json', context.testDir);
+
+      expect(scopedJson).toContain(`@${context.space.slug}/${pkg.slug}`);
+    });
+  });
+
   describe('when using --path to scope recursive install to a subtree', () => {
     beforeEach(async () => {
       // Create packmind.json at root and in a subdirectory

@@ -1,11 +1,16 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { stringify as stringifyYaml } from 'yaml';
+import { v4 as uuidv4 } from 'uuid';
 import {
   ApplyPlaybookCommand,
   ApplyPlaybookProposalItem,
   ApplyPlaybookResponse,
+  ChangeProposal,
+  ChangeProposalCaptureMode,
+  ChangeProposalStatus,
   ChangeProposalType,
+  DiffService,
   IAccountsPort,
   IRecipesPort,
   ISkillsPort,
@@ -15,30 +20,76 @@ import {
   NewSkillPayload,
   NewStandardPayload,
   RecipeId,
+  RecipeVersion,
   SkillId,
+  SkillVersionWithFiles,
   StandardId,
+  StandardVersion,
+  StandardVersionId,
+  RecipeVersionId,
+  SkillVersionId,
+  ApplierObjectVersions,
+  createChangeProposalId,
   createOrganizationId,
   createRecipeId,
   createSkillId,
   createStandardId,
   createUserId,
+  getItemTypeFromChangeProposalType,
   UploadSkillFileInput,
   CAMEL_TO_YAML_KEY,
   camelToKebab,
   sortAdditionalPropertiesKeys,
 } from '@packmind/types';
+import { IChangesProposalApplier } from './appliers/IChangesProposalApplier';
+import { StandardChangesApplier } from './appliers/StandardChangesApplier';
+import { CommandChangesApplier } from './appliers/CommandChangesApplier';
+import { SkillChangesApplier } from './appliers/SkillChangesApplier';
 
 const origin = 'ApplyPlaybookUseCase';
 
-type CreatedArtifact =
-  | { type: 'standard'; id: StandardId; slug: string }
-  | { type: 'recipe'; id: RecipeId; slug: string }
-  | { type: 'skill'; id: SkillId; slug: string };
+const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([
+  ChangeProposalType.removeStandard,
+  ChangeProposalType.removeCommand,
+  ChangeProposalType.removeSkill,
+  ChangeProposalType.deleteRule,
+  ChangeProposalType.deleteSkillFile,
+]);
+
+const CREATION_TYPES = new Set<ChangeProposalType>([
+  ChangeProposalType.createStandard,
+  ChangeProposalType.createCommand,
+  ChangeProposalType.createSkill,
+]);
+
+type RollbackEntry =
+  | { action: 'created'; type: 'standard' | 'recipe' | 'skill'; id: string }
+  | {
+      action: 'updated';
+      type: 'standard' | 'recipe' | 'skill';
+      newVersionId: string;
+    };
+
+type ExecutionStep =
+  | {
+      kind: 'create';
+      proposalIndex: number;
+      proposal: ApplyPlaybookProposalItem;
+    }
+  | {
+      kind: 'update';
+      firstIndex: number;
+      artefactId: string;
+      itemType: 'standard' | 'command' | 'skill';
+      proposals: ApplyPlaybookProposalItem[];
+    };
 
 export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
   ApplyPlaybookCommand,
   ApplyPlaybookResponse
 > {
+  private readonly diffService = new DiffService();
+
   constructor(
     accountsPort: IAccountsPort,
     private readonly skillsPort: ISkillsPort,
@@ -53,7 +104,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
   async executeForMembers(
     command: ApplyPlaybookCommand & MemberContext,
   ): Promise<ApplyPlaybookResponse> {
-    const { proposals, userId, organizationId } = command;
+    const { proposals, userId, organizationId, directUpdate } = command;
 
     const validationError = await this.validateSpaces(
       proposals,
@@ -63,23 +114,72 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       return validationError;
     }
 
-    const created: CreatedArtifact[] = [];
+    const typeValidationError = this.validateProposalTypes(proposals);
+    if (typeValidationError) {
+      return typeValidationError;
+    }
 
-    for (let i = 0; i < proposals.length; i++) {
+    const steps = this.buildExecutionPlan(proposals);
+    const rollbackEntries: RollbackEntry[] = [];
+    const createdIds: {
+      standards: Array<{ id: StandardId; slug: string }>;
+      commands: Array<{ id: RecipeId; slug: string }>;
+      skills: Array<{ id: SkillId; slug: string }>;
+    } = { standards: [], commands: [], skills: [] };
+    const updatedIds: {
+      standards: StandardId[];
+      commands: RecipeId[];
+      skills: SkillId[];
+    } = { standards: [], commands: [], skills: [] };
+
+    for (const step of steps) {
       try {
-        const artifact = await this.createArtifact(
-          proposals[i],
-          userId,
-          organizationId,
-        );
-        created.push(artifact);
+        if (step.kind === 'create') {
+          const artifact = await this.createArtifact(
+            step.proposal,
+            userId,
+            organizationId,
+            directUpdate,
+          );
+          rollbackEntries.push({
+            action: 'created',
+            type: artifact.type,
+            id: artifact.id,
+          });
+          this.addToIdBucket(
+            createdIds,
+            artifact.type,
+            artifact.id,
+            artifact.slug,
+          );
+        } else {
+          const result = await this.applyUpdateGroup(
+            step,
+            userId,
+            organizationId,
+          );
+          rollbackEntries.push({
+            action: 'updated',
+            type: result.type,
+            newVersionId: result.newVersionId,
+          });
+          this.addToUpdatedBucket(
+            updatedIds,
+            result.type === 'recipe' ? 'recipe' : result.type,
+            step.artefactId,
+          );
+        }
       } catch (error) {
-        await this.rollback(created);
+        const errorIndex =
+          step.kind === 'create' ? step.proposalIndex : step.firstIndex;
+        const errorType =
+          step.kind === 'create' ? step.proposal.type : step.proposals[0].type;
+        await this.rollback(rollbackEntries);
         return {
           success: false,
           error: {
-            index: i,
-            type: proposals[i].type,
+            index: errorIndex,
+            type: errorType,
             message: error instanceof Error ? error.message : String(error),
           },
         };
@@ -88,18 +188,208 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
 
     return {
       success: true,
-      created: {
-        standards: created
-          .filter((a) => a.type === 'standard')
-          .map((a) => ({ id: a.id as StandardId, slug: a.slug })),
-        commands: created
-          .filter((a) => a.type === 'recipe')
-          .map((a) => ({ id: a.id as RecipeId, slug: a.slug })),
-        skills: created
-          .filter((a) => a.type === 'skill')
-          .map((a) => ({ id: a.id as SkillId, slug: a.slug })),
-      },
+      created: createdIds,
+      updated: updatedIds,
     };
+  }
+
+  private validateProposalTypes(
+    proposals: ApplyPlaybookProposalItem[],
+  ): ApplyPlaybookResponse | null {
+    for (let i = 0; i < proposals.length; i++) {
+      if (UNSUPPORTED_TYPES.has(proposals[i].type)) {
+        return {
+          success: false,
+          error: {
+            index: i,
+            type: proposals[i].type,
+            message: `Unsupported proposal type: ${proposals[i].type}`,
+          },
+        };
+      }
+    }
+    return null;
+  }
+
+  private buildExecutionPlan(
+    proposals: ApplyPlaybookProposalItem[],
+  ): ExecutionStep[] {
+    const steps: ExecutionStep[] = [];
+    const updateGroups = new Map<
+      string,
+      {
+        firstIndex: number;
+        itemType: 'standard' | 'command' | 'skill';
+        proposals: ApplyPlaybookProposalItem[];
+      }
+    >();
+
+    for (let i = 0; i < proposals.length; i++) {
+      const proposal = proposals[i];
+      if (CREATION_TYPES.has(proposal.type)) {
+        steps.push({ kind: 'create', proposalIndex: i, proposal });
+      } else {
+        const artefactId = proposal.artefactId as string;
+        const existing = updateGroups.get(artefactId);
+        if (existing) {
+          existing.proposals.push(proposal);
+        } else {
+          updateGroups.set(artefactId, {
+            firstIndex: i,
+            itemType: getItemTypeFromChangeProposalType(proposal.type),
+            proposals: [proposal],
+          });
+        }
+      }
+    }
+
+    for (const [artefactId, group] of updateGroups) {
+      steps.push({
+        kind: 'update',
+        firstIndex: group.firstIndex,
+        artefactId,
+        itemType: group.itemType,
+        proposals: group.proposals,
+      });
+    }
+
+    steps.sort((a, b) => {
+      const indexA = a.kind === 'create' ? a.proposalIndex : a.firstIndex;
+      const indexB = b.kind === 'create' ? b.proposalIndex : b.firstIndex;
+      return indexA - indexB;
+    });
+
+    return steps;
+  }
+
+  private async applyUpdateGroup(
+    step: Extract<ExecutionStep, { kind: 'update' }>,
+    userId: string,
+    organizationId: string,
+  ): Promise<{ type: 'standard' | 'recipe' | 'skill'; newVersionId: string }> {
+    const applier = this.getApplierForType(step.itemType);
+    const currentVersion = await applier.getVersion(step.artefactId);
+
+    const changeProposals = step.proposals.map((item) =>
+      this.buildChangeProposal(item, userId),
+    );
+
+    const result = applier.applyChangeProposals(
+      currentVersion,
+      changeProposals,
+    );
+
+    const spaceId = step.proposals[0].spaceId;
+    const brandedUserId = createUserId(userId);
+    const brandedOrgId = createOrganizationId(organizationId);
+
+    const savedVersion = await applier.saveNewVersion(
+      result.version,
+      brandedUserId,
+      spaceId,
+      brandedOrgId,
+    );
+
+    return {
+      type: step.itemType === 'command' ? 'recipe' : step.itemType,
+      newVersionId: this.getVersionId(savedVersion, step.itemType),
+    };
+  }
+
+  private getApplierForType(
+    itemType: 'standard' | 'command' | 'skill',
+  ): IChangesProposalApplier<ApplierObjectVersions> {
+    switch (itemType) {
+      case 'standard':
+        return new StandardChangesApplier(this.diffService, this.standardsPort);
+      case 'command':
+        return new CommandChangesApplier(this.diffService, this.recipesPort);
+      case 'skill':
+        return new SkillChangesApplier(this.diffService, this.skillsPort);
+    }
+  }
+
+  private buildChangeProposal(
+    item: ApplyPlaybookProposalItem,
+    userId: string,
+  ): ChangeProposal {
+    return {
+      id: createChangeProposalId(uuidv4()),
+      type: item.type,
+      artefactId: item.artefactId,
+      artefactVersion: 0,
+      spaceId: item.spaceId,
+      targetId: item.targetId,
+      payload: item.payload,
+      captureMode: ChangeProposalCaptureMode.commit,
+      message: '',
+      status: ChangeProposalStatus.pending,
+      decision: null,
+      createdBy: createUserId(userId),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as ChangeProposal;
+  }
+
+  private getVersionId(
+    version: ApplierObjectVersions,
+    itemType: 'standard' | 'command' | 'skill',
+  ): string {
+    switch (itemType) {
+      case 'standard':
+        return (version as StandardVersion).id;
+      case 'command':
+        return (version as RecipeVersion).id;
+      case 'skill':
+        return (version as SkillVersionWithFiles).id;
+    }
+  }
+
+  private addToIdBucket(
+    bucket: {
+      standards: Array<{ id: StandardId; slug: string }>;
+      commands: Array<{ id: RecipeId; slug: string }>;
+      skills: Array<{ id: SkillId; slug: string }>;
+    },
+    type: 'standard' | 'recipe' | 'skill',
+    id: string,
+    slug: string,
+  ): void {
+    switch (type) {
+      case 'standard':
+        bucket.standards.push({ id: id as StandardId, slug });
+        break;
+      case 'recipe':
+        bucket.commands.push({ id: id as RecipeId, slug });
+        break;
+      case 'skill':
+        bucket.skills.push({ id: id as SkillId, slug });
+        break;
+    }
+  }
+
+  private addToUpdatedBucket(
+    bucket: {
+      standards: StandardId[];
+      commands: RecipeId[];
+      skills: SkillId[];
+    },
+    type: 'standard' | 'recipe' | 'skill',
+    id: string,
+  ): void {
+    switch (type) {
+      case 'standard':
+        bucket.standards.push(id as StandardId);
+        break;
+      case 'recipe':
+        bucket.commands.push(id as RecipeId);
+        break;
+      case 'skill':
+        bucket.skills.push(id as SkillId);
+        break;
+    }
   }
 
   private async validateSpaces(
@@ -130,7 +420,12 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     proposal: ApplyPlaybookProposalItem,
     userId: string,
     organizationId: string,
-  ): Promise<CreatedArtifact> {
+    directUpdate?: boolean,
+  ): Promise<{
+    type: 'standard' | 'recipe' | 'skill';
+    id: string;
+    slug: string;
+  }> {
     const brandedUserId = createUserId(userId);
     const brandedOrgId = createOrganizationId(organizationId);
     const source = 'cli' as const;
@@ -144,6 +439,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           source,
           spaceId: proposal.spaceId,
           files: this.buildSkillFiles(payload),
+          ...(directUpdate !== undefined && { directUpdate }),
         });
         return {
           type: 'skill',
@@ -163,6 +459,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           summary: null,
           scope: this.normalizeScope(payload.scope),
           rules: payload.rules.map((r) => ({ content: r.content })),
+          ...(directUpdate !== undefined && { directUpdate }),
         });
         return {
           type: 'standard',
@@ -179,6 +476,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           spaceId: proposal.spaceId,
           name: payload.name,
           content: payload.content,
+          ...(directUpdate !== undefined && { directUpdate }),
         });
         return {
           type: 'recipe',
@@ -191,24 +489,46 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     }
   }
 
-  private async rollback(created: CreatedArtifact[]): Promise<void> {
-    for (const artifact of [...created].reverse()) {
+  private async rollback(entries: RollbackEntry[]): Promise<void> {
+    for (const entry of [...entries].reverse()) {
       try {
-        switch (artifact.type) {
-          case 'skill':
-            await this.skillsPort.hardDeleteSkill(artifact.id);
-            break;
-          case 'standard':
-            await this.standardsPort.hardDeleteStandard(artifact.id);
-            break;
-          case 'recipe':
-            await this.recipesPort.hardDeleteRecipe(artifact.id);
-            break;
+        if (entry.action === 'created') {
+          switch (entry.type) {
+            case 'skill':
+              await this.skillsPort.hardDeleteSkill(entry.id as SkillId);
+              break;
+            case 'standard':
+              await this.standardsPort.hardDeleteStandard(
+                entry.id as StandardId,
+              );
+              break;
+            case 'recipe':
+              await this.recipesPort.hardDeleteRecipe(entry.id as RecipeId);
+              break;
+          }
+        } else {
+          switch (entry.type) {
+            case 'skill':
+              await this.skillsPort.hardDeleteSkillVersion(
+                entry.newVersionId as SkillVersionId,
+              );
+              break;
+            case 'standard':
+              await this.standardsPort.hardDeleteStandardVersion(
+                entry.newVersionId as StandardVersionId,
+              );
+              break;
+            case 'recipe':
+              await this.recipesPort.hardDeleteRecipeVersion(
+                entry.newVersionId as RecipeVersionId,
+              );
+              break;
+          }
         }
       } catch (rollbackError) {
-        this.logger.error('Failed to rollback artifact during playbook apply', {
-          artifactType: artifact.type,
-          artifactId: artifact.id,
+        this.logger.error('Failed to rollback during playbook apply', {
+          action: entry.action,
+          type: entry.type,
           error:
             rollbackError instanceof Error
               ? rollbackError.message

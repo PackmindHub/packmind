@@ -6,6 +6,7 @@ export interface SkillCreatedPayload {
   skillId: SkillId;
   spaceId: SpaceId;
   fileCount: number;
+  directUpdate?: boolean;
 }
 
 export class SkillCreatedEvent extends UserEvent<SkillCreatedPayload> {

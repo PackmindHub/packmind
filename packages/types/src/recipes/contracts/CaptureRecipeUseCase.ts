@@ -18,6 +18,7 @@ export type CaptureRecipeCommand = PackmindCommand & {
   steps?: RecipeStep[];
   // Legacy format (deprecated, for backward compatibility)
   content?: string;
+  directUpdate?: boolean;
 };
 
 export type CaptureRecipeResponse = Recipe;

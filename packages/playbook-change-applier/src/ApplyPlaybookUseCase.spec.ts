@@ -11,15 +11,20 @@ import {
   IStandardsPort,
   Organization,
   Recipe,
+  RecipeVersion,
   Skill,
   Space,
   Standard,
+  StandardVersion,
   User,
   createOrganizationId,
   createRecipeId,
+  createRecipeVersionId,
+  createRuleId,
   createSkillId,
   createSpaceId,
   createStandardId,
+  createStandardVersionId,
   createTargetId,
   createUserId,
 } from '@packmind/types';
@@ -82,6 +87,10 @@ describe('ApplyPlaybookUseCase', () => {
         versionCreated: true,
       }),
       hardDeleteSkill: jest.fn().mockResolvedValue(undefined),
+      hardDeleteSkillVersion: jest.fn().mockResolvedValue(undefined),
+      getLatestSkillVersion: jest.fn(),
+      getSkillFiles: jest.fn().mockResolvedValue([]),
+      saveSkillVersion: jest.fn(),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     standardsPort = {
@@ -90,6 +99,10 @@ describe('ApplyPlaybookUseCase', () => {
         slug: 'my-standard',
       } as Standard),
       hardDeleteStandard: jest.fn().mockResolvedValue(undefined),
+      hardDeleteStandardVersion: jest.fn().mockResolvedValue(undefined),
+      getLatestStandardVersion: jest.fn(),
+      getRulesByStandardId: jest.fn().mockResolvedValue([]),
+      updateStandard: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     recipesPort = {
@@ -98,6 +111,10 @@ describe('ApplyPlaybookUseCase', () => {
         slug: 'my-command',
       } as Recipe),
       hardDeleteRecipe: jest.fn().mockResolvedValue(undefined),
+      hardDeleteRecipeVersion: jest.fn().mockResolvedValue(undefined),
+      getRecipeByIdInternal: jest.fn(),
+      getRecipeVersion: jest.fn(),
+      updateRecipeFromUI: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
     spacesPort = {
@@ -655,6 +672,487 @@ describe('ApplyPlaybookUseCase', () => {
 
       it('does not attempt to create artifacts', () => {
         expect(standardsPort.createStandardWithExamples).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('update proposals', () => {
+    const stdId = createStandardId('existing-std');
+    const stdVersionId = createStandardVersionId('std-ver-1');
+    const newStdVersionId = createStandardVersionId('std-ver-2');
+    const ruleId = createRuleId('rule-1');
+
+    const stdVersion: StandardVersion = {
+      id: stdVersionId,
+      standardId: stdId,
+      name: 'Old Name',
+      slug: 'old-name',
+      description: 'Old desc',
+      version: 1,
+      scope: null,
+      rules: [
+        { id: ruleId, standardVersionId: stdVersionId, content: 'Use const' },
+      ],
+    };
+
+    const newStdVersion: StandardVersion = {
+      ...stdVersion,
+      id: newStdVersionId,
+      name: 'New Name',
+      version: 2,
+    };
+
+    const recipeId = createRecipeId('existing-recipe');
+    const recipeVersionId = createRecipeVersionId('recipe-ver-1');
+    const newRecipeVersionId = createRecipeVersionId('recipe-ver-2');
+
+    const recipe: Recipe = {
+      id: recipeId,
+      name: 'My Command',
+      slug: 'my-command',
+      version: 1,
+      spaceId,
+      organizationId,
+    } as Recipe;
+
+    const recipeVersion: RecipeVersion = {
+      id: recipeVersionId,
+      recipeId,
+      name: 'My Command',
+      slug: 'my-command',
+      content: 'Do this',
+      version: 1,
+      userId,
+    };
+
+    const newRecipeVersion: RecipeVersion = {
+      ...recipeVersion,
+      id: newRecipeVersionId,
+      name: 'New Command',
+      version: 2,
+    };
+
+    describe('when submitting a single update proposal', () => {
+      beforeEach(async () => {
+        standardsPort.getLatestStandardVersion.mockResolvedValue(stdVersion);
+        standardsPort.getRulesByStandardId.mockResolvedValue(
+          stdVersion.rules ?? [],
+        );
+        standardsPort.updateStandard.mockResolvedValue({
+          id: stdId,
+        } as Standard);
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(stdVersion)
+          .mockResolvedValueOnce(newStdVersion);
+        standardsPort.getRulesByStandardId
+          .mockResolvedValueOnce(stdVersion.rules ?? [])
+          .mockResolvedValueOnce(newStdVersion.rules ?? []);
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.updateStandardName,
+                artefactId: stdId,
+                payload: { oldValue: 'Old Name', newValue: 'New Name' },
+                targetId: createTargetId('t-1'),
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('includes the standard in updated list', () => {
+        expect(result.success && result.updated.standards).toEqual([stdId]);
+      });
+
+      it('returns empty created lists', () => {
+        expect(result.success && result.created.standards).toEqual([]);
+      });
+    });
+
+    describe('when submitting multiple updates on the same artifact', () => {
+      beforeEach(async () => {
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(stdVersion)
+          .mockResolvedValueOnce(newStdVersion);
+        standardsPort.getRulesByStandardId
+          .mockResolvedValueOnce(stdVersion.rules ?? [])
+          .mockResolvedValueOnce(newStdVersion.rules ?? []);
+        standardsPort.updateStandard.mockResolvedValue({
+          id: stdId,
+        } as Standard);
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.updateStandardName,
+                artefactId: stdId,
+                payload: { oldValue: 'Old Name', newValue: 'New Name' },
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.updateStandardScope,
+                artefactId: stdId,
+                payload: { oldValue: '', newValue: 'TypeScript' },
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('calls updateStandard only once (grouped)', () => {
+        expect(standardsPort.updateStandard).toHaveBeenCalledTimes(1);
+      });
+
+      it('includes the standard in updated list once', () => {
+        expect(result.success && result.updated.standards).toEqual([stdId]);
+      });
+    });
+
+    describe('when submitting a mixed batch (create + update)', () => {
+      beforeEach(async () => {
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
+        recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+        recipesPort.updateRecipeFromUI.mockResolvedValue({
+          recipe: { ...recipe, version: 2 },
+        });
+        recipesPort.getRecipeVersion
+          .mockResolvedValueOnce(recipeVersion)
+          .mockResolvedValueOnce(newRecipeVersion);
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.createStandard,
+                artefactId: null,
+                payload: {
+                  name: 'new-std',
+                  description: 'desc',
+                  scope: null,
+                  rules: [{ content: 'rule' }],
+                },
+                targetId: createTargetId('t-1'),
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.updateCommandName,
+                artefactId: recipeId,
+                payload: { oldValue: 'My Command', newValue: 'New Command' },
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('has one created standard', () => {
+        expect(result.success && result.created.standards).toHaveLength(1);
+      });
+
+      it('has one updated command', () => {
+        expect(result.success && result.updated.commands).toEqual([recipeId]);
+      });
+    });
+
+    describe('when an update fails after a successful create', () => {
+      beforeEach(async () => {
+        standardsPort.getLatestStandardVersion.mockRejectedValue(
+          new Error('Version not found'),
+        );
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.createSkill,
+                artefactId: null,
+                payload: {
+                  name: 'skill',
+                  description: 'desc',
+                  prompt: 'p',
+                  skillMdPermissions: 'rw-r--r--',
+                },
+                targetId: createTargetId('t-1'),
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.updateStandardName,
+                artefactId: stdId,
+                payload: { oldValue: 'Old', newValue: 'New' },
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('hard-deletes the created skill', () => {
+        expect(skillsPort.hardDeleteSkill).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when a create fails after a successful update', () => {
+      beforeEach(async () => {
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(stdVersion)
+          .mockResolvedValueOnce(newStdVersion);
+        standardsPort.getRulesByStandardId
+          .mockResolvedValueOnce(stdVersion.rules ?? [])
+          .mockResolvedValueOnce(newStdVersion.rules ?? []);
+        standardsPort.updateStandard.mockResolvedValue({
+          id: stdId,
+        } as Standard);
+
+        recipesPort.captureRecipe.mockRejectedValue(new Error('create failed'));
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.updateStandardName,
+                artefactId: stdId,
+                payload: { oldValue: 'Old Name', newValue: 'New Name' },
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.createCommand,
+                artefactId: null,
+                payload: { name: 'cmd', content: 'content' },
+                targetId: createTargetId('t-1'),
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('hard-deletes the new standard version', () => {
+        expect(standardsPort.hardDeleteStandardVersion).toHaveBeenCalledWith(
+          newStdVersionId,
+        );
+      });
+    });
+
+    describe('when rollback of version delete fails', () => {
+      beforeEach(async () => {
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(stdVersion)
+          .mockResolvedValueOnce(newStdVersion);
+        standardsPort.getRulesByStandardId
+          .mockResolvedValueOnce(stdVersion.rules ?? [])
+          .mockResolvedValueOnce(newStdVersion.rules ?? []);
+        standardsPort.updateStandard.mockResolvedValue({
+          id: stdId,
+        } as Standard);
+        standardsPort.hardDeleteStandardVersion.mockRejectedValue(
+          new Error('rollback failed'),
+        );
+
+        recipesPort.captureRecipe.mockRejectedValue(
+          new Error('original error'),
+        );
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.updateStandardName,
+                artefactId: stdId,
+                payload: { oldValue: 'Old Name', newValue: 'New Name' },
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.createCommand,
+                artefactId: null,
+                payload: { name: 'cmd', content: 'content' },
+                targetId: createTargetId('t-1'),
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns the original error', () => {
+        expect(!result.success && result.error.message).toBe('original error');
+      });
+    });
+  });
+
+  describe('unsupported proposal types', () => {
+    describe('when submitting a removal proposal', () => {
+      beforeEach(async () => {
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.removeStandard,
+                artefactId: createStandardId('std-1'),
+                payload: { packageIds: [] },
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('reports unsupported type message', () => {
+        expect(!result.success && result.error.message).toBe(
+          'Unsupported proposal type: removeStandard',
+        );
+      });
+
+      it('reports the correct index', () => {
+        expect(!result.success && result.error.index).toBe(0);
+      });
+    });
+
+    describe('when submitting deleteRule', () => {
+      beforeEach(async () => {
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.deleteRule,
+                artefactId: createStandardId('std-1'),
+                payload: {
+                  targetId: createRuleId('r-1'),
+                  item: { id: createRuleId('r-1'), content: 'rule' },
+                },
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns failure', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('reports unsupported type', () => {
+        expect(!result.success && result.error.type).toBe(
+          ChangeProposalType.deleteRule,
+        );
+      });
+    });
+  });
+
+  describe('directUpdate forwarding', () => {
+    describe('when directUpdate is true', () => {
+      beforeEach(async () => {
+        const command = buildCommand({
+          directUpdate: true,
+          proposals: [
+            {
+              spaceId,
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'skill',
+                description: 'desc',
+                prompt: 'p',
+                skillMdPermissions: 'rw-r--r--',
+              },
+              targetId: createTargetId('target-1'),
+            },
+            {
+              spaceId,
+              type: ChangeProposalType.createStandard,
+              payload: {
+                name: 'std',
+                description: 'desc',
+                scope: null,
+                rules: [{ content: 'rule' }],
+              },
+              targetId: createTargetId('target-1'),
+            },
+            {
+              spaceId,
+              type: ChangeProposalType.createCommand,
+              payload: { name: 'cmd', content: 'content' },
+              targetId: createTargetId('target-1'),
+            },
+          ],
+        });
+
+        result = await useCase.execute(command);
+      });
+
+      it('forwards directUpdate to uploadSkill', () => {
+        expect(skillsPort.uploadSkill.mock.calls[0][0]).toHaveProperty(
+          'directUpdate',
+          true,
+        );
+      });
+
+      it('forwards directUpdate to createStandardWithExamples', () => {
+        expect(
+          standardsPort.createStandardWithExamples.mock.calls[0][0],
+        ).toHaveProperty('directUpdate', true);
+      });
+
+      it('forwards directUpdate to captureRecipe', () => {
+        expect(recipesPort.captureRecipe.mock.calls[0][0]).toHaveProperty(
+          'directUpdate',
+          true,
+        );
+      });
+    });
+
+    describe('when directUpdate is not set', () => {
+      beforeEach(async () => {
+        const command = buildCommand({
+          proposals: [
+            {
+              spaceId,
+              type: ChangeProposalType.createSkill,
+              payload: {
+                name: 'skill',
+                description: 'desc',
+                prompt: 'p',
+                skillMdPermissions: 'rw-r--r--',
+              },
+              targetId: createTargetId('target-1'),
+            },
+          ],
+        });
+
+        result = await useCase.execute(command);
+      });
+
+      it('does not include directUpdate in uploadSkill', () => {
+        expect(skillsPort.uploadSkill.mock.calls[0][0]).not.toHaveProperty(
+          'directUpdate',
+        );
       });
     });
   });

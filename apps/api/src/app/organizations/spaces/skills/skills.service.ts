@@ -19,6 +19,13 @@ import {
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../../shared/HexaInjection';
 
+type GetSkillLatestVersionCommand = {
+  skillId: SkillId;
+  spaceId: SpaceId;
+  organizationId: OrganizationId;
+  userId: UserId;
+};
+
 @Injectable()
 export class SkillsService {
   constructor(
@@ -101,6 +108,15 @@ export class SkillsService {
       userId,
       source,
     });
+  }
+
+  async getLatestVersionNumber(
+    command: GetSkillLatestVersionCommand,
+  ): Promise<number | null> {
+    const adapter = this.skillsHexa.getAdapter();
+    const { skillVersion } =
+      await adapter.getLatestSkillVersionUseCase(command);
+    return skillVersion?.version ?? null;
   }
 
   async getSkillWithFilesById(

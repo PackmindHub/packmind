@@ -28,6 +28,7 @@ export const PMNativeSelect = React.forwardRef<
     backgroundColor = '{colors.background.tertiary}',
     ...rest
   } = props;
+
   return (
     <Select.Root {...rest}>
       <Select.Field

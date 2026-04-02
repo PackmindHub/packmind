@@ -9,7 +9,8 @@ import {
 
 export const createCommandCommand = command({
   name: 'create',
-  description: 'Create a command from a playbook JSON file or stdin',
+  description:
+    '[Deprecated] Create a command from a playbook JSON file or stdin',
   args: {
     file: positional({
       displayName: 'file',

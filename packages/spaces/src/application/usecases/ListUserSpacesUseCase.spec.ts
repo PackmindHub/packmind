@@ -2,9 +2,11 @@ import {
   createOrganizationId,
   createUserId,
   ListUserSpacesCommand,
+  UserSpaceMembership,
+  UserSpaceRole,
 } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
-import { SpaceService } from '../services/SpaceService';
+import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { ListUserSpacesUseCase } from './ListUserSpacesUseCase';
 
 describe('ListUserSpacesUseCase', () => {
@@ -12,7 +14,7 @@ describe('ListUserSpacesUseCase', () => {
   const userId = createUserId('user-id');
 
   let useCase: ListUserSpacesUseCase;
-  let spaceService: jest.Mocked<SpaceService>;
+  let membershipService: jest.Mocked<UserSpaceMembershipService>;
 
   const buildCommand = (
     overrides?: Partial<ListUserSpacesCommand>,
@@ -23,57 +25,96 @@ describe('ListUserSpacesUseCase', () => {
   });
 
   beforeEach(() => {
-    spaceService = {
-      listSpacesByOrganization: jest.fn(),
-    } as unknown as jest.Mocked<SpaceService>;
+    membershipService = {
+      findMembershipsByUserAndOrganization: jest.fn(),
+    } as unknown as jest.Mocked<UserSpaceMembershipService>;
 
-    useCase = new ListUserSpacesUseCase(spaceService);
+    useCase = new ListUserSpacesUseCase(membershipService);
   });
 
   afterEach(() => jest.clearAllMocks());
 
   describe('execute', () => {
-    describe('when the organization has spaces', () => {
+    describe('when user has memberships with spaces', () => {
       const space1 = spaceFactory({ organizationId });
       const space2 = spaceFactory({ organizationId });
+      const memberships: UserSpaceMembership[] = [
+        {
+          userId,
+          spaceId: space1.id,
+          role: UserSpaceRole.MEMBER,
+          space: space1,
+        },
+        {
+          userId,
+          spaceId: space2.id,
+          role: UserSpaceRole.ADMIN,
+          space: space2,
+        },
+      ];
 
       beforeEach(() => {
-        spaceService.listSpacesByOrganization.mockResolvedValue([
-          space1,
-          space2,
-        ]);
+        membershipService.findMembershipsByUserAndOrganization.mockResolvedValue(
+          memberships,
+        );
       });
 
-      it('returns all organization spaces', async () => {
+      it('returns spaces from memberships', async () => {
         const result = await useCase.execute(buildCommand());
 
-        expect(result.spaces).toEqual([space1, space2]);
+        expect(result).toEqual([space1, space2]);
       });
 
-      it('returns an empty discoverableSpaces list', async () => {
-        const result = await useCase.execute(buildCommand());
-
-        expect(result.discoverableSpaces).toEqual([]);
-      });
-
-      it('lists spaces for the correct organization', async () => {
+      it('calls membership service with correct params', async () => {
         await useCase.execute(buildCommand());
 
-        expect(spaceService.listSpacesByOrganization).toHaveBeenCalledWith(
-          organizationId,
-        );
+        expect(
+          membershipService.findMembershipsByUserAndOrganization,
+        ).toHaveBeenCalledWith(userId, organizationId);
       });
     });
 
-    describe('when the organization has no spaces', () => {
+    describe('when user has no memberships', () => {
       beforeEach(() => {
-        spaceService.listSpacesByOrganization.mockResolvedValue([]);
+        membershipService.findMembershipsByUserAndOrganization.mockResolvedValue(
+          [],
+        );
       });
 
       it('returns an empty spaces list', async () => {
         const result = await useCase.execute(buildCommand());
 
-        expect(result.spaces).toEqual([]);
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when memberships have undefined space', () => {
+      const space1 = spaceFactory({ organizationId });
+      const memberships: UserSpaceMembership[] = [
+        {
+          userId,
+          spaceId: space1.id,
+          role: UserSpaceRole.MEMBER,
+          space: space1,
+        },
+        {
+          userId,
+          spaceId: space1.id,
+          role: UserSpaceRole.MEMBER,
+          space: undefined,
+        },
+      ];
+
+      beforeEach(() => {
+        membershipService.findMembershipsByUserAndOrganization.mockResolvedValue(
+          memberships,
+        );
+      });
+
+      it('filters out memberships with undefined space', async () => {
+        const result = await useCase.execute(buildCommand());
+
+        expect(result).toEqual([space1]);
       });
     });
   });

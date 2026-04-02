@@ -9,6 +9,7 @@ import {
   RenderMode,
   StartTrialCommand,
   AnonymousTrialStartedEvent,
+  UserSpaceRole,
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -66,6 +67,7 @@ describe('StartTrialUseCase', () => {
 
     mockSpacesPort = {
       createDefaultSpace: jest.fn(),
+      addMemberToDefaultSpace: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     mockDeploymentPort = {
@@ -128,6 +130,18 @@ describe('StartTrialUseCase', () => {
 
         expect(mockSpacesPort.createDefaultSpace).toHaveBeenCalledWith(
           mockOrganization.id,
+        );
+      });
+
+      it('adds trial user to default space', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        await startTrialUseCase.execute(command);
+
+        expect(mockSpacesPort.addMemberToDefaultSpace).toHaveBeenCalledWith(
+          mockUser.id,
+          mockOrganization.id,
+          UserSpaceRole.ADMIN,
         );
       });
 
@@ -347,53 +361,30 @@ describe('StartTrialUseCase', () => {
       });
     });
 
-    describe('when spacesPort is not provided', () => {
-      let useCaseWithoutSpacesPort: StartTrialUseCase;
-
+    describe('when space membership creation fails', () => {
       beforeEach(() => {
-        useCaseWithoutSpacesPort = new StartTrialUseCase(
-          mockUserService,
-          mockOrganizationService,
-          mockEventEmitterService,
-          undefined,
-          mockDeploymentPort,
-          stubbedLogger,
-        );
-
         mockOrganizationService.createOrganization.mockResolvedValue(
           mockOrganization,
         );
         mockUserService.createUser.mockResolvedValue(mockUser);
+        mockSpacesPort.createDefaultSpace.mockResolvedValue(undefined);
+        mockSpacesPort.addMemberToDefaultSpace.mockRejectedValue(
+          new Error('Membership creation failed'),
+        );
       });
 
-      it('does not call createDefaultSpace', async () => {
+      it('still returns user data', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
-        await useCaseWithoutSpacesPort.execute(command);
-
-        expect(mockSpacesPort.createDefaultSpace).not.toHaveBeenCalled();
-      });
-
-      it('returns user data', async () => {
-        const command: StartTrialCommand = { agent: 'vs-code' };
-
-        const result = await useCaseWithoutSpacesPort.execute(command);
+        const result = await startTrialUseCase.execute(command);
 
         expect(result.user).toEqual(mockUser);
       });
 
-      it('returns organization data', async () => {
+      it('still returns admin role', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
-        const result = await useCaseWithoutSpacesPort.execute(command);
-
-        expect(result.organization).toEqual(mockOrganization);
-      });
-
-      it('returns admin role', async () => {
-        const command: StartTrialCommand = { agent: 'vs-code' };
-
-        const result = await useCaseWithoutSpacesPort.execute(command);
+        const result = await startTrialUseCase.execute(command);
 
         expect(result.role).toBe('admin');
       });

@@ -27,6 +27,7 @@ import {
   QueryOption,
   Recipe,
   RecipeId,
+  RecipeVersionId,
   SpaceId,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
@@ -403,5 +404,12 @@ export class RecipesAdapter
   async hardDeleteRecipe(recipeId: RecipeId): Promise<void> {
     this.logger.info('Hard deleting recipe', { recipeId });
     await this.recipesServices.getRecipeService().hardDeleteRecipe(recipeId);
+  }
+
+  async hardDeleteRecipeVersion(versionId: RecipeVersionId): Promise<void> {
+    this.logger.info('Hard deleting recipe version', { versionId });
+    await this.recipesServices
+      .getRecipeService()
+      .hardDeleteRecipeVersion(versionId);
   }
 }

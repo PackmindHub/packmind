@@ -24,6 +24,7 @@ import {
   Space,
   UserOrganizationMembership,
   SkillUpdatedEvent,
+  SkillCreatedEvent,
 } from '@packmind/types';
 
 describe('UploadSkillUsecase', () => {
@@ -328,6 +329,155 @@ Content`,
           }),
         }),
       );
+    });
+  });
+
+  describe('when directUpdate is provided', () => {
+    it('includes directUpdate in SkillCreatedEvent payload', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: test-skill
+description: A test skill
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+        directUpdate: true,
+      };
+
+      const mockSkill: Skill = {
+        id: createSkillId('skill-123'),
+        name: 'test-skill',
+        slug: 'test-skill',
+        description: 'A test skill',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: mockSkill.id,
+        userId,
+        name: 'test-skill',
+        slug: 'test-skill',
+        description: 'A test skill',
+        prompt: 'Content',
+        version: 1,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([]);
+      mockSkillService.addSkill.mockResolvedValue(mockSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+      await usecase.execute(command);
+
+      const emittedEvent = mockEventEmitterService.emit.mock
+        .calls[0][0] as SkillCreatedEvent;
+      expect(emittedEvent.payload.directUpdate).toBe(true);
+    });
+  });
+
+  describe('when directUpdate is not provided', () => {
+    it('has undefined directUpdate in SkillCreatedEvent payload', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: test-skill
+description: A test skill
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const mockSkill: Skill = {
+        id: createSkillId('skill-123'),
+        name: 'test-skill',
+        slug: 'test-skill',
+        description: 'A test skill',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: mockSkill.id,
+        userId,
+        name: 'test-skill',
+        slug: 'test-skill',
+        description: 'A test skill',
+        prompt: 'Content',
+        version: 1,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([]);
+      mockSkillService.addSkill.mockResolvedValue(mockSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+      await usecase.execute(command);
+
+      const emittedEvent = mockEventEmitterService.emit.mock
+        .calls[0][0] as SkillCreatedEvent;
+      expect(emittedEvent.payload.directUpdate).toBeUndefined();
     });
   });
 

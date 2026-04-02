@@ -1342,6 +1342,91 @@ describe('CreateStandardWithExamplesUsecase', () => {
         });
       });
 
+      describe('when directUpdate is provided', () => {
+        let mockStandard: Standard;
+
+        beforeEach(async () => {
+          const rules: RuleWithExamples[] = [{ content: 'Rule 1' }];
+
+          mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: baseRequest.name,
+          });
+
+          const mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: mockStandard.id,
+            version: 1,
+          });
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue([
+            ruleFactory({
+              id: uuidv4(),
+              standardVersionId: mockStandardVersion.id,
+            }),
+          ]);
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+            directUpdate: true,
+          });
+        });
+
+        it('includes directUpdate in StandardCreatedEvent', () => {
+          const firstCall = eventEmitterService.emit.mock
+            .calls[0][0] as StandardCreatedEvent;
+          expect(firstCall.payload.directUpdate).toBe(true);
+        });
+      });
+
+      describe('when directUpdate is not provided', () => {
+        let mockStandard: Standard;
+
+        beforeEach(async () => {
+          const rules: RuleWithExamples[] = [{ content: 'Rule 1' }];
+
+          mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: baseRequest.name,
+          });
+
+          const mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: mockStandard.id,
+            version: 1,
+          });
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue([
+            ruleFactory({
+              id: uuidv4(),
+              standardVersionId: mockStandardVersion.id,
+            }),
+          ]);
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
+        });
+
+        it('has undefined directUpdate in StandardCreatedEvent', () => {
+          const firstCall = eventEmitterService.emit.mock
+            .calls[0][0] as StandardCreatedEvent;
+          expect(firstCall.payload.directUpdate).toBeUndefined();
+        });
+      });
+
       describe('when standard is created without rules', () => {
         beforeEach(async () => {
           const rules: RuleWithExamples[] = [];

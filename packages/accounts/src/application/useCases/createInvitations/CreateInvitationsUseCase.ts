@@ -6,11 +6,15 @@ import {
   DirectMembershipResult,
   IAccountsPort,
   ICreateInvitationsUseCase,
+  ISpacesPort,
   InvitationCreationResult,
   InvitationSkipResult,
   Organization,
+  OrganizationId,
   User,
+  UserId,
   UserOrganizationRole,
+  UserSpaceRole,
 } from '@packmind/types';
 import validator from 'validator';
 import { InvitationBatchEmptyError } from '../../../domain/errors';
@@ -34,6 +38,7 @@ export class CreateInvitationsUseCase
     accountsPort: IAccountsPort,
     private readonly userService: UserService,
     private readonly invitationService: InvitationService,
+    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -196,6 +201,12 @@ export class CreateInvitationsUseCase
             },
           );
 
+          await this.addMemberToDefaultSpace(
+            userWithMembership.id,
+            organization.id,
+            role,
+          );
+
           directMemberships.push({
             email: candidate.original,
             userId: userWithMembership.id,
@@ -229,6 +240,12 @@ export class CreateInvitationsUseCase
             organization.id,
             role,
           );
+
+          await this.addMemberToDefaultSpace(
+            userWithMembership.id,
+            organization.id,
+            role,
+          );
         }
 
         requests.push({
@@ -251,6 +268,12 @@ export class CreateInvitationsUseCase
           organization.id,
           role,
         );
+
+      await this.addMemberToDefaultSpace(
+        userWithMembership.id,
+        organization.id,
+        role,
+      );
 
       requests.push({
         email: candidate.normalized,
@@ -337,6 +360,32 @@ export class CreateInvitationsUseCase
     }
 
     return results;
+  }
+
+  private async addMemberToDefaultSpace(
+    userId: UserId,
+    organizationId: OrganizationId,
+    role: UserOrganizationRole,
+  ): Promise<void> {
+    try {
+      const spaceRole =
+        role === 'admin' ? UserSpaceRole.ADMIN : UserSpaceRole.MEMBER;
+      await this.spacesPort.addMemberToDefaultSpace(
+        userId,
+        organizationId,
+        spaceRole,
+      );
+      this.logger.info('User added to default space membership successfully', {
+        userId,
+        organizationId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to add user to default space membership', {
+        userId,
+        organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   private buildCreationResults(

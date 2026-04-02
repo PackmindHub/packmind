@@ -38,6 +38,7 @@ import { OrganizationsSpacesStandardsModule } from './organizations/spaces/stand
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/skills.module';
+import { OrganizationsSpacesMembersModule } from './organizations/spaces/members/members.module';
 import {
   OrganizationsSpacesChangeProposalsModule,
   OrganizationsSpacesRecipesChangeProposalsModule,
@@ -241,6 +242,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
               {
                 path: ':spaceId/change-proposals',
                 module: OrganizationsSpacesChangeProposalsModule,
+              },
+              {
+                path: ':spaceId/members',
+                module: OrganizationsSpacesMembersModule,
               },
             ],
           },

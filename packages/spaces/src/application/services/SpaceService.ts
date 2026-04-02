@@ -27,6 +27,7 @@ export class SpaceService {
     name: string,
     organizationId: OrganizationId,
     isDefaultSpace = true,
+    type: SpaceType = SpaceType.open,
   ): Promise<Space> {
     this.logger.info('Creating space', { name, organizationId });
 
@@ -45,7 +46,7 @@ export class SpaceService {
         id: createSpaceId(uuidv4()),
         name,
         slug: baseSlug,
-        type: SpaceType.open,
+        type,
         organizationId,
         isDefaultSpace,
       };

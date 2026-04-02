@@ -2715,6 +2715,101 @@ describe('playbookSubmitHandler', () => {
           commands: [],
           skills: [],
         },
+        updated: {
+          standards: [],
+          commands: [],
+          skills: [],
+        },
+      });
+    });
+
+    it('passes message to batchApply', async () => {
+      await playbookSubmitHandler(
+        buildDeps({ message: 'My commit message', noReview: true }),
+      );
+
+      expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'My commit message' }),
+      );
+    });
+
+    it('passes directUpdate: true to batchApply', async () => {
+      await playbookSubmitHandler(
+        buildDeps({ message: 'My commit message', noReview: true }),
+      );
+
+      expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+        expect.objectContaining({ directUpdate: true }),
+      );
+    });
+
+    it('does not open the editor', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(mockOpenEditor).not.toHaveBeenCalled();
+    });
+
+    describe('when entry has changeType updated', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'updated',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard.md',
+          }),
+        ]);
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/my-standard': {
+              name: 'My Standard',
+              type: 'standard',
+              id: 'std-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/my-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+        mockGateway.deployment.getContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                content:
+                  '# My Standard\n\nOld description.\n\n## Rules\n\n* Old rule',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+      });
+
+      it('calls batchApply with update proposals', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockGateway.changeProposals.batchApply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            proposals: expect.arrayContaining([
+              expect.objectContaining({ artefactId: 'std-1' }),
+            ]),
+            directUpdate: true,
+          }),
+        );
       });
     });
 
@@ -2793,6 +2888,11 @@ describe('playbookSubmitHandler', () => {
             commands: [{ id: 'cmd-1', slug: 'my-command' }],
             skills: [],
           },
+          updated: {
+            standards: [],
+            commands: [],
+            skills: [],
+          },
         });
       });
 
@@ -2818,6 +2918,11 @@ describe('playbookSubmitHandler', () => {
             commands: [],
             skills: [],
           },
+          updated: {
+            standards: [],
+            commands: [],
+            skills: [],
+          },
         });
       });
 
@@ -2830,6 +2935,84 @@ describe('playbookSubmitHandler', () => {
 
         expect(logInfoConsole).not.toHaveBeenCalledWith(
           expect.stringContaining('packages add'),
+        );
+      });
+
+      it('logs fallback message instead of success', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith('No changes were applied.');
+      });
+    });
+
+    describe('when batchApply returns updated artifacts', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: { standards: [], commands: [], skills: [] },
+          updated: {
+            standards: ['std-1'],
+            commands: [],
+            skills: [],
+          },
+        });
+      });
+
+      it('logs updated count in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('updated'),
+        );
+      });
+    });
+
+    describe('when batchApply returns both created and updated artifacts', () => {
+      beforeEach(() => {
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: {
+            standards: [{ id: 'std-1', slug: 'my-standard' }],
+            commands: [],
+            skills: [],
+          },
+          updated: {
+            standards: [],
+            commands: ['cmd-1'],
+            skills: [],
+          },
+        });
+      });
+
+      it('logs created in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('created'),
+        );
+      });
+
+      it('logs updated in success message', async () => {
+        const { logSuccessConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logSuccessConsole).toHaveBeenCalledWith(
+          expect.stringContaining('updated'),
         );
       });
     });
