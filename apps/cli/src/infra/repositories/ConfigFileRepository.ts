@@ -425,6 +425,24 @@ export class ConfigFileRepository implements IConfigFileRepository {
     return this.updateConfig(baseDirectory, 'agents', agents);
   }
 
+  /**
+   * Removes the agents field from packmind.json entirely.
+   * Used when all agents have been removed to avoid writing an empty array.
+   */
+  async deleteAgentsConfig(baseDirectory: string): Promise<void> {
+    const configPath = this.getConfigPath(baseDirectory);
+    const rawContent = await this.tryReadFile(configPath);
+    if (!rawContent) return;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(rawContent);
+    } catch {
+      return;
+    }
+    delete parsed['agents'];
+    await this.writeConfigToPath(configPath, parsed as PackmindFileConfig);
+  }
+
   private async tryReadFile(filePath: string): Promise<string | null> {
     try {
       return await fs.readFile(filePath, 'utf-8');

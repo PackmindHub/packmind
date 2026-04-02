@@ -783,6 +783,57 @@ describe('ConfigFileRepository', () => {
     });
   });
 
+  describe('deleteAgentsConfig', () => {
+    describe('when the file exists with an agents field', () => {
+      beforeEach(() => {
+        mockFs.readFile.mockResolvedValue(
+          JSON.stringify({ packages: { pkg: '*' }, agents: ['claude'] }),
+        );
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('writes the file without the agents key', async () => {
+        await repository.deleteAgentsConfig('/project');
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed).not.toHaveProperty('agents');
+      });
+
+      it('preserves existing packages', async () => {
+        await repository.deleteAgentsConfig('/project');
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.packages).toEqual({ pkg: '*' });
+      });
+    });
+
+    describe('when the file does not exist', () => {
+      beforeEach(() => {
+        mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
+      });
+
+      it('does not call writeFile', async () => {
+        await repository.deleteAgentsConfig('/project');
+
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the file contains malformed JSON', () => {
+      beforeEach(() => {
+        mockFs.readFile.mockResolvedValue('{ invalid json');
+      });
+
+      it('does not call writeFile', async () => {
+        await repository.deleteAgentsConfig('/project');
+
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('findAllConfigsInTree', () => {
     type AllConfigsInTreeResult = Awaited<
       ReturnType<ConfigFileRepository['findAllConfigsInTree']>
