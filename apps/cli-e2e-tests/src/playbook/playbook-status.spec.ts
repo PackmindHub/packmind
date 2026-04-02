@@ -20,13 +20,14 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
 
     beforeEach(async () => {
       // Create a standard via API
-      standard = (await context.gateway.standards.create({
+      const createStandardResponse = await context.gateway.standards.create({
         name: 'My standard',
         description: 'A test standard description.',
         rules: [{ content: 'Always use const' }],
         scope: null,
         spaceId: context.space.id,
-      })) as unknown as Standard;
+      });
+      standard = createStandardResponse.standard;
 
       // Create a package containing the standard
       const createPackageResponse = await context.gateway.packages.create({
@@ -106,13 +107,14 @@ describeWithUserSignedUp('playbook status command', (getContext) => {
 
     beforeEach(async () => {
       // Create a standard and package to establish the project (packmind.json)
-      const bootstrapStandard = (await context.gateway.standards.create({
-        name: 'Existing standard',
-        description: 'Used only to bootstrap the project.',
-        rules: [],
-        scope: null,
-        spaceId: context.space.id,
-      })) as unknown as Standard;
+      const { standard: bootstrapStandard } =
+        await context.gateway.standards.create({
+          name: 'Existing standard',
+          description: 'Used only to bootstrap the project.',
+          rules: [],
+          scope: null,
+          spaceId: context.space.id,
+        });
 
       const createPackageResponse = await context.gateway.packages.create({
         name: 'Bootstrap package',

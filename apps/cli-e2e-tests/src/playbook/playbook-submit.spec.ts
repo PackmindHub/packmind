@@ -20,13 +20,14 @@ describeWithUserSignedUp('playbook submit command', (getContext) => {
 
     beforeEach(async () => {
       // Create a standard via API
-      standard = (await context.gateway.standards.create({
+      const createStandardResponse = await context.gateway.standards.create({
         name: 'My standard',
         description: 'A test standard description.',
         rules: [{ content: 'Always use const' }],
         scope: null,
         spaceId: context.space.id,
-      })) as unknown as Standard;
+      });
+      standard = createStandardResponse.standard;
 
       // Create a package containing the standard
       const createPackageResponse = await context.gateway.packages.create({
