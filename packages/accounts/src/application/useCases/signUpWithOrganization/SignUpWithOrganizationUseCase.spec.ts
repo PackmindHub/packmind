@@ -710,6 +710,7 @@ describe('SignUpWithOrganizationUseCase', () => {
           mockUser.id,
           mockOrganization.id,
           UserSpaceRole.ADMIN,
+          mockUser.id,
         );
       });
 

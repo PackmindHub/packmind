@@ -90,6 +90,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
           createUserId(userId),
           organization.id,
           UserSpaceRole.ADMIN,
+          createUserId(userId),
         );
         this.logger.info(
           'User added to default space membership successfully',

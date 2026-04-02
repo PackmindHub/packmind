@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AddMembersToSpaceCommand,
   AddMembersToSpaceResponse,
+  createUserId,
   IAccountsPort,
   UserSpaceMembership,
 } from '@packmind/types';
@@ -36,6 +37,7 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
           userId: member.userId,
           spaceId: command.spaceId,
           role: member.role,
+          createdBy: createUserId(command.userId),
         });
         createdMemberships.push(membership);
       } catch (error) {
