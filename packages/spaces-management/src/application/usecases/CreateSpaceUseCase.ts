@@ -16,10 +16,12 @@ export class CreateSpaceUseCase {
       type: SpaceType.private,
     });
 
+    const userId = createUserId(command.userId);
     await this.spacesPort.addSpaceMembership({
-      userId: createUserId(command.userId),
+      userId,
       spaceId: space.id,
       role: UserSpaceRole.ADMIN,
+      createdBy: userId,
     });
 
     return space;
