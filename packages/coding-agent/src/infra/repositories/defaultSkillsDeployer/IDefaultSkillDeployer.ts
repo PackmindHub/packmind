@@ -1,5 +1,9 @@
 import { FileUpdates } from '@packmind/types';
 
+export type SkillDeployOptions = {
+  includeNext?: boolean;
+};
+
 export interface ISkillDeployer {
   slug: string;
 
@@ -7,5 +11,9 @@ export interface ISkillDeployer {
 
   isSupportedByCliVersion(cliVersion: string | undefined): boolean;
 
-  deploy(agentName: string, skillsFolderPath: string): FileUpdates;
+  deploy(
+    agentName: string,
+    skillsFolderPath: string,
+    options?: SkillDeployOptions,
+  ): FileUpdates;
 }
