@@ -1,59 +1,104 @@
 export const APPLY_CHANGES_0230 = `# Applying Changes
 
-> **Prerequisite**: Run \`packmind-cli --version\`. If it fails, stop immediately and tell the user: "The Packmind CLI is not available or not working. Please check your installation before proceeding." Do not continue.
+#### Pre-flight: Space Discovery
 
-## Step 1: Write new artifacts
+Before writing any files, discover available spaces:
 
-For each approved **new** artifact, read the corresponding creation procedure from \`references/\`, then write the file(s) at the specified location:
+1. Run \`packmind-cli spaces list\` to see available spaces.
+2. If only **one space** exists, note its slug — the \`--space\` flag is optional for all commands.
+3. If **multiple spaces** exist, note all slugs. The \`--space\` flag is **required** when staging **new** artifacts. For updates to existing artifacts, the space auto-resolves from the lock file.
 
-| Artifact Type | Creation Procedure | Write Path |
-|---|---|---|
-| Standard | [create-standard-procedure.md](../references/create-standard-procedure.md) | \`.packmind/standards/<slug>.md\` |
-| Command | [create-command-procedure.md](../references/create-command-procedure.md) | \`.packmind/commands/<slug>.md\` |
-| Skill | [create-skill-procedure.md](../references/create-skill-procedure.md) | \`<agent-skills-dir>/<skill-name>/SKILL.md\` |
+#### Group Changes by Intent
 
-For skills: check which agent skills directory exists at the project root (\`.claude/skills/\`, \`.cursor/skills/\`, \`.github/skills/\`) — pick the first found in that priority order. If none exist, create \`.claude/skills/\`.
+Before touching any files, group the approved changes into logical **intents** — coherent units of related change that a human reviewer can understand as a single proposal.
 
-After writing each new artifact, run the following commands to submit it as a change proposal:
+**Grouping rules**:
+- Changes that serve the same purpose belong together (e.g., "update authentication patterns" = update auth standard + update auth skill)
+- Unrelated changes get separate intents (e.g., "update auth patterns" and "fix test naming convention" are 2 intents)
+- A single approved change = 1 intent
+- Deprecations (removals) should be their own intent unless tightly coupled with a replacement
 
-  packmind-cli playbook add <path>;
-  packmind-cli playbook submit -m "<description>"\`
-  
-This submits the new artifact. The message must be non-empty and max 1024 characters. If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
+Number the intents and present the grouping to the user:
 
-## Step 2: Preview updates
+\`\`\`
+## Submission Plan
 
-For each approved **update** to an existing artifact, edit the local installed files directly. Search the project root **and all subdirectories** (e.g. \`src/backend/.cursor/skills/\`, \`packages/api/.packmind/standards/\`):
+Intent 1: "<description>" — changes #1, #3
+Intent 2: "<description>" — change #5
+\`\`\`
 
-- **Standards**: \`**/.packmind/standards/<slug>.md\` (source of truth). Installed copies also exist in:
-  - Claude Code: \`**/.claude/rules/packmind/\`
-  - Cursor: \`**/.cursor/rules/packmind/\`
-  - GitHub Copilot: \`**/.github/instructions/packmind-*\`
-- **Commands**: \`**/.packmind/commands/<slug>.md\` (source of truth). Installed copies also exist in:
-  - Claude Code: \`**/.claude/commands/\`
-  - Cursor: \`**/.cursor/commands/\`
-  - GitHub Copilot: \`**/.github/prompts/\`
-- **Skills**: no \`.packmind/\` source — skills live directly in agent directories:
-  - Claude Code: \`**/.claude/skills/<skill-name>/\`
-  - Cursor: \`**/.cursor/skills/<skill-name>/\`
-  - GitHub Copilot: \`**/.github/skills/<skill-name>/\`
+Proceed once the user confirms the grouping, or adjust if they suggest different groupings.
 
-If the same artifact exists in multiple agent directories, edit the one matching the current session context: Claude Code → \`.claude/\`, Cursor → \`.cursor/\`, GitHub Copilot → \`.github/\`. If the context is unclear and multiple directories exist, list them and ask the user which agent directory to update.
+#### For Each Intent (one at a time):
 
-Run \`packmind-cli playbook diff\` and present the output. List all artifacts included in the diff. For each modified artefact, ask the user for submission. If the user validates the artefact change, run:
+##### Step 1: Write or edit artifact files locally
 
-  packmind-cli playbook add <path to file>;
+Edit the files that belong to **your agent** — this lets the user review and test changes in their actual working environment. Do NOT edit files from other agents or the \`.packmind/\` source-of-truth copies. Only edit one copy per artifact; the CLI handles the rest.
 
-## Step 3: Submit updates
+Determine which agent context you are running in. The agent directories are:
+- Claude Code: \`.claude/\`
+- Cursor: \`.cursor/\`
+- GitHub Copilot: \`.github/\`
 
-Run the following command to submit the changes as proposals for human review on Packmind:
- 
- packmind-cli playbook submit -m "<concise summary of all changes>"\`.
- 
-If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
+**Important**: Packmind packages can be installed in subdirectories, not just the repo root. Search for \`**/packmind-lock.json\` across the entire project tree to find all installed locations. Each lock file lists all files per artifact with their agent — use the path matching your agent.
 
-Once submitted, run \`packmind-cli whoami\` and extract the \`Organization:\` field from the output. Construct the review URL as \`https://app.packmind.ai/org/<organization>/space/global/review-changes/\`.
+**For updated artifacts**, find and edit the file at your agent's path. The lock file tells you the exact relative path. Remember that artifacts may live in nested project directories (e.g. \`packages/api/.claude/rules/packmind/\`, \`apps/backend/.claude/commands/\`).
 
-Tell the user: **"✅ Successfully sent to Packmind for review!"**
+**For new artifacts**, write files at the agent-specific location within the directory that contains the relevant \`packmind-lock.json\`:
+
+| Artifact Type | Claude Code | Cursor | GitHub Copilot |
+|---|---|---|---|
+| Standard | \`.claude/rules/packmind/<slug>.md\` | \`.cursor/rules/packmind/<slug>.md\` | \`.github/instructions/packmind-<slug>.md\` |
+| Command | \`.claude/commands/<slug>.md\` | \`.cursor/commands/<slug>.md\` | \`.github/prompts/<slug>.md\` |
+| Skill | \`.claude/skills/<name>/SKILL.md\` | \`.cursor/skills/<name>/SKILL.md\` | \`.github/skills/<name>/SKILL.md\` |
+
+If there are multiple \`packmind-lock.json\` locations and it's unclear where the new artifact should go, ask the user which project directory to target.
+
+**For deprecated artifacts (removal)** — do NOT delete the file yourself. The \`playbook rm\` command handles removal staging. Skip to Step 2.
+
+##### Step 2: Stage changes
+
+For each artifact written or edited in Step 1, stage it with \`playbook add\`:
+
+\`\`\`
+packmind-cli playbook add <path-to-the-file-you-edited>
+\`\`\`
+
+- If the organization has **multiple spaces** and this is a **new** artifact, add the \`--space\` flag: \`packmind-cli playbook add <path> --space <slug>\`
+- For **updates**, the space auto-resolves from the lock file — no \`--space\` needed.
+- For **deprecated artifacts**: run \`packmind-cli playbook rm <path>\` instead.
+
+If any command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
+
+> **Mistake?** If you staged the wrong file, run \`packmind-cli playbook unstage <path>\` to undo it before submitting.
+
+##### Step 3: Review staged changes
+
+Run \`packmind-cli playbook status\` and present the output to the user. Verify:
+- All intended changes for this intent are listed under staged changes
+- No unintended changes are included
+- Artifact types and change types (created/updated/removed) are correct
+
+Ask the user: **"These changes will be submitted as: '<intent description>'. Confirm?"**
+
+**BLOCK** — do not proceed until the user confirms.
+
+##### Step 4: Submit this intent
+
+Run \`packmind-cli playbook submit -m "<intent description>"\` to submit all staged changes as proposals for human review.
+
+The message should be a concise summary of the intent (max 1024 characters). If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
+
+##### Step 5: Report and continue
+
+Tell the user: **"Submitted: '<intent description>'"**
+
+If more intents remain, proceed to the next one (back to Step 1).
+
+#### After All Intents Are Submitted
+
+Once every intent has been submitted, run \`packmind-cli whoami\` and extract the \`Organization:\` field from the output. Construct the review URL as \`https://app.packmind.ai/org/<organization>/review-changes/\`.
+
+Tell the user: **"All change proposals sent to Packmind for review!"**
 Then add in italics: *"Review and accept your change proposals at <constructed-url> — once accepted, changes will be propagated and will replace all local copies."*
 `;
