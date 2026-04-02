@@ -99,7 +99,9 @@ export async function listAgentsHandler(
     return;
   }
 
-  const filesWithoutAgents = fileConfigs.filter((f) => f.agents.length === 0);
+  const filesWithoutAgents = fileConfigs.filter(
+    (f) => f.source === 'organization',
+  );
 
   if (filesWithoutAgents.length > 0 && deps.deploymentGateway) {
     const orgAgents = await fetchOrgDefaultAgents(deps.deploymentGateway);

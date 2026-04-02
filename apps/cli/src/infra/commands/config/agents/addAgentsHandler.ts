@@ -95,7 +95,7 @@ export async function addAgentsHandler(
         `  - Only the agent(s) you add will be configured locally.\n` +
         `  - Organization-level settings will NO LONGER apply to these file(s).\n` +
         `  - Any future changes to organization agents will NOT affect these file(s).\n\n` +
-        `To restore organization settings later, remove all local agents with: packmind-cli agents rm <agent1> <agent2> ...`;
+        `To restore organization settings later, remove all local agents with: packmind-cli config agents rm <agent1> <agent2> ...`;
 
       logWarningConsole(message);
 
