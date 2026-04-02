@@ -32,11 +32,17 @@ const columns: PMTableColumn[] = [
 interface SpaceMembersTableProps {
   members: SpaceMember[];
   currentUserId?: string;
+  isDefaultSpace?: boolean;
+  isSpaceAdmin?: boolean;
+  onRemoveMember?: (memberId: string) => void;
 }
 
 export function SpaceMembersTable({
   members,
   currentUserId,
+  isDefaultSpace,
+  isSpaceAdmin,
+  onRemoveMember,
 }: Readonly<SpaceMembersTableProps>) {
   const data = useMemo<PMTableRow[]>(
     () =>
@@ -70,16 +76,22 @@ export function SpaceMembersTable({
               ]}
             />
           ),
-          actions: isCurrentUser ? null : (
-            <PMButton size="xs" variant="ghost" colorPalette="red">
-              <PMIcon>
-                <LuX />
-              </PMIcon>
-            </PMButton>
-          ),
+          actions:
+            isCurrentUser || isDefaultSpace || !isSpaceAdmin ? null : (
+              <PMButton
+                size="xs"
+                variant="ghost"
+                colorPalette="red"
+                onClick={() => onRemoveMember?.(member.id)}
+              >
+                <PMIcon>
+                  <LuX />
+                </PMIcon>
+              </PMButton>
+            ),
         };
       }),
-    [members, currentUserId],
+    [members, currentUserId, isDefaultSpace, isSpaceAdmin, onRemoveMember],
   );
 
   return (

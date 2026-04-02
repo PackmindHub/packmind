@@ -22,3 +22,7 @@ export type ListSpaceMembersResponse = {
 export type AddMembersToSpaceResponse = {
   memberships: { userId: string; spaceId: string; role: SpaceMemberRole }[];
 };
+
+export type RemoveMemberFromSpaceResponse = {
+  removed: boolean;
+};

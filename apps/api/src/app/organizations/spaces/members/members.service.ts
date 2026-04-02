@@ -4,6 +4,7 @@ import {
   IAccountsPort,
   ISpacesPort,
   OrganizationId,
+  RemoveMemberFromSpaceResponse,
   SpaceId,
   UserId,
   UserSpaceRole,
@@ -74,5 +75,19 @@ export class SpaceMembersService {
         role: m.role,
       })),
     };
+  }
+
+  async removeMemberFromSpace(command: {
+    userId: string;
+    organizationId: OrganizationId;
+    spaceId: SpaceId;
+    targetUserId: UserId;
+  }): Promise<RemoveMemberFromSpaceResponse> {
+    return this.spacesAdapter.removeMemberFromSpace({
+      userId: command.userId,
+      organizationId: command.organizationId,
+      spaceId: command.spaceId,
+      targetUserId: command.targetUserId,
+    });
   }
 }

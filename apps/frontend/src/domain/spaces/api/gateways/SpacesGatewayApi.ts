@@ -4,6 +4,7 @@ import { ISpacesGateway } from './ISpacesGateway';
 import {
   AddMembersToSpaceResponse,
   ListSpaceMembersResponse,
+  RemoveMemberFromSpaceResponse,
   SpaceMemberEntry,
 } from '../../types';
 
@@ -51,6 +52,16 @@ export class SpacesGatewayApi
     return this._api.post<AddMembersToSpaceResponse>(
       `${this._endpoint}/${orgId}/spaces/${spaceId}/members`,
       { members },
+    );
+  }
+
+  async removeMemberFromSpace(
+    orgId: string,
+    spaceId: string,
+    targetUserId: string,
+  ): Promise<RemoveMemberFromSpaceResponse> {
+    return this._api.delete<RemoveMemberFromSpaceResponse>(
+      `${this._endpoint}/${orgId}/spaces/${spaceId}/members/${targetUserId}`,
     );
   }
 }

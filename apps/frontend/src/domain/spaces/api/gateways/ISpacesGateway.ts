@@ -3,6 +3,7 @@ import {
   SpaceMemberEntry,
   ListSpaceMembersResponse,
   AddMembersToSpaceResponse,
+  RemoveMemberFromSpaceResponse,
 } from '../../types';
 
 export interface ISpacesGateway {
@@ -17,4 +18,9 @@ export interface ISpacesGateway {
     spaceId: string,
     members: SpaceMemberEntry[],
   ): Promise<AddMembersToSpaceResponse>;
+  removeMemberFromSpace(
+    orgId: string,
+    spaceId: string,
+    targetUserId: string,
+  ): Promise<RemoveMemberFromSpaceResponse>;
 }

@@ -93,3 +93,28 @@ export const useAddMembersToSpaceMutation = (spaceId: string) => {
     },
   });
 };
+
+export const useRemoveMemberFromSpaceMutation = (spaceId: string) => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async (targetUserId: string) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to remove a member');
+      }
+      return spacesGateway.removeMemberFromSpace(
+        organization.id,
+        spaceId,
+        targetUserId,
+      );
+    },
+    onSuccess: async () => {
+      if (organization?.id) {
+        await queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.members(organization.id, spaceId),
+        });
+      }
+    },
+  });
+};

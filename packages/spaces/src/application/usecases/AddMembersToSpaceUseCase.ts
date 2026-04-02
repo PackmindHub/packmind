@@ -1,5 +1,4 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   AddMembersToSpaceCommand,
   AddMembersToSpaceResponse,
@@ -7,23 +6,27 @@ import {
   UserSpaceMembership,
 } from '@packmind/types';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
+import {
+  AbstractSpaceAdminUseCase,
+  SpaceAdminContext,
+} from './AbstractSpaceAdminUseCase';
 
 const origin = 'AddMembersToSpaceUseCase';
 
-export class AddMembersToSpaceUseCase extends AbstractAdminUseCase<
+export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
   AddMembersToSpaceCommand,
   AddMembersToSpaceResponse
 > {
   constructor(
-    private readonly membershipService: UserSpaceMembershipService,
+    membershipService: UserSpaceMembershipService,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(membershipService, accountsPort, logger);
   }
 
-  protected async executeForAdmins(
-    command: AddMembersToSpaceCommand & AdminContext,
+  protected async executeForSpaceAdmins(
+    command: AddMembersToSpaceCommand & SpaceAdminContext,
   ): Promise<AddMembersToSpaceResponse> {
     const createdMemberships: UserSpaceMembership[] = [];
 
