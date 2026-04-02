@@ -1,6 +1,7 @@
 import {
   describeWithUserSignedUp,
   describeForVersion,
+  RunCliResult,
   setupGitRepo,
   updateFile,
   UserSignedUpContext,
@@ -105,6 +106,73 @@ describeForVersion('> 0.24.0', 'playbook add', () => {
             `Staged "Secret standard" (standard, created) to playbook in space "${context.space.name}".`,
           ),
         });
+      });
+    });
+  });
+});
+
+describeForVersion('0.24.0', 'playbook add and submit for CLI <= 0.24.0', () => {
+  describeWithUserSignedUp('playbook add and submit for CLI <= 0.24.0', (getContext) => {
+    let context: UserSignedUpContext;
+
+    beforeEach(async () => {
+      context = await getContext();
+      await setupGitRepo(context.testDir);
+
+      updateFile(
+        'packmind.json',
+        JSON.stringify({ packages: {} }),
+        context.testDir,
+      );
+
+      fs.mkdirSync(`${context.testDir}/.packmind/standards/`, {
+        recursive: true,
+      });
+    });
+
+    describe('when targeting the default space', () => {
+      let addResult: RunCliResult;
+      let submitResult: RunCliResult;
+
+      beforeEach(async () => {
+        updateFile(
+          '.packmind/standards/default-space-standard.md',
+          '# Default space standard\n\nWith a description:\n\n* rule 1\n* rule 2\n',
+          context.testDir,
+        );
+
+        addResult = await context.runCli(
+          'playbook add .packmind/standards/default-space-standard.md',
+        );
+        submitResult = await context.runCli(
+          'playbook submit -m "Add standard to default space"',
+        );
+      });
+
+      it('adds the standard to the playbook', () => {
+        expect(addResult).toEqual({
+          returnCode: 0,
+          stderr: '',
+          stdout: expect.stringContaining('Staged'),
+        });
+      });
+
+      it('rejects the submit with a community edition error', () => {
+        expect(submitResult.returnCode).toBe(1);
+      });
+
+      it('returns an error message about change proposals not being available', () => {
+        expect(submitResult.stderr).toEqual(
+          expect.stringContaining(
+            'change proposals',
+          ),
+        );
+      });
+
+      it('suggests using --no-review as an alternative', () => {
+        expect(submitResult.stdout).toEqual(
+          expect.stringContaining('--no-review'),
+        );
       });
     });
   });

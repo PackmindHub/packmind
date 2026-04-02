@@ -9,6 +9,7 @@ import {
   ISignUpWithOrganizationUseCase,
   PublicGateway,
   Space,
+  SpaceType,
 } from '@packmind/types';
 import { IChangeProposalGateway } from './gateways/ChangeProposalGateway';
 import { IDeploymentsGateway } from './gateways/DeploymentsGateway';
@@ -21,7 +22,7 @@ export interface IAuthGateway {
 
 export interface ISpaceGateway {
   getGlobal: () => Promise<Space>;
-  create: (params: { name: string }) => Promise<Space>;
+  create: (params: { name: string; type?: SpaceType }) => Promise<Space>;
 }
 
 export interface ICommandGateway {

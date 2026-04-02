@@ -1,4 +1,4 @@
-import { Space } from '@packmind/types';
+import { Space, SpaceType } from '@packmind/types';
 import { ISpaceGateway } from '../IPackmindGateway';
 import { PackmindHttpClient } from './PackmindHttpClient';
 
@@ -12,7 +12,7 @@ export class SpaceGateway implements ISpaceGateway {
     );
   };
 
-  create = async (params: { name: string }): Promise<Space> => {
+  create = async (params: { name: string; type?: SpaceType }): Promise<Space> => {
     const organizationId = this.httpClient.getOrganizationId();
     return this.httpClient.request<Space>(
       `/api/v0/organizations/${organizationId}/spaces-management`,
