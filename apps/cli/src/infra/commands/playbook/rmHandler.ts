@@ -127,7 +127,17 @@ export async function playbookRmHandler(
   }
 
   const allSpaces = await packmindCliHexa.getSpaces();
-  const spaceName = allSpaces.find((s) => s.id === lockEntry.spaceId)?.name;
+  const matchingSpace = allSpaces.find((s) => s.id === lockEntry.spaceId);
+
+  if (!matchingSpace) {
+    logErrorConsole(
+      `Cannot remove this ${lockEntry.type}: the space it belongs to is not available to you`,
+    );
+    exit(1);
+    return;
+  }
+
+  const spaceName = matchingSpace.name;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
   const configDir = gitRoot
