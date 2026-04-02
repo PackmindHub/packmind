@@ -57,7 +57,9 @@ export async function runCli(
   command: string,
   opts?: RunCliOptions,
 ): Promise<RunCliResult> {
-  const cliPath = path.resolve(__dirname, '../../../../dist/apps/cli/main.cjs');
+  const cliPath =
+    process.env['CLI_BINARY_PATH'] ??
+    path.resolve(__dirname, '../../../../dist/apps/cli/main.cjs');
 
   const args = parseCommandArgs(command);
 

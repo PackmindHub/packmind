@@ -1,5 +1,6 @@
 import {
   describeWithUserSignedUp,
+  describeForVersion,
   runCli,
   UserSignedUpContext,
   getPackmindInstanceUrl,
@@ -8,33 +9,35 @@ import {
 import { describeWithTempSpace } from './helpers/describeWithTempSpace';
 
 describe('whoami command', () => {
-  describeWithUserSignedUp('when user is signed in', (getContext) => {
-    let returnCode: number;
-    let stdout: string;
-    let context: UserSignedUpContext;
+  describeForVersion('>=0.1.0', 'when user is signed in', () => {
+    describeWithUserSignedUp('with authenticated context', (getContext) => {
+      let returnCode: number;
+      let stdout: string;
+      let context: UserSignedUpContext;
 
-    beforeEach(async () => {
-      context = await getContext();
-      const result = await context.runCli('whoami');
+      beforeEach(async () => {
+        context = await getContext();
+        const result = await context.runCli('whoami');
 
-      returnCode = result.returnCode;
-      stdout = result.stdout;
-    });
+        returnCode = result.returnCode;
+        stdout = result.stdout;
+      });
 
-    it('succeeds', () => {
-      expect(returnCode).toEqual(0);
-    });
+      it('succeeds', () => {
+        expect(returnCode).toEqual(0);
+      });
 
-    it('shows authenticated status', () => {
-      expect(stdout).toContain('Authenticated');
-    });
+      it('shows authenticated status', () => {
+        expect(stdout).toContain('Authenticated');
+      });
 
-    it('shows user and host information', () => {
-      expect(stdout).toMatchOutput([
-        `Host: ${getPackmindInstanceUrl()}`,
-        `Organization: ${context.organization.name}`,
-        `User: ${context.user.email}`,
-      ]);
+      it('shows user and host information', () => {
+        expect(stdout).toMatchOutput([
+          `Host: ${getPackmindInstanceUrl()}`,
+          `Organization: ${context.organization.name}`,
+          `User: ${context.user.email}`,
+        ]);
+      });
     });
   });
 
