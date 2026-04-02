@@ -151,6 +151,7 @@ describe('CreateOrganizationUseCase', () => {
             userId,
             mockOrganization.id,
             UserSpaceRole.ADMIN,
+            userId,
           );
         });
 

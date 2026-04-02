@@ -93,6 +93,8 @@ describe('UserSpaceMembershipRepository', () => {
       userId,
       spaceId: space.id,
       role: UserSpaceRole.MEMBER,
+      createdBy: userId,
+      updatedBy: userId,
       ...overrides,
     };
     return repository.addMembership(membership);
@@ -109,6 +111,8 @@ describe('UserSpaceMembershipRepository', () => {
           userId,
           spaceId: space.id,
           role: UserSpaceRole.MEMBER,
+          createdBy: userId,
+          updatedBy: userId,
         });
       });
 

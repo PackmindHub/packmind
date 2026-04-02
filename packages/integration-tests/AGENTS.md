@@ -9,7 +9,7 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-## Standard: Integration Tests Structure and Patterns
+# Standard: Integration Tests Structure and Patterns
 
 Standardize Packmind monorepo integration tests in packages/integration-tests/src/**/*.spec.ts using integrationTestWithUser, typed entities from @packmind/types, hexagonal adapter access via testContext.testApp.<domain>Hexa.getAdapter(), Jest spies with proper cleanup, factories, and structured describe/beforeEach patterns to ensure consistent organization, reliable resource management, and comprehensive coverage. :
 * Access domain adapters through testContext.testApp.<domain>Hexa.getAdapter() hexagonal architecture pattern

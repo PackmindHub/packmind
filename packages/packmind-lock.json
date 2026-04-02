@@ -9,7 +9,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-03-30T08:35:10.599Z",
+  "installedAt": "2026-04-01T14:26:27.045Z",
   "artifacts": {
     "command:create-new-package-in-monorepo": {
       "name": "Create New Package",

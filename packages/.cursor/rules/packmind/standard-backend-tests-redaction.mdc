@@ -2,7 +2,7 @@
 globs: **/*.spec.ts
 alwaysApply: false
 ---
-## Standard: Backend Tests Redaction
+# Standard: Backend Tests Redaction
 
 Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :
 * Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values

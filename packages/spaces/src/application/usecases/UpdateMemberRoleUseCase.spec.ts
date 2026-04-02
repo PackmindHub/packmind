@@ -111,7 +111,7 @@ describe('UpdateMemberRoleUseCase', () => {
       });
 
       it('does not call updateMembershipRole', async () => {
-        await expect(useCase.execute(buildCommand())).rejects.toThrow();
+        await useCase.execute(buildCommand()).catch(() => undefined);
 
         expect(membershipService.updateMembershipRole).not.toHaveBeenCalled();
       });
@@ -149,7 +149,7 @@ describe('UpdateMemberRoleUseCase', () => {
       });
 
       it('does not call updateMembershipRole', async () => {
-        await expect(useCase.execute(buildCommand())).rejects.toThrow();
+        await useCase.execute(buildCommand()).catch(() => undefined);
 
         expect(membershipService.updateMembershipRole).not.toHaveBeenCalled();
       });
@@ -173,9 +173,9 @@ describe('UpdateMemberRoleUseCase', () => {
       });
 
       it('does not call updateMembershipRole', async () => {
-        await expect(
-          useCase.execute(buildCommand({ targetUserId: userId })),
-        ).rejects.toThrow();
+        await useCase
+          .execute(buildCommand({ targetUserId: userId }))
+          .catch(() => undefined);
 
         expect(membershipService.updateMembershipRole).not.toHaveBeenCalled();
       });

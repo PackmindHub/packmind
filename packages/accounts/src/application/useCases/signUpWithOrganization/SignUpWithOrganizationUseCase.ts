@@ -174,6 +174,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
         createUserId(user.id),
         organizationId,
         UserSpaceRole.ADMIN,
+        createUserId(user.id),
       );
       this.logger.info('User added to default space membership successfully', {
         userId: user.id,

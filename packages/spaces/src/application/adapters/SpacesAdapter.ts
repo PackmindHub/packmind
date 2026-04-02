@@ -102,12 +102,14 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     userId: UserId,
     organizationId: OrganizationId,
     role: UserSpaceRole,
+    createdBy: UserId,
   ): Promise<UserSpaceMembership> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     return membershipService.addMemberToDefaultSpace(
       userId,
       organizationId,
       role,
+      createdBy,
     );
   }
 
@@ -115,6 +117,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     userId: UserId;
     spaceId: SpaceId;
     role: UserSpaceRole;
+    createdBy: UserId;
   }): Promise<UserSpaceMembership> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     return membershipService.addSpaceMembership(membership);

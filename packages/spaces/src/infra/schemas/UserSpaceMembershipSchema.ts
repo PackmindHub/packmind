@@ -23,6 +23,16 @@ export const UserSpaceMembershipSchema = new EntitySchema<
       length: 64,
       nullable: false,
     },
+    createdBy: {
+      name: 'created_by',
+      type: 'uuid',
+      nullable: false,
+    },
+    updatedBy: {
+      name: 'updated_by',
+      type: 'uuid',
+      nullable: false,
+    },
     ...timestampsSchemas,
   },
   relations: {

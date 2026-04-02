@@ -3,6 +3,7 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   CreateInvitationsCommand,
   CreateInvitationsResponse,
+  createUserId,
   DirectMembershipResult,
   IAccountsPort,
   ICreateInvitationsUseCase,
@@ -74,6 +75,7 @@ export class CreateInvitationsUseCase
       organization: command.organization,
       inviter: command.user,
       role: command.role,
+      createdBy: createUserId(command.userId),
     });
 
     const created = await this.handleInvitationCreation(requests);
@@ -144,11 +146,13 @@ export class CreateInvitationsUseCase
     organization,
     inviter,
     role,
+    createdBy,
   }: {
     candidates: Array<{ normalized: string; original: string }>;
     organization: Organization;
     inviter: User;
     role: UserOrganizationRole;
+    createdBy: UserId;
   }): Promise<{
     requests: InvitationCreationRequest[];
     directMemberships: DirectMembershipResult[];
@@ -205,6 +209,7 @@ export class CreateInvitationsUseCase
             userWithMembership.id,
             organization.id,
             role,
+            createdBy,
           );
 
           directMemberships.push({
@@ -245,6 +250,7 @@ export class CreateInvitationsUseCase
             userWithMembership.id,
             organization.id,
             role,
+            createdBy,
           );
         }
 
@@ -273,6 +279,7 @@ export class CreateInvitationsUseCase
         userWithMembership.id,
         organization.id,
         role,
+        createdBy,
       );
 
       requests.push({
@@ -366,6 +373,7 @@ export class CreateInvitationsUseCase
     userId: UserId,
     organizationId: OrganizationId,
     role: UserOrganizationRole,
+    createdBy: UserId,
   ): Promise<void> {
     try {
       const spaceRole =
@@ -374,6 +382,7 @@ export class CreateInvitationsUseCase
         userId,
         organizationId,
         spaceRole,
+        createdBy,
       );
       this.logger.info('User added to default space membership successfully', {
         userId,

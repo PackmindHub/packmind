@@ -95,6 +95,7 @@ export interface ISpacesPort {
     userId: UserId,
     organizationId: OrganizationId,
     role: UserSpaceRole,
+    createdBy: UserId,
   ): Promise<UserSpaceMembership>;
 
   /**
@@ -104,6 +105,7 @@ export interface ISpacesPort {
     userId: UserId;
     spaceId: SpaceId;
     role: UserSpaceRole;
+    createdBy: UserId;
   }): Promise<UserSpaceMembership>;
 
   /**

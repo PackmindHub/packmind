@@ -48,9 +48,7 @@ import { SkillChangesApplier } from './appliers/SkillChangesApplier';
 
 const origin = 'ApplyPlaybookUseCase';
 
-const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([
-  ChangeProposalType.deleteRule,
-]);
+const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([]);
 
 const CREATION_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.createStandard,
@@ -310,6 +308,8 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
         return new CommandChangesApplier(this.diffService, this.recipesPort);
       case 'skill':
         return new SkillChangesApplier(this.diffService, this.skillsPort);
+      default:
+        throw new Error(`Unsupported item type: ${itemType}`);
     }
   }
 
@@ -334,7 +334,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       resolvedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
-    } as ChangeProposal;
+    } satisfies ChangeProposal;
   }
 
   private getVersionId(

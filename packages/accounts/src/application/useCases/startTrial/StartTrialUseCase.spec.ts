@@ -142,6 +142,7 @@ describe('StartTrialUseCase', () => {
           mockUser.id,
           mockOrganization.id,
           UserSpaceRole.ADMIN,
+          mockUser.id,
         );
       });
 

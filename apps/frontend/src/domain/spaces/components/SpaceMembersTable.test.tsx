@@ -158,40 +158,44 @@ describe('SpaceMembersTable', () => {
   });
 
   describe('when onRemoveMember is provided', () => {
-    it('calls onRemoveMember with the member id when remove button is clicked', async () => {
-      const onRemoveMember = jest.fn();
+    describe('when remove button is clicked', () => {
+      it('calls onRemoveMember with the member id', async () => {
+        const onRemoveMember = jest.fn();
 
-      renderWithProviders(
-        <SpaceMembersTable
-          members={members}
-          isSpaceAdmin={true}
-          onRemoveMember={onRemoveMember}
-        />,
-      );
+        renderWithProviders(
+          <SpaceMembersTable
+            members={members}
+            isSpaceAdmin={true}
+            onRemoveMember={onRemoveMember}
+          />,
+        );
 
-      const removeButtons = screen.getAllByRole('button');
-      await userEvent.click(removeButtons[0]);
+        const removeButtons = screen.getAllByRole('button');
+        await userEvent.click(removeButtons[0]);
 
-      expect(onRemoveMember).toHaveBeenCalledWith('user-1');
+        expect(onRemoveMember).toHaveBeenCalledWith('user-1');
+      });
     });
   });
 
   describe('when onUpdateMemberRole is provided', () => {
-    it('calls onUpdateMemberRole when role select is changed by a space admin', async () => {
-      const onUpdateMemberRole = jest.fn();
+    describe('when role select is changed by a space admin', () => {
+      it('calls onUpdateMemberRole', async () => {
+        const onUpdateMemberRole = jest.fn();
 
-      renderWithProviders(
-        <SpaceMembersTable
-          members={members}
-          isSpaceAdmin={true}
-          onUpdateMemberRole={onUpdateMemberRole}
-        />,
-      );
+        renderWithProviders(
+          <SpaceMembersTable
+            members={members}
+            isSpaceAdmin={true}
+            onUpdateMemberRole={onUpdateMemberRole}
+          />,
+        );
 
-      const selects = screen.getAllByRole('combobox');
-      await userEvent.selectOptions(selects[1], 'admin');
+        const selects = screen.getAllByRole('combobox');
+        await userEvent.selectOptions(selects[1], 'admin');
 
-      expect(onUpdateMemberRole).toHaveBeenCalledWith('user-2', 'admin');
+        expect(onUpdateMemberRole).toHaveBeenCalledWith('user-2', 'admin');
+      });
     });
   });
 

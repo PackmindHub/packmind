@@ -2,7 +2,7 @@
 globs: **/*Adapter.ts,**/*Hexa.ts
 alwaysApply: false
 ---
-## Standard: Port-Adapter Cross-Domain Integration
+# Standard: Port-Adapter Cross-Domain Integration
 
 Define port interfaces and cross-domain contracts in @packmind/types and packages/types/src/<domain>/contracts/, expose adapters via Hexa getters, and use async HexaFactory.initialize() with registry isRegistered()/get() checks to prevent circular dependencies, maintain loose coupling, and support resilient synchronous and asynchronous cross-domain operations. :
 * Declare all Command and Response types that define contracts between domains in packages/types/src/<domain>/contracts/ to ensure a single source of truth and prevent import cycles between domain packages.

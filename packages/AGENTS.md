@@ -63,7 +63,7 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-## Standard: UseCase Test Structure and Validation
+# Standard: UseCase Test Structure and Validation
 
 Define testing patterns for use case unit tests to ensure consistent organization and comprehensive validation coverage in the Packmind hexagonal architecture. :
 * Group test scenarios by execution context using nested describe blocks with shared setup in beforeEach to eliminate duplication and improve test readability
@@ -71,7 +71,7 @@ Define testing patterns for use case unit tests to ensure consistent organizatio
 
 Full standard is available here for further request: [UseCase Test Structure and Validation](.packmind/standards/usecase-test-structure-and-validation.md)
 
-## Standard: Domain Events
+# Standard: Domain Events
 
 Standardize TypeScript domain events by defining `{EventName}Payload` interfaces and `Event`-suffixed classes in `packages/types/src/{domain}/events/` (barrel `index.ts`) extending `UserEvent`/`SystemEvent` with `static override readonly eventName` in `domain.entity.action` format, emitting via `eventEmitterService.emit(new MyEvent(payload))`, and handling via `PackmindListener<TAdapter>.registerHandlers()` with `this.subscribe(EventClass, this.handlerMethod)` and arrow-function handlers to enable decoupled cross-domain communication and reliable subscriptions. :
 * Define event classes in `packages/types/src/{domain}/events/` with an `index.ts` barrel file
@@ -87,7 +87,7 @@ Standardize TypeScript domain events by defining `{EventName}Payload` interfaces
 
 Full standard is available here for further request: [Domain Events](.packmind/standards/domain-events.md)
 
-## Standard: Back-end TypeScript Clean Code Practices
+# Standard: Back-end TypeScript Clean Code Practices
 
 Establish back-end TypeScript clean code rules in the Packmind monorepo (/packages/**/*.ts)—including PackmindLogger constructor injection, disciplined logger.info/error usage, top-of-file static imports, custom Error subclasses, and adapter-created use cases with their own loggers—to improve maintainability, debuggability, and consistent architecture across services. :
 * Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements. Use logger.info for important business events, logger.error for error handling, and add logger.debug manually only when debugging specific issues.
@@ -98,7 +98,7 @@ Establish back-end TypeScript clean code rules in the Packmind monorepo (/packag
 
 Full standard is available here for further request: [Back-end TypeScript Clean Code Practices](.packmind/standards/back-end-typescript-clean-code-practices.md)
 
-## Standard: Use Case Architecture Patterns
+# Standard: Use Case Architecture Patterns
 
 Standardize Packmind monorepo use case architecture using hexagonal principles, typed command/response contracts, and role-specific base classes (AbstractMemberUseCase, AbstractAdminUseCase, IPublicUseCase, PackmindCommand/PublicPackmindCommand) to ensure consistent authentication/authorization behavior, clean interfaces, and type-safe command passing via full command objects and port/adapter reuse. :
 * Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions
@@ -114,7 +114,7 @@ Standardize Packmind monorepo use case architecture using hexagonal principles, 
 
 Full standard is available here for further request: [Use Case Architecture Patterns](.packmind/standards/use-case-architecture-patterns.md)
 
-## Standard: Port-Adapter Cross-Domain Integration
+# Standard: Port-Adapter Cross-Domain Integration
 
 Define port interfaces and cross-domain contracts in @packmind/types and packages/types/src/<domain>/contracts/, expose adapters via Hexa getters, and use async HexaFactory.initialize() with registry isRegistered()/get() checks to prevent circular dependencies, maintain loose coupling, and support resilient synchronous and asynchronous cross-domain operations. :
 * Declare all Command and Response types that define contracts between domains in packages/types/src/<domain>/contracts/ to ensure a single source of truth and prevent import cycles between domain packages.
@@ -125,7 +125,7 @@ Define port interfaces and cross-domain contracts in @packmind/types and package
 
 Full standard is available here for further request: [Port-Adapter Cross-Domain Integration](.packmind/standards/port-adapter-cross-domain-integration.md)
 
-## Standard: Jest Test Suite Organization and Patterns
+# Standard: Jest Test Suite Organization and Patterns
 
 Establish Jest test suite organization and patterns governing test file structure, describe/it hierarchy, typed mocking using jest.Mocked<ServiceType> and createMockInstance, factory-based test data and @packmind/types createUserId/createOrganizationId/createStandardId helpers, assertion conventions (single primary assertion, .not.toHaveBeenCalled()), test ordering (happy path, error cases, edge cases, complex scenarios), and validation/error-handling patterns for TypeScript/Node.js monorepo code (including Express or frontend React/Vue components where applicable) and toolchains (ESLint, Prettier, Webpack/Vite) with CI/infrastructure considerations (Docker, Kubernetes, AWS) to ensure reliable, maintainable, and debuggable unit and integration tests when writing or refactoring test suites with Jest. :
 * Define reusable test data at the describe block level before test cases when the data is shared across multiple tests
@@ -140,7 +140,7 @@ Establish Jest test suite organization and patterns governing test file structur
 
 Full standard is available here for further request: [Jest Test Suite Organization and Patterns](.packmind/standards/jest-test-suite-organization-and-patterns.md)
 
-## Standard: Compliance - Logging Personal Information
+# Standard: Compliance - Logging Personal Information
 
 Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries. :
 * Never log personal information in clear text across all log levels. Always mask sensitive data such as emails, phone numbers, IP addresses, and other personally identifiable information before logging.
@@ -148,7 +148,7 @@ Enforce masking of personal information in TypeScript logs, using a standard fir
 
 Full standard is available here for further request: [Compliance - Logging Personal Information](.packmind/standards/compliance-logging-personal-information.md)
 
-## Standard: Backend Tests Redaction
+# Standard: Backend Tests Redaction
 
 Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :
 * Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values
@@ -166,7 +166,7 @@ Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names
 
 Full standard is available here for further request: [Backend Tests Redaction](.packmind/standards/backend-tests-redaction.md)
 
-## Standard: Back-end repositories SQL queries using TypeORM
+# Standard: Back-end repositories SQL queries using TypeORM
 
 Standardize use of TypeORM QueryBuilder with parameterized WHERE/AND WHERE and IN (:...param) clauses in /infra/repositories/*.ts, including correct handling of soft-deleted entities via withDeleted() or includeDeleted options, to ensure type safety, prevent SQL injection, and improve maintainability and testability of all repository queries. :
 * Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.

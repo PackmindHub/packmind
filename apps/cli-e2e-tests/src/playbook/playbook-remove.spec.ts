@@ -1,5 +1,6 @@
 import {
   describeWithUserSignedUp,
+  getPackmindInstanceUrl,
   RunCliResult,
   setupGitRepo,
   updateFile,
@@ -170,7 +171,7 @@ describe('playbook remove', () => {
               'Some changes could not be applied: playbook submit does not allow remove artefacts. Review the following affected packages:',
             ),
             stdout: expect.stringContaining(
-              `${pkg.name}: http://localhost:4200/org/${context.organization.slug}/space/${context.space.slug}/packages/${pkg.id}`,
+              `${pkg.name}: ${getPackmindInstanceUrl()}/org/${context.organization.slug}/space/${context.space.slug}/packages/${pkg.id}`,
             ),
           });
         });

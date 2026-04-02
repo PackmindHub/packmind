@@ -6,7 +6,7 @@ alwaysApply: false
 description: 'Standardize Packmind monorepo integration tests in packages/integration-tests/src/**/*.spec.ts using integrationTestWithUser, typed entities from @packmind/types, hexagonal adapter access via testContext.testApp.<domain>Hexa.getAdapter(), Jest spies with proper cleanup, factories, and structured describe/beforeEach patterns to ensure consistent organization, reliable resource management, and comprehensive coverage.'
 ---
 
-## Standard: Integration Tests Structure and Patterns
+# Standard: Integration Tests Structure and Patterns
 
 Standardize Packmind monorepo integration tests in packages/integration-tests/src/**/*.spec.ts using integrationTestWithUser, typed entities from @packmind/types, hexagonal adapter access via testContext.testApp.<domain>Hexa.getAdapter(), Jest spies with proper cleanup, factories, and structured describe/beforeEach patterns to ensure consistent organization, reliable resource management, and comprehensive coverage. :
 * Access domain adapters through testContext.testApp.<domain>Hexa.getAdapter() hexagonal architecture pattern

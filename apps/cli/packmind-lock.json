@@ -9,7 +9,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-03-30T08:35:09.156Z",
+  "installedAt": "2026-04-01T14:26:25.716Z",
   "artifacts": {
     "standard:cli-packmindgateway-method-implementation": {
       "name": "CLI Gateway Implementation",
