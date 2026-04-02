@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 
-import { PMButton, PMIcon, PMPageSection, PMSpinner } from '@packmind/ui';
+import {
+  PMButton,
+  PMHeading,
+  PMIcon,
+  PMPageSection,
+  PMSpinner,
+  PMVStack,
+} from '@packmind/ui';
 
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
@@ -33,8 +40,12 @@ export function SpaceMembersList() {
 
   return (
     <PMPageSection
-      title="Members"
       backgroundColor="primary"
+      titleComponent={
+        <PMHeading level="h3" fontSize={'lg'} fontWeight={'semibold'}>
+          Members
+        </PMHeading>
+      }
       cta={
         <PMButton
           variant="primary"
@@ -48,13 +59,15 @@ export function SpaceMembersList() {
         </PMButton>
       }
     >
-      <SpaceMembersTable members={members} currentUserId={currentUserId} />
-      <AddSpaceMembersDialog
-        open={addDialogOpen}
-        setOpen={setAddDialogOpen}
-        spaceId={spaceId ?? ''}
-        existingMembers={members}
-      />
+      <PMVStack align="stretch" pt={4} w="full">
+        <SpaceMembersTable members={members} currentUserId={currentUserId} />
+        <AddSpaceMembersDialog
+          open={addDialogOpen}
+          setOpen={setAddDialogOpen}
+          spaceId={spaceId ?? ''}
+          existingMembers={members}
+        />
+      </PMVStack>
     </PMPageSection>
   );
 }
