@@ -9,32 +9,31 @@ import {
   PMVStack,
 } from '@packmind/ui';
 
-type SpaceVisibility = 'public' | 'private';
-type SpaceOpenness = 'open' | 'approval';
+type SpaceAccessStatus = 'open' | 'restricted' | 'private';
 
-const VISIBILITY_OPTIONS = [
-  { label: 'Public — visible to all organization members', value: 'public' },
-  { label: 'Private — visible only to space members', value: 'private' },
-];
-
-const OPENNESS_OPTIONS = [
-  { label: 'Open to all — anyone can join freely', value: 'open' },
+const ACCESS_STATUS_OPTIONS = [
   {
-    label: 'Needs approval — members must be invited or approved',
-    value: 'approval',
+    label: 'Open — anyone in the organization can join',
+    value: 'open',
+  },
+  {
+    label: 'Restricted — visible to everyone, approval required to join',
+    value: 'restricted',
+  },
+  {
+    label: 'Private — accessible only to invited members',
+    value: 'private',
   },
 ];
 
 const MOCK_SPACE = {
-  visibility: 'public' as SpaceVisibility,
-  openness: 'open' as SpaceOpenness,
+  accessStatus: 'open' as SpaceAccessStatus,
 };
 
 export function SpaceAccessSection() {
-  const [visibility, setVisibility] = useState<SpaceVisibility>(
-    MOCK_SPACE.visibility,
+  const [accessStatus, setAccessStatus] = useState<SpaceAccessStatus>(
+    MOCK_SPACE.accessStatus,
   );
-  const [openness, setOpenness] = useState<SpaceOpenness>(MOCK_SPACE.openness);
 
   return (
     <PMPageSection
@@ -47,26 +46,16 @@ export function SpaceAccessSection() {
     >
       <PMVStack align="stretch" gap={5} pt={4} w="lg">
         <PMField.Root>
-          <PMField.Label>Visibility</PMField.Label>
+          <PMField.Label>Access status</PMField.Label>
           <PMNativeSelect
-            items={VISIBILITY_OPTIONS}
-            value={visibility}
-            onChange={(e) => setVisibility(e.target.value as SpaceVisibility)}
+            items={ACCESS_STATUS_OPTIONS}
+            value={accessStatus}
+            onChange={(e) =>
+              setAccessStatus(e.target.value as SpaceAccessStatus)
+            }
           />
           <PMField.HelperText>
-            Controls who can see this space and its content.
-          </PMField.HelperText>
-        </PMField.Root>
-
-        <PMField.Root>
-          <PMField.Label>Openness</PMField.Label>
-          <PMNativeSelect
-            items={OPENNESS_OPTIONS}
-            value={openness}
-            onChange={(e) => setOpenness(e.target.value as SpaceOpenness)}
-          />
-          <PMField.HelperText>
-            Controls how new members can join this space.
+            Controls who can see and join this space.
           </PMField.HelperText>
         </PMField.Root>
 
