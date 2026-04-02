@@ -906,7 +906,10 @@ export async function playbookSubmitHandler(
     }
 
     if (!response.success) {
-      logErrorConsole(`Error: ${response.error.message}`);
+      logErrorConsole(`Failed to apply changes: ${response.error.message}`);
+      logInfoConsole(
+        'Your playbook has not been modified. Fix the issue and retry.',
+      );
       exit(1);
       return;
     }

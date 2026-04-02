@@ -3076,7 +3076,19 @@ describe('playbookSubmitHandler', () => {
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining('Duplicate name'),
+          'Failed to apply changes: Duplicate name',
+        );
+      });
+
+      it('logs recovery guidance', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          'Your playbook has not been modified. Fix the issue and retry.',
         );
       });
 
