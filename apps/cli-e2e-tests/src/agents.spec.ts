@@ -1,7 +1,7 @@
 import { runCli, updateFile, readFile, RunCliResult } from './helpers';
 import { describeWithTempSpace } from './helpers/describeWithTempSpace';
 
-describe('agents commands', () => {
+describe('config agents commands', () => {
   describeWithTempSpace(
     'when packmind.json has agents ["claude"]',
     (getContext) => {
@@ -18,11 +18,13 @@ describe('agents commands', () => {
         );
       });
 
-      describe('agents add cursor', () => {
+      describe('config agents add cursor', () => {
         let addResult: RunCliResult;
 
         beforeEach(async () => {
-          addResult = await runCli('agents add cursor', { cwd: testDir });
+          addResult = await runCli('config agents add cursor', {
+            cwd: testDir,
+          });
         });
 
         it('succeeds', () => {
@@ -42,12 +44,12 @@ describe('agents commands', () => {
         });
       });
 
-      describe('agents list after adding cursor', () => {
+      describe('config agents list after adding cursor', () => {
         let listResult: RunCliResult;
 
         beforeEach(async () => {
-          await runCli('agents add cursor', { cwd: testDir });
-          listResult = await runCli('agents list', { cwd: testDir });
+          await runCli('config agents add cursor', { cwd: testDir });
+          listResult = await runCli('config agents list', { cwd: testDir });
         });
 
         it('succeeds', () => {
@@ -63,14 +65,14 @@ describe('agents commands', () => {
         });
       });
 
-      describe('agents rm cursor after adding it', () => {
+      describe('config agents rm cursor after adding it', () => {
         let rmResult: RunCliResult;
         let listResult: RunCliResult;
 
         beforeEach(async () => {
-          await runCli('agents add cursor', { cwd: testDir });
-          rmResult = await runCli('agents rm cursor', { cwd: testDir });
-          listResult = await runCli('agents list', { cwd: testDir });
+          await runCli('config agents add cursor', { cwd: testDir });
+          rmResult = await runCli('config agents rm cursor', { cwd: testDir });
+          listResult = await runCli('config agents list', { cwd: testDir });
         });
 
         it('succeeds', () => {
@@ -89,11 +91,11 @@ describe('agents commands', () => {
           expect(config.agents).not.toContain('cursor');
         });
 
-        it('shows claude in agents list', () => {
+        it('shows claude in config agents list', () => {
           expect(listResult.stdout).toContain('claude');
         });
 
-        it('does not show cursor in agents list', () => {
+        it('does not show cursor in config agents list', () => {
           expect(listResult.stdout).not.toContain('cursor');
         });
       });
