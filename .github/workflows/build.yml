@@ -421,6 +421,13 @@ jobs:
           ls -la "${CLI_BINARY_PATH}"
           echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
 
+      - name: Fix CLI artifacts permissions
+        run: |
+          CLI_DIR="$(dirname "${CLI_BINARY_PATH}")"
+          chmod +x "${CLI_BINARY_PATH}" || true
+          chmod -R +r "${CLI_DIR}"
+          ls -la "${CLI_BINARY_PATH}"
+
       - name: Start docker compose for CLI E2E tests (production)
         uses: nick-fields/retry@v3
         with:
