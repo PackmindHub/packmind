@@ -72,69 +72,69 @@ With a description:
         });
       });
     });
-  });
 
-  describe('when updating an existing artifact using playbook submit --no-review', () => {
-    let playbookSubmitResult: RunCliResult;
-    let packageSlug: string;
-    let standardFilePath: string;
+    describe('when updating an existing artifact using playbook submit --no-review', () => {
+      let playbookSubmitResult: RunCliResult;
+      let packageSlug: string;
+      let standardFilePath: string;
 
-    beforeEach(async () => {
-      const createResult = await context.gateway.standards.create({
-        name: 'Updatable standard',
-        description: 'Original description',
-        spaceId: context.space.id,
-        rules: [{ content: 'Original rule' }],
-        scope: null,
+      beforeEach(async () => {
+        const createResult = await context.gateway.standards.create({
+          name: 'Updatable standard',
+          description: 'Original description',
+          spaceId: context.space.id,
+          rules: [{ content: 'Original rule' }],
+          scope: null,
+        });
+        const standardId = createResult.standard.id;
+
+        const packageResult = await context.gateway.packages.create({
+          name: 'Update test package',
+          description: 'For update test',
+          spaceId: context.space.id,
+          standardIds: [standardId],
+          recipeIds: [],
+        });
+        packageSlug = packageResult.package.slug;
+
+        await context.runCli(`install ${packageSlug}`);
+
+        const lockFileContent = readFile('packmind-lock.json', context.testDir);
+        const lockFile: PackmindLockFile = JSON.parse(lockFileContent);
+        const artifact = Object.values(lockFile.artifacts).find(
+          (a) => a.type === 'standard' && a.name === 'Updatable standard',
+        );
+        if (!artifact) {
+          throw new Error('Installed standard artifact not found in lock file');
+        }
+        standardFilePath = artifact.files[0].path;
+
+        updateFile(
+          standardFilePath,
+          `# Updatable standard\n\nUpdated description\n\n* Updated rule`,
+          context.testDir,
+        );
+
+        await context.runCli(`playbook add ${standardFilePath}`);
+        playbookSubmitResult = await context.runCli(
+          'playbook submit --no-review',
+        );
       });
-      const standardId = createResult.standard.id;
 
-      const packageResult = await context.gateway.packages.create({
-        name: 'Update test package',
-        description: 'For update test',
-        spaceId: context.space.id,
-        standardIds: [standardId],
-        recipeIds: [],
+      it('succeeds', () => {
+        expect(playbookSubmitResult).toEqual({
+          returnCode: 0,
+          stderr: '',
+          stdout: expect.stringMatching('1 standard updated'),
+        });
       });
-      packageSlug = packageResult.package.slug;
 
-      await context.runCli(`install ${packageSlug}`);
+      it('updates the artifact on the server', async () => {
+        await context.runCli(`install ${packageSlug}`);
 
-      const lockFileContent = readFile('packmind-lock.json', context.testDir);
-      const lockFile: PackmindLockFile = JSON.parse(lockFileContent);
-      const artifact = Object.values(lockFile.artifacts).find(
-        (a) => a.type === 'standard' && a.name === 'Updatable standard',
-      );
-      if (!artifact) {
-        throw new Error('Installed standard artifact not found in lock file');
-      }
-      standardFilePath = artifact.files[0].path;
-
-      updateFile(
-        standardFilePath,
-        `# Updatable standard\n\nUpdated description\n\n* Updated rule`,
-        context.testDir,
-      );
-
-      await context.runCli(`playbook add ${standardFilePath}`);
-      playbookSubmitResult = await context.runCli(
-        'playbook submit --no-review',
-      );
-    });
-
-    it('succeeds', () => {
-      expect(playbookSubmitResult).toEqual({
-        returnCode: 0,
-        stderr: '',
-        stdout: expect.stringMatching('1 standard updated'),
+        const content = readFile(standardFilePath, context.testDir);
+        expect(content).toContain('Updated rule');
       });
-    });
-
-    it('updates the artifact on the server', async () => {
-      await context.runCli(`install ${packageSlug}`);
-
-      const content = readFile(standardFilePath, context.testDir);
-      expect(content).toContain('Updated rule');
     });
   });
 });
