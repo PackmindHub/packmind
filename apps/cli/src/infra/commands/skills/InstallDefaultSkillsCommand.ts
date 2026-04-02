@@ -8,10 +8,9 @@ import {
   logWarningConsole,
   formatCommand,
 } from '../../utils/consoleLogger';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import * as readline from 'readline';
 import { IncompatibleInstalledSkill } from '../../../domain/useCases/IInstallDefaultSkillsUseCase';
+import { handleIncompatibleInstalledSkills } from './incompatibleSkillsHandler';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -55,7 +54,7 @@ export const installDefaultSkillsCommand = command({
       }
 
       if (result.incompatibleInstalledSkills.length > 0) {
-        await handleIncompatibleInstalledSkills(
+        await handleIncompatibleInstalledSkillsWithPrompt(
           result.incompatibleInstalledSkills,
           baseDirectory,
         );
@@ -92,35 +91,13 @@ export const installDefaultSkillsCommand = command({
   },
 });
 
-async function handleIncompatibleInstalledSkills(
+async function handleIncompatibleInstalledSkillsWithPrompt(
   skills: IncompatibleInstalledSkill[],
   baseDirectory: string,
 ): Promise<void> {
-  const skillNames = skills.map((s) => s.skillName).join(', ');
-  logWarningConsole(
-    `The following skill(s) are installed but are not compatible with this version of packmind-cli: ${skillNames}`,
+  await handleIncompatibleInstalledSkills(skills, baseDirectory, () =>
+    promptConfirmation('Confirm deletion? [y/N]: '),
   );
-  logInfoConsole('These skills will be deleted.');
-
-  const confirmed = await promptConfirmation('Confirm deletion? [y/N]: ');
-  if (!confirmed) {
-    logInfoConsole('Deletion cancelled.');
-    return;
-  }
-
-  for (const skill of skills) {
-    for (const relativePath of skill.filePaths) {
-      try {
-        await fs.unlink(path.join(baseDirectory, relativePath));
-      } catch (error) {
-        logErrorConsole(
-          `Failed to delete "${relativePath}": ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    }
-  }
-
-  logSuccessConsole(`Incompatible skill(s) deleted: ${skillNames}`);
 }
 
 async function promptConfirmation(question: string): Promise<boolean> {

@@ -47,18 +47,43 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     // Group incompatible installed skills by name (one skill may have multiple agent replicas)
     const incompatibleInstalledMap = new Map<string, string[]>();
 
+    // First pass: identify incompatible skill folders from their SKILL.md files so that
+    // companion files (README.md, LICENSE.txt) can be tracked for deletion too.
+    const incompatibleSkillDirs = new Map<string, string>(); // dir path -> skill name
+    if (command.cliVersion) {
+      for (const file of response.fileUpdates.createOrUpdate) {
+        if (
+          path.basename(file.path) === 'SKILL.md' &&
+          file.content &&
+          this.isVersionConstraintViolated(file.content, command.cliVersion)
+        ) {
+          const dir = path.dirname(file.path);
+          const skillName =
+            this.getSkillName(file.content) ?? path.basename(dir);
+          incompatibleSkillDirs.set(dir, skillName);
+        }
+      }
+    }
+
     try {
       // Process createOrUpdate files
       for (const file of response.fileUpdates.createOrUpdate) {
         try {
           if (!file.content) continue;
 
-          if (
+          const isIncompatible =
             command.cliVersion &&
-            this.isVersionConstraintViolated(file.content, command.cliVersion)
-          ) {
+            (this.isVersionConstraintViolated(
+              file.content,
+              command.cliVersion,
+            ) ||
+              incompatibleSkillDirs.has(path.dirname(file.path)));
+
+          if (isIncompatible) {
             const skillName =
-              this.getSkillName(file.content) ?? path.basename(file.path);
+              this.getSkillName(file.content) ??
+              incompatibleSkillDirs.get(path.dirname(file.path)) ??
+              path.basename(file.path);
             const fullPath = path.join(baseDirectory, file.path);
             const fileAlreadyInstalled = await this.fileExists(fullPath);
 

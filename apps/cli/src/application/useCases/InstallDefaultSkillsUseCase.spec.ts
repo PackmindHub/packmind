@@ -239,6 +239,83 @@ describe('InstallDefaultSkillsUseCase', () => {
     });
   });
 
+  describe('when a folder-based skill has companion files (README, LICENSE)', () => {
+    const skillMdPath = '.claude/skills/old-skill/SKILL.md';
+    const readmePath = '.claude/skills/old-skill/README.md';
+    const licensePath = '.claude/skills/old-skill/LICENSE.txt';
+    const skillContent = makeSkillContent('old-skill', {
+      versionConstraint: '< 0.24.0',
+    });
+
+    beforeEach(() => {
+      mockGetDefaults.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            { path: skillMdPath, content: skillContent },
+            { path: readmePath, content: 'README content' },
+            { path: licensePath, content: 'LICENSE content' },
+          ],
+          delete: [],
+        },
+        skippedSkillsCount: 0,
+      });
+    });
+
+    describe('when all files are already installed', () => {
+      beforeEach(() => {
+        mockFs.access.mockResolvedValue(undefined);
+      });
+
+      it('groups companion files under a single incompatibleInstalledSkill entry', async () => {
+        const result = await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(result.incompatibleInstalledSkills).toHaveLength(1);
+      });
+
+      it('includes all companion file paths in incompatibleInstalledSkills', async () => {
+        const result = await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(result.incompatibleInstalledSkills[0].filePaths).toEqual(
+          expect.arrayContaining([skillMdPath, readmePath, licensePath]),
+        );
+      });
+
+      it('does not create or update companion files', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the skill is NOT yet installed', () => {
+      beforeEach(() => {
+        mockFs.access.mockRejectedValue(new Error('ENOENT'));
+      });
+
+      it('does not create any file', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+
+      it('adds the skill name once to skippedIncompatibleSkillNames', async () => {
+        const result = await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(result.skippedIncompatibleSkillNames).toEqual(['old-skill']);
+      });
+    });
+  });
+
   describe('when a skill version constraint is satisfied by the CLI version', () => {
     beforeEach(() => {
       mockGetDefaults.mockResolvedValue({
