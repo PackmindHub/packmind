@@ -9,7 +9,12 @@ import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-
 import { skillMd } from './skills/packmind-update-playbook/skill.md';
 import { APPLY_CHANGES_0210 } from './skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes';
 import { APPLY_CHANGES_0230 } from './skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes';
-import { APPLY_CHANGES_NEXT } from './skills/packmind-update-playbook/packmind-versions/next/apply-changes';
+import { SemVer } from './AbstractDefaultSkillDeployer';
+
+const applyChangesByVersion: Record<SemVer, string> = {
+  '0.21.0': APPLY_CHANGES_0210,
+  '0.23.0': APPLY_CHANGES_0230,
+};
 
 export class UpdatePlaybookDeployerV2
   extends AbstractDefaultSkillDeployer
@@ -44,14 +49,10 @@ export class UpdatePlaybookDeployerV2
         path: `${basePath}/steps/analyze-skills.md`,
         content: ANALYZE_SKILLS,
       },
-      {
-        path: `${basePath}/packmind-versions/0.21.0/apply-changes.md`,
-        content: APPLY_CHANGES_0210,
-      },
-      {
-        path: `${basePath}/packmind-versions/0.23.0/apply-changes.md`,
-        content: APPLY_CHANGES_0230,
-      },
+      ...skillMd.versions.map((version) => ({
+        path: `${basePath}/packmind-versions/${version}/apply-changes.md`,
+        content: applyChangesByVersion[version],
+      })),
       {
         path: `${basePath}/references/agent-skills-specification.md`,
         content: AGENT_SKILLS_SPECIFICATION,
@@ -82,9 +83,10 @@ export class UpdatePlaybookDeployerV2
     ];
 
     if (includeNext) {
+      const latestVersion = skillMd.versions[skillMd.versions.length - 1];
       createOrUpdate.push({
         path: `${basePath}/packmind-versions/next/apply-changes.md`,
-        content: APPLY_CHANGES_NEXT,
+        content: applyChangesByVersion[latestVersion],
       });
     } else {
       deleteItems.push({
