@@ -111,69 +111,74 @@ describeForVersion('> 0.24.0', 'playbook add', () => {
   });
 });
 
-describeForVersion('0.24.0', 'playbook add and submit for CLI <= 0.24.0', () => {
-  describeWithUserSignedUp('playbook add and submit for CLI <= 0.24.0', (getContext) => {
-    let context: UserSignedUpContext;
+describeForVersion(
+  '0.24.0',
+  'playbook add and submit for CLI <= 0.24.0',
+  () => {
+    describeWithUserSignedUp(
+      'playbook add and submit for CLI <= 0.24.0',
+      (getContext) => {
+        let context: UserSignedUpContext;
 
-    beforeEach(async () => {
-      context = await getContext();
-      await setupGitRepo(context.testDir);
+        beforeEach(async () => {
+          context = await getContext();
+          await setupGitRepo(context.testDir);
 
-      updateFile(
-        'packmind.json',
-        JSON.stringify({ packages: {} }),
-        context.testDir,
-      );
+          updateFile(
+            'packmind.json',
+            JSON.stringify({ packages: {} }),
+            context.testDir,
+          );
 
-      fs.mkdirSync(`${context.testDir}/.packmind/standards/`, {
-        recursive: true,
-      });
-    });
-
-    describe('when targeting the default space', () => {
-      let addResult: RunCliResult;
-      let submitResult: RunCliResult;
-
-      beforeEach(async () => {
-        updateFile(
-          '.packmind/standards/default-space-standard.md',
-          '# Default space standard\n\nWith a description:\n\n* rule 1\n* rule 2\n',
-          context.testDir,
-        );
-
-        addResult = await context.runCli(
-          'playbook add .packmind/standards/default-space-standard.md',
-        );
-        submitResult = await context.runCli(
-          'playbook submit -m "Add standard to default space"',
-        );
-      });
-
-      it('adds the standard to the playbook', () => {
-        expect(addResult).toEqual({
-          returnCode: 0,
-          stderr: '',
-          stdout: expect.stringContaining('Staged'),
+          fs.mkdirSync(`${context.testDir}/.packmind/standards/`, {
+            recursive: true,
+          });
         });
-      });
 
-      it('rejects the submit with a community edition error', () => {
-        expect(submitResult.returnCode).toBe(1);
-      });
+        describe('when targeting the default space', () => {
+          let addResult: RunCliResult;
+          let submitResult: RunCliResult;
 
-      it('returns an error message about change proposals not being available', () => {
-        expect(submitResult.stderr).toEqual(
-          expect.stringContaining(
-            'change proposals',
-          ),
-        );
-      });
+          beforeEach(async () => {
+            updateFile(
+              '.packmind/standards/default-space-standard.md',
+              '# Default space standard\n\nWith a description:\n\n* rule 1\n* rule 2\n',
+              context.testDir,
+            );
 
-      it('mentions community edition in the error', () => {
-        expect(submitResult.stderr).toEqual(
-          expect.stringContaining('Community Edition'),
-        );
-      });
-    });
-  });
-});
+            addResult = await context.runCli(
+              'playbook add .packmind/standards/default-space-standard.md',
+            );
+            submitResult = await context.runCli(
+              'playbook submit -m "Add standard to default space"',
+            );
+          });
+
+          it('adds the standard to the playbook', () => {
+            expect(addResult).toEqual({
+              returnCode: 0,
+              stderr: '',
+              stdout: expect.stringContaining('Staged'),
+            });
+          });
+
+          it('rejects the submit with a community edition error', () => {
+            expect(submitResult.returnCode).toBe(1);
+          });
+
+          it('returns an error message about change proposals not being available', () => {
+            expect(submitResult.stderr).toEqual(
+              expect.stringContaining('change proposals'),
+            );
+          });
+
+          it('mentions community edition in the error', () => {
+            expect(submitResult.stderr).toEqual(
+              expect.stringContaining('Community Edition'),
+            );
+          });
+        });
+      },
+    );
+  },
+);
