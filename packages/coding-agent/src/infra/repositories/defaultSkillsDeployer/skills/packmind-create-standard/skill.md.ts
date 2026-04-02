@@ -1,12 +1,14 @@
-export function getSkillMd(agentName: string): string {
-  return `---
-name: 'packmind-create-standard'
-description: 'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to ${agentName}.'
-license: 'Complete terms in LICENSE.txt'
----
+import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
-# Standard Creator
-
+export const skillMd: SkillMD = {
+  fontMatter: {
+    description:
+      'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to ${agentName}.',
+    license: 'Complete terms in LICENSE.txt',
+  },
+  title: 'Standard Creator',
+  getPrompt: function (agentName: string): string {
+    return `
 This skill provides a complete walkthrough for creating coding standards via the Packmind CLI.
 
 ## About Coding Standards
@@ -469,4 +471,6 @@ EOF
 | \`#### Positive Example\` | No | Valid code in fenced block |
 | \`#### Negative Example\` | No | Invalid code in fenced block |
 `;
-}
+  },
+  versions: [],
+};

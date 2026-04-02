@@ -1,11 +1,14 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
-import { getSkillMd } from './skills/packmind-create-skill/skill';
+import { skillMd } from './skills/packmind-create-skill/skill.md';
 import { README } from './skills/packmind-create-skill/readme';
 import { getInitSkillPy } from './skills/packmind-create-skill/scripts/init-skill';
 import { QUICK_VALIDATE_PY } from './skills/packmind-create-skill/scripts/quick-validate';
-import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
+import {
+  AbstractDefaultSkillDeployer,
+  SemVer,
+} from './AbstractDefaultSkillDeployer';
 
 export class CreateSkillDeployer
   extends AbstractDefaultSkillDeployer
@@ -13,7 +16,7 @@ export class CreateSkillDeployer
 {
   public readonly slug = 'packmind-create-skill';
   protected readonly minimumVersion = '0.14.0';
-  protected override maximumVersion = null;
+  protected override maximumVersion: SemVer = '0.25.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-skill`;
@@ -22,7 +25,7 @@ export class CreateSkillDeployer
       createOrUpdate: [
         {
           path: `${basePath}/SKILL.md`,
-          content: getSkillMd(agentName),
+          content: this.getSkillMd(agentName, skillMd),
         },
         {
           path: `${basePath}/README.md`,

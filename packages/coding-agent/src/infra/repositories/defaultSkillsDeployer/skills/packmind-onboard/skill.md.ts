@@ -1,12 +1,14 @@
-export function getSkillMd(): string {
-  return `---
-name: 'packmind-onboard'
-description: 'Complete automated onboarding: analyzes codebase, creates package, and generates standards & commands via CLI. Automatic package creation when none exist, user selection when packages are available.'
-license: 'Complete terms in LICENSE.txt'
----
+import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
-# packmind-onboard
-
+export const skillMd: SkillMD = {
+  fontMatter: {
+    description:
+      'Complete automated onboarding: analyzes codebase, creates package, and generates standards & commands via CLI. Automatic package creation when none exist, user selection when packages are available.',
+    license: 'Complete terms in LICENSE.txt',
+  },
+  title: 'packmind-onboard',
+  getPrompt: function (): string {
+    return `
 Action skill. Provides **complete automated onboarding** for Packmind:
 1. Creates or selects a package
 2. Analyzes codebase for patterns
@@ -599,4 +601,6 @@ Draft files ready for review at:
 Edit them as needed, then re-run this skill to create them.
 \`\`\`
 `;
-}
+  },
+  versions: [],
+};
