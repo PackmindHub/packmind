@@ -925,9 +925,9 @@ export async function playbookSubmitHandler(
         : null;
 
     const collectParts = (counts: {
-      standards: unknown[];
-      commands: unknown[];
-      skills: unknown[];
+      standards: readonly unknown[];
+      commands: readonly unknown[];
+      skills: readonly unknown[];
     }): string[] =>
       [
         formatCount(counts.standards, 'standard'),
