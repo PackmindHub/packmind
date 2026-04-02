@@ -9,7 +9,7 @@ import {
 import { describeWithTempSpace } from './helpers/describeWithTempSpace';
 
 describe('whoami command', () => {
-  describeForVersion('>=0.1.0', 'when user is signed in', () => {
+  describeForVersion('>= 0.24.0', 'when user is signed in', () => {
     describeWithUserSignedUp('with authenticated context', (getContext) => {
       let returnCode: number;
       let stdout: string;
@@ -41,27 +41,29 @@ describe('whoami command', () => {
     });
   });
 
-  describeWithTempSpace('when user is not signed in', (getContext) => {
-    let testDir: string;
-    let returnCode: number;
-    let stdout: string;
+  describeForVersion('>= 0.24.0', 'when user is not signed in', () => {
+    describeWithTempSpace('context', (getContext) => {
+      let testDir: string;
+      let returnCode: number;
+      let stdout: string;
 
-    beforeEach(async () => {
-      const context = await getContext();
-      testDir = context.testDir;
+      beforeEach(async () => {
+        const context = await getContext();
+        testDir = context.testDir;
 
-      const result = await runCli('whoami', { cwd: testDir }); // No API key
+        const result = await runCli('whoami', { cwd: testDir }); // No API key
 
-      returnCode = result.returnCode;
-      stdout = result.stdout;
-    });
+        returnCode = result.returnCode;
+        stdout = result.stdout;
+      });
 
-    it('fails', () => {
-      expect(returnCode).toEqual(1);
-    });
+      it('fails', () => {
+        expect(returnCode).toEqual(1);
+      });
 
-    it('shows not authenticated status', () => {
-      expect(stdout).toContain('No credentials found');
+      it('shows not authenticated status', () => {
+        expect(stdout).toContain('No credentials found');
+      });
     });
   });
 });

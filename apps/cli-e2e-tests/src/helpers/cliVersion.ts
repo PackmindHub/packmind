@@ -1,20 +1,13 @@
 import { satisfies } from 'semver';
-import { runCli } from './runCli';
 
-let detectedVersion: string | null = null;
+let detectedVersion: string | null | undefined = undefined;
 
-export async function detectCliVersion(): Promise<string | null> {
-  if (detectedVersion !== null) return detectedVersion;
-
-  const result = await runCli('--version');
-  const match = result.stdout.match(/version\s+([\d.]+(?:-[\w.]+)?)/);
-  detectedVersion = match ? match[1] : null;
-
-  return detectedVersion;
+export function setDetectedVersion(version: string | null): void {
+  detectedVersion = version;
 }
 
 export function getCliVersion(): string | null {
-  return detectedVersion;
+  return detectedVersion ?? null;
 }
 
 export function isProductionMode(): boolean {
