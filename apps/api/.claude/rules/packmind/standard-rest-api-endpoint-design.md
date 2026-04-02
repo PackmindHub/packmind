@@ -6,7 +6,7 @@ alwaysApply: false
 description: 'Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent.'
 ---
 
-## Standard: REST API Endpoint Design
+# Standard: REST API Endpoint Design
 
 Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent. :
 * Create one endpoint per business action rather than a single endpoint handling multiple actions via request body

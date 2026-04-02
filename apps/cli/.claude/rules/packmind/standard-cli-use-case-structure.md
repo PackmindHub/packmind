@@ -6,7 +6,7 @@ alwaysApply: false
 description: 'Enforce CLI use case separation by defining IPublicUseCase<Command, Response> interfaces with co-located Command/Response types in apps/cli/src/domain/useCases/ and implementing business-only logic in apps/cli/src/application/useCases/ using custom errors from apps/cli/src/domain/errors/ (no console or output handlers) to improve modularity, reuse, and predictable error handling.'
 ---
 
-## Standard: CLI Use Case Structure
+# Standard: CLI Use Case Structure
 
 Enforce CLI use case separation by defining IPublicUseCase<Command, Response> interfaces with co-located Command/Response types in apps/cli/src/domain/useCases/ and implementing business-only logic in apps/cli/src/application/useCases/ using custom errors from apps/cli/src/domain/errors/ (no console or output handlers) to improve modularity, reuse, and predictable error handling. :
 * Base all use case interfaces on IPublicUseCase<Command, Response> from @packmind/types

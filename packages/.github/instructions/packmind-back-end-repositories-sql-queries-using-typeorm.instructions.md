@@ -1,7 +1,7 @@
 ---
 applyTo: '**/infra/repositories/*.ts'
 ---
-## Standard: Back-end repositories SQL queries using TypeORM
+# Standard: Back-end repositories SQL queries using TypeORM
 
 Standardize use of TypeORM QueryBuilder with parameterized WHERE/AND WHERE and IN (:...param) clauses in /infra/repositories/*.ts, including correct handling of soft-deleted entities via withDeleted() or includeDeleted options, to ensure type safety, prevent SQL injection, and improve maintainability and testability of all repository queries. :
 * Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.

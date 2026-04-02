@@ -941,7 +941,10 @@ export async function playbookSubmitHandler(
 
     await logRemovedPackagesNotification(packmindCliHexa, removalPackageIds);
 
-    const formatCount = (items: unknown[], noun: string): string | null =>
+    const formatCount = (
+      items: readonly unknown[],
+      noun: string,
+    ): string | null =>
       items.length > 0
         ? `${items.length} ${noun}${items.length !== 1 ? 's' : ''}`
         : null;

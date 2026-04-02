@@ -1,7 +1,7 @@
 ---
 applyTo: '**'
 ---
-## Standard: [E2E] Page object
+# Standard: [E2E] Page object
 
 Define Playwright E2E PageObjects for each frontend route using regexp-based expectedUrl matching and mandatory this.pageFactory() after navigation to ensure safer URL validation and proper typing. :
 * Always add this.pageFactory() after navigating to ensure proper typing
