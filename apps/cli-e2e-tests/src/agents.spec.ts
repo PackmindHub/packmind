@@ -1,7 +1,13 @@
-import { runCli, updateFile, readFile, RunCliResult } from './helpers';
+import {
+  runCli,
+  updateFile,
+  readFile,
+  RunCliResult,
+  describeForVersion,
+} from './helpers';
 import { describeWithTempSpace } from './helpers/describeWithTempSpace';
 
-describe('config agents commands', () => {
+describeForVersion('> 0.24.0', 'config agents commands', () => {
   describeWithTempSpace(
     'when packmind.json has agents ["claude"]',
     (getContext) => {
@@ -71,7 +77,9 @@ describe('config agents commands', () => {
 
         beforeEach(async () => {
           await runCli('config agents add cursor', { cwd: testDir });
-          rmResult = await runCli('config agents rm cursor', { cwd: testDir });
+          rmResult = await runCli('config agents rm cursor', {
+            cwd: testDir,
+          });
           listResult = await runCli('config agents list', { cwd: testDir });
         });
 

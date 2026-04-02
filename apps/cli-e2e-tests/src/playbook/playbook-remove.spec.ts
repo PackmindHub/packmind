@@ -1,4 +1,5 @@
 import {
+  describeForVersion,
   describeWithUserSignedUp,
   getPackmindInstanceUrl,
   RunCliResult,
@@ -16,8 +17,8 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
-describe('playbook remove', () => {
-  describeWithUserSignedUp('playbook add', (getContext) => {
+describeForVersion('> 0.24.0', 'playbook remove', () => {
+  describeWithUserSignedUp('playbook remove', (getContext) => {
     let context: UserSignedUpContext;
 
     beforeEach(async () => {

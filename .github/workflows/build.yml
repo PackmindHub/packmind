@@ -291,7 +291,7 @@ jobs:
 
   cli-e2e-tests:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       PACKMIND_INSTANCE_URL: http://localhost:4200
     strategy:
@@ -350,13 +350,31 @@ jobs:
           PACKMIND_INSTANCE_URL: ${{ env.PACKMIND_INSTANCE_URL }}
         run: |
           echo "Waiting for API to be ready..."
-          timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done" || true
+          timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done"
 
       - name: Run CLI E2E tests
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx test cli-e2e-tests
+
+      - name: Install latest production CLI from npm
+        run: |
+          PROD_CLI_DIR="$(mktemp -d)"
+          cd "${PROD_CLI_DIR}"
+          npm init -y --silent
+          npm install @packmind/cli
+          CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
+          cd -
+          echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
+          echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
+
+      - name: Run CLI E2E tests against production CLI
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
+          CLI_BINARY_PATH: ${{ env.CLI_BINARY_PATH }}
+        run: ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache
 
       - name: Collect Docker container logs
         if: always()
