@@ -56,7 +56,9 @@ export class DefaultSkillsDeployer {
     const skippedSkillsCount = this.countSkippedDeployers(options);
 
     const allFileUpdates = filteredDeployers.map((deployer) =>
-      deployer.deploy(this.agentName, this.skillsFolderPath),
+      deployer.deploy(this.agentName, this.skillsFolderPath, {
+        includeNext: options.includeBeta,
+      }),
     );
 
     return {

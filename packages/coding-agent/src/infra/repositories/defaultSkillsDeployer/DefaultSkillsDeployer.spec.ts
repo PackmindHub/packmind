@@ -9,10 +9,11 @@ describe('DefaultSkillsDeployer', () => {
 
   describe('deployDefaultSkills', () => {
     describe('with default options', () => {
+      let result: ReturnType<DefaultSkillsDeployer['deployDefaultSkills']>;
       let paths: string[];
 
       beforeEach(() => {
-        const result = deployer.deployDefaultSkills();
+        result = deployer.deployDefaultSkills();
         paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
       });
 
@@ -56,16 +57,38 @@ describe('DefaultSkillsDeployer', () => {
         );
       });
 
+      it('deletes packmind-versions/next directory for update-playbook-v2', () => {
+        const deletePaths = result.fileUpdates.delete.map((d) => d.path);
+        expect(
+          deletePaths.some(
+            (p) =>
+              p.includes('packmind-update-playbook-v2') &&
+              p.includes('packmind-versions/next'),
+          ),
+        ).toBe(true);
+      });
+
+      it('excludes packmind-versions/next/apply-changes.md from createOrUpdate', () => {
+        expect(
+          paths.some(
+            (p) =>
+              p.includes('packmind-update-playbook-v2') &&
+              p.includes('packmind-versions/next'),
+          ),
+        ).toBe(false);
+      });
+
       it('returns 0 skipped skills', () => {
         expect(deployer.deployDefaultSkills().skippedSkillsCount).toBe(0);
       });
     });
 
     describe('with includeBeta set to true', () => {
+      let result: ReturnType<DefaultSkillsDeployer['deployDefaultSkills']>;
       let paths: string[];
 
       beforeEach(() => {
-        const result = deployer.deployDefaultSkills({ includeBeta: true });
+        result = deployer.deployDefaultSkills({ includeBeta: true });
         paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
       });
 
@@ -89,6 +112,27 @@ describe('DefaultSkillsDeployer', () => {
         expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
           true,
         );
+      });
+
+      it('includes packmind-versions/next/apply-changes.md for update-playbook-v2', () => {
+        expect(
+          paths.some(
+            (p) =>
+              p.includes('packmind-update-playbook-v2') &&
+              p.includes('packmind-versions/next/apply-changes.md'),
+          ),
+        ).toBe(true);
+      });
+
+      it('does not delete packmind-versions/next directory for update-playbook-v2', () => {
+        const deletePaths = result.fileUpdates.delete.map((d) => d.path);
+        expect(
+          deletePaths.some(
+            (p) =>
+              p.includes('packmind-update-playbook-v2') &&
+              p.includes('packmind-versions/next'),
+          ),
+        ).toBe(false);
       });
 
       it('returns 0 skipped skills', () => {

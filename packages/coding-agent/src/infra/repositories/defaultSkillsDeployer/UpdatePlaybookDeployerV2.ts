@@ -1,5 +1,5 @@
 import { DeleteItemType, FileUpdates } from '@packmind/types';
-import { ISkillDeployer } from './IDefaultSkillDeployer';
+import { ISkillDeployer, SkillDeployOptions } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
 import { AGENT_SKILLS_SPECIFICATION } from './skills/packmind-update-playbook/references/agent-skills-specification';
 import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
@@ -9,6 +9,7 @@ import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-
 import { skillMd } from './skills/packmind-update-playbook/skill.md';
 import { APPLY_CHANGES_0210 } from './skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes';
 import { APPLY_CHANGES_0230 } from './skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes';
+import { APPLY_CHANGES_NEXT } from './skills/packmind-update-playbook/packmind-versions/next/apply-changes';
 
 export class UpdatePlaybookDeployerV2
   extends AbstractDefaultSkillDeployer
@@ -17,63 +18,81 @@ export class UpdatePlaybookDeployerV2
   public readonly slug = 'packmind-update-playbook-v2';
   protected readonly minimumVersion = '0.23.0';
 
-  deploy(agentName: string, skillsFolderPath: string): FileUpdates {
+  deploy(
+    agentName: string,
+    skillsFolderPath: string,
+    options?: SkillDeployOptions,
+  ): FileUpdates {
     const basePath = `${skillsFolderPath}${this.slug}`;
+    const includeNext = options?.includeNext ?? false;
 
-    return {
-      createOrUpdate: [
-        {
-          path: `${basePath}/SKILL.md`,
-          content: this.getSkillMd(agentName, skillMd),
-        },
-        { path: `${basePath}/LICENSE.txt`, content: LICENSE_TXT },
-        {
-          path: `${basePath}/steps/analyze-standards.md`,
-          content: ANALYZE_STANDARDS,
-        },
-        {
-          path: `${basePath}/steps/analyze-commands.md`,
-          content: ANALYZE_COMMANDS,
-        },
-        {
-          path: `${basePath}/steps/analyze-skills.md`,
-          content: ANALYZE_SKILLS,
-        },
-        {
-          path: `${basePath}/packmind-versions/0.21.0/apply-changes.md`,
-          content: APPLY_CHANGES_0210,
-        },
-        {
-          path: `${basePath}/packmind-versions/0.23.0/apply-changes.md`,
-          content: APPLY_CHANGES_0230,
-        },
-        {
-          path: `${basePath}/references/agent-skills-specification.md`,
-          content: AGENT_SKILLS_SPECIFICATION,
-        },
-      ],
-      delete: [
-        {
-          path: `${basePath}/references/domain-standards.md`,
-          type: DeleteItemType.File,
-        },
-        {
-          path: `${basePath}/references/domain-commands.md`,
-          type: DeleteItemType.File,
-        },
-        {
-          path: `${basePath}/references/domain-skills.md`,
-          type: DeleteItemType.File,
-        },
-        {
-          path: `${basePath}/steps/apply-changes.md`,
-          type: DeleteItemType.File,
-        },
-        {
-          path: `${basePath}/packmind-versions/0.24.0`,
-          type: DeleteItemType.Directory,
-        },
-      ],
-    };
+    const createOrUpdate = [
+      {
+        path: `${basePath}/SKILL.md`,
+        content: this.getSkillMd(agentName, skillMd),
+      },
+      { path: `${basePath}/LICENSE.txt`, content: LICENSE_TXT },
+      {
+        path: `${basePath}/steps/analyze-standards.md`,
+        content: ANALYZE_STANDARDS,
+      },
+      {
+        path: `${basePath}/steps/analyze-commands.md`,
+        content: ANALYZE_COMMANDS,
+      },
+      {
+        path: `${basePath}/steps/analyze-skills.md`,
+        content: ANALYZE_SKILLS,
+      },
+      {
+        path: `${basePath}/packmind-versions/0.21.0/apply-changes.md`,
+        content: APPLY_CHANGES_0210,
+      },
+      {
+        path: `${basePath}/packmind-versions/0.23.0/apply-changes.md`,
+        content: APPLY_CHANGES_0230,
+      },
+      {
+        path: `${basePath}/references/agent-skills-specification.md`,
+        content: AGENT_SKILLS_SPECIFICATION,
+      },
+    ];
+
+    const deleteItems = [
+      {
+        path: `${basePath}/references/domain-standards.md`,
+        type: DeleteItemType.File,
+      },
+      {
+        path: `${basePath}/references/domain-commands.md`,
+        type: DeleteItemType.File,
+      },
+      {
+        path: `${basePath}/references/domain-skills.md`,
+        type: DeleteItemType.File,
+      },
+      {
+        path: `${basePath}/steps/apply-changes.md`,
+        type: DeleteItemType.File,
+      },
+      {
+        path: `${basePath}/packmind-versions/0.24.0`,
+        type: DeleteItemType.Directory,
+      },
+    ];
+
+    if (includeNext) {
+      createOrUpdate.push({
+        path: `${basePath}/packmind-versions/next/apply-changes.md`,
+        content: APPLY_CHANGES_NEXT,
+      });
+    } else {
+      deleteItems.push({
+        path: `${basePath}/packmind-versions/next`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    return { createOrUpdate, delete: deleteItems };
   }
 }
