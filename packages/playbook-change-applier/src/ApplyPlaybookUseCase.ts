@@ -53,7 +53,6 @@ const UNSUPPORTED_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.removeCommand,
   ChangeProposalType.removeSkill,
   ChangeProposalType.deleteRule,
-  ChangeProposalType.deleteSkillFile,
 ]);
 
 const CREATION_TYPES = new Set<ChangeProposalType>([
