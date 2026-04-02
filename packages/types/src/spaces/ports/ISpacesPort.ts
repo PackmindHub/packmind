@@ -12,6 +12,10 @@ import {
   RemoveMemberFromSpaceResponse,
 } from '../contracts/IRemoveMemberFromSpaceUseCase';
 import {
+  UpdateMemberRoleCommand,
+  UpdateMemberRoleResponse,
+} from '../contracts/IUpdateMemberRoleUseCase';
+import {
   CreateSpaceCommand,
   CreateSpaceResponse,
 } from '../contracts/ICreateSpaceUseCase';
@@ -134,4 +138,13 @@ export interface ISpacesPort {
   removeMemberFromSpace(
     command: RemoveMemberFromSpaceCommand,
   ): Promise<RemoveMemberFromSpaceResponse>;
+
+  /**
+   * Update a member's role in a space.
+   * Requires the caller to be a space admin.
+   * Cannot update own role.
+   */
+  updateMemberRole(
+    command: UpdateMemberRoleCommand,
+  ): Promise<UpdateMemberRoleResponse>;
 }

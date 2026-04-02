@@ -93,6 +93,18 @@ export class UserSpaceMembershipService {
     return this.userSpaceMembershipRepository.findMembership(userId, spaceId);
   }
 
+  async updateMembershipRole(
+    userId: UserId,
+    spaceId: SpaceId,
+    role: UserSpaceRole,
+  ): Promise<boolean> {
+    return this.userSpaceMembershipRepository.updateMembershipRole(
+      userId,
+      spaceId,
+      role,
+    );
+  }
+
   async removeSpaceMembership(
     userId: UserId,
     spaceId: SpaceId,

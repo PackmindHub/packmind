@@ -180,7 +180,7 @@ describe('SpaceMembersTable', () => {
 
   describe('when onUpdateMemberRole is provided', () => {
     describe('when role select is changed by a space admin', () => {
-      it('calls onUpdateMemberRole with member id and new role', async () => {
+      it('calls onUpdateMemberRole', async () => {
         const onUpdateMemberRole = jest.fn();
 
         renderWithProviders(

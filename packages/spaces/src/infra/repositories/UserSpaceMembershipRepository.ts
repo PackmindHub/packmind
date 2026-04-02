@@ -1,5 +1,10 @@
 import { Repository } from 'typeorm';
-import { UserSpaceMembership, UserId, SpaceId } from '@packmind/types';
+import {
+  UserSpaceMembership,
+  UserId,
+  SpaceId,
+  UserSpaceRole,
+} from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { IUserSpaceMembershipRepository } from '../../domain/repositories/IUserSpaceMembershipRepository';
 import { UserSpaceMembershipSchema } from '../schemas/UserSpaceMembershipSchema';
@@ -129,6 +134,37 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       return memberships;
     } catch (error) {
       this.logger.error('Failed to find memberships by spaceId', {
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async updateMembershipRole(
+    userId: UserId,
+    spaceId: SpaceId,
+    role: UserSpaceRole,
+  ): Promise<boolean> {
+    this.logger.info('Updating membership role', { userId, spaceId, role });
+
+    try {
+      const updateResult = await this.repository.update(
+        { userId, spaceId },
+        { role },
+      );
+
+      const updated = (updateResult.affected ?? 0) > 0;
+      this.logger.info('Membership role update attempted', {
+        userId,
+        spaceId,
+        role,
+        updated,
+      });
+      return updated;
+    } catch (error) {
+      this.logger.error('Failed to update membership role', {
+        userId,
         spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
