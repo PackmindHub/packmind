@@ -74,10 +74,6 @@ describe('ApplyPlaybookUseCase', () => {
     organizationId,
   };
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   beforeEach(() => {
     accountsPort = {
       getUserById: jest.fn().mockResolvedValue(user),
@@ -138,6 +134,10 @@ describe('ApplyPlaybookUseCase', () => {
       spacesPort,
       stubbedLogger,
     );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   function buildCommand(
