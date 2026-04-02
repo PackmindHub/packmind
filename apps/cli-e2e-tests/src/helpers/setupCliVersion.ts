@@ -8,7 +8,7 @@ import {
 if (isProductionMode()) {
   const cliPath = process.env['CLI_BINARY_PATH'];
   try {
-    const stdout = execSync(`node "${cliPath}" --version`, {
+    const stdout = execSync(`"${cliPath}" --version`, {
       encoding: 'utf-8',
     });
     const match = stdout.match(/version\s+([\d.]+(?:-[\w.]+)?)/);

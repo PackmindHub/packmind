@@ -169,9 +169,9 @@ describeForVersion('0.24.0', 'playbook add and submit for CLI <= 0.24.0', () => 
         );
       });
 
-      it('suggests using --no-review as an alternative', () => {
-        expect(submitResult.stdout).toEqual(
-          expect.stringContaining('--no-review'),
+      it('mentions community edition in the error', () => {
+        expect(submitResult.stderr).toEqual(
+          expect.stringContaining('Community Edition'),
         );
       });
     });

@@ -84,11 +84,18 @@ export async function runCli(
   };
 
   return new Promise((resolve, reject) => {
-    const child = spawn('node', [cliPath, ...args], {
-      env,
-      cwd: opts?.cwd || process.cwd(),
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    const isJsFile = cliPath.endsWith('.cjs') || cliPath.endsWith('.js');
+    const child = isJsFile
+      ? spawn('node', [cliPath, ...args], {
+          env,
+          cwd: opts?.cwd || process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        })
+      : spawn(cliPath, args, {
+          env,
+          cwd: opts?.cwd || process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
 
     let stdout = '';
     let stderr = '';
