@@ -9,6 +9,7 @@ import {
   PMPageSection,
   PMSpinner,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
 
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -57,6 +58,13 @@ export function SpaceMembersList() {
   const handleConfirmRemove = () => {
     if (memberToRemove) {
       removeMutation.mutate(memberToRemove.id, {
+        onSuccess: () => {
+          pmToaster.create({
+            title: 'Member removed',
+            description: `${memberToRemove.displayName} has been removed from the space.`,
+            type: 'success',
+          });
+        },
         onSettled: () => setMemberToRemove(null),
       });
     }
