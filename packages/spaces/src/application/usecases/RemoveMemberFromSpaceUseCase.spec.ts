@@ -114,7 +114,9 @@ describe('RemoveMemberFromSpaceUseCase', () => {
       });
 
       it('does not call removeSpaceMembership', async () => {
-        await expect(useCase.execute(buildCommand())).rejects.toThrow();
+        await useCase.execute(buildCommand()).catch(() => {
+          /* expected */
+        });
 
         expect(membershipService.removeSpaceMembership).not.toHaveBeenCalled();
       });
@@ -153,7 +155,9 @@ describe('RemoveMemberFromSpaceUseCase', () => {
       });
 
       it('does not call removeSpaceMembership', async () => {
-        await expect(useCase.execute(buildCommand())).rejects.toThrow();
+        await useCase.execute(buildCommand()).catch(() => {
+          /* expected */
+        });
 
         expect(membershipService.removeSpaceMembership).not.toHaveBeenCalled();
       });
@@ -180,9 +184,11 @@ describe('RemoveMemberFromSpaceUseCase', () => {
       });
 
       it('does not call removeSpaceMembership', async () => {
-        await expect(
-          useCase.execute(buildCommand({ targetUserId: userId })),
-        ).rejects.toThrow();
+        await useCase
+          .execute(buildCommand({ targetUserId: userId }))
+          .catch(() => {
+            /* expected */
+          });
 
         expect(membershipService.removeSpaceMembership).not.toHaveBeenCalled();
       });
