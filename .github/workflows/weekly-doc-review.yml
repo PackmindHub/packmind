@@ -77,9 +77,11 @@ jobs:
         if: always() && hashFiles('doc-audit-report.md') != ''
         uses: archive/github-actions-slack@af78098f536edbc4de71162a307590698245be95
         with:
-          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-          slack-channel: ${{ secrets.SLACK_CHANNEL_ID }}
-          slack-text: ${{ env.SLACK_REPORT_CONTENT }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: ${{ env.SLACK_REPORT_CONTENT }}
 
       - name: Upload reports artifact
         if: always()

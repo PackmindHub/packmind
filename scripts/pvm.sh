@@ -13,6 +13,11 @@ PVM_DIR="${PVM_DIR:-$HOME/.pvm}"
 PVM_REPO="PackmindHub/packmind"
 PVM_BINARY_NAME="packmind-cli"
 
+# Detect repo root from the location of this script (needed for `pvm use dev`)
+# Works for both `source scripts/pvm.sh` and `. /absolute/path/to/pvm.sh`
+_PVM_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+_PVM_REPO_ROOT="$(cd "$_PVM_SCRIPT_DIR/.." && pwd)"
+
 # Colors (disabled if not a terminal)
 if [ -t 1 ]; then
     _PVM_RED='\033[0;31m'
@@ -159,6 +164,35 @@ _pvm_ls() {
     echo ""
 }
 
+# ── pvm use dev ────────────────────────────────────────────────────────────
+
+_pvm_use_dev() {
+    version_dir="${PVM_DIR}/versions/dev"
+    binary_path="${version_dir}/${PVM_BINARY_NAME}"
+    cli_entry="${_PVM_REPO_ROOT}/dist/apps/cli/main.cjs"
+
+    mkdir -p "$version_dir"
+
+    # (Re)generate wrapper script pointing to the local build
+    cat > "$binary_path" <<WRAPPER
+#!/bin/sh
+exec node "${cli_entry}" "\$@"
+WRAPPER
+    chmod +x "$binary_path"
+
+    # Create symlink for convenience (packmind -> packmind-cli)
+    ln -sf "$PVM_BINARY_NAME" "${version_dir}/packmind" 2>/dev/null
+
+    # Swap PATH
+    stripped_path=$(_pvm_strip_path)
+    export PATH="${version_dir}:${stripped_path}"
+    \hash -r 2>/dev/null
+
+    _pvm_success "Now using packmind-cli dev (local build)"
+    _pvm_info "Entry point: ${cli_entry}"
+    _pvm_warn "Make sure to build first: nx build packmind-cli"
+}
+
 # ── pvm use ─────────────────────────────────────────────────────────────────
 
 _pvm_use() {
@@ -167,6 +201,11 @@ _pvm_use() {
     if [ -z "$version" ]; then
         _pvm_error "Usage: pvm use <version>"
         return 1
+    fi
+
+    if [ "$version" = "dev" ]; then
+        _pvm_use_dev
+        return $?
     fi
 
     version_dir="${PVM_DIR}/versions/${version}"
@@ -253,6 +292,7 @@ pvm() {
             printf "  ${_PVM_BOLD}Examples:${_PVM_NC}\n"
             echo "    pvm ls              # see what's available"
             echo "    pvm use 0.24.0      # switch to 0.24.0 (downloads if needed)"
+            echo "    pvm use dev         # use the local build from this repo's dist/"
             echo "    pvm use 0.23.0      # switch back to 0.23.0"
             echo ""
             printf "  ${_PVM_BOLD}Current version:${_PVM_NC} ${current:-none}\n"
