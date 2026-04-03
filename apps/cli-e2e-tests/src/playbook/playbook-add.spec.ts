@@ -1,7 +1,6 @@
 import {
   describeWithUserSignedUp,
   describeForVersion,
-  RunCliResult,
   setupGitRepo,
   updateFile,
   UserSignedUpContext,
