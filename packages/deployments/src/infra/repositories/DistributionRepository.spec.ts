@@ -782,6 +782,110 @@ describe('DistributionRepository', () => {
     });
   });
 
+  describe('countActiveArtifactsBySpace', () => {
+    const spaceId = createSpaceId('space-1');
+
+    describe('when artifacts are deployed', () => {
+      let result: Awaited<
+        ReturnType<typeof repository.countActiveArtifactsBySpace>
+      >;
+
+      beforeEach(async () => {
+        const subQueryBuilder = {
+          select: jest.fn().mockReturnThis(),
+          innerJoin: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          groupBy: jest.fn().mockReturnThis(),
+          getQuery: jest.fn().mockReturnValue('SUBQUERY'),
+        };
+
+        const mainQueryBuilder = {
+          innerJoin: jest.fn().mockReturnThis(),
+          leftJoin: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          setParameters: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          addSelect: jest.fn().mockReturnThis(),
+          getRawOne: jest.fn().mockResolvedValue({
+            standards: '3',
+            recipes: '2',
+            skills: '1',
+          }),
+        };
+
+        mockTypeOrmRepository.createQueryBuilder = jest
+          .fn()
+          .mockReturnValueOnce(subQueryBuilder)
+          .mockReturnValueOnce(mainQueryBuilder);
+
+        result = await repository.countActiveArtifactsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('returns parsed artifact counts', () => {
+        expect(result).toEqual({
+          standards: 3,
+          recipes: 2,
+          skills: 1,
+        });
+      });
+
+      it('creates two query builders', () => {
+        expect(mockTypeOrmRepository.createQueryBuilder).toHaveBeenCalledTimes(
+          2,
+        );
+      });
+    });
+
+    describe('when no artifacts are deployed', () => {
+      let result: Awaited<
+        ReturnType<typeof repository.countActiveArtifactsBySpace>
+      >;
+
+      beforeEach(async () => {
+        const subQueryBuilder = {
+          select: jest.fn().mockReturnThis(),
+          innerJoin: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          groupBy: jest.fn().mockReturnThis(),
+          getQuery: jest.fn().mockReturnValue('SUBQUERY'),
+        };
+
+        const mainQueryBuilder = {
+          innerJoin: jest.fn().mockReturnThis(),
+          leftJoin: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          setParameters: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          addSelect: jest.fn().mockReturnThis(),
+          getRawOne: jest.fn().mockResolvedValue(undefined),
+        };
+
+        mockTypeOrmRepository.createQueryBuilder = jest
+          .fn()
+          .mockReturnValueOnce(subQueryBuilder)
+          .mockReturnValueOnce(mainQueryBuilder);
+
+        result = await repository.countActiveArtifactsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('returns zeros for all artifact types', () => {
+        expect(result).toEqual({
+          standards: 0,
+          recipes: 0,
+          skills: 0,
+        });
+      });
+    });
+  });
+
   describe('findActiveRenderModesByTarget', () => {
     const createDistribution = (
       id: string,
