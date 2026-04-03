@@ -20,7 +20,6 @@ import {
   fetchAvailablePackageSlugs,
   logPackageAddGuidance,
   logRemovedPackagesNotification,
-  warnSkippedRemovals,
   collectParts,
 } from './submit/submitLogger';
 import {
@@ -31,14 +30,6 @@ import {
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
-import { checkForDuplicateNames } from './submit/duplicateNameChecker';
-import {
-  fetchAvailablePackageSlugs,
-  logPackageAddGuidance,
-  logRemovedPackagesNotification,
-  warnSkippedRemovals,
-  collectParts,
-} from './submit/submitLogger';
 import { isCommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
@@ -149,11 +140,26 @@ export async function playbookSubmitHandler(
   });
 
   // Build proposals
-  const { proposals: allProposals, skippedRemovals } = await buildProposals(
+  const { proposals: allProposals, conflicts } = await buildProposals(
     changes,
     resolver.getTargetContext,
-    noReview,
   );
+
+  // Pre-flight: reject when the same artifact is updated from multiple agents
+  if (conflicts.length > 0) {
+    for (const conflict of conflicts) {
+      const agents = conflict.entries.map((e) => e.codingAgent).join(', ');
+      const paths = conflict.entries
+        .map((e) => `  - ${e.filePath} (${e.codingAgent})`)
+        .join('\n');
+      logErrorConsole(
+        `${capitalize(conflict.artifactType)} "${conflict.artifactName}" is modified from multiple agents (${agents}):\n${paths}\n` +
+          'Only one agent version can be submitted at a time. Use "playbook unstage" to remove one.',
+      );
+    }
+    exit(1);
+    return;
+  }
 
   if (allProposals.length === 0) {
     logConsole(
@@ -227,9 +233,16 @@ export async function playbookSubmitHandler(
         directUpdate: true,
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      logErrorConsole(`Failed to apply changes: ${errorMessage}`);
+      const err = error as Error & { statusCode?: number };
+      if (err.statusCode === 422) {
+        logErrorConsole('Failed to apply changes: a conflict was detected.');
+        logInfoConsole(
+          'This usually means the artifact was modified since your last pull.\n' +
+            'Run `packmind pull` to sync your local state, then retry.',
+        );
+      } else {
+        logErrorConsole(`Failed to apply changes: ${err.message}`);
+      }
       exit(1);
       return;
     }
@@ -282,6 +295,7 @@ export async function playbookSubmitHandler(
       createdSpaceIds,
     );
     logPackageAddGuidance(response.created, packageSlugs);
+
     exit(0);
     return;
   }

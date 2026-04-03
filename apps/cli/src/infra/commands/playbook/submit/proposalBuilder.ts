@@ -397,16 +397,28 @@ function findDeployedContentForPath(
   return match?.content ?? null;
 }
 
+export type ArtifactConflict = {
+  artifactName: string;
+  artifactType: string;
+  entries: Array<{ filePath: string; codingAgent: string }>;
+};
+
 export async function buildProposals(
   changes: PlaybookChangeEntry[],
   getTargetContext: (entry: PlaybookChangeEntry) => Promise<TargetContext>,
-  noReview: boolean,
 ): Promise<{
   proposals: ProposalItem[];
-  skippedRemovals: PlaybookChangeEntry[];
+  conflicts: ArtifactConflict[];
 }> {
   const proposals: ProposalItem[] = [];
-  const skippedRemovals: PlaybookChangeEntry[] = [];
+  const updateSources = new Map<
+    string,
+    {
+      artifactName: string;
+      artifactType: string;
+      entries: Array<{ filePath: string; codingAgent: string }>;
+    }
+  >();
 
   for (const entry of changes) {
     const ctx = await getTargetContext(entry);
@@ -430,10 +442,6 @@ export async function buildProposals(
           break;
       }
     } else if (entry.changeType === 'removed') {
-      if (noReview) {
-        skippedRemovals.push(entry);
-        continue;
-      }
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
         ctx.lockFile,
@@ -456,6 +464,23 @@ export async function buildProposals(
           `Skipping "${entry.artifactName}" — artifact not found in lock file. Try running a deploy first.`,
         );
         continue;
+      }
+
+      // Track update sources for conflict detection
+      const existing = updateSources.get(artifactId);
+      if (existing) {
+        existing.entries.push({
+          filePath: entry.filePath,
+          codingAgent: entry.codingAgent,
+        });
+      } else {
+        updateSources.set(artifactId, {
+          artifactName: entry.artifactName,
+          artifactType: entry.artifactType,
+          entries: [
+            { filePath: entry.filePath, codingAgent: entry.codingAgent },
+          ],
+        });
       }
 
       const deployedContent = findDeployedContentForPath(
@@ -497,5 +522,12 @@ export async function buildProposals(
     }
   }
 
-  return { proposals, skippedRemovals };
+  const conflicts: ArtifactConflict[] = [];
+  for (const source of updateSources.values()) {
+    if (source.entries.length > 1) {
+      conflicts.push(source);
+    }
+  }
+
+  return { proposals, conflicts };
 }

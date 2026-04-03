@@ -3,7 +3,6 @@ import { PlaybookChangeEntry } from '../../../../domain/repositories/IPlaybookLo
 import { PackmindLockFile } from '../../../../domain/repositories/PackmindLockFile';
 import {
   buildProposals,
-  ProposalItem,
   resolveArtifactIdFromLockFile,
 } from './proposalBuilder';
 import { TargetContext } from './targetContextResolver';
@@ -193,7 +192,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals).toHaveLength(1);
@@ -205,7 +203,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals[0].type).toBe(ChangeProposalType.createStandard);
@@ -217,7 +214,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect((proposals[0].payload as { name: string }).name).toBe(
@@ -231,7 +227,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(
@@ -248,7 +243,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals[0].artefactId).toBeNull();
@@ -270,7 +264,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals[0].type).toBe(ChangeProposalType.createCommand);
@@ -290,7 +283,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect((proposals[0].payload as { name: string }).name).toBe(
@@ -314,7 +306,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals[0].type).toBe(ChangeProposalType.createSkill);
@@ -334,7 +325,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       const payload = proposals[0].payload as {
@@ -368,7 +358,7 @@ describe('buildProposals', () => {
         .mockResolvedValue(makeTargetContext({ lockFile }));
       const entries = [makeEntry({ changeType: 'removed', content: '' })];
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(proposals[0].type).toBe(ChangeProposalType.removeStandard);
     });
@@ -394,54 +384,11 @@ describe('buildProposals', () => {
         .mockResolvedValue(makeTargetContext({ lockFile }));
       const entries = [makeEntry({ changeType: 'removed', content: '' })];
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(
         (proposals[0].payload as { packageIds: string[] }).packageIds,
       ).toEqual(['pkg-1', 'pkg-2']);
-    });
-  });
-
-  describe('when entry is removed and noReview is true', () => {
-    let resultProposals: ProposalItem[];
-    let resultSkipped: PlaybookChangeEntry[];
-
-    beforeEach(async () => {
-      const lockFile = makeLockFile({
-        artifacts: {
-          'my-standard': {
-            name: 'My Standard',
-            type: 'standard',
-            id: 'artifact-1',
-            version: 1,
-            spaceId: 'space-123',
-            packageIds: [],
-            files: [
-              { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
-            ],
-          },
-        },
-      });
-      const getCtx = jest
-        .fn()
-        .mockResolvedValue(makeTargetContext({ lockFile }));
-      const entries = [makeEntry({ changeType: 'removed', content: '' })];
-
-      const { proposals, skippedRemovals } = await buildProposals(
-        entries,
-        getCtx,
-        true,
-      );
-      resultProposals = proposals;
-      resultSkipped = skippedRemovals;
-    });
-
-    it('produces no proposals', () => {
-      expect(resultProposals).toHaveLength(0);
-    });
-
-    it('adds the entry to skippedRemovals', () => {
-      expect(resultSkipped).toHaveLength(1);
     });
   });
 
@@ -452,7 +399,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals).toHaveLength(0);
@@ -461,7 +407,7 @@ describe('buildProposals', () => {
     it('logs a warning', async () => {
       const entries = [makeEntry({ changeType: 'removed', content: '' })];
 
-      await buildProposals(entries, defaultGetTargetContext, false);
+      await buildProposals(entries, defaultGetTargetContext);
 
       expect(logWarningConsole).toHaveBeenCalledWith(
         expect.stringContaining('not found in lock file'),
@@ -509,7 +455,7 @@ describe('buildProposals', () => {
       );
       const entries = [makeEntry({ changeType: 'updated' })];
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(proposals.length).toBeGreaterThan(0);
     });
@@ -543,7 +489,7 @@ describe('buildProposals', () => {
       );
       const entries = [makeEntry({ changeType: 'updated' })];
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(proposals[0].artefactId).toBe('artifact-1');
     });
@@ -576,7 +522,7 @@ describe('buildProposals', () => {
     it('produces no proposals', async () => {
       const { entries, getCtx } = setupNoDeployedContent();
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(proposals).toHaveLength(0);
     });
@@ -584,7 +530,7 @@ describe('buildProposals', () => {
     it('logs a warning about deployed content', async () => {
       const { entries, getCtx } = setupNoDeployedContent();
 
-      await buildProposals(entries, getCtx, false);
+      await buildProposals(entries, getCtx);
 
       expect(logWarningConsole).toHaveBeenCalledWith(
         expect.stringContaining('deployed content unavailable'),
@@ -599,7 +545,6 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals).toHaveLength(0);
@@ -608,7 +553,7 @@ describe('buildProposals', () => {
     it('logs a warning', async () => {
       const entries = [makeEntry({ changeType: 'updated' })];
 
-      await buildProposals(entries, defaultGetTargetContext, false);
+      await buildProposals(entries, defaultGetTargetContext);
 
       expect(logWarningConsole).toHaveBeenCalledWith(
         expect.stringContaining('not found in lock file'),
@@ -626,7 +571,7 @@ describe('buildProposals', () => {
         makeEntry({ changeType: 'created', targetId: undefined }),
       ];
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(proposals[0].targetId).toBe('lock-target-789');
     });
@@ -678,7 +623,7 @@ describe('buildProposals', () => {
         }),
       ];
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       const types = proposals.map((p) => p.type);
       expect(types).toContain(ChangeProposalType.updateSkillDescription);
@@ -732,7 +677,7 @@ describe('buildProposals', () => {
     it('generates at least one proposal', async () => {
       const { entries, getCtx } = setupUpdatedCommand();
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(proposals.length).toBeGreaterThan(0);
     });
@@ -740,7 +685,7 @@ describe('buildProposals', () => {
     it('sets artefactId to the lock file artifact id', async () => {
       const { entries, getCtx } = setupUpdatedCommand();
 
-      const { proposals } = await buildProposals(entries, getCtx, false);
+      const { proposals } = await buildProposals(entries, getCtx);
 
       expect(proposals[0].artefactId).toBe('artifact-cmd-1');
     });
@@ -763,10 +708,206 @@ describe('buildProposals', () => {
       const { proposals } = await buildProposals(
         entries,
         defaultGetTargetContext,
-        false,
       );
 
       expect(proposals).toHaveLength(2);
+    });
+  });
+
+  describe('when the same artifact is updated from multiple agents', () => {
+    const sharedLockFile = makeLockFile({
+      artifacts: {
+        'commands/my-command': {
+          name: 'My Command',
+          type: 'command',
+          id: 'artifact-cmd-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: [],
+          files: [
+            { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+            {
+              path: '.github/copilot/commands/my-command.md',
+              agent: 'copilot',
+            },
+          ],
+        },
+      },
+    });
+
+    let getCtx: (entry: PlaybookChangeEntry) => Promise<TargetContext>;
+
+    beforeEach(() => {
+      getCtx = jest.fn().mockResolvedValue(
+        makeTargetContext({
+          lockFile: sharedLockFile,
+          deployedFiles: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: COMMAND_CONTENT,
+            },
+            {
+              path: '.github/copilot/commands/my-command.md',
+              content: COMMAND_CONTENT,
+            },
+          ],
+        }),
+      );
+    });
+
+    it('reports a conflict', async () => {
+      const entries = [
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from claude',
+          filePath: '.claude/commands/my-command.md',
+          codingAgent: 'claude-code',
+        }),
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from copilot',
+          filePath: '.github/copilot/commands/my-command.md',
+          codingAgent: 'copilot',
+        }),
+      ];
+
+      const { conflicts } = await buildProposals(entries, getCtx);
+
+      expect(conflicts).toHaveLength(1);
+    });
+
+    it('includes both file paths in the conflict', async () => {
+      const entries = [
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from claude',
+          filePath: '.claude/commands/my-command.md',
+          codingAgent: 'claude-code',
+        }),
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from copilot',
+          filePath: '.github/copilot/commands/my-command.md',
+          codingAgent: 'copilot',
+        }),
+      ];
+
+      const { conflicts } = await buildProposals(entries, getCtx);
+
+      expect(conflicts[0].entries).toEqual([
+        {
+          filePath: '.claude/commands/my-command.md',
+          codingAgent: 'claude-code',
+        },
+        {
+          filePath: '.github/copilot/commands/my-command.md',
+          codingAgent: 'copilot',
+        },
+      ]);
+    });
+
+    it('includes artifact name in the conflict', async () => {
+      const entries = [
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from claude',
+          filePath: '.claude/commands/my-command.md',
+          codingAgent: 'claude-code',
+        }),
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from copilot',
+          filePath: '.github/copilot/commands/my-command.md',
+          codingAgent: 'copilot',
+        }),
+      ];
+
+      const { conflicts } = await buildProposals(entries, getCtx);
+
+      expect(conflicts[0].artifactName).toBe('My Command');
+    });
+
+    it('includes artifact type in the conflict', async () => {
+      const entries = [
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from claude',
+          filePath: '.claude/commands/my-command.md',
+          codingAgent: 'claude-code',
+        }),
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from copilot',
+          filePath: '.github/copilot/commands/my-command.md',
+          codingAgent: 'copilot',
+        }),
+      ];
+
+      const { conflicts } = await buildProposals(entries, getCtx);
+
+      expect(conflicts[0].artifactType).toBe('command');
+    });
+  });
+
+  describe('when a single agent updates an artifact', () => {
+    it('reports no conflicts', async () => {
+      const lockFile = makeLockFile({
+        artifacts: {
+          'commands/my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'artifact-cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+            ],
+          },
+        },
+      });
+      const getCtx = jest.fn().mockResolvedValue(
+        makeTargetContext({
+          lockFile,
+          deployedFiles: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: COMMAND_CONTENT,
+            },
+          ],
+        }),
+      );
+
+      const entries = [
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated content',
+          filePath: '.claude/commands/my-command.md',
+          codingAgent: 'claude-code',
+        }),
+      ];
+
+      const { conflicts } = await buildProposals(entries, getCtx);
+
+      expect(conflicts).toHaveLength(0);
     });
   });
 });

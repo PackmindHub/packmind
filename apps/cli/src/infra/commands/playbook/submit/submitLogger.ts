@@ -5,10 +5,8 @@ import {
   logInfoConsole,
   logWarningConsole,
 } from '../../../utils/consoleLogger';
-import { loadApiKey, decodeApiKey } from '../../../utils/credentials';
 import { resolveUrlBuilder } from '../../../utils/urlBuilderUtils';
 import { PackmindCliHexa } from '../../../../PackmindCliHexa';
-import { PlaybookChangeEntry } from '../../../../domain/repositories/IPlaybookLocalRepository';
 
 export async function fetchAvailablePackageSlugs(
   packmindCliHexa: PackmindCliHexa,
@@ -113,18 +111,6 @@ export async function logRemovedPackagesNotification(
     }
   } catch {
     // Best effort — don't fail if package info can't be fetched
-  }
-}
-
-export function warnSkippedRemovals(skipped: PlaybookChangeEntry[]): void {
-  if (skipped.length === 0) return;
-  const apiKey = loadApiKey();
-  const host = apiKey ? decodeApiKey(apiKey)?.host : null;
-  logWarningConsole(
-    `${skipped.length} removal(s) skipped — removals are not supported via --no-review.`,
-  );
-  if (host) {
-    logInfoConsole(`To remove artifacts, visit: ${host}`);
   }
 }
 
