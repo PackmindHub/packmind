@@ -1,10 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardCommand,
   CreateStandardResponse,
   IAccountsPort,
+  ISpacesPort,
   Organization,
   OrganizationId,
   RuleAddedEvent,
@@ -14,6 +18,7 @@ import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  createRuleId,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,6 +41,7 @@ const mockSlug = slug as jest.MockedFunction<typeof slug>;
 
 describe('CreateStandardUsecase', () => {
   let createStandardUsecase: CreateStandardUsecase;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
@@ -62,6 +68,7 @@ describe('CreateStandardUsecase', () => {
           userId: testUserId,
         },
       ],
+      trial: false,
       active: true,
     };
 
@@ -70,6 +77,16 @@ describe('CreateStandardUsecase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
+
+    // Mock SpacesPort
+    spacesPort = {
+      findMembership: jest
+        .fn()
+        .mockResolvedValue({
+          userId: testUserId,
+          spaceId: createSpaceId(uuidv4()),
+        }),
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     // Mock AccountsPort
     accountsPort = {
@@ -127,6 +144,7 @@ describe('CreateStandardUsecase', () => {
     ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
     createStandardUsecase = new CreateStandardUsecase(
+      spacesPort,
       accountsPort,
       standardService,
       standardVersionService,
@@ -139,6 +157,28 @@ describe('CreateStandardUsecase', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('when the user is not a member of the space', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(null);
+    });
+
+    it('throws a SpaceMembershipRequiredError', async () => {
+      const command: CreateStandardCommand = {
+        name: 'Test Standard',
+        description: 'Test description',
+        rules: [{ content: 'Test rule' }],
+        organizationId: testOrganizationId,
+        userId: testUserId.toString(),
+        spaceId: createSpaceId(uuidv4()),
+        scope: null,
+      };
+
+      await expect(createStandardUsecase.execute(command)).rejects.toThrow(
+        SpaceMembershipRequiredError,
+      );
+    });
   });
 
   describe('createStandard', () => {
@@ -724,11 +764,11 @@ describe('CreateStandardUsecase', () => {
 
           createdRules = [
             ruleFactory({
-              id: uuidv4(),
+              id: createRuleId(uuidv4()),
               standardVersionId: createdStandardVersion.id,
             }),
             ruleFactory({
-              id: uuidv4(),
+              id: createRuleId(uuidv4()),
               standardVersionId: createdStandardVersion.id,
             }),
           ];
@@ -891,6 +931,7 @@ describe('CreateStandardUsecase', () => {
         } as unknown as jest.Mocked<IRuleRepository>;
 
         createStandardUsecase = new CreateStandardUsecase(
+          spacesPort,
           accountsPort,
           standardService,
           standardVersionService,
