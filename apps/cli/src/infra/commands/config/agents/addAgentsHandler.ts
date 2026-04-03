@@ -2,8 +2,10 @@ import { CodingAgent, PackmindFileConfig } from '@packmind/types';
 import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
 import { IDeploymentGateway } from '../../../../domain/repositories/IDeploymentGateway';
 import {
+  formatCommand,
   logConsole,
   logErrorConsole,
+  logInfoConsole,
   logSuccessConsole,
   logWarningConsole,
 } from '../../../utils/consoleLogger';
@@ -129,8 +131,8 @@ export async function addAgentsHandler(
   }
 
   if (anyUpdated) {
-    logWarningConsole(
-      'Run `packmind-cli install` to apply changes and deploy agent artifacts.',
+    logInfoConsole(
+      `Run "${formatCommand('packmind install')}" to apply changes and deploy agent artifacts.`,
     );
   }
   exit(0);

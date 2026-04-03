@@ -1,8 +1,9 @@
 import * as readline from 'readline';
-import { command, option, restPositionals, string } from 'cmd-ts';
+import { command, option, string } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
+import { agentNamesPositional } from '../customParameters/AgentNamesPositional';
 import { addAgentsHandler } from './agents/addAgentsHandler';
 
 function createPromptConfirm(): (message: string) => Promise<boolean> {
@@ -31,11 +32,7 @@ export const addAgentsCommand = command({
       description:
         'Run in the specified directory (recursive within that path)',
     }),
-    agentNames: restPositionals({
-      type: string,
-      displayName: 'agents',
-      description: 'Agent identifiers to add (e.g. claude cursor)',
-    }),
+    agentNames: agentNamesPositional,
   },
   handler: async ({ path: pathArg, agentNames }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
