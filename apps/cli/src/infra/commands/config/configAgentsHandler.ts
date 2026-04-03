@@ -5,6 +5,7 @@ import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileR
 import { IAgentArtifactDetectionService } from '../../../application/services/AgentArtifactDetectionService';
 import { logInfoConsole, logSuccessConsole } from '../../utils/consoleLogger';
 import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
+import { getRelativePath } from './agents/agentsHandlerUtils';
 
 /**
  * Agents available for selection (packmind excluded - always active)
@@ -85,6 +86,8 @@ export async function configAgentsHandler(
         name: 'selectedAgents',
         message: 'Select coding agents to generate artifacts for:',
         choices,
+        pageSize: 15,
+        loop: false,
       },
     ]);
     selectedAgents = result.selectedAgents;
@@ -92,6 +95,15 @@ export async function configAgentsHandler(
 
   // Step 4: Save selected agents to config
   await configRepository.updateAgentsConfig(baseDirectory, selectedAgents);
+
+  // Step 5: Propagate selected agents to descendant packmind.json files
+  if (selectedAgents.length > 0) {
+    await propagateAgentsToDescendants(
+      configRepository,
+      baseDirectory,
+      selectedAgents,
+    );
+  }
 
   const agentNames = selectedAgents.map((a) => AGENT_DISPLAY_NAMES[a]);
   if (selectedAgents.length === 0) {
@@ -193,4 +205,28 @@ async function getPreselectedAgents(
   }
 
   return new Set();
+}
+
+async function propagateAgentsToDescendants(
+  configRepository: IConfigFileRepository,
+  baseDirectory: string,
+  selectedAgents: CodingAgent[],
+): Promise<void> {
+  const descendantDirs =
+    await configRepository.findDescendantConfigs(baseDirectory);
+
+  for (const dir of descendantDirs) {
+    const config = await configRepository.readConfig(dir);
+    if (config === null) continue;
+
+    const existingAgents = config.agents ?? [];
+    const toAdd = selectedAgents.filter((a) => !existingAgents.includes(a));
+
+    if (toAdd.length > 0) {
+      const mergedAgents = [...existingAgents, ...toAdd];
+      await configRepository.updateAgentsConfig(dir, mergedAgents);
+      const relPath = getRelativePath(dir, baseDirectory);
+      logSuccessConsole(`Updated ${relPath}`);
+    }
+  }
 }

@@ -2,12 +2,14 @@ import { CodingAgent, PackmindFileConfig } from '@packmind/types';
 import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
 import { IDeploymentGateway } from '../../../../domain/repositories/IDeploymentGateway';
 import {
+  formatCommand,
   logConsole,
   logErrorConsole,
+  logInfoConsole,
   logSuccessConsole,
   logWarningConsole,
 } from '../../../utils/consoleLogger';
-import { AGENT_DISPLAY_NAMES, SELECTABLE_AGENTS } from '../configAgentsHandler';
+import { SELECTABLE_AGENTS } from '../configAgentsHandler';
 import {
   fetchOrgDefaultAgents,
   getRelativePath,
@@ -35,9 +37,6 @@ export async function addAgentsHandler(
 
   if (args.agentNames.length === 0) {
     logErrorConsole('No agents specified.');
-    logConsole(
-      `Valid agents: ${SELECTABLE_AGENTS.map((a) => AGENT_DISPLAY_NAMES[a]).join(', ')}`,
-    );
     logConsole(`Agent identifiers: ${SELECTABLE_AGENTS.join(', ')}`);
     exit(1);
     return;
@@ -49,7 +48,7 @@ export async function addAgentsHandler(
 
   if (invalidAgents.length > 0) {
     logErrorConsole(`Unknown agent(s): ${invalidAgents.join(', ')}`);
-    logConsole(`Valid agents: ${SELECTABLE_AGENTS.join(', ')}`);
+    logConsole(`Agent identifiers: ${SELECTABLE_AGENTS.join(', ')}`);
     exit(1);
     return;
   }
@@ -132,8 +131,8 @@ export async function addAgentsHandler(
   }
 
   if (anyUpdated) {
-    logWarningConsole(
-      'Run `packmind-cli install` to apply changes and deploy agent artifacts.',
+    logInfoConsole(
+      `Run "${formatCommand('packmind install')}" to apply changes and deploy agent artifacts.`,
     );
   }
   exit(0);

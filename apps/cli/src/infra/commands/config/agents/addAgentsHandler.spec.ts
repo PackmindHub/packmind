@@ -15,8 +15,10 @@ jest.mock('inquirer', () => ({
   default: { prompt: jest.fn() },
 }));
 jest.mock('../../../utils/consoleLogger', () => ({
+  formatCommand: jest.fn((text: string) => text),
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
+  logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logWarningConsole: jest.fn(),
 }));
@@ -143,8 +145,8 @@ describe('addAgentsHandler', () => {
     it('does not show the install reminder', async () => {
       await addAgentsHandler({ agentNames: ['claude'] }, deps);
 
-      const warns = mockLogger.logWarningConsole.mock.calls.map(([m]) => m);
-      expect(warns.some((m) => m.includes('packmind-cli install'))).toBe(false);
+      const infos = mockLogger.logInfoConsole.mock.calls.map(([m]) => m);
+      expect(infos.some((m) => m.includes('packmind install'))).toBe(false);
     });
   });
 
@@ -200,15 +202,13 @@ describe('addAgentsHandler', () => {
       expect(mockLogger.logSuccessConsole).toHaveBeenCalledTimes(2);
     });
 
-    it('shows the install warning at the end', async () => {
+    it('shows the install info at the end', async () => {
       await addAgentsHandler({ agentNames: ['claude'] }, deps);
 
-      const warnCalls = mockLogger.logWarningConsole.mock.calls.map(
+      const infoCalls = mockLogger.logInfoConsole.mock.calls.map(
         ([msg]) => msg,
       );
-      expect(warnCalls.some((m) => m.includes('packmind-cli install'))).toBe(
-        true,
-      );
+      expect(infoCalls.some((m) => m.includes('packmind install'))).toBe(true);
     });
   });
 

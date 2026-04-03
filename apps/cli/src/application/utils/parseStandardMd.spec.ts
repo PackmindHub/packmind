@@ -146,7 +146,23 @@ describe('parseStandardMd', () => {
   describe('when file is in Claude format', () => {
     const filePath = '.claude/rules/packmind/standard-my-standard.md';
 
-    it('extracts name from ## Standard: heading', () => {
+    it('extracts name from # Standard: heading (deployed format)', () => {
+      const content =
+        "---\nname: 'My Standard'\nalwaysApply: true\ndescription: 'Summary'\n---\n# Standard: My Standard\n\nSome description :\n\n* Rule 1";
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'My Standard',
+        description: 'Some description',
+        scope: '',
+        rules: ['Rule 1'],
+        frontmatterName: 'My Standard',
+        frontmatterDescription: 'Summary',
+      });
+    });
+
+    it('extracts name from ## Standard: heading (legacy format)', () => {
       const content =
         '---\nalwaysApply: true\n---\n## Standard: My Standard\n\nSome description :\n\n* Rule 1';
 
@@ -373,6 +389,20 @@ describe('parseStandardMd', () => {
   describe('when file is in Cursor format', () => {
     const filePath = '.cursor/rules/packmind/standard-my-standard.mdc';
 
+    it('extracts name from # Standard: heading (deployed format)', () => {
+      const content =
+        '---\nglobs: **/*.ts\nalwaysApply: false\n---\n# Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
     it('extracts scope from globs key', () => {
       const content =
         '---\nglobs: **/*.ts\nalwaysApply: false\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1';
@@ -406,6 +436,20 @@ describe('parseStandardMd', () => {
 
   describe('when file is in Continue format', () => {
     const filePath = '.continue/rules/packmind/standard-my-standard.md';
+
+    it('extracts name from # Standard: heading (deployed format)', () => {
+      const content =
+        '---\nglobs: "**/*.ts"\nalwaysApply: false\n---\n# Standard: Name\n\nDesc :\n\n* Rule 1';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
 
     it('extracts scope from globs key', () => {
       const content =
@@ -469,6 +513,20 @@ describe('parseStandardMd', () => {
     const filePath =
       '.github/instructions/packmind-my-standard.instructions.md';
 
+    it('extracts name from # Standard: heading (deployed format)', () => {
+      const content =
+        "---\napplyTo: '**/*.ts'\n---\n# Standard: Name\n\nDesc :\n\n* Rule 1";
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
     it('extracts scope from applyTo key', () => {
       const content =
         "---\napplyTo: '**/*.ts'\n---\n## Standard: Name\n\nDesc :\n\n* Rule 1";
@@ -520,6 +578,22 @@ describe('parseStandardMdForAgent', () => {
       description: 'Description',
       scope: '',
       rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Claude format for claude agent (deployed # Standard: format)', () => {
+    const content =
+      "---\nname: 'My Standard'\npaths: \"**/*.ts\"\nalwaysApply: false\ndescription: 'Summary'\n---\n# Standard: My Standard\n\nDescription :\n\n* Rule 1";
+
+    const result = parseStandardMdForAgent(content, 'claude');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+      frontmatterName: 'My Standard',
+      frontmatterDescription: 'Summary',
     });
   });
 

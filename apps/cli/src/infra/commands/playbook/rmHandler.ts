@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 
 import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
@@ -53,6 +54,12 @@ export async function playbookRmHandler(
   }
 
   const absolutePath = path.resolve(getCwd(), filePath);
+
+  if (!fs.existsSync(absolutePath)) {
+    logErrorConsole(`File not found: "${filePath}"`);
+    exit(1);
+    return;
+  }
 
   // Resolve target directory and lock file first
   const targetDir = await findNearestConfigDir(

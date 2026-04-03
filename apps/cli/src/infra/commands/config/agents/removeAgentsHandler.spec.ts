@@ -12,8 +12,10 @@ jest.mock('inquirer', () => ({
   default: { prompt: jest.fn() },
 }));
 jest.mock('../../../utils/consoleLogger', () => ({
+  formatCommand: jest.fn((text: string) => text),
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
+  logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logWarningConsole: jest.fn(),
 }));
@@ -51,11 +53,27 @@ describe('removeAgentsHandler', () => {
   });
 
   describe('when no agent names are provided', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: ['claude', 'cursor'],
+      });
+    });
+
     it('logs an error', async () => {
       await removeAgentsHandler({ agentNames: [] }, deps);
 
       expect(mockLogger.logErrorConsole).toHaveBeenCalledWith(
         'No agents specified.',
+      );
+    });
+
+    it('shows configured agents from packmind.json files', async () => {
+      await removeAgentsHandler({ agentNames: [] }, deps);
+
+      expect(mockLogger.logConsole).toHaveBeenCalledWith(
+        'Configured agents: claude, cursor',
       );
     });
 
@@ -67,6 +85,14 @@ describe('removeAgentsHandler', () => {
   });
 
   describe('when an invalid agent name is provided', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: ['claude', 'cursor'],
+      });
+    });
+
     it('logs the unknown agent', async () => {
       await removeAgentsHandler({ agentNames: ['unknown-agent'] }, deps);
 
@@ -75,10 +101,54 @@ describe('removeAgentsHandler', () => {
       );
     });
 
+    it('shows only configured agents as hint', async () => {
+      await removeAgentsHandler({ agentNames: ['unknown-agent'] }, deps);
+
+      expect(mockLogger.logConsole).toHaveBeenCalledWith(
+        'Configured agents: claude, cursor',
+      );
+    });
+
     it('exits with code 1', async () => {
       await removeAgentsHandler({ agentNames: ['unknown-agent'] }, deps);
 
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when an invalid agent name is provided and no agents are configured', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+      });
+    });
+
+    it('shows organization settings message', async () => {
+      await removeAgentsHandler({ agentNames: ['unknown-agent'] }, deps);
+
+      expect(mockLogger.logConsole).toHaveBeenCalledWith(
+        'No agents are currently configured in any packmind.json file — all projects use organization settings.',
+      );
+    });
+  });
+
+  describe('when an invalid agent name is provided with agents from multiple files', () => {
+    beforeEach(() => {
+      mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+        '/project/apps/api',
+      ]);
+      mockConfigRepository.readConfig
+        .mockResolvedValueOnce({ packages: {}, agents: ['cursor', 'claude'] })
+        .mockResolvedValueOnce({ packages: {}, agents: ['claude', 'copilot'] });
+    });
+
+    it('shows sorted deduplicated union of configured agents', async () => {
+      await removeAgentsHandler({ agentNames: ['unknown-agent'] }, deps);
+
+      expect(mockLogger.logConsole).toHaveBeenCalledWith(
+        'Configured agents: claude, copilot, cursor',
+      );
     });
   });
 
@@ -129,8 +199,8 @@ describe('removeAgentsHandler', () => {
     it('does not show the install reminder', async () => {
       await removeAgentsHandler({ agentNames: ['claude'] }, deps);
 
-      const warns = mockLogger.logWarningConsole.mock.calls.map(([m]) => m);
-      expect(warns.some((m) => m.includes('packmind-cli install'))).toBe(false);
+      const infos = mockLogger.logInfoConsole.mock.calls.map(([m]) => m);
+      expect(infos.some((m) => m.includes('packmind install'))).toBe(false);
     });
   });
 
@@ -161,15 +231,13 @@ describe('removeAgentsHandler', () => {
       expect(mockLogger.logSuccessConsole).toHaveBeenCalledTimes(2);
     });
 
-    it('shows the install warning at the end', async () => {
+    it('shows the install info at the end', async () => {
       await removeAgentsHandler({ agentNames: ['claude'] }, deps);
 
-      const warnCalls = mockLogger.logWarningConsole.mock.calls.map(
+      const infoCalls = mockLogger.logInfoConsole.mock.calls.map(
         ([msg]) => msg,
       );
-      expect(warnCalls.some((m) => m.includes('packmind-cli install'))).toBe(
-        true,
-      );
+      expect(infoCalls.some((m) => m.includes('packmind install'))).toBe(true);
     });
   });
 
@@ -203,11 +271,11 @@ describe('removeAgentsHandler', () => {
       expect(mockLogger.logSuccessConsole).toHaveBeenCalledTimes(1);
     });
 
-    it('warns that no agents will be rendered after install', async () => {
+    it('warns that organization settings will be used', async () => {
       await removeAgentsHandler({ agentNames: ['claude'] }, deps);
 
       expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
-        expect.stringContaining('no agents'),
+        expect.stringContaining('organization settings will be used'),
       );
     });
   });

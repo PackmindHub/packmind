@@ -1,7 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
+  ISpacesPort,
   ListSpaceMembersCommand,
   ListSpaceMembersResponse,
 } from '@packmind/types';
@@ -9,20 +13,21 @@ import { UserSpaceMembershipService } from '../services/UserSpaceMembershipServi
 
 const origin = 'ListSpaceMembersUseCase';
 
-export class ListSpaceMembersUseCase extends AbstractMemberUseCase<
+export class ListSpaceMembersUseCase extends AbstractSpaceMemberUseCase<
   ListSpaceMembersCommand,
   ListSpaceMembersResponse
 > {
   constructor(
     private readonly membershipService: UserSpaceMembershipService,
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  protected async executeForMembers(
-    command: ListSpaceMembersCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: ListSpaceMembersCommand & SpaceMemberContext,
   ): Promise<ListSpaceMembersResponse> {
     return this.membershipService.listSpaceMembers(command.spaceId);
   }

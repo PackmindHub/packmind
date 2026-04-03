@@ -4,6 +4,11 @@ import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybook
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn().mockReturnValue(true),
+}));
+
 jest.mock('../../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
   logErrorConsole: jest.fn(),
@@ -124,6 +129,9 @@ describe('playbookRmHandler', () => {
     mockLockFileRepository = {
       read: jest.fn().mockResolvedValue(LOCK_FILE_WITH_COMMAND),
     };
+
+    const fs = jest.requireMock('fs');
+    fs.existsSync.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -163,6 +171,35 @@ describe('playbookRmHandler', () => {
 
     it('does not stage anything', async () => {
       await playbookRmHandler(buildDeps({ filePath: undefined }));
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when file does not exist on disk', () => {
+    beforeEach(() => {
+      const fs = jest.requireMock('fs');
+      fs.existsSync.mockReturnValue(false);
+    });
+
+    it('logs error with file path', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookRmHandler(buildDeps({ filePath: 'nonexistent/file.md' }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('nonexistent/file.md'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookRmHandler(buildDeps({ filePath: 'nonexistent/file.md' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not stage anything', async () => {
+      await playbookRmHandler(buildDeps({ filePath: 'nonexistent/file.md' }));
 
       expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
     });

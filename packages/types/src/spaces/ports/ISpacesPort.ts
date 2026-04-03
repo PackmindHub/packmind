@@ -147,4 +147,13 @@ export interface ISpacesPort {
   updateMemberRole(
     command: UpdateMemberRoleCommand,
   ): Promise<UpdateMemberRoleResponse>;
+
+  /**
+   * Find a user's membership in a specific space.
+   * Returns null if the user is not a member of the space.
+   */
+  findMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<UserSpaceMembership | null>;
 }

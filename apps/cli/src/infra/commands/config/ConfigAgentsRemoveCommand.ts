@@ -1,9 +1,11 @@
-import { command, option, restPositionals, string } from 'cmd-ts';
+import { command, option, string } from 'cmd-ts';
 import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
+import { agentNamesPositional } from '../customParameters/AgentNamesPositional';
 import { removeAgentsHandler } from './agents/removeAgentsHandler';
 
 export const removeAgentsCommand = command({
   name: 'rm',
+  aliases: ['remove'],
   description: 'Remove coding agents from packmind.json files',
   args: {
     path: option({
@@ -14,11 +16,7 @@ export const removeAgentsCommand = command({
       description:
         'Run in the specified directory (recursive within that path)',
     }),
-    agentNames: restPositionals({
-      type: string,
-      displayName: 'agents',
-      description: 'Agent identifiers to remove (e.g. claude cursor)',
-    }),
+    agentNames: agentNamesPositional,
   },
   handler: async ({ path: pathArg, agentNames }) => {
     const configRepository = new ConfigFileRepository();
