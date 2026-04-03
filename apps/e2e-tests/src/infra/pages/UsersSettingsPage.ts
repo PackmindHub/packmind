@@ -17,11 +17,10 @@ export class UsersSettingsPage
       .getByTestId(UsersPageDataTestIds.InviteUsersSubmitCTA)
       .click();
 
-    // Wait for the invitation to be created (toast message appears then disappears)
-    await this.page.waitForSelector('text=Users Processed');
-    await this.page
-      .locator('text=Users Processed')
-      .waitFor({ state: 'hidden' });
+    // Wait for the invitation toast to appear then disappear
+    const toastTitle = this.page.getByText('Users Processed', { exact: true });
+    await toastTitle.waitFor({ state: 'visible' });
+    await toastTitle.waitFor({ state: 'hidden' });
   }
 
   async getInvitationToken(): Promise<string> {
