@@ -29,30 +29,14 @@ For details on the SKILL.md format, frontmatter fields, and best practices, refe
 
 ## Create a Skill Using the AI Agent
 
-The easiest way to create a skill is using the built-in `/packmind-create-skill` command with your AI coding assistant.
-
-### Install Default Skills
-
-First, ensure the skill creation tools are available locally. Run:
-
-```bash
-packmind-cli skills init
-```
-
-This installs Packmind's default skills, including the `packmind-create-skill` skill that guides you through creating new skills.
-
-<Tip>
-  **Automatic installation** — Default skills are also installed automatically
-  when you install a package with `packmind-cli install` or when packages are
-  distributed to your repository.
-</Tip>
+The easiest way to create a skill is using the `/packmind-update-playbook` skill with your AI coding assistant.
 
 ### Create Your Skill
 
-Once default skills are installed, invoke the `/packmind-create-skill` command in your AI coding assistant:
+Invoke the `/packmind-update-playbook` skill in your AI coding assistant:
 
 ```
-/packmind-create-skill
+/packmind-update-playbook create a Packmind skill for bootstrapping a new page in the frontend
 ```
 
 The assistant will guide you through:

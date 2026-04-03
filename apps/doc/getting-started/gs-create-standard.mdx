@@ -17,14 +17,14 @@ Let’s see how we can make written documentation useful again with **Packmind**
 
 ## Create a standard from your codebase
 
-You can create standards using the `/packmind-create-standard` command in your AI coding assistant.
+You can create standards using the `/packmind-update-playbook` skill in your AI coding assistant.
 
 1. Open your IDE and your coding assistant in **agentic mode**.
 2. For this demo, we will create a language-agnostic standard. (You can also target a specific language or framework.)
 3. Type this command:
 
 ```
-/packmind-create-standard
+/packmind-update-playbook create a Packmind standard about error handling
 ```
 
 Or use a natural language prompt:
@@ -51,21 +51,20 @@ Your new standard will be available in the Packmind web app, in the **Standards*
 
 ## Create a standard with a coding agent
 
-When using a coding agent like Claude Code, you can invoke the `/packmind-create-standard` skill to get guided assistance through the entire standard creation process.
+When using a coding agent like Claude Code, you can invoke the `/packmind-update-playbook` skill to get guided assistance through the entire standard creation process.
 
 ### Using the skill
 
 1. Open your coding agent (e.g., Claude Code)
-2. Type `/packmind-create-standard` to invoke the skill
-3. Describe the standard you want to create
+2. Type `/packmind-update-playbook` followed by a description of the standard you want to create
+3. The agent will analyze your codebase and iterate with you on the draft
 
 The agent will guide you through:
 
 1. **Understanding your needs** — Clarifying what problem the standard solves and where it applies
 2. **Writing rules** — Helping you craft clear, actionable rules following best practices
-3. **Creating the playbook** — Generating a JSON file with your standard definition
-4. **Review** — Showing you the complete standard for approval
-5. **Submission** — Creating the standard via the CLI
+3. **Review** — Showing you the complete standard for approval
+4. **Submission** — Creating the standard via the CLI
 
 <Tip>
   The skill workflow is interactive and iterative. The agent will ask clarifying
