@@ -169,9 +169,11 @@ describeForVersion('> 0.24.0', 'playbook remove', () => {
           expect(submitResult).toEqual({
             returnCode: 0,
             stderr: expect.stringContaining(
-              'Some changes could not be applied: playbook submit does not allow remove artefacts',
+              'Some changes could not be applied: playbook submit does not allow remove artefacts. Review the following affected packages:',
             ),
-            stdout: expect.stringContaining(`${getPackmindInstanceUrl()}`),
+            stdout: expect.stringContaining(
+              `${pkg.name}: ${getPackmindInstanceUrl()}/org/${context.organization.slug}/space/${context.space.slug}/packages/${pkg.id}`,
+            ),
           });
         });
       });
