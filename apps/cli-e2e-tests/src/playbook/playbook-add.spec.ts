@@ -1,5 +1,6 @@
 import {
   describeWithUserSignedUp,
+  describeForVersion,
   setupGitRepo,
   updateFile,
   UserSignedUpContext,
@@ -12,7 +13,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
-describe('playbook add', () => {
+describeForVersion('> 0.24.0', 'playbook add', () => {
   describeWithUserSignedUp('playbook add', (getContext) => {
     let context: UserSignedUpContext;
 

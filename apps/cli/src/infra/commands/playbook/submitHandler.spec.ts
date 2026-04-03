@@ -19,6 +19,13 @@ jest.mock('../../utils/consoleLogger', () => ({
   formatCommand: (text: string) => text,
 }));
 
+jest.mock('../../utils/credentials', () => ({
+  loadApiKey: jest.fn().mockReturnValue('fake-api-key'),
+  decodeApiKey: jest
+    .fn()
+    .mockReturnValue({ host: 'https://app.packmind.com', jwt: {} }),
+}));
+
 const STANDARD_CONTENT = [
   '# My Standard',
   '',
@@ -156,10 +163,22 @@ describe('playbookSubmitHandler', () => {
     };
   }
 
+  const {
+    logConsole,
+    logErrorConsole,
+    logInfoConsole,
+    logSuccessConsole,
+    logWarningConsole,
+  } = jest.requireMock('../../utils/consoleLogger') as {
+    logConsole: jest.Mock;
+    logErrorConsole: jest.Mock;
+    logInfoConsole: jest.Mock;
+    logSuccessConsole: jest.Mock;
+    logWarningConsole: jest.Mock;
+  };
+
   describe('when playbook is empty', () => {
     it('logs "Nothing to submit."', async () => {
-      const { logConsole } = jest.requireMock('../../utils/consoleLogger');
-
       await playbookSubmitHandler(buildDeps());
 
       expect(logConsole).toHaveBeenCalledWith('Nothing to submit.');
@@ -233,10 +252,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps());
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -258,10 +273,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps());
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -285,10 +296,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs abort message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps());
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -1391,10 +1398,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('skips the proposal and warns', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1430,10 +1433,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -1465,10 +1464,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs error', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'submit' }));
 
         expect(logErrorConsole).toHaveBeenCalled();
@@ -1522,6 +1517,51 @@ describe('playbookSubmitHandler', () => {
         await playbookSubmitHandler(buildDeps({ message: 'partial' }));
 
         expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when submitting to multiple spaces', () => {
+      describe('when one space fails', () => {
+        beforeEach(() => {
+          mockPlaybookLocalRepository.getChanges.mockReturnValue([
+            makeEntry({ spaceId: 'space-1', spaceName: 'Frontend' }),
+            makeEntry({
+              spaceId: 'space-2',
+              spaceName: 'Backend',
+              filePath: '.packmind/standards/other.md',
+              artifactName: 'Other Standard',
+            }),
+          ]);
+          mockGateway.changeProposals.batchCreate
+            .mockResolvedValueOnce({ created: 1, skipped: 0, errors: [] })
+            .mockResolvedValueOnce({
+              created: 0,
+              skipped: 0,
+              errors: [{ index: 0, message: 'Space quota exceeded' }],
+            });
+        });
+
+        it('reports the failed space by name', async () => {
+          await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+          expect(logErrorConsole).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to submit to space 'Backend'"),
+          );
+        });
+
+        it('reports the succeeded space and retry guidance', async () => {
+          await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+          expect(logWarningConsole).toHaveBeenCalledWith(
+            expect.stringContaining('Submitted to: Frontend'),
+          );
+        });
+
+        it('exits with code 1', async () => {
+          await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
       });
     });
 
@@ -1590,10 +1630,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('warns about missing deployed content', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1602,10 +1638,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('suggests running packmind pull', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update std' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1674,10 +1706,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('warns about missing deployed content', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1686,10 +1714,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('suggests running packmind pull', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'update cmd' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -1760,8 +1784,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs informative message', async () => {
-        const { logConsole } = jest.requireMock('../../utils/consoleLogger');
-
         await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
 
         expect(logConsole).toHaveBeenCalledWith(
@@ -2112,10 +2134,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs a warning about the missing space', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'remove skill' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -2156,10 +2174,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs the error', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'create std' }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -2537,10 +2551,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs warning', async () => {
-        const { logWarningConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'remove missing' }));
 
         expect(logWarningConsole).toHaveBeenCalledWith(
@@ -2575,10 +2585,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs error mentioning the artifact name', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'test' }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -2587,10 +2593,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs error mentioning playbook unstage', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ message: 'test' }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -2857,10 +2859,6 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs success message', async () => {
-      const { logSuccessConsole } = jest.requireMock(
-        '../../utils/consoleLogger',
-      );
-
       await playbookSubmitHandler(buildDeps({ noReview: true }));
 
       expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -2876,10 +2874,6 @@ describe('playbookSubmitHandler', () => {
 
     describe('when a single standard is created', () => {
       it('logs the exact packages add command with the standard and package slugs', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith(
@@ -2907,10 +2901,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('shows available packages', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith(
@@ -2940,10 +2930,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs generic package add guidance', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith(
@@ -2970,10 +2956,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('does not log package add guidance', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).not.toHaveBeenCalledWith(
@@ -2982,10 +2964,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs fallback message instead of success', async () => {
-        const { logInfoConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logInfoConsole).toHaveBeenCalledWith('No changes were applied.');
@@ -3006,10 +2984,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs updated count in success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -3036,10 +3010,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs created in success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -3048,10 +3018,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs updated in success message', async () => {
-        const { logSuccessConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logSuccessConsole).toHaveBeenCalledWith(
@@ -3069,14 +3035,18 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs the error message', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          expect.stringContaining('Duplicate name'),
+          'Failed to apply changes: Duplicate name',
+        );
+      });
+
+      it('logs recovery guidance', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          'Your playbook has not been modified. Fix the issue and retry.',
         );
       });
 
@@ -3101,10 +3071,6 @@ describe('playbookSubmitHandler', () => {
       });
 
       it('logs the error', async () => {
-        const { logErrorConsole } = jest.requireMock(
-          '../../utils/consoleLogger',
-        );
-
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
         expect(logErrorConsole).toHaveBeenCalledWith(
@@ -3135,6 +3101,144 @@ describe('playbookSubmitHandler', () => {
         );
       });
     });
+
+    describe('when entries include removals', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry(),
+          makeEntry({
+            changeType: 'removed',
+            artifactName: 'Old Standard',
+            filePath: '.packmind/standards/old-standard.md',
+          }),
+        ]);
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/old-standard': {
+              name: 'Old Standard',
+              type: 'standard',
+              id: 'std-old',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/old-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+      });
+
+      it('excludes removal proposals from batchApply', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        const batchApplyCall =
+          mockGateway.changeProposals.batchApply.mock.calls[0][0];
+        const proposalTypes = batchApplyCall.proposals.map(
+          (p: { type: ChangeProposalType }) => p.type,
+        );
+
+        expect(proposalTypes).toEqual(
+          expect.not.arrayContaining([
+            ChangeProposalType.removeStandard,
+            ChangeProposalType.removeCommand,
+            ChangeProposalType.removeSkill,
+          ]),
+        );
+      });
+
+      it('warns about skipped removals', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('1 removal(s) skipped'),
+        );
+      });
+
+      it('displays host URL for removal guidance', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('https://app.packmind.com'),
+        );
+      });
+
+      it('clears skipped removal entries from playbook', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          '.packmind/standards/old-standard.md',
+          'space-123',
+        );
+      });
+    });
+
+    describe('when all entries are removals', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'removed',
+            artifactName: 'Old Standard',
+            filePath: '.packmind/standards/old-standard.md',
+          }),
+        ]);
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/old-standard': {
+              name: 'Old Standard',
+              type: 'standard',
+              id: 'std-old',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/old-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+      });
+
+      it('does not call batchApply', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockGateway.changeProposals.batchApply).not.toHaveBeenCalled();
+      });
+
+      it('warns about skipped removals', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('1 removal(s) skipped'),
+        );
+      });
+
+      it('displays host URL for removal guidance', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('https://app.packmind.com'),
+        );
+      });
+    });
   });
 
   describe('when batchCreate throws CommunityEditionError', () => {
@@ -3146,7 +3250,6 @@ describe('playbookSubmitHandler', () => {
     });
 
     it('logs error with --no-review hint', async () => {
-      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
       await playbookSubmitHandler(
         buildDeps({ message: 'test', noReview: false }),
       );

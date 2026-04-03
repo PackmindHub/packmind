@@ -4,7 +4,7 @@ alwaysApply: true
 description: 'Standardize Packmind monorepo use case architecture using hexagonal principles, typed command/response contracts, and role-specific base classes (AbstractMemberUseCase, AbstractAdminUseCase, IPublicUseCase, PackmindCommand/PublicPackmindCommand) to ensure consistent authentication/authorization behavior, clean interfaces, and type-safe command passing via full command objects and port/adapter reuse.'
 ---
 
-## Standard: Use Case Architecture Patterns
+# Standard: Use Case Architecture Patterns
 
 Standardize Packmind monorepo use case architecture using hexagonal principles, typed command/response contracts, and role-specific base classes (AbstractMemberUseCase, AbstractAdminUseCase, IPublicUseCase, PackmindCommand/PublicPackmindCommand) to ensure consistent authentication/authorization behavior, clean interfaces, and type-safe command passing via full command objects and port/adapter reuse. :
 * Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions

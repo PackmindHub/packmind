@@ -20,6 +20,8 @@ import {
   RemoveMemberFromSpaceCommand,
   RemoveMemberFromSpaceResponse,
   Space,
+  UpdateMemberRoleCommand,
+  UpdateMemberRoleResponse,
   SpaceId,
   UserId,
   UserSpaceMembership,
@@ -33,6 +35,7 @@ import { GetDefaultSpaceUseCase } from '../usecases/GetDefaultSpaceUseCase';
 import { ListSpaceMembersUseCase } from '../usecases/ListSpaceMembersUseCase';
 import { ListUserSpacesUseCase } from '../usecases/ListUserSpacesUseCase';
 import { RemoveMemberFromSpaceUseCase } from '../usecases/RemoveMemberFromSpaceUseCase';
+import { UpdateMemberRoleUseCase } from '../usecases/UpdateMemberRoleUseCase';
 
 /**
  * SpacesAdapter - Implements the ISpacesPort interface for cross-domain access
@@ -158,6 +161,17 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<RemoveMemberFromSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new RemoveMemberFromSpaceUseCase(
+      membershipService,
+      this.accountsPort,
+    );
+    return useCase.execute(command);
+  }
+
+  async updateMemberRole(
+    command: UpdateMemberRoleCommand,
+  ): Promise<UpdateMemberRoleResponse> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    const useCase = new UpdateMemberRoleUseCase(
       membershipService,
       this.accountsPort,
     );

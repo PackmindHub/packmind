@@ -1,4 +1,5 @@
 import {
+  describeForVersion,
   describeWithUserSignedUp,
   getPackmindInstanceUrl,
   RunCliResult,
@@ -16,8 +17,8 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
-describe('playbook remove', () => {
-  describeWithUserSignedUp('playbook add', (getContext) => {
+describeForVersion('> 0.24.0', 'playbook remove', () => {
+  describeWithUserSignedUp('playbook remove', (getContext) => {
     let context: UserSignedUpContext;
 
     beforeEach(async () => {
@@ -168,10 +169,10 @@ describe('playbook remove', () => {
           expect(submitResult).toEqual({
             returnCode: 0,
             stderr: expect.stringContaining(
-              'Some changes could not be applied: playbook submit does not allow remove artefacts. Review the following affected packages:',
+              'removal(s) skipped — removals are not supported via --no-review',
             ),
             stdout: expect.stringContaining(
-              `${pkg.name}: ${getPackmindInstanceUrl()}/org/${context.organization.slug}/space/${context.space.slug}/packages/${pkg.id}`,
+              `To remove artifacts, visit: ${getPackmindInstanceUrl()}`,
             ),
           });
         });

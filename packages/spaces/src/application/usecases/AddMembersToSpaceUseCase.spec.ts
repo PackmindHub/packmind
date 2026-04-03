@@ -203,9 +203,7 @@ describe('AddMembersToSpaceUseCase', () => {
       });
 
       it('does not call addSpaceMembership', async () => {
-        await useCase.execute(buildCommand()).catch(() => {
-          /* expected */
-        });
+        await useCase.execute(buildCommand()).catch(() => undefined);
 
         expect(membershipService.addSpaceMembership).not.toHaveBeenCalled();
       });

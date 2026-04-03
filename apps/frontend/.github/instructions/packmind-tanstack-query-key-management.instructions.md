@@ -1,7 +1,7 @@
 ---
 applyTo: 'apps/frontend/**/*.tsx'
 ---
-## Standard: TanStack Query Key Management
+# Standard: TanStack Query Key Management
 
 Manage TanStack Query key structures using hierarchical prefix matching and dedicated queryKeys.ts files in React applications to ensure efficient cache invalidation and type-safe query management when handling cross-domain data operations. :
 * Define base query key arrays as const to enable precise invalidation patterns and avoid duplication

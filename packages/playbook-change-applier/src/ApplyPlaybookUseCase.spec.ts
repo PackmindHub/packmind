@@ -74,10 +74,6 @@ describe('ApplyPlaybookUseCase', () => {
     organizationId,
   };
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   beforeEach(() => {
     accountsPort = {
       getUserById: jest.fn().mockResolvedValue(user),
@@ -138,6 +134,10 @@ describe('ApplyPlaybookUseCase', () => {
       spacesPort,
       stubbedLogger,
     );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   function buildCommand(
@@ -1089,6 +1089,65 @@ describe('ApplyPlaybookUseCase', () => {
         ]);
       });
     });
+
+    describe('when submitting a deleteRule proposal', () => {
+      const ruleToDelete = createRuleId('rule-to-delete');
+      const stdVersionWithTwoRules: StandardVersion = {
+        ...stdVersion,
+        rules: [
+          { id: ruleId, standardVersionId: stdVersionId, content: 'Use const' },
+          {
+            id: ruleToDelete,
+            standardVersionId: stdVersionId,
+            content: 'No var',
+          },
+        ],
+      };
+
+      beforeEach(async () => {
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(stdVersionWithTwoRules)
+          .mockResolvedValueOnce(newStdVersion);
+        standardsPort.getRulesByStandardId
+          .mockResolvedValueOnce(stdVersionWithTwoRules.rules ?? [])
+          .mockResolvedValueOnce(newStdVersion.rules ?? []);
+        standardsPort.updateStandard.mockResolvedValue({
+          id: stdId,
+        } as Standard);
+
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.deleteRule,
+                artefactId: stdId,
+                payload: {
+                  targetId: ruleToDelete,
+                  item: { id: ruleToDelete, content: 'No var' },
+                },
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('includes the standard in updated list', () => {
+        expect(result.success && result.updated.standards).toEqual([stdId]);
+      });
+
+      it('calls updateStandard with only the remaining rule', () => {
+        expect(standardsPort.updateStandard).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rules: [{ id: ruleId, content: 'Use const' }],
+          }),
+        );
+      });
+    });
   });
 
   describe('remove proposal types', () => {
@@ -1196,38 +1255,6 @@ describe('ApplyPlaybookUseCase', () => {
 
       it('does not delete the standard', () => {
         expect(standardsPort.hardDeleteStandard).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('unsupported proposal types', () => {
-    describe('when submitting deleteRule', () => {
-      beforeEach(async () => {
-        result = await useCase.execute(
-          buildCommand({
-            proposals: [
-              {
-                spaceId,
-                type: ChangeProposalType.deleteRule,
-                artefactId: createStandardId('std-1'),
-                payload: {
-                  targetId: createRuleId('r-1'),
-                  item: { id: createRuleId('r-1'), content: 'rule' },
-                },
-              },
-            ],
-          }),
-        );
-      });
-
-      it('returns failure', () => {
-        expect(result.success).toBe(false);
-      });
-
-      it('reports unsupported type', () => {
-        expect(!result.success && result.error.type).toBe(
-          ChangeProposalType.deleteRule,
-        );
       });
     });
   });
