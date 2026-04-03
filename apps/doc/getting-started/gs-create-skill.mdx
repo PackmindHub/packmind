@@ -70,8 +70,16 @@ After the assistant generates your skill, you can test it locally before uploadi
 Once you have a skill folder ready, upload it to Packmind using the CLI:
 
 ```bash
-packmind-cli skills add ./my-skill
+packmind-cli playbook add ./my-skill
+packmind-cli playbook submit --no-review
 ```
+
+<Info>
+  Usage of the `--no-review` flag will trigger a [direct
+  update](/playbook-maintenance/updating-your-playbook#direct-updates). Do not
+  set it to use the [change proposals](/playbook-maintenance/change-proposals)
+  system to get a validation of your changes.
+</Info>
 
 The CLI will upload the skill to your Packmind organization and display a confirmation.
 

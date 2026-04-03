@@ -70,8 +70,16 @@ mkdir my-skill
 # ...
 
 # Upload to Packmind
-packmind-cli skills add ./my-skill
+packmind-cli playbook add ./my-skill
+packmind-cli playbook submit --no-review
 ```
+
+<Info>
+  Usage of the `--no-review` flag will trigger a [direct
+  update](/playbook-maintenance/updating-your-playbook#direct-updates). Do not
+  set it to use the [change proposals](/playbook-maintenance/change-proposals)
+  system to get a validation of your changes.
+</Info>
 
 For a complete walkthrough, see [Create Your First Skill](/getting-started/gs-create-skill).
 
@@ -86,14 +94,16 @@ When you upload a skill that already exists in your organization, Packmind autom
 To update an existing skill, simply upload it again:
 
 ```bash
-packmind-cli skills add ./my-skill
+packmind-cli playbook add ./my-skill
+packmind-cli playbook submit --no-review
 ```
 
-The CLI will report:
-
-- **New skill created** — If this is a new skill
-- **New version created** — If changes were detected
-- **Skill already up to date** — If no changes were detected
+<Info>
+  Usage of the `--no-review` flag will trigger a [direct
+  update](/playbook-maintenance/updating-your-playbook#direct-updates). Do not
+  set it to use the [change proposals](/playbook-maintenance/change-proposals)
+  system to get a validation of your changes.
+</Info>
 
 ### Viewing Version History
 
