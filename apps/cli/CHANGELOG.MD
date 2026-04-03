@@ -15,6 +15,8 @@
 
 ## Fixed
 
+- changes in the standards rendered for agents were incorreclty treated.
+
 ## Removed
 
 # [0.24.0] - 2026-03-30
