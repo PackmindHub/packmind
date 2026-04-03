@@ -46,15 +46,13 @@ describe('ListSpaceMembersUseCase', () => {
     } as unknown as jest.Mocked<UserSpaceMembershipService>;
 
     spacesPort = {
-      findMembership: jest
-        .fn()
-        .mockResolvedValue(
-          userSpaceMembershipFactory({
-            spaceId,
-            userId,
-            role: UserSpaceRole.MEMBER,
-          }),
-        ),
+      findMembership: jest.fn().mockResolvedValue(
+        userSpaceMembershipFactory({
+          spaceId,
+          userId,
+          role: UserSpaceRole.MEMBER,
+        }),
+      ),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     accountsPort = {
