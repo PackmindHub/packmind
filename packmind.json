@@ -1,7 +1,6 @@
 {
   "packages": {
     "@global/generic": "*",
-    "@global/playground": "*",
-    "@global/typescript": "*"
+    "@global/playground": "*"
   }
 }

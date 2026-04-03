@@ -105,7 +105,6 @@
     "semver": "^7.7.4",
     "storybook": "10.3.3",
     "swc-loader": "~0.2.7",
-    "swc-loader": "~0.2.7",
     "tar-fs": "^2.1.4",
     "ts-jest": "^29.4.6",
     "ts-node": "10.9.2",
