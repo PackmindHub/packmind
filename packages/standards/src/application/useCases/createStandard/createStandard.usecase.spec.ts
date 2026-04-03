@@ -80,12 +80,10 @@ describe('CreateStandardUsecase', () => {
 
     // Mock SpacesPort
     spacesPort = {
-      findMembership: jest
-        .fn()
-        .mockResolvedValue({
-          userId: testUserId,
-          spaceId: createSpaceId(uuidv4()),
-        }),
+      findMembership: jest.fn().mockResolvedValue({
+        userId: testUserId,
+        spaceId: createSpaceId(uuidv4()),
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     // Mock AccountsPort
