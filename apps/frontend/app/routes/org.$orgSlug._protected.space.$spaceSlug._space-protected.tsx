@@ -49,6 +49,29 @@ async function clientLoaderWithMe(
       }
     }
 
+    // Verify the current user is a member of this space
+    const userSpaces = await queryClient.ensureQueryData(
+      getSpacesQueryOptions(me.organization.id),
+    );
+    const isMember = userSpaces.some((s) => s.id === space.id);
+
+    if (!isMember) {
+      if (userSpaces.length > 0) {
+        pmToaster.error({
+          title: 'Access denied',
+          description: `You are not a member of the space '${space.name}'. Redirecting to ${userSpaces[0].name}.`,
+        });
+        throw redirect(`/org/${params.orgSlug}/space/${userSpaces[0].slug}`);
+      } else {
+        pmToaster.error({
+          title: 'No spaces available',
+          description:
+            'You are not a member of any space. Please contact your administrator.',
+        });
+        throw redirect(`/org/${params.orgSlug}`);
+      }
+    }
+
     // Prefetch standards list for this space to warm cache for child routes
     // This runs in parallel and doesn't block the loader
     queryClient.prefetchQuery(
