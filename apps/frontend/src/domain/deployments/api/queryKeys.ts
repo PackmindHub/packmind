@@ -19,6 +19,9 @@ export enum DeploymentQueryKeys {
   GET_TARGETS_BY_REPOSITORY = 'get-targets-by-repository',
   GET_TARGETS_BY_ORGANIZATION = 'get-targets-by-organization',
   GET_RENDER_MODE_CONFIGURATION = 'get-render-mode-configuration',
+  GET_DASHBOARD_KPI = 'get-dashboard-kpi',
+  GET_DASHBOARD_OUTDATED = 'get-dashboard-outdated',
+  GET_DASHBOARD_NON_LIVE = 'get-dashboard-non-live',
 }
 
 // Base query key arrays for reuse
@@ -126,3 +129,30 @@ export const REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY = [
   DEPLOYMENTS_QUERY_SCOPE,
   DeploymentQueryKeys.REMOVE_PACKAGE_FROM_TARGETS,
 ] as const;
+
+export const GET_DASHBOARD_KPI_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.GET_DASHBOARD_KPI,
+] as const;
+
+export const getDashboardKpiKey = (spaceId: string) =>
+  [...GET_DASHBOARD_KPI_KEY, spaceId] as const;
+
+export const GET_DASHBOARD_OUTDATED_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.GET_DASHBOARD_OUTDATED,
+] as const;
+
+export const getDashboardOutdatedKey = (spaceId: string) =>
+  [...GET_DASHBOARD_OUTDATED_KEY, spaceId] as const;
+
+export const GET_DASHBOARD_NON_LIVE_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.GET_DASHBOARD_NON_LIVE,
+] as const;
+
+export const getDashboardNonLiveKey = (spaceId: string) =>
+  [...GET_DASHBOARD_NON_LIVE_KEY, spaceId] as const;
