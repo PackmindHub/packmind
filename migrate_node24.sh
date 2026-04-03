@@ -64,13 +64,13 @@ echo ""
 echo "🗑️  Suppression du package-lock.json..."
 rm -f package-lock.json
 
-# 10. Installer et activer Node 24.14.0 via nvm
+# 10. Installer et activer Node 24.14.1 via nvm
 echo ""
-echo "📦 Installation de Node 24.14.0..."
+echo "📦 Installation de Node 24.14.1..."
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-nvm install 24.14.0
-nvm use 24.14.0
+nvm install 24.14.1
+nvm use 24.14.1
 
 # 11. Réinstaller les dépendances
 echo ""

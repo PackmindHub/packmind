@@ -3,7 +3,7 @@ name: Main CI/CD Pipeline
 # ┌─────────────────────────────────────────────────────────────────┐
 # │ GLOBAL CONFIGURATION                                            │
 # │ To update Node.js version, change all occurrences below        │
-# │ Current version: 24.14.0                                       │
+# │ Current version: 24.14.1                                       │
 # │                                                                 │
 # │ Repository Variables Required:                                  │
 # │ - PACKMIND_EDITION: 'oss' or 'proprietary'                     │
@@ -23,7 +23,7 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      node-version: 24.14.0
+      node-version: 24.14.1
     secrets:
       VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
       VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
@@ -33,7 +33,7 @@ jobs:
     needs: [build]
     uses: ./.github/workflows/quality.yml
     with:
-      node-version: 24.14.0
+      node-version: 24.14.1
       cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
@@ -50,7 +50,7 @@ jobs:
       frontend-artifact: ${{ needs.build.outputs.frontend-artifact }}
       mcp-server-artifact: ${{ needs.build.outputs.mcp-server-artifact }}
       standard-samples-artifact: ${{ needs.build.outputs.standard-samples-artifact }}
-      node-version: 24.14.0
+      node-version: 24.14.1
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -81,7 +81,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/deploy-staging-and-release.yml
     with:
-      node-version: 24.14.0
+      node-version: 24.14.1
       helm-charts-repository: ${{ vars.HELM_CHARTS_REPOSITORY || 'PackmindHub/packmind-ai-helm-charts' }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
