@@ -19,13 +19,6 @@ jest.mock('../../utils/consoleLogger', () => ({
   formatCommand: (text: string) => text,
 }));
 
-jest.mock('../../utils/credentials', () => ({
-  loadApiKey: jest.fn().mockReturnValue('fake-api-key'),
-  decodeApiKey: jest
-    .fn()
-    .mockReturnValue({ host: 'https://app.packmind.com', jwt: {} }),
-}));
-
 const STANDARD_CONTENT = [
   '# My Standard',
   '',
@@ -3164,14 +3157,6 @@ describe('playbookSubmitHandler', () => {
         );
       });
 
-      it('displays host URL for removal guidance', async () => {
-        await playbookSubmitHandler(buildDeps({ noReview: true }));
-
-        expect(logInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('https://app.packmind.com'),
-        );
-      });
-
       it('clears skipped removal entries from playbook', async () => {
         await playbookSubmitHandler(buildDeps({ noReview: true }));
 
@@ -3228,14 +3213,6 @@ describe('playbookSubmitHandler', () => {
 
         expect(logWarningConsole).toHaveBeenCalledWith(
           expect.stringContaining('1 removal(s) skipped'),
-        );
-      });
-
-      it('displays host URL for removal guidance', async () => {
-        await playbookSubmitHandler(buildDeps({ noReview: true }));
-
-        expect(logInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('https://app.packmind.com'),
         );
       });
     });
