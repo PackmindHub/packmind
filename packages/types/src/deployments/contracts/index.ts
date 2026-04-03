@@ -36,3 +36,6 @@ export * from './IDownloadDefaultSkillsZipForAgent';
 export * from './IDownloadSkillZipForAgentUseCase';
 export * from './IGetDeployedContentUseCase';
 export * from './IGetContentByVersionsUseCase';
+export * from './IGetDashboardKpi';
+export * from './IGetDashboardOutdated';
+export * from './IGetDashboardNonLive';
