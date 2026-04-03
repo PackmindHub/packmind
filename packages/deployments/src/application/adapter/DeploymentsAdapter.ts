@@ -13,6 +13,9 @@ import {
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DashboardKpiResponse,
+  DashboardNonLiveResponse,
+  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -29,6 +32,9 @@ import {
   FindActiveStandardVersionsByTargetResponse,
   GetContentByVersionsCommand,
   GetContentByVersionsResponse,
+  GetDashboardKpiCommand,
+  GetDashboardNonLiveCommand,
+  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -124,6 +130,9 @@ import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPacka
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
+import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
+import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
+import { GetDashboardOutdatedUseCase } from '../useCases/getDashboardOutdated/GetDashboardOutdatedUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
@@ -179,6 +188,9 @@ export class DeploymentsAdapter
   private _downloadDefaultSkillsZipForAgentUseCase!: DownloadDefaultSkillsZipForAgentUseCase;
   private _downloadSkillZipForAgentUseCase!: DownloadSkillZipForAgentUseCase;
   private _getContentByVersionsUseCase!: GetContentByVersionsUseCase;
+  private _getDashboardKpiUseCase!: GetDashboardKpiUseCase;
+  private _getDashboardOutdatedUseCase!: GetDashboardOutdatedUseCase;
+  private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
 
   constructor(
@@ -408,6 +420,27 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.spacesPort,
       this.accountsPort,
+    );
+
+    this._getDashboardKpiUseCase = new GetDashboardKpiUseCase(
+      this.distributionRepository,
+      this.standardsPort,
+      this.recipesPort,
+      this.skillsPort,
+    );
+
+    this._getDashboardOutdatedUseCase = new GetDashboardOutdatedUseCase(
+      this.distributionRepository,
+      this.standardsPort,
+      this.recipesPort,
+      this.gitPort,
+    );
+
+    this._getDashboardNonLiveUseCase = new GetDashboardNonLiveUseCase(
+      this.distributionRepository,
+      this.standardsPort,
+      this.recipesPort,
+      this.skillsPort,
     );
 
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
@@ -746,5 +779,23 @@ export class DeploymentsAdapter
     command: GetContentByVersionsCommand,
   ): Promise<GetContentByVersionsResponse> {
     return this._getContentByVersionsUseCase.execute(command);
+  }
+
+  async getDashboardKpi(
+    command: GetDashboardKpiCommand,
+  ): Promise<DashboardKpiResponse> {
+    return this._getDashboardKpiUseCase.execute(command);
+  }
+
+  async getDashboardOutdated(
+    command: GetDashboardOutdatedCommand,
+  ): Promise<DashboardOutdatedResponse> {
+    return this._getDashboardOutdatedUseCase.execute(command);
+  }
+
+  async getDashboardNonLive(
+    command: GetDashboardNonLiveCommand,
+  ): Promise<DashboardNonLiveResponse> {
+    return this._getDashboardNonLiveUseCase.execute(command);
   }
 }

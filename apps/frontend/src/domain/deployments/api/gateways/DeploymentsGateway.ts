@@ -25,6 +25,9 @@ import {
   IGetTargetsByOrganizationUseCase,
   IGetTargetsByRepositoryUseCase,
   IRemovePackageFromTargetsUseCase,
+  IGetDashboardKpi,
+  IGetDashboardOutdated,
+  IGetDashboardNonLive,
   PackageId,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -44,6 +47,9 @@ import {
   GetRenderModeConfigurationCommand,
   UpdateRenderModeConfigurationCommand,
   RemovePackageFromTargetsCommand,
+  GetDashboardKpiCommand,
+  GetDashboardOutdatedCommand,
+  GetDashboardNonLiveCommand,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -311,4 +317,34 @@ export class DeploymentsGatewayApi
         { data: { targetIds } },
       );
     };
+
+  getDashboardKpi: NewGateway<IGetDashboardKpi> = async ({
+    organizationId,
+    spaceId,
+  }: NewPackmindCommandBody<GetDashboardKpiCommand>) => {
+    return this._api.get(
+      `${this._endpoint}/${organizationId}/deployments/dashboard/kpi`,
+      { params: { spaceId } },
+    );
+  };
+
+  getDashboardOutdated: NewGateway<IGetDashboardOutdated> = async ({
+    organizationId,
+    spaceId,
+  }: NewPackmindCommandBody<GetDashboardOutdatedCommand>) => {
+    return this._api.get(
+      `${this._endpoint}/${organizationId}/deployments/dashboard/outdated`,
+      { params: { spaceId } },
+    );
+  };
+
+  getDashboardNonLive: NewGateway<IGetDashboardNonLive> = async ({
+    organizationId,
+    spaceId,
+  }: NewPackmindCommandBody<GetDashboardNonLiveCommand>) => {
+    return this._api.get(
+      `${this._endpoint}/${organizationId}/deployments/dashboard/non-live`,
+      { params: { spaceId } },
+    );
+  };
 }

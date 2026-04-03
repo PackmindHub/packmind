@@ -39,6 +39,12 @@ import {
   RemovePackageFromTargetsResponse,
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  GetDashboardKpiCommand,
+  DashboardKpiResponse,
+  GetDashboardOutdatedCommand,
+  DashboardOutdatedResponse,
+  GetDashboardNonLiveCommand,
+  DashboardNonLiveResponse,
   IDeploymentPort,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
@@ -190,5 +196,23 @@ export class DeploymentsService {
     command: GetPackageSummaryCommand,
   ): Promise<GetPackageSummaryResponse> {
     return this.deploymentAdapter.getPackageSummary(command);
+  }
+
+  async getDashboardKpi(
+    command: GetDashboardKpiCommand,
+  ): Promise<DashboardKpiResponse> {
+    return this.deploymentAdapter.getDashboardKpi(command);
+  }
+
+  async getDashboardOutdated(
+    command: GetDashboardOutdatedCommand,
+  ): Promise<DashboardOutdatedResponse> {
+    return this.deploymentAdapter.getDashboardOutdated(command);
+  }
+
+  async getDashboardNonLive(
+    command: GetDashboardNonLiveCommand,
+  ): Promise<DashboardNonLiveResponse> {
+    return this.deploymentAdapter.getDashboardNonLive(command);
   }
 }

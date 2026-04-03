@@ -13,11 +13,7 @@ import {
   PMCloseButton,
   PMText,
 } from '@packmind/ui';
-import {
-  useGetRecipesDeploymentOverviewQuery,
-  useGetStandardsDeploymentOverviewQuery,
-  useGetSkillsDeploymentOverviewQuery,
-} from '../../../deployments/api/queries/DeploymentsQueries';
+import { useGetDashboardNonLiveQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetSpacesQuery } from '../../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../../shared/utils/routes';
@@ -52,30 +48,14 @@ export const NonLiveArtifactsModal = ({
   const defaultSpaceSlug = spaces?.[0]?.slug;
   const effectiveSpaceSlug = spaceSlug || defaultSpaceSlug;
 
-  const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery(
+  const { data: nonLiveData } = useGetDashboardNonLiveQuery(
     spaceId ?? '',
-  );
-  const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery(
-    spaceId ?? '',
-  );
-  const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery(
-    spaceId ?? '',
+    open,
   );
 
-  const nonLiveStandards =
-    standardsOverview?.standards
-      .filter((s) => s.targetDeployments.length === 0)
-      .sort((a, b) => a.standard.name.localeCompare(b.standard.name)) ?? [];
-
-  const nonLiveRecipes =
-    recipesOverview?.recipes
-      .filter((r) => r.targetDeployments.length === 0)
-      .sort((a, b) => a.recipe.name.localeCompare(b.recipe.name)) ?? [];
-
-  const nonLiveSkills =
-    skillsOverview?.skills
-      .filter((s) => s.targetDeployments.length === 0)
-      .sort((a, b) => a.skill.name.localeCompare(b.skill.name)) ?? [];
+  const nonLiveStandards = nonLiveData?.standards ?? [];
+  const nonLiveRecipes = nonLiveData?.recipes ?? [];
+  const nonLiveSkills = nonLiveData?.skills ?? [];
 
   const standardColumns: PMTableColumn[] = [
     {
@@ -105,62 +85,50 @@ export const NonLiveArtifactsModal = ({
   ];
 
   const standardRows: PMTableRow[] = nonLiveStandards.map((item) => ({
-    key: item.standard.id,
+    key: item.id,
     name:
       orgSlug && effectiveSpaceSlug ? (
         <PMLink asChild>
           <Link
-            to={routes.space.toStandard(
-              orgSlug,
-              effectiveSpaceSlug,
-              item.standard.id,
-            )}
+            to={routes.space.toStandard(orgSlug, effectiveSpaceSlug, item.id)}
           >
-            {item.standard.name}
+            {item.name}
           </Link>
         </PMLink>
       ) : (
-        item.standard.name
+        item.name
       ),
   }));
 
   const commandRows: PMTableRow[] = nonLiveRecipes.map((item) => ({
-    key: item.recipe.id,
+    key: item.id,
     name:
       orgSlug && effectiveSpaceSlug ? (
         <PMLink asChild>
           <Link
-            to={routes.space.toCommand(
-              orgSlug,
-              effectiveSpaceSlug,
-              item.recipe.id,
-            )}
+            to={routes.space.toCommand(orgSlug, effectiveSpaceSlug, item.id)}
           >
-            {item.recipe.name}
+            {item.name}
           </Link>
         </PMLink>
       ) : (
-        item.recipe.name
+        item.name
       ),
   }));
 
   const skillRows: PMTableRow[] = nonLiveSkills.map((item) => ({
-    key: item.skill.id,
+    key: item.id,
     name:
       orgSlug && effectiveSpaceSlug ? (
         <PMLink asChild>
           <Link
-            to={routes.space.toSkill(
-              orgSlug,
-              effectiveSpaceSlug,
-              item.skill.slug,
-            )}
+            to={routes.space.toSkill(orgSlug, effectiveSpaceSlug, item.slug)}
           >
-            {item.skill.name}
+            {item.name}
           </Link>
         </PMLink>
       ) : (
-        item.skill.name
+        item.name
       ),
   }));
 

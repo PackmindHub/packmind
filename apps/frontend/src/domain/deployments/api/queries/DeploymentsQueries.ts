@@ -50,6 +50,9 @@ import {
   getRecipesDeploymentOverviewKey,
   getStandardsDeploymentOverviewKey,
   getSkillsDeploymentOverviewKey,
+  getDashboardKpiKey,
+  getDashboardOutdatedKey,
+  getDashboardNonLiveKey,
 } from '../queryKeys';
 
 export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
@@ -291,6 +294,67 @@ export const useGetSkillsDeploymentOverviewQuery = (spaceId: string) => {
       });
     },
     enabled: !!organization?.id && !!spaceId,
+  });
+};
+
+export const useGetDashboardKpiQuery = (spaceId: string) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: getDashboardKpiKey(spaceId),
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch dashboard KPI');
+      }
+      return deploymentsGateways.getDashboardKpi({
+        organizationId: organization.id,
+        spaceId: createSpaceId(spaceId),
+      });
+    },
+    enabled: !!organization?.id && !!spaceId,
+  });
+};
+
+export const useGetDashboardOutdatedQuery = (spaceId: string) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: getDashboardOutdatedKey(spaceId),
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch dashboard outdated',
+        );
+      }
+      return deploymentsGateways.getDashboardOutdated({
+        organizationId: organization.id,
+        spaceId: createSpaceId(spaceId),
+      });
+    },
+    enabled: !!organization?.id && !!spaceId,
+  });
+};
+
+export const useGetDashboardNonLiveQuery = (
+  spaceId: string,
+  enabled: boolean,
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: getDashboardNonLiveKey(spaceId),
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch dashboard non-live',
+        );
+      }
+      return deploymentsGateways.getDashboardNonLive({
+        organizationId: organization.id,
+        spaceId: createSpaceId(spaceId),
+      });
+    },
+    enabled: !!organization?.id && !!spaceId && enabled,
   });
 };
 

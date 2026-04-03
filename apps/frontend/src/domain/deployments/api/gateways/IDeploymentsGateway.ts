@@ -23,6 +23,9 @@ import {
   IGetRenderModeConfigurationUseCase,
   IUpdateRenderModeConfigurationUseCase,
   IRemovePackageFromTargetsUseCase,
+  IGetDashboardKpi,
+  IGetDashboardOutdated,
+  IGetDashboardNonLive,
 } from '@packmind/types';
 
 export interface IDeploymentsGateway {
@@ -49,4 +52,7 @@ export interface IDeploymentsGateway {
   getRenderModeConfiguration: NewGateway<IGetRenderModeConfigurationUseCase>;
   updateRenderModeConfiguration: NewGateway<IUpdateRenderModeConfigurationUseCase>;
   removePackageFromTargets: NewGateway<IRemovePackageFromTargetsUseCase>;
+  getDashboardKpi: NewGateway<IGetDashboardKpi>;
+  getDashboardOutdated: NewGateway<IGetDashboardOutdated>;
+  getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
 }

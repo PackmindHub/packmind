@@ -5,6 +5,9 @@ import {
   CreatePackageCommand,
   CreatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DashboardKpiResponse,
+  DashboardNonLiveResponse,
+  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -20,6 +23,9 @@ import {
   FindActiveStandardVersionsByTargetResponse,
   GetContentByVersionsCommand,
   GetContentByVersionsResponse,
+  GetDashboardKpiCommand,
+  GetDashboardNonLiveCommand,
+  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -525,4 +531,16 @@ export interface IDeploymentPort {
   getContentByVersions(
     command: GetContentByVersionsCommand,
   ): Promise<GetContentByVersionsResponse>;
+
+  getDashboardKpi(
+    command: GetDashboardKpiCommand,
+  ): Promise<DashboardKpiResponse>;
+
+  getDashboardOutdated(
+    command: GetDashboardOutdatedCommand,
+  ): Promise<DashboardOutdatedResponse>;
+
+  getDashboardNonLive(
+    command: GetDashboardNonLiveCommand,
+  ): Promise<DashboardNonLiveResponse>;
 }

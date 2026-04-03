@@ -154,4 +154,54 @@ export interface IDistributionRepository {
     gitCommit?: GitCommit,
     error?: string,
   ): Promise<Distribution>;
+
+  /**
+   * Count distinct artifact IDs that are currently deployed (appear in the
+   * latest successful distribution for at least one target) within a space.
+   */
+  countActiveArtifactsBySpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<{ standards: number; recipes: number; skills: number }>;
+
+  /**
+   * Get distinct artifact IDs from the latest successful distributions
+   * across all targets within a space.
+   */
+  listDeployedArtifactIdsBySpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<{
+    standardIds: StandardId[];
+    recipeIds: RecipeId[];
+    skillIds: SkillId[];
+  }>;
+
+  /**
+   * Find outdated deployments per target within a space.
+   * Returns lightweight DTOs with deployed vs latest version info,
+   * only for artifacts where the deployed version differs from latest
+   * or the artifact has been deleted.
+   */
+  findOutdatedDeploymentsBySpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<OutdatedDeploymentsByTarget[]>;
 }
+
+export type OutdatedDeploymentInfo = {
+  artifactId: string;
+  artifactName: string;
+  deployedVersion: number;
+  latestVersion: number;
+  deploymentDate: string;
+  isDeleted: boolean;
+};
+
+export type OutdatedDeploymentsByTarget = {
+  targetId: TargetId;
+  targetName: string;
+  gitRepoId: string;
+  standards: OutdatedDeploymentInfo[];
+  recipes: OutdatedDeploymentInfo[];
+};

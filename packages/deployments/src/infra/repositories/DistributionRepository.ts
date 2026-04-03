@@ -18,7 +18,10 @@ import {
   TargetId,
 } from '@packmind/types';
 import { Repository } from 'typeorm';
-import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import {
+  IDistributionRepository,
+  OutdatedDeploymentsByTarget,
+} from '../../domain/repositories/IDistributionRepository';
 import { DistributionSchema } from '../schemas/DistributionSchema';
 
 const origin = 'DistributionRepository';
@@ -1219,6 +1222,157 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
+  async countActiveArtifactsBySpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<{ standards: number; recipes: number; skills: number }> {
+    this.logger.info('Counting active artifacts by space', {
+      organizationId,
+      spaceId,
+    });
+
+    const deployedIds = await this.listDeployedArtifactIdsBySpace(
+      organizationId,
+      spaceId,
+    );
+
+    const counts = {
+      standards: deployedIds.standardIds.length,
+      recipes: deployedIds.recipeIds.length,
+      skills: deployedIds.skillIds.length,
+    };
+
+    this.logger.info('Active artifacts counted by space', {
+      organizationId,
+      spaceId,
+      ...counts,
+    });
+
+    return counts;
+  }
+
+  async listDeployedArtifactIdsBySpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<{
+    standardIds: StandardId[];
+    recipeIds: RecipeId[];
+    skillIds: SkillId[];
+  }> {
+    this.logger.info('Listing deployed artifact IDs by space', {
+      organizationId,
+      spaceId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .leftJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .leftJoinAndSelect('distributedPackage.package', 'package')
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .andWhere('package.spaceId = :spaceId', { spaceId })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // Group by target, track latest operation per package per target
+      const targetPackageData = new Map<
+        string,
+        Map<
+          string,
+          {
+            operation: string;
+            standardVersions: StandardVersion[];
+            recipeVersions: RecipeVersion[];
+            skillVersions: SkillVersion[];
+          }
+        >
+      >();
+
+      for (const distribution of distributions) {
+        const tId = distribution.target?.id as string;
+
+        if (!targetPackageData.has(tId)) {
+          targetPackageData.set(tId, new Map());
+        }
+
+        const latestPerPackage = targetPackageData.get(tId)!;
+
+        for (const dp of distribution.distributedPackages) {
+          if (!latestPerPackage.has(dp.packageId)) {
+            latestPerPackage.set(dp.packageId, {
+              operation: dp.operation ?? 'add',
+              standardVersions: dp.standardVersions,
+              recipeVersions: dp.recipeVersions,
+              skillVersions: dp.skillVersions,
+            });
+          }
+        }
+      }
+
+      // Collect unique artifact IDs from active packages across all targets
+      const standardIds = new Set<StandardId>();
+      const recipeIds = new Set<RecipeId>();
+      const skillIds = new Set<SkillId>();
+
+      for (const [, latestPerPackage] of targetPackageData) {
+        for (const [, pkgData] of latestPerPackage) {
+          if (pkgData.operation === 'remove') {
+            continue;
+          }
+
+          for (const sv of pkgData.standardVersions) {
+            standardIds.add(sv.standardId);
+          }
+
+          for (const rv of pkgData.recipeVersions) {
+            recipeIds.add(rv.recipeId);
+          }
+
+          for (const skv of pkgData.skillVersions) {
+            skillIds.add(skv.skillId);
+          }
+        }
+      }
+
+      const result = {
+        standardIds: Array.from(standardIds),
+        recipeIds: Array.from(recipeIds),
+        skillIds: Array.from(skillIds),
+      };
+
+      this.logger.info('Deployed artifact IDs listed by space', {
+        organizationId,
+        spaceId,
+        standardCount: result.standardIds.length,
+        recipeCount: result.recipeIds.length,
+        skillCount: result.skillIds.length,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to list deployed artifact IDs by space', {
+        organizationId,
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async updateStatus(
     id: DistributionId,
     status: DistributionStatus,
@@ -1264,6 +1418,166 @@ export class DistributionRepository implements IDistributionRepository {
       this.logger.error('Failed to update distribution status', {
         distributionId: id,
         status,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findOutdatedDeploymentsBySpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<OutdatedDeploymentsByTarget[]> {
+    this.logger.info('Finding outdated deployments by space', {
+      organizationId,
+      spaceId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .leftJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.package', 'package')
+        .leftJoinAndSelect('distribution.target', 'target')
+        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .andWhere('package.spaceId = :spaceId', { spaceId })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // Group distributions by target, then track latest operation per package per target
+      const targetData = new Map<
+        string,
+        {
+          targetName: string;
+          gitRepoId: string;
+          latestPerPackage: Map<
+            string,
+            {
+              operation: string;
+              standardVersions: StandardVersion[];
+              recipeVersions: RecipeVersion[];
+            }
+          >;
+        }
+      >();
+
+      for (const distribution of distributions) {
+        const tId = distribution.target.id as string;
+
+        if (!targetData.has(tId)) {
+          targetData.set(tId, {
+            targetName: distribution.target.name,
+            gitRepoId: distribution.target.gitRepoId as string,
+            latestPerPackage: new Map(),
+          });
+        }
+
+        const target = targetData.get(tId)!;
+
+        for (const dp of distribution.distributedPackages) {
+          if (!target.latestPerPackage.has(dp.packageId)) {
+            target.latestPerPackage.set(dp.packageId, {
+              operation: dp.operation ?? 'add',
+              standardVersions: dp.standardVersions,
+              recipeVersions: dp.recipeVersions,
+            });
+          }
+        }
+      }
+
+      // Build result: extract versions from active packages, dedup by artifact ID
+      const result: OutdatedDeploymentsByTarget[] = [];
+
+      for (const [tId, data] of targetData) {
+        const standardMap = new Map<
+          string,
+          { version: number; deploymentDate: string }
+        >();
+        const recipeMap = new Map<
+          string,
+          { version: number; deploymentDate: string }
+        >();
+
+        for (const [, pkgData] of data.latestPerPackage) {
+          if (pkgData.operation === 'remove') {
+            continue;
+          }
+
+          for (const sv of pkgData.standardVersions) {
+            if (!standardMap.has(sv.standardId)) {
+              standardMap.set(sv.standardId, {
+                version: sv.version,
+                deploymentDate: '',
+              });
+            }
+          }
+
+          for (const rv of pkgData.recipeVersions) {
+            if (!recipeMap.has(rv.recipeId)) {
+              recipeMap.set(rv.recipeId, {
+                version: rv.version,
+                deploymentDate: '',
+              });
+            }
+          }
+        }
+
+        if (standardMap.size === 0 && recipeMap.size === 0) {
+          continue;
+        }
+
+        result.push({
+          targetId: tId as TargetId,
+          targetName: data.targetName,
+          gitRepoId: data.gitRepoId,
+          standards: Array.from(standardMap.entries()).map(
+            ([artifactId, info]) => ({
+              artifactId,
+              artifactName: '',
+              deployedVersion: info.version,
+              latestVersion: 0,
+              deploymentDate: info.deploymentDate,
+              isDeleted: false,
+            }),
+          ),
+          recipes: Array.from(recipeMap.entries()).map(
+            ([artifactId, info]) => ({
+              artifactId,
+              artifactName: '',
+              deployedVersion: info.version,
+              latestVersion: 0,
+              deploymentDate: info.deploymentDate,
+              isDeleted: false,
+            }),
+          ),
+        });
+      }
+
+      this.logger.info('Outdated deployments found by space', {
+        organizationId,
+        spaceId,
+        targetCount: result.length,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to find outdated deployments by space', {
+        organizationId,
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

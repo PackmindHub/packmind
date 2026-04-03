@@ -10,15 +10,10 @@ import {
   PMBox,
   PMIcon,
 } from '@packmind/ui';
-import {
-  useGetRecipesDeploymentOverviewQuery,
-  useGetStandardsDeploymentOverviewQuery,
-} from '../../../deployments/api/queries/DeploymentsQueries';
+import { useGetDashboardOutdatedQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   TargetId,
-  DeploymentOverview,
-  StandardDeploymentOverview,
   GitRepo,
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
@@ -27,27 +22,14 @@ import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
 
 // ---- Types & constants
-type TargetEntry = {
-  id: TargetId;
-  title: string; // target name
-  recipes: DeployedRecipeTargetInfo[];
-  standards: DeployedStandardTargetInfo[];
-};
-
-type RepoEntry = {
-  repoKey: string; // gitRepo.id or owner/repo:branch
-  title: string; // owner/repo:branch
-  targets: Map<TargetId, TargetEntry>;
-};
-
 type RepoResult = {
   repoKey: string;
   title: string;
   targets: Array<{
     id: TargetId;
     title: string;
-    recipes: TargetEntry['recipes'];
-    standards: TargetEntry['standards'];
+    recipes: DeployedRecipeTargetInfo[];
+    standards: DeployedStandardTargetInfo[];
   }>;
 };
 
@@ -55,26 +37,45 @@ export const OutdatedTargetsSection: React.FC = () => {
   const { orgSlug } = useParams() as { orgSlug?: string };
   const { spaceId } = useCurrentSpace();
   const {
-    data: recipesOverview,
-    isLoading: isRecipesLoading,
-    isError: isRecipesError,
-    error: recipesError,
-  } = useGetRecipesDeploymentOverviewQuery(spaceId ?? '');
+    data: outdatedData,
+    isLoading,
+    isError,
+    error,
+  } = useGetDashboardOutdatedQuery(spaceId ?? '');
 
-  const {
-    data: standardsOverview,
-    isLoading: isStandardsLoading,
-    isError: isStandardsError,
-    error: standardsError,
-  } = useGetStandardsDeploymentOverviewQuery(spaceId ?? '');
+  const reposWithTargets = useMemo(() => {
+    if (!outdatedData?.targets) return [];
+    type TargetValue = RepoResult['targets'][number];
+    const repoMap = new Map<
+      string,
+      { repoKey: string; title: string; targets: Map<TargetId, TargetValue> }
+    >();
 
-  const isLoading = isRecipesLoading || isStandardsLoading;
-  const isError = isRecipesError || isStandardsError;
+    for (const t of outdatedData.targets) {
+      const { key, title } = getRepoIdentity(t.gitRepo);
+      let repo = repoMap.get(key);
+      if (!repo) {
+        repo = { repoKey: key, title, targets: new Map() };
+        repoMap.set(key, repo);
+      }
+      repo.targets.set(t.target.id, {
+        id: t.target.id,
+        title: t.target.name,
+        recipes: t.outdatedRecipes,
+        standards: t.outdatedStandards,
+      });
+    }
 
-  const reposWithTargets = useMemo(
-    () => buildReposWithTargets(recipesOverview, standardsOverview, orgSlug),
-    [recipesOverview, standardsOverview, orgSlug],
-  );
+    return Array.from(repoMap.values())
+      .map((r) => ({
+        repoKey: r.repoKey,
+        title: r.title,
+        targets: Array.from(r.targets.values()).sort((a, b) =>
+          a.title.localeCompare(b.title),
+        ),
+      }))
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }, [outdatedData]);
 
   return (
     <PMPageSection
@@ -95,9 +96,7 @@ export const OutdatedTargetsSection: React.FC = () => {
         <PMAlert.Root status="error">
           <PMAlert.Indicator />
           <PMAlert.Content>
-            {(recipesError as Error)?.message ||
-              (standardsError as Error)?.message ||
-              'Unable to retrieve deployment data'}
+            {(error as Error)?.message || 'Unable to retrieve deployment data'}
           </PMAlert.Content>
         </PMAlert.Root>
       )}
@@ -167,89 +166,4 @@ const getRepoIdentity = (gitRepo: GitRepo) => {
   const title = `${gitRepo.owner}/${gitRepo.repo}:${gitRepo.branch}`;
   const key = gitRepo.id || title;
   return { key, title };
-};
-
-const ensureRepo = (
-  repoMap: Map<string, RepoEntry>,
-  key: string,
-  title: string,
-) => {
-  let repo = repoMap.get(key);
-  if (!repo) {
-    repo = { repoKey: key, title, targets: new Map() };
-    repoMap.set(key, repo);
-  }
-  return repo;
-};
-
-const upsertRows = (
-  repoMap: Map<string, RepoEntry>,
-  repoKey: string,
-  repoTitle: string,
-  targetId: TargetId,
-  targetTitle: string,
-  items: {
-    recipes?: TargetEntry['recipes'];
-    standards?: TargetEntry['standards'];
-  },
-) => {
-  const repo = ensureRepo(repoMap, repoKey, repoTitle);
-  let target = repo.targets.get(targetId);
-  if (!target) {
-    target = { id: targetId, title: targetTitle, recipes: [], standards: [] };
-    repo.targets.set(targetId, target);
-  }
-  items.recipes?.length && target.recipes.push(...items.recipes);
-  items.standards?.length && target.standards.push(...items.standards);
-};
-const buildReposWithTargets = (
-  recipesOverview: DeploymentOverview | undefined,
-  standardsOverview: StandardDeploymentOverview | undefined,
-  orgSlug: string | undefined,
-): RepoResult[] => {
-  const repoMap = new Map<string, RepoEntry>();
-
-  // Standards by repo/target
-  if (standardsOverview?.targets) {
-    for (const t of standardsOverview.targets) {
-      const { key: repoKey, title: repoTitle } = getRepoIdentity(t.gitRepo);
-      const targetId = t.target.id;
-      const targetTitle = t.target.name;
-      upsertRows(repoMap, repoKey, repoTitle, targetId, targetTitle, {
-        standards: (t.deployedStandards || []).filter((s) => !s.isUpToDate),
-      });
-    }
-  }
-
-  // Recipes by repo/target (processed after standards to keep standards first)
-  if (recipesOverview?.targets) {
-    for (const t of recipesOverview.targets) {
-      const { key: repoKey, title: repoTitle } = getRepoIdentity(t.gitRepo);
-      const targetId = t.target.id;
-      const targetTitle = t.target.name;
-      upsertRows(repoMap, repoKey, repoTitle, targetId, targetTitle, {
-        recipes: (t.deployedRecipes || []).filter((r) => !r.isUpToDate),
-      });
-    }
-  }
-
-  // Convert to sorted arrays and exclude empty targets/repos
-  const repos = Array.from(repoMap.values())
-    .map((r) => ({
-      repoKey: r.repoKey,
-      title: r.title,
-      targets: Array.from(r.targets.values())
-        .map((t) => ({
-          id: t.id,
-          title: t.title,
-          recipes: t.recipes,
-          standards: t.standards,
-        }))
-        .filter((t) => t.recipes.length > 0 || t.standards.length > 0)
-        .sort((a, b) => a.title.localeCompare(b.title)),
-    }))
-    .filter((r) => r.targets.length > 0)
-    .sort((a, b) => a.title.localeCompare(b.title));
-
-  return repos;
 };
