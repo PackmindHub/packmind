@@ -171,7 +171,6 @@ describeForVersion(
               expect.stringContaining('change proposals'),
             );
           });
-
         });
       },
     );

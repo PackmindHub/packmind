@@ -7,10 +7,8 @@ export function describeForVersion(
 ): void {
   describe(`${description} [cli ${range}]`, () => {
     if (!matchesVersionConstraint(range)) {
-      it.skip(
-        `skipped — CLI version does not satisfy ${range}`,
-        () => undefined,
-      );
+      it.skip(`skipped — CLI version does not satisfy ${range}`, () =>
+        undefined);
       return;
     }
     fn();
