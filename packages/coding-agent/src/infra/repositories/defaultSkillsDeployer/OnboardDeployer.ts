@@ -1,7 +1,7 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
-import { getSkillMd } from './skills/packmind-onboard/skill';
+import { skillMd } from './skills/packmind-onboard/skill.md';
 import { README } from './skills/packmind-onboard/readme';
 import { TEST_DATA_CONSTRUCTION } from './skills/packmind-onboard/references/test-data-construction';
 import { FILE_TEMPLATE_CONSISTENCY } from './skills/packmind-onboard/references/file-template-consistency';
@@ -15,8 +15,9 @@ export class OnboardDeployer
 {
   public readonly slug = 'packmind-onboard';
   protected readonly minimumVersion = '0.16.0';
+  protected override unsupportedFromVersion = null;
 
-  deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
+  deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-onboard`;
     const referencesPath = `${basePath}/references`;
 
@@ -24,7 +25,7 @@ export class OnboardDeployer
       createOrUpdate: [
         {
           path: `${basePath}/SKILL.md`,
-          content: getSkillMd(),
+          content: this.getSkillMd(agentName, skillMd),
         },
         {
           path: `${basePath}/README.md`,

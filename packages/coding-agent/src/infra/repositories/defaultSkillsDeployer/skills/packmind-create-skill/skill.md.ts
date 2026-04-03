@@ -1,12 +1,14 @@
-export function getSkillMd(agentName: string): string {
-  return `---
-name: 'packmind-create-skill'
-description: 'Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends ${agentName}''s capabilities with specialized knowledge, workflows, or tool integrations.'
-license: 'Complete terms in LICENSE.txt'
----
+import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
-# Create skill
-
+export const skillMd: SkillMD = {
+  frontMatter: {
+    description:
+      "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends ${agentName}''s capabilities with specialized knowledge, workflows, or tool integrations.",
+    license: 'Complete terms in LICENSE.txt',
+  },
+  title: 'Create skill',
+  getPrompt: function (agentName: string): string {
+    return `
 This skill provides guidance for creating effective skills.
 
 ## About Skills
@@ -279,4 +281,6 @@ After successful distribution, check if the skill fits an existing package:
    - Ask: "Would you like me to run \`packmind-cli install\` to sync the changes?"
    - If yes, run: \`packmind-cli install\`
 `;
-}
+  },
+  versions: [],
+};

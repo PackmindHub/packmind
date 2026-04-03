@@ -1,12 +1,14 @@
-export function getSkillMd(): string {
-  return `---
-name: 'packmind-create-package'
-description: 'Guide for creating Packmind packages via the CLI. This skill should be used when users want to create a new package to organize standards, commands, and skills for distribution.'
-license: 'Complete terms in LICENSE.txt'
----
+import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
-# Package Creator
-
+export const skillMd: SkillMD = {
+  frontMatter: {
+    description:
+      'Guide for creating Packmind packages via the CLI. This skill should be used when users want to create a new package to organize standards, commands, and skills for distribution.',
+    license: 'Complete terms in LICENSE.txt',
+  },
+  title: 'Package Creator',
+  getPrompt: function (): string {
+    return `
 Create Packmind packages—logical collections of standards, commands, and skills that can be distributed together.
 
 ## About Packages
@@ -103,4 +105,6 @@ After creating a package, content can be added via:
 1. **MCP tools**: Use \`packageSlugs\` parameter when creating standards/commands
 2. **Web interface**: Navigate to the package URL and add items manually
 `;
-}
+  },
+  versions: [],
+};

@@ -1,12 +1,14 @@
-export function getSkillMd(agentName: string): string {
-  return `---
-name: 'packmind-create-command'
-description: 'Guide for creating reusable commands via the Packmind CLI. This skill should be used when users want to create a new command that captures multi-step workflows, recipes, or task automation for distribution to ${agentName}.'
-license: 'Complete terms in LICENSE.txt'
----
+import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
-# Command Creator
-
+export const skillMd: SkillMD = {
+  frontMatter: {
+    description:
+      'Guide for creating reusable commands via the Packmind CLI. This skill should be used when users want to create a new command that captures multi-step workflows, recipes, or task automation for distribution to ${agentName}.',
+    license: 'Complete terms in LICENSE.txt',
+  },
+  title: 'Command Creator',
+  getPrompt: function (agentName: string): string {
+    return `
 This skill provides a complete walkthrough for creating reusable commands via the Packmind CLI.
 
 ## About Commands
@@ -347,4 +349,6 @@ EOF
 | Step body (paragraph) | Yes | Implementation details |
 | Step body (code block) | No | Markdown code block with language |
 `;
-}
+  },
+  versions: [],
+};
