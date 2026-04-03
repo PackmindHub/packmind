@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   displayName: 'packmind-plugin',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',

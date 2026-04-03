@@ -1,4 +1,4 @@
-import type { Meta } from '@storybook/react';
+import type { Meta } from '@storybook/react-vite';
 import { PMCopiable } from './PMCopiable';
 import { PMInput } from '../../form/PMInput/PMInput';
 import { PMTextArea } from '../../form/PMTextArea/PMTextArea';

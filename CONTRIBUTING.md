@@ -2,7 +2,7 @@
 
 ## Starting the stack:
 
-You will need node 22.17 and docker to start the development stack:
+You will need node 24.14.0 and docker to start the development stack:
 
 ```shell
 nvm use

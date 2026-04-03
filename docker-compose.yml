@@ -11,22 +11,21 @@ services:
   nx-daemon:
     profiles:
       - dev
-    image: node:22.17.0-alpine3.21
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
     working_dir: /packmind
     command: >
       sh -lc "
         set -eu;
-        node scripts/select-tsconfig.mjs;
         mkdir -p /nx-sock && chmod 777 /nx-sock;
-        npx nx daemon --start;
+        ./node_modules/.bin/nx daemon --start;
         for i in $$(seq 1 30); do
           [ -S /nx-sock/d.sock ] && break;
           [ $$i -eq 30 ] && exit 1;
           sleep 1;
         done;
         echo '[nx-daemon] Socket ready, pre-warming project graph...';
-        npx nx show projects >/dev/null &
+        ./node_modules/.bin/nx show projects >/dev/null &
         tail -f /dev/null
       "
     volumes:
@@ -37,9 +36,10 @@ services:
       <<: *nx-env
     healthcheck:
       test: ['CMD-SHELL', 'test -S /nx-sock/d.sock']
-      interval: 2s
-      timeout: 2s
+      interval: 1s
+      timeout: 1s
       retries: 30
+      start_period: 3s
     depends_on:
       install-dependencies:
         condition: service_completed_successfully
@@ -57,9 +57,10 @@ services:
       - dev-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      interval: 1s
+      timeout: 2s
+      retries: 10
+      start_period: 2s
 
   redis:
     image: redis:7.2.4
@@ -70,9 +71,10 @@ services:
       - dev-redis-data:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      interval: 1s
+      timeout: 1s
+      retries: 10
+      start_period: 1s
 
   pgadmin:
     profiles:
@@ -91,7 +93,7 @@ services:
       - postgres
 
   install-dependencies:
-    image: node:22.17.0-alpine3.21
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-install-deps
     working_dir: /packmind
     environment:
@@ -100,21 +102,25 @@ services:
       - sh
       - -c
       - |
-        apk add --no-cache git && \
-        npm install --unsafe-perm --audit=false --fund=false && \
-        chmod -R +x node_modules/.bin 2>/dev/null || true
+        if [ -f node_modules/.package-lock.json ] && diff -q package-lock.json node_modules/.package-lock.json >/dev/null 2>&1; then
+          echo "[deps] node_modules up to date, skipping install"
+        else
+          apk add --no-cache git && \
+          npm install --unsafe-perm --audit=false --fund=false && \
+          chmod -R +x node_modules/.bin 2>/dev/null || true
+        fi
+        node scripts/select-tsconfig.mjs
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
 
   run-migrations:
-    image: node:22.17.0-alpine3.21
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-run-migrations
     working_dir: /packmind
     entrypoint: >
       sh -lc '
         set -euo pipefail
-        node scripts/select-tsconfig.mjs;
         echo "[migrations] Running TypeORM migrations directly (bypassing Nx)..."
         cd packages/migrations
         npm run --no-update-notifier typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each
@@ -133,7 +139,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: node:22.17.0-alpine3.21
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
     ports:
@@ -141,21 +147,16 @@ services:
     entrypoint: >
       sh -lc '
         set -eu
-        node scripts/select-tsconfig.mjs;
-        echo "[frontend] CI: ${CI:-not set}"
-        echo "[frontend] NX_* env:"; env | grep -E "^NX_" || true
         if [ -n "${CI:-}" ]; then
           echo "[frontend] CI mode -> WITHOUT daemon"
-          export NX_DAEMON=false
-          exec npx nx run frontend:dev
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run frontend:dev
         fi
-        echo "[frontend] /nx-sock:"; ls -l /nx-sock || true
-        if npx nx daemon --status >/dev/null 2>&1; then
+        if [ -S /nx-sock/d.sock ]; then
           echo "[frontend] Daemon OK -> WITH daemon"
-          exec npx nx run frontend:dev
+          exec ./node_modules/.bin/nx run frontend:dev
         else
           echo "[frontend] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run frontend:dev --no-daemon
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run frontend:dev
         fi
       '
     environment:
@@ -184,7 +185,7 @@ services:
         condition: service_completed_successfully
 
   backend:
-    image: node:22.17.0-alpine3.21
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-backend
     working_dir: /packmind
     entrypoint: >
@@ -197,21 +198,16 @@ services:
         if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
           cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
         fi && \
-        node scripts/select-tsconfig.mjs;
-        echo "[backend] CI: ${CI:-not set}"
-        echo "[backend] NX_* env:"; env | grep -E "^NX_" || true
         if [ -n "${CI:-}" ]; then
           echo "[backend] CI mode -> WITHOUT daemon"
-          export NX_DAEMON=false
-          exec npx nx run api:serve:development --skip-nx-cache
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         fi
-        echo "[backend] /nx-sock:"; ls -l /nx-sock || true
-        if npx nx daemon --status >/dev/null 2>&1; then
+        if [ -S /nx-sock/d.sock ]; then
           echo "[backend] Daemon OK -> WITH daemon"
-          exec npx nx run api:serve:development --skip-nx-cache
+          exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         else
           echo "[backend] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run api:serve:development --skip-nx-cache
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         fi
       '
     environment:
@@ -245,30 +241,25 @@ services:
         condition: service_healthy
 
   mcp-server:
-    image: node:22.17.0-alpine3.21
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-mcp-server
     working_dir: /packmind
     entrypoint: >
       sh -lc '
         set -eu
-        node scripts/select-tsconfig.mjs;
-        echo "[mcp] CI: ${CI:-not set}"
-        echo "[mcp] NX_* env:"; env | grep -E "^NX_" || true
         if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
           cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
         fi && \
         if [ -n "${CI:-}" ]; then
           echo "[mcp] CI mode -> WITHOUT daemon"
-          export NX_DAEMON=false
-          exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         fi
-        echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
-        if npx nx daemon --status >/dev/null 2>&1; then
+        if [ -S /nx-sock/d.sock ]; then
           echo "[mcp] Daemon OK -> WITH daemon"
-          exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+          exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         else
           echo "[mcp] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose --no-daemon
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         fi
       '
     environment:
