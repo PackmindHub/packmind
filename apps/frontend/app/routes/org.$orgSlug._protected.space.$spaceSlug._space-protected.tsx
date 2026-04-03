@@ -1,4 +1,5 @@
 import { Outlet, redirect } from 'react-router';
+import { useEffect } from 'react';
 import { ChangeProposalUpdateSubscription } from '@packmind/proprietary/frontend/domain/change-proposals/components/ChangeProposalUpdateSubscription';
 import type { LoaderFunctionArgs, Params } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
@@ -10,6 +11,10 @@ import { getStandardsBySpaceQueryOptions } from '../../src/domain/standards/api/
 import { pmToaster } from '@packmind/ui';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import { type AuthenticatedMeWithOrganization } from '../../src/shared/data/ensureOrgContext';
+import {
+  setFlashToast,
+  consumeFlashToast,
+} from '../../src/shared/utils/flashToast';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const me = await queryClient.ensureQueryData(getMeQueryOptions());
@@ -34,14 +39,16 @@ async function clientLoaderWithMe(
       );
 
       if (spaces && spaces.length > 0) {
-        pmToaster.error({
+        setFlashToast({
+          type: 'error',
           title: 'Space not found',
           description: `The space '${params.spaceSlug}' does not exist. Redirecting to ${spaces[0].name}.`,
         });
         throw redirect(`/org/${params.orgSlug}/space/${spaces[0].slug}`);
       } else {
         // No spaces at all - this shouldn't happen
-        pmToaster.error({
+        setFlashToast({
+          type: 'error',
           title: 'No spaces available',
           description: 'Please contact support.',
         });
@@ -57,13 +64,15 @@ async function clientLoaderWithMe(
 
     if (!isMember) {
       if (userSpaces.length > 0) {
-        pmToaster.error({
+        setFlashToast({
+          type: 'error',
           title: 'Access denied',
-          description: `You are not a member of the space '${space.name}'. Redirecting to ${userSpaces[0].name}.`,
+          description: `You do not have permission to access the space '${space.name}'.`,
         });
         throw redirect(`/org/${params.orgSlug}/space/${userSpaces[0].slug}`);
       } else {
-        pmToaster.error({
+        setFlashToast({
+          type: 'error',
           title: 'No spaces available',
           description:
             'You are not a member of any space. Please contact your administrator.',
@@ -91,15 +100,20 @@ async function clientLoaderWithMe(
       );
 
       if (spaces && spaces.length > 0) {
-        pmToaster.error({
+        setFlashToast({
+          type: 'error',
           title: 'Error loading space',
           description: `Redirecting to ${spaces[0].name}.`,
         });
         throw redirect(`/org/${params.orgSlug}/space/${spaces[0].slug}`);
       }
-    } catch {
+    } catch (innerError) {
+      if (innerError instanceof Response) {
+        throw innerError;
+      }
       // Fallback to org page
-      pmToaster.error({
+      setFlashToast({
+        type: 'error',
         title: 'Error loading spaces',
         description: 'Please try again.',
       });
@@ -112,7 +126,10 @@ async function clientLoaderWithMe(
 }
 
 export default function SpaceProtectedLayout() {
-  // Just pass through to child routes - space validation is done in loader
+  useEffect(() => {
+    consumeFlashToast();
+  }, []);
+
   return (
     <>
       <ChangeProposalUpdateSubscription />
