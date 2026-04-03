@@ -85,6 +85,8 @@ export async function configAgentsHandler(
         name: 'selectedAgents',
         message: 'Select coding agents to generate artifacts for:',
         choices,
+        pageSize: 15,
+        loop: false,
       },
     ]);
     selectedAgents = result.selectedAgents;
