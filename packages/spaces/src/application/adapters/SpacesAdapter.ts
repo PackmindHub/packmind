@@ -138,6 +138,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new ListSpaceMembersUseCase(
       membershipService,
+      this,
       this.accountsPort,
     );
     return useCase.execute(command);

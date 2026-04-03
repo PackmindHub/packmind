@@ -1,11 +1,13 @@
 import {
   IAccountsPort,
+  ISpacesPort,
   ListSpaceMembersCommand,
   createOrganizationId,
   createSpaceId,
   createUserId,
   UserSpaceRole,
 } from '@packmind/types';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
@@ -26,6 +28,7 @@ describe('ListSpaceMembersUseCase', () => {
 
   let useCase: ListSpaceMembersUseCase;
   let membershipService: jest.Mocked<UserSpaceMembershipService>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
 
   const buildCommand = (
@@ -42,6 +45,18 @@ describe('ListSpaceMembersUseCase', () => {
       listSpaceMembers: jest.fn(),
     } as unknown as jest.Mocked<UserSpaceMembershipService>;
 
+    spacesPort = {
+      findMembership: jest
+        .fn()
+        .mockResolvedValue(
+          userSpaceMembershipFactory({
+            spaceId,
+            userId,
+            role: UserSpaceRole.MEMBER,
+          }),
+        ),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     accountsPort = {
       getUserById: jest.fn().mockResolvedValue(user),
       getOrganizationById: jest.fn().mockResolvedValue(organization),
@@ -49,6 +64,7 @@ describe('ListSpaceMembersUseCase', () => {
 
     useCase = new ListSpaceMembersUseCase(
       membershipService,
+      spacesPort,
       accountsPort,
       stubLogger(),
     );
@@ -103,6 +119,18 @@ describe('ListSpaceMembersUseCase', () => {
 
       it('throws an access error', async () => {
         await expect(useCase.execute(buildCommand())).rejects.toThrow();
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      beforeEach(() => {
+        spacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
       });
     });
   });
