@@ -37,6 +37,7 @@ import {
   logWarningConsole,
 } from '../../utils/consoleLogger';
 import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
+import { loadApiKey, decodeApiKey } from '../../utils/credentials';
 import { isCommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
@@ -47,6 +48,7 @@ import {
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
 import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
+import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -598,6 +600,55 @@ function logPackageAddGuidance(
   }
 }
 
+async function logRemovedPackagesNotification(
+  packmindCliHexa: PackmindCliHexa,
+  packageIds: Set<string>,
+): Promise<void> {
+  if (packageIds.size === 0) return;
+  try {
+    const [allPackages, allSpaces] = await Promise.all([
+      packmindCliHexa.listPackages({}),
+      packmindCliHexa.getSpaces(),
+    ]);
+    const affectedPackages = allPackages.filter((pkg) =>
+      packageIds.has(pkg.id as string),
+    );
+
+    if (affectedPackages.length === 0) return;
+
+    const buildUrl = resolveUrlBuilder((id) => `packages/${id}`);
+    const spaceById = new Map(allSpaces.map((s) => [s.id as string, s]));
+
+    logWarningConsole(
+      'Some changes could not be applied: playbook submit does not allow remove artefacts. Review the following affected packages:',
+    );
+    for (const pkg of affectedPackages) {
+      const space = spaceById.get(pkg.spaceId as string);
+      const spaceSlug = space?.slug ?? '';
+      const url = buildUrl(spaceSlug, pkg.id as string);
+      if (url) {
+        logInfoConsole(`  - ${pkg.name}: ${url}`);
+      } else {
+        logInfoConsole(`  - ${pkg.name}`);
+      }
+    }
+  } catch {
+    // Best effort — don't fail if package info can't be fetched
+  }
+}
+
+function warnSkippedRemovals(skipped: PlaybookChangeEntry[]): void {
+  if (skipped.length === 0) return;
+  const apiKey = loadApiKey();
+  const host = apiKey ? decodeApiKey(apiKey)?.host : null;
+  logWarningConsole(
+    `${skipped.length} removal(s) skipped — removals are not supported via --no-review.`,
+  );
+  if (host) {
+    logInfoConsole(`To remove artifacts, visit: ${host}`);
+  }
+}
+
 export async function playbookSubmitHandler(
   deps: PlaybookSubmitHandlerDependencies,
 ): Promise<void> {
@@ -700,6 +751,7 @@ export async function playbookSubmitHandler(
 
   // Build proposals
   const allProposals: ProposalItem[] = [];
+  const skippedRemovals: PlaybookChangeEntry[] = [];
 
   for (const entry of changes) {
     const ctx = await getTargetContext(entry);
@@ -723,6 +775,10 @@ export async function playbookSubmitHandler(
           break;
       }
     } else if (entry.changeType === 'removed') {
+      if (noReview) {
+        skippedRemovals.push(entry);
+        continue;
+      }
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
         ctx.lockFile,
@@ -795,8 +851,24 @@ export async function playbookSubmitHandler(
     for (const entry of changes) {
       playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
     }
+    warnSkippedRemovals(skippedRemovals);
     exit(0);
     return;
+  }
+
+  // Collect packageIds from removal proposals for post-submit notification
+  const removalPackageIds = new Set<string>();
+  for (const proposal of allProposals) {
+    if (
+      proposal.type === ChangeProposalType.removeStandard ||
+      proposal.type === ChangeProposalType.removeCommand ||
+      proposal.type === ChangeProposalType.removeSkill
+    ) {
+      const payload = proposal.payload as { packageIds: string[] };
+      for (const id of payload.packageIds) {
+        removalPackageIds.add(id);
+      }
+    }
   }
 
   // Group file paths by spaceId (for incremental clearing)
@@ -853,7 +925,10 @@ export async function playbookSubmitHandler(
     }
 
     if (!response.success) {
-      logErrorConsole(`Error: ${response.error.message}`);
+      logErrorConsole(`Failed to apply changes: ${response.error.message}`);
+      logInfoConsole(
+        'Your playbook has not been modified. Fix the issue and retry.',
+      );
       exit(1);
       return;
     }
@@ -864,15 +939,20 @@ export async function playbookSubmitHandler(
       }
     }
 
-    const formatCount = (items: unknown[], noun: string): string | null =>
+    await logRemovedPackagesNotification(packmindCliHexa, removalPackageIds);
+
+    const formatCount = (
+      items: readonly unknown[],
+      noun: string,
+    ): string | null =>
       items.length > 0
         ? `${items.length} ${noun}${items.length !== 1 ? 's' : ''}`
         : null;
 
     const collectParts = (counts: {
-      standards: unknown[];
-      commands: unknown[];
-      skills: unknown[];
+      standards: readonly unknown[];
+      commands: readonly unknown[];
+      skills: readonly unknown[];
     }): string[] =>
       [
         formatCount(counts.standards, 'standard'),
@@ -911,13 +991,28 @@ export async function playbookSubmitHandler(
       createdSpaceIds,
     );
     logPackageAddGuidance(response.created, packageSlugs);
+
+    for (const entry of skippedRemovals) {
+      playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
+    }
+    warnSkippedRemovals(skippedRemovals);
+
     exit(0);
     return;
   }
 
+  const spaceNameById = new Map<string, string>();
+  for (const change of changes) {
+    if (change.spaceName && !spaceNameById.has(change.spaceId)) {
+      spaceNameById.set(change.spaceId, change.spaceName);
+    }
+  }
+  const displaySpace = (id: string) => spaceNameById.get(id) ?? id;
+
   let totalCreated = 0;
   let totalSkipped = 0;
-  let hasErrors = false;
+  const succeededSpaces: string[] = [];
+  const failedSpaces: Array<{ spaceId: string; errors: string[] }> = [];
 
   for (const [spaceId, proposals] of proposalsBySpaceId) {
     let response: Awaited<
@@ -986,12 +1081,13 @@ export async function playbookSubmitHandler(
           }
         }
       } else {
-        hasErrors = true;
-        for (const error of response.errors) {
-          logErrorConsole(`Error: ${error.message}`);
-        }
+        failedSpaces.push({
+          spaceId,
+          errors: response.errors.map((e) => e.message),
+        });
       }
     } else {
+      succeededSpaces.push(spaceId);
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
       for (const filePath of filePaths) {
         playbookLocalRepository.removeChange(filePath, spaceId);
@@ -1018,17 +1114,23 @@ export async function playbookSubmitHandler(
     }
   }
 
-  if (hasErrors) {
-    if (totalCreated > 0) {
-      logWarningConsole(
-        `Partially submitted: ${totalCreated} succeeded, some failed`,
+  if (failedSpaces.length > 0) {
+    for (const { spaceId, errors } of failedSpaces) {
+      logErrorConsole(
+        `Failed to submit to space '${displaySpace(spaceId)}': ${errors.join(', ')}`,
       );
-    } else {
-      logErrorConsole('Proposals failed to submit');
+    }
+    if (succeededSpaces.length > 0) {
+      logWarningConsole(
+        `Submitted to: ${succeededSpaces.map(displaySpace).join(', ')}. ` +
+          `Run 'packmind playbook submit' again to retry failed spaces.`,
+      );
     }
     exit(1);
     return;
   }
+
+  await logRemovedPackagesNotification(packmindCliHexa, removalPackageIds);
 
   const parts: string[] = [];
   if (totalCreated > 0) {

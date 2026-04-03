@@ -14,8 +14,7 @@ import {
 } from '@packmind/ui';
 
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-
-type SpaceMemberRole = 'admin' | 'member';
+import { SpaceMemberRole } from '../types';
 
 export interface SpaceMember {
   id: string;
@@ -32,11 +31,19 @@ const columns: PMTableColumn[] = [
 interface SpaceMembersTableProps {
   members: SpaceMember[];
   currentUserId?: string;
+  isDefaultSpace?: boolean;
+  isSpaceAdmin?: boolean;
+  onRemoveMember?: (memberId: string) => void;
+  onUpdateMemberRole?: (memberId: string, role: SpaceMemberRole) => void;
 }
 
 export function SpaceMembersTable({
   members,
   currentUserId,
+  isDefaultSpace,
+  isSpaceAdmin,
+  onRemoveMember,
+  onUpdateMemberRole,
 }: Readonly<SpaceMembersTableProps>) {
   const data = useMemo<PMTableRow[]>(
     () =>
@@ -62,24 +69,43 @@ export function SpaceMembersTable({
           role: (
             <PMNativeSelect
               size="sm"
-              defaultValue={member.role}
-              disabled={isCurrentUser}
+              value={member.role}
+              disabled={isCurrentUser || !isSpaceAdmin}
+              onChange={(e) =>
+                onUpdateMemberRole?.(
+                  member.id,
+                  e.currentTarget.value as SpaceMemberRole,
+                )
+              }
               items={[
                 { value: 'admin', label: 'Admin' },
                 { value: 'member', label: 'Member' },
               ]}
             />
           ),
-          actions: isCurrentUser ? null : (
-            <PMButton size="xs" variant="ghost" colorPalette="red">
-              <PMIcon>
-                <LuX />
-              </PMIcon>
-            </PMButton>
-          ),
+          actions:
+            isCurrentUser || isDefaultSpace || !isSpaceAdmin ? null : (
+              <PMButton
+                size="xs"
+                variant="ghost"
+                colorPalette="red"
+                onClick={() => onRemoveMember?.(member.id)}
+              >
+                <PMIcon>
+                  <LuX />
+                </PMIcon>
+              </PMButton>
+            ),
         };
       }),
-    [members, currentUserId],
+    [
+      members,
+      currentUserId,
+      isDefaultSpace,
+      isSpaceAdmin,
+      onRemoveMember,
+      onUpdateMemberRole,
+    ],
   );
 
   return (

@@ -14,7 +14,7 @@
     "@packmind/skills": "*",
     "@packmind/test-utils": "*",
     "adm-zip": "^0.5.16",
-    "semver": "^6.3.1",
+    "semver": "^7.7.4",
     "typeorm": "0.3.28",
     "archiver": "^7.0.1",
     "uuid": "^11.1.0"

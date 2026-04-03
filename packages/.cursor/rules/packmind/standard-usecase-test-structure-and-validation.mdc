@@ -1,7 +1,7 @@
 ---
 alwaysApply: true
 ---
-## Standard: UseCase Test Structure and Validation
+# Standard: UseCase Test Structure and Validation
 
 Define testing patterns for use case unit tests to ensure consistent organization and comprehensive validation coverage in the Packmind hexagonal architecture. :
 * Group test scenarios by execution context using nested describe blocks with shared setup in beforeEach to eliminate duplication and improve test readability

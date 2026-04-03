@@ -4,11 +4,13 @@ import {
   ICreatePackageUseCase,
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
+  IListPackagesBySpaceUseCase,
   IListStandardsBySpaceUseCase,
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
   PublicGateway,
   Space,
+  SpaceType,
 } from '@packmind/types';
 import { IChangeProposalGateway } from './gateways/ChangeProposalGateway';
 import { IDeploymentsGateway } from './gateways/DeploymentsGateway';
@@ -21,7 +23,7 @@ export interface IAuthGateway {
 
 export interface ISpaceGateway {
   getGlobal: () => Promise<Space>;
-  create: (params: { name: string }) => Promise<Space>;
+  create: (params: { name: string; type?: SpaceType }) => Promise<Space>;
 }
 
 export interface ICommandGateway {
@@ -30,6 +32,7 @@ export interface ICommandGateway {
 
 export interface IPackageGateway {
   create: Gateway<ICreatePackageUseCase>;
+  list: Gateway<IListPackagesBySpaceUseCase>;
 }
 
 export interface IStandardGateway {

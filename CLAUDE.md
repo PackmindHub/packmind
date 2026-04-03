@@ -41,6 +41,7 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
 - ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
 - when asked to execute `packmind-cli`, use `node ./dist/apps/cli/main.cjs`
+- Some default skills use version-routed directories (`packmind-versions/<version>/`) and ask you to run `packmind-cli --version` to pick the right one. Since you already run the local build with `node ./dist/apps/cli/main.cjs`, you always have the latest — skip the `--version` check and use the `packmind-versions/next/` directory directly.
 
 ## Git Workflow
 

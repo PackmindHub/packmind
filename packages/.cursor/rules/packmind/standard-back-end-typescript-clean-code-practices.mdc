@@ -2,7 +2,7 @@
 globs: **/packages/**/*.ts
 alwaysApply: false
 ---
-## Standard: Back-end TypeScript Clean Code Practices
+# Standard: Back-end TypeScript Clean Code Practices
 
 Establish back-end TypeScript clean code rules in the Packmind monorepo (/packages/**/*.ts)—including PackmindLogger constructor injection, disciplined logger.info/error usage, top-of-file static imports, custom Error subclasses, and adapter-created use cases with their own loggers—to improve maintainability, debuggability, and consistent architecture across services. :
 * Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements. Use logger.info for important business events, logger.error for error handling, and add logger.debug manually only when debugging specific issues.

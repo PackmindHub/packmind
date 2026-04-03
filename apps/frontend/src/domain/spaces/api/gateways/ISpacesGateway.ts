@@ -1,8 +1,11 @@
 import { ListUserSpacesResponse, Space } from '@packmind/types';
 import {
   SpaceMemberEntry,
+  SpaceMemberRole,
   ListSpaceMembersResponse,
   AddMembersToSpaceResponse,
+  RemoveMemberFromSpaceResponse,
+  UpdateMemberRoleResponse,
 } from '../../types';
 
 export interface ISpacesGateway {
@@ -17,4 +20,15 @@ export interface ISpacesGateway {
     spaceId: string,
     members: SpaceMemberEntry[],
   ): Promise<AddMembersToSpaceResponse>;
+  removeMemberFromSpace(
+    orgId: string,
+    spaceId: string,
+    targetUserId: string,
+  ): Promise<RemoveMemberFromSpaceResponse>;
+  updateMemberRole(
+    orgId: string,
+    spaceId: string,
+    targetUserId: string,
+    role: SpaceMemberRole,
+  ): Promise<UpdateMemberRoleResponse>;
 }

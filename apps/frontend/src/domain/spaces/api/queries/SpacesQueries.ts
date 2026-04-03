@@ -7,7 +7,7 @@ import {
 import { spacesGateway } from '../gateways';
 import { spacesQueryKeys } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { SpaceMemberEntry } from '../../types';
+import { SpaceMemberEntry, SpaceMemberRole } from '../../types';
 
 export const getSpacesQueryOptions = (orgId: string) =>
   queryOptions({
@@ -83,6 +83,63 @@ export const useAddMembersToSpaceMutation = (spaceId: string) => {
         throw new Error('Organization ID is required to add members');
       }
       return spacesGateway.addMembersToSpace(organization.id, spaceId, members);
+    },
+    onSuccess: async () => {
+      if (organization?.id) {
+        await queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.members(organization.id, spaceId),
+        });
+      }
+    },
+  });
+};
+
+export const useRemoveMemberFromSpaceMutation = (spaceId: string) => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async (targetUserId: string) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to remove a member');
+      }
+      return spacesGateway.removeMemberFromSpace(
+        organization.id,
+        spaceId,
+        targetUserId,
+      );
+    },
+    onSuccess: async () => {
+      if (organization?.id) {
+        await queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.members(organization.id, spaceId),
+        });
+      }
+    },
+  });
+};
+
+export const useUpdateMemberRoleMutation = (spaceId: string) => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async ({
+      targetUserId,
+      role,
+    }: {
+      targetUserId: string;
+      role: SpaceMemberRole;
+    }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to update a member role');
+      }
+      return spacesGateway.updateMemberRole(
+        organization.id,
+        spaceId,
+        targetUserId,
+        role,
+      );
     },
     onSuccess: async () => {
       if (organization?.id) {

@@ -1,15 +1,31 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
   Param,
+  Patch,
   Post,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
-import { OrganizationId, SpaceId } from '@packmind/types';
+import {
+  OrganizationId,
+  SpaceId,
+  UserId,
+  UserSpaceRole,
+} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  SpaceAdminRequiredError,
+  CannotRemoveFromDefaultSpaceError,
+  CannotRemoveSelfError,
+  CannotUpdateOwnRoleError,
+  MemberNotFoundError,
+} from '@packmind/spaces';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceMembersService } from './members.service';
 
@@ -55,11 +71,86 @@ export class SpaceMembersController {
       },
     );
 
-    return this.membersService.addMembersToSpace({
-      userId: req.user.userId,
-      organizationId: orgId,
-      spaceId,
-      members: body.members,
-    });
+    try {
+      return await this.membersService.addMembersToSpace({
+        userId: req.user.userId,
+        organizationId: orgId,
+        spaceId,
+        members: body.members,
+      });
+    } catch (error) {
+      if (error instanceof SpaceAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  @Delete(':targetUserId')
+  async removeMember(
+    @Param('orgId') orgId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('targetUserId') targetUserId: UserId,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/members/:targetUserId - Removing member from space',
+      { organizationId: orgId, spaceId, targetUserId },
+    );
+
+    try {
+      return await this.membersService.removeMemberFromSpace({
+        userId: req.user.userId,
+        organizationId: orgId,
+        spaceId,
+        targetUserId,
+      });
+    } catch (error) {
+      if (error instanceof SpaceAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof CannotRemoveFromDefaultSpaceError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof CannotRemoveSelfError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  @Patch(':targetUserId')
+  async updateMemberRole(
+    @Param('orgId') orgId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('targetUserId') targetUserId: UserId,
+    @Body() body: { role: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    this.logger.info(
+      'PATCH /organizations/:orgId/spaces/:spaceId/members/:targetUserId - Updating member role',
+      { organizationId: orgId, spaceId, targetUserId },
+    );
+
+    try {
+      return await this.membersService.updateMemberRole({
+        userId: req.user.userId,
+        organizationId: orgId,
+        spaceId,
+        targetUserId,
+        role: body.role as UserSpaceRole,
+      });
+    } catch (error) {
+      if (error instanceof SpaceAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof CannotUpdateOwnRoleError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof MemberNotFoundError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 }

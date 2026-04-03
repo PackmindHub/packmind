@@ -6,11 +6,11 @@ import {
   createUserId,
   UserSpaceRole,
 } from '@packmind/types';
-import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
 import { stubLogger } from '@packmind/test-utils';
+import { SpaceAdminRequiredError } from '../../domain/errors/SpaceAdminRequiredError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { AddMembersToSpaceUseCase } from './AddMembersToSpaceUseCase';
 
@@ -22,7 +22,7 @@ describe('AddMembersToSpaceUseCase', () => {
   const organization = organizationFactory({ id: organizationId });
   const user = userFactory({
     id: userId,
-    memberships: [{ userId, organizationId, role: 'admin' }],
+    memberships: [{ userId, organizationId, role: 'member' }],
   });
 
   let useCase: AddMembersToSpaceUseCase;
@@ -45,6 +45,7 @@ describe('AddMembersToSpaceUseCase', () => {
   beforeEach(() => {
     membershipService = {
       addSpaceMembership: jest.fn(),
+      findMembership: jest.fn(),
     } as unknown as jest.Mocked<UserSpaceMembershipService>;
 
     accountsPort = {
@@ -75,6 +76,13 @@ describe('AddMembersToSpaceUseCase', () => {
       });
 
       beforeEach(() => {
+        membershipService.findMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId,
+            spaceId,
+            role: UserSpaceRole.ADMIN,
+          }),
+        );
         membershipService.addSpaceMembership
           .mockResolvedValueOnce(membership1)
           .mockResolvedValueOnce(membership2);
@@ -101,6 +109,13 @@ describe('AddMembersToSpaceUseCase', () => {
       });
 
       beforeEach(() => {
+        membershipService.findMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId,
+            spaceId,
+            role: UserSpaceRole.ADMIN,
+          }),
+        );
         membershipService.addSpaceMembership
           .mockResolvedValueOnce(membership1)
           .mockRejectedValueOnce(new Error('duplicate key'));
@@ -115,6 +130,13 @@ describe('AddMembersToSpaceUseCase', () => {
 
     describe('when all members fail to be added', () => {
       beforeEach(() => {
+        membershipService.findMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId,
+            spaceId,
+            role: UserSpaceRole.ADMIN,
+          }),
+        );
         membershipService.addSpaceMembership.mockRejectedValue(
           new Error('duplicate key'),
         );
@@ -128,6 +150,16 @@ describe('AddMembersToSpaceUseCase', () => {
     });
 
     describe('when members array is empty', () => {
+      beforeEach(() => {
+        membershipService.findMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId,
+            spaceId,
+            role: UserSpaceRole.ADMIN,
+          }),
+        );
+      });
+
       it('returns an empty array', async () => {
         const result = await useCase.execute(buildCommand({ members: [] }));
 
@@ -153,19 +185,38 @@ describe('AddMembersToSpaceUseCase', () => {
       });
     });
 
-    describe('when the user is a member but not an admin', () => {
+    describe('when the caller is not a space admin', () => {
       beforeEach(() => {
-        accountsPort.getUserById.mockResolvedValue(
-          userFactory({
-            id: userId,
-            memberships: [{ userId, organizationId, role: 'member' }],
+        membershipService.findMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId,
+            spaceId,
+            role: UserSpaceRole.MEMBER,
           }),
         );
       });
 
-      it('throws OrganizationAdminRequiredError', async () => {
+      it('throws SpaceAdminRequiredError', async () => {
         await expect(useCase.execute(buildCommand())).rejects.toThrow(
-          OrganizationAdminRequiredError,
+          SpaceAdminRequiredError,
+        );
+      });
+
+      it('does not call addSpaceMembership', async () => {
+        await useCase.execute(buildCommand()).catch(() => undefined);
+
+        expect(membershipService.addSpaceMembership).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the caller has no space membership', () => {
+      beforeEach(() => {
+        membershipService.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws SpaceAdminRequiredError', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow(
+          SpaceAdminRequiredError,
         );
       });
     });

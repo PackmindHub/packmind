@@ -42,7 +42,7 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-## Standard: CLI Gateway Implementation
+# Standard: CLI Gateway Implementation
 
 Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods to use PackmindHttpClient (getAuthContext and typed request<T> with options for non-GET), delegate to sub-gateways, and expose only Gateway<UseCase> interfaces to reduce boilerplate, enforce type safety, and keep authentication and error handling consistent. :
 * Define the method return type using `Promise<ResponseType>` for type safety
@@ -57,7 +57,7 @@ Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods 
 
 Full standard is available here for further request: [CLI Gateway Implementation](.packmind/standards/cli-packmindgateway-method-implementation.md)
 
-## Standard: CLI Command Structure
+# Standard: CLI Command Structure
 
 Enforce cmd-ts CLI command definitions (Command.ts) to contain only name/description/args and delegate to separate Handler.ts functions that validate inputs, run PackmindCliHexa with PackmindLogger, handle domain errors, and standardize output/exit codes via consoleLogger utilities to improve testability, maintainability, and consistent user feedback. :
 * Call exit(1) after outputting error messages and exit(0) after success messages
@@ -75,7 +75,7 @@ Enforce cmd-ts CLI command definitions (Command.ts) to contain only name/descrip
 
 Full standard is available here for further request: [CLI Command Structure](.packmind/standards/cli-command-structure.md)
 
-## Standard: CLI Use Case Structure
+# Standard: CLI Use Case Structure
 
 Enforce CLI use case separation by defining IPublicUseCase<Command, Response> interfaces with co-located Command/Response types in apps/cli/src/domain/useCases/ and implementing business-only logic in apps/cli/src/application/useCases/ using custom errors from apps/cli/src/domain/errors/ (no console or output handlers) to improve modularity, reuse, and predictable error handling. :
 * Base all use case interfaces on IPublicUseCase<Command, Response> from @packmind/types

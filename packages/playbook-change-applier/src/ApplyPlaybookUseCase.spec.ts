@@ -74,10 +74,6 @@ describe('ApplyPlaybookUseCase', () => {
     organizationId,
   };
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   beforeEach(() => {
     accountsPort = {
       getUserById: jest.fn().mockResolvedValue(user),
@@ -138,6 +134,10 @@ describe('ApplyPlaybookUseCase', () => {
       spacesPort,
       stubbedLogger,
     );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   function buildCommand(
@@ -1089,52 +1089,42 @@ describe('ApplyPlaybookUseCase', () => {
         ]);
       });
     });
-  });
 
-  describe('unsupported proposal types', () => {
-    describe('when submitting a removal proposal', () => {
+    describe('when submitting a deleteRule proposal', () => {
+      const ruleToDelete = createRuleId('rule-to-delete');
+      const stdVersionWithTwoRules: StandardVersion = {
+        ...stdVersion,
+        rules: [
+          { id: ruleId, standardVersionId: stdVersionId, content: 'Use const' },
+          {
+            id: ruleToDelete,
+            standardVersionId: stdVersionId,
+            content: 'No var',
+          },
+        ],
+      };
+
       beforeEach(async () => {
-        result = await useCase.execute(
-          buildCommand({
-            proposals: [
-              {
-                spaceId,
-                type: ChangeProposalType.removeStandard,
-                artefactId: createStandardId('std-1'),
-                payload: { packageIds: [] },
-              },
-            ],
-          }),
-        );
-      });
+        standardsPort.getLatestStandardVersion
+          .mockResolvedValueOnce(stdVersionWithTwoRules)
+          .mockResolvedValueOnce(newStdVersion);
+        standardsPort.getRulesByStandardId
+          .mockResolvedValueOnce(stdVersionWithTwoRules.rules ?? [])
+          .mockResolvedValueOnce(newStdVersion.rules ?? []);
+        standardsPort.updateStandard.mockResolvedValue({
+          id: stdId,
+        } as Standard);
 
-      it('returns failure', () => {
-        expect(result.success).toBe(false);
-      });
-
-      it('reports unsupported type message', () => {
-        expect(!result.success && result.error.message).toBe(
-          'Unsupported proposal type: removeStandard',
-        );
-      });
-
-      it('reports the correct index', () => {
-        expect(!result.success && result.error.index).toBe(0);
-      });
-    });
-
-    describe('when submitting deleteRule', () => {
-      beforeEach(async () => {
         result = await useCase.execute(
           buildCommand({
             proposals: [
               {
                 spaceId,
                 type: ChangeProposalType.deleteRule,
-                artefactId: createStandardId('std-1'),
+                artefactId: stdId,
                 payload: {
-                  targetId: createRuleId('r-1'),
-                  item: { id: createRuleId('r-1'), content: 'rule' },
+                  targetId: ruleToDelete,
+                  item: { id: ruleToDelete, content: 'No var' },
                 },
               },
             ],
@@ -1142,14 +1132,129 @@ describe('ApplyPlaybookUseCase', () => {
         );
       });
 
-      it('returns failure', () => {
-        expect(result.success).toBe(false);
+      it('returns success', () => {
+        expect(result.success).toBe(true);
       });
 
-      it('reports unsupported type', () => {
-        expect(!result.success && result.error.type).toBe(
-          ChangeProposalType.deleteRule,
+      it('includes the standard in updated list', () => {
+        expect(result.success && result.updated.standards).toEqual([stdId]);
+      });
+
+      it('calls updateStandard with only the remaining rule', () => {
+        expect(standardsPort.updateStandard).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rules: [{ id: ruleId, content: 'Use const' }],
+          }),
         );
+      });
+    });
+  });
+
+  describe('remove proposal types', () => {
+    describe('when submitting only remove proposals', () => {
+      const stdId = createStandardId('existing-std');
+      const recipeId = createRecipeId('existing-recipe');
+      const skillId = createSkillId('existing-skill');
+
+      beforeEach(async () => {
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.removeStandard,
+                artefactId: stdId,
+                payload: {},
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.removeCommand,
+                artefactId: recipeId,
+                payload: {},
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.removeSkill,
+                artefactId: skillId,
+                payload: {},
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('returns no created artifacts', () => {
+        expect(result.success && result.created).toEqual({
+          standards: [],
+          commands: [],
+          skills: [],
+        });
+      });
+
+      it('returns no updated artifacts', () => {
+        expect(result.success && result.updated).toEqual({
+          standards: [],
+          commands: [],
+          skills: [],
+        });
+      });
+
+      it('does not delete standard', () => {
+        expect(standardsPort.hardDeleteStandard).not.toHaveBeenCalled();
+      });
+
+      it('does not delete recipe', () => {
+        expect(recipesPort.hardDeleteRecipe).not.toHaveBeenCalled();
+      });
+
+      it('does not delete skill', () => {
+        expect(skillsPort.hardDeleteSkill).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when mixing remove proposals with create proposals', () => {
+      const stdId = createStandardId('existing-std');
+
+      beforeEach(async () => {
+        result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.removeStandard,
+                artefactId: stdId,
+                payload: {},
+              },
+              {
+                spaceId,
+                type: ChangeProposalType.createSkill,
+                payload: {
+                  name: 'new-skill',
+                  description: 'A skill',
+                  prompt: 'Do things',
+                  skillMdPermissions: 'rw-r--r--',
+                },
+                targetId: createTargetId('target-1'),
+              },
+            ],
+          }),
+        );
+      });
+
+      it('returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('creates the skill', () => {
+        expect(result.success && result.created.skills).toHaveLength(1);
+      });
+
+      it('does not delete the standard', () => {
+        expect(standardsPort.hardDeleteStandard).not.toHaveBeenCalled();
       });
     });
   });

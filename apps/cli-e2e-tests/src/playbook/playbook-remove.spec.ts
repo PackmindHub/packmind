@@ -1,5 +1,8 @@
 import {
+  describeForVersion,
   describeWithUserSignedUp,
+  getPackmindInstanceUrl,
+  RunCliResult,
   setupGitRepo,
   updateFile,
   UserSignedUpContext,
@@ -8,12 +11,14 @@ import fs from 'fs';
 import {
   createSpaceId,
   createStandardId,
+  Package,
   PackmindLockFile,
+  Standard,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
-describe('playbook remove', () => {
-  describeWithUserSignedUp('playbook add', (getContext) => {
+describeForVersion('> 0.24.0', 'playbook remove', () => {
+  describeWithUserSignedUp('playbook remove', (getContext) => {
     let context: UserSignedUpContext;
 
     beforeEach(async () => {
@@ -31,7 +36,7 @@ describe('playbook remove', () => {
       });
     });
 
-    describe('when an artifact comes from a private space', () => {
+    describe('when an artefact comes from a private space', () => {
       beforeEach(() => {
         updateFile(
           'packmind.json',
@@ -89,6 +94,87 @@ describe('playbook remove', () => {
             'Cannot remove this standard: the space it belongs to is not available to you',
           ),
           stdout: '',
+        });
+      });
+    });
+
+    describe('when an artefact comes from a space the user can access', () => {
+      let rmResult: RunCliResult;
+      let standard: Standard;
+      let pkg: Package;
+
+      beforeEach(async () => {
+        const createStandardResponse = await context.gateway.standards.create({
+          description: 'Some standard',
+          name: 'My super standard',
+          rules: [],
+          scope: '',
+          spaceId: context.space.id,
+        });
+        standard = createStandardResponse.standard;
+
+        const createPackageResponse = await context.gateway.packages.create({
+          description: '',
+          name: 'My package',
+          recipeIds: [],
+          spaceId: context.space.id,
+          standardIds: [standard.id],
+        });
+        pkg = createPackageResponse.package;
+
+        await context.runCli(`install @${context.space.slug}/${pkg.slug}`);
+        rmResult = await context.runCli(
+          `playbook rm .packmind/standards/${standard.slug}.md`,
+        );
+      });
+
+      it('succeeds', () => {
+        expect(rmResult).toEqual({
+          returnCode: 0,
+          stderr: '',
+          stdout: expect.stringContaining(
+            `Staged "${standard.name}" (standard, removed) to playbook in space "${context.space.name}"`,
+          ),
+        });
+      });
+
+      describe('when user submits the changes', () => {
+        let submitResult: RunCliResult;
+
+        beforeEach(async () => {
+          submitResult = await context.runCli('playbook submit --no-review');
+        });
+
+        it('does not delete the artefacts', async () => {
+          const { standards } = await context.gateway.standards.list({
+            spaceId: context.space.id,
+          });
+
+          expect(standards).toEqual([expect.objectContaining(standard)]);
+        });
+
+        it('does not remove the artefact from packages', async () => {
+          const { packages } = await context.gateway.packages.list({
+            spaceId: context.space.id,
+          });
+
+          expect(packages).toEqual([
+            expect.objectContaining({
+              standards: [standard.id],
+            }),
+          ]);
+        });
+
+        it('warns the user that some actions could not be done and provides link to manage the packages', () => {
+          expect(submitResult).toEqual({
+            returnCode: 0,
+            stderr: expect.stringContaining(
+              'removal(s) skipped — removals are not supported via --no-review',
+            ),
+            stdout: expect.stringContaining(
+              `To remove artifacts, visit: ${getPackmindInstanceUrl()}`,
+            ),
+          });
         });
       });
     });

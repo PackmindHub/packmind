@@ -11,5 +11,8 @@ module.exports = {
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/apps/cli-e2e-tests',
   testTimeout: 30000, // E2E tests may take longer
-  setupFilesAfterEnv: ['<rootDir>/src/helpers/matchers.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/src/helpers/matchers.ts',
+    '<rootDir>/src/helpers/setupCliVersion.ts',
+  ],
 };
