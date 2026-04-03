@@ -169,11 +169,9 @@ describeForVersion('> 0.24.0', 'playbook remove', () => {
           expect(submitResult).toEqual({
             returnCode: 0,
             stderr: expect.stringContaining(
-              'removal(s) skipped — removals are not supported via --no-review',
+              'Some changes could not be applied: playbook submit does not allow remove artefacts',
             ),
-            stdout: expect.stringContaining(
-              `To remove artifacts, visit: ${getPackmindInstanceUrl()}`,
-            ),
+            stdout: expect.stringContaining(`${getPackmindInstanceUrl()}`),
           });
         });
       });
