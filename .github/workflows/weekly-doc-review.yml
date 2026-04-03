@@ -57,7 +57,7 @@ jobs:
             echo "No report file found." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Prepare Slack message
+      - name: Prepare Slack payload
         if: always() && hashFiles('doc-audit-report.md') != ''
         run: |
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -68,9 +68,13 @@ jobs:
           else
             REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
           fi
+          PAYLOAD=$(jq -n \
+            --arg channel "${{ secrets.SLACK_CHANNEL_ID }}" \
+            --arg text "$REPORT" \
+            '{channel: $channel, text: $text}')
           EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
-          echo "SLACK_REPORT_CONTENT<<${EOF_DELIMITER}" >> "$GITHUB_ENV"
-          echo "$REPORT" >> "$GITHUB_ENV"
+          echo "SLACK_PAYLOAD<<${EOF_DELIMITER}" >> "$GITHUB_ENV"
+          echo "$PAYLOAD" >> "$GITHUB_ENV"
           echo "${EOF_DELIMITER}" >> "$GITHUB_ENV"
 
       - name: Send report to Slack
@@ -79,9 +83,7 @@ jobs:
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-          payload: |
-            channel: ${{ secrets.SLACK_CHANNEL_ID }}
-            text: ${{ env.SLACK_REPORT_CONTENT }}
+          payload: ${{ env.SLACK_PAYLOAD }}
 
       - name: Upload reports artifact
         if: always()
