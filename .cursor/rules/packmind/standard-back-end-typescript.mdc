@@ -1,0 +1,13 @@
+---
+globs: **/*.ts
+alwaysApply: false
+---
+## Standard: Back-end Typescript
+
+Establish clean code practices in TypeScript for back-end development by limiting logger.debug calls in production, organizing import statements, using dedicated error types, and injecting PackmindLogger to enhance maintainability and ensure consistent logging across services. :
+* Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements
+* Inject PackmindLogger as constructor parameter with origin constant for consistent logging across services
+* Keep all import statements at the top of the file before any other code
+* Use dedicated error types instead of generic Error instances to enable precise error handling and improve code maintainability
+
+Full standard is available here for further request: [Back-end Typescript](../../../.packmind/standards/back-end-typescript.md)

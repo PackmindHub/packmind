@@ -75,7 +75,7 @@ jobs:
 
       - name: Send report to Slack
         if: always() && hashFiles('doc-audit-report.md') != ''
-        uses: slackapi/slack-github-action@v2
+        uses: archive/github-actions-slack@af78098f536edbc4de71162a307590698245be95
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
