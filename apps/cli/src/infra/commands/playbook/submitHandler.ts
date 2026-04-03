@@ -27,7 +27,7 @@ import {
   compareSkillDefinitionFields,
 } from '../../../application/utils/artifactComparison';
 import { normalizePath } from '../../../application/utils/pathUtils';
-import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
+import { createTargetContextResolver } from './submit/targetContextResolver';
 import {
   formatCommand,
   logConsole,
@@ -46,7 +46,6 @@ import {
 } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
-import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
 import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
 
 export type PlaybookSubmitHandlerDependencies = {
@@ -697,50 +696,17 @@ export async function playbookSubmitHandler(
   }
 
   // Per-target lock file resolution cache
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-
-  type TargetContext = {
-    lockFile: PackmindLockFile | null;
-    deployedFiles: FileModification[];
-    projectDir: string | null;
-  };
-
-  const targetContextCache = new Map<string, TargetContext>();
-
-  async function getTargetContext(
-    entry: PlaybookChangeEntry,
-  ): Promise<TargetContext> {
-    const key = entry.configDir ?? '__cwd__';
-    if (targetContextCache.has(key)) return targetContextCache.get(key)!;
-
-    let projectDir: string | null;
-    if (entry.configDir !== undefined && gitRoot) {
-      projectDir = path.join(gitRoot, entry.configDir);
-    } else {
-      projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
-    }
-
-    const lockFile = projectDir
-      ? await lockFileRepository.read(projectDir)
-      : null;
-    const deployedFiles =
-      lockFile && Object.keys(lockFile.artifacts).length > 0
-        ? await fetchDeployedFiles(
-            packmindCliHexa.getPackmindGateway(),
-            lockFile,
-          )
-        : [];
-
-    const ctx = { lockFile, deployedFiles, projectDir };
-    targetContextCache.set(key, ctx);
-    return ctx;
-  }
+  const resolver = await createTargetContextResolver({
+    lockFileRepository,
+    cwd,
+    packmindCliHexa,
+  });
 
   // Build proposals
   const allProposals: ProposalItem[] = [];
 
   for (const entry of changes) {
-    const ctx = await getTargetContext(entry);
+    const ctx = await resolver.getTargetContext(entry);
 
     // Fall back to the lock file's targetId for entries staged before the fix
     // where resolveDeployedContext couldn't resolve it (e.g. no git provider configured).
@@ -1042,7 +1008,7 @@ export async function playbookSubmitHandler(
           (c) => c.changeType === 'removed',
         );
         for (const entry of removedEntries) {
-          const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+          const entryCtx = resolver.getCachedContext(entry.configDir);
           if (!entryCtx?.projectDir) continue;
           try {
             const fullPath = path.join(entryCtx.projectDir, entry.filePath);
@@ -1073,7 +1039,7 @@ export async function playbookSubmitHandler(
         (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
       );
       for (const entry of removedEntries) {
-        const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+        const entryCtx = resolver.getCachedContext(entry.configDir);
         if (!entryCtx?.projectDir) continue;
         try {
           const fullPath = path.join(entryCtx.projectDir, entry.filePath);
