@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -39,14 +40,21 @@ describe('GetSkillByIdUsecase', () => {
       createSpace: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId: createUserId('00000000-0000-0000-0000-000000000001'),
+        spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
+        role: 'member',
+        createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
+        updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      }),
     } as jest.Mocked<ISpacesPort>;
 
     stubbedLogger = stubLogger();
 
     usecase = new GetSkillByIdUsecase(
+      spacesPort,
       accountsAdapter,
       skillService,
-      spacesPort,
       stubbedLogger,
     );
   });
@@ -445,6 +453,61 @@ describe('GetSkillByIdUsecase', () => {
       it('throws error', async () => {
         await expect(usecase.execute(command)).rejects.toThrow(
           `User ${userId} is not a member of organization ${organizationId}`,
+        );
+      });
+    });
+
+    describe('when user is not a member of the space', () => {
+      let userId: string;
+      let organizationId: string;
+      let spaceId: string;
+      let skillId: string;
+      let user: User;
+      let organization: Organization;
+      let space: Space;
+      let command: GetSkillByIdCommand;
+
+      beforeEach(() => {
+        userId = createUserId(uuidv4());
+        organizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
+        skillId = createSkillId(uuidv4());
+
+        user = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hashed_password',
+          memberships: [{ organizationId, role: 'member', userId }],
+          active: true,
+        };
+        organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
+
+        command = {
+          userId,
+          organizationId,
+          spaceId,
+          skillId,
+        };
+
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        spacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
         );
       });
     });

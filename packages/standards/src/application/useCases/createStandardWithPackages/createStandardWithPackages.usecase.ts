@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   CreateStandardWithPackagesCommand,
   CreateStandardWithPackagesResponse,
@@ -16,25 +19,25 @@ import { CreateStandardWithExamplesUsecase } from '../createStandardWithExamples
 const origin = 'CreateStandardWithPackagesUsecase';
 
 export class CreateStandardWithPackagesUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     CreateStandardWithPackagesCommand,
     CreateStandardWithPackagesResponse
   >
   implements ICreateStandardWithPackagesUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly createStandardWithExamplesUsecase: CreateStandardWithExamplesUsecase,
     private readonly deploymentsPort: IDeploymentPort,
-    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('CreateStandardWithPackagesUsecase initialized');
   }
 
-  async executeForMembers(
-    command: CreateStandardWithPackagesCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: CreateStandardWithPackagesCommand & SpaceMemberContext,
   ): Promise<CreateStandardWithPackagesResponse> {
     const {
       spaceId,

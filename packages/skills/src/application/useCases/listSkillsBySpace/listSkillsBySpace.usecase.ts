@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   ListSkillsBySpaceCommand,
   ListSkillsBySpaceResponse,
@@ -13,24 +16,24 @@ import { SkillService } from '../../services/SkillService';
 const origin = 'ListSkillsBySpaceUsecase';
 
 export class ListSkillsBySpaceUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     ListSkillsBySpaceCommand,
     ListSkillsBySpaceResponse
   >
   implements IListSkillsBySpaceUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly skillService: SkillService,
-    private readonly spacesPort: ISpacesPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('ListSkillsBySpaceUsecase initialized');
   }
 
-  async executeForMembers(
-    command: ListSkillsBySpaceCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: ListSkillsBySpaceCommand & SpaceMemberContext,
   ): Promise<ListSkillsBySpaceResponse> {
     this.logger.info('Starting listSkillsBySpace process', {
       spaceId: command.spaceId,
@@ -40,11 +43,6 @@ export class ListSkillsBySpaceUsecase
 
     try {
       // Verify the space belongs to the organization
-      if (!this.spacesPort) {
-        this.logger.error('SpacesPort not available for space validation');
-        throw new Error('SpacesPort not available');
-      }
-
       const spaceId = createSpaceId(command.spaceId);
       const space = await this.spacesPort.getSpaceById(spaceId);
       if (!space) {

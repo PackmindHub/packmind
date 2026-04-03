@@ -1,4 +1,7 @@
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { UpdateStandardUsecase } from './updateStandard.usecase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
@@ -158,6 +161,13 @@ describe('UpdateStandardUsecase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn().mockResolvedValue(mockSpace),
+      findMembership: jest.fn().mockResolvedValue({
+        userId: mockUser.id,
+        spaceId: mockSpace.id,
+        role: 'member',
+        createdBy: mockUser.id,
+        updatedBy: mockUser.id,
+      }),
       listSpaces: jest.fn(),
       createSpace: jest.fn(),
       updateSpace: jest.fn(),
@@ -174,13 +184,13 @@ describe('UpdateStandardUsecase', () => {
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     updateStandardUsecase = new UpdateStandardUsecase(
+      spacesPort,
       accountsAdapter,
       standardService,
       standardVersionService,
       ruleRepository,
       ruleExampleRepository,
       generateStandardSummaryDelayedJob,
-      spacesPort,
       eventEmitterService,
       stubbedLogger,
     );
@@ -1649,6 +1659,29 @@ describe('UpdateStandardUsecase', () => {
           expect(ruleDeletedCalls).toHaveLength(0);
         });
       });
+    });
+  });
+
+  describe('when the user is not a member of the space', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(null);
+    });
+
+    it('throws a SpaceMembershipRequiredError', async () => {
+      const command: UpdateStandardCommand = {
+        standardId: createStandardId(uuidv4()),
+        name: 'Test Standard',
+        description: 'Test description',
+        rules: [],
+        organizationId: mockMembership.organizationId,
+        userId: mockUser.id.toString(),
+        spaceId: mockSpace.id,
+        scope: null,
+      };
+
+      await expect(updateStandardUsecase.execute(command)).rejects.toThrow(
+        SpaceMembershipRequiredError,
+      );
     });
   });
 });

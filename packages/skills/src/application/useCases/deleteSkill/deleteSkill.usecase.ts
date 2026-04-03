@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -20,22 +20,22 @@ import { SkillService } from '../../services/SkillService';
 const origin = 'DeleteSkillUsecase';
 
 export class DeleteSkillUsecase
-  extends AbstractMemberUseCase<DeleteSkillCommand, DeleteSkillResponse>
+  extends AbstractSpaceMemberUseCase<DeleteSkillCommand, DeleteSkillResponse>
   implements IDeleteSkillUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly skillService: SkillService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('DeleteSkillUsecase initialized');
   }
 
-  async executeForMembers(
-    command: DeleteSkillCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: DeleteSkillCommand & SpaceMemberContext,
   ): Promise<DeleteSkillResponse> {
     const {
       skillId: skillIdString,

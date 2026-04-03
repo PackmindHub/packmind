@@ -1,8 +1,9 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { Skill } from '../Skill';
+import { SpaceId } from '../../spaces';
 
 export type ListSkillsBySpaceCommand = PackmindCommand & {
-  spaceId: string;
+  spaceId: SpaceId;
   includeDeleted?: boolean;
 };
 

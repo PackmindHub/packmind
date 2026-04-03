@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -9,6 +9,7 @@ import {
   CreateStandardResponse,
   IAccountsPort,
   ICreateStandardUseCase,
+  ISpacesPort,
   OrganizationId,
   PackmindEventSource,
   RuleAddedEvent,
@@ -33,10 +34,14 @@ import {
 const origin = 'CreateStandardUsecase';
 
 export class CreateStandardUsecase
-  extends AbstractMemberUseCase<CreateStandardCommand, CreateStandardResponse>
+  extends AbstractSpaceMemberUseCase<
+    CreateStandardCommand,
+    CreateStandardResponse
+  >
   implements ICreateStandardUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
@@ -45,12 +50,12 @@ export class CreateStandardUsecase
     private readonly ruleRepository: IRuleRepository,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('CreateStandardUsecase initialized');
   }
 
-  protected async executeForMembers(
-    command: CreateStandardCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: CreateStandardCommand & SpaceMemberContext,
   ): Promise<CreateStandardResponse> {
     const {
       name,
