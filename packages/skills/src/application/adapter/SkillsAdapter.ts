@@ -274,7 +274,12 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       userId: userId.substring(0, 6) + '*',
       includeDeleted: opts?.includeDeleted ?? false,
     });
-    return this.services.getSkillService().listSkillsBySpace(spaceId, opts);
+    return this._listSkillsBySpace.execute({
+      spaceId,
+      organizationId,
+      userId,
+      includeDeleted: opts?.includeDeleted ?? false,
+    });
   }
 
   async findSkillBySlug(
