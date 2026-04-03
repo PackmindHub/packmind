@@ -21,14 +21,18 @@ Three new use cases in `packages/deployments`, each behind a new endpoint on the
 
 ```
 packages/deployments/src/application/useCases/
-├── GetDashboardKpi/          → counts only, SQL aggregates
-├── GetDashboardOutdated/     → outdated per target, optimized query
-└── GetDashboardNonLive/      → non-deployed artifact names, on-demand
+├── getDashboardKpi/          → counts only, SQL aggregates
+├── getDashboardOutdated/     → outdated per target, optimized query
+└── getDashboardNonLive/      → non-deployed artifact names, on-demand
 ```
 
 Key principle: **none of these use cases call `listByOrganizationIdWithStatus()`**. They use new targeted repository methods that fetch only what's needed.
 
 The existing heavy overview endpoints remain untouched — deployment pages keep working as-is.
+
+### Hexagonal wiring
+
+Each new use case is wired through `DeploymentsAdapter` (implementing `IDeploymentPort`) and exposed via the adapter's port interface. The `DeploymentsHexa` facade instantiates them in `initialize()` and passes required ports.
 
 ### Loading strategy
 
@@ -44,8 +48,10 @@ No new entities or schema changes. New response contracts only.
 
 ### New contracts (`packages/types/src/deployments/contracts/`)
 
+Each contract follows the standard pattern: one file per use case exporting Command, Response, and IUseCase.
+
+**`IGetDashboardKpi.ts`**:
 ```typescript
-// GET /organizations/:orgId/deployments/dashboard/kpi?spaceId=xxx
 type GetDashboardKpiCommand = PackmindCommand & {
   organizationId: OrganizationId;
   spaceId: SpaceId;
@@ -55,8 +61,11 @@ type DashboardKpiResponse = {
   recipes: { total: number; active: number };
   skills: { total: number; active: number };
 };
+type IGetDashboardKpi = IUseCase<GetDashboardKpiCommand, DashboardKpiResponse>;
+```
 
-// GET /organizations/:orgId/deployments/dashboard/outdated?spaceId=xxx
+**`IGetDashboardOutdated.ts`**:
+```typescript
 type GetDashboardOutdatedCommand = PackmindCommand & {
   organizationId: OrganizationId;
   spaceId: SpaceId;
@@ -70,8 +79,11 @@ type DashboardOutdatedTarget = {
   outdatedStandards: DeployedStandardTargetInfo[];
   outdatedRecipes: DeployedRecipeTargetInfo[];
 };
+type IGetDashboardOutdated = IUseCase<GetDashboardOutdatedCommand, DashboardOutdatedResponse>;
+```
 
-// GET /organizations/:orgId/deployments/dashboard/non-live?spaceId=xxx
+**`IGetDashboardNonLive.ts`**:
+```typescript
 type GetDashboardNonLiveCommand = PackmindCommand & {
   organizationId: OrganizationId;
   spaceId: SpaceId;
@@ -81,6 +93,7 @@ type DashboardNonLiveResponse = {
   recipes: { id: string; name: string }[];
   skills: { id: string; name: string; slug: string }[];
 };
+type IGetDashboardNonLive = IUseCase<GetDashboardNonLiveCommand, DashboardNonLiveResponse>;
 ```
 
 The outdated response uses only the target-centric view (no legacy `repositories` view) since the dashboard only uses that.
@@ -89,31 +102,32 @@ The outdated response uses only the target-centric view (no legacy `repositories
 
 ### 1. `GetDashboardKpiUseCase`
 
-- Gets total artifact counts from `IStandardsPort`, `IRecipesPort`, `ISkillsPort` (existing `listBySpace` methods, counting results)
+- Gets total artifact counts from `IStandardsPort`, `IRecipesPort`, `ISkillsPort` (existing `listBySpace` methods, counting `.length`). Note: loading ~240 lightweight entity objects to count them is negligible (<10ms) — the bottleneck is the distribution query, not the artifact list.
 - Gets active (deployed) counts via new repo method `countActiveArtifactsBySpace(orgId, spaceId)`:
   - SQL: for each target, find the latest successful distribution → count distinct standard/recipe/skill IDs in those distributions' packages
-- Returns `DashboardKpiResponse` — counts only, no entity loading
+- Returns `DashboardKpiResponse` — counts only
 
 ### 2. `GetDashboardOutdatedUseCase`
 
 - New repo method `findOutdatedDeploymentsBySpace(orgId, spaceId)`:
   - Finds latest successful distribution per target
-  - Joins to artifact version tables to compare deployed vs latest version
-  - Returns only rows where versions differ OR artifact is deleted
+  - Joins to `distributed_package_standard_versions` / `distributed_package_recipe_versions` to get deployed version numbers
+  - Compares deployed version number against the current latest version (from the `standard_version` / `recipe_version` tables)
+  - Returns only rows where `deployedVersion.version < latestVersion.version` OR artifact is soft-deleted
 - Uses standards/recipes ports to resolve artifact names for display
 - Returns `DashboardOutdatedResponse` — target-centric outdated view only
 
 ### 3. `GetDashboardNonLiveUseCase`
 
-- Gets all artifacts per space from standards/recipes/skills ports
-- Gets deployed artifact IDs via new repo method `listDeployedArtifactIdsBySpace(orgId, spaceId)` — distinct artifact IDs from latest distributions
+- Gets all artifacts per space from standards/recipes/skills ports (same lightweight list as KPI — ~240 objects, negligible cost)
+- Gets deployed artifact IDs via new repo method `listDeployedArtifactIdsBySpace(orgId, spaceId)` — distinct artifact IDs from latest successful distributions
 - Diffs the two sets → non-live = total minus deployed
 - Returns `DashboardNonLiveResponse` — lightweight `{ id, name }` objects
 
 ### New `DistributionRepository` methods
 
-- `countActiveArtifactsBySpace(orgId, spaceId)` — SQL aggregate returning `{ standardIds: number, recipeIds: number, skillIds: number }`
-- `findOutdatedDeploymentsBySpace(orgId, spaceId)` — targeted query with version comparison, returns lightweight DTOs
+- `countActiveArtifactsBySpace(orgId, spaceId)` — SQL aggregate returning `{ standards: number, recipes: number, skills: number }`
+- `findOutdatedDeploymentsBySpace(orgId, spaceId)` — targeted query with version comparison, returns lightweight DTOs (no full entity trees)
 - `listDeployedArtifactIdsBySpace(orgId, spaceId)` — distinct artifact IDs from latest successful distributions
 
 Existing `listByOrganizationIdWithStatus()` is untouched.
