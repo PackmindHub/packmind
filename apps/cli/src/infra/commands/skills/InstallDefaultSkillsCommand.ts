@@ -8,6 +8,9 @@ import {
   logWarningConsole,
   formatCommand,
 } from '../../utils/consoleLogger';
+import * as readline from 'readline';
+import { IncompatibleInstalledSkill } from '../../../domain/useCases/IInstallDefaultSkillsUseCase';
+import { handleIncompatibleInstalledSkills } from './incompatibleSkillsHandler';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -29,14 +32,31 @@ export const installDefaultSkillsCommand = command({
     try {
       logInfoConsole('Installing default skills...');
 
+      const baseDirectory = process.cwd();
       const result = await packmindCliHexa.installDefaultSkills({
         includeBeta,
         cliVersion: includeBeta ? undefined : CLI_VERSION,
+        baseDirectory,
       });
 
       if (result.skippedSkillsCount > 0) {
         logWarningConsole(
           `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of packmind-cli. Run "${formatCommand('packmind-cli update')}" to get the latest version.`,
+        );
+      }
+
+      if (result.skippedIncompatibleSkillNames.length > 0) {
+        for (const skillName of result.skippedIncompatibleSkillNames) {
+          logWarningConsole(
+            `Skill "${skillName}" was not installed because it is not compatible with this version of packmind-cli.`,
+          );
+        }
+      }
+
+      if (result.incompatibleInstalledSkills.length > 0) {
+        await handleIncompatibleInstalledSkillsWithPrompt(
+          result.incompatibleInstalledSkills,
+          baseDirectory,
         );
       }
 
@@ -70,3 +90,26 @@ export const installDefaultSkillsCommand = command({
     }
   },
 });
+
+async function handleIncompatibleInstalledSkillsWithPrompt(
+  skills: IncompatibleInstalledSkill[],
+  baseDirectory: string,
+): Promise<void> {
+  await handleIncompatibleInstalledSkills(skills, baseDirectory, () =>
+    promptConfirmation('Confirm deletion? [y/N]: '),
+  );
+}
+
+async function promptConfirmation(question: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase() === 'y');
+    });
+  });
+}

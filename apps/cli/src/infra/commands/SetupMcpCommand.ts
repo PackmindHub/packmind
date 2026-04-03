@@ -129,7 +129,9 @@ export const setupMcpCommand = command({
 
     if (targets.length > 0) {
       // Direct mode: skip interactive selection
-      selectedAgents = targets.map((t) => agentArgToType[t]);
+      selectedAgents = targets
+        .map((t) => agentArgToType[t])
+        .filter((a): a is AgentType => a !== undefined);
     } else {
       // Interactive mode: detect and prompt
       logConsole('\nDetecting installed AI agents...\n');

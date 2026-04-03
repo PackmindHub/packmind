@@ -37,7 +37,6 @@ import {
   logWarningConsole,
 } from '../../utils/consoleLogger';
 import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
-import { loadApiKey, decodeApiKey } from '../../utils/credentials';
 import { isCommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
@@ -637,18 +636,6 @@ async function logRemovedPackagesNotification(
   }
 }
 
-function warnSkippedRemovals(skipped: PlaybookChangeEntry[]): void {
-  if (skipped.length === 0) return;
-  const apiKey = loadApiKey();
-  const host = apiKey ? decodeApiKey(apiKey)?.host : null;
-  logWarningConsole(
-    `${skipped.length} removal(s) skipped — removals are not supported via --no-review.`,
-  );
-  if (host) {
-    logInfoConsole(`To remove artifacts, visit: ${host}`);
-  }
-}
-
 export async function playbookSubmitHandler(
   deps: PlaybookSubmitHandlerDependencies,
 ): Promise<void> {
@@ -751,7 +738,6 @@ export async function playbookSubmitHandler(
 
   // Build proposals
   const allProposals: ProposalItem[] = [];
-  const skippedRemovals: PlaybookChangeEntry[] = [];
 
   for (const entry of changes) {
     const ctx = await getTargetContext(entry);
@@ -775,10 +761,6 @@ export async function playbookSubmitHandler(
           break;
       }
     } else if (entry.changeType === 'removed') {
-      if (noReview) {
-        skippedRemovals.push(entry);
-        continue;
-      }
       const artifactId = resolveArtifactIdFromLockFile(
         entry.filePath,
         ctx.lockFile,
@@ -851,7 +833,6 @@ export async function playbookSubmitHandler(
     for (const entry of changes) {
       playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
     }
-    warnSkippedRemovals(skippedRemovals);
     exit(0);
     return;
   }
@@ -991,12 +972,6 @@ export async function playbookSubmitHandler(
       createdSpaceIds,
     );
     logPackageAddGuidance(response.created, packageSlugs);
-
-    for (const entry of skippedRemovals) {
-      playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
-    }
-    warnSkippedRemovals(skippedRemovals);
-
     exit(0);
     return;
   }

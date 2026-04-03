@@ -204,7 +204,14 @@ function parseIdeStandardBody(
   let nameLineIndex = -1;
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith('## Standard: ')) {
+    if (lines[i].startsWith('# Standard: ')) {
+      const extracted = lines[i].slice('# Standard: '.length).trim();
+      if (extracted) {
+        name = extracted;
+        nameLineIndex = i;
+        break;
+      }
+    } else if (lines[i].startsWith('## Standard: ')) {
       const extracted = lines[i].slice('## Standard: '.length).trim();
       if (extracted) {
         name = extracted;

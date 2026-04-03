@@ -11,8 +11,11 @@
 ## Changed
 
 - Move `agents list`, `agents add`, and `agents rm` subcommands under `config agents` (now `config agents list`, `config agents add`, `config agents rm`). The previous interactive `config agents` command is now available as `config agents setup`.
+- Do not render packmind skills which requires an older version of the cli #273
 
 ## Fixed
+
+- changes in the standards rendered for agents were incorreclty treated.
 
 ## Removed
 

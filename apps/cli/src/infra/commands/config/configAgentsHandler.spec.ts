@@ -58,7 +58,7 @@ describe('configAgentsHandler', () => {
       writeConfig: jest.fn(),
       configExists: jest.fn(),
       addPackagesToConfig: jest.fn(),
-      findDescendantConfigs: jest.fn(),
+      findDescendantConfigs: jest.fn().mockResolvedValue([]),
       readHierarchicalConfig: jest.fn(),
       findAllConfigsInTree: jest.fn(),
       updateConfig: jest.fn(),
@@ -1071,6 +1071,152 @@ describe('configAgentsHandler', () => {
 
     it('calls readConfig with base directory', () => {
       expect(mockConfigRepository.readConfig).toHaveBeenCalledWith('/project');
+    });
+  });
+
+  describe('when propagating agents to descendant configs', () => {
+    beforeEach(() => {
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: { backend: '*' },
+      });
+      mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
+    });
+
+    describe('when descendant packmind.json files exist', () => {
+      beforeEach(async () => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+          '/project/apps/api',
+          '/project/apps/frontend',
+        ]);
+        mockConfigRepository.readConfig
+          .mockResolvedValueOnce({ packages: { backend: '*' } }) // base dir read for preselection
+          .mockResolvedValueOnce({ packages: { api: '*' }, agents: [] }) // apps/api
+          .mockResolvedValueOnce({ packages: { front: '*' }, agents: [] }); // apps/frontend
+
+        mockInquirerPrompt.mockResolvedValue({
+          selectedAgents: ['claude', 'cursor'],
+        });
+
+        await configAgentsHandler(deps);
+      });
+
+      it('searches for descendant configs', () => {
+        expect(mockConfigRepository.findDescendantConfigs).toHaveBeenCalledWith(
+          '/project',
+        );
+      });
+
+      it('updates apps/api with selected agents', () => {
+        expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+          '/project/apps/api',
+          ['claude', 'cursor'],
+        );
+      });
+
+      it('updates apps/frontend with selected agents', () => {
+        expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+          '/project/apps/frontend',
+          ['claude', 'cursor'],
+        );
+      });
+    });
+
+    describe('when descendant already has some selected agents', () => {
+      beforeEach(async () => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+          '/project/apps/api',
+        ]);
+        mockConfigRepository.readConfig
+          .mockResolvedValueOnce({ packages: { backend: '*' } }) // base dir read for preselection
+          .mockResolvedValueOnce({
+            packages: { api: '*' },
+            agents: ['claude', 'copilot'],
+          }); // apps/api already has claude
+
+        mockInquirerPrompt.mockResolvedValue({
+          selectedAgents: ['claude', 'cursor'],
+        });
+
+        await configAgentsHandler(deps);
+      });
+
+      it('merges only missing agents without duplicates', () => {
+        expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+          '/project/apps/api',
+          ['claude', 'copilot', 'cursor'],
+        );
+      });
+    });
+
+    describe('when descendant already has all selected agents', () => {
+      beforeEach(async () => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+          '/project/apps/api',
+        ]);
+        mockConfigRepository.readConfig
+          .mockResolvedValueOnce({ packages: { backend: '*' } }) // base dir read for preselection
+          .mockResolvedValueOnce({
+            packages: { api: '*' },
+            agents: ['claude', 'cursor'],
+          }); // apps/api already has all
+
+        mockInquirerPrompt.mockResolvedValue({
+          selectedAgents: ['claude', 'cursor'],
+        });
+
+        await configAgentsHandler(deps);
+      });
+
+      it('does not update the descendant config', () => {
+        expect(
+          mockConfigRepository.updateAgentsConfig,
+        ).not.toHaveBeenCalledWith('/project/apps/api', expect.anything());
+      });
+    });
+
+    describe('when no descendant configs exist', () => {
+      beforeEach(async () => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([]);
+
+        mockInquirerPrompt.mockResolvedValue({
+          selectedAgents: ['claude'],
+        });
+
+        await configAgentsHandler(deps);
+      });
+
+      it('updates config exactly once', () => {
+        expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledTimes(
+          1,
+        );
+      });
+
+      it('updates the base directory config', () => {
+        expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
+          '/project',
+          ['claude'],
+        );
+      });
+    });
+
+    describe('when no agents are selected', () => {
+      beforeEach(async () => {
+        mockConfigRepository.findDescendantConfigs.mockResolvedValue([
+          '/project/apps/api',
+        ]);
+
+        mockInquirerPrompt.mockResolvedValue({
+          selectedAgents: [],
+        });
+
+        await configAgentsHandler(deps);
+      });
+
+      it('does not search for descendant configs', () => {
+        expect(
+          mockConfigRepository.findDescendantConfigs,
+        ).not.toHaveBeenCalled();
+      });
     });
   });
 });

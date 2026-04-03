@@ -1,12 +1,14 @@
 import { CodingAgent, PackmindFileConfig } from '@packmind/types';
 import { IConfigFileRepository } from '../../../../domain/repositories/IConfigFileRepository';
 import {
+  formatCommand,
   logConsole,
   logErrorConsole,
+  logInfoConsole,
   logSuccessConsole,
   logWarningConsole,
 } from '../../../utils/consoleLogger';
-import { AGENT_DISPLAY_NAMES, SELECTABLE_AGENTS } from '../configAgentsHandler';
+import { SELECTABLE_AGENTS } from '../configAgentsHandler';
 import { getRelativePath, resolveStartDirectory } from './agentsHandlerUtils';
 
 export type RemoveAgentsHandlerArgs = {
@@ -25,29 +27,6 @@ export async function removeAgentsHandler(
   deps: RemoveAgentsHandlerDependencies,
 ): Promise<void> {
   const { configRepository, exit, getCwd } = deps;
-
-  if (args.agentNames.length === 0) {
-    logErrorConsole('No agents specified.');
-    logConsole(
-      `Valid agents: ${SELECTABLE_AGENTS.map((a) => AGENT_DISPLAY_NAMES[a]).join(', ')}`,
-    );
-    logConsole(`Agent identifiers: ${SELECTABLE_AGENTS.join(', ')}`);
-    exit(1);
-    return;
-  }
-
-  const invalidAgents = args.agentNames.filter(
-    (n) => !SELECTABLE_AGENTS.includes(n as CodingAgent),
-  );
-
-  if (invalidAgents.length > 0) {
-    logErrorConsole(`Unknown agent(s): ${invalidAgents.join(', ')}`);
-    logConsole(`Valid agents: ${SELECTABLE_AGENTS.join(', ')}`);
-    exit(1);
-    return;
-  }
-
-  const agentsToRemove = args.agentNames as CodingAgent[];
 
   const startDirectory = await resolveStartDirectory(args, getCwd, exit);
   if (!startDirectory) return;
@@ -68,6 +47,30 @@ export async function removeAgentsHandler(
     exit(0);
     return;
   }
+
+  const configuredAgents = [
+    ...new Set(validEntries.flatMap(({ config }) => config.agents ?? [])),
+  ].sort();
+
+  if (args.agentNames.length === 0) {
+    logErrorConsole('No agents specified.');
+    logConfiguredAgentsHint(configuredAgents);
+    exit(1);
+    return;
+  }
+
+  const invalidAgents = args.agentNames.filter(
+    (n) => !SELECTABLE_AGENTS.includes(n as CodingAgent),
+  );
+
+  if (invalidAgents.length > 0) {
+    logErrorConsole(`Unknown agent(s): ${invalidAgents.join(', ')}`);
+    logConfiguredAgentsHint(configuredAgents);
+    exit(1);
+    return;
+  }
+
+  const agentsToRemove = args.agentNames as CodingAgent[];
 
   let anyUpdated = false;
 
@@ -91,7 +94,7 @@ export async function removeAgentsHandler(
       if (remainingAgents.length === 0) {
         await configRepository.deleteAgentsConfig(dir);
         logWarningConsole(
-          `${relPath} now has no agents configured — no agent files will be rendered after install.`,
+          `${relPath} now has no agents configured — organization settings will be used.`,
         );
       } else {
         await configRepository.updateAgentsConfig(dir, remainingAgents);
@@ -102,9 +105,19 @@ export async function removeAgentsHandler(
   }
 
   if (anyUpdated) {
-    logWarningConsole(
-      'Run `packmind-cli install` to apply changes and remove agent artifacts.',
+    logInfoConsole(
+      `Run "${formatCommand('packmind install')}" to apply changes and remove agent artifacts.`,
     );
   }
   exit(0);
+}
+
+function logConfiguredAgentsHint(configuredAgents: CodingAgent[]): void {
+  if (configuredAgents.length > 0) {
+    logConsole(`Configured agents: ${configuredAgents.join(', ')}`);
+  } else {
+    logConsole(
+      'No agents are currently configured in any packmind.json file — all projects use organization settings.',
+    );
+  }
 }

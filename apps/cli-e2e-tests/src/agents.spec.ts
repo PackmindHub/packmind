@@ -107,6 +107,63 @@ describeForVersion('> 0.24.0', 'config agents commands', () => {
           expect(listResult.stdout).not.toContain('cursor');
         });
       });
+
+      describe('config agents rm claude (last agent)', () => {
+        let rmResult: RunCliResult;
+
+        beforeEach(async () => {
+          rmResult = await runCli('config agents rm claude', {
+            cwd: testDir,
+          });
+        });
+
+        it('succeeds', () => {
+          expect(rmResult.returnCode).toBe(0);
+        });
+
+        it('removes agents key from packmind.json', () => {
+          const config = JSON.parse(readFile('packmind.json', testDir));
+
+          expect(config.agents).toBeUndefined();
+        });
+
+        it('mentions organization settings in output', () => {
+          expect(rmResult.stdout).toContain('organization settings');
+        });
+      });
+
+      describe('config agents remove cursor after adding it', () => {
+        let removeResult: RunCliResult;
+        let listResult: RunCliResult;
+
+        beforeEach(async () => {
+          await runCli('config agents add cursor', { cwd: testDir });
+          removeResult = await runCli('config agents remove cursor', {
+            cwd: testDir,
+          });
+          listResult = await runCli('config agents list', { cwd: testDir });
+        });
+
+        it('succeeds', () => {
+          expect(removeResult.returnCode).toBe(0);
+        });
+
+        it('removes cursor from packmind.json', () => {
+          const config = JSON.parse(readFile('packmind.json', testDir));
+
+          expect(config.agents).not.toContain('cursor');
+        });
+
+        it('keeps claude in packmind.json', () => {
+          const config = JSON.parse(readFile('packmind.json', testDir));
+
+          expect(config.agents).toContain('claude');
+        });
+
+        it('does not show cursor in config agents list', () => {
+          expect(listResult.stdout).not.toContain('cursor');
+        });
+      });
     },
   );
 });
