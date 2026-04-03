@@ -46,6 +46,12 @@ import {
   RemovePackageFromTargetsCommand,
   RemovePackageFromTargetsResponse,
   CodingAgent,
+  GetDashboardKpiCommand,
+  DashboardKpiResponse,
+  GetDashboardOutdatedCommand,
+  DashboardOutdatedResponse,
+  GetDashboardNonLiveCommand,
+  DashboardNonLiveResponse,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -826,6 +832,98 @@ export class DeploymentsController {
         {
           organizationId,
           error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('dashboard/kpi')
+  async getDashboardKpi(
+    @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DashboardKpiResponse> {
+    this.logger.info('GET /organizations/:orgId/deployments/dashboard/kpi', {
+      organizationId,
+    });
+
+    try {
+      const command: GetDashboardKpiCommand = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+      };
+
+      return await this.deploymentsService.getDashboardKpi(command);
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/dashboard/kpi - Failed',
+        {
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('dashboard/outdated')
+  async getDashboardOutdated(
+    @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DashboardOutdatedResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/dashboard/outdated',
+      { organizationId },
+    );
+
+    try {
+      const command: GetDashboardOutdatedCommand = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+      };
+
+      return await this.deploymentsService.getDashboardOutdated(command);
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/dashboard/outdated - Failed',
+        {
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('dashboard/non-live')
+  async getDashboardNonLive(
+    @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DashboardNonLiveResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/dashboard/non-live',
+      { organizationId },
+    );
+
+    try {
+      const command: GetDashboardNonLiveCommand = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+      };
+
+      return await this.deploymentsService.getDashboardNonLive(command);
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/dashboard/non-live - Failed',
+        {
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
         },
       );
       throw error;
