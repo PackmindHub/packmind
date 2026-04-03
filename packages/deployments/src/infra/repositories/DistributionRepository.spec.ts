@@ -3,6 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   createDistributionId,
   createDistributedPackageId,
+  createGitRepoId,
   createOrganizationId,
   createPackageId,
   createRecipeId,
@@ -18,6 +19,7 @@ import {
 } from '@packmind/types';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { DistributionRepository } from './DistributionRepository';
+import { OutdatedDeploymentsByTarget } from '../../domain/repositories/IDistributionRepository';
 
 describe('DistributionRepository', () => {
   let repository: DistributionRepository;
@@ -886,6 +888,344 @@ describe('DistributionRepository', () => {
     });
   });
 
+  describe('listDeployedArtifactIdsBySpace', () => {
+    const spaceId = createSpaceId('space-1');
+
+    const createDistribution = (
+      id: string,
+      createdAt: string,
+      distributedPackages: Distribution['distributedPackages'],
+    ): Distribution => ({
+      id: createDistributionId(id),
+      organizationId,
+      authorId: createUserId('author-1'),
+      status: DistributionStatus.success,
+      target: {
+        id: targetId,
+        name: 'default',
+        path: '/',
+        gitRepoId: 'git-repo-1' as never,
+      },
+      distributedPackages,
+      createdAt,
+      renderModes: [],
+      source: 'cli',
+    });
+
+    describe('with deployed artifacts across packages', () => {
+      const standardId1 = createStandardId('std-1');
+      const standardId2 = createStandardId('std-2');
+      const recipeId1 = createRecipeId('recipe-1');
+      const skillId1 = 'skill-1' as never;
+
+      let result: Awaited<
+        ReturnType<typeof repository.listDeployedArtifactIdsBySpace>
+      >;
+
+      beforeEach(async () => {
+        const distribution = createDistribution(
+          'dist-1',
+          '2024-01-02T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [
+                {
+                  id: createStandardVersionId('sv-1'),
+                  standardId: standardId1,
+                  name: 'Standard One',
+                  slug: 'standard-one',
+                  description: 'desc',
+                  version: 1,
+                  summary: null,
+                  gitCommit: undefined,
+                  userId: createUserId('author-1'),
+                  scope: null,
+                },
+                {
+                  id: createStandardVersionId('sv-2'),
+                  standardId: standardId2,
+                  name: 'Standard Two',
+                  slug: 'standard-two',
+                  description: 'desc',
+                  version: 1,
+                  summary: null,
+                  gitCommit: undefined,
+                  userId: createUserId('author-1'),
+                  scope: null,
+                },
+              ],
+              recipeVersions: [
+                {
+                  id: createRecipeVersionId('rv-1'),
+                  recipeId: recipeId1,
+                  name: 'Recipe One',
+                  slug: 'recipe-one',
+                  content: 'content',
+                  version: 1,
+                  summary: null,
+                  userId: null,
+                },
+              ],
+              skillVersions: [
+                {
+                  id: 'skv-1' as never,
+                  skillId: skillId1,
+                  name: 'Skill One',
+                  slug: 'skill-one',
+                  content: 'content',
+                  version: 1,
+                  summary: null,
+                  userId: null,
+                },
+              ],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([distribution]);
+
+        result = await repository.listDeployedArtifactIdsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('returns standard IDs', () => {
+        expect(result.standardIds).toEqual([standardId1, standardId2]);
+      });
+
+      it('returns recipe IDs', () => {
+        expect(result.recipeIds).toEqual([recipeId1]);
+      });
+
+      it('returns skill IDs', () => {
+        expect(result.skillIds).toEqual([skillId1]);
+      });
+    });
+
+    describe('with removed packages', () => {
+      const standardId1 = createStandardId('std-1');
+      const standardId2 = createStandardId('std-2');
+
+      let result: Awaited<
+        ReturnType<typeof repository.listDeployedArtifactIdsBySpace>
+      >;
+
+      beforeEach(async () => {
+        const addDistribution = createDistribution(
+          'dist-1',
+          '2024-01-01T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [
+                {
+                  id: createStandardVersionId('sv-1'),
+                  standardId: standardId1,
+                  name: 'Standard One',
+                  slug: 'standard-one',
+                  description: 'desc',
+                  version: 1,
+                  summary: null,
+                  gitCommit: undefined,
+                  userId: createUserId('author-1'),
+                  scope: null,
+                },
+              ],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const removeDistribution = createDistribution(
+          'dist-2',
+          '2024-01-02T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: packageId1,
+              operation: 'remove',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const addDistribution2 = createDistribution(
+          'dist-3',
+          '2024-01-03T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-3'),
+              distributionId: createDistributionId('dist-3'),
+              packageId: packageId2,
+              operation: 'add',
+              standardVersions: [
+                {
+                  id: createStandardVersionId('sv-2'),
+                  standardId: standardId2,
+                  name: 'Standard Two',
+                  slug: 'standard-two',
+                  description: 'desc',
+                  version: 1,
+                  summary: null,
+                  gitCommit: undefined,
+                  userId: createUserId('author-1'),
+                  scope: null,
+                },
+              ],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([
+          addDistribution2,
+          removeDistribution,
+          addDistribution,
+        ]);
+
+        result = await repository.listDeployedArtifactIdsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('excludes IDs from removed packages', () => {
+        expect(result.standardIds).toEqual([standardId2]);
+      });
+
+      it('returns empty arrays for artifact types with no active deployments', () => {
+        expect(result.recipeIds).toEqual([]);
+      });
+    });
+
+    describe('with no distributions', () => {
+      let result: Awaited<
+        ReturnType<typeof repository.listDeployedArtifactIdsBySpace>
+      >;
+
+      beforeEach(async () => {
+        mockQueryBuilder.getMany.mockResolvedValue([]);
+
+        result = await repository.listDeployedArtifactIdsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('returns empty standard IDs', () => {
+        expect(result.standardIds).toEqual([]);
+      });
+
+      it('returns empty recipe IDs', () => {
+        expect(result.recipeIds).toEqual([]);
+      });
+
+      it('returns empty skill IDs', () => {
+        expect(result.skillIds).toEqual([]);
+      });
+    });
+
+    describe('with duplicate artifact IDs across targets', () => {
+      const standardId1 = createStandardId('std-1');
+      const targetId2 = createTargetId('target-789');
+
+      let result: Awaited<
+        ReturnType<typeof repository.listDeployedArtifactIdsBySpace>
+      >;
+
+      beforeEach(async () => {
+        const distribution1 = createDistribution(
+          'dist-1',
+          '2024-01-02T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [
+                {
+                  id: createStandardVersionId('sv-1'),
+                  standardId: standardId1,
+                  name: 'Standard One',
+                  slug: 'standard-one',
+                  description: 'desc',
+                  version: 1,
+                  summary: null,
+                  gitCommit: undefined,
+                  userId: createUserId('author-1'),
+                  scope: null,
+                },
+              ],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const distribution2: Distribution = {
+          ...createDistribution('dist-2', '2024-01-03T00:00:00Z', [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [
+                {
+                  id: createStandardVersionId('sv-1b'),
+                  standardId: standardId1,
+                  name: 'Standard One',
+                  slug: 'standard-one',
+                  description: 'desc',
+                  version: 2,
+                  summary: null,
+                  gitCommit: undefined,
+                  userId: createUserId('author-1'),
+                  scope: null,
+                },
+              ],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ]),
+          target: {
+            id: targetId2,
+            name: 'other-target',
+            path: '/',
+            gitRepoId: 'git-repo-2' as never,
+          },
+        };
+
+        mockQueryBuilder.getMany.mockResolvedValue([
+          distribution2,
+          distribution1,
+        ]);
+
+        result = await repository.listDeployedArtifactIdsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('deduplicates standard IDs across targets', () => {
+        expect(result.standardIds).toEqual([standardId1]);
+      });
+    });
+  });
+
   describe('findActiveRenderModesByTarget', () => {
     const createDistribution = (
       id: string,
@@ -1006,6 +1346,337 @@ describe('DistributionRepository', () => {
 
       it('returns an empty array', () => {
         expect(result).toEqual([]);
+      });
+    });
+  });
+
+  describe('findOutdatedDeploymentsBySpace', () => {
+    const spaceId = createSpaceId('space-1');
+    const targetId1 = createTargetId('target-1');
+    const targetId2 = createTargetId('target-2');
+    const gitRepoId1 = createGitRepoId('git-repo-1');
+
+    const createStandardVersion = (
+      id: string,
+      standardId: string,
+      name: string,
+      version = 1,
+    ) => ({
+      id: createStandardVersionId(id),
+      standardId: createStandardId(standardId),
+      name,
+      slug: name.toLowerCase().replace(/ /g, '-'),
+      description: `Description for ${name}`,
+      version,
+      summary: null,
+      gitCommit: undefined,
+      userId: createUserId('author-1'),
+      scope: null,
+    });
+
+    const createRecipeVersion = (
+      id: string,
+      recipeId: string,
+      name: string,
+      version = 1,
+    ) => ({
+      id: createRecipeVersionId(id),
+      recipeId: createRecipeId(recipeId),
+      name,
+      slug: name.toLowerCase().replace(/ /g, '-'),
+      content: `Content for ${name}`,
+      version,
+      summary: null,
+      userId: null,
+    });
+
+    const createDistributionForTarget = (
+      id: string,
+      createdAt: string,
+      tgtId: string,
+      tgtName: string,
+      gRepoId: string,
+      distributedPackages: Distribution['distributedPackages'],
+    ): Distribution => ({
+      id: createDistributionId(id),
+      organizationId,
+      authorId: createUserId('author-1'),
+      status: DistributionStatus.success,
+      target: {
+        id: createTargetId(tgtId),
+        name: tgtName,
+        path: '/',
+        gitRepoId: createGitRepoId(gRepoId),
+      },
+      distributedPackages,
+      createdAt,
+      renderModes: [],
+      source: 'cli',
+    });
+
+    describe('with standards and recipes across multiple targets', () => {
+      const sv1 = createStandardVersion('sv-1', 'std-1', 'Standard One', 2);
+      const rv1 = createRecipeVersion('rv-1', 'recipe-1', 'Recipe One', 3);
+      const sv2 = createStandardVersion('sv-2', 'std-2', 'Standard Two', 1);
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        const dist1 = createDistributionForTarget(
+          'dist-1',
+          '2024-01-02T00:00:00Z',
+          'target-1',
+          'Target One',
+          'git-repo-1',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [sv1],
+              recipeVersions: [rv1],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const dist2 = createDistributionForTarget(
+          'dist-2',
+          '2024-01-03T00:00:00Z',
+          'target-2',
+          'Target Two',
+          'git-repo-2',
+          [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: packageId2,
+              operation: 'add',
+              standardVersions: [sv2],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([dist1, dist2]);
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('returns entries for both targets', () => {
+        expect(result).toHaveLength(2);
+      });
+
+      it('includes first target in results', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1).toBeDefined();
+      });
+
+      it('sets correct target name for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.targetName).toBe('Target One');
+      });
+
+      it('sets correct gitRepoId for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.gitRepoId).toBe(gitRepoId1);
+      });
+
+      it('includes one standard for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards).toHaveLength(1);
+      });
+
+      it('sets correct standard artifactId for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].artifactId).toBe(sv1.standardId);
+      });
+
+      it('sets correct standard deployedVersion for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deployedVersion).toBe(2);
+      });
+
+      it('includes one recipe for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.recipes).toHaveLength(1);
+      });
+
+      it('sets correct recipe artifactId for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.recipes[0].artifactId).toBe(rv1.recipeId);
+      });
+
+      it('sets correct recipe deployedVersion for first target', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.recipes[0].deployedVersion).toBe(3);
+      });
+
+      it('includes one standard for second target', () => {
+        const target2 = result.find((r) => r.targetId === targetId2);
+        expect(target2!.standards).toHaveLength(1);
+      });
+
+      it('sets correct standard artifactId for second target', () => {
+        const target2 = result.find((r) => r.targetId === targetId2);
+        expect(target2!.standards[0].artifactId).toBe(sv2.standardId);
+      });
+
+      it('includes no recipes for second target', () => {
+        const target2 = result.find((r) => r.targetId === targetId2);
+        expect(target2!.recipes).toHaveLength(0);
+      });
+    });
+
+    describe('with removed packages', () => {
+      const sv1 = createStandardVersion('sv-1', 'std-1', 'Standard One', 1);
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        const addDist = createDistributionForTarget(
+          'dist-1',
+          '2024-01-01T00:00:00Z',
+          'target-1',
+          'Target One',
+          'git-repo-1',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [sv1],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const removeDist = createDistributionForTarget(
+          'dist-2',
+          '2024-01-02T00:00:00Z',
+          'target-1',
+          'Target One',
+          'git-repo-1',
+          [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: packageId1,
+              operation: 'remove',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([removeDist, addDist]);
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('excludes artifacts from removed packages', () => {
+        expect(result).toHaveLength(0);
+      });
+    });
+
+    describe('with no distributions', () => {
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        mockQueryBuilder.getMany.mockResolvedValue([]);
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('returns an empty array', () => {
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('with duplicate standard versions across packages', () => {
+      const sv1v1 = createStandardVersion(
+        'sv-1-v1',
+        'std-1',
+        'Standard One v1',
+        1,
+      );
+      const sv1v2 = createStandardVersion(
+        'sv-1-v2',
+        'std-1',
+        'Standard One v2',
+        2,
+      );
+
+      let result: OutdatedDeploymentsByTarget[];
+
+      beforeEach(async () => {
+        const dist1 = createDistributionForTarget(
+          'dist-2',
+          '2024-01-02T00:00:00Z',
+          'target-1',
+          'Target One',
+          'git-repo-1',
+          [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [sv1v2],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const dist2 = createDistributionForTarget(
+          'dist-1',
+          '2024-01-01T00:00:00Z',
+          'target-1',
+          'Target One',
+          'git-repo-1',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId2,
+              operation: 'add',
+              standardVersions: [sv1v1],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([dist1, dist2]);
+
+        result = await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+      });
+
+      it('keeps only one standard after deduplication', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards).toHaveLength(1);
+      });
+
+      it('keeps the most recent version after deduplication', () => {
+        const target1 = result.find((r) => r.targetId === targetId1);
+        expect(target1!.standards[0].deployedVersion).toBe(2);
       });
     });
   });
