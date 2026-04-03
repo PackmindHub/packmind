@@ -7,7 +7,7 @@ echo "================================================"
 # 1. Arrêter les containers Docker
 echo ""
 echo "⏹️  Arrêt des containers Docker..."
-docker compose stop
+docker compose down
 
 # 2. Reset Nx (tant que node_modules et .nx existent encore)
 echo ""
