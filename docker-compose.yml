@@ -149,14 +149,14 @@ services:
         set -eu
         if [ -n "${CI:-}" ]; then
           echo "[frontend] CI mode -> WITHOUT daemon"
-          exec NX_DAEMON=false ./node_modules/.bin/nx run frontend:dev
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run frontend:dev
         fi
         if [ -S /nx-sock/d.sock ]; then
           echo "[frontend] Daemon OK -> WITH daemon"
           exec ./node_modules/.bin/nx run frontend:dev
         else
           echo "[frontend] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false ./node_modules/.bin/nx run frontend:dev
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run frontend:dev
         fi
       '
     environment:
@@ -200,14 +200,14 @@ services:
         fi && \
         if [ -n "${CI:-}" ]; then
           echo "[backend] CI mode -> WITHOUT daemon"
-          exec NX_DAEMON=false ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         fi
         if [ -S /nx-sock/d.sock ]; then
           echo "[backend] Daemon OK -> WITH daemon"
           exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         else
           echo "[backend] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
         fi
       '
     environment:
@@ -252,14 +252,14 @@ services:
         fi && \
         if [ -n "${CI:-}" ]; then
           echo "[mcp] CI mode -> WITHOUT daemon"
-          exec NX_DAEMON=false ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         fi
         if [ -S /nx-sock/d.sock ]; then
           echo "[mcp] Daemon OK -> WITH daemon"
           exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         else
           echo "[mcp] Daemon NOT reachable -> WITHOUT daemon"
-          exec NX_DAEMON=false ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         fi
       '
     environment:
