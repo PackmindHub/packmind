@@ -17,7 +17,7 @@ services:
       retries: 5
 
   install-dependencies:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: packmind-prod-install-deps
     volumes:
       - .:/packmind
@@ -25,7 +25,7 @@ services:
     entrypoint: npm install
 
   build-mcp-server:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: packmind-prod-build-mcp-server
     volumes:
       - .:/packmind
@@ -36,7 +36,7 @@ services:
         condition: service_completed_successfully
 
   install-mcp-server:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: packmind-prod-install-mcp-server
     volumes:
       - ./dist/apps/mcp-server:/mcp-server
@@ -47,7 +47,7 @@ services:
         condition: service_completed_successfully
 
   mcp-server:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: packmind-prod-mcp-server
     volumes:
       - ./dist/apps/mcp-server:/mcp-server

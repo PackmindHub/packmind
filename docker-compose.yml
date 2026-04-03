@@ -11,7 +11,7 @@ services:
   nx-daemon:
     profiles:
       - dev
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
     working_dir: /packmind
     command: >
@@ -91,7 +91,7 @@ services:
       - postgres
 
   install-dependencies:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-install-deps
     working_dir: /packmind
     environment:
@@ -108,7 +108,7 @@ services:
       - dev-node_modules:/packmind/node_modules
 
   run-migrations:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-run-migrations
     working_dir: /packmind
     entrypoint: >
@@ -133,7 +133,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
     ports:
@@ -184,7 +184,7 @@ services:
         condition: service_completed_successfully
 
   backend:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-backend
     working_dir: /packmind
     entrypoint: >
@@ -245,7 +245,7 @@ services:
         condition: service_healthy
 
   mcp-server:
-    image: node:24.14.1-alpine3.23
+    image: node:24.14.0-alpine3.23
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-mcp-server
     working_dir: /packmind
     entrypoint: >

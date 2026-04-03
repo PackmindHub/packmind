@@ -26,7 +26,7 @@ on:
         required: true
 
 env:
-  NODE_VERSION: '24.14.1'
+  NODE_VERSION: '24.14.0'
 
 jobs:
   sign-macos-cli:

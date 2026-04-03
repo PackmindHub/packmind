@@ -8,6 +8,8 @@ echo "================================================"
 echo ""
 echo "⏹️  Arrêt des containers Docker..."
 docker compose down
+echo "🗑️  Suppression des volumes Docker dev-nx-sock et dev-node_modules..."
+docker volume rm dev-nx-sock dev-node_modules 2>/dev/null || true
 
 # 2. Reset Nx (tant que node_modules et .nx existent encore)
 echo ""
@@ -64,13 +66,13 @@ echo ""
 echo "🗑️  Suppression du package-lock.json..."
 rm -f package-lock.json
 
-# 10. Installer et activer Node 24.14.1 via nvm
+# 10. Installer et activer Node 24.14.0 via nvm
 echo ""
-echo "📦 Installation de Node 24.14.1..."
+echo "📦 Installation de Node 24.14.0..."
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-nvm install 24.14.1
-nvm use 24.14.1
+nvm install 24.14.0
+nvm use 24.14.0
 
 # 11. Réinstaller les dépendances
 echo ""
