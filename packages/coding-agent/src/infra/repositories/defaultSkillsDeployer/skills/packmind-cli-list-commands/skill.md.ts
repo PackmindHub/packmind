@@ -1,12 +1,14 @@
-export function getSkillMd(): string {
-  return `---
-name: 'packmind-cli-list-commands'
-description: 'Reference for Packmind CLI listing commands. This skill should be used when an agent needs to discover available standards, commands, or skills in the Packmind organization.'
-license: 'Complete terms in LICENSE.txt'
----
+import { SkillMD } from '../../AbstractDefaultSkillDeployer';
 
-# Packmind CLI List Commands
-
+export const skillMd: SkillMD = {
+  frontMatter: {
+    description:
+      'Reference for Packmind CLI listing commands. This skill should be used when an agent needs to discover available standards, commands, or skills in the Packmind organization.',
+    license: 'Complete terms in LICENSE.txt',
+  },
+  title: 'Packmind CLI List Commands',
+  getPrompt: function (): string {
+    return `
 List available Packmind artifacts (standards, commands, skills, packages) via the CLI.
 
 ## IMPORTANT: Output Requirements
@@ -53,4 +55,6 @@ If not logged in, authenticate first:
 packmind-cli login
 \`\`\`
 `;
-}
+  },
+  versions: [],
+};
