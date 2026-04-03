@@ -16,6 +16,9 @@ import {
   Distribution,
   DistributionStatus,
   RenderMode,
+  StandardId,
+  RecipeId,
+  SkillId,
 } from '@packmind/types';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { DistributionRepository } from './DistributionRepository';
@@ -793,33 +796,17 @@ describe('DistributionRepository', () => {
       >;
 
       beforeEach(async () => {
-        const subQueryBuilder = {
-          select: jest.fn().mockReturnThis(),
-          innerJoin: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          andWhere: jest.fn().mockReturnThis(),
-          groupBy: jest.fn().mockReturnThis(),
-          getQuery: jest.fn().mockReturnValue('SUBQUERY'),
-        };
-
-        const mainQueryBuilder = {
-          innerJoin: jest.fn().mockReturnThis(),
-          leftJoin: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          setParameters: jest.fn().mockReturnThis(),
-          select: jest.fn().mockReturnThis(),
-          addSelect: jest.fn().mockReturnThis(),
-          getRawOne: jest.fn().mockResolvedValue({
-            standards: '3',
-            recipes: '2',
-            skills: '1',
-          }),
-        };
-
-        mockTypeOrmRepository.createQueryBuilder = jest
-          .fn()
-          .mockReturnValueOnce(subQueryBuilder)
-          .mockReturnValueOnce(mainQueryBuilder);
+        jest
+          .spyOn(repository, 'listDeployedArtifactIdsBySpace')
+          .mockResolvedValue({
+            standardIds: [
+              's1' as StandardId,
+              's2' as StandardId,
+              's3' as StandardId,
+            ],
+            recipeIds: ['r1' as RecipeId, 'r2' as RecipeId],
+            skillIds: ['sk1' as SkillId],
+          });
 
         result = await repository.countActiveArtifactsBySpace(
           organizationId,
@@ -827,7 +814,7 @@ describe('DistributionRepository', () => {
         );
       });
 
-      it('returns parsed artifact counts', () => {
+      it('returns counts matching deployed artifact IDs', () => {
         expect(result).toEqual({
           standards: 3,
           recipes: 2,
@@ -835,9 +822,10 @@ describe('DistributionRepository', () => {
         });
       });
 
-      it('creates two query builders', () => {
-        expect(mockTypeOrmRepository.createQueryBuilder).toHaveBeenCalledTimes(
-          2,
+      it('delegates to listDeployedArtifactIdsBySpace', () => {
+        expect(repository.listDeployedArtifactIdsBySpace).toHaveBeenCalledWith(
+          organizationId,
+          spaceId,
         );
       });
     });
@@ -848,29 +836,13 @@ describe('DistributionRepository', () => {
       >;
 
       beforeEach(async () => {
-        const subQueryBuilder = {
-          select: jest.fn().mockReturnThis(),
-          innerJoin: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          andWhere: jest.fn().mockReturnThis(),
-          groupBy: jest.fn().mockReturnThis(),
-          getQuery: jest.fn().mockReturnValue('SUBQUERY'),
-        };
-
-        const mainQueryBuilder = {
-          innerJoin: jest.fn().mockReturnThis(),
-          leftJoin: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          setParameters: jest.fn().mockReturnThis(),
-          select: jest.fn().mockReturnThis(),
-          addSelect: jest.fn().mockReturnThis(),
-          getRawOne: jest.fn().mockResolvedValue(undefined),
-        };
-
-        mockTypeOrmRepository.createQueryBuilder = jest
-          .fn()
-          .mockReturnValueOnce(subQueryBuilder)
-          .mockReturnValueOnce(mainQueryBuilder);
+        jest
+          .spyOn(repository, 'listDeployedArtifactIdsBySpace')
+          .mockResolvedValue({
+            standardIds: [],
+            recipeIds: [],
+            skillIds: [],
+          });
 
         result = await repository.countActiveArtifactsBySpace(
           organizationId,

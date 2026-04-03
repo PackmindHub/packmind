@@ -1231,51 +1231,24 @@ export class DistributionRepository implements IDistributionRepository {
       spaceId,
     });
 
-    try {
-      const latestDistributionSubquery = this.repository
-        .createQueryBuilder('d')
-        .select('MAX(d.id)', 'latestId')
-        .innerJoin('d.distributedPackages', 'dp')
-        .innerJoin('dp.package', 'p')
-        .where('d.organizationId = :organizationId')
-        .andWhere('d.status = :status')
-        .andWhere('p.spaceId = :spaceId')
-        .groupBy('d.target_id');
+    const deployedIds = await this.listDeployedArtifactIdsBySpace(
+      organizationId,
+      spaceId,
+    );
 
-      const result = await this.repository
-        .createQueryBuilder('dist')
-        .innerJoin('dist.distributedPackages', 'distPkg')
-        .leftJoin('distPkg.standardVersions', 'sv')
-        .leftJoin('distPkg.recipeVersions', 'rv')
-        .leftJoin('distPkg.skillVersions', 'skv')
-        .where(`dist.id IN (${latestDistributionSubquery.getQuery()})`)
-        .setParameters({ organizationId, status: 'success', spaceId })
-        .select('COUNT(DISTINCT sv.standardId)', 'standards')
-        .addSelect('COUNT(DISTINCT rv.recipeId)', 'recipes')
-        .addSelect('COUNT(DISTINCT skv.skillId)', 'skills')
-        .getRawOne();
+    const counts = {
+      standards: deployedIds.standardIds.length,
+      recipes: deployedIds.recipeIds.length,
+      skills: deployedIds.skillIds.length,
+    };
 
-      const counts = {
-        standards: parseInt(result?.standards ?? '0', 10),
-        recipes: parseInt(result?.recipes ?? '0', 10),
-        skills: parseInt(result?.skills ?? '0', 10),
-      };
+    this.logger.info('Active artifacts counted by space', {
+      organizationId,
+      spaceId,
+      ...counts,
+    });
 
-      this.logger.info('Active artifacts counted by space', {
-        organizationId,
-        spaceId,
-        ...counts,
-      });
-
-      return counts;
-    } catch (error) {
-      this.logger.error('Failed to count active artifacts by space', {
-        organizationId,
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return counts;
   }
 
   async listDeployedArtifactIdsBySpace(
