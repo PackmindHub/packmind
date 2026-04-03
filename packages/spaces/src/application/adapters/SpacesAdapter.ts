@@ -113,14 +113,12 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     );
   }
 
-  async addSpaceMembership(membership: {
-    userId: UserId;
-    spaceId: SpaceId;
-    role: UserSpaceRole;
-    createdBy: UserId;
-  }): Promise<UserSpaceMembership> {
+  async findMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<UserSpaceMembership | null> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
-    return membershipService.addSpaceMembership(membership);
+    return membershipService.findMembership(userId, spaceId);
   }
 
   async findMembershipsByUserAndOrganization(

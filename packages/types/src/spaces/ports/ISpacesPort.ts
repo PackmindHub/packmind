@@ -99,16 +99,6 @@ export interface ISpacesPort {
   ): Promise<UserSpaceMembership>;
 
   /**
-   * Add a user membership to a space.
-   */
-  addSpaceMembership(membership: {
-    userId: UserId;
-    spaceId: SpaceId;
-    role: UserSpaceRole;
-    createdBy: UserId;
-  }): Promise<UserSpaceMembership>;
-
-  /**
    * Find all space memberships for a user within an organization.
    */
   findMembershipsByUserAndOrganization(
@@ -147,4 +137,13 @@ export interface ISpacesPort {
   updateMemberRole(
     command: UpdateMemberRoleCommand,
   ): Promise<UpdateMemberRoleResponse>;
+
+  /**
+   * Find a user's membership in a specific space.
+   * Returns null if the user is not a member of the space.
+   */
+  findMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<UserSpaceMembership | null>;
 }
