@@ -37,62 +37,25 @@ const renderComponent = () => {
 };
 
 describe('DashboardKPI', () => {
-  const mockRecipesOverview = {
-    recipes: [
-      {
-        recipe: { id: '1', name: 'Recipe 1' },
-        targetDeployments: [{ target: 'repo1' }],
-      },
-      { recipe: { id: '2', name: 'Recipe 2' }, targetDeployments: [] },
-    ],
-  };
-
-  const mockStandardsOverview = {
-    standards: [
-      {
-        standard: { id: '1', name: 'Standard 1' },
-        targetDeployments: [{ target: 'repo1' }],
-      },
-      { standard: { id: '2', name: 'Standard 2' }, targetDeployments: [] },
-    ],
-  };
-
-  const mockSkillsOverview = {
-    skills: [
-      {
-        skill: { id: '1', name: 'Skill 1', slug: 'skill-1' },
-        targetDeployments: [{ target: 'repo1' }],
-      },
-      {
-        skill: { id: '2', name: 'Skill 2', slug: 'skill-2' },
-        targetDeployments: [],
-      },
-    ],
+  const mockKpiData = {
+    standards: { total: 2, active: 1 },
+    recipes: { total: 2, active: 1 },
+    skills: { total: 2, active: 1 },
   };
 
   beforeEach(() => {
-    jest
-      .spyOn(DeploymentsQueries, 'useGetRecipesDeploymentOverviewQuery')
-      .mockReturnValue({
-        data: mockRecipesOverview,
-      } as unknown as ReturnType<
-        typeof DeploymentsQueries.useGetRecipesDeploymentOverviewQuery
-      >);
+    jest.spyOn(DeploymentsQueries, 'useGetDashboardKpiQuery').mockReturnValue({
+      data: mockKpiData,
+    } as unknown as ReturnType<
+      typeof DeploymentsQueries.useGetDashboardKpiQuery
+    >);
 
     jest
-      .spyOn(DeploymentsQueries, 'useGetStandardsDeploymentOverviewQuery')
+      .spyOn(DeploymentsQueries, 'useGetDashboardNonLiveQuery')
       .mockReturnValue({
-        data: mockStandardsOverview,
+        data: { standards: [], recipes: [], skills: [] },
       } as unknown as ReturnType<
-        typeof DeploymentsQueries.useGetStandardsDeploymentOverviewQuery
-      >);
-
-    jest
-      .spyOn(DeploymentsQueries, 'useGetSkillsDeploymentOverviewQuery')
-      .mockReturnValue({
-        data: mockSkillsOverview,
-      } as unknown as ReturnType<
-        typeof DeploymentsQueries.useGetSkillsDeploymentOverviewQuery
+        typeof DeploymentsQueries.useGetDashboardNonLiveQuery
       >);
 
     jest.spyOn(SpacesQueries, 'useGetSpacesQuery').mockReturnValue({
@@ -163,48 +126,15 @@ describe('DashboardKPI', () => {
   describe('when there are no non-live artifacts', () => {
     beforeEach(() => {
       jest
-        .spyOn(DeploymentsQueries, 'useGetRecipesDeploymentOverviewQuery')
+        .spyOn(DeploymentsQueries, 'useGetDashboardKpiQuery')
         .mockReturnValue({
           data: {
-            recipes: [
-              {
-                recipe: { id: '1', name: 'Recipe 1' },
-                targetDeployments: [{ target: 'repo1' }],
-              },
-            ],
+            standards: { total: 1, active: 1 },
+            recipes: { total: 1, active: 1 },
+            skills: { total: 1, active: 1 },
           },
         } as unknown as ReturnType<
-          typeof DeploymentsQueries.useGetRecipesDeploymentOverviewQuery
-        >);
-
-      jest
-        .spyOn(DeploymentsQueries, 'useGetStandardsDeploymentOverviewQuery')
-        .mockReturnValue({
-          data: {
-            standards: [
-              {
-                standard: { id: '1', name: 'Standard 1' },
-                targetDeployments: [{ target: 'repo1' }],
-              },
-            ],
-          },
-        } as unknown as ReturnType<
-          typeof DeploymentsQueries.useGetStandardsDeploymentOverviewQuery
-        >);
-
-      jest
-        .spyOn(DeploymentsQueries, 'useGetSkillsDeploymentOverviewQuery')
-        .mockReturnValue({
-          data: {
-            skills: [
-              {
-                skill: { id: '1', name: 'Skill 1', slug: 'skill-1' },
-                targetDeployments: [{ target: 'repo1' }],
-              },
-            ],
-          },
-        } as unknown as ReturnType<
-          typeof DeploymentsQueries.useGetSkillsDeploymentOverviewQuery
+          typeof DeploymentsQueries.useGetDashboardKpiQuery
         >);
     });
 

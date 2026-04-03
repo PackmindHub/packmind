@@ -9,11 +9,7 @@ import {
   PMButton,
   PMProgress,
 } from '@packmind/ui';
-import {
-  useGetRecipesDeploymentOverviewQuery,
-  useGetStandardsDeploymentOverviewQuery,
-  useGetSkillsDeploymentOverviewQuery,
-} from '../../../deployments/api/queries/DeploymentsQueries';
+import { useGetDashboardKpiQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { LuInfo, LuRadio } from 'react-icons/lu';
 import { NonLiveArtifactsModal, ArtifactTab } from './NonLiveArtifactsModal';
@@ -27,36 +23,14 @@ export const DashboardKPI = () => {
     setSelectedTab(tab);
     setIsModalOpen(true);
   };
-  const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery(
-    spaceId ?? '',
-  );
-  const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery(
-    spaceId ?? '',
-  );
-  const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery(
-    spaceId ?? '',
-  );
+  const { data: kpi } = useGetDashboardKpiQuery(spaceId ?? '');
 
-  const totalRecipes =
-    recipesOverview?.recipes.filter((r) => !r.isDeleted).length ?? 0;
-  const activeRecipes =
-    recipesOverview?.recipes.filter(
-      (r) => !r.isDeleted && r.targetDeployments.length > 0,
-    ).length ?? 0;
-
-  const totalStandards =
-    standardsOverview?.standards.filter((s) => !s.isDeleted).length ?? 0;
-  const activeStandards =
-    standardsOverview?.standards.filter(
-      (s) => !s.isDeleted && s.targetDeployments.length > 0,
-    ).length ?? 0;
-
-  const totalSkills =
-    skillsOverview?.skills.filter((s) => !s.isDeleted).length ?? 0;
-  const activeSkills =
-    skillsOverview?.skills.filter(
-      (s) => !s.isDeleted && s.targetDeployments.length > 0,
-    ).length ?? 0;
+  const totalStandards = kpi?.standards.total ?? 0;
+  const activeStandards = kpi?.standards.active ?? 0;
+  const totalRecipes = kpi?.recipes.total ?? 0;
+  const activeRecipes = kpi?.recipes.active ?? 0;
+  const totalSkills = kpi?.skills.total ?? 0;
+  const activeSkills = kpi?.skills.active ?? 0;
 
   const nonLiveStandards = totalStandards - activeStandards;
   const nonLiveRecipes = totalRecipes - activeRecipes;
