@@ -3,6 +3,10 @@ import {
   Body,
   ConflictException,
   Controller,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  NotFoundException,
   Post,
   Param,
   Req,
@@ -17,9 +21,12 @@ import {
   MoveArtifactsToSpaceCommand,
   Space,
   SpaceType,
+  BrowseSpacesResponse,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
+import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpacesManagementService } from './spaces-management.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 
@@ -92,6 +99,63 @@ export class SpacesManagementController {
           error: errorMessage,
         },
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Browse spaces in the organization
+   * GET /organizations/:orgId/spaces-management/browse
+   */
+  @Get('browse')
+  async browseSpaces(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<BrowseSpacesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces-management/browse - Browsing spaces',
+      { organizationId, userId },
+    );
+
+    return this.spacesManagementService.browseSpaces({
+      userId,
+      organizationId,
+    });
+  }
+
+  /**
+   * Self-join an open space
+   * POST /organizations/:orgId/spaces-management/:spaceId/join
+   */
+  @Post(':spaceId/join')
+  @HttpCode(204)
+  async joinSpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces-management/:spaceId/join - Joining space',
+      { organizationId, userId, spaceId },
+    );
+
+    try {
+      await this.spacesManagementService.joinSpace({
+        userId,
+        organizationId,
+        spaceId,
+      });
+    } catch (error) {
+      if (error instanceof SpaceNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof SpaceNotJoinableError) {
+        throw new ForbiddenException(error.message);
+      }
       throw error;
     }
   }

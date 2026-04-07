@@ -6,6 +6,10 @@ import {
   ISpacesManagementPort,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
+  BrowseSpacesCommand,
+  BrowseSpacesResponse,
+  JoinSpaceCommand,
+  JoinSpaceResponse,
 } from '@packmind/types';
 import { SpacesManagementHexa } from '../../SpacesManagementHexa';
 
@@ -36,5 +40,22 @@ export class SpacesManagementService {
       destinationSpaceId: command.destinationSpaceId,
     });
     return this.spacesManagementAdapter.moveArtifactsToSpace(command);
+  }
+
+  async browseSpaces(
+    command: BrowseSpacesCommand,
+  ): Promise<BrowseSpacesResponse> {
+    this.logger.info('Browsing spaces', {
+      organizationId: command.organizationId,
+    });
+    return this.spacesManagementAdapter.browseSpaces(command);
+  }
+
+  async joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
+    this.logger.info('Joining space', {
+      organizationId: command.organizationId,
+      spaceId: command.spaceId,
+    });
+    return this.spacesManagementAdapter.joinSpace(command);
   }
 }

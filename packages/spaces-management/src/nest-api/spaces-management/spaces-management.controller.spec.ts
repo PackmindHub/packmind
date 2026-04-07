@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -13,6 +18,8 @@ import {
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpacesManagementController } from './spaces-management.controller';
 import { SpacesManagementService } from './spaces-management.service';
 
@@ -34,6 +41,8 @@ describe('SpacesManagementController', () => {
     service = {
       createSpace: jest.fn(),
       moveArtifactsToSpace: jest.fn(),
+      browseSpaces: jest.fn(),
+      joinSpace: jest.fn(),
     } as unknown as jest.Mocked<SpacesManagementService>;
     controller = new SpacesManagementController(service, logger);
   });
@@ -203,6 +212,87 @@ describe('SpacesManagementController', () => {
             artifacts: [],
           }),
         ).rejects.toThrow(BadRequestException);
+      });
+    });
+  });
+
+  describe('browseSpaces', () => {
+    describe('when browsing spaces successfully', () => {
+      const mockResponse = {
+        mySpaces: [
+          spaceFactory({
+            id: createSpaceId('space-1'),
+            name: 'My Space',
+            organizationId,
+          }),
+        ],
+        allSpaces: [
+          {
+            id: createSpaceId('space-2'),
+            name: 'Open Space',
+            type: SpaceType.open,
+          },
+        ],
+      };
+      let result: typeof mockResponse;
+
+      beforeEach(async () => {
+        service.browseSpaces.mockResolvedValue(mockResponse);
+        result = await controller.browseSpaces(organizationId, mockRequest);
+      });
+
+      it('returns the browse response', () => {
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('calls service with correct params', () => {
+        expect(service.browseSpaces).toHaveBeenCalledWith({
+          userId: 'user-123',
+          organizationId,
+        });
+      });
+    });
+  });
+
+  describe('joinSpace', () => {
+    const spaceId = 'space-1';
+
+    describe('when joining a space successfully', () => {
+      beforeEach(async () => {
+        service.joinSpace.mockResolvedValue(undefined);
+        await controller.joinSpace(organizationId, spaceId, mockRequest);
+      });
+
+      it('calls service with correct params', () => {
+        expect(service.joinSpace).toHaveBeenCalledWith({
+          userId: 'user-123',
+          organizationId,
+          spaceId,
+        });
+      });
+    });
+
+    describe('when the space is not found', () => {
+      beforeEach(() => {
+        service.joinSpace.mockRejectedValue(new SpaceNotFoundError(spaceId));
+      });
+
+      it('throws NotFoundException', async () => {
+        await expect(
+          controller.joinSpace(organizationId, spaceId, mockRequest),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+
+    describe('when the space is not joinable', () => {
+      beforeEach(() => {
+        service.joinSpace.mockRejectedValue(new SpaceNotJoinableError(spaceId));
+      });
+
+      it('throws ForbiddenException', async () => {
+        await expect(
+          controller.joinSpace(organizationId, spaceId, mockRequest),
+        ).rejects.toThrow(ForbiddenException);
       });
     });
   });

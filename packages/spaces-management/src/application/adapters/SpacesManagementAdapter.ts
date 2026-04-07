@@ -18,9 +18,15 @@ import {
   IStandardsPortName,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
+  BrowseSpacesCommand,
+  BrowseSpacesResponse,
+  JoinSpaceCommand,
+  JoinSpaceResponse,
 } from '@packmind/types';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { MoveArtifactsToSpaceUseCase } from '../usecases/MoveArtifactsToSpaceUseCase';
+import { BrowseSpacesUseCase } from '../usecases/BrowseSpacesUseCase';
+import { JoinSpaceUseCase } from '../usecases/JoinSpaceUseCase';
 
 /**
  * SpacesManagementAdapter - Implements the ISpacesManagementPort interface for cross-domain access
@@ -52,6 +58,18 @@ export class SpacesManagementAdapter
       this.recipesPort,
       this.eventEmitterService,
     );
+    return useCase.execute(command);
+  }
+
+  async browseSpaces(
+    command: BrowseSpacesCommand,
+  ): Promise<BrowseSpacesResponse> {
+    const useCase = new BrowseSpacesUseCase(this.spacesPort);
+    return useCase.execute(command);
+  }
+
+  async joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
+    const useCase = new JoinSpaceUseCase(this.spacesPort);
     return useCase.execute(command);
   }
 
