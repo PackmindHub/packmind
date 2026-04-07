@@ -1,9 +1,6 @@
 import { PackmindHttpClient } from './PackmindHttpClient';
 import { Gateway, IGetTargetsByOrganizationUseCase } from '@packmind/types';
-
-export interface IDeploymentsGateway {
-  getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
-}
+import { IDeploymentsGateway } from '../IPackmindGateway';
 
 export class DeploymentsGateway implements IDeploymentsGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}

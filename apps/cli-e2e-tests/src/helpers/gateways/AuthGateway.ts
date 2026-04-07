@@ -1,5 +1,6 @@
 import {
   Gateway,
+  IActivateUserAccountUseCase,
   IGenerateApiKeyUseCase,
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
@@ -53,6 +54,31 @@ export class AuthGateway implements IAuthGateway {
         method: command.method,
       }),
     });
+
+    if (!signupResponse.ok) {
+      throw new Error(
+        `Failed to sign up: ${signupResponse.status} ${signupResponse.statusText}`,
+      );
+    }
+
+    return signupResponse.json();
+  };
+
+  signupWithInvitation: PublicGateway<IActivateUserAccountUseCase> = async (
+    command,
+  ) => {
+    const signupResponse = await fetch(
+      `${this.baseUrl}/api/v0/auth/activate/${command.token}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          password: command.password,
+        }),
+      },
+    );
 
     if (!signupResponse.ok) {
       throw new Error(

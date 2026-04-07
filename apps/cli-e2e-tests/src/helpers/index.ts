@@ -14,5 +14,5 @@ export type {
   ICommandGateway,
   IPackageGateway,
   IStandardGateway,
+  IChangeProposalGateway,
 } from './IPackmindGateway';
-export type { IChangeProposalGateway } from './gateways/ChangeProposalGateway';

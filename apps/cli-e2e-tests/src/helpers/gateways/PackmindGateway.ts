@@ -1,4 +1,14 @@
-import { IPackmindGateway } from '../IPackmindGateway';
+import {
+  IAuthGateway,
+  ICommandGateway,
+  IPackageGateway,
+  IPackmindGateway,
+  ISpaceGateway,
+  IStandardGateway,
+  IChangeProposalGateway,
+  IDeploymentsGateway,
+  IAccountsGateway,
+} from '../IPackmindGateway';
 import { PackmindHttpClient } from './PackmindHttpClient';
 import { AuthGateway } from './AuthGateway';
 import { SpaceGateway } from './SpaceGateway';
@@ -7,16 +17,18 @@ import { PackageGateway } from './PackageGateway';
 import { StandardGateway } from './StandardGateway';
 import { ChangeProposalGateway } from './ChangeProposalGateway';
 import { DeploymentsGateway } from './DeploymentsGateway';
+import { AccountsGateway } from './AccountsGateway';
 
 export class PackmindGateway implements IPackmindGateway {
   private httpClient?: PackmindHttpClient;
-  private _auth?: AuthGateway;
-  private _spaces?: SpaceGateway;
-  private _commands?: CommandGateway;
-  private _packages?: PackageGateway;
-  private _standards?: StandardGateway;
-  private _changeProposals?: ChangeProposalGateway;
-  private _deployments?: DeploymentsGateway;
+  private _auth?: IAuthGateway;
+  private _accounts?: IAccountsGateway;
+  private _spaces?: ISpaceGateway;
+  private _commands?: ICommandGateway;
+  private _packages?: IPackageGateway;
+  private _standards?: IStandardGateway;
+  private _changeProposals?: IChangeProposalGateway;
+  private _deployments?: IDeploymentsGateway;
 
   constructor(
     private readonly baseUrl: string,
@@ -27,37 +39,42 @@ export class PackmindGateway implements IPackmindGateway {
     }
   }
 
-  get auth(): AuthGateway {
+  get auth(): IAuthGateway {
     this._auth ??= new AuthGateway(this.baseUrl);
     return this._auth;
   }
 
-  get spaces(): SpaceGateway {
+  get accounts(): IAccountsGateway {
+    this._accounts ??= new AccountsGateway(this.getHttpClient());
+    return this._accounts;
+  }
+
+  get spaces(): ISpaceGateway {
     this._spaces ??= new SpaceGateway(this.getHttpClient());
     return this._spaces;
   }
 
-  get commands(): CommandGateway {
+  get commands(): ICommandGateway {
     this._commands ??= new CommandGateway(this.getHttpClient());
     return this._commands;
   }
 
-  get packages(): PackageGateway {
+  get packages(): IPackageGateway {
     this._packages ??= new PackageGateway(this.getHttpClient());
     return this._packages;
   }
 
-  get standards(): StandardGateway {
+  get standards(): IStandardGateway {
     this._standards ??= new StandardGateway(this.getHttpClient());
     return this._standards;
   }
 
-  get changeProposals(): ChangeProposalGateway {
+  get changeProposals(): IChangeProposalGateway {
     this._changeProposals ??= new ChangeProposalGateway(this.getHttpClient());
     return this._changeProposals;
   }
 
-  get deployments(): DeploymentsGateway {
+  get deployments(): IDeploymentsGateway {
     this._deployments ??= new DeploymentsGateway(this.getHttpClient());
     return this._deployments;
   }
@@ -68,6 +85,7 @@ export class PackmindGateway implements IPackmindGateway {
   initializeWithApiKey(apiKey: string): void {
     this.httpClient = new PackmindHttpClient(this.baseUrl, apiKey);
     // Reset lazy-initialized gateways that depend on httpClient
+    this._accounts = undefined;
     this._spaces = undefined;
     this._commands = undefined;
     this._packages = undefined;

@@ -11,9 +11,12 @@ export interface TestUserCredentials {
  *
  * @returns Test user credentials with random email and strong password
  */
-export function createTestUser(): TestUserCredentials {
+export function createTestUser(
+  data?: Partial<TestUserCredentials>,
+): TestUserCredentials {
   return {
     email: `test-${uuidv4()}@example.com`,
     password: `Test-${uuidv4()}-Password!123`,
+    ...data,
   };
 }
