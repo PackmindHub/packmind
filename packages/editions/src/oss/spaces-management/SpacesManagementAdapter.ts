@@ -1,6 +1,10 @@
 import {
+  BrowseSpacesCommand,
+  BrowseSpacesResponse,
   CreateSpaceResponse,
   ISpacesManagementPort,
+  JoinSpaceCommand,
+  JoinSpaceResponse,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
 } from '@packmind/types';
@@ -15,5 +19,19 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
     _command: MoveArtifactsToSpaceCommand,
   ): Promise<MoveArtifactsToSpaceResponse> {
     return { movedCount: 0 };
+  }
+
+  async browseSpaces(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: BrowseSpacesCommand,
+  ): Promise<BrowseSpacesResponse> {
+    return { mySpaces: [], allSpaces: [] };
+  }
+
+  async joinSpace(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: JoinSpaceCommand,
+  ): Promise<JoinSpaceResponse> {
+    return {} as JoinSpaceResponse;
   }
 }

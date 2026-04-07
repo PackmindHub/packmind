@@ -1,17 +1,29 @@
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   BrowseSpacesCommand,
   BrowseSpacesResponse,
   BrowsableSpace,
   createOrganizationId,
   createUserId,
+  IAccountsPort,
   ISpacesPort,
   SpaceType,
 } from '@packmind/types';
 
-export class BrowseSpacesUseCase {
-  constructor(private readonly spacesPort: ISpacesPort) {}
+export class BrowseSpacesUseCase extends AbstractMemberUseCase<
+  BrowseSpacesCommand,
+  BrowseSpacesResponse
+> {
+  constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
+  ) {
+    super(accountsPort);
+  }
 
-  async execute(command: BrowseSpacesCommand): Promise<BrowseSpacesResponse> {
+  protected async executeForMembers(
+    command: BrowseSpacesCommand & MemberContext,
+  ): Promise<BrowseSpacesResponse> {
     const organizationId = createOrganizationId(command.organizationId);
     const userId = createUserId(command.userId);
 

@@ -2,11 +2,14 @@ import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  IAccountsPort,
   ISpacesPort,
   JoinSpaceCommand,
   SpaceType,
   UserSpaceRole,
 } from '@packmind/types';
+import { userFactory } from '@packmind/accounts/test/userFactory';
+import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { JoinSpaceUseCase } from './JoinSpaceUseCase';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
@@ -17,7 +20,14 @@ describe('JoinSpaceUseCase', () => {
   const userId = createUserId('user-1');
   const spaceId = createSpaceId('space-1');
 
+  const organization = organizationFactory({ id: organizationId });
+  const user = userFactory({
+    id: userId,
+    memberships: [{ userId, organizationId, role: 'member' }],
+  });
+
   let useCase: JoinSpaceUseCase;
+  let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<
     Pick<ISpacesPort, 'getSpaceById' | 'findMembership' | 'addSpaceMembership'>
   >;
@@ -32,12 +42,20 @@ describe('JoinSpaceUseCase', () => {
   });
 
   beforeEach(() => {
+    accountsPort = {
+      getUserById: jest.fn().mockResolvedValue(user),
+      getOrganizationById: jest.fn().mockResolvedValue(organization),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
     spacesPort = {
       getSpaceById: jest.fn(),
       findMembership: jest.fn(),
       addSpaceMembership: jest.fn(),
     };
-    useCase = new JoinSpaceUseCase(spacesPort as unknown as ISpacesPort);
+    useCase = new JoinSpaceUseCase(
+      accountsPort,
+      spacesPort as unknown as ISpacesPort,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());

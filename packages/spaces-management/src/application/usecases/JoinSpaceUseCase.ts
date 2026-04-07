@@ -1,7 +1,9 @@
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  IAccountsPort,
   ISpacesPort,
   JoinSpaceCommand,
   JoinSpaceResponse,
@@ -11,10 +13,20 @@ import {
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 
-export class JoinSpaceUseCase {
-  constructor(private readonly spacesPort: ISpacesPort) {}
+export class JoinSpaceUseCase extends AbstractMemberUseCase<
+  JoinSpaceCommand,
+  JoinSpaceResponse
+> {
+  constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
+  ) {
+    super(accountsPort);
+  }
 
-  async execute(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
+  protected async executeForMembers(
+    command: JoinSpaceCommand & MemberContext,
+  ): Promise<JoinSpaceResponse> {
     const spaceId = createSpaceId(command.spaceId);
     const userId = createUserId(command.userId);
     const organizationId = createOrganizationId(command.organizationId);

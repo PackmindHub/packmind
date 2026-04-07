@@ -9,6 +9,7 @@ import {
   PMIcon,
   PMInput,
   PMPortal,
+  PMSpinner,
   PMStatus,
   PMText,
 } from '@packmind/ui';
@@ -26,6 +27,9 @@ interface BrowseSpacesDrawerProps {
   onJoinSpace: (spaceId: SpaceId) => void;
   onCreateSpace: () => void;
   containerRef?: RefObject<HTMLElement | null>;
+  isLoading?: boolean;
+  isError?: boolean;
+  isJoining?: boolean;
 }
 
 export function BrowseSpacesDrawer({
@@ -37,6 +41,9 @@ export function BrowseSpacesDrawer({
   onJoinSpace,
   onCreateSpace,
   containerRef,
+  isLoading,
+  isError,
+  isJoining,
 }: Readonly<BrowseSpacesDrawerProps>) {
   const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,7 +97,7 @@ export function BrowseSpacesDrawer({
             <PMBox
               paddingX={4}
               borderBottomWidth="1px"
-              borderColor="{colors.border.tertiary}"
+              borderColor="border.tertiary"
             >
               <PMHStack gap={0}>
                 <TabButton
@@ -120,20 +127,40 @@ export function BrowseSpacesDrawer({
             </PMBox>
 
             <PMDrawer.Body paddingX={1} paddingY={2}>
-              {activeTab === 'my' && (
-                <MySpacesTab
-                  spaces={filteredMySpaces}
-                  searchQuery={searchQuery}
-                  onSpaceClick={onSpaceClick}
-                />
-              )}
+              {isLoading ? (
+                <PMBox
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  paddingY={8}
+                >
+                  <PMSpinner size="sm" />
+                </PMBox>
+              ) : isError ? (
+                <PMBox paddingX={3} paddingY={8} textAlign="center">
+                  <PMText color="faded" fontSize="xs">
+                    Failed to load spaces
+                  </PMText>
+                </PMBox>
+              ) : (
+                <>
+                  {activeTab === 'my' && (
+                    <MySpacesTab
+                      spaces={filteredMySpaces}
+                      searchQuery={searchQuery}
+                      onSpaceClick={onSpaceClick}
+                    />
+                  )}
 
-              {activeTab === 'all' && (
-                <AllSpacesTab
-                  spaces={filteredAllSpaces}
-                  searchQuery={searchQuery}
-                  onJoinSpace={onJoinSpace}
-                />
+                  {activeTab === 'all' && (
+                    <AllSpacesTab
+                      spaces={filteredAllSpaces}
+                      searchQuery={searchQuery}
+                      onJoinSpace={onJoinSpace}
+                      isJoining={isJoining}
+                    />
+                  )}
+                </>
               )}
             </PMDrawer.Body>
           </PMDrawer.Content>
@@ -189,7 +216,11 @@ function MySpacesTab({
     return (
       <PMBox paddingX={3} paddingY={8} textAlign="center">
         <PMText color="faded" fontSize="xs">
-          No spaces matching &ldquo;{searchQuery}&rdquo;
+          {searchQuery.trim() ? (
+            <>No spaces matching &ldquo;{searchQuery}&rdquo;</>
+          ) : (
+            'No spaces yet'
+          )}
         </PMText>
       </PMBox>
     );
@@ -242,16 +273,22 @@ function AllSpacesTab({
   spaces,
   searchQuery,
   onJoinSpace,
+  isJoining,
 }: Readonly<{
   spaces: BrowsableSpace[];
   searchQuery: string;
   onJoinSpace: (spaceId: SpaceId) => void;
+  isJoining?: boolean;
 }>) {
   if (spaces.length === 0) {
     return (
       <PMBox paddingX={3} paddingY={8} textAlign="center">
         <PMText color="faded" fontSize="xs">
-          No spaces matching &ldquo;{searchQuery}&rdquo;
+          {searchQuery.trim() ? (
+            <>No spaces matching &ldquo;{searchQuery}&rdquo;</>
+          ) : (
+            'No other spaces to discover'
+          )}
         </PMText>
       </PMBox>
     );
@@ -292,6 +329,7 @@ function AllSpacesTab({
               size="xs"
               variant="secondary"
               onClick={() => onJoinSpace(space.id)}
+              disabled={isJoining}
               data-testid={`browse-spaces-join-${space.id}`}
             >
               <PMIcon fontSize="xs">

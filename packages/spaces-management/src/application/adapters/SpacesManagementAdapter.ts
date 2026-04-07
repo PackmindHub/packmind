@@ -64,12 +64,12 @@ export class SpacesManagementAdapter
   async browseSpaces(
     command: BrowseSpacesCommand,
   ): Promise<BrowseSpacesResponse> {
-    const useCase = new BrowseSpacesUseCase(this.spacesPort);
+    const useCase = new BrowseSpacesUseCase(this.accountsPort, this.spacesPort);
     return useCase.execute(command);
   }
 
   async joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
-    const useCase = new JoinSpaceUseCase(this.spacesPort);
+    const useCase = new JoinSpaceUseCase(this.accountsPort, this.spacesPort);
     return useCase.execute(command);
   }
 

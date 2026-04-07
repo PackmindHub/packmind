@@ -3,10 +3,13 @@ import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  IAccountsPort,
   ISpacesPort,
   SpaceType,
   UserSpaceRole,
 } from '@packmind/types';
+import { userFactory } from '@packmind/accounts/test/userFactory';
+import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { BrowseSpacesUseCase } from './BrowseSpacesUseCase';
 
@@ -14,7 +17,14 @@ describe('BrowseSpacesUseCase', () => {
   const organizationId = createOrganizationId('org-1');
   const userId = createUserId('user-1');
 
+  const organization = organizationFactory({ id: organizationId });
+  const user = userFactory({
+    id: userId,
+    memberships: [{ userId, organizationId, role: 'member' }],
+  });
+
   let useCase: BrowseSpacesUseCase;
+  let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<
     Pick<
       ISpacesPort,
@@ -33,13 +43,21 @@ describe('BrowseSpacesUseCase', () => {
   });
 
   beforeEach(() => {
+    accountsPort = {
+      getUserById: jest.fn().mockResolvedValue(user),
+      getOrganizationById: jest.fn().mockResolvedValue(organization),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
     spacesPort = {
       listUserSpaces: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       findMembershipsByUserAndOrganization: jest.fn(),
     };
 
-    useCase = new BrowseSpacesUseCase(spacesPort as unknown as ISpacesPort);
+    useCase = new BrowseSpacesUseCase(
+      accountsPort,
+      spacesPort as unknown as ISpacesPort,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
