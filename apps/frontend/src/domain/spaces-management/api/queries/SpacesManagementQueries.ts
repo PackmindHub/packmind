@@ -1,6 +1,17 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArtifactReference, SpaceId, SpaceType } from '@packmind/types';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import {
+  ArtifactReference,
+  BrowseSpacesResponse,
+  SpaceId,
+  SpaceType,
+} from '@packmind/types';
 import { spacesManagementGateway } from '../gateways';
+import { spacesManagementQueryKeys } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { spacesQueryKeys } from '../../../spaces/api/queryKeys';
@@ -10,6 +21,25 @@ import { getRecipesBySpaceKey } from '../../../recipes/api/queryKeys';
 import { LIST_PACKAGES_BY_SPACE_KEY } from '../../../deployments/api/queryKeys';
 import { CHANGE_PROPOSALS_QUERY_SCOPE } from '../../../change-proposals/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+
+export const getBrowseSpacesQueryOptions = (orgId: string) =>
+  queryOptions({
+    queryKey: spacesManagementQueryKeys.browse(orgId),
+    queryFn: async (): Promise<BrowseSpacesResponse> => {
+      if (!orgId) {
+        throw new Error('Organization ID is required to browse spaces');
+      }
+      return spacesManagementGateway.browseSpaces(orgId);
+    },
+    enabled: !!orgId,
+    staleTime: 1000 * 60 * 5,
+  });
+
+export const useBrowseSpacesQuery = () => {
+  const { organization } = useAuthContext();
+  const orgId = organization?.id;
+  return useQuery(getBrowseSpacesQueryOptions(orgId || ''));
+};
 
 const CREATE_SPACE_MUTATION_KEY = 'createSpace';
 
@@ -82,6 +112,33 @@ export const useMoveArtifactsToSpaceMutation = () => {
         }),
         queryClient.invalidateQueries({
           queryKey: [ORGANIZATION_QUERY_SCOPE, CHANGE_PROPOSALS_QUERY_SCOPE],
+        }),
+      ]);
+    },
+  });
+};
+
+const JOIN_SPACE_MUTATION_KEY = 'joinSpace';
+
+export const useJoinSpaceMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [JOIN_SPACE_MUTATION_KEY],
+    mutationFn: async ({ spaceId }: { spaceId: SpaceId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization context required');
+      }
+      return spacesManagementGateway.joinSpace(organization.id, spaceId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...spacesManagementQueryKeys.all],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...spacesQueryKeys.all],
         }),
       ]);
     },

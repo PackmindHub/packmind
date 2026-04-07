@@ -1,4 +1,9 @@
-import { Space, SpaceType } from '@packmind/types';
+import {
+  BrowseSpacesResponse,
+  Space,
+  SpaceId,
+  SpaceType,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import {
   ISpacesManagementGateway,
@@ -40,6 +45,25 @@ export class SpacesManagementGatewayApi
     return this._api.post<MoveArtifactsToSpaceResponse>(
       `${this._endpoint}/${orgId}/spaces-management/move`,
       params,
+    );
+  }
+
+  async browseSpaces(orgId: string): Promise<BrowseSpacesResponse> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to browse spaces');
+    }
+    return this._api.get<BrowseSpacesResponse>(
+      `${this._endpoint}/${orgId}/spaces-management/browse`,
+    );
+  }
+
+  async joinSpace(orgId: string, spaceId: SpaceId): Promise<void> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to join a space');
+    }
+    return this._api.post(
+      `${this._endpoint}/${orgId}/spaces-management/${spaceId}/join`,
+      {},
     );
   }
 }

@@ -1,4 +1,10 @@
-import { ArtifactReference, Space, SpaceId, SpaceType } from '@packmind/types';
+import {
+  ArtifactReference,
+  BrowseSpacesResponse,
+  Space,
+  SpaceId,
+  SpaceType,
+} from '@packmind/types';
 
 export type MoveArtifactsToSpaceParams = {
   sourceSpaceId: SpaceId;
@@ -14,4 +20,6 @@ export interface ISpacesManagementGateway {
     orgId: string,
     params: MoveArtifactsToSpaceParams,
   ): Promise<MoveArtifactsToSpaceResponse>;
+  browseSpaces(orgId: string): Promise<BrowseSpacesResponse>;
+  joinSpace(orgId: string, spaceId: SpaceId): Promise<void>;
 }
