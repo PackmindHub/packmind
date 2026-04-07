@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -29,23 +29,26 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 const origin = 'CaptureRecipeUsecase';
 
 export class CaptureRecipeUsecase
-  extends AbstractMemberUseCase<CaptureRecipeCommand, CaptureRecipeResponse>
+  extends AbstractSpaceMemberUseCase<
+    CaptureRecipeCommand,
+    CaptureRecipeResponse
+  >
   implements ICaptureRecipeUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
-    super(accountsPort, new PackmindLogger(origin));
+    super(spacesPort, accountsPort, new PackmindLogger(origin));
     this.logger.info('CaptureRecipeUsecase initialized');
   }
 
-  protected async executeForMembers(
-    command: CaptureRecipeCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: CaptureRecipeCommand & SpaceMemberContext,
   ): Promise<CaptureRecipeResponse> {
     const {
       name,

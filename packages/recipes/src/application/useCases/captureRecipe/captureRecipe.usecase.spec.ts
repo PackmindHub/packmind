@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CaptureRecipeCommand,
+  CommandCreatedEvent,
   createOrganizationId,
   createRecipeId,
   createRecipeVersionId,
@@ -14,9 +18,9 @@ import {
   OrganizationId,
   Recipe,
   RecipeSlugAlreadyExistsError,
-  CommandCreatedEvent,
   Space,
   SpaceId,
+  SpaceType,
   User,
   UserId,
 } from '@packmind/types';
@@ -55,6 +59,7 @@ describe('CaptureRecipeUsecase', () => {
       createSpace: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
     } as jest.Mocked<ISpacesPort>;
 
     // Mock RecipeService
@@ -95,8 +100,8 @@ describe('CaptureRecipeUsecase', () => {
     recipeService.listRecipesBySpace.mockResolvedValue([]);
 
     captureRecipeUsecase = new CaptureRecipeUsecase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       recipeService,
       recipeVersionService,
       recipeSummaryService,
@@ -444,6 +449,8 @@ describe('CaptureRecipeUsecase', () => {
         name: 'Test Space',
         slug: 'test-space',
         organizationId,
+        type: SpaceType.open,
+        isDefaultSpace: true,
       };
 
       accountsPort.getUserById.mockResolvedValue(user);
@@ -1480,6 +1487,29 @@ describe('CaptureRecipeUsecase', () => {
 
         await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
           'Database connection failed',
+        );
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      beforeEach(() => {
+        spacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        const command: CaptureRecipeCommand = {
+          name: 'Test Recipe',
+          spaceId,
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId,
+          userId,
+        };
+
+        await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
         );
       });
     });

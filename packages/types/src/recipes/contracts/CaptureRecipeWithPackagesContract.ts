@@ -1,10 +1,11 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { Recipe } from '../Recipe';
 import { RecipeStep } from './CaptureRecipeUseCase';
+import { SpaceId } from '../../spaces';
 
 export type CaptureRecipeWithPackagesCommand = PackmindCommand & {
   name: string;
-  spaceId: string;
+  spaceId: SpaceId;
   summary?: string;
   whenToUse?: string[];
   contextValidationCheckpoints?: string[];

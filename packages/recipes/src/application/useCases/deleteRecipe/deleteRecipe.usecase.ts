@@ -2,8 +2,8 @@ import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -21,23 +21,23 @@ import {
 const origin = 'DeleteRecipeUsecase';
 
 export class DeleteRecipeUsecase
-  extends AbstractMemberUseCase<DeleteRecipeCommand, DeleteRecipeResponse>
+  extends AbstractSpaceMemberUseCase<DeleteRecipeCommand, DeleteRecipeResponse>
   implements IDeleteRecipeUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('DeleteRecipeUsecase initialized');
   }
 
-  protected async executeForMembers(
-    command: DeleteRecipeCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: DeleteRecipeCommand & SpaceMemberContext,
   ): Promise<DeleteRecipeResponse> {
     const {
       recipeId,

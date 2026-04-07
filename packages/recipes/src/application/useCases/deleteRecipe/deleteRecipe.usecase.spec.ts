@@ -1,4 +1,7 @@
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -39,6 +42,7 @@ describe('DeleteRecipeUsecase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     recipeService = {
@@ -67,8 +71,8 @@ describe('DeleteRecipeUsecase', () => {
     stubLogger();
 
     deleteRecipeUsecase = new DeleteRecipeUsecase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       recipeService,
       recipeVersionService,
       eventEmitterService,
@@ -278,6 +282,18 @@ describe('DeleteRecipeUsecase', () => {
         await expect(
           deleteRecipeUsecase.execute(failingCommand),
         ).rejects.toThrow('Database connection failed');
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      beforeEach(() => {
+        spacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        await expect(deleteRecipeUsecase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
       });
     });
   });
