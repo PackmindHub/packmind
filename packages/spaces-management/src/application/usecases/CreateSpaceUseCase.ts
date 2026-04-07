@@ -13,7 +13,7 @@ export class CreateSpaceUseCase {
   async execute(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
     const space = await this.spacesPort.createSpace({
       ...command,
-      type: SpaceType.private,
+      type: command.type ?? SpaceType.open,
     });
 
     const userId = createUserId(command.userId);

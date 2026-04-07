@@ -55,15 +55,27 @@ describe('CreateSpaceUseCase', () => {
       });
     });
 
-    it('creates the space with private type', async () => {
-      await useCase.execute(buildCommand());
+    it('creates the space with the provided type', async () => {
+      await useCase.execute(buildCommand({ type: SpaceType.restricted }));
 
       expect(spacesPort.createSpace).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'My Private Space',
-          type: SpaceType.private,
+          type: SpaceType.restricted,
         }),
       );
+    });
+
+    describe('when type is not provided', () => {
+      it('defaults to open type', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(spacesPort.createSpace).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SpaceType.open,
+          }),
+        );
+      });
     });
 
     it('adds the creator as admin member of the space', async () => {
