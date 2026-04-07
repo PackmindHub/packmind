@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -20,26 +20,26 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 const origin = 'UpdateRecipeFromUIUsecase';
 
 export class UpdateRecipeFromUIUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     UpdateRecipeFromUICommand,
     UpdateRecipeFromUIResponse
   >
   implements IUpdateRecipeFromUIUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
-    super(accountsPort, new PackmindLogger(origin));
+    super(spacesPort, accountsPort, new PackmindLogger(origin));
     this.logger.info('UpdateRecipeFromUIUsecase initialized');
   }
 
-  protected async executeForMembers(
-    command: UpdateRecipeFromUICommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: UpdateRecipeFromUICommand & SpaceMemberContext,
   ): Promise<UpdateRecipeFromUIResponse> {
     const { recipeId, spaceId, organizationId, name, content, userId, source } =
       command;

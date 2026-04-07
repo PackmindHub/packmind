@@ -9,6 +9,7 @@ import {
   Space,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
@@ -73,14 +74,18 @@ describe('ListPackagesBySpaceUsecase', () => {
       getSpaceById: jest.fn(),
       getSpaceBySlug: jest.fn(),
       listSpacesByOrganization: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     stubbedLogger = stubLogger();
 
     useCase = new ListPackagesBySpaceUsecase(
+      mockSpacesPort,
       mockAccountsPort,
       mockServices,
-      mockSpacesPort,
       stubbedLogger,
     );
   });
@@ -298,6 +303,24 @@ describe('ListPackagesBySpaceUsecase', () => {
 
         await expect(useCase.execute(command)).rejects.toThrow(
           'Spaces service unavailable',
+        );
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      beforeEach(() => {
+        mockSpacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        const command: ListPackagesBySpaceCommand = {
+          userId,
+          organizationId,
+          spaceId,
+        };
+
+        await expect(useCase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
         );
       });
     });

@@ -25,7 +25,10 @@ import {
   Package,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
@@ -151,6 +154,10 @@ describe('UpdatePackageUsecase', () => {
       getSpaceById: jest.fn(),
       getSpaceBySlug: jest.fn(),
       listSpacesByOrganization: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     mockRecipesPort = {
@@ -178,9 +185,9 @@ describe('UpdatePackageUsecase', () => {
     stubbedLogger = stubLogger();
 
     useCase = new UpdatePackageUsecase(
+      mockSpacesPort,
       mockAccountsPort,
       mockServices,
-      mockSpacesPort,
       mockRecipesPort,
       mockStandardsPort,
       mockSkillsPort,
@@ -923,6 +930,30 @@ describe('UpdatePackageUsecase', () => {
 
       it('does not query packages by space', () => {
         expect(mockPackageService.getPackagesBySpaceId).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      beforeEach(() => {
+        mockSpacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        const command: UpdatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          name: 'Updated Package',
+          description: 'Updated description',
+          recipeIds: [],
+          standardIds: [],
+          skillsIds: [],
+        };
+
+        await expect(useCase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
       });
     });
   });

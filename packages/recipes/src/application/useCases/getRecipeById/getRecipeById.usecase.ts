@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   GetRecipeByIdCommand,
   GetRecipeByIdResponse,
@@ -14,21 +17,24 @@ import { RecipeService } from '../../services/RecipeService';
 const origin = 'GetRecipeByIdUsecase';
 
 export class GetRecipeByIdUsecase
-  extends AbstractMemberUseCase<GetRecipeByIdCommand, GetRecipeByIdResponse>
+  extends AbstractSpaceMemberUseCase<
+    GetRecipeByIdCommand,
+    GetRecipeByIdResponse
+  >
   implements IGetRecipeByIdUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly recipeService: RecipeService,
-    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('GetRecipeByIdUsecase initialized');
   }
 
-  async executeForMembers(
-    command: GetRecipeByIdCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: GetRecipeByIdCommand & SpaceMemberContext,
   ): Promise<GetRecipeByIdResponse> {
     this.logger.info('Getting recipe by ID', {
       id: command.recipeId,

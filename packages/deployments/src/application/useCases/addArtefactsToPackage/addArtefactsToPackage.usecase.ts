@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
@@ -15,27 +18,27 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 const origin = 'AddArtefactsToPackageUsecase';
 
 export class AddArtefactsToPackageUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     AddArtefactsToPackageCommand,
     AddArtefactsToPackageResponse
   >
   implements IAddArtefactsToPackageUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
-    private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('AddArtefactsToPackageUsecase initialized');
   }
 
-  async executeForMembers(
-    command: AddArtefactsToPackageCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: AddArtefactsToPackageCommand & SpaceMemberContext,
   ): Promise<AddArtefactsToPackageResponse> {
     const {
       packageId,

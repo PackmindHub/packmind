@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   CreatePackageCommand,
   CreatePackageResponse,
@@ -19,24 +22,27 @@ import slug from 'slug';
 const origin = 'CreatePackageUsecase';
 
 export class CreatePackageUsecase
-  extends AbstractMemberUseCase<CreatePackageCommand, CreatePackageResponse>
+  extends AbstractSpaceMemberUseCase<
+    CreatePackageCommand,
+    CreatePackageResponse
+  >
   implements ICreatePackageUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
-    private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('CreatePackageUsecase initialized');
   }
 
-  async executeForMembers(
-    command: CreatePackageCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: CreatePackageCommand & SpaceMemberContext,
   ): Promise<CreatePackageResponse> {
     const {
       spaceId,

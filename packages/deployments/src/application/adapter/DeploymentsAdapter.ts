@@ -444,9 +444,9 @@ export class DeploymentsAdapter
     );
 
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
     );
 
     this._listPackagesUseCase = new ListPackagesUsecase(
@@ -460,18 +460,18 @@ export class DeploymentsAdapter
     );
 
     this._createPackageUseCase = new CreatePackageUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
     );
 
     this._updatePackageUseCase = new UpdatePackageUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
@@ -479,6 +479,7 @@ export class DeploymentsAdapter
     );
 
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
     );
@@ -488,9 +489,9 @@ export class DeploymentsAdapter
     );
 
     this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,

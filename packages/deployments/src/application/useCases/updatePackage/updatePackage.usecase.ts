@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -22,25 +22,28 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 const origin = 'UpdatePackageUsecase';
 
 export class UpdatePackageUsecase
-  extends AbstractMemberUseCase<UpdatePackageCommand, UpdatePackageResponse>
+  extends AbstractSpaceMemberUseCase<
+    UpdatePackageCommand,
+    UpdatePackageResponse
+  >
   implements IUpdatePackageUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
-    private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('UpdatePackageUsecase initialized');
   }
 
-  async executeForMembers(
-    command: UpdatePackageCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: UpdatePackageCommand & SpaceMemberContext,
   ): Promise<UpdatePackageResponse> {
     const { packageId, name, description, recipeIds, standardIds, skillsIds } =
       command;

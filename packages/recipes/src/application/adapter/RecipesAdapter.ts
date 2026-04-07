@@ -131,8 +131,8 @@ export class RecipesAdapter
 
     // Step 4: Create all use cases with non-null ports/services
     this._captureRecipe = new CaptureRecipeUsecase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
@@ -140,10 +140,10 @@ export class RecipesAdapter
     );
 
     this._captureRecipeWithPackages = new CaptureRecipeWithPackagesUsecase(
-      this.accountsPort!,
+      this.accountsPort,
       this._captureRecipe,
-      this.deploymentPort!,
-      this.spacesPort!,
+      this.deploymentPort,
+      this.spacesPort,
     );
 
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
@@ -165,8 +165,8 @@ export class RecipesAdapter
     );
 
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
-      this.accountsPort!,
-      this.spacesPort!,
+      this.spacesPort,
+      this.accountsPort,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
@@ -174,17 +174,17 @@ export class RecipesAdapter
     );
 
     this._deleteRecipe = new DeleteRecipeUsecase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       ports.eventEmitterService,
     );
 
     this._getRecipeById = new GetRecipeByIdUsecase(
-      this.accountsPort!,
+      this.spacesPort,
+      this.accountsPort,
       this.recipesServices.getRecipeService(),
-      this.spacesPort!,
     );
 
     this._findRecipeBySlug = new FindRecipeBySlugUsecase(
@@ -192,9 +192,9 @@ export class RecipesAdapter
     );
 
     this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
-      this.accountsPort!,
+      this.spacesPort,
+      this.accountsPort,
       this.recipesServices.getRecipeService(),
-      this.spacesPort!,
     );
 
     this._listRecipeVersions = new ListRecipeVersionsUsecase(

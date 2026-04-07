@@ -1,28 +1,30 @@
 import { AddArtefactsToPackageUsecase } from './addArtefactsToPackage.usecase';
 import {
-  createUserId,
-  createOrganizationId,
-  createSpaceId,
-  createRecipeId,
-  createStandardId,
-  createPackageId,
-  createSkillId,
-  IAccountsPort,
-  ISpacesPort,
-  IRecipesPort,
-  IStandardsPort,
-  ISkillsPort,
   AddArtefactsToPackageCommand,
-  Space,
+  createOrganizationId,
+  createPackageId,
+  createRecipeId,
+  createSkillId,
+  createSpaceId,
+  createStandardId,
+  createUserId,
+  IAccountsPort,
+  IRecipesPort,
+  ISkillsPort,
+  ISpacesPort,
+  IStandardsPort,
   Recipe,
-  Standard,
-  Skill,
   RecipeId,
-  StandardId,
+  Skill,
   SkillId,
+  Space,
   SpaceId,
+  SpaceType,
+  Standard,
+  StandardId,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
@@ -78,6 +80,8 @@ describe('AddArtefactsToPackageUsecase', () => {
     slug: 'test-space',
     name: 'Test Space',
     organizationId,
+    type: SpaceType.open,
+    isDefaultSpace: true,
   });
 
   const buildRecipe = (id: RecipeId, spaceIdParam: SpaceId): Recipe => ({
@@ -88,6 +92,7 @@ describe('AddArtefactsToPackageUsecase', () => {
     version: 1,
     userId,
     spaceId: spaceIdParam,
+    movedTo: null,
   });
 
   const buildStandard = (id: StandardId, spaceIdParam: SpaceId): Standard => ({
@@ -99,6 +104,7 @@ describe('AddArtefactsToPackageUsecase', () => {
     userId,
     scope: null,
     spaceId: spaceIdParam,
+    movedTo: null,
   });
 
   const buildSkill = (id: SkillId, spaceIdParam: SpaceId): Skill => ({
@@ -107,9 +113,16 @@ describe('AddArtefactsToPackageUsecase', () => {
     slug: `skill-${id}`,
     description: 'Test skill',
     spaceId: spaceIdParam,
-    createdBy: userId,
+    createdBy: {
+      userId,
+      displayName: 'Test User',
+    },
     createdAt: new Date(),
     updatedAt: new Date(),
+    version: 1,
+    prompt: 'Prompt',
+    userId,
+    movedTo: null,
   });
 
   beforeEach(() => {
@@ -146,6 +159,10 @@ describe('AddArtefactsToPackageUsecase', () => {
       getSpaceById: jest.fn(),
       getSpaceBySlug: jest.fn(),
       listSpacesByOrganization: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     mockRecipesPort = {
@@ -163,9 +180,9 @@ describe('AddArtefactsToPackageUsecase', () => {
     stubbedLogger = stubLogger();
 
     useCase = new AddArtefactsToPackageUsecase(
+      mockSpacesPort,
       mockAccountsPort,
       mockServices,
-      mockSpacesPort,
       mockRecipesPort,
       mockStandardsPort,
       mockSkillsPort,
@@ -585,6 +602,8 @@ describe('AddArtefactsToPackageUsecase', () => {
           slug: 'test-space',
           name: 'Test Space',
           organizationId: differentOrgId,
+          type: SpaceType.open,
+          isDefaultSpace: true,
         };
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
@@ -1200,6 +1219,26 @@ describe('AddArtefactsToPackageUsecase', () => {
 
       it('returns skipped skills', () => {
         expect(result.skipped.skills).toEqual([skillId1]);
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      beforeEach(() => {
+        mockSpacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        const command: AddArtefactsToPackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          recipeIds: [recipeId1],
+        };
+
+        await expect(useCase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
       });
     });
   });
