@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
@@ -17,7 +17,6 @@ import {
   ISpacesPort,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
-import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { ChangeProposalLimitExceededError } from '../../errors/ChangeProposalLimitExceededError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { IChangeProposalValidator } from '../../validators/IChangeProposalValidator';
@@ -25,36 +24,31 @@ import { IChangeProposalValidator } from '../../validators/IChangeProposalValida
 const origin = 'CreateChangeProposalUseCase';
 
 export class CreateChangeProposalUseCase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     CreateChangeProposalCommand<ChangeProposalType>,
     CreateChangeProposalResponse<ChangeProposalType>
   >
   implements ICreateChangeProposalUseCase<ChangeProposalType>
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     private readonly validators: IChangeProposalValidator[],
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  async executeForMembers(
-    command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
+  async executeForSpaceMembers(
+    command: CreateChangeProposalCommand<ChangeProposalType> &
+      SpaceMemberContext,
   ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
     const validator = this.validators.find((v) => v.supports(command.type));
     if (!validator) {
       throw new UnsupportedChangeProposalTypeError(command.type);
     }
-
-    await validateSpaceOwnership(
-      this.spacesPort,
-      command.spaceId,
-      command.organization.id,
-    );
 
     let artefactVersion: number;
     let resolvedPayload: Awaited<

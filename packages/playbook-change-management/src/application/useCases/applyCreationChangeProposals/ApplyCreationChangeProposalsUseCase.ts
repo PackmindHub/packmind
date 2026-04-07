@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
@@ -28,7 +28,6 @@ import {
   UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
-import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import {
   CreatedIds,
   ICreateChangeProposalApplier,
@@ -46,7 +45,7 @@ export type {
 const origin = 'ApplyCreationChangeProposalsUseCase';
 
 export class ApplyCreationChangeProposalsUseCase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     ApplyCreationChangeProposalsCommand,
     ApplyCreationChangeProposalsResponse
   >
@@ -58,8 +57,8 @@ export class ApplyCreationChangeProposalsUseCase
   >;
 
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     recipesPort: IRecipesPort,
     standardsPort: IStandardsPort,
     skillsPort: ISkillsPort,
@@ -67,7 +66,7 @@ export class ApplyCreationChangeProposalsUseCase
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
 
     this.appliers = {
       [ChangeProposalType.createCommand]:
@@ -80,15 +79,9 @@ export class ApplyCreationChangeProposalsUseCase
     };
   }
 
-  async executeForMembers(
-    command: ApplyCreationChangeProposalsCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: ApplyCreationChangeProposalsCommand & SpaceMemberContext,
   ): Promise<ApplyCreationChangeProposalsResponse> {
-    await validateSpaceOwnership(
-      this.spacesPort,
-      command.spaceId,
-      command.organization.id,
-    );
-
     const acceptedIds = command.accepted.map((p) => p.id);
     const allIds = [...acceptedIds, ...command.rejected];
     const proposals = await Promise.all(

@@ -1,4 +1,7 @@
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   AcceptedChangeProposal,
@@ -24,6 +27,7 @@ import {
   StandardId,
   SkillId,
   ChangeProposalStatus,
+  UserSpaceRole,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
@@ -86,6 +90,13 @@ describe('ApplyChangeProposalsUseCase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+        role: UserSpaceRole.MEMBER,
+        createdBy: userId,
+        updatedBy: userId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     standardsPort = {
@@ -127,8 +138,8 @@ describe('ApplyChangeProposalsUseCase', () => {
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new ApplyChangeProposalsUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       standardsPort,
       recipesPort,
       skillsPort,
@@ -666,17 +677,12 @@ describe('ApplyChangeProposalsUseCase', () => {
     });
   });
 
-  describe('when space does not belong to organization', () => {
-    const differentOrgId = createOrganizationId('different-org');
-
+  describe('when the user is not a member of the space', () => {
     beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue({
-        ...space,
-        organizationId: differentOrgId,
-      });
+      spacesPort.findMembership.mockResolvedValue(null);
     });
 
-    it('throws an error', async () => {
+    it('throws a SpaceMembershipRequiredError', async () => {
       await expect(
         useCase.execute({
           userId,
@@ -686,7 +692,7 @@ describe('ApplyChangeProposalsUseCase', () => {
           accepted: [],
           rejected: [],
         }),
-      ).rejects.toThrow();
+      ).rejects.toThrow(SpaceMembershipRequiredError);
     });
   });
 

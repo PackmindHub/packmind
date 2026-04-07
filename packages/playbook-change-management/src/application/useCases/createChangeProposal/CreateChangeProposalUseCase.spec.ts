@@ -1,4 +1,7 @@
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposal,
@@ -20,6 +23,7 @@ import {
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
+  UserSpaceRole,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
@@ -27,8 +31,6 @@ import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
-import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
-import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
 import { SkillFileNotFoundError } from '../../errors/SkillFileNotFoundError';
 import { SkillVersionNotFoundError } from '../../errors/SkillVersionNotFoundError';
@@ -111,6 +113,13 @@ describe('CreateChangeProposalUseCase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+        role: UserSpaceRole.MEMBER,
+        createdBy: userId,
+        updatedBy: userId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     service = {
@@ -123,8 +132,8 @@ describe('CreateChangeProposalUseCase', () => {
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new CreateChangeProposalUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       service,
       [
         new CommandChangeProposalValidator(recipesPort),
@@ -774,8 +783,8 @@ describe('CreateChangeProposalUseCase', () => {
       };
 
       useCase = new CreateChangeProposalUseCase(
-        accountsPort,
         spacesPort,
+        accountsPort,
         service,
         [mockValidator],
         eventEmitterService,
@@ -836,8 +845,8 @@ describe('CreateChangeProposalUseCase', () => {
       };
 
       useCase = new CreateChangeProposalUseCase(
-        accountsPort,
         spacesPort,
+        accountsPort,
         service,
         [mockValidator],
         eventEmitterService,
@@ -961,21 +970,19 @@ describe('CreateChangeProposalUseCase', () => {
     });
   });
 
-  describe('when space is not found', () => {
-    const command = buildCommand();
-
+  describe('when the user is not a member of the space', () => {
     beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(null);
+      spacesPort.findMembership.mockResolvedValue(null);
     });
 
-    it('throws an error', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        SpaceNotFoundError,
+    it('throws a SpaceMembershipRequiredError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toThrow(
+        SpaceMembershipRequiredError,
       );
     });
 
     it('does not call the service', async () => {
-      await useCase.execute(command).catch(() => {
+      await useCase.execute(buildCommand()).catch(() => {
         /* expected rejection */
       });
 
@@ -983,41 +990,7 @@ describe('CreateChangeProposalUseCase', () => {
     });
 
     it('does not call getRecipeById', async () => {
-      await useCase.execute(command).catch(() => {
-        /* expected rejection */
-      });
-
-      expect(recipesPort.getRecipeById).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when space does not belong to the organization', () => {
-    const command = buildCommand();
-    const otherOrgSpace = spaceFactory({
-      id: spaceId,
-      organizationId: createOrganizationId('other-org-id'),
-    });
-
-    beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(otherOrgSpace);
-    });
-
-    it('throws an error', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        SpaceOwnershipMismatchError,
-      );
-    });
-
-    it('does not call the service', async () => {
-      await useCase.execute(command).catch(() => {
-        /* expected rejection */
-      });
-
-      expect(service.createChangeProposal).not.toHaveBeenCalled();
-    });
-
-    it('does not call getRecipeById', async () => {
-      await useCase.execute(command).catch(() => {
+      await useCase.execute(buildCommand()).catch(() => {
         /* expected rejection */
       });
 

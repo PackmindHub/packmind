@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
   SSEEventPublisher,
 } from '@packmind/node-utils';
@@ -33,7 +33,6 @@ import {
   UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
-import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
 import { DiffService } from '@packmind/types';
 import { CommandChangesApplier } from './CommandChangesApplier';
@@ -48,7 +47,7 @@ const origin = 'ApplyChangeProposalsUseCase';
 export class ApplyChangeProposalsUseCase<
   T extends StandardId | RecipeId | SkillId,
 >
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     ApplyChangeProposalsCommand<T>,
     ApplyChangeProposalsResponse<T>
   >
@@ -57,8 +56,8 @@ export class ApplyChangeProposalsUseCase<
   private readonly diffService: DiffService;
 
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
@@ -67,19 +66,13 @@ export class ApplyChangeProposalsUseCase<
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.diffService = new DiffService();
   }
 
-  async executeForMembers(
-    command: ApplyChangeProposalsCommand<T> & MemberContext,
+  async executeForSpaceMembers(
+    command: ApplyChangeProposalsCommand<T> & SpaceMemberContext,
   ): Promise<ApplyChangeProposalsResponse<T>> {
-    await validateSpaceOwnership(
-      this.spacesPort,
-      command.spaceId,
-      command.organization.id,
-    );
-
     await validateArtefactInSpace(
       command.artefactId,
       command.spaceId,

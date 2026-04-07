@@ -1,3 +1,4 @@
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposalStatus,
@@ -20,6 +21,7 @@ import {
   RecipeId,
   SkillId,
   StandardId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { packageFactory } from '@packmind/deployments/test/packageFactory';
 import { userFactory } from '@packmind/accounts/test/userFactory';
@@ -31,8 +33,6 @@ import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { changeProposalFactory } from '../../../../test/changeProposalFactory';
 import { ArtefactNotFoundError } from '../../../domain/errors/ArtefactNotFoundError';
 import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
-import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
-import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ConflictDetectionService } from '../../services/ConflictDetectionService';
 import { ListChangeProposalsByArtefactUseCase } from './ListChangeProposalsByArtefactUseCase';
@@ -87,6 +87,13 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+        role: UserSpaceRole.MEMBER,
+        createdBy: userId,
+        updatedBy: userId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     standardsPort = {
@@ -114,8 +121,8 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     useCase = new ListChangeProposalsByArtefactUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       standardsPort,
       recipesPort,
       skillsPort,
@@ -190,10 +197,10 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       expect(result.changeProposals[1].conflictsWith).toEqual([]);
     });
 
-    it('validates space ownership', async () => {
+    it('validates space membership', async () => {
       await useCase.execute(command);
 
-      expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      expect(spacesPort.findMembership).toHaveBeenCalledWith(userId, spaceId);
     });
 
     it('validates artefact exists in space', async () => {
@@ -463,21 +470,19 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
     });
   });
 
-  describe('when space does not exist', () => {
-    const command = buildCommand();
-
+  describe('when the user is not a member of the space', () => {
     beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(null);
+      spacesPort.findMembership.mockResolvedValue(null);
     });
 
-    it('throws SpaceNotFoundError', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        SpaceNotFoundError,
+    it('throws a SpaceMembershipRequiredError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toThrow(
+        SpaceMembershipRequiredError,
       );
     });
 
     it('does not validate artefact', async () => {
-      await useCase.execute(command).catch(() => {
+      await useCase.execute(buildCommand()).catch(() => {
         /* expected rejection */
       });
 
@@ -485,38 +490,11 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
     });
 
     it('does not call service', async () => {
-      await useCase.execute(command).catch(() => {
+      await useCase.execute(buildCommand()).catch(() => {
         /* expected rejection */
       });
 
       expect(service.findProposalsByArtefact).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when space belongs to different organization', () => {
-    const differentOrgId = createOrganizationId('different-org');
-    const differentSpace = spaceFactory({
-      id: spaceId,
-      organizationId: differentOrgId,
-    });
-    const command = buildCommand();
-
-    beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(differentSpace);
-    });
-
-    it('throws SpaceOwnershipMismatchError', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        SpaceOwnershipMismatchError,
-      );
-    });
-
-    it('does not validate artefact', async () => {
-      await useCase.execute(command).catch(() => {
-        /* expected rejection */
-      });
-
-      expect(standardsPort.getStandard).not.toHaveBeenCalled();
     });
   });
 

@@ -1,3 +1,4 @@
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposalStatus,
@@ -10,6 +11,7 @@ import {
   IAccountsPort,
   ISpacesPort,
   RecomputeConflictsCommand,
+  UserSpaceRole,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
@@ -57,6 +59,13 @@ describe('RecomputeConflictsUseCase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+        role: UserSpaceRole.MEMBER,
+        createdBy: userId,
+        updatedBy: userId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     service = {
@@ -68,8 +77,8 @@ describe('RecomputeConflictsUseCase', () => {
     } as unknown as jest.Mocked<ConflictDetectionService>;
 
     useCase = new RecomputeConflictsUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       service,
       conflictDetectionService,
       stubLogger(),
@@ -234,6 +243,18 @@ describe('RecomputeConflictsUseCase', () => {
       const result = await useCase.execute(buildCommand());
 
       expect(result.conflicts).toEqual({});
+    });
+  });
+
+  describe('when the user is not a member of the space', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(null);
+    });
+
+    it('throws a SpaceMembershipRequiredError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toThrow(
+        SpaceMembershipRequiredError,
+      );
     });
   });
 });

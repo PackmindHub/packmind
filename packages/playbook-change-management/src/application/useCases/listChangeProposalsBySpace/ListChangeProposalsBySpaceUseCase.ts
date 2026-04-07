@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   ChangeProposalType,
   CreationChangeProposalTypes,
@@ -22,39 +25,32 @@ import {
   ArtefactProposalStats,
   ChangeProposalService,
 } from '../../services/ChangeProposalService';
-import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 
 const origin = 'ListChangeProposalsBySpaceUseCase';
 
 export class ListChangeProposalsBySpaceUseCase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     ListChangeProposalsBySpaceCommand,
     ListChangeProposalsBySpaceResponse
   >
   implements IListChangeProposalsBySpace
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
     private readonly service: ChangeProposalService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  async executeForMembers(
-    command: ListChangeProposalsBySpaceCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: ListChangeProposalsBySpaceCommand & SpaceMemberContext,
   ): Promise<ListChangeProposalsBySpaceResponse> {
-    await validateSpaceOwnership(
-      this.spacesPort,
-      command.spaceId,
-      command.organization.id,
-    );
-
     const grouped = await this.service.groupProposalsByArtefact(
       command.spaceId,
     );

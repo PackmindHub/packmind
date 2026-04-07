@@ -1,3 +1,4 @@
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposalCaptureMode,
@@ -19,6 +20,7 @@ import {
   RecipeId,
   SkillId,
   StandardId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
@@ -30,8 +32,6 @@ import {
   ArtefactProposalStats,
   ChangeProposalService,
 } from '../../services/ChangeProposalService';
-import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
-import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ListChangeProposalsBySpaceUseCase } from './ListChangeProposalsBySpaceUseCase';
 
 describe('ListChangeProposalsBySpaceUseCase', () => {
@@ -83,6 +83,13 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+        role: UserSpaceRole.MEMBER,
+        createdBy: userId,
+        updatedBy: userId,
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     standardsPort = {
@@ -102,8 +109,8 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     } as unknown as jest.Mocked<ChangeProposalService>;
 
     useCase = new ListChangeProposalsBySpaceUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       standardsPort,
       recipesPort,
       skillsPort,
@@ -346,21 +353,19 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
     });
   });
 
-  describe('when space is not found', () => {
-    const command = buildCommand();
-
+  describe('when the user is not a member of the space', () => {
     beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(null);
+      spacesPort.findMembership.mockResolvedValue(null);
     });
 
-    it('throws an error', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        SpaceNotFoundError,
+    it('throws a SpaceMembershipRequiredError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toThrow(
+        SpaceMembershipRequiredError,
       );
     });
 
     it('does not call the service', async () => {
-      await useCase.execute(command).catch(() => {
+      await useCase.execute(buildCommand()).catch(() => {
         /* expected rejection */
       });
 
@@ -816,32 +821,6 @@ describe('ListChangeProposalsBySpaceUseCase', () => {
       await expect(() => useCase.execute(command)).rejects.toThrow(
         new Error('Unsupported creation ChangeProposalType: unknownType'),
       );
-    });
-  });
-
-  describe('when space does not belong to the organization', () => {
-    const command = buildCommand();
-    const otherOrgSpace = spaceFactory({
-      id: spaceId,
-      organizationId: createOrganizationId('other-org-id'),
-    });
-
-    beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(otherOrgSpace);
-    });
-
-    it('throws an error', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        SpaceOwnershipMismatchError,
-      );
-    });
-
-    it('does not call the service', async () => {
-      await useCase.execute(command).catch(() => {
-        /* expected rejection */
-      });
-
-      expect(service.groupProposalsByArtefact).not.toHaveBeenCalled();
     });
   });
 });

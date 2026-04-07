@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IDeploymentPort,
@@ -18,22 +21,21 @@ import {
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ConflictDetectionService } from '../../services/ConflictDetectionService';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
-import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
 const origin = 'ListChangeProposalsByArtefactUseCase';
 
 export class ListChangeProposalsByArtefactUseCase<
   T extends StandardId | RecipeId | SkillId,
 >
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     ListChangeProposalsByArtefactCommand<T>,
     ListChangeProposalsByArtefactResponse
   >
   implements IListChangeProposalsByArtefact<T>
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
@@ -42,18 +44,12 @@ export class ListChangeProposalsByArtefactUseCase<
     private readonly conflictDetectionService: ConflictDetectionService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  async executeForMembers(
-    command: ListChangeProposalsByArtefactCommand<T> & MemberContext,
+  async executeForSpaceMembers(
+    command: ListChangeProposalsByArtefactCommand<T> & SpaceMemberContext,
   ): Promise<ListChangeProposalsByArtefactResponse> {
-    await validateSpaceOwnership(
-      this.spacesPort,
-      command.spaceId,
-      command.organization.id,
-    );
-
     const artefactType = await validateArtefactInSpace(
       command.artefactId,
       command.spaceId,

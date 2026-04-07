@@ -223,8 +223,8 @@ export class PlaybookChangeManagementAdapter
     ];
 
     this._applyChangeProposals = new ApplyChangeProposalsUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       standardsPort,
       recipesPort,
       skillsPort,
@@ -235,8 +235,8 @@ export class PlaybookChangeManagementAdapter
 
     this._applyCreationChangeProposals =
       new ApplyCreationChangeProposalsUseCase(
-        accountsPort,
         spacesPort,
+        accountsPort,
         recipesPort,
         standardsPort,
         skillsPort,
@@ -257,8 +257,8 @@ export class PlaybookChangeManagementAdapter
     );
 
     this._createChangeProposal = new CreateChangeProposalUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       changeProposalService,
       validators,
       eventEmitterService,
@@ -266,8 +266,8 @@ export class PlaybookChangeManagementAdapter
 
     this._listChangeProposalsByArtefact =
       new ListChangeProposalsByArtefactUseCase(
-        accountsPort,
         spacesPort,
+        accountsPort,
         standardsPort,
         recipesPort,
         skillsPort,
@@ -277,8 +277,8 @@ export class PlaybookChangeManagementAdapter
       );
 
     this._listChangeProposalsBySpace = new ListChangeProposalsBySpaceUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       standardsPort,
       recipesPort,
       skillsPort,
@@ -289,8 +289,8 @@ export class PlaybookChangeManagementAdapter
       new MigrateChangeProposalsForMovedArtefactUseCase(changeProposalService);
 
     this._recomputeConflicts = new RecomputeConflictsUseCase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       changeProposalService,
       conflictDetectionService,
     );

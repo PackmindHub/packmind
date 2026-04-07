@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   ChangeProposal,
   ChangeProposalId,
@@ -13,36 +16,29 @@ import {
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ConflictDetectionService } from '../../services/ConflictDetectionService';
-import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
 const origin = 'RecomputeConflictsUseCase';
 
 export class RecomputeConflictsUseCase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     RecomputeConflictsCommand,
     RecomputeConflictsResponse
   >
   implements IRecomputeConflictsUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     private readonly conflictDetectionService: ConflictDetectionService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  async executeForMembers(
-    command: RecomputeConflictsCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: RecomputeConflictsCommand & SpaceMemberContext,
   ): Promise<RecomputeConflictsResponse> {
-    await validateSpaceOwnership(
-      this.spacesPort,
-      command.spaceId,
-      command.organization.id,
-    );
-
     const allProposals = await this.service.findProposalsByArtefact(
       command.spaceId,
       command.artefactId,
