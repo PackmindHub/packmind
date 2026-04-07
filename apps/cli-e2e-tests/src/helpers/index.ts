@@ -1,5 +1,6 @@
 export * from './runCli';
 export * from './describeWithUserSignedUp';
+export * from './describeWithExtraUser';
 export * from './userFactory';
 export * from './fileHelpers';
 export * from './setupGitRepo';

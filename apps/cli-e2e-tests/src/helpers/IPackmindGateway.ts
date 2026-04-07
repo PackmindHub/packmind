@@ -13,6 +13,7 @@ import {
   IListStandardsBySpaceUseCase,
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
+  IUpdateRecipeFromUIUseCase,
   PublicGateway,
   RecipeId,
   Space,
@@ -37,6 +38,7 @@ export interface ISpaceGateway {
 
 export interface ICommandGateway {
   create: Gateway<ICaptureRecipeUseCase>;
+  update: Gateway<IUpdateRecipeFromUIUseCase>;
 }
 
 export interface IPackageGateway {
