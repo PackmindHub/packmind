@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArtifactReference, SpaceId } from '@packmind/types';
+import { ArtifactReference, SpaceId, SpaceType } from '@packmind/types';
 import { spacesManagementGateway } from '../gateways';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -19,11 +19,11 @@ export const useCreateSpaceMutation = () => {
 
   return useMutation({
     mutationKey: [CREATE_SPACE_MUTATION_KEY],
-    mutationFn: async (name: string) => {
+    mutationFn: async ({ name, type }: { name: string; type: SpaceType }) => {
       if (!organization?.id) {
         throw new Error('Organization context required');
       }
-      return spacesManagementGateway.createSpace(organization.id, name);
+      return spacesManagementGateway.createSpace(organization.id, name, type);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
