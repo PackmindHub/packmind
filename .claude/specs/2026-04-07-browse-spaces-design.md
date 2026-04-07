@@ -43,7 +43,7 @@ type BrowsableSpace = {
 2. Fetch all org spaces where `type IN ('open', 'restricted')` AND user is NOT a member → `allSpaces`
 3. Default space is excluded from `allSpaces` (all org members are automatically added)
 
-**Location:** New use case `BrowseSpacesUseCase` in `packages/spaces-management/src/application/use-cases/`.
+**Location:** New use case `BrowseSpacesUseCase` in `packages/spaces-management/src/application/usecases/`.
 
 ### Join Space Endpoint
 
@@ -59,7 +59,7 @@ type BrowsableSpace = {
 4. Restricted spaces → reject with `403 Forbidden`
 5. Private spaces → reject with `404 Not Found` (space not visible)
 
-**Location:** New use case `JoinSpaceUseCase` in `packages/spaces-management/src/application/use-cases/`.
+**Location:** New use case `JoinSpaceUseCase` in `packages/spaces-management/src/application/usecases/`.
 
 ## Frontend
 
