@@ -1,4 +1,4 @@
-import { ArtifactReference, Space, SpaceId } from '@packmind/types';
+import { ArtifactReference, Space, SpaceId, SpaceType } from '@packmind/types';
 
 export type MoveArtifactsToSpaceParams = {
   sourceSpaceId: SpaceId;
@@ -9,7 +9,7 @@ export type MoveArtifactsToSpaceParams = {
 export type MoveArtifactsToSpaceResponse = { movedCount: number };
 
 export interface ISpacesManagementGateway {
-  createSpace(orgId: string, name: string): Promise<Space>;
+  createSpace(orgId: string, name: string, type: SpaceType): Promise<Space>;
   moveArtifactsToSpace(
     orgId: string,
     params: MoveArtifactsToSpaceParams,
