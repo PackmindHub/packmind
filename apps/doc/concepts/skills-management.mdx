@@ -185,16 +185,18 @@ After distributing a package containing skills, they appear in specific location
 
 | AI Assistant   | Where Skills Appear                        |
 | -------------- | ------------------------------------------ |
+| GitHub Copilot | `.github/skills/{skill-slug}/SKILL.md`     |
 | Claude Code    | `.claude/skills/{skill-slug}/SKILL.md`     |
 | Cursor         | `.cursor/skills/{skill-slug}/SKILL.md`     |
-| GitHub Copilot | `.github/skills/{skill-slug}/SKILL.md`     |
 | GitLab Duo     | `.gitlab/duo/skills/{skill-slug}/SKILL.md` |
+| OpenCode       | `.opencode/skills/{skill-slug}/SKILL.md`   |
+| Codex          | `.agents/skills/{skill-slug}/SKILL.md`     |
 
 The source files are always stored in `.packmind/skills/` regardless of which AI assistants are enabled.
 
 <Note>
-  Skills are currently available for Claude Code, Cursor, GitHub Copilot, and
-  GitLab Duo. Other AI assistants do not support skill rendering.
+  Skills are currently available for Claude Code, Cursor, GitHub Copilot, Codex,
+  OpenCode and GitLab Duo. Other AI assistants do not support skill rendering.
 </Note>
 
 For complete details on where artifacts appear, see [Understanding Where Your Artifacts Appear](/concepts/artifact-rendering).

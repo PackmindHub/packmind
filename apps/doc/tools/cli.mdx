@@ -18,12 +18,12 @@ The Packmind CLI provides the following commands:
 - **`install`** - Download packages locally
 - **`uninstall`** - Remove packages from your project
 - **`lint`** - Run detection programs (Enterprise only)
-- **`skills add`** - Import skills into Packmind
+- **`playbook diff`** - Show differences between local files and Packmind artefacts
+- **`playbook add`** - Stage a change between a local files and Packmind artefacts
+- **`playbook submit`** - Submit local changes to Packmind
 - **`skills init`** - Install default Packmind skills locally
 - **`skills list`** - List all skills in your organization
-- **`standards create`** - Create a coding standard from a playbook file or stdin
 - **`standards list`** - List all standards in your organization
-- **`commands create`** - Create a reusable command from a playbook file or stdin
 - **`commands list`** - List all commands in your organization
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
@@ -612,7 +612,7 @@ When working on large codebases, you can focus the lint check on only the files 
 
 <Info>
   **Git Repository Required** — The `--changed-files` and `--changed-lines`
-  flags requires your project to be in a Git repository.
+  flags require your project to be in a Git repository.
 </Info>
 
 <Note>
@@ -808,7 +808,7 @@ Available standards:
 
 ### Create a Standard
 
-See [create a standard from the CLI](/getting-started/gs-create-standard#create-a-standard-from-the-cli) to discover how you can create standards using the cli.
+See [create a standard from the CLI](/getting-started/gs-create-standard#create-a-standard-from-the-cli) to discover how you can create standards using the CLI.
 
 ## Commands Command
 
