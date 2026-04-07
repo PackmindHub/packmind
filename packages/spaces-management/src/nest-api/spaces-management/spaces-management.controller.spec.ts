@@ -9,6 +9,7 @@ import {
   createSkillId,
   ArtifactReference,
   MoveArtifactsToSpaceResponse,
+  SpaceType,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
@@ -42,7 +43,7 @@ describe('SpacesManagementController', () => {
   });
 
   describe('createSpace', () => {
-    describe('when creating a space with a valid name', () => {
+    describe('when creating a space with a valid name and type', () => {
       const mockSpace = spaceFactory({
         id: createSpaceId('space-1'),
         name: 'New Space',
@@ -55,7 +56,7 @@ describe('SpacesManagementController', () => {
         service.createSpace.mockResolvedValue(mockSpace);
         result = await controller.createSpace(
           organizationId,
-          { name: 'New Space' },
+          { name: 'New Space', type: SpaceType.restricted },
           mockRequest,
         );
       });
@@ -64,9 +65,37 @@ describe('SpacesManagementController', () => {
         expect(result).toEqual(mockSpace);
       });
 
-      it('calls service with correct params', () => {
+      it('calls service with correct params including type', () => {
         expect(service.createSpace).toHaveBeenCalledWith({
           name: 'New Space',
+          type: SpaceType.restricted,
+          organizationId,
+          userId: 'user-123',
+        });
+      });
+    });
+
+    describe('when creating a space without specifying type', () => {
+      const mockSpace = spaceFactory({
+        id: createSpaceId('space-1'),
+        name: 'New Space',
+        slug: 'new-space',
+        organizationId,
+      });
+
+      beforeEach(async () => {
+        service.createSpace.mockResolvedValue(mockSpace);
+        await controller.createSpace(
+          organizationId,
+          { name: 'New Space' },
+          mockRequest,
+        );
+      });
+
+      it('calls service with undefined type', () => {
+        expect(service.createSpace).toHaveBeenCalledWith({
+          name: 'New Space',
+          type: undefined,
           organizationId,
           userId: 'user-123',
         });

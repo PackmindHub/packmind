@@ -16,6 +16,7 @@ import {
   PackmindCommandBody,
   MoveArtifactsToSpaceCommand,
   Space,
+  SpaceType,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
@@ -44,7 +45,7 @@ export class SpacesManagementController {
   @Post()
   async createSpace(
     @Param('orgId') organizationId: OrganizationId,
-    @Body() body: { name: string },
+    @Body() body: { name: string; type?: SpaceType },
     @Req() request: AuthenticatedRequest,
   ): Promise<Space> {
     const userId = request.user.userId;
@@ -65,6 +66,7 @@ export class SpacesManagementController {
     try {
       return await this.spacesManagementService.createSpace({
         name,
+        type: body.type,
         organizationId,
         userId,
       });
