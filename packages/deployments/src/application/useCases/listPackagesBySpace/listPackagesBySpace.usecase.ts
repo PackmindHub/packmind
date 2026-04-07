@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IListPackagesBySpaceUseCase,
@@ -12,24 +15,24 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 const origin = 'ListPackagesBySpaceUsecase';
 
 export class ListPackagesBySpaceUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     ListPackagesBySpaceCommand,
     ListPackagesBySpaceResponse
   >
   implements IListPackagesBySpaceUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly services: DeploymentsServices,
-    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('ListPackagesBySpaceUsecase initialized');
   }
 
-  async executeForMembers(
-    command: ListPackagesBySpaceCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: ListPackagesBySpaceCommand & SpaceMemberContext,
   ): Promise<ListPackagesBySpaceResponse> {
     this.logger.info('Listing packages by space', {
       spaceId: command.spaceId,

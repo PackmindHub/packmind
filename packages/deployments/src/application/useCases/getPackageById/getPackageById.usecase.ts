@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IGetPackageByIdUseCase,
+  ISpacesPort,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
 } from '@packmind/types';
@@ -11,20 +15,24 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 const origin = 'GetPackageByIdUsecase';
 
 export class GetPackageByIdUsecase
-  extends AbstractMemberUseCase<GetPackageByIdCommand, GetPackageByIdResponse>
+  extends AbstractSpaceMemberUseCase<
+    GetPackageByIdCommand,
+    GetPackageByIdResponse
+  >
   implements IGetPackageByIdUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly services: DeploymentsServices,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('GetPackageByIdUsecase initialized');
   }
 
-  async executeForMembers(
-    command: GetPackageByIdCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: GetPackageByIdCommand & SpaceMemberContext,
   ): Promise<GetPackageByIdResponse> {
     this.logger.info('Getting package by ID', {
       packageId: command.packageId,
