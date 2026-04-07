@@ -7,37 +7,20 @@ import {
   PMCloseButton,
   PMInput,
   PMText,
-  PMRadioCard,
-  PMHStack,
-  PMIcon,
+  PMNativeSelect,
+  PMVStack,
   pmToaster,
 } from '@packmind/ui';
 import { SpaceType } from '@packmind/types';
-import { LuGlobe, LuShieldCheck, LuLock } from 'react-icons/lu';
 import { useCreateSpaceMutation } from '../api/queries/SpacesManagementQueries';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 
 const SPACE_TYPE_OPTIONS = [
-  {
-    value: SpaceType.open,
-    label: 'Open',
-    description: 'Anyone can join',
-    icon: LuGlobe,
-  },
-  {
-    value: SpaceType.restricted,
-    label: 'Restricted',
-    description: 'Approval required to join',
-    icon: LuShieldCheck,
-  },
-  {
-    value: SpaceType.private,
-    label: 'Private',
-    description: 'Invite only',
-    icon: LuLock,
-  },
+  { value: SpaceType.open, label: 'Open' },
+  { value: SpaceType.restricted, label: 'Restricted' },
+  { value: SpaceType.private, label: 'Private' },
 ];
 
 interface CreateSpaceDialogProps {
@@ -127,58 +110,41 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
               </PMDialog.CloseTrigger>
             </PMDialog.Header>
             <PMDialog.Body>
-              <PMField.Root required invalid={!!spaceNameError}>
-                <PMField.Label>
-                  Space Name{' '}
-                  <PMText as="span" variant="small" color="secondary">
-                    ({spaceName.length} / {SPACE_NAME_MAX_LENGTH} max)
-                  </PMText>
-                  <PMField.RequiredIndicator />
-                </PMField.Label>
-                <PMInput
-                  value={spaceName}
-                  onChange={(e) => {
-                    setSpaceName(e.target.value);
-                    setSpaceNameError(undefined);
-                  }}
-                  maxLength={SPACE_NAME_MAX_LENGTH}
-                  placeholder="e.g. 'frontend team', 'security'..."
-                  required
-                  disabled={createSpaceMutation.isPending}
-                  data-testid="create-space-name-input"
-                />
-                <PMField.ErrorText>{spaceNameError}</PMField.ErrorText>
-              </PMField.Root>
-              <PMField.Root>
-                <PMField.Label>Access status</PMField.Label>
-                <PMRadioCard.Root
-                  size="sm"
-                  variant="outline"
-                  value={spaceType}
-                  onValueChange={(e) => setSpaceType(e.value as SpaceType)}
-                  disabled={createSpaceMutation.isPending}
-                >
-                  <PMHStack gap={2} alignItems="stretch">
-                    {SPACE_TYPE_OPTIONS.map((option) => (
-                      <PMRadioCard.Item key={option.value} value={option.value}>
-                        <PMRadioCard.ItemHiddenInput />
-                        <PMRadioCard.ItemControl>
-                          <PMRadioCard.ItemContent>
-                            <PMIcon as={option.icon} color="text.tertiary" />
-                            <PMRadioCard.ItemText fontWeight="semibold">
-                              {option.label}
-                            </PMRadioCard.ItemText>
-                            <PMText variant="small" color="secondary">
-                              {option.description}
-                            </PMText>
-                          </PMRadioCard.ItemContent>
-                          <PMRadioCard.ItemIndicator />
-                        </PMRadioCard.ItemControl>
-                      </PMRadioCard.Item>
-                    ))}
-                  </PMHStack>
-                </PMRadioCard.Root>
-              </PMField.Root>
+              <PMVStack gap={4}>
+                <PMField.Root required invalid={!!spaceNameError}>
+                  <PMField.Label>
+                    Space Name{' '}
+                    <PMText as="span" variant="small" color="secondary">
+                      ({spaceName.length} / {SPACE_NAME_MAX_LENGTH} max)
+                    </PMText>
+                    <PMField.RequiredIndicator />
+                  </PMField.Label>
+                  <PMInput
+                    value={spaceName}
+                    onChange={(e) => {
+                      setSpaceName(e.target.value);
+                      setSpaceNameError(undefined);
+                    }}
+                    maxLength={SPACE_NAME_MAX_LENGTH}
+                    placeholder="e.g. 'frontend team', 'security'..."
+                    required
+                    disabled={createSpaceMutation.isPending}
+                    data-testid="create-space-name-input"
+                  />
+                  <PMField.ErrorText>{spaceNameError}</PMField.ErrorText>
+                </PMField.Root>
+                <PMField.Root>
+                  <PMField.Label>Access status</PMField.Label>
+                  <PMNativeSelect
+                    items={SPACE_TYPE_OPTIONS}
+                    value={spaceType}
+                    onChange={(e) => setSpaceType(e.target.value as SpaceType)}
+                    disabled={createSpaceMutation.isPending}
+                    data-testid="create-space-type-select"
+                    size="sm"
+                  />
+                </PMField.Root>
+              </PMVStack>
             </PMDialog.Body>
             <PMDialog.Footer>
               <PMDialog.Trigger asChild>

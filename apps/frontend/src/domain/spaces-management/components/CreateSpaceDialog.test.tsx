@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -78,34 +72,23 @@ describe('CreateSpaceDialog', () => {
   });
 
   describe('when the dialog is open', () => {
-    it('renders all three access status options with descriptions', () => {
+    it('renders all three access status options', () => {
       renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
 
-      expect(screen.getByText('Open')).toBeInTheDocument();
-      expect(screen.getByText('Anyone can join')).toBeInTheDocument();
-      expect(screen.getByText('Restricted')).toBeInTheDocument();
-      expect(screen.getByText('Approval required to join')).toBeInTheDocument();
-      expect(screen.getByText('Private')).toBeInTheDocument();
-      expect(screen.getByText('Invite only')).toBeInTheDocument();
+      const wrapper = screen.getByTestId('create-space-type-select');
+      const select = wrapper.querySelector('select')!;
+      const options = select.querySelectorAll('option');
+      const optionTexts = Array.from(options).map((o) => o.textContent);
+
+      expect(optionTexts).toEqual(['Open', 'Restricted', 'Private']);
     });
 
     it('selects open as default access status', () => {
       renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
 
-      const openRadio = screen.getByRole('radio', { name: /open/i });
-      expect(openRadio).toBeChecked();
-    });
-
-    it('does not select restricted or private by default', () => {
-      renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
-
-      const restrictedRadio = screen.getByRole('radio', {
-        name: /restricted/i,
-      });
-      const privateRadio = screen.getByRole('radio', { name: /private/i });
-
-      expect(restrictedRadio).not.toBeChecked();
-      expect(privateRadio).not.toBeChecked();
+      const wrapper = screen.getByTestId('create-space-type-select');
+      const select = wrapper.querySelector('select')!;
+      expect(select).toHaveValue(SpaceType.open);
     });
   });
 
@@ -149,17 +132,12 @@ describe('CreateSpaceDialog', () => {
       const input = screen.getByTestId('create-space-name-input');
       fireEvent.change(input, { target: { value: 'My Space' } });
 
-      await act(async () => {
-        const restrictedRadio = screen.getByRole('radio', {
-          name: /restricted/i,
-        });
-        fireEvent.click(restrictedRadio);
-      });
+      const wrapper = screen.getByTestId('create-space-type-select');
+      const select = wrapper.querySelector('select')!;
+      fireEvent.change(select, { target: { value: SpaceType.restricted } });
 
-      await act(async () => {
-        const submitButton = screen.getByTestId('create-space-submit');
-        fireEvent.click(submitButton);
-      });
+      const submitButton = screen.getByTestId('create-space-submit');
+      fireEvent.click(submitButton);
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith({
@@ -184,15 +162,12 @@ describe('CreateSpaceDialog', () => {
       const input = screen.getByTestId('create-space-name-input');
       fireEvent.change(input, { target: { value: 'My Space' } });
 
-      await act(async () => {
-        const privateRadio = screen.getByRole('radio', { name: /private/i });
-        fireEvent.click(privateRadio);
-      });
+      const wrapper = screen.getByTestId('create-space-type-select');
+      const select = wrapper.querySelector('select')!;
+      fireEvent.change(select, { target: { value: SpaceType.private } });
 
-      await act(async () => {
-        const submitButton = screen.getByTestId('create-space-submit');
-        fireEvent.click(submitButton);
-      });
+      const submitButton = screen.getByTestId('create-space-submit');
+      fireEvent.click(submitButton);
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith({
