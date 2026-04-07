@@ -5,7 +5,12 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
-import { SpaceType } from '@packmind/types';
+import {
+  SpaceType,
+  createSpaceId,
+  createOrganizationId,
+} from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { BrowseSpacesDrawer } from './BrowseSpacesDrawer';
 
 const renderWithProviders = (component: React.ReactElement) => {
@@ -28,28 +33,32 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('BrowseSpacesDrawer', () => {
+  const organizationId = createOrganizationId('org-1');
   const mySpaces = [
-    {
-      id: 'space-1',
+    spaceFactory({
+      id: createSpaceId('space-1'),
       name: 'My Team',
       slug: 'my-team',
       type: SpaceType.open,
-      organizationId: 'org-1',
-      isDefaultSpace: false,
-    },
-    {
-      id: 'space-2',
+      organizationId,
+    }),
+    spaceFactory({
+      id: createSpaceId('space-2'),
       name: 'Default',
       slug: 'default',
       type: SpaceType.open,
-      organizationId: 'org-1',
+      organizationId,
       isDefaultSpace: true,
-    },
+    }),
   ];
 
   const allSpaces = [
-    { id: 'space-3', name: 'Open Space', type: SpaceType.open },
-    { id: 'space-4', name: 'Restricted Space', type: SpaceType.restricted },
+    { id: createSpaceId('space-3'), name: 'Open Space', type: SpaceType.open },
+    {
+      id: createSpaceId('space-4'),
+      name: 'Restricted Space',
+      type: SpaceType.restricted,
+    },
   ];
 
   const defaultProps = {
@@ -67,10 +76,15 @@ describe('BrowseSpacesDrawer', () => {
   });
 
   describe('when the drawer is open on My spaces tab', () => {
-    it('renders user spaces', () => {
+    it('renders My Team space', () => {
       renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
 
       expect(screen.getByText('My Team')).toBeInTheDocument();
+    });
+
+    it('renders Default space', () => {
+      renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
+
       expect(screen.getByText('Default')).toBeInTheDocument();
     });
 
@@ -84,26 +98,34 @@ describe('BrowseSpacesDrawer', () => {
   });
 
   describe('when switching to All spaces tab', () => {
-    it('renders discoverable spaces with join button for open type', () => {
-      renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
+    describe('when rendering open type space', () => {
+      beforeEach(() => {
+        renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
+        fireEvent.click(screen.getByTestId('browse-spaces-tab-all-spaces'));
+      });
 
-      fireEvent.click(screen.getByTestId('browse-spaces-tab-all-spaces'));
+      it('renders Open Space name', () => {
+        expect(screen.getByText('Open Space')).toBeInTheDocument();
+      });
 
-      expect(screen.getByText('Open Space')).toBeInTheDocument();
-      expect(
-        screen.getByTestId('browse-spaces-join-space-3'),
-      ).toBeInTheDocument();
+      it('renders join button for open space', () => {
+        expect(
+          screen.getByTestId('browse-spaces-join-space-3'),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('does not render join button for restricted spaces', () => {
-      renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
+    describe('when rendering restricted type space', () => {
+      beforeEach(() => {
+        renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
+        fireEvent.click(screen.getByTestId('browse-spaces-tab-all-spaces'));
+      });
 
-      fireEvent.click(screen.getByTestId('browse-spaces-tab-all-spaces'));
-
-      expect(screen.getByText('Restricted Space')).toBeInTheDocument();
-      expect(
-        screen.queryByTestId('browse-spaces-join-space-4'),
-      ).not.toBeInTheDocument();
+      it('does not render join button for restricted space', () => {
+        expect(
+          screen.queryByTestId('browse-spaces-join-space-4'),
+        ).not.toBeInTheDocument();
+      });
     });
 
     it('calls onJoinSpace when clicking join', () => {
@@ -112,19 +134,27 @@ describe('BrowseSpacesDrawer', () => {
       fireEvent.click(screen.getByTestId('browse-spaces-tab-all-spaces'));
       fireEvent.click(screen.getByTestId('browse-spaces-join-space-3'));
 
-      expect(defaultProps.onJoinSpace).toHaveBeenCalledWith('space-3');
+      expect(defaultProps.onJoinSpace).toHaveBeenCalledWith(
+        createSpaceId('space-3'),
+      );
     });
   });
 
   describe('when searching', () => {
-    it('filters my spaces by name', () => {
-      renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
+    describe('when filtering my spaces by name', () => {
+      beforeEach(() => {
+        renderWithProviders(<BrowseSpacesDrawer {...defaultProps} />);
+        const searchInput = screen.getByTestId('browse-spaces-search');
+        fireEvent.change(searchInput, { target: { value: 'Team' } });
+      });
 
-      const searchInput = screen.getByTestId('browse-spaces-search');
-      fireEvent.change(searchInput, { target: { value: 'Team' } });
+      it('shows matching space', () => {
+        expect(screen.getByText('My Team')).toBeInTheDocument();
+      });
 
-      expect(screen.getByText('My Team')).toBeInTheDocument();
-      expect(screen.queryByText('Default')).not.toBeInTheDocument();
+      it('hides non-matching space', () => {
+        expect(screen.queryByText('Default')).not.toBeInTheDocument();
+      });
     });
 
     it('shows empty state when no match', () => {

@@ -24,7 +24,7 @@ export function BrowseSpaces({
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { organization } = useAuthContext();
-  const { data } = useBrowseSpacesQuery();
+  const { data, isLoading, isError } = useBrowseSpacesQuery();
   const joinMutation = useJoinSpaceMutation();
 
   const handleSpaceClick = (space: Space) => {
@@ -56,6 +56,9 @@ export function BrowseSpaces({
         onClose={() => setIsDrawerOpen(false)}
         onSpaceClick={handleSpaceClick}
         onJoinSpace={handleJoinSpace}
+        isLoading={isLoading}
+        isError={isError}
+        isJoining={joinMutation.isPending}
         onCreateSpace={() => {
           setIsDrawerOpen(false);
           setIsCreateDialogOpen(true);
