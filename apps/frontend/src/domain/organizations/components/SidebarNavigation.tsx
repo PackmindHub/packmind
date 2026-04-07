@@ -406,7 +406,7 @@ export const SidebarNavigation: React.FunctionComponent<
                   featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
                   userEmail={user?.email}
                 >
-                  <BrowseSpaces />
+                  <BrowseSpaces containerRef={contentAreaRef} />
                 </PMFeatureFlag>
               </PMBox>
             )}

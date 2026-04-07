@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { RefObject } from 'react';
 import { PMIconButton } from '@packmind/ui';
 import { LuCompass } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
@@ -12,7 +13,13 @@ import {
 } from '../api/queries/SpacesManagementQueries';
 import { routes } from '../../../shared/utils/routes';
 
-export function BrowseSpaces(): React.ReactElement {
+interface BrowseSpacesProps {
+  containerRef?: RefObject<HTMLElement | null>;
+}
+
+export function BrowseSpaces({
+  containerRef,
+}: Readonly<BrowseSpacesProps>): React.ReactElement {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -53,6 +60,7 @@ export function BrowseSpaces(): React.ReactElement {
           setIsDrawerOpen(false);
           setIsCreateDialogOpen(true);
         }}
+        containerRef={containerRef}
       />
       <CreateSpaceDialog
         open={isCreateDialogOpen}
