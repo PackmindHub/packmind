@@ -72,7 +72,8 @@ The CLI will upload the skill to your Packmind organization and display a confir
 If you have a collection of skills organized in subdirectories (e.g., `.claude/skills/*/`), you can upload them all with a single command:
 
 ```bash
-for dir in '.claude/skills/*/'; do packmind-cli skills add "$dir"; done
+for dir in '.claude/skills/*/'; do packmind-cli playbook add "$dir"; done
+packmind-cli playbook submit
 ```
 
 This iterates through all skill folders and uploads each one to Packmind.
