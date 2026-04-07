@@ -5,13 +5,7 @@ import {
   RecipeId,
 } from '@packmind/types';
 import { PackmindHttpClient } from './PackmindHttpClient';
-
-export interface IChangeProposalGateway {
-  listBySpace: Gateway<IListChangeProposalsBySpace>;
-  listChangeProposalsByRecipe: Gateway<
-    IListChangeProposalsByArtefact<RecipeId>
-  >;
-}
+import { IChangeProposalGateway } from '../IPackmindGateway';
 
 export class ChangeProposalGateway implements IChangeProposalGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
