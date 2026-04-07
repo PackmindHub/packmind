@@ -18,9 +18,18 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 
 const SPACE_TYPE_OPTIONS = [
-  { value: SpaceType.open, label: 'Open' },
-  { value: SpaceType.restricted, label: 'Restricted' },
-  { value: SpaceType.private, label: 'Private' },
+  {
+    value: SpaceType.open,
+    label: 'Open — anyone in the organization can join',
+  },
+  {
+    value: SpaceType.restricted,
+    label: 'Restricted — visible to everyone, approval required to join',
+  },
+  {
+    value: SpaceType.private,
+    label: 'Private — accessible only to invited members',
+  },
 ];
 
 interface CreateSpaceDialogProps {

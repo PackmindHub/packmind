@@ -80,7 +80,11 @@ describe('CreateSpaceDialog', () => {
       const options = select.querySelectorAll('option');
       const optionTexts = Array.from(options).map((o) => o.textContent);
 
-      expect(optionTexts).toEqual(['Open', 'Restricted', 'Private']);
+      expect(optionTexts).toEqual([
+        'Open — anyone in the organization can join',
+        'Restricted — visible to everyone, approval required to join',
+        'Private — accessible only to invited members',
+      ]);
     });
 
     it('selects open as default access status', () => {
