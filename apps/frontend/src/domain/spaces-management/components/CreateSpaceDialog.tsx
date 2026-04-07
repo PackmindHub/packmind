@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   PMField,
@@ -53,11 +53,9 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
 }) => {
   const navigate = useNavigate();
   const { organization } = useAuthContext();
-  const [spaceName, setSpaceName] = React.useState('');
-  const [spaceType, setSpaceType] = React.useState<SpaceType>(SpaceType.open);
-  const [spaceNameError, setSpaceNameError] = React.useState<
-    string | undefined
-  >();
+  const [spaceName, setSpaceName] = useState('');
+  const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.open);
+  const [spaceNameError, setSpaceNameError] = useState<string | undefined>();
   const createSpaceMutation = useCreateSpaceMutation();
 
   const handleSpaceCreation = async (e: React.FormEvent) => {
