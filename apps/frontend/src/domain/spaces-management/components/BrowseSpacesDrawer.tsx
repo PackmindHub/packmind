@@ -48,6 +48,10 @@ export function BrowseSpacesDrawer({
   const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const isSearchDisabled =
+    (activeTab === 'my' && mySpaces.length === 0) ||
+    (activeTab === 'all' && allSpaces.length === 0);
+
   const filteredMySpaces = searchQuery.trim()
     ? mySpaces.filter((s) =>
         s.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -122,6 +126,7 @@ export function BrowseSpacesDrawer({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 size="sm"
+                disabled={isSearchDisabled}
                 data-testid="browse-spaces-search"
               />
             </PMBox>
@@ -239,7 +244,7 @@ function MySpacesTab({
           paddingX={3}
           paddingY={2}
           borderRadius="sm"
-          _hover={{ bg: 'bg.muted' }}
+          _hover={{ backgroundColor: 'blue.900' }}
           cursor="pointer"
           width="full"
           textAlign="left"
@@ -303,7 +308,7 @@ function AllSpacesTab({
           paddingX={3}
           paddingY={2}
           borderRadius="sm"
-          _hover={{ bg: 'bg.muted' }}
+          _hover={{ backgroundColor: 'blue.900' }}
           data-testid={`browse-spaces-all-${space.id}`}
         >
           <PMStatus.Root
