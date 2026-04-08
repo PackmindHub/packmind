@@ -173,6 +173,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     const useCase = new AddMembersToSpaceUseCase(
       membershipService,
       this.accountsPort,
+      this.eventEmitterService,
     );
     return useCase.execute(command);
   }
@@ -184,6 +185,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     const useCase = new RemoveMemberFromSpaceUseCase(
       membershipService,
       this.accountsPort,
+      this.eventEmitterService,
     );
     return useCase.execute(command);
   }
@@ -203,6 +205,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     const useCase = new UpdateMemberRoleUseCase(
       membershipService,
       this.accountsPort,
+      this.eventEmitterService,
     );
     return useCase.execute(command);
   }

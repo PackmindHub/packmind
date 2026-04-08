@@ -1,9 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   AddMembersToSpaceCommand,
   AddMembersToSpaceResponse,
+  createOrganizationId,
   createUserId,
   IAccountsPort,
+  SpaceMembersAddedEvent,
   UserSpaceMembership,
 } from '@packmind/types';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
@@ -21,6 +24,7 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
   constructor(
     membershipService: UserSpaceMembershipService,
     accountsPort: IAccountsPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(membershipService, accountsPort, logger);
@@ -46,6 +50,18 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
           error: error instanceof Error ? error.message : String(error),
         });
       }
+    }
+
+    if (createdMemberships.length > 0) {
+      this.eventEmitterService.emit(
+        new SpaceMembersAddedEvent({
+          userId: createUserId(command.userId),
+          organizationId: createOrganizationId(command.organizationId),
+          source: command.source ?? 'ui',
+          spaceId: command.spaceId,
+          memberUserIds: createdMemberships.map((m) => m.userId),
+        }),
+      );
     }
 
     return createdMemberships;
