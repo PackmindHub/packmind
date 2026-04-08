@@ -134,7 +134,7 @@ Present this report and ask the user for approval:
 
 ### Applying Changes
 
-Follow the procedure in [packmind-versions/<$PACKMIND_CLI_VERSION>/apply-changes.md](packmind-versions/<$PACKMIND_CLI_VERSION>/apply-changes.md).
+Follow the procedure in [\`packmind-versions/<$PACKMIND_CLI_VERSION>/apply-changes.md\`](packmind-versions/<$PACKMIND_CLI_VERSION>/apply-changes.md).
 Pass it the list of approved changes (with their numbers and details) from the Change Report above.
 
 `;

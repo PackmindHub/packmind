@@ -99,28 +99,22 @@ describe('DefaultSkillsDeployer', () => {
         );
       });
 
-      it('includes packmind-update-playbook-v2', () => {
-        expect(
-          paths.some((p) => p.includes('packmind-update-playbook-v2')),
-        ).toBe(true);
-      });
-
-      it('includes packmind-versions/next/apply-changes.md for update-playbook-v2', () => {
+      it('includes packmind-versions/next/apply-changes.md for update-playbook', () => {
         expect(
           paths.some(
             (p) =>
-              p.includes('packmind-update-playbook-v2') &&
+              p.includes('packmind-update-playbook') &&
               p.includes('packmind-versions/next/apply-changes.md'),
           ),
         ).toBe(true);
       });
 
-      it('does not delete packmind-versions/next directory for update-playbook-v2', () => {
+      it('does not delete packmind-versions/next directory for update-playbook', () => {
         const deletePaths = result.fileUpdates.delete.map((d) => d.path);
         expect(
           deletePaths.some(
             (p) =>
-              p.includes('packmind-update-playbook-v2') &&
+              p.includes('packmind-update-playbook') &&
               p.includes('packmind-versions/next'),
           ),
         ).toBe(false);
