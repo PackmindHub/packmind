@@ -7,6 +7,8 @@
 
 ## Changed
 
+- Updated `packmind-playbook-update` skill to support the new `playbook` commands of the cli
+
 ## Fixed
 
 ## Removed
