@@ -77,7 +77,7 @@ export default function JoinSpaceRouteModule() {
       >
         <PMVStack align="center" gap={4} maxW="md" textAlign="center">
           <PMHeading size="lg">Space not found</PMHeading>
-          <PMText color="fg.muted">
+          <PMText color="faded">
             This space doesn't exist or is not available to join.
           </PMText>
         </PMVStack>
@@ -114,9 +114,7 @@ export default function JoinSpaceRouteModule() {
         </PMStatus.Root>
         <PMVStack gap={2}>
           <PMHeading size="lg">{space.name}</PMHeading>
-          <PMText color="fg.muted">
-            You've been invited to join this space.
-          </PMText>
+          <PMText color="faded">You've been invited to join this space.</PMText>
         </PMVStack>
         <PMButton
           onClick={handleJoin}
