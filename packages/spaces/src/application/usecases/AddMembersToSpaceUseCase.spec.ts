@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   AddMembersToSpaceCommand,
   IAccountsPort,
@@ -28,6 +29,9 @@ describe('AddMembersToSpaceUseCase', () => {
   let useCase: AddMembersToSpaceUseCase;
   let membershipService: jest.Mocked<UserSpaceMembershipService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let eventEmitterService: jest.Mocked<
+    Pick<PackmindEventEmitterService, 'emit'>
+  >;
 
   const buildCommand = (
     overrides?: Partial<AddMembersToSpaceCommand>,
@@ -53,9 +57,14 @@ describe('AddMembersToSpaceUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
+
     useCase = new AddMembersToSpaceUseCase(
       membershipService,
       accountsPort,
+      eventEmitterService as unknown as PackmindEventEmitterService,
       stubLogger(),
     );
   });
@@ -98,6 +107,22 @@ describe('AddMembersToSpaceUseCase', () => {
         await useCase.execute(buildCommand());
 
         expect(membershipService.addSpaceMembership).toHaveBeenCalledTimes(2);
+      });
+
+      it('emits SpaceMembersAddedEvent with added member IDs', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [
+                createUserId('member-1'),
+                createUserId('member-2'),
+              ],
+            }),
+          }),
+        );
       });
     });
 
@@ -146,6 +171,12 @@ describe('AddMembersToSpaceUseCase', () => {
         const result = await useCase.execute(buildCommand());
 
         expect(result).toEqual([]);
+      });
+
+      it('does not emit SpaceMembersAddedEvent', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

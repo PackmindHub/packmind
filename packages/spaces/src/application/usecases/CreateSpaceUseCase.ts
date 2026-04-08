@@ -49,6 +49,7 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
         source: command.source ?? 'ui',
         spaceName: space.name,
         spaceSlug: space.slug,
+        visibility: space.type,
       }),
     );
 
