@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import { PMIconButton } from '@packmind/ui';
 import { LuCompass } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
-import type { Space } from '@packmind/types';
+import { Space, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { BrowseSpacesDrawer } from './BrowseSpacesDrawer';
 import { CreateSpaceDialog } from './CreateSpaceDialog';
@@ -34,7 +34,7 @@ export function BrowseSpaces({
     setIsDrawerOpen(false);
   };
 
-  const handleJoinSpace = (spaceId: string) => {
+  const handleJoinSpace = (spaceId: SpaceId) => {
     joinMutation.mutate({ spaceId });
   };
 
