@@ -30,7 +30,7 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
     const space = await this.spacesPort.getSpaceById(spaceId);
 
     if (!space || space.organizationId !== organizationId) {
-      throw new SpaceNotFoundError(command.spaceId);
+      throw new SpaceNotFoundError(spaceId);
     }
 
     const fields: { name?: string; type?: SpaceType } = {};
