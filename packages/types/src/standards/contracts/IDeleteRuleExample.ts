@@ -1,7 +1,7 @@
-import { IUseCase, PackmindCommand, PackmindResult } from '../../UseCase';
+import { IUseCase, SpaceMemberCommand, PackmindResult } from '../../UseCase';
 import { RuleExampleId } from '../RuleExampleId';
 
-export type DeleteRuleExampleCommand = PackmindCommand & {
+export type DeleteRuleExampleCommand = SpaceMemberCommand & {
   ruleExampleId: RuleExampleId;
 };
 
