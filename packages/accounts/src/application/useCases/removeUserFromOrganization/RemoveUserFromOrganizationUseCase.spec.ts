@@ -4,6 +4,7 @@ import {
   createOrganizationId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   User,
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
@@ -27,6 +28,7 @@ describe('RemoveUserFromOrganizationUseCase', () => {
   const targetUserId = createUserId('target-user');
 
   let userService: jest.Mocked<UserService>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let logger: jest.Mocked<PackmindLogger>;
   let useCase: RemoveUserFromOrganizationUseCase;
   let mockGetUserById: jest.Mock;
@@ -40,6 +42,10 @@ describe('RemoveUserFromOrganizationUseCase', () => {
       getUserById: mockGetUserById,
       excludeUserFromOrganization: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
+
+    spacesPort = {
+      removeUserFromOrganizationSpaces: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     const organization = organizationFactory({ id: organizationId });
     mockGetUserById.mockResolvedValue(buildUser(requestingUserId));
@@ -55,6 +61,7 @@ describe('RemoveUserFromOrganizationUseCase', () => {
     useCase = new RemoveUserFromOrganizationUseCase(
       accountsPort,
       userService,
+      spacesPort,
       logger,
     );
   });
@@ -142,6 +149,15 @@ describe('RemoveUserFromOrganizationUseCase', () => {
         organizationId,
       });
     });
+
+    it('removes user from all organization spaces', async () => {
+      await useCase.execute(createCommand());
+
+      expect(spacesPort.removeUserFromOrganizationSpaces).toHaveBeenCalledWith(
+        targetUserId,
+        organizationId,
+      );
+    });
   });
 
   describe('when requesting user is missing', () => {
@@ -169,6 +185,16 @@ describe('RemoveUserFromOrganizationUseCase', () => {
       });
 
       expect(userService.excludeUserFromOrganization).not.toHaveBeenCalled();
+    });
+
+    it('does not remove space memberships', async () => {
+      await useCase.execute(createCommand()).catch(() => {
+        // Expected to throw - catch to verify side effects
+      });
+
+      expect(
+        spacesPort.removeUserFromOrganizationSpaces,
+      ).not.toHaveBeenCalled();
     });
   });
 

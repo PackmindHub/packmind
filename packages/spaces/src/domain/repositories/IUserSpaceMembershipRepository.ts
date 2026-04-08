@@ -24,4 +24,8 @@ export interface IUserSpaceMembershipRepository {
     spaceId: SpaceId,
     role: UserSpaceRole,
   ): Promise<boolean>;
+  removeByUserAndOrganization(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<number>;
 }

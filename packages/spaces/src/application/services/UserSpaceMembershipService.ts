@@ -105,6 +105,28 @@ export class UserSpaceMembershipService {
     );
   }
 
+  async removeUserFromOrganizationSpaces(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    this.logger.info('Removing user from all organization spaces', {
+      userId,
+      organizationId,
+    });
+
+    const removed =
+      await this.userSpaceMembershipRepository.removeByUserAndOrganization(
+        userId,
+        organizationId,
+      );
+
+    this.logger.info('User removed from organization spaces', {
+      userId,
+      organizationId,
+      removedCount: removed,
+    });
+  }
+
   async removeSpaceMembership(
     userId: UserId,
     spaceId: SpaceId,

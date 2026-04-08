@@ -172,6 +172,60 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     }
   }
 
+  async removeByUserAndOrganization(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<number> {
+    this.logger.info('Removing memberships by user and organization', {
+      userId,
+      organizationId,
+    });
+
+    try {
+      const memberships = await this.repository
+        .createQueryBuilder('membership')
+        .innerJoin('membership.space', 'space')
+        .where('membership.userId = :userId', { userId })
+        .andWhere('space.organizationId = :organizationId', { organizationId })
+        .andWhere('space.deletedAt IS NULL')
+        .getMany();
+
+      if (memberships.length === 0) {
+        this.logger.info('No memberships to remove for user in organization', {
+          userId,
+          organizationId,
+        });
+        return 0;
+      }
+
+      const spaceIds = memberships.map((m) => m.spaceId);
+      const deleteResult = await this.repository
+        .createQueryBuilder()
+        .delete()
+        .where('userId = :userId', { userId })
+        .andWhere('spaceId IN (:...spaceIds)', { spaceIds })
+        .execute();
+
+      const removed = deleteResult.affected ?? 0;
+      this.logger.info('Memberships removed by user and organization', {
+        userId,
+        organizationId,
+        removed,
+      });
+      return removed;
+    } catch (error) {
+      this.logger.error(
+        'Failed to remove memberships by user and organization',
+        {
+          userId,
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   async findByUserAndOrganization(
     userId: UserId,
     organizationId: OrganizationId,

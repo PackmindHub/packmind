@@ -3,6 +3,7 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   IAccountsPort,
   IRemoveUserFromOrganizationUseCase,
+  ISpacesPort,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
   User,
@@ -27,6 +28,7 @@ export class RemoveUserFromOrganizationUseCase
   constructor(
     accountsPort: IAccountsPort,
     readonly userService: UserService,
+    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -60,11 +62,18 @@ export class RemoveUserFromOrganizationUseCase
     try {
       const targetUser = await this.getExistingUser(createUserId(targetUserId));
 
+      const orgId = createOrganizationId(organizationId);
+
       await this.userService.excludeUserFromOrganization({
         requestingUser,
         targetUser,
-        organizationId: createOrganizationId(organizationId),
+        organizationId: orgId,
       });
+
+      await this.spacesPort.removeUserFromOrganizationSpaces(
+        createUserId(targetUserId),
+        orgId,
+      );
 
       this.logger.info('User removed from organization', {
         organizationId,

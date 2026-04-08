@@ -249,6 +249,7 @@ export class AccountsAdapter
     this._removeUserFromOrganization = new RemoveUserFromOrganizationUseCase(
       this,
       this.accountsServices.getUserService(),
+      this.spacesPort,
     );
     this._listOrganizationUserStatuses =
       new ListOrganizationUserStatusesUseCase(
