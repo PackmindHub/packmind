@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import type { RefObject } from 'react';
-import { PMIconButton } from '@packmind/ui';
-import { LuCompass } from 'react-icons/lu';
+import { PMBox } from '@packmind/ui';
 import { useNavigate } from 'react-router';
 import { Space, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -40,15 +39,18 @@ export function BrowseSpaces({
 
   return (
     <>
-      <PMIconButton
-        aria-label="Browse spaces"
-        size="2xs"
-        variant="ghost"
+      <PMBox
+        as="button"
+        fontSize="10px"
+        color="text.faded"
+        cursor="pointer"
+        _hover={{ color: 'text.primary' }}
+        transition="color 0.15s"
         onClick={() => setIsDrawerOpen(true)}
         data-testid="browse-spaces-trigger"
       >
-        <LuCompass />
-      </PMIconButton>
+        Browse
+      </PMBox>
       <BrowseSpacesDrawer
         mySpaces={data?.mySpaces ?? []}
         allSpaces={data?.allSpaces ?? []}
