@@ -3,8 +3,10 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createSpaceId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   Organization,
   ProgrammingLanguage,
   RuleExampleId,
@@ -18,6 +20,7 @@ import {
   ruleFactory,
   standardVersionFactory,
 } from '../../../../test';
+import { RuleExampleNotFoundInSpaceError } from '../../../domain/errors/RuleExampleNotFoundInSpaceError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
@@ -27,6 +30,7 @@ import { UpdateRuleExampleUsecase } from './updateRuleExample.usecase';
 describe('UpdateRuleExampleUsecase', () => {
   let usecase: UpdateRuleExampleUsecase;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let repositories: jest.Mocked<IStandardsRepositories>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
@@ -36,6 +40,7 @@ describe('UpdateRuleExampleUsecase', () => {
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
+  const spaceId = createSpaceId(uuidv4());
 
   const user: User = {
     id: userId,
@@ -43,6 +48,7 @@ describe('UpdateRuleExampleUsecase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
+    trial: false,
   };
   const organization: Organization = {
     id: organizationId,
@@ -59,6 +65,7 @@ describe('UpdateRuleExampleUsecase', () => {
     ...props,
     userId,
     organizationId,
+    spaceId,
   });
 
   beforeEach(() => {
@@ -67,17 +74,24 @@ describe('UpdateRuleExampleUsecase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    spacesPort = {
+      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     ruleExampleRepository = {
       add: jest.fn(),
       findById: jest.fn(),
+      findByIdInSpace: jest.fn(),
       updateById: jest.fn(),
       findByRuleId: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
     };
 
     ruleRepository = {
       findById: jest.fn(),
+      findByIdInSpace: jest.fn(),
       add: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -100,13 +114,13 @@ describe('UpdateRuleExampleUsecase', () => {
       getRuleExampleRepository: jest
         .fn()
         .mockReturnValue(ruleExampleRepository),
-      getStandardRepository: jest.fn(),
       getStandardVersionRepository: jest
         .fn()
         .mockReturnValue(standardVersionRepository),
       getRuleRepository: jest.fn().mockReturnValue(ruleRepository),
       getDetectionProgramRepository: jest.fn(),
       getActiveDetectionProgramRepository: jest.fn(),
+      getStandardRepository: jest.fn(),
     } as jest.Mocked<IStandardsRepositories>;
 
     eventEmitterService = {
@@ -119,6 +133,7 @@ describe('UpdateRuleExampleUsecase', () => {
     accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
     usecase = new UpdateRuleExampleUsecase(
+      spacesPort,
       accountsAdapter,
       repositories,
       eventEmitterService,
@@ -147,7 +162,7 @@ describe('UpdateRuleExampleUsecase', () => {
         negative: 'updated negative',
       };
 
-      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.findByIdInSpace.mockResolvedValue(existingExample);
       ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
       ruleRepository.findById.mockResolvedValue(rule);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
@@ -162,9 +177,10 @@ describe('UpdateRuleExampleUsecase', () => {
       result = await usecase.execute(command);
     });
 
-    it('finds the existing example by id', () => {
-      expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
+    it('finds the existing example by id in space', () => {
+      expect(ruleExampleRepository.findByIdInSpace).toHaveBeenCalledWith(
         existingExample.id,
+        spaceId,
       );
     });
 
@@ -193,7 +209,7 @@ describe('UpdateRuleExampleUsecase', () => {
       lang: ProgrammingLanguage.JAVASCRIPT,
     };
 
-    ruleExampleRepository.findById.mockResolvedValue(existingExample);
+    ruleExampleRepository.findByIdInSpace.mockResolvedValue(existingExample);
     ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
     ruleRepository.findById.mockResolvedValue(rule);
     standardVersionRepository.findById.mockResolvedValue(standardVersion);
@@ -224,7 +240,7 @@ describe('UpdateRuleExampleUsecase', () => {
         lang: ProgrammingLanguage.PYTHON,
       };
 
-      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.findByIdInSpace.mockResolvedValue(existingExample);
       ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
       ruleRepository.findById.mockResolvedValue(rule);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
@@ -267,7 +283,7 @@ describe('UpdateRuleExampleUsecase', () => {
         negative: '',
       };
 
-      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.findByIdInSpace.mockResolvedValue(existingExample);
       ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
       ruleRepository.findById.mockResolvedValue(rule);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
@@ -310,9 +326,9 @@ describe('UpdateRuleExampleUsecase', () => {
     });
   });
 
-  describe('when rule example does not exist', () => {
-    it('throws an error', async () => {
-      ruleExampleRepository.findById.mockResolvedValue(null);
+  describe('when rule example is not found in space', () => {
+    it('throws RuleExampleNotFoundInSpaceError', async () => {
+      ruleExampleRepository.findByIdInSpace.mockResolvedValue(null);
 
       const command = createCommand({
         ruleExampleId: 'non-existent-id' as RuleExampleId,
@@ -320,7 +336,7 @@ describe('UpdateRuleExampleUsecase', () => {
       });
 
       await expect(usecase.execute(command)).rejects.toThrow(
-        'Rule example with id non-existent-id not found',
+        RuleExampleNotFoundInSpaceError,
       );
     });
   });

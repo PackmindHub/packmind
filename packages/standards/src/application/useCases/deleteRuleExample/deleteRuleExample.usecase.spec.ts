@@ -3,9 +3,11 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createSpaceId,
   createUserId,
   DeleteRuleExampleCommand,
   IAccountsPort,
+  ISpacesPort,
   Organization,
   RuleExampleId,
   RuleUpdatedEvent,
@@ -17,6 +19,7 @@ import {
   ruleFactory,
   standardVersionFactory,
 } from '../../../../test';
+import { RuleExampleNotFoundInSpaceError } from '../../../domain/errors/RuleExampleNotFoundInSpaceError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
@@ -25,6 +28,7 @@ import { DeleteRuleExampleUsecase } from './deleteRuleExample.usecase';
 
 describe('DeleteRuleExampleUsecase', () => {
   let usecase: DeleteRuleExampleUsecase;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   let repositories: jest.Mocked<IStandardsRepositories>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
@@ -35,6 +39,7 @@ describe('DeleteRuleExampleUsecase', () => {
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
+  const spaceId = createSpaceId(uuidv4());
 
   const user: User = {
     id: userId,
@@ -42,6 +47,7 @@ describe('DeleteRuleExampleUsecase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
+    trial: false,
   };
   const organization: Organization = {
     id: organizationId,
@@ -55,9 +61,14 @@ describe('DeleteRuleExampleUsecase', () => {
     ...props,
     userId,
     organizationId,
+    spaceId,
   });
 
   beforeEach(() => {
+    spacesPort = {
+      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     accountsAdapter = {
       getUserById: jest.fn(),
       getOrganizationById: jest.fn(),
@@ -66,14 +77,17 @@ describe('DeleteRuleExampleUsecase', () => {
     ruleExampleRepository = {
       add: jest.fn(),
       findById: jest.fn(),
+      findByIdInSpace: jest.fn(),
       updateById: jest.fn(),
       findByRuleId: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      hardDeleteById: jest.fn(),
     };
 
     ruleRepository = {
       findById: jest.fn(),
+      findByIdInSpace: jest.fn(),
       add: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -96,13 +110,13 @@ describe('DeleteRuleExampleUsecase', () => {
       getRuleExampleRepository: jest
         .fn()
         .mockReturnValue(ruleExampleRepository),
-      getStandardRepository: jest.fn(),
       getStandardVersionRepository: jest
         .fn()
         .mockReturnValue(standardVersionRepository),
       getRuleRepository: jest.fn().mockReturnValue(ruleRepository),
       getDetectionProgramRepository: jest.fn(),
       getActiveDetectionProgramRepository: jest.fn(),
+      getStandardRepository: jest.fn(),
     } as jest.Mocked<IStandardsRepositories>;
 
     eventEmitterService = {
@@ -115,6 +129,7 @@ describe('DeleteRuleExampleUsecase', () => {
     accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
     usecase = new DeleteRuleExampleUsecase(
+      spacesPort,
       accountsAdapter,
       repositories,
       eventEmitterService,
@@ -135,7 +150,7 @@ describe('DeleteRuleExampleUsecase', () => {
       const rule = ruleFactory({ standardVersionId: standardVersion.id });
       existingExample = ruleExampleFactory({ ruleId: rule.id });
 
-      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.findByIdInSpace.mockResolvedValue(existingExample);
       ruleExampleRepository.deleteById.mockResolvedValue(undefined);
       ruleRepository.findById.mockResolvedValue(rule);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
@@ -147,9 +162,10 @@ describe('DeleteRuleExampleUsecase', () => {
       await usecase.execute(command);
     });
 
-    it('finds the rule example by id', () => {
-      expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
+    it('finds the rule example by id in space', () => {
+      expect(ruleExampleRepository.findByIdInSpace).toHaveBeenCalledWith(
         existingExample.id,
+        spaceId,
       );
     });
 
@@ -166,37 +182,17 @@ describe('DeleteRuleExampleUsecase', () => {
     });
   });
 
-  describe('when rule example does not exist', () => {
-    let thrownError: Error;
-
-    beforeEach(async () => {
-      ruleExampleRepository.findById.mockResolvedValue(null);
+  describe('when rule example is not found in space', () => {
+    it('throws RuleExampleNotFoundInSpaceError', async () => {
+      ruleExampleRepository.findByIdInSpace.mockResolvedValue(null);
 
       const command = createCommand({
         ruleExampleId: 'non-existent-id' as RuleExampleId,
       });
 
-      try {
-        await usecase.execute(command);
-      } catch (error) {
-        thrownError = error as Error;
-      }
-    });
-
-    it('throws an error', () => {
-      expect(thrownError.message).toBe(
-        'Rule example with id non-existent-id not found',
+      await expect(usecase.execute(command)).rejects.toThrow(
+        RuleExampleNotFoundInSpaceError,
       );
-    });
-
-    it('calls findById with the non-existent id', () => {
-      expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
-        'non-existent-id',
-      );
-    });
-
-    it('does not call deleteById', () => {
-      expect(ruleExampleRepository.deleteById).not.toHaveBeenCalled();
     });
   });
 });

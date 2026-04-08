@@ -1,12 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
   PackmindEventEmitterService,
+  SpaceMemberContext,
 } from '@packmind/node-utils';
 import {
   IAccountsPort,
   ILinterPort,
+  ISpacesPort,
   IUpdateRuleExampleUseCase,
   ProgrammingLanguage,
   RuleExample,
@@ -19,29 +20,31 @@ import {
   createStandardVersionId,
   createUserId,
 } from '@packmind/types';
+import { RuleExampleNotFoundInSpaceError } from '../../../domain/errors/RuleExampleNotFoundInSpaceError';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 
 const origin = 'UpdateRuleExampleUsecase';
 
 export class UpdateRuleExampleUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     UpdateRuleExampleCommand,
     UpdateRuleExampleResponse
   >
   implements IUpdateRuleExampleUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly _repositories: IStandardsRepositories,
     private readonly _eventEmitterService: PackmindEventEmitterService,
     private readonly _linterAdapter?: ILinterPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
   }
 
-  async executeForMembers(
-    command: UpdateRuleExampleCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: UpdateRuleExampleCommand & SpaceMemberContext,
   ): Promise<UpdateRuleExampleResponse> {
     const { source = 'ui' } = command;
 
@@ -50,13 +53,15 @@ export class UpdateRuleExampleUsecase
     }
 
     const ruleExampleRepository = this._repositories.getRuleExampleRepository();
-    const existingExample = await ruleExampleRepository.findById(
+    const existingExample = await ruleExampleRepository.findByIdInSpace(
       command.ruleExampleId,
+      command.spaceId,
     );
 
     if (!existingExample) {
-      throw new Error(
-        `Rule example with id ${command.ruleExampleId} not found`,
+      throw new RuleExampleNotFoundInSpaceError(
+        command.ruleExampleId,
+        command.spaceId,
       );
     }
 

@@ -12,6 +12,7 @@ import {
   createStandardVersionId,
   IAccountsPort,
   IAddRuleToStandardUseCase,
+  ISpacesPort,
   OrganizationId,
   RuleAddedEvent,
   RuleExample,
@@ -24,9 +25,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
   PackmindEventEmitterService,
+  SpaceMemberContext,
 } from '@packmind/node-utils';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import type { ILinterPort } from '@packmind/types';
@@ -34,13 +35,14 @@ import type { ILinterPort } from '@packmind/types';
 const origin = 'AddRuleToStandardUsecase';
 
 export class AddRuleToStandardUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     AddRuleToStandardCommand,
     AddRuleToStandardResponse
   >
   implements IAddRuleToStandardUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
@@ -51,11 +53,11 @@ export class AddRuleToStandardUsecase
     private readonly linterAdapter?: ILinterPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  protected async executeForMembers(
-    command: AddRuleToStandardCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: AddRuleToStandardCommand & SpaceMemberContext,
   ): Promise<AddRuleToStandardResponse> {
     const { standardSlug, ruleContent, examples, source = 'ui' } = command;
     const { user, organization } = command;
@@ -86,6 +88,10 @@ export class AddRuleToStandardUsecase
         throw new Error(
           'Standard slug not found, please check current standards first',
         );
+      }
+
+      if (existingStandard.spaceId !== command.spaceId) {
+        throw new Error('Standard does not belong to the requested space');
       }
 
       const latestVersion =
