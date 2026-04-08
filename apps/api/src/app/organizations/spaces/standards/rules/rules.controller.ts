@@ -346,6 +346,7 @@ export class OrganizationsSpacesStandardsRulesController {
       const command: CreateRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleId,
         lang: stringToProgrammingLanguage(body.lang),
         positive: body.positive || '',
@@ -452,6 +453,7 @@ export class OrganizationsSpacesStandardsRulesController {
       const command: UpdateRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleExampleId: exampleId,
         lang: body.lang ? stringToProgrammingLanguage(body.lang) : undefined,
         positive: body.positive,
@@ -552,6 +554,7 @@ export class OrganizationsSpacesStandardsRulesController {
       const command: DeleteRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleExampleId: exampleId,
         source: request.clientSource,
       };

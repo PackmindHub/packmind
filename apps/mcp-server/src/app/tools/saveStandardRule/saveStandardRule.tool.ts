@@ -103,12 +103,18 @@ export function registerSaveStandardRuleTool(
           });
         }
 
+        const globalSpace = await getGlobalSpace(
+          fastify,
+          createOrganizationId(userContext.organizationId),
+        );
+
         // Add rule with examples in one atomic operation
         const result = await standardsHexa.getAdapter().addRuleToStandard({
           standardSlug: standardSlug.toLowerCase(),
           ruleContent,
           organizationId: userContext.organizationId,
           userId: userContext.userId,
+          spaceId: globalSpace.id,
           examples,
           source: 'mcp',
         });
@@ -133,11 +139,6 @@ export function registerSaveStandardRuleTool(
           logger.info('Trial user detected, ensuring Default package exists', {
             userId: userContext.userId,
           });
-
-          const globalSpace = await getGlobalSpace(
-            fastify,
-            createOrganizationId(userContext.organizationId),
-          );
 
           trialPackageSlug = await ensureDefaultPackageWithArtifact(
             fastify,

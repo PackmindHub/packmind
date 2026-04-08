@@ -1,9 +1,9 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, SpaceMemberCommand } from '../../UseCase';
 import { ProgrammingLanguage } from '../../languages/ProgrammingLanguage';
 import { RuleExample } from '../RuleExample';
 import { RuleExampleId } from '../RuleExampleId';
 
-export type UpdateRuleExampleCommand = PackmindCommand & {
+export type UpdateRuleExampleCommand = SpaceMemberCommand & {
   ruleExampleId: RuleExampleId;
   lang?: ProgrammingLanguage;
   positive?: string;

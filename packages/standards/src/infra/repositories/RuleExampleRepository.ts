@@ -3,7 +3,7 @@ import { RuleExampleSchema } from '../schemas/RuleExampleSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { RuleExample, RuleExampleId, RuleId } from '@packmind/types';
+import { RuleExample, RuleExampleId, RuleId, SpaceId } from '@packmind/types';
 
 const origin = 'RuleExampleRepository';
 
@@ -29,6 +29,25 @@ export class RuleExampleRepository
       positive: entity.positive.substring(0, 100) + '...', // Log first 100 chars
       negative: entity.negative.substring(0, 100) + '...', // Log first 100 chars
     };
+  }
+
+  async findByIdInSpace(
+    ruleExampleId: RuleExample['id'],
+    spaceId: SpaceId,
+  ): Promise<RuleExample | null> {
+    this.logger.info('Finding rule example by id in space', {
+      ruleExampleId,
+      spaceId,
+    });
+
+    return this.repository
+      .createQueryBuilder('re')
+      .innerJoin('re.rule', 'rule')
+      .innerJoin('rule.standardVersion', 'sv')
+      .innerJoin('sv.standard', 'standard')
+      .where('re.id = :ruleExampleId', { ruleExampleId })
+      .andWhere('standard.spaceId = :spaceId', { spaceId })
+      .getOne();
   }
 
   async findByRuleId(ruleId: RuleId): Promise<RuleExample[]> {

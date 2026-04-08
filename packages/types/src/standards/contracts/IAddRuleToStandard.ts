@@ -1,8 +1,8 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, SpaceMemberCommand } from '../../UseCase';
 import { RuleExampleInput } from '../RuleWithExamples';
 import { StandardVersion } from '../StandardVersion';
 
-export type AddRuleToStandardCommand = PackmindCommand & {
+export type AddRuleToStandardCommand = SpaceMemberCommand & {
   standardSlug: string;
   ruleContent: string;
   examples?: RuleExampleInput[];

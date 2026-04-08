@@ -3,7 +3,7 @@ import { RuleSchema } from '../schemas/RuleSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { Rule, StandardVersionId } from '@packmind/types';
+import { Rule, SpaceId, StandardVersionId } from '@packmind/types';
 
 const origin = 'RuleRepository';
 
@@ -27,6 +27,21 @@ export class RuleRepository
       standardVersionId: entity.standardVersionId,
       content: entity.content.substring(0, 100) + '...', // Log first 100 chars
     };
+  }
+
+  async findByIdInSpace(
+    ruleId: Rule['id'],
+    spaceId: SpaceId,
+  ): Promise<Rule | null> {
+    this.logger.info('Finding rule by id in space', { ruleId, spaceId });
+
+    return this.repository
+      .createQueryBuilder('rule')
+      .innerJoin('rule.standardVersion', 'sv')
+      .innerJoin('sv.standard', 'standard')
+      .where('rule.id = :ruleId', { ruleId })
+      .andWhere('standard.spaceId = :spaceId', { spaceId })
+      .getOne();
   }
 
   async findByStandardVersionId(
