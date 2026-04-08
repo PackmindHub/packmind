@@ -121,10 +121,10 @@ describe('BrowseSpacesDrawer', () => {
         fireEvent.click(screen.getByTestId('browse-spaces-tab-all-spaces'));
       });
 
-      it('does not render join button for restricted space', () => {
+      it('renders join button for restricted space', () => {
         expect(
-          screen.queryByTestId('browse-spaces-join-space-4'),
-        ).not.toBeInTheDocument();
+          screen.getByTestId('browse-spaces-join-space-4'),
+        ).toBeInTheDocument();
       });
     });
 

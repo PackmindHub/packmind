@@ -111,11 +111,10 @@ describe('BrowseSpacesUseCase', () => {
       expect(result.mySpaces).toEqual([defaultSpace, memberSpace]);
     });
 
-    it('returns all non-private non-default spaces in allSpaces', async () => {
+    it('excludes user member spaces from allSpaces', async () => {
       const result = await useCase.execute(buildCommand());
 
       expect(result.allSpaces).toEqual([
-        { id: memberSpace.id, name: memberSpace.name, type: SpaceType.open },
         { id: openSpace.id, name: openSpace.name, type: SpaceType.open },
         {
           id: restrictedSpace.id,
@@ -144,8 +143,8 @@ describe('BrowseSpacesUseCase', () => {
     });
   });
 
-  describe('when there are no discoverable spaces', () => {
-    const memberSpace = spaceFactory({
+  describe('when the user only belongs to a private space', () => {
+    const memberPrivateSpace = spaceFactory({
       id: createSpaceId('space-1'),
       name: 'Only Space',
       organizationId,
@@ -154,9 +153,34 @@ describe('BrowseSpacesUseCase', () => {
 
     beforeEach(() => {
       spacesPort.listUserSpaces.mockResolvedValue({
-        spaces: [memberSpace],
+        spaces: [memberPrivateSpace],
       });
-      spacesPort.listSpacesByOrganization.mockResolvedValue([memberSpace]);
+      spacesPort.listSpacesByOrganization.mockResolvedValue([
+        memberPrivateSpace,
+      ]);
+    });
+
+    it('returns empty allSpaces', async () => {
+      const result = await useCase.execute(buildCommand());
+
+      expect(result.allSpaces).toEqual([]);
+    });
+  });
+
+  describe('when there are no discoverable spaces', () => {
+    const defaultSpace = spaceFactory({
+      id: createSpaceId('space-default'),
+      name: 'Global',
+      organizationId,
+      type: SpaceType.open,
+      isDefaultSpace: true,
+    });
+
+    beforeEach(() => {
+      spacesPort.listUserSpaces.mockResolvedValue({
+        spaces: [defaultSpace],
+      });
+      spacesPort.listSpacesByOrganization.mockResolvedValue([defaultSpace]);
     });
 
     it('returns empty allSpaces', async () => {
@@ -207,15 +231,10 @@ describe('BrowseSpacesUseCase', () => {
       ]);
     });
 
-    it('includes private and member spaces in allSpaces', async () => {
+    it('includes private spaces the admin is not a member of', async () => {
       const result = await useCase.execute(buildCommand());
 
       expect(result.allSpaces).toEqual([
-        {
-          id: memberSpace.id,
-          name: memberSpace.name,
-          type: SpaceType.open,
-        },
         {
           id: privateSpace.id,
           name: privateSpace.name,
