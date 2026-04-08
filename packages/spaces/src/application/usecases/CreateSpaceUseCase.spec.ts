@@ -95,7 +95,7 @@ describe('CreateSpaceUseCase', () => {
         );
       });
 
-      it('emits a SpaceCreatedEvent with space name and slug', async () => {
+      it('emits a SpaceCreatedEvent with space name, slug, and visibility', async () => {
         await useCase.execute(buildCommand());
 
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
@@ -106,6 +106,7 @@ describe('CreateSpaceUseCase', () => {
               source: 'ui',
               spaceName: createdSpace.name,
               spaceSlug: createdSpace.slug,
+              visibility: createdSpace.type,
             }),
           }),
         );
