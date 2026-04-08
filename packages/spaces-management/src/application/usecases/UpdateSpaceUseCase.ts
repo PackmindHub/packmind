@@ -1,10 +1,16 @@
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
+  createUserId,
   IAccountsPort,
   ISpacesPort,
   SpaceType,
+  SpaceVisibilityUpdatedEvent,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
 } from '@packmind/types';
@@ -17,6 +23,7 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
     super(accountsPort);
   }
@@ -47,6 +54,20 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
       return space;
     }
 
-    return this.spacesPort.updateSpace(spaceId, fields);
+    const updatedSpace = await this.spacesPort.updateSpace(spaceId, fields);
+
+    if (command.type !== undefined) {
+      this.eventEmitterService.emit(
+        new SpaceVisibilityUpdatedEvent({
+          userId: createUserId(command.userId),
+          organizationId,
+          source: command.source ?? 'ui',
+          spaceId,
+          newVisibility: command.type,
+        }),
+      );
+    }
+
+    return updatedSpace;
   }
 }

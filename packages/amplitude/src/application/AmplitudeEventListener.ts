@@ -26,6 +26,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
   SpaceCreatedEvent,
+  SpaceVisibilityUpdatedEvent,
   PlaybookArtefactMovedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
@@ -73,6 +74,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(ChangeProposalAcceptedEvent, this.onChangeProposalAccepted);
     this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
     this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
+    this.subscribe(SpaceVisibilityUpdatedEvent, this.onSpaceVisibilityUpdated);
     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
   }
 
@@ -345,6 +347,19 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
         itemType: payload.itemType,
         itemId: payload.itemId,
         changeType: payload.changeType,
+      }),
+    );
+  };
+
+  private onSpaceVisibilityUpdated = async (
+    event: SpaceVisibilityUpdatedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'space_visibility_updated',
+      (payload) => ({
+        spaceId: payload.spaceId,
+        newVisibility: payload.newVisibility,
       }),
     );
   };

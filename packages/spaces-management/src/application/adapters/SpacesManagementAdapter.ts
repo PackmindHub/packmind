@@ -77,7 +77,11 @@ export class SpacesManagementAdapter
   }
 
   async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {
-    const useCase = new UpdateSpaceUseCase(this.accountsPort, this.spacesPort);
+    const useCase = new UpdateSpaceUseCase(
+      this.accountsPort,
+      this.spacesPort,
+      this.eventEmitterService,
+    );
     return useCase.execute(command);
   }
 
