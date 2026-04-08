@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   UpdateMemberRoleCommand,
   IAccountsPort,
@@ -31,6 +32,9 @@ describe('UpdateMemberRoleUseCase', () => {
   let useCase: UpdateMemberRoleUseCase;
   let membershipService: jest.Mocked<UserSpaceMembershipService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let eventEmitterService: jest.Mocked<
+    Pick<PackmindEventEmitterService, 'emit'>
+  >;
 
   const buildCommand = (
     overrides?: Partial<UpdateMemberRoleCommand>,
@@ -54,9 +58,14 @@ describe('UpdateMemberRoleUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
+
     useCase = new UpdateMemberRoleUseCase(
       membershipService,
       accountsPort,
+      eventEmitterService as unknown as PackmindEventEmitterService,
       stubLogger(),
     );
   });
@@ -89,6 +98,20 @@ describe('UpdateMemberRoleUseCase', () => {
           targetUserId,
           spaceId,
           UserSpaceRole.MEMBER,
+        );
+      });
+
+      it('emits SpaceMembersRoleUpdatedEvent', async () => {
+        await useCase.execute(buildCommand({ role: UserSpaceRole.MEMBER }));
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [targetUserId],
+              newRole: UserSpaceRole.MEMBER,
+            }),
+          }),
         );
       });
     });
@@ -178,6 +201,14 @@ describe('UpdateMemberRoleUseCase', () => {
           .catch(() => undefined);
 
         expect(membershipService.updateMembershipRole).not.toHaveBeenCalled();
+      });
+
+      it('does not emit SpaceMembersRoleUpdatedEvent', async () => {
+        await useCase
+          .execute(buildCommand({ targetUserId: userId }))
+          .catch(() => undefined);
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 
