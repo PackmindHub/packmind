@@ -6,6 +6,7 @@ import {
   createUserId,
   UserSpaceRole,
 } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
@@ -32,6 +33,9 @@ describe('RemoveMemberFromSpaceUseCase', () => {
   let useCase: RemoveMemberFromSpaceUseCase;
   let membershipService: jest.Mocked<UserSpaceMembershipService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let eventEmitterService: jest.Mocked<
+    Pick<PackmindEventEmitterService, 'emit'>
+  >;
 
   const buildCommand = (
     overrides?: Partial<RemoveMemberFromSpaceCommand>,
@@ -55,9 +59,14 @@ describe('RemoveMemberFromSpaceUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
+
     useCase = new RemoveMemberFromSpaceUseCase(
       membershipService,
       accountsPort,
+      eventEmitterService as unknown as PackmindEventEmitterService,
       stubLogger(),
     );
   });
@@ -94,6 +103,19 @@ describe('RemoveMemberFromSpaceUseCase', () => {
           spaceId,
         );
       });
+
+      it('emits SpaceMembersRemovedEvent', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [targetUserId],
+            }),
+          }),
+        );
+      });
     });
 
     describe('when the caller is not a space admin', () => {
@@ -119,6 +141,12 @@ describe('RemoveMemberFromSpaceUseCase', () => {
         });
 
         expect(membershipService.removeSpaceMembership).not.toHaveBeenCalled();
+      });
+
+      it('does not emit SpaceMembersRemovedEvent', async () => {
+        await useCase.execute(buildCommand()).catch(() => undefined);
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

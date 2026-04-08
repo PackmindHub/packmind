@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  createOrganizationId,
+  createUserId,
   IAccountsPort,
   RemoveMemberFromSpaceCommand,
   RemoveMemberFromSpaceResponse,
+  SpaceMembersRemovedEvent,
 } from '@packmind/types';
 import { CannotRemoveFromDefaultSpaceError } from '../../domain/errors/CannotRemoveFromDefaultSpaceError';
 import { CannotRemoveSelfError } from '../../domain/errors/CannotRemoveSelfError';
@@ -21,6 +25,7 @@ export class RemoveMemberFromSpaceUseCase extends AbstractSpaceAdminUseCase<
   constructor(
     membershipService: UserSpaceMembershipService,
     accountsPort: IAccountsPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(membershipService, accountsPort, logger);
@@ -43,6 +48,18 @@ export class RemoveMemberFromSpaceUseCase extends AbstractSpaceAdminUseCase<
       command.targetUserId,
       command.spaceId,
     );
+
+    if (removed) {
+      this.eventEmitterService.emit(
+        new SpaceMembersRemovedEvent({
+          userId: createUserId(command.userId),
+          organizationId: createOrganizationId(command.organizationId),
+          source: command.source ?? 'ui',
+          spaceId: command.spaceId,
+          memberUserIds: [command.targetUserId],
+        }),
+      );
+    }
 
     return { removed };
   }
