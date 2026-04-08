@@ -1,13 +1,12 @@
-import type { Space } from '@packmind/types';
+import type { UserSpaceWithRole } from '@packmind/types';
 import { SpaceNavBlock } from '../../organizations/components/sidebar/SpaceNavBlock';
-import { PMSeparator } from '@packmind/ui';
 
 interface CustomSpacesNavBlockProps {
-  spaces: Space[];
+  spaces: UserSpaceWithRole[];
   orgSlug: string;
   currentSpaceSlug: string | undefined;
   selectedSpaceId: string | null;
-  onSpaceClick: (space: Space) => void;
+  onSpaceClick: (space: UserSpaceWithRole) => void;
 }
 
 export function CustomSpacesNavBlock({
