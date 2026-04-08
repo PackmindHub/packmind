@@ -19,7 +19,7 @@ The Packmind CLI provides the following commands:
 - **`uninstall`** - Remove packages from your project
 - **`lint`** - Run detection programs (Enterprise only)
 - **`playbook diff`** - Show differences between local files and Packmind artefacts
-- **`playbook add`** - Stage a change between a local files and Packmind artefacts
+- **`playbook add`** - Stage a change between local files and Packmind artefacts
 - **`playbook submit`** - Submit local changes to Packmind
 - **`skills init`** - Install default Packmind skills locally
 - **`skills list`** - List all skills in your organization
@@ -758,10 +758,11 @@ packmind-cli playbook submit --no-review
 ```
 
 <Info>
-  Usage of the `--no-review` flag will trigger a [direct
-  update](/playbook-maintenance/updating-your-playbook#direct-updates). Do not
-  set it to use the [change proposals](/playbook-maintenance/change-proposals)
-  system to get a validation of your changes.
+  Use `--no-review` to trigger a [direct
+  update](/playbook-maintenance/updating-your-playbook#direct-updates). Omit
+  `--no-review` to use the [change
+  proposals](/playbook-maintenance/change-proposals) system and get validation
+  of your changes.
 </Info>
 
 This uploads the skill to your Packmind organization, making it available for distribution to repositories.
@@ -844,6 +845,7 @@ Available commands:
 
 ```bash
 packmind-cli playbook add path/to-command.md
+packmind-cli playbook submit
 ```
 
 The markdown file content will be used as the command's prompt. The name of the command will be deduced from the file path.
