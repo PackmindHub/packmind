@@ -34,15 +34,15 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
     const space = await this.spacesPort.getSpaceById(spaceId);
 
     if (!space || space.organizationId !== organizationId) {
-      throw new SpaceNotFoundError(command.spaceId);
+      throw new SpaceNotFoundError(spaceId);
     }
 
     if (space.type === SpaceType.private) {
-      throw new SpaceNotFoundError(command.spaceId);
+      throw new SpaceNotFoundError(spaceId);
     }
 
     if (space.type === SpaceType.restricted) {
-      throw new SpaceNotJoinableError(command.spaceId);
+      throw new SpaceNotJoinableError(spaceId);
     }
 
     const existingMembership = await this.spacesPort.findMembership(
