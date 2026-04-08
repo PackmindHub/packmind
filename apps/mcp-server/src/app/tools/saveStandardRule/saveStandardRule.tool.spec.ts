@@ -149,6 +149,7 @@ describe('addRuleToStandard.tool', () => {
           ruleContent: 'Use meaningful variable names',
           organizationId: 'org-123',
           userId: 'user-123',
+          spaceId: 'space-123',
           examples: [],
           source: 'mcp',
         });
@@ -208,6 +209,7 @@ describe('addRuleToStandard.tool', () => {
           ruleContent: 'Use const for immutable variables',
           organizationId: 'org-123',
           userId: 'user-123',
+          spaceId: 'space-123',
           examples: [
             {
               positive: 'const PI = 3.14;',
@@ -263,6 +265,7 @@ describe('addRuleToStandard.tool', () => {
           ruleContent: 'Follow naming conventions',
           organizationId: 'org-123',
           userId: 'user-123',
+          spaceId: 'space-123',
           examples: [],
           source: 'mcp',
         });
