@@ -14,6 +14,10 @@ import {
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
 } from '../contracts/IMoveArtifactsToSpaceUseCase';
+import {
+  UpdateSpaceCommand,
+  UpdateSpaceResponse,
+} from '../contracts/IUpdateSpaceUseCase';
 
 /**
  * Port interface for cross-domain access to Spaces Management functionality
@@ -43,4 +47,9 @@ export interface ISpacesManagementPort {
    * Join a space by its ID.
    */
   joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse>;
+
+  /**
+   * Update a space's settings (name, type).
+   */
+  updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse>;
 }

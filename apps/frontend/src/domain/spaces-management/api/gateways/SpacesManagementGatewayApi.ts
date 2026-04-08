@@ -66,4 +66,18 @@ export class SpacesManagementGatewayApi
       {},
     );
   }
+
+  async updateSpace(
+    orgId: string,
+    spaceId: SpaceId,
+    fields: { name?: string; type?: SpaceType },
+  ): Promise<Space> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to update a space');
+    }
+    return this._api.patch<Space>(
+      `${this._endpoint}/${orgId}/spaces-management/${spaceId}`,
+      fields,
+    );
+  }
 }

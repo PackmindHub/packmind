@@ -144,3 +144,40 @@ export const useJoinSpaceMutation = () => {
     },
   });
 };
+
+const UPDATE_SPACE_MUTATION_KEY = 'updateSpace';
+
+export const useUpdateSpaceMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [UPDATE_SPACE_MUTATION_KEY],
+    mutationFn: async ({
+      spaceId,
+      fields,
+    }: {
+      spaceId: SpaceId;
+      fields: { name?: string; type?: SpaceType };
+    }) => {
+      if (!organization?.id) {
+        throw new Error('Organization context required');
+      }
+      return spacesManagementGateway.updateSpace(
+        organization.id,
+        spaceId,
+        fields,
+      );
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...spacesManagementQueryKeys.all],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...spacesQueryKeys.all],
+        }),
+      ]);
+    },
+  });
+};

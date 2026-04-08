@@ -9,3 +9,4 @@ export { SpaceOwnershipMismatchError } from './domain/errors/SpaceOwnershipMisma
 export { BrowseSpacesUseCase } from './application/usecases/BrowseSpacesUseCase';
 export { JoinSpaceUseCase } from './application/usecases/JoinSpaceUseCase';
 export { SpaceNotJoinableError } from './domain/errors/SpaceNotJoinableError';
+export { UpdateSpaceUseCase } from './application/usecases/UpdateSpaceUseCase';

@@ -143,6 +143,38 @@ export class SpaceService {
     }
   }
 
+  async updateSpace(
+    spaceId: SpaceId,
+    fields: { name?: string; type?: SpaceType },
+  ): Promise<Space> {
+    this.logger.info('Updating space', { spaceId });
+
+    const repoFields: { name?: string; slug?: string; type?: SpaceType } = {};
+
+    if (fields.name !== undefined) {
+      const space = await this.spaceRepository.findById(spaceId);
+      if (!space) {
+        throw new Error(`Space ${spaceId} not found`);
+      }
+      const newSlug = slug(fields.name);
+      const existingBySlug = await this.spaceRepository.findBySlug(
+        newSlug,
+        space.organizationId,
+      );
+      if (existingBySlug && existingBySlug.id !== spaceId) {
+        throw new SpaceSlugConflictError(fields.name, space.organizationId);
+      }
+      repoFields.name = fields.name;
+      repoFields.slug = newSlug;
+    }
+
+    if (fields.type !== undefined) {
+      repoFields.type = fields.type;
+    }
+
+    return this.spaceRepository.updateFields(spaceId, repoFields);
+  }
+
   async listSpaces(): Promise<Space[]> {
     this.logger.info('Listing all spaces');
 

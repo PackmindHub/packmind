@@ -1,6 +1,6 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
-import { Space } from '../Space';
+import { Space, SpaceType } from '../Space';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
 import {
@@ -156,4 +156,14 @@ export interface ISpacesPort {
     userId: UserId,
     spaceId: SpaceId,
   ): Promise<UserSpaceMembership | null>;
+
+  /**
+   * Update a space's mutable fields (name, type).
+   * Slug is regenerated automatically when name changes.
+   * Returns the updated space.
+   */
+  updateSpace(
+    spaceId: SpaceId,
+    fields: { name?: string; type?: SpaceType },
+  ): Promise<Space>;
 }

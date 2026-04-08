@@ -22,11 +22,14 @@ import {
   BrowseSpacesResponse,
   JoinSpaceCommand,
   JoinSpaceResponse,
+  UpdateSpaceCommand,
+  UpdateSpaceResponse,
 } from '@packmind/types';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { MoveArtifactsToSpaceUseCase } from '../usecases/MoveArtifactsToSpaceUseCase';
 import { BrowseSpacesUseCase } from '../usecases/BrowseSpacesUseCase';
 import { JoinSpaceUseCase } from '../usecases/JoinSpaceUseCase';
+import { UpdateSpaceUseCase } from '../usecases/UpdateSpaceUseCase';
 
 /**
  * SpacesManagementAdapter - Implements the ISpacesManagementPort interface for cross-domain access
@@ -70,6 +73,11 @@ export class SpacesManagementAdapter
 
   async joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
     const useCase = new JoinSpaceUseCase(this.accountsPort, this.spacesPort);
+    return useCase.execute(command);
+  }
+
+  async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {
+    const useCase = new UpdateSpaceUseCase(this.accountsPort, this.spacesPort);
     return useCase.execute(command);
   }
 

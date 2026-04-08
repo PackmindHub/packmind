@@ -7,6 +7,7 @@ import {
   Get,
   HttpCode,
   NotFoundException,
+  Patch,
   Post,
   Param,
   Req,
@@ -155,6 +156,43 @@ export class SpacesManagementController {
       }
       if (error instanceof SpaceNotJoinableError) {
         throw new ForbiddenException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Update a space's settings
+   * PATCH /organizations/:orgId/spaces-management/:spaceId
+   */
+  @Patch(':spaceId')
+  async updateSpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: string,
+    @Body() body: { name?: string; type?: SpaceType },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Space> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'PATCH /organizations/:orgId/spaces-management/:spaceId - Updating space',
+      { organizationId, userId, spaceId },
+    );
+
+    try {
+      return await this.spacesManagementService.updateSpace({
+        userId,
+        organizationId,
+        spaceId,
+        name: body.name?.trim() || undefined,
+        type: body.type,
+      });
+    } catch (error) {
+      if (error instanceof SpaceNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof SpaceSlugConflictError) {
+        throw new ConflictException(error.message);
       }
       throw error;
     }

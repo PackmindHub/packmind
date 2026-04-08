@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractRepository, localDataSource } from '@packmind/node-utils';
-import { OrganizationId, Space } from '@packmind/types';
+import { OrganizationId, Space, SpaceId, SpaceType } from '@packmind/types';
 import { Repository } from 'typeorm';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
@@ -76,6 +76,34 @@ export class SpaceRepository
     } catch (error) {
       this.logger.error('Failed to find spaces by organizationId', {
         organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async updateFields(
+    id: SpaceId,
+    fields: { name?: string; slug?: string; type?: SpaceType },
+  ): Promise<Space> {
+    this.logger.info('Updating space fields', { id, fields });
+
+    try {
+      const space = await this.repository.findOne({ where: { id } });
+      if (!space) {
+        throw new Error(`Space ${id} not found`);
+      }
+
+      if (fields.name !== undefined) space.name = fields.name;
+      if (fields.slug !== undefined) space.slug = fields.slug;
+      if (fields.type !== undefined) space.type = fields.type;
+
+      const updated = await this.repository.save(space);
+      this.logger.info('Space updated successfully', { id });
+      return updated;
+    } catch (error) {
+      this.logger.error('Failed to update space', {
+        id,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

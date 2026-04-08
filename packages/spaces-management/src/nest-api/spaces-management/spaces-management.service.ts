@@ -10,6 +10,8 @@ import {
   BrowseSpacesResponse,
   JoinSpaceCommand,
   JoinSpaceResponse,
+  UpdateSpaceCommand,
+  UpdateSpaceResponse,
 } from '@packmind/types';
 import { SpacesManagementHexa } from '../../SpacesManagementHexa';
 
@@ -57,5 +59,13 @@ export class SpacesManagementService {
       spaceId: command.spaceId,
     });
     return this.spacesManagementAdapter.joinSpace(command);
+  }
+
+  async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {
+    this.logger.info('Updating space', {
+      organizationId: command.organizationId,
+      spaceId: command.spaceId,
+    });
+    return this.spacesManagementAdapter.updateSpace(command);
   }
 }

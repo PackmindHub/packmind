@@ -7,6 +7,8 @@ import {
   JoinSpaceResponse,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
+  UpdateSpaceCommand,
+  UpdateSpaceResponse,
 } from '@packmind/types';
 
 export class SpacesManagementAdapter implements ISpacesManagementPort {
@@ -33,5 +35,12 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
     _command: JoinSpaceCommand,
   ): Promise<JoinSpaceResponse> {
     return {} as JoinSpaceResponse;
+  }
+
+  async updateSpace(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: UpdateSpaceCommand,
+  ): Promise<UpdateSpaceResponse> {
+    throw new Error('Method not implemented.');
   }
 }
