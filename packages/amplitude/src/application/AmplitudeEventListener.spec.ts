@@ -18,6 +18,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
   SpaceCreatedEvent,
+  SpaceType,
   PlaybookArtefactMovedEvent,
   createUserId,
   createOrganizationId,
@@ -529,6 +530,7 @@ describe('AmplitudeEventListener', () => {
         organizationId: createOrganizationId('org-456'),
         spaceName: 'My Space',
         spaceSlug: 'my-space',
+        visibility: SpaceType.open,
         source: 'ui',
       });
 
@@ -543,6 +545,7 @@ describe('AmplitudeEventListener', () => {
         {
           spaceName: 'My Space',
           spaceSlug: 'my-space',
+          visibility: 'open',
           source: 'ui',
         },
       );

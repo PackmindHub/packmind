@@ -353,6 +353,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     return this.emitAmplitudeEvent(event, 'space_created', (payload) => ({
       spaceName: payload.spaceName,
       spaceSlug: payload.spaceSlug,
+      visibility: payload.visibility,
     }));
   };
 
