@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   PMButton,
-  PMColorSwatch,
   PMField,
   PMHeading,
   PMHStack,
@@ -9,31 +8,28 @@ import {
   PMPageSection,
   PMVStack,
 } from '@packmind/ui';
-
-const SPACE_COLOR_PALETTES = [
-  'red',
-  'orange',
-  'yellow',
-  'green',
-  'teal',
-  'blue',
-  'cyan',
-  'purple',
-  'pink',
-] as const;
-
-type SpaceColor = (typeof SPACE_COLOR_PALETTES)[number];
-
-const MOCK_SPACE = {
-  name: 'My Space',
-  color: 'blue' as SpaceColor,
-};
+import { useCurrentSpace } from '../hooks/useCurrentSpace';
+import { useUpdateSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
 
 export function SpaceIdentitySection() {
-  const [name, setName] = useState(MOCK_SPACE.name);
-  const [selectedColor, setSelectedColor] = useState<SpaceColor>(
-    MOCK_SPACE.color,
-  );
+  const { space, spaceId } = useCurrentSpace();
+  const updateMutation = useUpdateSpaceMutation();
+  const [name, setName] = useState<string | undefined>(undefined);
+
+  const currentName = name ?? space?.name ?? '';
+  const hasChanges = name !== undefined && name !== space?.name;
+
+  const handleSave = () => {
+    if (!spaceId || !hasChanges || !currentName.trim()) return;
+    updateMutation.mutate(
+      { spaceId, fields: { name: currentName.trim() } },
+      {
+        onSuccess: () => {
+          setName(undefined);
+        },
+      },
+    );
+  };
 
   return (
     <PMPageSection
@@ -48,43 +44,20 @@ export function SpaceIdentitySection() {
         <PMField.Root>
           <PMField.Label>Name</PMField.Label>
           <PMInput
-            value={name}
+            value={currentName}
             onChange={(e) => setName(e.target.value)}
             placeholder="Space name"
           />
         </PMField.Root>
 
-        <PMField.Root>
-          <PMField.Label>Color</PMField.Label>
-          <PMHStack gap={3} flexWrap="wrap">
-            {SPACE_COLOR_PALETTES.map((color) => (
-              <PMColorSwatch
-                key={color}
-                value={`{colors.${color}.solid}`}
-                cursor="pointer"
-                outline={selectedColor === color ? '2px solid' : 'none'}
-                outlineColor={
-                  selectedColor === color ? `${color}.solid` : undefined
-                }
-                outlineOffset="2px"
-                transition="outline 0.15s"
-                _hover={{ opacity: 0.8 }}
-                aria-label={`Select ${color} color`}
-                onClick={() => setSelectedColor(color)}
-              />
-            ))}
-          </PMHStack>
-          <PMField.HelperText>
-            This color is used to identify the space in the sidebar.
-          </PMField.HelperText>
-        </PMField.Root>
-
         <PMHStack justify="flex-end">
           <PMButton
             variant="secondary"
-            onClick={() => {
-              /* TODO: wire to API */
-            }}
+            onClick={handleSave}
+            disabled={
+              !hasChanges || !currentName.trim() || updateMutation.isPending
+            }
+            loading={updateMutation.isPending}
           >
             Save changes
           </PMButton>
