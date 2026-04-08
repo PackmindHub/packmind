@@ -245,6 +245,7 @@ export class StandardsAdapter
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
@@ -282,6 +283,7 @@ export class StandardsAdapter
     );
 
     this._createRuleExample = new CreateRuleExampleUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.repositories.getRuleExampleRepository(),
       this.repositories.getRuleRepository(),
@@ -291,6 +293,7 @@ export class StandardsAdapter
     );
 
     this._updateRuleExample = new UpdateRuleExampleUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.repositories,
       this.eventEmitterService,
@@ -298,6 +301,7 @@ export class StandardsAdapter
     );
 
     this._deleteRuleExample = new DeleteRuleExampleUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.repositories,
       this.eventEmitterService,

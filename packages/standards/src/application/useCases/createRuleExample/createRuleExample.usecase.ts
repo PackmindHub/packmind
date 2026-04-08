@@ -1,8 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
   PackmindEventEmitterService,
+  SpaceMemberContext,
 } from '@packmind/node-utils';
 import {
   CreateRuleExampleCommand,
@@ -10,6 +10,7 @@ import {
   IAccountsPort,
   ICreateRuleExampleUseCase,
   ILinterPort,
+  ISpacesPort,
   ProgrammingLanguage,
   RuleExample,
   RuleId,
@@ -21,6 +22,7 @@ import {
   createUserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { RuleNotInSpaceError } from '../../../domain/errors/RuleNotInSpaceError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
@@ -28,13 +30,14 @@ import { IStandardVersionRepository } from '../../../domain/repositories/IStanda
 const origin = 'CreateRuleExampleUsecase';
 
 export class CreateRuleExampleUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     CreateRuleExampleCommand,
     CreateRuleExampleResponse
   >
   implements ICreateRuleExampleUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly _ruleExampleRepository: IRuleExampleRepository,
     private readonly _ruleRepository: IRuleRepository,
@@ -43,11 +46,11 @@ export class CreateRuleExampleUsecase
     private readonly _linterAdapter?: ILinterPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
   }
 
-  async executeForMembers(
-    command: CreateRuleExampleCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: CreateRuleExampleCommand & SpaceMemberContext,
   ): Promise<CreateRuleExampleResponse> {
     const {
       ruleId,
@@ -63,9 +66,13 @@ export class CreateRuleExampleUsecase
       throw new Error('Language is required and cannot be empty');
     }
 
-    const rule = await this._ruleRepository.findById(ruleId);
+    const rule = await this._ruleRepository.findByIdInSpace(
+      ruleId,
+      command.spaceId,
+    );
+
     if (!rule) {
-      throw new Error(`Rule with id ${ruleId} not found`);
+      throw new RuleNotInSpaceError(ruleId, command.spaceId);
     }
 
     const ruleExample: RuleExample = {
