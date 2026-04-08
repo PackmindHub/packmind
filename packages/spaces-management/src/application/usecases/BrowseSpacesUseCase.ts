@@ -43,8 +43,7 @@ export class BrowseSpacesUseCase extends AbstractMemberUseCase<
         (space) =>
           !memberSpaceIds.has(space.id) &&
           !space.isDefaultSpace &&
-          (space.type === SpaceType.open ||
-            space.type === SpaceType.restricted),
+          space.type !== SpaceType.private,
       )
       .map((space) => ({
         id: space.id,

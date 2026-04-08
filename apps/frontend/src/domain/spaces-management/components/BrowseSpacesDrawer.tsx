@@ -329,7 +329,7 @@ function AllSpacesTab({
           >
             {space.name}
           </PMText>
-          {space.type === SpaceType.open && (
+          {(!space.type || space.type === SpaceType.open) && (
             <PMButton
               size="xs"
               variant="secondary"
