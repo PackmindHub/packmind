@@ -135,10 +135,12 @@ export const useJoinSpaceMutation = () => {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: [...spacesManagementQueryKeys.all],
+          queryKey: spacesQueryKeys.all,
+          refetchType: 'all',
         }),
         queryClient.invalidateQueries({
-          queryKey: [...spacesQueryKeys.all],
+          queryKey: spacesManagementQueryKeys.all,
+          refetchType: 'all',
         }),
       ]);
     },
