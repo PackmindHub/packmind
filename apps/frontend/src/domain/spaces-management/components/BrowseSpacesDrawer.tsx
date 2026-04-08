@@ -163,6 +163,7 @@ export function BrowseSpacesDrawer({
                       searchQuery={searchQuery}
                       onJoinSpace={onJoinSpace}
                       isJoining={isJoining}
+                      mySpaceIds={new Set(mySpaces.map((s) => s.id))}
                     />
                   )}
                 </>
@@ -279,11 +280,13 @@ function AllSpacesTab({
   searchQuery,
   onJoinSpace,
   isJoining,
+  mySpaceIds,
 }: Readonly<{
   spaces: BrowsableSpace[];
   searchQuery: string;
   onJoinSpace: (spaceId: SpaceId) => void;
   isJoining?: boolean;
+  mySpaceIds: Set<SpaceId>;
 }>) {
   if (spaces.length === 0) {
     return (
@@ -329,20 +332,21 @@ function AllSpacesTab({
           >
             {space.name}
           </PMText>
-          {(!space.type || space.type === SpaceType.open) && (
-            <PMButton
-              size="xs"
-              variant="secondary"
-              onClick={() => onJoinSpace(space.id)}
-              disabled={isJoining}
-              data-testid={`browse-spaces-join-${space.id}`}
-            >
-              <PMIcon fontSize="xs">
-                <LuUserPlus />
-              </PMIcon>
-              Join
-            </PMButton>
-          )}
+          {(!space.type || space.type === SpaceType.open) &&
+            !mySpaceIds.has(space.id) && (
+              <PMButton
+                size="xs"
+                variant="secondary"
+                onClick={() => onJoinSpace(space.id)}
+                disabled={isJoining}
+                data-testid={`browse-spaces-join-${space.id}`}
+              >
+                <PMIcon fontSize="xs">
+                  <LuUserPlus />
+                </PMIcon>
+                Join
+              </PMButton>
+            )}
         </PMHStack>
       ))}
     </>

@@ -4,7 +4,6 @@ import {
   BrowseSpacesResponse,
   BrowsableSpace,
   createOrganizationId,
-  createUserId,
   IAccountsPort,
   ISpacesPort,
   SpaceType,
@@ -25,25 +24,17 @@ export class BrowseSpacesUseCase extends AbstractMemberUseCase<
     command: BrowseSpacesCommand & MemberContext,
   ): Promise<BrowseSpacesResponse> {
     const organizationId = createOrganizationId(command.organizationId);
-    const userId = createUserId(command.userId);
 
-    const [userSpacesResponse, allOrgSpaces, memberships] = await Promise.all([
+    const [userSpacesResponse, allOrgSpaces] = await Promise.all([
       this.spacesPort.listUserSpaces(command),
       this.spacesPort.listSpacesByOrganization(organizationId),
-      this.spacesPort.findMembershipsByUserAndOrganization(
-        userId,
-        organizationId,
-      ),
     ]);
-
-    const memberSpaceIds = new Set(memberships.map((m) => m.spaceId));
 
     const isOrgAdmin = command.membership.role === 'admin';
 
     const allSpaces: BrowsableSpace[] = allOrgSpaces
       .filter(
         (space) =>
-          !memberSpaceIds.has(space.id) &&
           !space.isDefaultSpace &&
           (isOrgAdmin || space.type !== SpaceType.private),
       )
