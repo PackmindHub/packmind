@@ -30,6 +30,7 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
     const spaceId = createSpaceId(command.spaceId);
     const userId = createUserId(command.userId);
     const organizationId = createOrganizationId(command.organizationId);
+    const isOrgAdmin = command.membership.role === 'admin';
 
     const space = await this.spacesPort.getSpaceById(spaceId);
 
@@ -37,12 +38,14 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
       throw new SpaceNotFoundError(spaceId);
     }
 
-    if (space.type === SpaceType.private) {
-      throw new SpaceNotFoundError(spaceId);
-    }
+    if (!isOrgAdmin) {
+      if (space.type === SpaceType.private) {
+        throw new SpaceNotFoundError(spaceId);
+      }
 
-    if (space.type === SpaceType.restricted) {
-      throw new SpaceNotJoinableError(spaceId);
+      if (space.type === SpaceType.restricted) {
+        throw new SpaceNotJoinableError(spaceId);
+      }
     }
 
     const existingMembership = await this.spacesPort.findMembership(
@@ -57,7 +60,7 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
     await this.spacesPort.addSpaceMembership({
       userId,
       spaceId,
-      role: UserSpaceRole.MEMBER,
+      role: isOrgAdmin ? UserSpaceRole.ADMIN : UserSpaceRole.MEMBER,
       createdBy: userId,
     });
 

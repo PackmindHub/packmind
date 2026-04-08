@@ -188,4 +188,108 @@ describe('JoinSpaceUseCase', () => {
       expect(spacesPort.addSpaceMembership).not.toHaveBeenCalled();
     });
   });
+
+  describe('when the user is an organization admin', () => {
+    const adminUser = userFactory({
+      id: userId,
+      memberships: [{ userId, organizationId, role: 'admin' }],
+    });
+
+    beforeEach(() => {
+      accountsPort.getUserById.mockResolvedValue(adminUser);
+    });
+
+    describe('when joining a private space', () => {
+      const privateSpace = spaceFactory({
+        id: spaceId,
+        name: 'Private Space',
+        organizationId,
+        type: SpaceType.private,
+      });
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(privateSpace);
+        spacesPort.findMembership.mockResolvedValue(null);
+        spacesPort.addSpaceMembership.mockResolvedValue({
+          userId,
+          spaceId,
+          role: UserSpaceRole.ADMIN,
+          createdBy: userId,
+        });
+      });
+
+      it('adds the user as an admin', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(spacesPort.addSpaceMembership).toHaveBeenCalledWith({
+          userId,
+          spaceId,
+          role: UserSpaceRole.ADMIN,
+          createdBy: userId,
+        });
+      });
+    });
+
+    describe('when joining a restricted space', () => {
+      const restrictedSpace = spaceFactory({
+        id: spaceId,
+        name: 'Restricted Space',
+        organizationId,
+        type: SpaceType.restricted,
+      });
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(restrictedSpace);
+        spacesPort.findMembership.mockResolvedValue(null);
+        spacesPort.addSpaceMembership.mockResolvedValue({
+          userId,
+          spaceId,
+          role: UserSpaceRole.ADMIN,
+          createdBy: userId,
+        });
+      });
+
+      it('adds the user as an admin', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(spacesPort.addSpaceMembership).toHaveBeenCalledWith({
+          userId,
+          spaceId,
+          role: UserSpaceRole.ADMIN,
+          createdBy: userId,
+        });
+      });
+    });
+
+    describe('when joining an open space', () => {
+      const openSpace = spaceFactory({
+        id: spaceId,
+        name: 'Open Space',
+        organizationId,
+        type: SpaceType.open,
+      });
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(openSpace);
+        spacesPort.findMembership.mockResolvedValue(null);
+        spacesPort.addSpaceMembership.mockResolvedValue({
+          userId,
+          spaceId,
+          role: UserSpaceRole.ADMIN,
+          createdBy: userId,
+        });
+      });
+
+      it('adds the user as an admin', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(spacesPort.addSpaceMembership).toHaveBeenCalledWith({
+          userId,
+          spaceId,
+          role: UserSpaceRole.ADMIN,
+          createdBy: userId,
+        });
+      });
+    });
+  });
 });
