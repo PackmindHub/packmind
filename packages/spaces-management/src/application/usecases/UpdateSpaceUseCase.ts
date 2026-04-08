@@ -14,6 +14,7 @@ import {
   UpdateSpaceCommand,
   UpdateSpaceResponse,
 } from '@packmind/types';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 
 export class UpdateSpaceUseCase extends AbstractMemberUseCase<
@@ -38,6 +39,10 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
 
     if (!space || space.organizationId !== organizationId) {
       throw new SpaceNotFoundError(spaceId);
+    }
+
+    if (command.type !== undefined && space.isDefaultSpace) {
+      throw new CannotUpdateDefaultSpaceVisibilityError(spaceId);
     }
 
     const fields: { name?: string; type?: SpaceType } = {};
