@@ -59,7 +59,8 @@ export abstract class AbstractPackmindAppPage
   }
 
   async createSpace(name: string): Promise<IDashboardPage> {
-    await this.page.getByRole('button', { name: 'Create space' }).click();
+    await this.page.getByTestId('browse-spaces-trigger').click();
+    await this.page.getByTestId('browse-spaces-new-button').click();
     await this.page.getByTestId('create-space-name-input').fill(name);
     await this.page.getByTestId('create-space-submit').click();
 
