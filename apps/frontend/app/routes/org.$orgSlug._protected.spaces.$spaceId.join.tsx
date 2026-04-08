@@ -1,12 +1,14 @@
 import { redirect, useLoaderData, useNavigate, useParams } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
-import { getBrowseSpacesQueryOptions } from '../../src/domain/spaces-management/api/queries/SpacesManagementQueries';
-import { useJoinSpaceMutation } from '../../src/domain/spaces-management/api/queries/SpacesManagementQueries';
+import {
+  getBrowseSpacesQueryOptions,
+  useJoinSpaceMutation,
+} from '../../src/domain/spaces-management/api/queries/SpacesManagementQueries';
 import { setFlashToast } from '../../src/shared/utils/flashToast';
 import { routes } from '../../src/shared/utils/routes';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import { BrowsableSpace, SpaceId } from '@packmind/types';
+import { SpaceId } from '@packmind/types';
 import {
   PMBox,
   PMButton,
