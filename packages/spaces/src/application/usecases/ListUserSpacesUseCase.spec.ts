@@ -59,10 +59,15 @@ describe('ListUserSpacesUseCase', () => {
         );
       });
 
-      it('returns spaces from memberships', async () => {
+      it('returns spaces with roles from memberships', async () => {
         const result = await useCase.execute(buildCommand());
 
-        expect(result).toEqual({ spaces: [space1, space2] });
+        expect(result).toEqual({
+          spaces: [
+            { ...space1, role: UserSpaceRole.MEMBER },
+            { ...space2, role: UserSpaceRole.ADMIN },
+          ],
+        });
       });
 
       it('calls membership service with correct params', async () => {
@@ -114,7 +119,9 @@ describe('ListUserSpacesUseCase', () => {
       it('filters out memberships with undefined space', async () => {
         const result = await useCase.execute(buildCommand());
 
-        expect(result).toEqual({ spaces: [space1] });
+        expect(result).toEqual({
+          spaces: [{ ...space1, role: UserSpaceRole.MEMBER }],
+        });
       });
     });
   });

@@ -4,9 +4,12 @@ import {
   ListUserSpacesResponse,
   OrganizationId,
   Space,
+  UserSpaceMembership,
   UserId,
 } from '@packmind/types';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
+
+type MembershipWithSpace = UserSpaceMembership & { space: Space };
 
 export class ListUserSpacesUseCase implements IListUserSpaces {
   constructor(
@@ -23,8 +26,8 @@ export class ListUserSpacesUseCase implements IListUserSpaces {
       );
 
     const spaces = memberships
-      .map((m) => m.space)
-      .filter((s): s is Space => s !== undefined);
+      .filter((m): m is MembershipWithSpace => m.space !== undefined)
+      .map((m) => ({ ...m.space, role: m.role }));
 
     return { spaces };
   }
