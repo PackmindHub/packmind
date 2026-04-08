@@ -3,9 +3,21 @@ import {
   CreateSpaceResponse,
 } from '../../spaces/contracts/ICreateSpaceUseCase';
 import {
+  BrowseSpacesCommand,
+  BrowseSpacesResponse,
+} from '../contracts/IBrowseSpacesUseCase';
+import {
+  JoinSpaceCommand,
+  JoinSpaceResponse,
+} from '../contracts/IJoinSpaceUseCase';
+import {
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
 } from '../contracts/IMoveArtifactsToSpaceUseCase';
+import {
+  UpdateSpaceCommand,
+  UpdateSpaceResponse,
+} from '../contracts/IUpdateSpaceUseCase';
 
 /**
  * Port interface for cross-domain access to Spaces Management functionality
@@ -25,4 +37,19 @@ export interface ISpacesManagementPort {
   moveArtifactsToSpace(
     command: MoveArtifactsToSpaceCommand,
   ): Promise<MoveArtifactsToSpaceResponse>;
+
+  /**
+   * Browse all spaces, returning the user's spaces and all discoverable spaces.
+   */
+  browseSpaces(command: BrowseSpacesCommand): Promise<BrowseSpacesResponse>;
+
+  /**
+   * Join a space by its ID.
+   */
+  joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse>;
+
+  /**
+   * Update a space's settings (name, type).
+   */
+  updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse>;
 }

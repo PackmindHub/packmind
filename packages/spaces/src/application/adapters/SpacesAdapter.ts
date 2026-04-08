@@ -23,6 +23,7 @@ import {
   UpdateMemberRoleCommand,
   UpdateMemberRoleResponse,
   SpaceId,
+  SpaceType,
   UserId,
   UserSpaceMembership,
   UserSpaceRole,
@@ -174,6 +175,14 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
       this.accountsPort,
     );
     return useCase.execute(command);
+  }
+
+  async updateSpace(
+    spaceId: SpaceId,
+    fields: { name?: string; type?: SpaceType },
+  ): Promise<Space> {
+    const spaceService = this.hexa.getSpaceService();
+    return spaceService.updateSpace(spaceId, fields);
   }
 
   async updateMemberRole(
