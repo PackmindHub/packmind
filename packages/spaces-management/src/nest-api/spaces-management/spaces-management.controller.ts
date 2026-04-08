@@ -25,6 +25,7 @@ import {
   BrowseSpacesResponse,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
+import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
@@ -79,6 +80,9 @@ export class SpacesManagementController {
         userId,
       });
     } catch (error) {
+      if (error instanceof OrganizationAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
       if (error instanceof SpaceSlugConflictError) {
         this.logger.warn(
           'POST /organizations/:orgId/spaces-management - Space slug conflict',
