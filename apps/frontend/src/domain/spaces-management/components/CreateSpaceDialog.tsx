@@ -22,10 +22,11 @@ const SPACE_TYPE_OPTIONS = [
     value: SpaceType.open,
     label: 'Open — anyone in the organization can join',
   },
-  {
-    value: SpaceType.restricted,
-    label: 'Restricted — visible to everyone, approval required to join',
-  },
+  // TODO: Re-enable when approval workflow is implemented
+  // {
+  //   value: SpaceType.restricted,
+  //   label: 'Restricted — visible to everyone, approval required to join',
+  // },
   {
     value: SpaceType.private,
     label: 'Private — accessible only to invited members',

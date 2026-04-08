@@ -72,7 +72,7 @@ describe('CreateSpaceDialog', () => {
   });
 
   describe('when the dialog is open', () => {
-    it('renders all three access status options', () => {
+    it('renders available access status options', () => {
       renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
 
       const wrapper = screen.getByTestId('create-space-type-select');
@@ -82,7 +82,6 @@ describe('CreateSpaceDialog', () => {
 
       expect(optionTexts).toEqual([
         'Open — anyone in the organization can join',
-        'Restricted — visible to everyone, approval required to join',
         'Private — accessible only to invited members',
       ]);
     });
@@ -122,35 +121,8 @@ describe('CreateSpaceDialog', () => {
     });
   });
 
-  describe('when selecting restricted type before submitting', () => {
-    it('sends restricted type to the mutation', async () => {
-      const mockMutateAsync = jest
-        .fn()
-        .mockResolvedValue({ name: 'My Space', slug: 'my-space' });
-      mockUseCreateSpaceMutation.mockReturnValue(
-        createMockMutation({ mutateAsync: mockMutateAsync }),
-      );
-
-      renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
-
-      const input = screen.getByTestId('create-space-name-input');
-      fireEvent.change(input, { target: { value: 'My Space' } });
-
-      const wrapper = screen.getByTestId('create-space-type-select');
-      const select = wrapper.querySelector('select')!;
-      fireEvent.change(select, { target: { value: SpaceType.restricted } });
-
-      const submitButton = screen.getByTestId('create-space-submit');
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(mockMutateAsync).toHaveBeenCalledWith({
-          name: 'My Space',
-          type: SpaceType.restricted,
-        });
-      });
-    });
-  });
+  // TODO: Re-enable when restricted type is available in the UI
+  // describe('when selecting restricted type before submitting', () => { ... });
 
   describe('when selecting private type before submitting', () => {
     it('sends private type to the mutation', async () => {
