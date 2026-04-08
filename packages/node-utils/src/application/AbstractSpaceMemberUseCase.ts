@@ -2,17 +2,12 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   IAccountsPort,
   ISpacesPort,
-  PackmindCommand,
   PackmindResult,
-  SpaceId,
+  SpaceMemberCommand,
 } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
 
 const defaultOrigin = 'AbstractSpaceMemberUseCase';
-
-export type SpaceMemberCommand = PackmindCommand & {
-  spaceId: SpaceId;
-};
 
 export type SpaceMemberContext = MemberContext;
 

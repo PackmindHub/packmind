@@ -7,6 +7,7 @@ import {
   ISpacesPort,
   Organization,
   PackmindResult,
+  SpaceMemberCommand,
   User,
   UserOrganizationMembership,
   UserSpaceMembership,
@@ -14,7 +15,6 @@ import {
 } from '@packmind/types';
 import {
   AbstractSpaceMemberUseCase,
-  SpaceMemberCommand,
   SpaceMemberContext,
   SpaceMembershipRequiredError,
 } from './AbstractSpaceMemberUseCase';
