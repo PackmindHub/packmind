@@ -13,14 +13,14 @@ A Packmind **Command** is an executable, step-by-step guide that tells the AI as
 
 ## How to
 
-You can create commands using the `/packmind-create-command` command in your AI coding assistant.
+You can create commands using the `/packmind-update-playbook` skill in your AI coding assistant.
 
 1. Open your IDE and your coding assistant in **agentic mode**.
 2. For this demo, we will create a **language-agnostic command**. (You can also target a specific language or framework.)
 3. Type this command:
 
 ```
-/packmind-create-command
+/packmind-update-playbook create a Packmind command to add a new endpoint to our API
 ```
 
 Or use a natural language prompt:
@@ -30,7 +30,7 @@ Analyze our codebase and create a Packmind command to add a new endpoint to our 
 ```
 
 <Tip>
-  **Guided Creation** — The `/packmind-create-command` skill provides
+  **Guided Creation** — The `/packmind-update-playbook` skill provides
   step-by-step guidance through the entire creation process, ensuring your
   command is well-structured and reusable.
 </Tip>
@@ -65,7 +65,7 @@ When capturing a **Command**, you can, for example:
   **Example**
 
   ```text
-  Create a Packmind command for adding a new endpoint based on your last suggested changes.
+  /packmind-update-playbook Create a Packmind command for adding a new endpoint based on your last suggested changes.
   ```
 
 - **Mention example files or directories**
@@ -73,7 +73,7 @@ When capturing a **Command**, you can, for example:
   **Example**
 
   ```text
-  Using the file `MyPageFile.tsx`, create a Packmind command for bootstrapping a new page in the frontend.
+  /packmind-update-playbook Using the file `MyPageFile.tsx`, create a Packmind command for bootstrapping a new page in the frontend.
   ```
 
 - **Use a Git commit diff**
@@ -81,7 +81,7 @@ When capturing a **Command**, you can, for example:
   **Example**
 
   ```text
-  Read commit abcd123 and create a command for migrating an Angular component to React.
+  /packmind-update-playbook Read commit abcd123 and create a command for migrating an Angular component to React.
   ```
 
 ## What Makes a Good Command

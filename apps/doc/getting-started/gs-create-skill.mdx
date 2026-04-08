@@ -29,30 +29,14 @@ For details on the SKILL.md format, frontmatter fields, and best practices, refe
 
 ## Create a Skill Using the AI Agent
 
-The easiest way to create a skill is using the built-in `/packmind-create-skill` command with your AI coding assistant.
-
-### Install Default Skills
-
-First, ensure the skill creation tools are available locally. Run:
-
-```bash
-packmind-cli skills init
-```
-
-This installs Packmind's default skills, including the `packmind-create-skill` skill that guides you through creating new skills.
-
-<Tip>
-  **Automatic installation** — Default skills are also installed automatically
-  when you install a package with `packmind-cli install` or when packages are
-  distributed to your repository.
-</Tip>
+The easiest way to create a skill is using the `/packmind-update-playbook` skill with your AI coding assistant.
 
 ### Create Your Skill
 
-Once default skills are installed, invoke the `/packmind-create-skill` command in your AI coding assistant:
+Invoke the `/packmind-update-playbook` skill in your AI coding assistant:
 
 ```
-/packmind-create-skill
+/packmind-update-playbook create a Packmind skill for bootstrapping a new page in the frontend
 ```
 
 The assistant will guide you through:
@@ -70,8 +54,17 @@ After the assistant generates your skill, you can test it locally before uploadi
 Once you have a skill folder ready, upload it to Packmind using the CLI:
 
 ```bash
-packmind-cli skills add ./my-skill
+packmind-cli playbook add ./my-skill
+packmind-cli playbook submit --no-review
 ```
+
+<Info>
+  Use `--no-review` to trigger a [direct
+  update](/playbook-maintenance/updating-your-playbook#direct-updates). Omit
+  `--no-review` to use the [change
+  proposals](/playbook-maintenance/change-proposals) system and get validation
+  of your changes.
+</Info>
 
 The CLI will upload the skill to your Packmind organization and display a confirmation.
 
@@ -80,7 +73,8 @@ The CLI will upload the skill to your Packmind organization and display a confir
 If you have a collection of skills organized in subdirectories (e.g., `.claude/skills/*/`), you can upload them all with a single command:
 
 ```bash
-for dir in '.claude/skills/*/'; do packmind-cli skills add "$dir"; done
+for dir in '.claude/skills/*/'; do packmind-cli playbook add "$dir"; done
+packmind-cli playbook submit
 ```
 
 This iterates through all skill folders and uploads each one to Packmind.
