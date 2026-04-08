@@ -1,15 +1,12 @@
 import React from 'react';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
   PMAvatar,
   PMBox,
-  PMFeatureFlag,
   PMIconButton,
   PMSeparator,
   PMStatus,
   PMText,
   PMTooltip,
-  SPACE_SETTINGS_FEATURE_KEY,
 } from '@packmind/ui';
 import {
   LuBookCheck,
@@ -24,7 +21,6 @@ import {
 import { useNavigate } from 'react-router';
 import type { Space } from '@packmind/types';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
 import { SidebarNavigationLink } from '../SidebarNavigation';
 import { useSidebarCollapse } from '../SidebarCollapseContext';
@@ -155,7 +151,6 @@ function ExpandedSpaceNavBlock({
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
 
   return (
     <PMBox>
@@ -194,23 +189,17 @@ function ExpandedSpaceNavBlock({
               </PMStatus.Root>
               {space.name}
             </PMText>
-            <PMFeatureFlag
-              featureKeys={[SPACE_SETTINGS_FEATURE_KEY]}
-              featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-              userEmail={user?.email}
+            <PMIconButton
+              aria-label="Space settings"
+              size="2xs"
+              variant="ghost"
+              onClick={() =>
+                navigate(routes.space.toSettings(orgSlug, space.slug))
+              }
+              data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
             >
-              <PMIconButton
-                aria-label="Space settings"
-                size="2xs"
-                variant="ghost"
-                onClick={() =>
-                  navigate(routes.space.toSettings(orgSlug, space.slug))
-                }
-                data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
-              >
-                <LuSlidersHorizontal />
-              </PMIconButton>
-            </PMFeatureFlag>
+              <LuSlidersHorizontal />
+            </PMIconButton>
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
