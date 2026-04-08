@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -31,6 +32,9 @@ describe('JoinSpaceUseCase', () => {
   let spacesPort: jest.Mocked<
     Pick<ISpacesPort, 'getSpaceById' | 'findMembership' | 'addSpaceMembership'>
   >;
+  let eventEmitterService: jest.Mocked<
+    Pick<PackmindEventEmitterService, 'emit'>
+  >;
 
   const buildCommand = (
     overrides?: Partial<JoinSpaceCommand>,
@@ -52,9 +56,15 @@ describe('JoinSpaceUseCase', () => {
       findMembership: jest.fn(),
       addSpaceMembership: jest.fn(),
     };
+
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
+
     useCase = new JoinSpaceUseCase(
       accountsPort,
       spacesPort as unknown as ISpacesPort,
+      eventEmitterService as unknown as PackmindEventEmitterService,
     );
   });
 
@@ -88,6 +98,19 @@ describe('JoinSpaceUseCase', () => {
         role: UserSpaceRole.MEMBER,
         createdBy: userId,
       });
+    });
+
+    it('emits SpaceMembersAddedEvent with the joining user', async () => {
+      await useCase.execute(buildCommand());
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            spaceId,
+            memberUserIds: [userId],
+          }),
+        }),
+      );
     });
   });
 
@@ -186,6 +209,12 @@ describe('JoinSpaceUseCase', () => {
     it('does not add a duplicate membership', async () => {
       await useCase.execute(buildCommand());
       expect(spacesPort.addSpaceMembership).not.toHaveBeenCalled();
+    });
+
+    it('does not emit SpaceMembersAddedEvent', async () => {
+      await useCase.execute(buildCommand());
+
+      expect(eventEmitterService.emit).not.toHaveBeenCalled();
     });
   });
 

@@ -72,7 +72,11 @@ export class SpacesManagementAdapter
   }
 
   async joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
-    const useCase = new JoinSpaceUseCase(this.accountsPort, this.spacesPort);
+    const useCase = new JoinSpaceUseCase(
+      this.accountsPort,
+      this.spacesPort,
+      this.eventEmitterService,
+    );
     return useCase.execute(command);
   }
 

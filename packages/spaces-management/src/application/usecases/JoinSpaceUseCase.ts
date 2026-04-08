@@ -1,4 +1,8 @@
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -7,6 +11,7 @@ import {
   ISpacesPort,
   JoinSpaceCommand,
   JoinSpaceResponse,
+  SpaceMembersAddedEvent,
   SpaceType,
   UserSpaceRole,
 } from '@packmind/types';
@@ -20,6 +25,7 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
     super(accountsPort);
   }
@@ -63,6 +69,16 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
       role: isOrgAdmin ? UserSpaceRole.ADMIN : UserSpaceRole.MEMBER,
       createdBy: userId,
     });
+
+    this.eventEmitterService.emit(
+      new SpaceMembersAddedEvent({
+        userId,
+        organizationId,
+        source: command.source ?? 'ui',
+        spaceId,
+        memberUserIds: [userId],
+      }),
+    );
 
     return {} as JoinSpaceResponse;
   }

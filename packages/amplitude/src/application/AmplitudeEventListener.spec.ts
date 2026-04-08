@@ -18,6 +18,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
   SpaceCreatedEvent,
+  SpaceMembersAddedEvent,
   SpaceVisibilityUpdatedEvent,
   SpaceType,
   PlaybookArtefactMovedEvent,
@@ -547,6 +548,33 @@ describe('AmplitudeEventListener', () => {
           spaceName: 'My Space',
           spaceSlug: 'my-space',
           visibility: 'open',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('SpaceMembersAddedEvent', () => {
+    it('tracks space_members_added event with correct payload', async () => {
+      const event = new SpaceMembersAddedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        spaceId: createSpaceId('space-789'),
+        memberUserIds: [createUserId('member-1'), createUserId('member-2')],
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'space_members_added',
+        {
+          spaceId: 'space-789',
+          memberCount: 2,
           source: 'ui',
         },
       );
