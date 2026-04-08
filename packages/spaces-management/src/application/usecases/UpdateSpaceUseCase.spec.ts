@@ -11,6 +11,7 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { UpdateSpaceUseCase } from './UpdateSpaceUseCase';
 
@@ -149,6 +150,59 @@ describe('UpdateSpaceUseCase', () => {
       await useCase.execute(buildCommand());
 
       expect(eventEmitterService.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when space is the default space', () => {
+    const defaultSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      isDefaultSpace: true,
+      type: SpaceType.open,
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(defaultSpace);
+    });
+
+    describe('when updating type', () => {
+      it('throws CannotUpdateDefaultSpaceVisibilityError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.private })),
+        ).rejects.toThrow(CannotUpdateDefaultSpaceVisibilityError);
+      });
+
+      it('does not call updateSpace', async () => {
+        await useCase
+          .execute(buildCommand({ type: SpaceType.private }))
+          .catch(() => undefined);
+
+        expect(spacesPort.updateSpace).not.toHaveBeenCalled();
+      });
+
+      it('does not emit any event', async () => {
+        await useCase
+          .execute(buildCommand({ type: SpaceType.private }))
+          .catch(() => undefined);
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when updating name', () => {
+      it('allows updating the name', async () => {
+        const updatedSpace = spaceFactory({
+          ...defaultSpace,
+          name: 'New Name',
+        });
+        spacesPort.updateSpace.mockResolvedValue(updatedSpace);
+
+        const result = await useCase.execute(
+          buildCommand({ name: 'New Name' }),
+        );
+
+        expect(result).toEqual(updatedSpace);
+      });
     });
   });
 

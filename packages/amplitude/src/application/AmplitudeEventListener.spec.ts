@@ -20,8 +20,10 @@ import {
   SpaceCreatedEvent,
   SpaceMembersAddedEvent,
   SpaceMembersRemovedEvent,
+  SpaceMembersRoleUpdatedEvent,
   SpaceVisibilityUpdatedEvent,
   SpaceType,
+  UserSpaceRole,
   PlaybookArtefactMovedEvent,
   createUserId,
   createOrganizationId,
@@ -603,6 +605,35 @@ describe('AmplitudeEventListener', () => {
         {
           spaceId: 'space-789',
           memberCount: 1,
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('SpaceMembersRoleUpdatedEvent', () => {
+    it('tracks space_members_role_updated event with correct payload', async () => {
+      const event = new SpaceMembersRoleUpdatedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        spaceId: createSpaceId('space-789'),
+        memberUserIds: [createUserId('member-1')],
+        newRole: UserSpaceRole.ADMIN,
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'space_members_role_updated',
+        {
+          spaceId: 'space-789',
+          memberCount: 1,
+          newRole: 'admin',
           source: 'ui',
         },
       );
