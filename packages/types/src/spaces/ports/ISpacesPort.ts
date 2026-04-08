@@ -149,6 +149,15 @@ export interface ISpacesPort {
   ): Promise<UpdateMemberRoleResponse>;
 
   /**
+   * Remove all space memberships for a user within an organization.
+   * Used when a user is removed from the organization.
+   */
+  removeUserFromOrganizationSpaces(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<void>;
+
+  /**
    * Find a user's membership in a specific space.
    * Returns null if the user is not a member of the space.
    */
