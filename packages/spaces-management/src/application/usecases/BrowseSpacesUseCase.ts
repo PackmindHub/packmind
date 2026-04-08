@@ -38,12 +38,14 @@ export class BrowseSpacesUseCase extends AbstractMemberUseCase<
 
     const memberSpaceIds = new Set(memberships.map((m) => m.spaceId));
 
+    const isOrgAdmin = command.membership.role === 'admin';
+
     const allSpaces: BrowsableSpace[] = allOrgSpaces
       .filter(
         (space) =>
           !memberSpaceIds.has(space.id) &&
           !space.isDefaultSpace &&
-          space.type !== SpaceType.private,
+          (isOrgAdmin || space.type !== SpaceType.private),
       )
       .map((space) => ({
         id: space.id,

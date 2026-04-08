@@ -200,4 +200,88 @@ describe('BrowseSpacesUseCase', () => {
       expect(result.allSpaces).toEqual([]);
     });
   });
+
+  describe('when the user is an organization admin', () => {
+    const adminUser = userFactory({
+      id: userId,
+      memberships: [{ userId, organizationId, role: 'admin' }],
+    });
+
+    const memberSpace = spaceFactory({
+      id: createSpaceId('space-1'),
+      name: 'My Team',
+      organizationId,
+      type: SpaceType.open,
+    });
+
+    const privateSpace = spaceFactory({
+      id: createSpaceId('space-4'),
+      name: 'Secret Space',
+      organizationId,
+      type: SpaceType.private,
+    });
+
+    const defaultSpace = spaceFactory({
+      id: createSpaceId('space-default'),
+      name: 'Global',
+      organizationId,
+      type: SpaceType.open,
+      isDefaultSpace: true,
+    });
+
+    beforeEach(() => {
+      accountsPort.getUserById.mockResolvedValue(adminUser);
+
+      spacesPort.listUserSpaces.mockResolvedValue({
+        spaces: [defaultSpace, memberSpace],
+      });
+      spacesPort.listSpacesByOrganization.mockResolvedValue([
+        defaultSpace,
+        memberSpace,
+        privateSpace,
+      ]);
+      spacesPort.findMembershipsByUserAndOrganization.mockResolvedValue([
+        {
+          userId,
+          spaceId: defaultSpace.id,
+          role: UserSpaceRole.MEMBER,
+          createdBy: userId,
+        },
+        {
+          userId,
+          spaceId: memberSpace.id,
+          role: UserSpaceRole.MEMBER,
+          createdBy: userId,
+        },
+      ]);
+    });
+
+    it('includes private spaces in allSpaces', async () => {
+      const result = await useCase.execute(buildCommand());
+
+      expect(result.allSpaces).toEqual([
+        {
+          id: privateSpace.id,
+          name: privateSpace.name,
+          type: SpaceType.private,
+        },
+      ]);
+    });
+
+    it('still excludes already-member spaces from allSpaces', async () => {
+      const result = await useCase.execute(buildCommand());
+
+      const memberIds = result.allSpaces.filter((s) => s.id === memberSpace.id);
+      expect(memberIds).toEqual([]);
+    });
+
+    it('still excludes default space from allSpaces', async () => {
+      const result = await useCase.execute(buildCommand());
+
+      const defaultIds = result.allSpaces.filter(
+        (s) => s.id === defaultSpace.id,
+      );
+      expect(defaultIds).toEqual([]);
+    });
+  });
 });
