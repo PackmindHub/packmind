@@ -1,15 +1,12 @@
 import React from 'react';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
   PMAvatar,
   PMBox,
-  PMFeatureFlag,
   PMIconButton,
   PMSeparator,
   PMStatus,
   PMText,
   PMTooltip,
-  SPACE_SETTINGS_FEATURE_KEY,
 } from '@packmind/ui';
 import {
   LuBookCheck,
@@ -22,16 +19,15 @@ import {
   LuWandSparkles,
 } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
-import type { Space } from '@packmind/types';
+import type { UserSpaceWithRole } from '@packmind/types';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
 import { SidebarNavigationLink } from '../SidebarNavigation';
 import { useSidebarCollapse } from '../SidebarCollapseContext';
 import { SpaceNavSections } from './SpaceNavSections';
 
 interface SpaceNavBlockProps {
-  space: Space;
+  space: UserSpaceWithRole;
   orgSlug: string;
   isActive: boolean;
   isSelected: boolean;
@@ -101,7 +97,10 @@ export function SpaceNavBlock({
 function CollapsedSpaceNavItems({
   space,
   orgSlug,
-}: Readonly<{ space: Space; orgSlug: string }>): React.ReactElement {
+}: Readonly<{
+  space: UserSpaceWithRole;
+  orgSlug: string;
+}>): React.ReactElement {
   return (
     <>
       <SidebarNavigationLink
@@ -155,7 +154,6 @@ function ExpandedSpaceNavBlock({
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
 
   return (
     <PMBox>
@@ -194,11 +192,7 @@ function ExpandedSpaceNavBlock({
               </PMStatus.Root>
               {space.name}
             </PMText>
-            <PMFeatureFlag
-              featureKeys={[SPACE_SETTINGS_FEATURE_KEY]}
-              featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-              userEmail={user?.email}
-            >
+            {space.role === 'admin' && (
               <PMIconButton
                 aria-label="Space settings"
                 size="2xs"
@@ -210,7 +204,7 @@ function ExpandedSpaceNavBlock({
               >
                 <LuSlidersHorizontal />
               </PMIconButton>
-            </PMFeatureFlag>
+            )}
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
@@ -283,7 +277,7 @@ function SpaceNameRow({
   isSelected,
   onSpaceClick,
 }: Readonly<{
-  space: Space;
+  space: UserSpaceWithRole;
   isActive: boolean;
   isSelected: boolean;
   onSpaceClick: () => void;

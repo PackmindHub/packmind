@@ -105,7 +105,8 @@ See [event.md](components/event.md) and [adapter.md](components/adapter.md) for 
 |-------|---------|
 | `BaseHexa<TOpts, TPort>` | Hexagon lifecycle (construct -> initialize -> destroy) |
 | `HexaRegistry` | Central dependency injection container |
-| `AbstractMemberUseCase<C, R>` | Use case with member authorization |
+| `AbstractMemberUseCase<C, R>` | Use case with org member authorization |
+| `AbstractSpaceMemberUseCase<C, R>` | Use case with org + space member authorization |
 | `AbstractAdminUseCase<C, R>` | Use case with admin authorization |
 | `AbstractRepository<T>` | Base TypeORM repository with soft delete support |
 | `PackmindListener<TAdapter>` | Event subscription base class |

@@ -27,8 +27,9 @@ application/
 
 The primary unit of work. Each use case lives in its own folder and handles one business operation.
 
-Three authorization levels:
-- `AbstractMemberUseCase` — requires authenticated org member
+Four authorization levels:
+- `AbstractMemberUseCase` — requires authenticated org member (org-level operations without space scoping)
+- `AbstractSpaceMemberUseCase` — requires authenticated org member + space membership (space-scoped operations with `spaceId` in command)
 - `AbstractAdminUseCase` — requires org admin
 - `IPublicUseCase` — no auth required
 

@@ -2,6 +2,6 @@
   "packages": {
     "@global/generic": "*",
     "@global/playground": "*",
-    "generic": "*"
+    "@global/proprietary": "*"
   }
 }

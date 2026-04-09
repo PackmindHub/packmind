@@ -43,6 +43,45 @@ export class GetStandardByIdUseCase
 - Injects `user`, `organization`, `membership` into the command via `MemberContext`
 - Throws `UserNotFoundError` or `UserNotInOrganizationError` on failure
 
+### Space Member Use Case
+
+Requires the user to be an authenticated member of the organization **and** a member of the target space.
+
+```typescript
+import { AbstractSpaceMemberUseCase, SpaceMemberContext } from '@packmind/node-utils';
+import { ISpacesPort } from '@packmind/types';
+import { IListStandardsBySpaceUseCase, ListStandardsBySpaceCommand, ListStandardsBySpaceResponse } from '@packmind/types';
+
+export class ListStandardsBySpaceUseCase
+  extends AbstractSpaceMemberUseCase<ListStandardsBySpaceCommand, ListStandardsBySpaceResponse>
+  implements IListStandardsBySpaceUseCase {
+
+  constructor(
+    spacesPort: ISpacesPort,
+    accountsPort: IAccountsPort,
+    private readonly standardService: StandardService,
+  ) {
+    super(spacesPort, accountsPort);
+  }
+
+  protected async executeForSpaceMembers(
+    command: ListStandardsBySpaceCommand & SpaceMemberContext,
+  ): Promise<ListStandardsBySpaceResponse> {
+    // SpaceMemberContext provides: user, organization, membership (same as MemberContext)
+    // Space membership is already verified automatically
+    return this.standardService.listBySpace(command.spaceId);
+  }
+}
+```
+
+`AbstractSpaceMemberUseCase` extends `AbstractMemberUseCase` and additionally:
+- Validates the user is a member of the target space via `spacesPort.findMembership()`
+- Throws `SpaceMembershipRequiredError` if the user is not in the space
+- Requires the command to extend `SpaceMemberCommand` (which includes `spaceId: SpaceId`)
+- Exposes `protected readonly spacesPort` — do NOT declare a private `spacesPort` field in subclasses
+
+**Decision guide**: Use `AbstractSpaceMemberUseCase` when the command includes `spaceId`. Use `AbstractMemberUseCase` only for org-level operations without space scoping.
+
 ### Admin Use Case
 
 Requires the user to have admin role in the organization.

@@ -1,0 +1,87 @@
+import { CodingAgent, SkillId, StartTrialCommandAgents } from '@packmind/types';
+
+export enum McpUnavailableReason {
+  CantUseMcp = 'cant-use-mcp',
+  DontWantMcp = 'dont-want-mcp',
+  DontKnowMcp = 'dont-know-mcp',
+  Other = 'other',
+}
+
+export type AnalyticsEventMap = {
+  page_view: {
+    path: string;
+    routeId?: string;
+    orgSlug?: string;
+    title?: string;
+  };
+  user_signed_in: {
+    method: 'email' | 'github' | 'gitlab' | 'google' | 'sso';
+  };
+  artifact_updated: {
+    artifactType: 'recipe' | 'standard';
+    id: string;
+    from: number;
+    to: number;
+  };
+  mcp_configuration_card_clicked: {
+    agent: string;
+  };
+  cli_login_done: Record<string, never>;
+  mcp_installed: {
+    method: 'cli' | 'magic-link' | 'json' | 'install-cli';
+    agent: StartTrialCommandAgents;
+  };
+  onboarding_prompt_copied: {
+    agent: StartTrialCommandAgents;
+  };
+  onboarding_reason_selected: {
+    reason_key: string;
+    reason_label: string;
+  };
+  mcp_unavailable_feedback: {
+    reason: McpUnavailableReason;
+    otherDetails?: string;
+    selectedAgent: StartTrialCommandAgents;
+  };
+  skill_downloaded: {
+    agent: CodingAgent;
+    skillId: SkillId;
+  };
+  default_skills_downloaded: {
+    agent: CodingAgent;
+  };
+  create_standard_from_samples_clicked: Record<string, never>;
+  post_signup_onboarding_started: Record<string, never>;
+  post_signup_onboarding_skipped: Record<string, never>;
+  post_signup_onboarding_completed: Record<string, never>;
+  post_signup_onboarding_agent_clicked: {
+    agent: StartTrialCommandAgents;
+  };
+  post_signup_onboarding_field_copied: {
+    field:
+      | 'installSh'
+      | 'installNpm'
+      | 'installHomebrew'
+      | 'cliInit'
+      | 'cliStartAnalysis'
+      | 'mcpStartAnalysis';
+  };
+};
+
+export type AnalyticsEventName = keyof AnalyticsEventMap;
+
+export type AnalyticsOptions = {
+  apiKey?: string;
+  enabled?: boolean;
+  appVersion?: string;
+  environment?: string;
+  serverZone?: 'US' | 'EU';
+};
+
+export type UserProperties = Record<string, unknown> & {
+  orgId?: string;
+  orgSlug?: string;
+  orgName?: string;
+  plan?: string;
+  edition?: 'oss' | 'proprietary';
+};

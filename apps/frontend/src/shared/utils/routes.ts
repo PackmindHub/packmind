@@ -121,6 +121,8 @@ export const routes = {
       proposalId: string,
     ) =>
       `/org/${orgSlug}/space/${spaceSlug}/review-changes/${artefactType}/new/${proposalId}`,
+    toJoinSpace: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/spaces/${spaceSlug}/join`,
   },
 
   /**

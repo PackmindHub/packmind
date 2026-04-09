@@ -8,32 +8,47 @@ import {
   PMPageSection,
   PMVStack,
 } from '@packmind/ui';
-
-type SpaceAccessStatus = 'open' | 'restricted' | 'private';
+import { SpaceType } from '@packmind/types';
+import { useCurrentSpace } from '../hooks/useCurrentSpace';
+import { useUpdateSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
 
 const ACCESS_STATUS_OPTIONS = [
   {
     label: 'Open — anyone in the organization can join',
-    value: 'open',
+    value: SpaceType.open,
   },
-  {
-    label: 'Restricted — visible to everyone, approval required to join',
-    value: 'restricted',
-  },
+  // TODO: Re-enable when approval workflow is implemented
+  // {
+  //   label: 'Restricted — visible to everyone, approval required to join',
+  //   value: SpaceType.restricted,
+  // },
   {
     label: 'Private — accessible only to invited members',
-    value: 'private',
+    value: SpaceType.private,
   },
 ];
 
-const MOCK_SPACE = {
-  accessStatus: 'open' as SpaceAccessStatus,
-};
-
 export function SpaceAccessSection() {
-  const [accessStatus, setAccessStatus] = useState<SpaceAccessStatus>(
-    MOCK_SPACE.accessStatus,
+  const { space, spaceId } = useCurrentSpace();
+  const updateMutation = useUpdateSpaceMutation();
+  const [accessStatus, setAccessStatus] = useState<SpaceType | undefined>(
+    undefined,
   );
+
+  const currentType = accessStatus ?? space?.type ?? SpaceType.open;
+  const hasChanges = accessStatus !== undefined && accessStatus !== space?.type;
+
+  const handleSave = () => {
+    if (!spaceId || !hasChanges) return;
+    updateMutation.mutate(
+      { spaceId, fields: { type: accessStatus } },
+      {
+        onSuccess: () => {
+          setAccessStatus(undefined);
+        },
+      },
+    );
+  };
 
   return (
     <PMPageSection
@@ -49,10 +64,8 @@ export function SpaceAccessSection() {
           <PMField.Label>Access status</PMField.Label>
           <PMNativeSelect
             items={ACCESS_STATUS_OPTIONS}
-            value={accessStatus}
-            onChange={(e) =>
-              setAccessStatus(e.target.value as SpaceAccessStatus)
-            }
+            value={currentType}
+            onChange={(e) => setAccessStatus(e.target.value as SpaceType)}
           />
           <PMField.HelperText>
             Controls who can see and join this space.
@@ -62,9 +75,9 @@ export function SpaceAccessSection() {
         <PMHStack justify="flex-end">
           <PMButton
             variant="secondary"
-            onClick={() => {
-              /* TODO: wire to API */
-            }}
+            onClick={handleSave}
+            disabled={!hasChanges || updateMutation.isPending}
+            loading={updateMutation.isPending}
           >
             Save changes
           </PMButton>

@@ -91,6 +91,9 @@ export abstract class AbstractPackmindAppPage
     // Wait for actual navigation (URL was already matching /org/** so waitForLoaded won't wait)
     await this.page.waitForURL((url) => url.toString() !== currentUrl);
 
+    // Wait for the space drawer to close (it closes via useEffect on pathname change)
+    await drawer.waitFor({ state: 'hidden' });
+
     return this.pageFactory.getDashboardPage();
   }
 
