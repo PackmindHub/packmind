@@ -58,6 +58,8 @@ import {
   IDeploymentPort,
   IGitPort,
   IGitPortName,
+  InstallPackagesCommand,
+  InstallPackagesResponse,
   IPullContentResponse,
   IRecipesPort,
   IRecipesPortName,
@@ -134,6 +136,7 @@ import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboard
 import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
 import { GetDashboardOutdatedUseCase } from '../useCases/getDashboardOutdated/GetDashboardOutdatedUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
+import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
@@ -192,6 +195,7 @@ export class DeploymentsAdapter
   private _getDashboardOutdatedUseCase!: GetDashboardOutdatedUseCase;
   private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
+  private _installPackagesUseCase!: InstallPackagesUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -399,6 +403,18 @@ export class DeploymentsAdapter
       this.distributionRepository,
       targetResolutionService,
       this.spacesPort,
+    );
+
+    this._installPackagesUseCase = new InstallPackagesUseCase(
+      this.deploymentsServices.getPackageService(),
+      this.recipesPort,
+      this.standardsPort,
+      this.skillsPort,
+      this.codingAgentPort,
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.accountsPort,
+      this.spacesPort,
+      ports.eventEmitterService,
     );
 
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(
@@ -690,6 +706,12 @@ export class DeploymentsAdapter
     command: PullContentCommand,
   ): Promise<IPullContentResponse> {
     return this._pullAllContentUseCase.execute(command);
+  }
+
+  async installPackages(
+    command: InstallPackagesCommand,
+  ): Promise<InstallPackagesResponse> {
+    return this._installPackagesUseCase.execute(command);
   }
 
   async listPackagesBySpace(

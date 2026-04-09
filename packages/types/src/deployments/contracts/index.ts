@@ -39,3 +39,4 @@ export * from './IGetContentByVersionsUseCase';
 export * from './IGetDashboardKpi';
 export * from './IGetDashboardOutdated';
 export * from './IGetDashboardNonLive';
+export * from './IInstallPackagesUseCase';
