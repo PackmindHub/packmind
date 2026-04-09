@@ -333,38 +333,56 @@ describe('OrganizationsController', () => {
     });
 
     describe('when gitRemoteUrl is missing', () => {
-      it('throws BadRequestException', async () => {
-        await expect(
-          controller.getDeployedContent(orgId, mockRequest, {
-            packagesSlugs: ['backend'],
+      it('passes through to the adapter without gitRemoteUrl', async () => {
+        await controller.getDeployedContent(orgId, mockRequest, {
+          packagesSlugs: ['backend'],
+          gitBranch: 'main',
+          relativePath: '/',
+        });
+
+        expect(mockDeploymentAdapter.getDeployedContent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            gitRemoteUrl: undefined,
             gitBranch: 'main',
             relativePath: '/',
-          } as typeof defaultBody),
-        ).rejects.toThrow(BadRequestException);
+          }),
+        );
       });
     });
 
     describe('when gitBranch is missing', () => {
-      it('throws BadRequestException', async () => {
-        await expect(
-          controller.getDeployedContent(orgId, mockRequest, {
-            packagesSlugs: ['backend'],
+      it('passes through to the adapter without gitBranch', async () => {
+        await controller.getDeployedContent(orgId, mockRequest, {
+          packagesSlugs: ['backend'],
+          gitRemoteUrl: 'https://github.com/org/repo.git',
+          relativePath: '/',
+        });
+
+        expect(mockDeploymentAdapter.getDeployedContent).toHaveBeenCalledWith(
+          expect.objectContaining({
             gitRemoteUrl: 'https://github.com/org/repo.git',
+            gitBranch: undefined,
             relativePath: '/',
-          } as typeof defaultBody),
-        ).rejects.toThrow(BadRequestException);
+          }),
+        );
       });
     });
 
     describe('when relativePath is missing', () => {
-      it('throws BadRequestException', async () => {
-        await expect(
-          controller.getDeployedContent(orgId, mockRequest, {
-            packagesSlugs: ['backend'],
+      it('passes through to the adapter without relativePath', async () => {
+        await controller.getDeployedContent(orgId, mockRequest, {
+          packagesSlugs: ['backend'],
+          gitRemoteUrl: 'https://github.com/org/repo.git',
+          gitBranch: 'main',
+        });
+
+        expect(mockDeploymentAdapter.getDeployedContent).toHaveBeenCalledWith(
+          expect.objectContaining({
             gitRemoteUrl: 'https://github.com/org/repo.git',
             gitBranch: 'main',
-          } as typeof defaultBody),
-        ).rejects.toThrow(BadRequestException);
+            relativePath: undefined,
+          }),
+        );
       });
     });
 
