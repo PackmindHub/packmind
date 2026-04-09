@@ -56,6 +56,18 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
         command.organization.id,
       );
 
+    // Step 1b: If no git remote URL, skip tracking entirely
+    if (!command.gitRemoteUrl || !command.gitBranch || !command.relativePath) {
+      this.logger.info(
+        'Skipping distribution tracking: no git remote URL provided',
+      );
+      return {
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skillFolders: [],
+        resolvedAgents: codingAgents,
+      };
+    }
+
     // Step 2: Resolve target from git info
     const target = await this.targetResolutionService.findTargetFromGitInfo(
       command.organization.id,

@@ -4,9 +4,9 @@ import { DistributionId } from '../DistributionId';
 
 export type NotifyDistributionCommand = PackmindCommand & {
   distributedPackages: string[];
-  gitRemoteUrl: string;
-  gitBranch: string;
-  relativePath: string;
+  gitRemoteUrl?: string;
+  gitBranch?: string;
+  relativePath?: string;
   agents?: CodingAgent[];
 };
 

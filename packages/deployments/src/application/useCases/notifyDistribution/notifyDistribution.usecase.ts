@@ -81,6 +81,13 @@ export class NotifyDistributionUseCase
     const userId = command.user.id;
     const organizationId = command.organization.id;
 
+    if (!gitRemoteUrl || !gitBranch || !relativePath) {
+      this.logger.info(
+        'Skipping distribution tracking: no git remote URL provided',
+      );
+      return { deploymentId: createDistributionId('') };
+    }
+
     this.logger.info('Processing distribution notification', {
       packageSlugs,
       gitRemoteUrl,

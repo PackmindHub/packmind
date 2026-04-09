@@ -782,9 +782,9 @@ export class DeploymentsController {
     @Body()
     body: {
       distributedPackages: string[];
-      gitRemoteUrl: string;
-      gitBranch: string;
-      relativePath: string;
+      gitRemoteUrl?: string;
+      gitBranch?: string;
+      relativePath?: string;
       agents?: CodingAgent[];
     },
     @Req() request: AuthenticatedRequest,

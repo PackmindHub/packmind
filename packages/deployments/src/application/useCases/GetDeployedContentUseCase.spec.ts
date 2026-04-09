@@ -3,6 +3,7 @@ import {
   CodingAgents,
   FileUpdates,
   GetDeployedContentCommand,
+  GetDeployedContentResponse,
   IAccountsPort,
   ICodingAgentPort,
   ISkillsPort,
@@ -444,6 +445,93 @@ describe('GetDeployedContentUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.fileUpdates.createOrUpdate).toEqual([]);
+    });
+  });
+
+  describe('when gitRemoteUrl is undefined', () => {
+    let result: GetDeployedContentResponse;
+
+    beforeEach(async () => {
+      command = { ...command, gitRemoteUrl: undefined };
+      result = await useCase.execute(command);
+    });
+
+    it('returns empty file updates', () => {
+      expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+
+    it('returns empty skill folders', () => {
+      expect(result.skillFolders).toEqual([]);
+    });
+
+    it('returns resolved agents', () => {
+      expect(result.resolvedAgents).toEqual([
+        CodingAgents.packmind,
+        CodingAgents.claude,
+      ]);
+    });
+
+    it('does not resolve target from git info', () => {
+      expect(
+        targetResolutionService.findTargetFromGitInfo,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('does not query deployed versions', () => {
+      expect(
+        distributionRepository.findActiveStandardVersionsByTarget,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when gitRemoteUrl is an empty string', () => {
+    let result: GetDeployedContentResponse;
+
+    beforeEach(async () => {
+      command = { ...command, gitRemoteUrl: '' };
+      result = await useCase.execute(command);
+    });
+
+    it('returns empty file updates', () => {
+      expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+  });
+
+  describe('when gitBranch is undefined', () => {
+    let result: GetDeployedContentResponse;
+
+    beforeEach(async () => {
+      command = { ...command, gitBranch: undefined };
+      result = await useCase.execute(command);
+    });
+
+    it('returns empty file updates', () => {
+      expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+
+    it('does not resolve target from git info', () => {
+      expect(
+        targetResolutionService.findTargetFromGitInfo,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when relativePath is undefined', () => {
+    let result: GetDeployedContentResponse;
+
+    beforeEach(async () => {
+      command = { ...command, relativePath: undefined };
+      result = await useCase.execute(command);
+    });
+
+    it('returns empty file updates', () => {
+      expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+
+    it('does not resolve target from git info', () => {
+      expect(
+        targetResolutionService.findTargetFromGitInfo,
+      ).not.toHaveBeenCalled();
     });
   });
 

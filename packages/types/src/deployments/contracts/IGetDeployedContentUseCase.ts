@@ -6,9 +6,9 @@ import { PackageId } from '../Package';
 
 export type GetDeployedContentCommand = PackmindCommand & {
   packagesSlugs: string[];
-  gitRemoteUrl: string;
-  gitBranch: string;
-  relativePath: string;
+  gitRemoteUrl?: string;
+  gitBranch?: string;
+  relativePath?: string;
   agents?: CodingAgent[];
 };
 

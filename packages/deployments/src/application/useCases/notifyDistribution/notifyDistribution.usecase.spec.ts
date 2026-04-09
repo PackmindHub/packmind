@@ -21,6 +21,7 @@ import {
   ISpacesPort,
   IStandardsPort,
   NotifyDistributionCommand,
+  NotifyDistributionResponse,
   Package,
   RenderMode,
   Space,
@@ -964,6 +965,119 @@ describe('NotifyDistributionUseCase', () => {
             renderModes: DEFAULT_ACTIVE_RENDER_MODES,
           }),
         );
+      });
+    });
+
+    describe('when gitRemoteUrl is undefined', () => {
+      let result: NotifyDistributionResponse;
+
+      beforeEach(async () => {
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns empty deployment id', () => {
+        expect(result.deploymentId).toEqual('');
+      });
+
+      it('does not create any target', () => {
+        expect(
+          mockTargetResolutionService.findOrCreateTargetFromGitInfo,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('does not save any distribution', () => {
+        expect(mockDistributionRepository.add).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when gitRemoteUrl is an empty string', () => {
+      let result: NotifyDistributionResponse;
+
+      beforeEach(async () => {
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: '',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns empty deployment id', () => {
+        expect(result.deploymentId).toEqual('');
+      });
+
+      it('does not create any target', () => {
+        expect(
+          mockTargetResolutionService.findOrCreateTargetFromGitInfo,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('does not save any distribution', () => {
+        expect(mockDistributionRepository.add).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when gitBranch is undefined', () => {
+      let result: NotifyDistributionResponse;
+
+      beforeEach(async () => {
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          relativePath: '/',
+        };
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns empty deployment id', () => {
+        expect(result.deploymentId).toEqual('');
+      });
+
+      it('does not create any target', () => {
+        expect(
+          mockTargetResolutionService.findOrCreateTargetFromGitInfo,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when relativePath is undefined', () => {
+      let result: NotifyDistributionResponse;
+
+      beforeEach(async () => {
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+        };
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns empty deployment id', () => {
+        expect(result.deploymentId).toEqual('');
+      });
+
+      it('does not create any target', () => {
+        expect(
+          mockTargetResolutionService.findOrCreateTargetFromGitInfo,
+        ).not.toHaveBeenCalled();
       });
     });
   });

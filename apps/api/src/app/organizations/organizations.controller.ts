@@ -234,19 +234,13 @@ export class OrganizationsController {
     @Body()
     body: {
       packagesSlugs?: string[];
-      gitRemoteUrl: string;
-      gitBranch: string;
-      relativePath: string;
+      gitRemoteUrl?: string;
+      gitBranch?: string;
+      relativePath?: string;
       agents?: string[];
     },
   ): Promise<IPullContentResponse> {
     const userId = request.user.userId;
-
-    if (!body.gitRemoteUrl || !body.gitBranch || !body.relativePath) {
-      throw new BadRequestException(
-        'gitRemoteUrl, gitBranch, and relativePath are required',
-      );
-    }
 
     const packagesSlugs = body.packagesSlugs ?? [];
 
