@@ -1,14 +1,12 @@
 ---
-name: Packmind Proprietary
-globs: '**/*.ts'
-alwaysApply: false
-description: Forbid importing from '@packmind/editions' in TypeScript files to prevent using OSS-only modules in proprietary codebases.
+name: 'Packmind Proprietary'
+alwaysApply: true
+description: 'Prohibit imports from ''@packmind/editions'' in proprietary codebases to prevent unintended use of open-source–only modules and ensure proper licensing boundaries.'
 ---
 
-## Standard: Packmind Proprietary
+# Standard: Packmind Proprietary
 
-Forbid importing from '@packmind/editions' in TypeScript files to prevent using OSS-only modules in proprietary codebases. :
-
-- Never import something from '@packmind/editions', this is for OSS only
+Prohibit imports from '@packmind/editions' in proprietary codebases to prevent unintended use of open-source–only modules and ensure proper licensing boundaries. :
+* Never import something from '@packmind/editions', this is for OSS only
 
 Full standard is available here for further request: [Packmind Proprietary](../../../.packmind/standards/packmind-proprietary.md)
