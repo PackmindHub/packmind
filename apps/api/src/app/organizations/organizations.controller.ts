@@ -14,6 +14,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationOnboardingStatus,
   IPullContentResponse,
+  InstallPackagesResponse,
   ListPackagesResponse,
   GetPackageSummaryResponse,
   IAccountsPort,
@@ -23,6 +24,7 @@ import {
   ArtifactVersionEntry,
   ISpacesPort,
   ListUserSpacesResponse,
+  PackmindLockFile,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -445,6 +447,90 @@ export class OrganizationsController {
       userId,
       organizationId,
     });
+  }
+
+  /**
+   * Install packages for an organization, respecting space-level access control
+   * POST /organizations/:orgId/install
+   */
+  @Post('install')
+  async installPackages(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: {
+      packagesSlugs: string[];
+      packmindLockFile: PackmindLockFile;
+      relativePath?: string;
+      agents?: string[];
+    },
+  ): Promise<InstallPackagesResponse> {
+    const userId = request.user.userId;
+
+    if (!body.packagesSlugs || !Array.isArray(body.packagesSlugs)) {
+      throw new BadRequestException('packagesSlugs array is required');
+    }
+
+    if (!body.packmindLockFile) {
+      throw new BadRequestException('packmindLockFile is required');
+    }
+
+    let agents: CodingAgent[] | undefined;
+    if (body.agents !== undefined) {
+      const validAgents = body.agents.filter(isValidCodingAgent);
+      const invalidAgents = body.agents.filter((a) => !isValidCodingAgent(a));
+      if (invalidAgents.length > 0) {
+        this.logger.info('Invalid agent values provided, ignoring', {
+          invalidAgents,
+          validAgents,
+        });
+      }
+      agents = validAgents;
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/install - Installing packages for organization',
+      {
+        organizationId,
+        userId,
+        packagesSlugs: body.packagesSlugs,
+        relativePath: body.relativePath,
+        agents,
+      },
+    );
+
+    try {
+      return await this.deploymentAdapter.installPackages({
+        userId,
+        organizationId,
+        packagesSlugs: body.packagesSlugs,
+        packmindLockFile: body.packmindLockFile,
+        relativePath: body.relativePath,
+        agents,
+        source: request.clientSource,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/install - Failed to install packages',
+        {
+          organizationId,
+          userId,
+          error: errorMessage,
+        },
+      );
+
+      if (error instanceof NoPackageSlugsProvidedError) {
+        throw new BadRequestException(error.message);
+      }
+
+      if (error instanceof PackagesNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   /**

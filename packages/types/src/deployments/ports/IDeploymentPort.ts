@@ -42,6 +42,8 @@ import {
   GetTargetByIdResponse,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
+  InstallPackagesCommand,
+  InstallPackagesResponse,
   IPullContentResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -334,6 +336,21 @@ export interface IDeploymentPort {
    * @returns Promise resolving to file updates for all coding agents
    */
   pullAllContent(command: PullContentCommand): Promise<IPullContentResponse>;
+
+  /**
+   * Installs packages for an organization, respecting space-level access control.
+   *
+   * For each package slug, checks if the user has access to the corresponding space.
+   * Packages in inaccessible spaces are listed in `missingAccess` and their artifacts
+   * are preserved from the provided `packmindLockFile`. Only accessible packages are
+   * deployed and their artifacts are updated.
+   *
+   * @param command - Command containing packagesSlugs, packmindLockFile, and optional agents
+   * @returns Promise resolving to file updates, missing access list, resolved agents, and skill folders
+   */
+  installPackages(
+    command: InstallPackagesCommand,
+  ): Promise<InstallPackagesResponse>;
 
   /**
    * Lists all packages in a specific space
