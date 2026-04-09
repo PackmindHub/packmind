@@ -1,6 +1,8 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["@global/generic", "@global/playground"],
+  "packageSlugs": [
+    "generic"
+  ],
   "agents": [
     "agents_md",
     "claude",
@@ -9,30 +11,33 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-01T14:26:24.627Z",
+  "installedAt": "2026-04-09T08:54:27.667Z",
+  "targetId": "69797760-3b22-4c71-95df-c0d2df01fe5f",
   "artifacts": {
-    "command:release-app": {
-      "name": "Release app",
+    "command:create-handoff": {
+      "name": "Create handoff",
       "type": "command",
-      "id": "03040e51-42bb-4bdf-94fb-e12721e1d941",
-      "version": 3,
+      "id": "f7907029-f0c1-4c32-b488-bfac6fbaab1c",
+      "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
-          "path": ".packmind/commands/release-app.md",
+          "path": ".packmind/commands/create-handoff.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/prompts/release-app.prompt.md",
+          "path": ".github/prompts/create-handoff.prompt.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/commands/release-app.md",
+          "path": ".claude/commands/create-handoff.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/commands/release-app.md",
+          "path": ".cursor/commands/create-handoff.md",
           "agent": "cursor"
         }
       ]
@@ -43,7 +48,9 @@
       "id": "231875a1-cd53-414c-8fbb-c4f301a2d386",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".packmind/commands/create-new-package-in-monorepo.md",
@@ -63,28 +70,30 @@
         }
       ]
     },
-    "command:how-to-write-typeorm-migrations-in-packmind": {
-      "name": "How to Write TypeORM Migrations in Packmind",
+    "command:create-or-update-model-and-typeorm-schemas": {
+      "name": "Create or update model and TypeORM schemas",
       "type": "command",
-      "id": "27151725-7ae6-4318-9377-e03ab73d4247",
+      "id": "e76d8f23-e2c3-4336-9cd3-c6102f47af0f",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
-          "path": ".packmind/commands/how-to-write-typeorm-migrations-in-packmind.md",
+          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/prompts/how-to-write-typeorm-migrations-in-packmind.prompt.md",
+          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/commands/how-to-write-typeorm-migrations-in-packmind.md",
+          "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/commands/how-to-write-typeorm-migrations-in-packmind.md",
+          "path": ".cursor/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "cursor"
         }
       ]
@@ -95,7 +104,9 @@
       "id": "51fa2ad4-cb4d-4f27-a7d3-8aa55c91ff18",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".packmind/commands/creating-end-user-documentation-for-packmind.md",
@@ -115,54 +126,86 @@
         }
       ]
     },
-    "command:wrapping-chakra-ui-with-slot-components": {
-      "name": "Wrapping Chakra UI with Slot Components",
+    "command:gateway-pattern-implementation-in-packmind-frontend": {
+      "name": "Gateway Pattern Implementation in Packmind Frontend",
       "type": "command",
-      "id": "9c0df659-eb9f-4e37-b915-8540f982d6f2",
+      "id": "ef745515-4898-4a34-8762-5c3a7a2d0f63",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
-          "path": ".packmind/commands/wrapping-chakra-ui-with-slot-components.md",
+          "path": ".packmind/commands/gateway-pattern-implementation-in-packmind-frontend.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/prompts/wrapping-chakra-ui-with-slot-components.prompt.md",
+          "path": ".github/prompts/gateway-pattern-implementation-in-packmind-frontend.prompt.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/commands/wrapping-chakra-ui-with-slot-components.md",
+          "path": ".claude/commands/gateway-pattern-implementation-in-packmind-frontend.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/commands/wrapping-chakra-ui-with-slot-components.md",
+          "path": ".cursor/commands/gateway-pattern-implementation-in-packmind-frontend.md",
           "agent": "cursor"
         }
       ]
     },
-    "command:working-with-git-worktrees-in-cursor": {
-      "name": "Working with Git Worktrees in Cursor",
+    "command:how-to-write-typeorm-migrations-in-packmind": {
+      "name": "How to Write TypeORM Migrations in Packmind",
       "type": "command",
-      "id": "bea9e57f-d1f9-4346-82c3-70d6c41eb547",
-      "version": 1,
+      "id": "27151725-7ae6-4318-9377-e03ab73d4247",
+      "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
-          "path": ".packmind/commands/working-with-git-worktrees-in-cursor.md",
+          "path": ".packmind/commands/how-to-write-typeorm-migrations-in-packmind.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/prompts/working-with-git-worktrees-in-cursor.prompt.md",
+          "path": ".github/prompts/how-to-write-typeorm-migrations-in-packmind.prompt.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/commands/working-with-git-worktrees-in-cursor.md",
+          "path": ".claude/commands/how-to-write-typeorm-migrations-in-packmind.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/commands/working-with-git-worktrees-in-cursor.md",
+          "path": ".cursor/commands/how-to-write-typeorm-migrations-in-packmind.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "command:release-app": {
+      "name": "Release app",
+      "type": "command",
+      "id": "03040e51-42bb-4bdf-94fb-e12721e1d941",
+      "version": 3,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".packmind/commands/release-app.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/release-app.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/release-app.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/release-app.md",
           "agent": "cursor"
         }
       ]
@@ -173,7 +216,9 @@
       "id": "c1ac14ce-bb7b-44e3-a4db-d6252d1b9930",
       "version": 5,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".packmind/commands/release-cli.md",
@@ -199,7 +244,9 @@
       "id": "d08e183f-beff-431e-9b0e-d21ffb64014c",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".packmind/commands/repository-implementation-and-testing-pattern.md",
@@ -219,117 +266,15 @@
         }
       ]
     },
-    "command:create-or-update-model-and-typeorm-schemas": {
-      "name": "Create or update model and TypeORM schemas",
-      "type": "command",
-      "id": "e76d8f23-e2c3-4336-9cd3-c6102f47af0f",
-      "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
-      "files": [
-        {
-          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/create-or-update-model-and-typeorm-schemas.md",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "command:gateway-pattern-implementation-in-packmind-frontend": {
-      "name": "Gateway Pattern Implementation in Packmind Frontend",
-      "type": "command",
-      "id": "ef745515-4898-4a34-8762-5c3a7a2d0f63",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
-      "files": [
-        {
-          "path": ".packmind/commands/gateway-pattern-implementation-in-packmind-frontend.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/gateway-pattern-implementation-in-packmind-frontend.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/gateway-pattern-implementation-in-packmind-frontend.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/gateway-pattern-implementation-in-packmind-frontend.md",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "command:update-handoff": {
-      "name": "Update Handoff",
-      "type": "command",
-      "id": "fc2294fd-2bcd-4b09-a610-8dbad8459276",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
-      "files": [
-        {
-          "path": ".packmind/commands/update-handoff.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/update-handoff.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/update-handoff.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/update-handoff.md",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "command:create-handoff": {
-      "name": "Create handoff",
-      "type": "command",
-      "id": "f7907029-f0c1-4c32-b488-bfac6fbaab1c",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
-      "files": [
-        {
-          "path": ".packmind/commands/create-handoff.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/create-handoff.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/create-handoff.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/create-handoff.md",
-          "agent": "cursor"
-        }
-      ]
-    },
     "command:resume-handoff": {
       "name": "Resume handoff",
       "type": "command",
       "id": "05c8b199-25d7-4cf6-9fe5-4835e1e3ae5e",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".packmind/commands/resume-handoff.md",
@@ -349,13 +294,125 @@
         }
       ]
     },
+    "command:update-handoff": {
+      "name": "Update Handoff",
+      "type": "command",
+      "id": "fc2294fd-2bcd-4b09-a610-8dbad8459276",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".packmind/commands/update-handoff.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/update-handoff.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/update-handoff.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/update-handoff.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "command:working-with-git-worktrees-in-cursor": {
+      "name": "Working with Git Worktrees in Cursor",
+      "type": "command",
+      "id": "bea9e57f-d1f9-4346-82c3-70d6c41eb547",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".packmind/commands/working-with-git-worktrees-in-cursor.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/working-with-git-worktrees-in-cursor.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/working-with-git-worktrees-in-cursor.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/working-with-git-worktrees-in-cursor.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "command:wrapping-chakra-ui-with-slot-components": {
+      "name": "Wrapping Chakra UI with Slot Components",
+      "type": "command",
+      "id": "9c0df659-eb9f-4e37-b915-8540f982d6f2",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".packmind/commands/wrapping-chakra-ui-with-slot-components.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/wrapping-chakra-ui-with-slot-components.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/wrapping-chakra-ui-with-slot-components.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/wrapping-chakra-ui-with-slot-components.md",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:back-end-typescript-clean-code-practices": {
+      "name": "Back-end TypeScript Clean Code Practices",
+      "type": "standard",
+      "id": "2e289137-cf3f-48a7-b6eb-bd2b4abf5caa",
+      "version": 8,
+      "spaceId": "",
+      "packageIds": [],
+      "files": [
+        {
+          "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-back-end-typescript-clean-code-practices.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-back-end-typescript-clean-code-practices.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-back-end-typescript-clean-code-practices.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
     "standard:changelog": {
       "name": "Changelog",
       "type": "standard",
       "id": "68528136-4310-4910-848c-89c9fce93739",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".packmind/standards/changelog.md",
@@ -375,39 +432,15 @@
         }
       ]
     },
-    "standard:typescript-good-practices": {
-      "name": "Typescript good practices",
-      "type": "standard",
-      "id": "e26dc800-20ca-4378-beb7-aa1c773864e3",
-      "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
-      "files": [
-        {
-          "path": ".packmind/standards/typescript-good-practices.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-typescript-good-practices.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-typescript-good-practices.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-typescript-good-practices.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:testing-good-practices": {
       "name": "Testing good practices",
       "type": "standard",
       "id": "f18dc77f-ea04-4b57-af74-319287fd7fea",
       "version": 6,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".packmind/standards/testing-good-practices.md",
@@ -427,63 +460,127 @@
         }
       ]
     },
-    "skill:test-factory-patterns": {
-      "name": "test-factory-patterns",
-      "type": "skill",
-      "id": "3dc94d05-adea-4b2e-95dd-39199913b1ef",
-      "version": 1,
+    "standard:typescript-good-practices": {
+      "name": "Typescript good practices",
+      "type": "standard",
+      "id": "e26dc800-20ca-4378-beb7-aa1c773864e3",
+      "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
-          "path": ".github/skills/test-factory-patterns/SKILL.md",
+          "path": ".packmind/standards/typescript-good-practices.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-typescript-good-practices.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-typescript-good-practices.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-typescript-good-practices.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "skill:adding-ai-agent-rendering-system": {
+      "name": "adding-ai-agent-rendering-system",
+      "type": "skill",
+      "id": "ddb8af6b-66b7-4d4c-9e25-993502acdd20",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "copilot",
           "isSkillDefinition": true
         },
         {
-          "path": ".claude/skills/test-factory-patterns/SKILL.md",
+          "path": ".claude/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "claude",
           "isSkillDefinition": true
         },
         {
-          "path": ".cursor/skills/test-factory-patterns/SKILL.md",
+          "path": ".cursor/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "cursor",
           "isSkillDefinition": true
         },
         {
-          "path": ".gitlab/duo/skills/test-factory-patterns/SKILL.md",
+          "path": ".gitlab/duo/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
         }
       ]
     },
-    "skill:git-commit-guidelines": {
-      "name": "git-commit-guidelines",
+    "skill:create-em-spec": {
+      "name": "create-em-spec",
       "type": "skill",
-      "id": "f1133c02-d615-4520-9c51-3adf3e6932eb",
-      "version": 2,
+      "id": "17153f49-2878-4351-b43b-c71704c17b89",
+      "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
-          "path": ".github/skills/git-commit-guidelines/SKILL.md",
+          "path": ".github/skills/create-em-spec/SKILL.md",
           "agent": "copilot",
           "isSkillDefinition": true
         },
         {
-          "path": ".claude/skills/git-commit-guidelines/SKILL.md",
+          "path": ".github/skills/create-em-spec/inputs/github-issue.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/create-em-spec/inputs/miro-screenshots.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/skills/create-em-spec/SKILL.md",
           "agent": "claude",
           "isSkillDefinition": true
         },
         {
-          "path": ".cursor/skills/git-commit-guidelines/SKILL.md",
+          "path": ".claude/skills/create-em-spec/inputs/github-issue.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/create-em-spec/inputs/miro-screenshots.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/skills/create-em-spec/SKILL.md",
           "agent": "cursor",
           "isSkillDefinition": true
         },
         {
-          "path": ".gitlab/duo/skills/git-commit-guidelines/SKILL.md",
+          "path": ".cursor/skills/create-em-spec/inputs/github-issue.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/create-em-spec/inputs/miro-screenshots.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".gitlab/duo/skills/create-em-spec/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/create-em-spec/inputs/github-issue.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/create-em-spec/inputs/miro-screenshots.md",
+          "agent": "gitlab_duo"
         }
       ]
     },
@@ -493,7 +590,9 @@
       "id": "7683e9a7-4d61-40be-a993-9de987dba976",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".github/skills/doc-audit/SKILL.md",
@@ -533,13 +632,47 @@
         }
       ]
     },
+    "skill:git-commit-guidelines": {
+      "name": "git-commit-guidelines",
+      "type": "skill",
+      "id": "f1133c02-d615-4520-9c51-3adf3e6932eb",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/git-commit-guidelines/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/git-commit-guidelines/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/git-commit-guidelines/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/git-commit-guidelines/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
     "skill:qa-review": {
       "name": "qa-review",
       "type": "skill",
       "id": "468a3a08-d963-4c26-a600-c0bb755cdb14",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".github/skills/qa-review/SKILL.md",
@@ -627,13 +760,47 @@
         }
       ]
     },
+    "skill:test-factory-patterns": {
+      "name": "test-factory-patterns",
+      "type": "skill",
+      "id": "3dc94d05-adea-4b2e-95dd-39199913b1ef",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/test-factory-patterns/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/test-factory-patterns/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/test-factory-patterns/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/test-factory-patterns/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
     "skill:ux-microcopy": {
       "name": "ux-microcopy",
       "type": "skill",
       "id": "e8211a60-03b4-41ed-b75e-94c999a7b226",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
       "files": [
         {
           "path": ".github/skills/ux-microcopy/SKILL.md",
@@ -657,43 +824,13 @@
         }
       ]
     },
-    "skill:adding-ai-agent-rendering-system": {
-      "name": "adding-ai-agent-rendering-system",
-      "type": "skill",
-      "id": "ddb8af6b-66b7-4d4c-9e25-993502acdd20",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"],
-      "files": [
-        {
-          "path": ".github/skills/adding-ai-agent-rendering-system/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/adding-ai-agent-rendering-system/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/adding-ai-agent-rendering-system/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/adding-ai-agent-rendering-system/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
     "skill:working-with-playground-app": {
       "name": "working-with-playground-app",
       "type": "skill",
       "id": "9f2f119d-b7ca-4415-b056-03bb4d7ee387",
       "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["16a47324-2b84-49b9-818e-0619273c66ed"],
+      "spaceId": "",
+      "packageIds": [],
       "files": [
         {
           "path": ".github/skills/working-with-playground-app/SKILL.md",
@@ -738,8 +875,8 @@
       "type": "skill",
       "id": "a21235ed-a979-41db-ad6f-6cc87c7b840d",
       "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["16a47324-2b84-49b9-818e-0619273c66ed"],
+      "spaceId": "",
+      "packageIds": [],
       "files": [
         {
           "path": ".github/skills/working-with-pm-design-kit/SKILL.md",
