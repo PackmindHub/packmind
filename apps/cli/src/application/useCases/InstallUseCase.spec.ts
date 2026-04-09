@@ -284,7 +284,7 @@ describe('InstallUseCase', () => {
             baseDirectory: '/test',
           }),
         ).rejects.toThrow(
-          "You don't have access to space @public-space. It is a public space — you can join at: https://app.packmind.com/organisation/my-org/spaces/public-space/join",
+          "You don't have access to space @public-space. It is a public space — you can join at: https://app.packmind.com/org/my-org/spaces/public-space/join",
         );
       });
     });

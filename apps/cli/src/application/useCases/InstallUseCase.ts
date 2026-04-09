@@ -196,7 +196,7 @@ export class InstallUseCase implements IInstallUseCase {
       } else {
         const organization =
           await this.packmindGateway.organization.getOrganization();
-        const joinUrl = `${host}/organisation/${organization.slug}/spaces/${spaceSlug}/join`;
+        const joinUrl = `${host}/org/${organization.slug}/spaces/${spaceSlug}/join`;
         errors.push(
           `You don't have access to space @${spaceSlug}. It is a public space — you can join at: ${joinUrl}`,
         );
