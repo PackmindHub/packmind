@@ -15,6 +15,7 @@ export type IInstallResult = {
   skillsCount: number;
   skillDirectoriesDeleted: number;
   missingAccess: string[];
+  joinSpaceUrl?: string;
 };
 
 export type IInstallUseCase = IPublicUseCase<IInstallCommand, IInstallResult>;

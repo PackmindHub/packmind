@@ -78,6 +78,12 @@ export class InstallUseCase implements IInstallUseCase {
 
     result.missingAccess = response.missingAccess;
 
+    if (result.missingAccess.length > 0) {
+      result.joinSpaceUrl = await this.computeJoinSpaceUrl(
+        result.missingAccess,
+      );
+    }
+
     // Filter out packmind.json from server response - config writing is handled separately
     // by the CLI to preserve property order
     const filteredCreateOrUpdate = response.fileUpdates.createOrUpdate.filter(
@@ -206,6 +212,30 @@ export class InstallUseCase implements IInstallUseCase {
     if (errors.length > 0) {
       throw new Error(errors.join('\n'));
     }
+  }
+
+  private async computeJoinSpaceUrl(
+    missingAccessSlugs: string[],
+  ): Promise<string | undefined> {
+    const spaceSlugs = new Set<string>();
+    for (const slug of missingAccessSlugs) {
+      if (slug.startsWith('@')) {
+        const spaceSlug = slug.slice(1).split('/')[0];
+        spaceSlugs.add(spaceSlug);
+      }
+    }
+
+    if (spaceSlugs.size !== 1) return undefined;
+
+    const [spaceSlug] = spaceSlugs;
+    const space = await this.spaceService.getSpaceBySlug(spaceSlug);
+
+    if (!space || space.type !== SpaceType.open) return undefined;
+
+    const organization =
+      await this.packmindGateway.organization.getOrganization();
+    const { host } = this.spaceService.getApiContext();
+    return `${host}/org/${organization.slug}/spaces/${spaceSlug}/join`;
   }
 
   private async createOrUpdateFile(

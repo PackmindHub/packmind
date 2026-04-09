@@ -31,10 +31,15 @@ export const install2Command = command({
       });
 
       if (result.missingAccess.length > 0) {
-        logWarningConsole(
+        let warning =
           `⚠️  You don't have access to the following packages (their artifacts were preserved from the lock file):\n` +
-            result.missingAccess.map((s) => `  - ${s}`).join('\n'),
-        );
+          result.missingAccess.map((s) => `  - ${s}`).join('\n');
+
+        if (result.joinSpaceUrl) {
+          warning += `\n\n  👉 Join the space to get access: ${result.joinSpaceUrl}`;
+        }
+
+        logWarningConsole(warning);
       }
 
       logConsole(

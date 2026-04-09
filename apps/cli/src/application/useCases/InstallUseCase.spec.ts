@@ -302,6 +302,71 @@ describe('InstallUseCase', () => {
 
       expect(result.missingAccess).toEqual(['@space/restricted-pkg']);
     });
+
+    describe('when all missing packages belong to the same open space', () => {
+      beforeEach(() => {
+        mockGateway.deployment.install.mockResolvedValue(
+          installResponseFactory({
+            missingAccess: ['@open-space/pkg-a', '@open-space/pkg-b'],
+          }),
+        );
+        mockSpaceService.getSpaceBySlug.mockResolvedValue(
+          spaceFactory({ slug: 'open-space', type: SpaceType.open }),
+        );
+        mockSpaceService.getApiContext.mockReturnValue({
+          host: 'https://app.packmind.com',
+          organizationId: 'org-1',
+        });
+        mockGateway.organization.getOrganization.mockResolvedValue({
+          id: createOrganizationId('org-1'),
+          name: 'My Org',
+          slug: 'my-org',
+        });
+      });
+
+      it('includes a joinSpaceUrl in the result', async () => {
+        const result = await useCase.execute({ baseDirectory: '/test' });
+
+        expect(result.joinSpaceUrl).toBe(
+          'https://app.packmind.com/org/my-org/spaces/open-space/join',
+        );
+      });
+    });
+
+    describe('when missing packages belong to multiple spaces', () => {
+      beforeEach(() => {
+        mockGateway.deployment.install.mockResolvedValue(
+          installResponseFactory({
+            missingAccess: ['@space-a/pkg-1', '@space-b/pkg-2'],
+          }),
+        );
+      });
+
+      it('does not include a joinSpaceUrl in the result', async () => {
+        const result = await useCase.execute({ baseDirectory: '/test' });
+
+        expect(result.joinSpaceUrl).toBeUndefined();
+      });
+    });
+
+    describe('when missing packages belong to a single non-open space', () => {
+      beforeEach(() => {
+        mockGateway.deployment.install.mockResolvedValue(
+          installResponseFactory({
+            missingAccess: ['@private-space/secret-pkg'],
+          }),
+        );
+        mockSpaceService.getSpaceBySlug.mockResolvedValue(
+          spaceFactory({ slug: 'private-space', type: SpaceType.private }),
+        );
+      });
+
+      it('does not include a joinSpaceUrl in the result', async () => {
+        const result = await useCase.execute({ baseDirectory: '/test' });
+
+        expect(result.joinSpaceUrl).toBeUndefined();
+      });
+    });
   });
 
   describe('when file does not exist', () => {
