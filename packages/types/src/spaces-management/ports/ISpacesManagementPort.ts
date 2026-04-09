@@ -8,6 +8,7 @@ import {
 } from '../contracts/IBrowseSpacesUseCase';
 import {
   JoinSpaceCommand,
+  JoinSpaceBySlugCommand,
   JoinSpaceResponse,
 } from '../contracts/IJoinSpaceUseCase';
 import {
@@ -47,6 +48,11 @@ export interface ISpacesManagementPort {
    * Join a space by its ID.
    */
   joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse>;
+
+  /**
+   * Join a space by its slug within the organization.
+   */
+  joinSpaceBySlug(command: JoinSpaceBySlugCommand): Promise<JoinSpaceResponse>;
 
   /**
    * Update a space's settings (name, type).
