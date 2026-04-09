@@ -147,6 +147,38 @@ export const useJoinSpaceMutation = () => {
   });
 };
 
+const JOIN_SPACE_BY_SLUG_MUTATION_KEY = 'joinSpaceBySlug';
+
+export const useJoinSpaceBySlugMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [JOIN_SPACE_BY_SLUG_MUTATION_KEY],
+    mutationFn: async ({ spaceSlug }: { spaceSlug: string }) => {
+      if (!organization?.id) {
+        throw new Error('Organization context required');
+      }
+      return spacesManagementGateway.joinSpaceBySlug(
+        organization.id,
+        spaceSlug,
+      );
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.all,
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: spacesManagementQueryKeys.all,
+          refetchType: 'all',
+        }),
+      ]);
+    },
+  });
+};
+
 const UPDATE_SPACE_MUTATION_KEY = 'updateSpace';
 
 export const useUpdateSpaceMutation = () => {

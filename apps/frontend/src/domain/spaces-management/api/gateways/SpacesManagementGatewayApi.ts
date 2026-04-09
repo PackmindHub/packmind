@@ -67,6 +67,16 @@ export class SpacesManagementGatewayApi
     );
   }
 
+  async joinSpaceBySlug(orgId: string, spaceSlug: string): Promise<void> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to join a space');
+    }
+    return this._api.post(
+      `${this._endpoint}/${orgId}/spaces-management/by-slug/${spaceSlug}/join`,
+      {},
+    );
+  }
+
   async updateSpace(
     orgId: string,
     spaceId: SpaceId,

@@ -22,6 +22,7 @@ export interface ISpacesManagementGateway {
   ): Promise<MoveArtifactsToSpaceResponse>;
   browseSpaces(orgId: string): Promise<BrowseSpacesResponse>;
   joinSpace(orgId: string, spaceId: SpaceId): Promise<void>;
+  joinSpaceBySlug(orgId: string, spaceSlug: string): Promise<void>;
   updateSpace(
     orgId: string,
     spaceId: SpaceId,
