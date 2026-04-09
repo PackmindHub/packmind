@@ -1,8 +1,8 @@
 import { SpaceId } from '@packmind/types';
 
 export class SpaceNotFoundError extends Error {
-  constructor(spaceId: SpaceId) {
-    super(`Space ${spaceId} not found`);
+  constructor(spaceIdOrSlug: SpaceId | string) {
+    super(`Space ${spaceIdOrSlug} not found`);
     this.name = 'SpaceNotFoundError';
   }
 }
