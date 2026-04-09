@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PMHeader } from './PMHeader';
 import { HStack } from '@chakra-ui/react';
 import { PMButton } from '../../form/PMButton/PMButton';

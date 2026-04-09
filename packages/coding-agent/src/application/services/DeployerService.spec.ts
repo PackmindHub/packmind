@@ -138,9 +138,7 @@ class MockDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     recipeVersions: RecipeVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     standardVersions: StandardVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[] = [],

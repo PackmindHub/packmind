@@ -9,7 +9,7 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
-    "@nestjs/common": "^11.1.17",
-    "typeorm": "0.3.28"
+    "typeorm": "0.3.28",
+    "@nestjs/common": "^11.1.17"
   }
 }

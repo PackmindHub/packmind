@@ -6,14 +6,14 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/accounts": "0.0.1",
-    "@packmind/logger": "0.0.1",
-    "@packmind/node-utils": "0.0.1",
-    "@packmind/spaces": "0.0.1",
-    "@packmind/test-utils": "0.0.1",
-    "@packmind/types": "0.0.1",
-    "slug": "^11.0.1",
+    "@packmind/accounts": "*",
+    "@packmind/logger": "*",
+    "@packmind/node-utils": "*",
+    "@packmind/spaces": "*",
+    "@packmind/test-utils": "*",
+    "@packmind/types": "*",
     "typeorm": "0.3.28",
-    "uuid": "^11.0.5"
+    "uuid": "^11.1.0",
+    "slug": "^11.0.0"
   }
 }

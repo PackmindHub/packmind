@@ -1,10 +1,9 @@
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import {
+const {
   swcTransformWithDefineFields,
   standardModuleFileExtensions,
-} from '../../jest-utils';
+} = require('../../jest-utils.ts');
 
-export default {
+module.exports = {
   displayName: 'packmind-cli',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',

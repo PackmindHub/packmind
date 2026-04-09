@@ -138,12 +138,10 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
           />
         </>
       )}
-      {inviteUserOpened && (
-        <InviteUsersDialog
-          open={inviteUserOpened}
-          setOpen={setInviteUserOpened}
-        />
-      )}
+      <InviteUsersDialog
+        open={inviteUserOpened}
+        setOpen={setInviteUserOpened}
+      />
       {changeRoleUserStatus && (
         <ChangeUserRoleDialog
           open={!!changeRoleUserStatus}

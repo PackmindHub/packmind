@@ -6,17 +6,14 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "typeorm": "0.3.28",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
+    "@packmind/test-utils": "*",
+    "typeorm": "0.3.28",
     "uuid": "^11.1.0",
-    "bcrypt": "^6.0.0",
     "slug": "^11.0.0",
-    "validator": "^13.15.15",
-    "@packmind/test-utils": "0.0.1"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^5.0.2"
+    "bcrypt": "^6.0.0",
+    "validator": "^13.15.15"
   }
 }

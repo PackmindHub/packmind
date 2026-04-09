@@ -1,7 +1,7 @@
 ---
 applyTo: '**/*.spec.ts, **/*.spec.tsx, **/*.test.ts, **/*.test.tsx'
 ---
-## Standard: Testing good practices
+# Standard: Testing good practices
 
 Standardize unit test structure and naming in TypeScript/TSX test files using verb-first descriptions, Arrange-Act-Assert flow without comments, nested describe('when...') context blocks, and single-expect test cases to improve readability, maintainability, and debugging. :
 * Follow  'Arrange, Act, Assert' pattern
