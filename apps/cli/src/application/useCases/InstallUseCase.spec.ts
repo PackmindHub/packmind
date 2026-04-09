@@ -80,7 +80,10 @@ describe('InstallUseCase', () => {
     (fs.rmdir as jest.Mock).mockResolvedValue(undefined);
     (fs.chmod as jest.Mock).mockResolvedValue(undefined);
 
-    // Default: lock file exists with one package, install returns empty response
+    // Default: packmind.json and lock file exist with one package, install returns empty response
+    mockConfigFileRepository.readConfig.mockResolvedValue({
+      packages: { '@space/test-package': '*' },
+    });
     mockLockFileRepository.read.mockResolvedValue(
       lockFileFactory({ packageSlugs: ['@space/test-package'] }),
     );
@@ -98,14 +101,14 @@ describe('InstallUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('when no lock file exists and no explicit packages are provided', () => {
+  describe('when no packmind.json exists and no explicit packages are provided', () => {
     beforeEach(() => {
-      mockLockFileRepository.read.mockResolvedValue(null);
+      mockConfigFileRepository.readConfig.mockResolvedValue(null);
     });
 
-    it('throws an error indicating the lock file is missing', async () => {
+    it('throws an error indicating packmind.json is missing', async () => {
       await expect(useCase.execute({ baseDirectory: '/test' })).rejects.toThrow(
-        'No packmind-lock.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
+        'No packmind.json found in this directory. Run `packmind-cli install-2 <@space/package>` first to install your packages.',
       );
     });
   });
@@ -118,13 +121,13 @@ describe('InstallUseCase', () => {
 
     beforeEach(() => {
       mockLockFileRepository.read.mockResolvedValue(null);
+      mockConfigFileRepository.readConfig.mockResolvedValue(null);
       mockSpaceService.getSpaces.mockResolvedValue([mySpace]);
       mockSpaceService.getDefaultSpace.mockResolvedValue(mySpace);
       mockSpaceService.getApiContext.mockReturnValue({
         host: 'https://app.packmind.com',
         organizationId: 'org-1',
       });
-      mockConfigFileRepository.readConfig.mockResolvedValue(null);
     });
 
     it('proceeds without throwing', async () => {
@@ -148,16 +151,31 @@ describe('InstallUseCase', () => {
         }),
       );
     });
+
+    it('updates packmind.json with the installed package slug', async () => {
+      await useCase.execute({
+        packages: ['@my-space/my-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(mockConfigFileRepository.addPackagesToConfig).toHaveBeenCalledWith(
+        '/test',
+        ['@my-space/my-package'],
+      );
+    });
   });
 
-  describe('when lock file exists and no explicit packages are provided', () => {
+  describe('when packmind.json exists with packages and no explicit packages are provided', () => {
     beforeEach(() => {
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/pkg-a': '*', '@space/pkg-b': '*' },
+      });
       mockLockFileRepository.read.mockResolvedValue(
         lockFileFactory({ packageSlugs: ['@space/pkg-a', '@space/pkg-b'] }),
       );
     });
 
-    it('calls install with the lock file package slugs', async () => {
+    it('calls install with the packmind.json package slugs', async () => {
       await useCase.execute({ baseDirectory: '/test' });
 
       expect(mockGateway.deployment.install).toHaveBeenCalledWith(
@@ -167,7 +185,7 @@ describe('InstallUseCase', () => {
       );
     });
 
-    it('passes the lock file to the install call', async () => {
+    it('passes the lock file to the install call for artifact preservation', async () => {
       await useCase.execute({ baseDirectory: '/test' });
 
       expect(mockGateway.deployment.install).toHaveBeenCalledWith(
@@ -177,6 +195,14 @@ describe('InstallUseCase', () => {
           }),
         }),
       );
+    });
+
+    it('does not update packmind.json', async () => {
+      await useCase.execute({ baseDirectory: '/test' });
+
+      expect(
+        mockConfigFileRepository.addPackagesToConfig,
+      ).not.toHaveBeenCalled();
     });
   });
 

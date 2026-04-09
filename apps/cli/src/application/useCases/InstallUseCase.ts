@@ -42,9 +42,11 @@ export class InstallUseCase implements IInstallUseCase {
     const hasExplicitPackages = command.packages && command.packages.length > 0;
 
     const lockFile = await this.lockFileRepository.read(baseDirectory);
-    if (!lockFile && !hasExplicitPackages) {
+    const config = await this.configFileRepository.readConfig(baseDirectory);
+
+    if (!config && !hasExplicitPackages) {
       throw new Error(
-        'No packmind-lock.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
+        'No packmind.json found in this directory. Run `packmind-cli install-2 <@space/package>` first to install your packages.',
       );
     }
 
@@ -57,18 +59,16 @@ export class InstallUseCase implements IInstallUseCase {
     };
 
     let packagesSlugs: string[];
+    let normalizedPackages: string[] = [];
 
     if (hasExplicitPackages) {
-      const normalizedPackages = await this.normalizePackageSlugs(
-        command.packages!,
-      );
+      normalizedPackages = await this.normalizePackageSlugs(command.packages!);
       await this.validatePackageAccess(normalizedPackages);
 
-      const config = await this.configFileRepository.readConfig(baseDirectory);
       const configPackages = config ? Object.keys(config.packages) : [];
       packagesSlugs = [...new Set([...configPackages, ...normalizedPackages])];
     } else {
-      packagesSlugs = effectiveLockFile.packageSlugs;
+      packagesSlugs = Object.keys(config!.packages);
     }
 
     const response = await this.packmindGateway.deployment.install({
@@ -162,6 +162,13 @@ export class InstallUseCase implements IInstallUseCase {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       result.errors.push(`Failed to install packages: ${errorMsg}`);
+    }
+
+    if (normalizedPackages.length > 0) {
+      await this.configFileRepository.addPackagesToConfig(
+        baseDirectory,
+        normalizedPackages,
+      );
     }
 
     return result;
