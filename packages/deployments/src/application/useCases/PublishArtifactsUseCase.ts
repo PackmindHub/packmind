@@ -28,6 +28,7 @@ import {
   CodingAgent,
   DeploymentCompletedEvent,
   PackmindFileConfig,
+  PackmindLockFile,
   normalizeCodingAgents,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
@@ -314,6 +315,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           command.packagesSlugs,
           command.artifactSpaceIds ?? {},
           command.artifactPackageIds ?? {},
+          command.packageIds.map(String),
         );
 
         // Build commit message for the job
@@ -473,6 +475,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     packagesSlugs: string[],
     artifactSpaceIds: Record<string, string>,
     artifactPackageIds: Record<string, string[]>,
+    accessiblePackageIds: string[],
   ): Promise<{
     fileUpdatesPerTarget: Map<string, FileUpdates>;
     renderModesPerTarget: Map<string, RenderMode[]>;
@@ -616,7 +619,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
       }
 
-      // Generate lock file
+      // Generate lock file and merge with existing to preserve inaccessible package entries
       const lockFile = this.lockFileService.buildLockFile({
         fileModifications: baseFileUpdates.createOrUpdate.filter(
           (f) => f.artifactType && f.artifactId,
@@ -630,8 +633,17 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         artifactSpaceIds,
         artifactPackageIds,
       });
+      const existingLockFile = await this.fetchExistingLockFile(
+        gitRepo,
+        target,
+      );
+      const mergedLockFile = this.lockFileService.mergeWithExistingLockFile(
+        lockFile,
+        existingLockFile,
+        accessiblePackageIds,
+      );
       const lockFileModification =
-        this.lockFileService.createLockFileModification(lockFile);
+        this.lockFileService.createLockFileModification(mergedLockFile);
       baseFileUpdates.createOrUpdate.push(lockFileModification);
 
       // Apply target path prefixing
@@ -673,6 +685,30 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       return JSON.parse(fileData.content) as PackmindFileConfig;
     } catch {
       // File doesn't exist or couldn't be parsed
+      return null;
+    }
+  }
+
+  /**
+   * Fetches and parses the existing packmind-lock.json from the git repository
+   * Returns null if the file doesn't exist or couldn't be parsed
+   */
+  private async fetchExistingLockFile(
+    gitRepo: GitRepo,
+    target: Target,
+  ): Promise<PackmindLockFile | null> {
+    const lockFilePath = getTargetPrefixedPath('packmind-lock.json', target);
+
+    try {
+      const fileData = await this.gitPort.getFileFromRepo(
+        gitRepo,
+        lockFilePath,
+      );
+      if (!fileData) {
+        return null;
+      }
+      return JSON.parse(fileData.content) as PackmindLockFile;
+    } catch {
       return null;
     }
   }

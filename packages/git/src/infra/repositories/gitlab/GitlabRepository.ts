@@ -158,6 +158,126 @@ export class GitlabRepository implements IGitRepo {
     );
   }
 
+  private static readonly FILE_ANALYSIS_BATCH_SIZE = 10;
+
+  private async analyzeFilesForCommit(
+    files: CommitFile[],
+    existingPaths: Set<string>,
+    targetBranch: string,
+  ): Promise<
+    Array<{
+      path: string;
+      hasChanges: boolean;
+      action: 'create' | 'update';
+      existingExecuteFilemode: boolean;
+    }>
+  > {
+    type FileAnalysisResult = {
+      path: string;
+      hasChanges: boolean;
+      action: 'create' | 'update';
+      existingExecuteFilemode: boolean;
+    };
+
+    // Pre-allocate results array to preserve original file order
+    const results: FileAnalysisResult[] = new Array(files.length);
+
+    // Resolve new files immediately, collect existing files with their original indices
+    const existingFileIndices: Array<{ index: number; file: CommitFile }> = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const normalizedPath = this.normalizePath(file.path);
+
+      if (!existingPaths.has(normalizedPath)) {
+        this.logger.debug('File action determined', {
+          filePath: file.path,
+          action: 'create',
+        });
+        results[i] = {
+          path: file.path,
+          hasChanges: true,
+          action: 'create',
+          existingExecuteFilemode: false,
+        };
+      } else {
+        existingFileIndices.push({ index: i, file });
+      }
+    }
+
+    // Existing files need content check — process in batches to avoid rate limiting
+    for (
+      let i = 0;
+      i < existingFileIndices.length;
+      i += GitlabRepository.FILE_ANALYSIS_BATCH_SIZE
+    ) {
+      const batch = existingFileIndices.slice(
+        i,
+        i + GitlabRepository.FILE_ANALYSIS_BATCH_SIZE,
+      );
+      const batchResults = await Promise.all(
+        batch.map(async ({ file }) =>
+          this.analyzeExistingFile(file, targetBranch),
+        ),
+      );
+      for (let j = 0; j < batch.length; j++) {
+        results[batch[j].index] = batchResults[j];
+      }
+    }
+
+    return results;
+  }
+
+  private async analyzeExistingFile(
+    file: CommitFile,
+    targetBranch: string,
+  ): Promise<{
+    path: string;
+    hasChanges: boolean;
+    action: 'create' | 'update';
+    existingExecuteFilemode: boolean;
+  }> {
+    try {
+      const existingFile = await this.getFileOnRepo(file.path, targetBranch);
+
+      if (!existingFile) {
+        return {
+          path: file.path,
+          hasChanges: true,
+          action: 'create',
+          existingExecuteFilemode: false,
+        };
+      }
+
+      const existingContent = Buffer.from(
+        existingFile.content,
+        'base64',
+      ).toString('utf-8');
+      const hasChanges = existingContent !== file.content;
+
+      return {
+        path: file.path,
+        hasChanges,
+        action: 'update',
+        existingExecuteFilemode: existingFile.execute_filemode === true,
+      };
+    } catch (fileError: unknown) {
+      // If the files API fails for an existing file, treat as create
+      // This handles transient errors gracefully
+      this.logger.debug('File content check failed, treating as create', {
+        filePath: file.path,
+        error:
+          fileError instanceof Error ? fileError.message : String(fileError),
+      });
+      return {
+        path: file.path,
+        hasChanges: true,
+        action: 'create',
+        existingExecuteFilemode: false,
+      };
+    }
+  }
+
   private isExecutable(permissions: string): boolean {
     return (
       permissions[2] === 'x' || permissions[5] === 'x' || permissions[8] === 'x'
@@ -214,72 +334,11 @@ export class GitlabRepository implements IGitRepo {
 
       // Determine create/update for files to commit using tree lookup
       // Only call the files API for existing files to check content changes and existing permissions
-      const fileAnalysis = await Promise.all(
-        deduplicatedFiles.map(async (file) => {
-          const normalizedPath = this.normalizePath(file.path);
-          const fileExists = existingPaths.has(normalizedPath);
-
-          if (!fileExists) {
-            // File doesn't exist in tree, mark as create
-            this.logger.debug('File action determined', {
-              filePath: file.path,
-              action: 'create',
-            });
-            return {
-              path: file.path,
-              hasChanges: true,
-              action: 'create' as const,
-              existingExecuteFilemode: false,
-            };
-          }
-
-          // File exists - fetch content and metadata to check changes
-          try {
-            const existingFile = await this.getFileOnRepo(
-              file.path,
-              targetBranch,
-            );
-
-            if (!existingFile) {
-              return {
-                path: file.path,
-                hasChanges: true,
-                action: 'create' as const,
-                existingExecuteFilemode: false,
-              };
-            }
-
-            // File exists, check if content is different
-            const existingContent = Buffer.from(
-              existingFile.content,
-              'base64',
-            ).toString('utf-8');
-            const hasChanges = existingContent !== file.content;
-
-            return {
-              path: file.path,
-              hasChanges,
-              action: 'update' as const,
-              existingExecuteFilemode: existingFile.execute_filemode === true,
-            };
-          } catch (fileError: unknown) {
-            // If the files API fails for an existing file, treat as create
-            // This handles transient errors gracefully
-            this.logger.debug('File content check failed, treating as create', {
-              filePath: file.path,
-              error:
-                fileError instanceof Error
-                  ? fileError.message
-                  : String(fileError),
-            });
-            return {
-              path: file.path,
-              hasChanges: true,
-              action: 'create' as const,
-              existingExecuteFilemode: false,
-            };
-          }
-        }),
+      // Process in batches to avoid overwhelming the GitLab API with concurrent requests
+      const fileAnalysis = await this.analyzeFilesForCommit(
+        deduplicatedFiles,
+        existingPaths,
+        targetBranch,
       );
 
       const fileDifferenceCheck = fileAnalysis;
