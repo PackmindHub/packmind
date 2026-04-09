@@ -166,6 +166,41 @@ export class SpacesManagementController {
   }
 
   /**
+   * Self-join a space by its slug
+   * POST /organizations/:orgId/spaces-management/by-slug/:spaceSlug/join
+   */
+  @Post('by-slug/:spaceSlug/join')
+  @HttpCode(204)
+  async joinSpaceBySlug(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceSlug') spaceSlug: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces-management/by-slug/:spaceSlug/join - Joining space by slug',
+      { organizationId, userId, spaceSlug },
+    );
+
+    try {
+      await this.spacesManagementService.joinSpaceBySlug({
+        userId,
+        organizationId,
+        spaceSlug,
+      });
+    } catch (error) {
+      if (error instanceof SpaceNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof SpaceNotJoinableError) {
+        throw new ForbiddenException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Update a space's settings
    * PATCH /organizations/:orgId/spaces-management/:spaceId
    */

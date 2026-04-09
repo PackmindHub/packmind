@@ -9,6 +9,7 @@ import {
   BrowseSpacesCommand,
   BrowseSpacesResponse,
   JoinSpaceCommand,
+  JoinSpaceBySlugCommand,
   JoinSpaceResponse,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
@@ -59,6 +60,16 @@ export class SpacesManagementService {
       spaceId: command.spaceId,
     });
     return this.spacesManagementAdapter.joinSpace(command);
+  }
+
+  async joinSpaceBySlug(
+    command: JoinSpaceBySlugCommand,
+  ): Promise<JoinSpaceResponse> {
+    this.logger.info('Joining space by slug', {
+      organizationId: command.organizationId,
+      spaceSlug: command.spaceSlug,
+    });
+    return this.spacesManagementAdapter.joinSpaceBySlug(command);
   }
 
   async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {

@@ -21,10 +21,13 @@ import {
   BrowseSpacesCommand,
   BrowseSpacesResponse,
   JoinSpaceCommand,
+  JoinSpaceBySlugCommand,
   JoinSpaceResponse,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
+  createOrganizationId,
 } from '@packmind/types';
+import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { MoveArtifactsToSpaceUseCase } from '../usecases/MoveArtifactsToSpaceUseCase';
 import { BrowseSpacesUseCase } from '../usecases/BrowseSpacesUseCase';
@@ -78,6 +81,25 @@ export class SpacesManagementAdapter
       this.eventEmitterService,
     );
     return useCase.execute(command);
+  }
+
+  async joinSpaceBySlug(
+    command: JoinSpaceBySlugCommand,
+  ): Promise<JoinSpaceResponse> {
+    const organizationId = createOrganizationId(command.organizationId);
+    const space = await this.spacesPort.getSpaceBySlug(
+      command.spaceSlug,
+      organizationId,
+    );
+
+    if (!space) {
+      throw new SpaceNotFoundError(command.spaceSlug);
+    }
+
+    return this.joinSpace({
+      ...command,
+      spaceId: space.id,
+    });
   }
 
   async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {
