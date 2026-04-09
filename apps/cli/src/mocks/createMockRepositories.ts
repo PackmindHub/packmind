@@ -31,9 +31,13 @@ export function createMockConfigFileRepository(
     writeConfig: jest.fn(),
     configExists: jest.fn(),
     readConfig: jest.fn(),
+    addPackagesToConfig: jest.fn(),
     findDescendantConfigs: jest.fn(),
     readHierarchicalConfig: jest.fn(),
     findAllConfigsInTree: jest.fn(),
+    updateConfig: jest.fn(),
+    updateAgentsConfig: jest.fn(),
+    deleteAgentsConfig: jest.fn(),
     ...overrides,
   };
 }

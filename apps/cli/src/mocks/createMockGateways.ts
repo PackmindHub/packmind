@@ -8,6 +8,7 @@ import { ICommandsGateway } from '../domain/repositories/ICommandsGateway';
 import { IStandardsGateway } from '../domain/repositories/IStandardsGateway';
 import { IPackagesGateway } from '../domain/repositories/IPackagesGateway';
 import { IDeploymentGateway } from '../domain/repositories/IDeploymentGateway';
+import { IOrganizationGateway } from '../domain/repositories/IOrganizationGateway';
 
 export type MockPackmindGatewayOverrides = {
   changeProposals?: jest.Mocked<IChangeProposalGateway>;
@@ -19,6 +20,7 @@ export type MockPackmindGatewayOverrides = {
   standards?: jest.Mocked<IStandardsGateway>;
   packages?: jest.Mocked<IPackagesGateway>;
   deployment?: jest.Mocked<IDeploymentGateway>;
+  organization?: jest.Mocked<IOrganizationGateway>;
 };
 
 export function createMockPackmindGateway(
@@ -34,6 +36,7 @@ export function createMockPackmindGateway(
     standards: createMockStandardsGateway(),
     packages: createMockPackagesGateway(),
     deployment: createMockDeploymentGateway(),
+    organization: createMockOrganizationGateway(),
     ...overrides,
   };
 }
@@ -130,11 +133,21 @@ export function createMockDeploymentGateway(
 ): jest.Mocked<IDeploymentGateway> {
   return {
     pull: jest.fn(),
+    install: jest.fn(),
     getDeployed: jest.fn(),
     getContentByVersions: jest.fn(),
     notifyDistribution: jest.fn(),
     getRenderModeConfiguration: jest.fn(),
     getLatestVersion: jest.fn().mockResolvedValue({ version: 1 }),
+    ...overrides,
+  };
+}
+
+export function createMockOrganizationGateway(
+  overrides?: Partial<jest.Mocked<IOrganizationGateway>>,
+): jest.Mocked<IOrganizationGateway> {
+  return {
+    getOrganization: jest.fn(),
     ...overrides,
   };
 }

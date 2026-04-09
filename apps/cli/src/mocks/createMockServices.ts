@@ -37,6 +37,8 @@ export function createMockSpaceService(
   return {
     getDefaultSpace: jest.fn(),
     getSpaces: jest.fn(),
+    getSpaceBySlug: jest.fn(),
+    getApiContext: jest.fn(),
     ...overrides,
   };
 }

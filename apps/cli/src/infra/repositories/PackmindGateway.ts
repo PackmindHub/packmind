@@ -18,6 +18,8 @@ import { PackagesGateway } from './PackagesGateway';
 import { IPackagesGateway } from '../../domain/repositories/IPackagesGateway';
 import { DeploymentGateway } from './DeploymentGateway';
 import { IDeploymentGateway } from '../../domain/repositories/IDeploymentGateway';
+import { OrganizationGateway } from './OrganizationGateway';
+import { IOrganizationGateway } from '../../domain/repositories/IOrganizationGateway';
 
 export class PackmindGateway implements IPackmindGateway {
   private readonly httpClient: PackmindHttpClient;
@@ -30,6 +32,7 @@ export class PackmindGateway implements IPackmindGateway {
   readonly standards: IStandardsGateway;
   readonly packages: IPackagesGateway;
   readonly deployment: IDeploymentGateway;
+  readonly organization: IOrganizationGateway;
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
@@ -43,5 +46,6 @@ export class PackmindGateway implements IPackmindGateway {
     this.standards = new StandardsGateway(this.httpClient);
     this.packages = new PackagesGateway(apiKey, this.httpClient);
     this.deployment = new DeploymentGateway(this.httpClient);
+    this.organization = new OrganizationGateway(this.httpClient);
   }
 }
