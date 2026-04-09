@@ -53,10 +53,16 @@ describe('BrowseSpacesDrawer', () => {
   ];
 
   const allSpaces = [
-    { id: createSpaceId('space-3'), name: 'Open Space', type: SpaceType.open },
+    {
+      id: createSpaceId('space-3'),
+      name: 'Open Space',
+      slug: 'open-space',
+      type: SpaceType.open,
+    },
     {
       id: createSpaceId('space-4'),
       name: 'Restricted Space',
+      slug: 'restricted-space',
       type: SpaceType.restricted,
     },
   ];

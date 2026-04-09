@@ -5,6 +5,7 @@ import { SpaceId } from '../../spaces/SpaceId';
 export type BrowsableSpace = {
   id: SpaceId;
   name: string;
+  slug: string;
   type: SpaceType;
 };
 

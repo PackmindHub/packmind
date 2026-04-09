@@ -115,10 +115,16 @@ describe('BrowseSpacesUseCase', () => {
       const result = await useCase.execute(buildCommand());
 
       expect(result.allSpaces).toEqual([
-        { id: openSpace.id, name: openSpace.name, type: SpaceType.open },
+        {
+          id: openSpace.id,
+          name: openSpace.name,
+          slug: openSpace.slug,
+          type: SpaceType.open,
+        },
         {
           id: restrictedSpace.id,
           name: restrictedSpace.name,
+          slug: restrictedSpace.slug,
           type: SpaceType.restricted,
         },
       ]);
@@ -238,6 +244,7 @@ describe('BrowseSpacesUseCase', () => {
         {
           id: privateSpace.id,
           name: privateSpace.name,
+          slug: privateSpace.slug,
           type: SpaceType.private,
         },
       ]);

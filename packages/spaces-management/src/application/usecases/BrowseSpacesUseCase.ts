@@ -43,6 +43,7 @@ export class BrowseSpacesUseCase extends AbstractMemberUseCase<
       .map((space) => ({
         id: space.id,
         name: space.name,
+        slug: space.slug,
         type: space.type,
       }));
 
