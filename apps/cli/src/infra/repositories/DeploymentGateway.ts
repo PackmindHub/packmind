@@ -5,6 +5,7 @@ import {
   IGetContentByVersionsUseCase,
   IGetDeployedContentUseCase,
   IGetRenderModeConfigurationUseCase,
+  IInstallPackagesUseCase,
   INotifyDistributionUseCase,
   IPullContentUseCase,
 } from '@packmind/types';
@@ -57,6 +58,23 @@ export class DeploymentGateway implements IDeploymentGateway {
 
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/pull?${queryParams.toString()}`,
+    );
+  };
+
+  public install: Gateway<IInstallPackagesUseCase> = async (command) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/install`,
+      {
+        method: 'POST',
+        body: {
+          packagesSlugs: command.packagesSlugs,
+          packmindLockFile: command.packmindLockFile,
+          ...(command.relativePath && { relativePath: command.relativePath }),
+          ...(command.agents !== undefined && { agents: command.agents }),
+        },
+      },
     );
   };
 

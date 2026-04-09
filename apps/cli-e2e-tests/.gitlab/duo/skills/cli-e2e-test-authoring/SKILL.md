@@ -69,14 +69,14 @@ describeWithUserSignedUp('my-command with auth', (getContext) => {
 
 The context object from `describeWithUserSignedUp` provides:
 
-| Field          | Description                                    |
-| -------------- | ---------------------------------------------- |
-| `testDir`      | Isolated temporary directory                   |
-| `apiKey`       | Valid API key for the created user             |
-| `user`         | User object (email, etc.)                      |
-| `organization` | Organization the user belongs to               |
-| `spaceId`      | Global space ID for the organization           |
-| `gateway`      | Authenticated gateway to call the API directly |
+| Field          | Description                                      |
+|----------------|--------------------------------------------------|
+| `testDir`      | Isolated temporary directory                     |
+| `apiKey`       | Valid API key for the created user                |
+| `user`         | User object (email, etc.)                        |
+| `organization` | Organization the user belongs to                 |
+| `spaceId`      | Global space ID for the organization             |
+| `gateway`      | Authenticated gateway to call the API directly   |
 
 ## Setting Up Test Preconditions
 
@@ -101,8 +101,8 @@ Use `gateway` from the context to seed data before running the CLI:
 beforeEach(async () => {
   const { gateway, spaceId, testDir } = await getContext();
   await setupGitRepo(testDir);
-  await gateway.commands.create({ spaceId /* ... */ });
-  await gateway.packages.create({ spaceId /* ... */ });
+  await gateway.commands.create({ spaceId, /* ... */ });
+  await gateway.packages.create({ spaceId, /* ... */ });
 });
 ```
 
@@ -153,18 +153,14 @@ describeWithUserSignedUp('diff command', (getContext) => {
       // modify file + run diff --submit
     });
 
-    it('succeeds', () => {
-      /* ... */
-    });
+    it('succeeds', () => { /* ... */ });
 
     describe('when running diff again', () => {
       beforeEach(async () => {
         // run diff without --submit
       });
 
-      it('excludes the already-submitted change', () => {
-        /* ... */
-      });
+      it('excludes the already-submitted change', () => { /* ... */ });
     });
   });
 });

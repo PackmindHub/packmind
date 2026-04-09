@@ -20,4 +20,12 @@ export class SpaceService implements ISpaceService {
 
     return defaultSpace;
   }
+
+  async getSpaceBySlug(slug: string): Promise<Space | null> {
+    return this.spaceGateway.getSpaceBySlug(slug);
+  }
+
+  getApiContext(): { host: string; organizationId: string } {
+    return this.spaceGateway.getApiContext();
+  }
 }

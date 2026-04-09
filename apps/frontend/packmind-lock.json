@@ -1,6 +1,8 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["@global/frontend"],
+  "packageSlugs": [
+    "@global/frontend"
+  ],
   "agents": [
     "agents_md",
     "claude",
@@ -9,7 +11,8 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-01T14:26:26.609Z",
+  "installedAt": "2026-04-09T14:34:19.190Z",
+  "targetId": "c2284e8e-4cef-4fca-85b3-638e94d08999",
   "artifacts": {
     "command:gateway-pattern-implementation-in-packmind-frontend": {
       "name": "Gateway Pattern Implementation in Packmind Frontend",
@@ -17,7 +20,9 @@
       "id": "ef745515-4898-4a34-8762-5c3a7a2d0f63",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "packageIds": [
+        "f1ac58c9-c246-419f-ae3e-f0ab6951308c"
+      ],
       "files": [
         {
           "path": ".packmind/commands/gateway-pattern-implementation-in-packmind-frontend.md",
@@ -43,7 +48,9 @@
       "id": "1c291279-ac40-482c-b66f-ae7d74e3698a",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "packageIds": [
+        "f1ac58c9-c246-419f-ae3e-f0ab6951308c"
+      ],
       "files": [
         {
           "path": ".packmind/standards/frontend-testing.md",
@@ -69,7 +76,9 @@
       "id": "3d06e76d-af52-4bf7-a0c4-88b8ad7c4990",
       "version": 4,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "packageIds": [
+        "f1ac58c9-c246-419f-ae3e-f0ab6951308c"
+      ],
       "files": [
         {
           "path": ".packmind/standards/frontend-data-flow.md",
@@ -95,7 +104,9 @@
       "id": "3e7b9558-19af-4313-82f9-0a8c16a3f8de",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "packageIds": [
+        "f1ac58c9-c246-419f-ae3e-f0ab6951308c"
+      ],
       "files": [
         {
           "path": ".packmind/standards/frontend-navigation-with-react-router.md",
@@ -121,7 +132,9 @@
       "id": "4e6cc1cb-c715-4843-8c24-46728617ca9a",
       "version": 3,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "packageIds": [
+        "f1ac58c9-c246-419f-ae3e-f0ab6951308c"
+      ],
       "files": [
         {
           "path": ".packmind/standards/frontend-error-management.md",
@@ -147,7 +160,9 @@
       "id": "85f88ffe-8bb5-475a-94cf-2924b3d28866",
       "version": 6,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "packageIds": [
+        "f1ac58c9-c246-419f-ae3e-f0ab6951308c"
+      ],
       "files": [
         {
           "path": ".packmind/standards/jest-test-suite-organization-and-patterns.md",
@@ -173,7 +188,9 @@
       "id": "860201c0-a89b-452a-acf0-8f6b5b16ce57",
       "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "packageIds": [
+        "f1ac58c9-c246-419f-ae3e-f0ab6951308c"
+      ],
       "files": [
         {
           "path": ".packmind/standards/tanstack-query-key-management.md",
