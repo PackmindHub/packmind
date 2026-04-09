@@ -3,6 +3,7 @@ import {
   BrowseSpacesResponse,
   CreateSpaceResponse,
   ISpacesManagementPort,
+  JoinSpaceBySlugCommand,
   JoinSpaceCommand,
   JoinSpaceResponse,
   MoveArtifactsToSpaceCommand,
@@ -33,6 +34,13 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
   async joinSpace(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _command: JoinSpaceCommand,
+  ): Promise<JoinSpaceResponse> {
+    return {} as JoinSpaceResponse;
+  }
+
+  async joinSpaceBySlug(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: JoinSpaceBySlugCommand,
   ): Promise<JoinSpaceResponse> {
     return {} as JoinSpaceResponse;
   }
