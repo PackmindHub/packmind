@@ -3,12 +3,11 @@ import { queryClient } from '../../src/shared/data/queryClient';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import {
   getBrowseSpacesQueryOptions,
-  useJoinSpaceMutation,
+  useJoinSpaceBySlugMutation,
 } from '../../src/domain/spaces-management/api/queries/SpacesManagementQueries';
 import { setFlashToast } from '../../src/shared/utils/flashToast';
 import { routes } from '../../src/shared/utils/routes';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import { SpaceId } from '@packmind/types';
 import {
   PMBox,
   PMButton,
@@ -24,7 +23,7 @@ import { getSpaceColorPalette } from '../../src/domain/organizations/components/
 export async function clientLoader({
   params,
 }: {
-  params: { orgSlug: string; spaceId: string };
+  params: { orgSlug: string; spaceSlug: string };
 }) {
   const me = await queryClient.ensureQueryData(getMeQueryOptions());
   if (!me.organization) {
@@ -35,10 +34,10 @@ export async function clientLoader({
     getBrowseSpacesQueryOptions(me.organization.id),
   );
 
-  const spaceId = params.spaceId as SpaceId;
+  const spaceSlug = params.spaceSlug;
 
   // Already a member → redirect to space dashboard with toast
-  const mySpace = browseData.mySpaces.find((s) => s.id === spaceId);
+  const mySpace = browseData.mySpaces.find((s) => s.slug === spaceSlug);
   if (mySpace) {
     setFlashToast({
       type: 'info',
@@ -49,7 +48,7 @@ export async function clientLoader({
   }
 
   // Find in discoverable spaces
-  const space = browseData.allSpaces.find((s) => s.id === spaceId);
+  const space = browseData.allSpaces.find((s) => s.slug === spaceSlug);
 
   return { space: space ?? null };
 }
@@ -57,15 +56,15 @@ export async function clientLoader({
 // ─── ROUTE COMPONENT ────────────────────────────────────────────────────
 export default function JoinSpaceRouteModule() {
   const { space } = useLoaderData<typeof clientLoader>();
-  const { orgSlug, spaceId } = useParams<{
+  const { orgSlug, spaceSlug } = useParams<{
     orgSlug: string;
-    spaceId: string;
+    spaceSlug: string;
   }>();
   const { organization } = useAuthContext();
   const navigate = useNavigate();
-  const joinMutation = useJoinSpaceMutation();
+  const joinMutation = useJoinSpaceBySlugMutation();
 
-  if (!organization || !orgSlug || !spaceId) return null;
+  if (!organization || !orgSlug || !spaceSlug) return null;
 
   if (!space) {
     return (
@@ -87,7 +86,7 @@ export default function JoinSpaceRouteModule() {
 
   const handleJoin = () => {
     joinMutation.mutate(
-      { spaceId: spaceId as SpaceId },
+      { spaceSlug },
       {
         onSuccess: () => {
           pmToaster.success({
