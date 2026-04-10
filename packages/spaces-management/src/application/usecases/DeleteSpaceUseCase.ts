@@ -77,5 +77,7 @@ export class DeleteSpaceUseCase extends AbstractMemberUseCase<
         spaceSlug: space.slug,
       }),
     );
+
+    return {} as DeleteSpaceResponse;
   }
 }
