@@ -6,6 +6,7 @@ import {
 } from '@packmind/node-utils';
 import {
   ArtifactsPulledEvent,
+  DeleteItemType,
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
@@ -220,6 +221,29 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
         });
 
       this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
+    }
+
+    // Delete files for artifacts from removed packages
+    const newArtifactIds = new Set<string>([
+      ...recipeVersions.map((rv) => String(rv.recipeId)),
+      ...standardVersions.map((sv) => String(sv.standardId)),
+      ...skillVersions.map((skv) => String(skv.skillId)),
+    ]);
+
+    for (const entry of Object.values(command.packmindLockFile.artifacts)) {
+      if (inaccessibleSpaceIds.has(entry.spaceId)) {
+        continue;
+      }
+      if (!newArtifactIds.has(entry.id)) {
+        for (const file of entry.files) {
+          if (!mergedFileUpdates.delete.some((d) => d.path === file.path)) {
+            mergedFileUpdates.delete.push({
+              path: file.path,
+              type: DeleteItemType.File,
+            });
+          }
+        }
+      }
     }
 
     // Add packmind.json config (all slugs, both accessible and inaccessible)

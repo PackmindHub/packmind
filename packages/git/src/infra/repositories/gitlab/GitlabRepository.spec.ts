@@ -1134,6 +1134,124 @@ describe('GitlabRepository', () => {
         expect(mockAxiosInstance.post).not.toHaveBeenCalled();
       });
     });
+
+    describe('when committing many existing files', () => {
+      it('processes file content checks in batches', async () => {
+        // Create 25 files to exceed the batch size of 10
+        const files = Array.from({ length: 25 }, (_, i) => ({
+          path: `file-${i}.txt`,
+          content: `new-content-${i}`,
+        }));
+
+        // Track concurrent getFileOnRepo calls
+        let maxConcurrent = 0;
+        let currentConcurrent = 0;
+
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: files.map((f) => ({ path: f.path, type: 'blob' })),
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            currentConcurrent++;
+            maxConcurrent = Math.max(maxConcurrent, currentConcurrent);
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                currentConcurrent--;
+                resolve({
+                  data: {
+                    blob_id: 'blob-id',
+                    content: Buffer.from('old-content').toString('base64'),
+                  },
+                });
+              }, 1);
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha',
+            author_email: 'test@example.com',
+            web_url: 'https://gitlab.com/test/-/commit/commit-sha',
+          },
+        });
+
+        await gitlabRepository.commitFiles(files, 'Batch test');
+
+        expect(maxConcurrent).toBeLessThanOrEqual(10);
+      });
+
+      describe('when committing a mix of existing and new files', () => {
+        let actions: Array<{ action: string; file_path: string }>;
+
+        beforeEach(async () => {
+          const files = [
+            { path: 'existing-1.txt', content: 'new-1' },
+            { path: 'existing-2.txt', content: 'new-2' },
+            { path: 'new-file.txt', content: 'new-content' },
+          ];
+
+          mockAxiosInstance.get.mockImplementation((url: string) => {
+            if (url.includes('/repository/tree')) {
+              return Promise.resolve({
+                data: [
+                  { path: 'existing-1.txt', type: 'blob' },
+                  { path: 'existing-2.txt', type: 'blob' },
+                ],
+                headers: {},
+              });
+            }
+            if (url.includes('/repository/files/')) {
+              return Promise.resolve({
+                data: {
+                  blob_id: 'blob-id',
+                  content: Buffer.from('old-content').toString('base64'),
+                },
+              });
+            }
+            return Promise.reject({ response: { status: 404 } });
+          });
+
+          mockAxiosInstance.post.mockResolvedValue({
+            data: {
+              id: 'commit-sha',
+              author_email: 'test@example.com',
+              web_url: 'https://gitlab.com/test/-/commit/commit-sha',
+            },
+          });
+
+          await gitlabRepository.commitFiles(files, 'Mixed test');
+
+          const commitCall = mockAxiosInstance.post.mock.calls[0];
+          actions = commitCall[1].actions;
+        });
+
+        it('uses update action for existing files', () => {
+          const updateActions = actions.filter(
+            (a: { action: string }) => a.action === 'update',
+          );
+          expect(updateActions).toHaveLength(2);
+        });
+
+        it('uses create action for new files', () => {
+          const createActions = actions.filter(
+            (a: { action: string }) => a.action === 'create',
+          );
+          expect(createActions).toHaveLength(1);
+        });
+
+        it('assigns create action to the correct file', () => {
+          const createActions = actions.filter(
+            (a: { action: string }) => a.action === 'create',
+          );
+          expect(createActions[0].file_path).toBe('new-file.txt');
+        });
+      });
+    });
   });
 
   describe('getFileOnRepo', () => {
