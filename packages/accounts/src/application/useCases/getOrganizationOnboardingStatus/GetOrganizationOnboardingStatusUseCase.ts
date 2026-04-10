@@ -72,9 +72,10 @@ export class GetOrganizationOnboardingStatusUseCase
     // Check standards across all spaces
     let hasCreatedStandard = false;
     if (this.standardsPort && this.spacesPort) {
-      const spaces = await this.spacesPort.listSpacesByOrganization(
-        organization.id,
-      );
+      const { spaces } = await this.spacesPort.listUserSpaces({
+        userId,
+        organizationId: organization.id,
+      });
       const standardsPort = this.standardsPort;
       const standardsPerSpace = await Promise.all(
         spaces.map((space) =>
@@ -88,9 +89,10 @@ export class GetOrganizationOnboardingStatusUseCase
     // Check deployments across all spaces
     let hasDeployed = false;
     if (this.deploymentPort && this.spacesPort) {
-      const spaces = await this.spacesPort.listSpacesByOrganization(
-        organization.id,
-      );
+      const { spaces } = await this.spacesPort.listUserSpaces({
+        userId,
+        organizationId: organization.id,
+      });
       const deploymentPort = this.deploymentPort;
       const overviews = await Promise.all(
         spaces.map((space) =>

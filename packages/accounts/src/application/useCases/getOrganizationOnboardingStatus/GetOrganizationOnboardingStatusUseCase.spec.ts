@@ -2,6 +2,9 @@ import { PackmindLogger } from '@packmind/logger';
 import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  createOrganizationId,
+  createSpaceId,
+  createUserId,
   GetOrganizationOnboardingStatusCommand,
   GitRepo,
   IAccountsPort,
@@ -12,10 +15,9 @@ import {
   RecipeDeploymentStatus,
   RepositoryDeploymentStatus,
   Space,
+  SpaceType,
   Standard,
-  createOrganizationId,
-  createSpaceId,
-  createUserId,
+  UserSpaceRole,
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
 import { UserService } from '../../services/UserService';
@@ -52,6 +54,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
 
     mockSpacesPort = {
       listSpacesByOrganization: jest.fn(),
+      listUserSpaces: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     mockDeploymentPort = {
@@ -81,6 +84,16 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
     const organizationId = createOrganizationId('org-456');
     const user = userFactory({ id: userId });
     const organization = organizationFactory({ id: organizationId });
+
+    const mockSpace: Space = {
+      id: createSpaceId('space-1'),
+      name: 'Global',
+      slug: 'global',
+      organizationId,
+      isDefaultSpace: false,
+      type: SpaceType.open,
+    };
+
     const membership = {
       userId,
       organizationId,
@@ -96,15 +109,18 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         membership,
       };
 
+    beforeEach(() => {
+      mockSpacesPort.listUserSpaces.mockResolvedValue({
+        spaces: [{ ...mockSpace, role: UserSpaceRole.MEMBER }],
+      });
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     describe('with all onboarding steps completed', () => {
       it('returns all flags as true', async () => {
-        const mockSpace: Space = {
-          id: createSpaceId('space-1'),
-          name: 'Global',
-          slug: 'global',
-          organizationId,
-        };
-
         mockUserService.listUsersByOrganization.mockResolvedValue([
           user,
           userFactory(),
@@ -144,13 +160,6 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
 
     describe('with no onboarding steps completed', () => {
       it('returns all flags as false', async () => {
-        const mockSpace: Space = {
-          id: createSpaceId('space-1'),
-          name: 'Global',
-          slug: 'global',
-          organizationId,
-        };
-
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
         mockGitPort.listProviders.mockResolvedValue({ providers: [] });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
@@ -179,13 +188,6 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
 
     describe('with only git provider connected', () => {
       it('returns only hasConnectedGitProvider as true', async () => {
-        const mockSpace: Space = {
-          id: createSpaceId('space-1'),
-          name: 'Global',
-          slug: 'global',
-          organizationId,
-        };
-
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
         mockGitPort.listProviders.mockResolvedValue({
           providers: [{ id: 'provider-1', hasToken: true } as never],
@@ -243,13 +245,6 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
 
     describe('with deployment via recipes', () => {
       it('detects deployment through recipes list', async () => {
-        const mockSpace: Space = {
-          id: createSpaceId('space-1'),
-          name: 'Global',
-          slug: 'global',
-          organizationId,
-        };
-
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
         mockGitPort.listProviders.mockResolvedValue({ providers: [] });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
@@ -274,13 +269,6 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
 
     describe('with multiple users', () => {
       it('detects invited colleagues', async () => {
-        const mockSpace: Space = {
-          id: createSpaceId('space-1'),
-          name: 'Global',
-          slug: 'global',
-          organizationId,
-        };
-
         mockUserService.listUsersByOrganization.mockResolvedValue([
           user,
           userFactory(),
