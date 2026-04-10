@@ -15,6 +15,7 @@ import {
   parsePermissionString,
   supportsUnixPermissions,
 } from '../../infra/utils/permissions';
+import { normalizePackageSlugs } from '../utils/normalizePackageSlugs';
 
 export class InstallUseCase implements IInstallUseCase {
   constructor(
@@ -69,6 +70,21 @@ export class InstallUseCase implements IInstallUseCase {
       packagesSlugs = [...new Set([...configPackages, ...normalizedPackages])];
     } else {
       packagesSlugs = Object.keys(config!.packages);
+    }
+
+    if (packagesSlugs.length === 0) {
+      try {
+        for (const entry of Object.values(effectiveLockFile.artifacts)) {
+          for (const file of entry.files) {
+            await this.deleteFile(baseDirectory, file.path, result);
+          }
+        }
+        await this.deleteFile(baseDirectory, 'packmind-lock.json', result);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        result.errors.push(`Failed to clean up artifacts: ${errorMsg}`);
+      }
+      return result;
     }
 
     const response = await this.packmindGateway.deployment.install({
@@ -175,21 +191,7 @@ export class InstallUseCase implements IInstallUseCase {
   }
 
   private async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
-    const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
-    if (!hasUnprefixed) return slugs;
-
-    const spaces = await this.spaceService.getSpaces();
-
-    if (spaces.length > 1) {
-      throw new Error(
-        `Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @${spaces[0].slug}/my-package).`,
-      );
-    }
-
-    const defaultSpace = await this.spaceService.getDefaultSpace();
-    return slugs.map((slug) =>
-      slug.startsWith('@') ? slug : `@${defaultSpace.slug}/${slug}`,
-    );
+    return normalizePackageSlugs(slugs, this.spaceService);
   }
 
   private async validatePackageAccess(packages: string[]): Promise<void> {

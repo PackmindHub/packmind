@@ -206,6 +206,74 @@ describe('InstallUseCase', () => {
     });
   });
 
+  describe('when packmind.json exists with an empty packages list', () => {
+    beforeEach(() => {
+      mockConfigFileRepository.readConfig.mockResolvedValue({ packages: {} });
+      mockLockFileRepository.read.mockResolvedValue(
+        lockFileFactory({
+          artifacts: {
+            'artifact-1': {
+              name: 'my-recipe',
+              type: 'recipe',
+              id: 'artifact-1',
+              version: 1,
+              spaceId: 'space-1',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/recipes/my-recipe.md',
+                  agent: 'claude-code',
+                },
+              ],
+            },
+          },
+        }),
+      );
+    });
+
+    it('does not call the gateway', async () => {
+      await useCase.execute({ baseDirectory: '/test' });
+
+      expect(mockGateway.deployment.install).not.toHaveBeenCalled();
+    });
+
+    it('deletes all artifact files tracked in the lock file', async () => {
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false,
+      });
+
+      await useCase.execute({ baseDirectory: '/test' });
+
+      expect(fs.unlink).toHaveBeenCalledWith(
+        '/test/.packmind/recipes/my-recipe.md',
+      );
+    });
+
+    it('deletes the lock file', async () => {
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false,
+      });
+
+      await useCase.execute({ baseDirectory: '/test' });
+
+      expect(fs.unlink).toHaveBeenCalledWith('/test/packmind-lock.json');
+    });
+
+    it('returns no errors', async () => {
+      const result = await useCase.execute({ baseDirectory: '/test' });
+
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('returns no missing access entries', async () => {
+      const result = await useCase.execute({ baseDirectory: '/test' });
+
+      expect(result.missingAccess).toHaveLength(0);
+    });
+  });
+
   describe('when explicit packages are provided without @ prefix', () => {
     describe('when organization has a single space', () => {
       const mySpace = spaceFactory({

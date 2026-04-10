@@ -19,6 +19,8 @@ import { IInstallPackagesUseCase } from './domain/useCases/IInstallPackagesUseCa
 import { InstallPackagesUseCase } from './application/useCases/InstallPackagesUseCase';
 import { IInstallUseCase } from './domain/useCases/IInstallUseCase';
 import { InstallUseCase } from './application/useCases/InstallUseCase';
+import { IUninstallUseCase } from './domain/useCases/IUninstallUseCase';
+import { UninstallUseCase } from './application/useCases/UninstallUseCase';
 import { IInstallDefaultSkillsUseCase } from './domain/useCases/IInstallDefaultSkillsUseCase';
 import { InstallDefaultSkillsUseCase } from './application/useCases/InstallDefaultSkillsUseCase';
 import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
@@ -67,6 +69,7 @@ export class PackmindCliHexaFactory {
     lintFilesFromConfig: ILintFilesFromConfig;
     installPackages: IInstallPackagesUseCase;
     install2: IInstallUseCase;
+    uninstall2: IUninstallUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
@@ -99,6 +102,13 @@ export class PackmindCliHexaFactory {
       spaceService: new SpaceService(this.repositories.packmindGateway.spaces),
     };
 
+    const install2UseCase = new InstallUseCase(
+      this.repositories.packmindGateway,
+      this.repositories.lockFileRepository,
+      this.repositories.configFileRepository,
+      this.services.spaceService,
+    );
+
     this.useCases = {
       executeSingleFileAst: new ExecuteSingleFileAstUseCase(
         this.services.linterExecutionUseCase,
@@ -116,11 +126,11 @@ export class PackmindCliHexaFactory {
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,
       ),
-      install2: new InstallUseCase(
-        this.repositories.packmindGateway,
-        this.repositories.lockFileRepository,
+      install2: install2UseCase,
+      uninstall2: new UninstallUseCase(
         this.repositories.configFileRepository,
         this.services.spaceService,
+        install2UseCase,
       ),
       installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
       listPackages: new ListPackagesUseCase(
