@@ -24,20 +24,9 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     throw redirect(`/org/${params.orgSlug}/space/${params.spaceSlug}`);
   }
 
-  const membersData = await queryClient.ensureQueryData(
+  await queryClient.ensureQueryData(
     getSpaceMembersQueryOptions(orgId, space.id),
   );
-
-  const currentUserMember = membersData?.members?.find(
-    (m) => m.userId === me.user.id,
-  );
-
-  const isOrgAdmin = me.organization.role === 'admin';
-  const isSpaceAdmin = currentUserMember?.role === 'admin';
-
-  if (!isOrgAdmin && !isSpaceAdmin) {
-    throw redirect(`/org/${params.orgSlug}/space/${params.spaceSlug}`);
-  }
 
   return null;
 }

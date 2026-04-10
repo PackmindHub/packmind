@@ -192,19 +192,17 @@ function ExpandedSpaceNavBlock({
               </PMStatus.Root>
               {space.name}
             </PMText>
-            {space.role === 'admin' && (
-              <PMIconButton
-                aria-label="Space settings"
-                size="2xs"
-                variant="ghost"
-                onClick={() =>
-                  navigate(routes.space.toSettings(orgSlug, space.slug))
-                }
-                data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
-              >
-                <LuSlidersHorizontal />
-              </PMIconButton>
-            )}
+            <PMIconButton
+              aria-label="Space settings"
+              size="2xs"
+              variant="ghost"
+              onClick={() =>
+                navigate(routes.space.toSettings(orgSlug, space.slug))
+              }
+              data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+            >
+              <LuSlidersHorizontal />
+            </PMIconButton>
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>

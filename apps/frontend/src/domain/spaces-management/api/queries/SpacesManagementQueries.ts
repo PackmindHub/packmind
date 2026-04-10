@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import {
   ArtifactReference,
   BrowseSpacesResponse,
@@ -22,6 +22,7 @@ import { getRecipesBySpaceKey } from '../../../recipes/api/queryKeys';
 import { LIST_PACKAGES_BY_SPACE_KEY } from '../../../deployments/api/queryKeys';
 import { CHANGE_PROPOSALS_QUERY_SCOPE } from '../../../change-proposals/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { routes } from '../../../../shared/utils/routes';
 
 export const getBrowseSpacesQueryOptions = (orgId: string) =>
   queryOptions({
@@ -186,6 +187,7 @@ export const useLeaveSpaceMutation = () => {
   const queryClient = useQueryClient();
   const { organization } = useAuthContext();
   const navigate = useNavigate();
+  const { orgSlug } = useParams<{ orgSlug: string }>();
 
   return useMutation({
     mutationKey: [LEAVE_SPACE_MUTATION_KEY],
@@ -206,7 +208,10 @@ export const useLeaveSpaceMutation = () => {
           refetchType: 'all',
         }),
       ]);
-      navigate('..');
+      const slug = orgSlug || organization?.slug;
+      if (slug) {
+        navigate(routes.org.toDashboard(slug));
+      }
     },
   });
 };
