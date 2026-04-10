@@ -9,10 +9,16 @@ export type IInstallResult = {
   filesCreated: number;
   filesUpdated: number;
   filesDeleted: number;
+  contentFilesChanged: number;
   errors: string[];
   recipesCount: number;
   standardsCount: number;
+  commandsCount: number;
   skillsCount: number;
+  recipesRemoved: number;
+  standardsRemoved: number;
+  commandsRemoved: number;
+  skillsRemoved: number;
   skillDirectoriesDeleted: number;
   missingAccess: string[];
   joinSpaceUrl?: string;

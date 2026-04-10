@@ -6,6 +6,40 @@ import {
   logErrorConsole,
   logWarningConsole,
 } from '../utils/consoleLogger';
+import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+
+function buildInstallSummary(result: IInstallResult): string {
+  const contentParts = [
+    result.standardsCount > 0
+      ? `${result.standardsCount} ${result.standardsCount === 1 ? 'standard' : 'standards'}`
+      : null,
+    result.commandsCount > 0
+      ? `${result.commandsCount} ${result.commandsCount === 1 ? 'command' : 'commands'}`
+      : null,
+    result.skillsCount > 0
+      ? `${result.skillsCount} ${result.skillsCount === 1 ? 'skill' : 'skills'}`
+      : null,
+    result.recipesCount > 0
+      ? `${result.recipesCount} ${result.recipesCount === 1 ? 'recipe' : 'recipes'}`
+      : null,
+  ].filter(Boolean);
+
+  const contentChanged = result.contentFilesChanged > 0;
+
+  if (!contentChanged && contentParts.length === 0) {
+    return '✅ Nothing to install';
+  }
+
+  if (!contentChanged) {
+    return `✅ Already up to date — ${contentParts.join(', ')}`;
+  }
+
+  if (contentParts.length === 0) {
+    return '✅ Packages removed';
+  }
+
+  return `✅ Synced ${contentParts.join(', ')}`;
+}
 
 export const install2Command = command({
   name: 'install-2',
@@ -42,13 +76,7 @@ export const install2Command = command({
         logWarningConsole(warning);
       }
 
-      logConsole(
-        `✅ Install complete: ${result.filesCreated} created, ${result.filesUpdated} updated, ${result.filesDeleted} deleted` +
-          (result.skillDirectoriesDeleted > 0
-            ? `, ${result.skillDirectoriesDeleted} skill files cleaned up`
-            : '') +
-          ` (${result.recipesCount} recipes, ${result.standardsCount} standards, ${result.skillsCount} skills)`,
-      );
+      logConsole(buildInstallSummary(result));
 
       if (result.errors.length > 0) {
         logWarningConsole(`Encountered ${result.errors.length} error(s):`);

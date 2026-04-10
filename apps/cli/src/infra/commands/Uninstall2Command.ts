@@ -6,6 +6,30 @@ import {
   logErrorConsole,
   logWarningConsole,
 } from '../utils/consoleLogger';
+import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+
+function buildUninstallSummary(result: IInstallResult): string {
+  const removedParts = [
+    result.standardsRemoved > 0
+      ? `${result.standardsRemoved} ${result.standardsRemoved === 1 ? 'standard' : 'standards'}`
+      : null,
+    result.commandsRemoved > 0
+      ? `${result.commandsRemoved} ${result.commandsRemoved === 1 ? 'command' : 'commands'}`
+      : null,
+    result.skillsRemoved > 0
+      ? `${result.skillsRemoved} ${result.skillsRemoved === 1 ? 'skill' : 'skills'}`
+      : null,
+    result.recipesRemoved > 0
+      ? `${result.recipesRemoved} ${result.recipesRemoved === 1 ? 'recipe' : 'recipes'}`
+      : null,
+  ].filter(Boolean);
+
+  if (removedParts.length === 0) {
+    return '✅ Package removed';
+  }
+
+  return `✅ Removed ${removedParts.join(', ')}`;
+}
 
 export const uninstall2Command = command({
   name: 'uninstall-2',
@@ -45,13 +69,7 @@ export const uninstall2Command = command({
         logWarningConsole(warning);
       }
 
-      logConsole(
-        `✅ Uninstall complete: ${result.filesCreated} created, ${result.filesUpdated} updated, ${result.filesDeleted} deleted` +
-          (result.skillDirectoriesDeleted > 0
-            ? `, ${result.skillDirectoriesDeleted} skill files cleaned up`
-            : '') +
-          ` (${result.recipesCount} recipes, ${result.standardsCount} standards, ${result.skillsCount} skills)`,
-      );
+      logConsole(buildUninstallSummary(result));
 
       if (result.errors.length > 0) {
         logWarningConsole(`Encountered ${result.errors.length} error(s):`);

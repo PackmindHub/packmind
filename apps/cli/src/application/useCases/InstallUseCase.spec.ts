@@ -977,6 +977,10 @@ Old packmind content
               path: '.packmind/standards/standard-1.md',
               content: '# Standard 1',
             },
+            {
+              path: '.packmind/commands/command-1.md',
+              content: '# Command 1',
+            },
             { path: '.packmind/skills/skill-1.md', content: '# Skill 1' },
             { path: 'packmind.json', content: '{}' },
             { path: 'some-other-file.txt', content: 'content' },
@@ -996,6 +1000,12 @@ Old packmind content
       const result = await useCase.execute({ baseDirectory: '/test' });
 
       expect(result.standardsCount).toBe(1);
+    });
+
+    it('counts commands correctly', async () => {
+      const result = await useCase.execute({ baseDirectory: '/test' });
+
+      expect(result.commandsCount).toBe(1);
     });
 
     it('counts skills correctly', async () => {

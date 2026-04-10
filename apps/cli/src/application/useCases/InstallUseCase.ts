@@ -32,10 +32,16 @@ export class InstallUseCase implements IInstallUseCase {
       filesCreated: 0,
       filesUpdated: 0,
       filesDeleted: 0,
+      contentFilesChanged: 0,
       errors: [],
       recipesCount: 0,
       standardsCount: 0,
+      commandsCount: 0,
       skillsCount: 0,
+      recipesRemoved: 0,
+      standardsRemoved: 0,
+      commandsRemoved: 0,
+      skillsRemoved: 0,
       skillDirectoriesDeleted: 0,
       missingAccess: [],
     };
@@ -136,6 +142,11 @@ export class InstallUseCase implements IInstallUseCase {
       ) {
         result.standardsCount++;
       } else if (
+        file.path.includes('.packmind/commands/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.commandsCount++;
+      } else if (
         file.path.includes('.packmind/skills/') &&
         file.path.endsWith('.md')
       ) {
@@ -151,12 +162,19 @@ export class InstallUseCase implements IInstallUseCase {
 
       for (const file of uniqueFiles) {
         try {
+          const changesBefore = result.filesCreated + result.filesUpdated;
           await this.createOrUpdateFile(
             baseDirectory,
             file,
             result,
             file.skillFilePermissions,
           );
+          if (
+            result.filesCreated + result.filesUpdated > changesBefore &&
+            this.isContentFile(file.path)
+          ) {
+            result.contentFilesChanged++;
+          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -168,7 +186,35 @@ export class InstallUseCase implements IInstallUseCase {
 
       for (const file of response.fileUpdates.delete) {
         try {
+          const deletedBefore = result.filesDeleted;
           await this.deleteFile(baseDirectory, file.path, result);
+          if (result.filesDeleted > deletedBefore) {
+            if (
+              file.path.includes('.packmind/standards/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.standardsRemoved++;
+              result.contentFilesChanged++;
+            } else if (
+              file.path.includes('.packmind/commands/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.commandsRemoved++;
+              result.contentFilesChanged++;
+            } else if (
+              file.path.includes('.packmind/skills/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.skillsRemoved++;
+              result.contentFilesChanged++;
+            } else if (
+              file.path.includes('.packmind/recipes/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.recipesRemoved++;
+              result.contentFilesChanged++;
+            }
+          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -383,6 +429,16 @@ export class InstallUseCase implements IInstallUseCase {
       result.filesDeleted++;
       await this.removeEmptyParentDirectories(fullPath, baseDirectory);
     }
+  }
+
+  private isContentFile(filePath: string): boolean {
+    return (
+      (filePath.includes('.packmind/standards/') ||
+        filePath.includes('.packmind/commands/') ||
+        filePath.includes('.packmind/skills/') ||
+        filePath.includes('.packmind/recipes/')) &&
+      filePath.endsWith('.md')
+    );
   }
 
   private async fileExists(filePath: string): Promise<boolean> {
