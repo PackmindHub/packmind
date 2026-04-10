@@ -77,6 +77,16 @@ export class SpacesManagementGatewayApi
     );
   }
 
+  async leaveSpace(orgId: string, spaceId: SpaceId): Promise<void> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to leave a space');
+    }
+    return this._api.post(
+      `${this._endpoint}/${orgId}/spaces-management/${spaceId}/leave`,
+      {},
+    );
+  }
+
   async updateSpace(
     orgId: string,
     spaceId: SpaceId,

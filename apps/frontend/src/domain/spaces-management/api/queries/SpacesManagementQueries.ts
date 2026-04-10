@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
 import {
   ArtifactReference,
   BrowseSpacesResponse,
@@ -175,6 +176,37 @@ export const useJoinSpaceBySlugMutation = () => {
           refetchType: 'all',
         }),
       ]);
+    },
+  });
+};
+
+const LEAVE_SPACE_MUTATION_KEY = 'leaveSpace';
+
+export const useLeaveSpaceMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationKey: [LEAVE_SPACE_MUTATION_KEY],
+    mutationFn: async ({ spaceId }: { spaceId: SpaceId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization context required');
+      }
+      return spacesManagementGateway.leaveSpace(organization.id, spaceId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.all,
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: spacesManagementQueryKeys.all,
+          refetchType: 'all',
+        }),
+      ]);
+      navigate('..');
     },
   });
 };
