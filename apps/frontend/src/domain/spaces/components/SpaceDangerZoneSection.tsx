@@ -171,7 +171,7 @@ export function SpaceDangerZoneSection() {
   const { space } = useCurrentSpace();
   const leaveSpaceMutation = useLeaveSpaceMutation();
 
-  if (!space) {
+  if (!space || space.isDefaultSpace) {
     return null;
   }
 

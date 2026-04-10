@@ -59,6 +59,29 @@ describe('SpaceDangerZoneSection', () => {
     mockUseCurrentSpace({});
   });
 
+  describe('when the space is the default space', () => {
+    beforeEach(() => {
+      mockUseCurrentSpace({
+        space: {
+          id: 'space-1',
+          name: 'Default Space',
+          slug: 'default-space',
+          type: SpaceType.open,
+          organizationId: 'org-1',
+          isDefaultSpace: true,
+        },
+      });
+    });
+
+    it('does not render the leave button', () => {
+      renderWithProviders(<SpaceDangerZoneSection />);
+
+      expect(
+        screen.queryByRole('button', { name: /leave this space/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe('when the leave dialog is opened', () => {
     const openLeaveDialog = () => {
       renderWithProviders(<SpaceDangerZoneSection />);

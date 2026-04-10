@@ -149,6 +149,35 @@ describe('LeaveSpaceUseCase', () => {
     });
   });
 
+  describe('when the user is the last member of the space', () => {
+    const space = spaceFactory({
+      id: spaceId,
+      name: 'My Space',
+      organizationId,
+      isDefaultSpace: false,
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      spacesPort.findMembership.mockResolvedValue({
+        userId,
+        spaceId,
+        role: UserSpaceRole.ADMIN,
+        createdBy: userId,
+      });
+      spacesPort.removeSpaceMembership.mockResolvedValue(true);
+    });
+
+    it('removes the membership', async () => {
+      await useCase.execute(buildCommand());
+
+      expect(spacesPort.removeSpaceMembership).toHaveBeenCalledWith(
+        userId,
+        spaceId,
+      );
+    });
+  });
+
   describe('when the space does not exist', () => {
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(null);
