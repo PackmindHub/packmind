@@ -19,6 +19,10 @@ import {
   UpdateSpaceCommand,
   UpdateSpaceResponse,
 } from '../contracts/IUpdateSpaceUseCase';
+import {
+  LeaveSpaceCommand,
+  LeaveSpaceResponse,
+} from '../contracts/ILeaveSpaceUseCase';
 
 /**
  * Port interface for cross-domain access to Spaces Management functionality
@@ -58,4 +62,9 @@ export interface ISpacesManagementPort {
    * Update a space's settings (name, type).
    */
   updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse>;
+
+  /**
+   * Leave a space (user-initiated self-removal).
+   */
+  leaveSpace(command: LeaveSpaceCommand): Promise<LeaveSpaceResponse>;
 }
