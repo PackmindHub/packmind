@@ -11,6 +11,18 @@ jest.mock('../hooks/useCurrentSpace', () => ({
   useCurrentSpace: jest.fn(),
 }));
 
+const mockMutate = jest.fn();
+
+jest.mock(
+  '../../spaces-management/api/queries/SpacesManagementQueries',
+  () => ({
+    useLeaveSpaceMutation: () => ({
+      mutate: mockMutate,
+      isPending: false,
+    }),
+  }),
+);
+
 const mockUseCurrentSpace = (
   overrides: Partial<ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>>,
 ) => {
@@ -38,7 +50,10 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('SpaceDangerZoneSection', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => {
+    jest.clearAllMocks();
+    mockMutate.mockReset();
+  });
 
   beforeEach(() => {
     mockUseCurrentSpace({});
@@ -88,6 +103,18 @@ describe('SpaceDangerZoneSection', () => {
         const leaveButton = screen.getByRole('button', { name: 'Leave' });
 
         expect(leaveButton).not.toBeDisabled();
+      });
+
+      describe('when the user confirms leaving', () => {
+        it('calls the leave space mutation with the space ID', () => {
+          const input = screen.getByPlaceholderText('Enter space name');
+          fireEvent.change(input, { target: { value: 'Test Space' } });
+
+          const leaveButton = screen.getByRole('button', { name: 'Leave' });
+          fireEvent.click(leaveButton);
+
+          expect(mockMutate).toHaveBeenCalledWith({ spaceId: 'space-1' });
+        });
       });
     });
 

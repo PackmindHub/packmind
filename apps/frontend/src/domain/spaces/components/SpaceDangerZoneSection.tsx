@@ -13,6 +13,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 
+import { useLeaveSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
 
 function LeaveSpaceConfirmationDialog({
@@ -168,6 +169,7 @@ function DeleteSpaceConfirmationDialog({
 
 export function SpaceDangerZoneSection() {
   const { space } = useCurrentSpace();
+  const leaveSpaceMutation = useLeaveSpaceMutation();
 
   if (!space) {
     return null;
@@ -195,7 +197,7 @@ export function SpaceDangerZoneSection() {
           <LeaveSpaceConfirmationDialog
             spaceName={space.name}
             onConfirm={() => {
-              /* TODO: wire to API */
+              leaveSpaceMutation.mutate({ spaceId: space.id });
             }}
           />
         </PMHStack>

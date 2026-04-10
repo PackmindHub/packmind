@@ -12,7 +12,7 @@ export function SpaceGeneralSettings() {
     <PMVStack align="stretch" gap={6} pt={4}>
       <SpaceIdentitySection />
       {!space?.isDefaultSpace && <SpaceAccessSection />}
-      <SpaceDangerZoneSection />
+      {!space?.isDefaultSpace && <SpaceDangerZoneSection />}
     </PMVStack>
   );
 }
