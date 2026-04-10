@@ -10,6 +10,79 @@ import {
 } from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 
+function findSubDirectoriesWithPackmindJson(
+  dirPath: string,
+  recursive: boolean,
+): string[] {
+  const result: string[] = [];
+
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dirPath, { withFileTypes: true });
+  } catch {
+    return result;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const subDir = path.join(dirPath, entry.name);
+
+    if (fs.existsSync(path.join(subDir, 'packmind.json'))) {
+      result.push(subDir);
+    }
+
+    if (recursive) {
+      result.push(...findSubDirectoriesWithPackmindJson(subDir, true));
+    }
+  }
+
+  return result;
+}
+
+function mergeInstallResults(results: IInstallResult[]): IInstallResult {
+  const merged: IInstallResult = {
+    filesCreated: 0,
+    filesUpdated: 0,
+    filesDeleted: 0,
+    contentFilesChanged: 0,
+    errors: [],
+    recipesCount: 0,
+    standardsCount: 0,
+    commandsCount: 0,
+    skillsCount: 0,
+    recipesRemoved: 0,
+    standardsRemoved: 0,
+    commandsRemoved: 0,
+    skillsRemoved: 0,
+    skillDirectoriesDeleted: 0,
+    missingAccess: [],
+    joinSpaceUrl: undefined,
+  };
+
+  for (const r of results) {
+    merged.filesCreated += r.filesCreated;
+    merged.filesUpdated += r.filesUpdated;
+    merged.filesDeleted += r.filesDeleted;
+    merged.contentFilesChanged += r.contentFilesChanged;
+    merged.errors.push(...r.errors);
+    merged.recipesCount += r.recipesCount;
+    merged.standardsCount += r.standardsCount;
+    merged.commandsCount += r.commandsCount;
+    merged.skillsCount += r.skillsCount;
+    merged.recipesRemoved += r.recipesRemoved;
+    merged.standardsRemoved += r.standardsRemoved;
+    merged.commandsRemoved += r.commandsRemoved;
+    merged.skillsRemoved += r.skillsRemoved;
+    merged.skillDirectoriesDeleted += r.skillDirectoriesDeleted;
+    merged.missingAccess.push(...r.missingAccess);
+    if (!merged.joinSpaceUrl && r.joinSpaceUrl) {
+      merged.joinSpaceUrl = r.joinSpaceUrl;
+    }
+  }
+
+  return merged;
+}
+
 function buildInstallSummary(result: IInstallResult): string {
   const contentParts = [
     result.standardsCount > 0
@@ -70,33 +143,71 @@ export async function install2Handler({
     }
   }
 
-  try {
-    const result = await packmindCliHexa.install2({
-      baseDirectory: cwd,
-      packages: packages.length > 0 ? packages : undefined,
-    });
+  // Determine target directories
+  let targetDirs: string[];
 
-    if (result.missingAccess.length > 0) {
-      let warning =
-        `⚠️  You don't have access to the following packages (their artifacts were preserved from the lock file):\n` +
-        result.missingAccess.map((s) => `  - ${s}`).join('\n');
+  if (installPath) {
+    // With -p: find packmind.json in direct sub-directories only (non-recursive)
+    targetDirs = findSubDirectoriesWithPackmindJson(cwd, false);
+  } else {
+    // Without -p: include root if it has packmind.json, then recursively find sub-directories
+    targetDirs = [];
+    if (fs.existsSync(path.join(cwd, 'packmind.json'))) {
+      targetDirs.push(cwd);
+    }
+    targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, true));
+  }
 
-      if (result.joinSpaceUrl) {
-        warning += `\n\n  👉 Join the space to get access: ${result.joinSpaceUrl}`;
+  // Fallback: if no config files found anywhere, run on cwd (use case will report the error)
+  if (targetDirs.length === 0) {
+    targetDirs = [cwd];
+  }
+
+  const results: IInstallResult[] = [];
+  const thrownErrors: string[] = [];
+  const multiDir = targetDirs.length > 1;
+
+  for (const dir of targetDirs) {
+    try {
+      const result = await packmindCliHexa.install2({
+        baseDirectory: dir,
+        packages: packages.length > 0 ? packages : undefined,
+      });
+      results.push(result);
+
+      if (result.missingAccess.length > 0) {
+        let warning =
+          `⚠️  You don't have access to the following packages (their artifacts were preserved from the lock file):\n` +
+          result.missingAccess.map((s) => `  - ${s}`).join('\n');
+
+        if (result.joinSpaceUrl) {
+          warning += `\n\n  👉 Join the space to get access: ${result.joinSpaceUrl}`;
+        }
+
+        logWarningConsole(warning);
       }
-
-      logWarningConsole(warning);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      thrownErrors.push(
+        multiDir
+          ? `[${dir}] install-2 failed: ${errorMessage}`
+          : `install-2 failed: ${errorMessage}`,
+      );
     }
+  }
 
-    logConsole(buildInstallSummary(result));
+  const combined = mergeInstallResults(results);
+  logConsole(buildInstallSummary(combined));
 
-    if (result.errors.length > 0) {
-      logWarningConsole(`Encountered ${result.errors.length} error(s):`);
-      result.errors.forEach((err) => logErrorConsole(`  - ${err}`));
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logErrorConsole(`install-2 failed: ${errorMessage}`);
+  const allErrors = [...combined.errors, ...thrownErrors];
+
+  if (allErrors.length > 0) {
+    logWarningConsole(`Encountered ${allErrors.length} error(s):`);
+    allErrors.forEach((err) => logErrorConsole(`  - ${err}`));
+  }
+
+  if (thrownErrors.length > 0) {
     process.exit(1);
   }
 }
