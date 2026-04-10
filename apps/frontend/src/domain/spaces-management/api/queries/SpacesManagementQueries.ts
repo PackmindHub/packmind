@@ -211,6 +211,33 @@ export const useLeaveSpaceMutation = () => {
   });
 };
 
+const DELETE_SPACE_MUTATION_KEY = 'deleteSpace';
+
+export const useDeleteSpaceMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [DELETE_SPACE_MUTATION_KEY],
+    mutationFn: async ({ spaceId }: { spaceId: string }) => {
+      if (!organization?.id) {
+        throw new Error('Organization context required');
+      }
+      return spacesManagementGateway.deleteSpace(organization.id, spaceId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...spacesManagementQueryKeys.all],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...spacesQueryKeys.all],
+        }),
+      ]);
+    },
+  });
+};
+
 const UPDATE_SPACE_MUTATION_KEY = 'updateSpace';
 
 export const useUpdateSpaceMutation = () => {

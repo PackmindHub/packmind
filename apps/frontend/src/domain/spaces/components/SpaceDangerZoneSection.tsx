@@ -12,9 +12,14 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
+import { Package } from '@packmind/types';
 
 import { useLeaveSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
+import { useDeleteSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
+import { useNavigation } from '../../../shared/hooks/useNavigation';
+import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 function LeaveSpaceConfirmationDialog({
   spaceName,
@@ -94,14 +99,18 @@ function LeaveSpaceConfirmationDialog({
 
 function DeleteSpaceConfirmationDialog({
   spaceName,
+  packages,
+  isPending,
   onConfirm,
 }: Readonly<{
   spaceName: string;
+  packages: Package[];
+  isPending: boolean;
   onConfirm: () => void;
 }>) {
   const [confirmationInput, setConfirmationInput] = useState('');
 
-  const isConfirmEnabled = confirmationInput === spaceName;
+  const isConfirmEnabled = confirmationInput === spaceName && !isPending;
 
   return (
     <Dialog.Root
@@ -132,6 +141,24 @@ function DeleteSpaceConfirmationDialog({
                   all its standards, commands, skills, and members. This action
                   cannot be undone.
                 </PMText>
+                {packages.length > 0 && (
+                  <PMVStack gap={2} align="stretch">
+                    <PMText variant="body" fontSize="sm">
+                      The following packages will be affected:
+                    </PMText>
+                    <PMVStack gap={1} align="stretch" pl={4}>
+                      {packages.map((pkg) => (
+                        <PMText key={pkg.id} variant="body" fontSize="sm">
+                          - {pkg.name}
+                        </PMText>
+                      ))}
+                    </PMVStack>
+                    <PMText variant="body" fontSize="sm">
+                      All deployments using these packages will stop receiving
+                      updates.
+                    </PMText>
+                  </PMVStack>
+                )}
                 <PMVStack gap={2} align="stretch">
                   <PMText variant="body" fontSize="sm">
                     Type <strong>{spaceName}</strong> to confirm:
@@ -170,6 +197,13 @@ function DeleteSpaceConfirmationDialog({
 export function SpaceDangerZoneSection() {
   const { space } = useCurrentSpace();
   const leaveSpaceMutation = useLeaveSpaceMutation();
+  const { organization } = useAuthContext();
+  const deleteSpaceMutation = useDeleteSpaceMutation();
+  const nav = useNavigation();
+  const { data: packagesData } = useListPackagesBySpaceQuery(
+    space?.id,
+    organization?.id,
+  );
 
   if (!space || space.isDefaultSpace) {
     return null;
@@ -202,23 +236,32 @@ export function SpaceDangerZoneSection() {
           />
         </PMHStack>
 
-        <PMSeparator />
+        {!space.isDefaultSpace && (
+          <>
+            <PMSeparator />
 
-        <PMHStack justify="space-between" align="center">
-          <PMVStack gap={1} align="flex-start">
-            <PMText fontWeight="medium">Delete this space</PMText>
-            <PMText variant="body" color="secondary" fontSize="sm">
-              Permanently remove this space and all its content. This action
-              cannot be undone.
-            </PMText>
-          </PMVStack>
-          <DeleteSpaceConfirmationDialog
-            spaceName={space.name}
-            onConfirm={() => {
-              /* TODO: wire to API */
-            }}
-          />
-        </PMHStack>
+            <PMHStack justify="space-between" align="center">
+              <PMVStack gap={1} align="flex-start">
+                <PMText fontWeight="medium">Delete this space</PMText>
+                <PMText variant="body" color="secondary" fontSize="sm">
+                  Permanently remove this space and all its content. This action
+                  cannot be undone.
+                </PMText>
+              </PMVStack>
+              <DeleteSpaceConfirmationDialog
+                spaceName={space.name}
+                packages={packagesData?.packages ?? []}
+                isPending={deleteSpaceMutation.isPending}
+                onConfirm={() => {
+                  deleteSpaceMutation.mutate(
+                    { spaceId: space.id },
+                    { onSuccess: () => nav.org.toDashboard() },
+                  );
+                }}
+              />
+            </PMHStack>
+          </>
+        )}
       </PMVStack>
     </PMPageSection>
   );

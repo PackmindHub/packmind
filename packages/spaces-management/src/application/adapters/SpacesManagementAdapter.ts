@@ -27,6 +27,8 @@ import {
   LeaveSpaceResponse,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
+  DeleteSpaceCommand,
+  DeleteSpaceResponse,
   createOrganizationId,
 } from '@packmind/types';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
@@ -36,6 +38,7 @@ import { BrowseSpacesUseCase } from '../usecases/BrowseSpacesUseCase';
 import { JoinSpaceUseCase } from '../usecases/JoinSpaceUseCase';
 import { LeaveSpaceUseCase } from '../usecases/LeaveSpaceUseCase';
 import { UpdateSpaceUseCase } from '../usecases/UpdateSpaceUseCase';
+import { DeleteSpaceUseCase } from '../usecases/DeleteSpaceUseCase';
 
 /**
  * SpacesManagementAdapter - Implements the ISpacesManagementPort interface for cross-domain access
@@ -118,6 +121,15 @@ export class SpacesManagementAdapter
     const useCase = new UpdateSpaceUseCase(
       this.spacesPort,
       this.accountsPort,
+      this.eventEmitterService,
+    );
+    return useCase.execute(command);
+  }
+
+  async deleteSpace(command: DeleteSpaceCommand): Promise<DeleteSpaceResponse> {
+    const useCase = new DeleteSpaceUseCase(
+      this.accountsPort,
+      this.spacesPort,
       this.eventEmitterService,
     );
     return useCase.execute(command);

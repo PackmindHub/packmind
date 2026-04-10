@@ -15,6 +15,8 @@ import {
   LeaveSpaceResponse,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
+  DeleteSpaceCommand,
+  DeleteSpaceResponse,
 } from '@packmind/types';
 import { SpacesManagementHexa } from '../../SpacesManagementHexa';
 
@@ -88,5 +90,13 @@ export class SpacesManagementService {
       spaceId: command.spaceId,
     });
     return this.spacesManagementAdapter.updateSpace(command);
+  }
+
+  async deleteSpace(command: DeleteSpaceCommand): Promise<DeleteSpaceResponse> {
+    this.logger.info('Deleting space', {
+      organizationId: command.organizationId,
+      spaceId: command.spaceId,
+    });
+    return this.spacesManagementAdapter.deleteSpace(command);
   }
 }

@@ -3,6 +3,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   HttpCode,
@@ -30,6 +31,8 @@ import { SpaceSlugConflictError } from '@packmind/spaces';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
+import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
+import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpacesManagementService } from './spaces-management.service';
@@ -270,6 +273,47 @@ export class SpacesManagementController {
       }
       if (error instanceof SpaceSlugConflictError) {
         throw new ConflictException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a space
+   * DELETE /organizations/:orgId/spaces-management/:spaceId
+   */
+  @Delete(':spaceId')
+  @HttpCode(204)
+  async deleteSpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces-management/:spaceId - Deleting space',
+      { organizationId, userId, spaceId },
+    );
+
+    try {
+      await this.spacesManagementService.deleteSpace({
+        userId,
+        organizationId,
+        spaceId,
+      });
+    } catch (error) {
+      if (error instanceof SpaceNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof CannotDeleteDefaultSpaceError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof SpaceDeletionForbiddenError) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof OrganizationAdminRequiredError) {
+        throw new ForbiddenException(error.message);
       }
       throw error;
     }

@@ -175,6 +175,10 @@ export class SpaceService {
     return this.spaceRepository.updateFields(spaceId, repoFields);
   }
 
+  async deleteSpace(spaceId: SpaceId, deletedBy: string): Promise<void> {
+    await this.spaceRepository.deleteById(spaceId, deletedBy);
+  }
+
   async listSpaces(): Promise<Space[]> {
     this.logger.info('Listing all spaces');
 

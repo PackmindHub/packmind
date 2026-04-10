@@ -100,4 +100,13 @@ export class SpacesManagementGatewayApi
       fields,
     );
   }
+
+  async deleteSpace(orgId: string, spaceId: string): Promise<void> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to delete a space');
+    }
+    return this._api.delete(
+      `${this._endpoint}/${orgId}/spaces-management/${spaceId}`,
+    );
+  }
 }

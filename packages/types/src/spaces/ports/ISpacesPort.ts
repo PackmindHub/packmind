@@ -181,4 +181,18 @@ export interface ISpacesPort {
     spaceId: SpaceId,
     fields: { name?: string; type?: SpaceType },
   ): Promise<Space>;
+
+  /**
+   * Soft-delete a space.
+   */
+  deleteSpace(spaceId: SpaceId, deletedBy: UserId): Promise<void>;
+
+  /**
+   * Soft-delete all memberships for a space.
+   * Returns the number of memberships soft-deleted.
+   */
+  softDeleteMembershipsBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: UserId,
+  ): Promise<number>;
 }

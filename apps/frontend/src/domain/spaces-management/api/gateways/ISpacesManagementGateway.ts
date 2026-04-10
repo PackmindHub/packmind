@@ -29,4 +29,5 @@ export interface ISpacesManagementGateway {
     spaceId: SpaceId,
     fields: { name?: string; type?: SpaceType },
   ): Promise<Space>;
+  deleteSpace(orgId: string, spaceId: string): Promise<void>;
 }
