@@ -25,6 +25,10 @@ import {
   IInstallResult,
 } from './domain/useCases/IInstallUseCase';
 import {
+  IUninstallCommand,
+  IUninstallResult,
+} from './domain/useCases/IUninstallUseCase';
+import {
   IInstallDefaultSkillsCommand,
   IInstallDefaultSkillsResult,
 } from './domain/useCases/IInstallDefaultSkillsUseCase';
@@ -149,6 +153,12 @@ export class PackmindCliHexa {
 
   public async install2(command: IInstallCommand): Promise<IInstallResult> {
     return this.hexa.useCases.install2.execute(command);
+  }
+
+  public async uninstall2(
+    command: IUninstallCommand,
+  ): Promise<IUninstallResult> {
+    return this.hexa.useCases.uninstall2.execute(command);
   }
 
   public async diffArtefacts(

@@ -15,6 +15,7 @@ import {
   parsePermissionString,
   supportsUnixPermissions,
 } from '../../infra/utils/permissions';
+import { normalizePackageSlugs } from '../utils/normalizePackageSlugs';
 
 export class InstallUseCase implements IInstallUseCase {
   constructor(
@@ -31,10 +32,16 @@ export class InstallUseCase implements IInstallUseCase {
       filesCreated: 0,
       filesUpdated: 0,
       filesDeleted: 0,
+      contentFilesChanged: 0,
       errors: [],
       recipesCount: 0,
       standardsCount: 0,
+      commandsCount: 0,
       skillsCount: 0,
+      recipesRemoved: 0,
+      standardsRemoved: 0,
+      commandsRemoved: 0,
+      skillsRemoved: 0,
       skillDirectoriesDeleted: 0,
       missingAccess: [],
     };
@@ -69,6 +76,21 @@ export class InstallUseCase implements IInstallUseCase {
       packagesSlugs = [...new Set([...configPackages, ...normalizedPackages])];
     } else {
       packagesSlugs = Object.keys(config!.packages);
+    }
+
+    if (packagesSlugs.length === 0) {
+      try {
+        for (const entry of Object.values(effectiveLockFile.artifacts)) {
+          for (const file of entry.files) {
+            await this.deleteFile(baseDirectory, file.path, result);
+          }
+        }
+        await this.deleteFile(baseDirectory, 'packmind-lock.json', result);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        result.errors.push(`Failed to clean up artifacts: ${errorMsg}`);
+      }
+      return result;
     }
 
     const response = await this.packmindGateway.deployment.install({
@@ -120,6 +142,11 @@ export class InstallUseCase implements IInstallUseCase {
       ) {
         result.standardsCount++;
       } else if (
+        file.path.includes('.packmind/commands/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.commandsCount++;
+      } else if (
         file.path.includes('.packmind/skills/') &&
         file.path.endsWith('.md')
       ) {
@@ -135,12 +162,19 @@ export class InstallUseCase implements IInstallUseCase {
 
       for (const file of uniqueFiles) {
         try {
+          const changesBefore = result.filesCreated + result.filesUpdated;
           await this.createOrUpdateFile(
             baseDirectory,
             file,
             result,
             file.skillFilePermissions,
           );
+          if (
+            result.filesCreated + result.filesUpdated > changesBefore &&
+            this.isContentFile(file.path)
+          ) {
+            result.contentFilesChanged++;
+          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -152,7 +186,35 @@ export class InstallUseCase implements IInstallUseCase {
 
       for (const file of response.fileUpdates.delete) {
         try {
+          const deletedBefore = result.filesDeleted;
           await this.deleteFile(baseDirectory, file.path, result);
+          if (result.filesDeleted > deletedBefore) {
+            if (
+              file.path.includes('.packmind/standards/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.standardsRemoved++;
+              result.contentFilesChanged++;
+            } else if (
+              file.path.includes('.packmind/commands/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.commandsRemoved++;
+              result.contentFilesChanged++;
+            } else if (
+              file.path.includes('.packmind/skills/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.skillsRemoved++;
+              result.contentFilesChanged++;
+            } else if (
+              file.path.includes('.packmind/recipes/') &&
+              file.path.endsWith('.md')
+            ) {
+              result.recipesRemoved++;
+              result.contentFilesChanged++;
+            }
+          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -175,21 +237,7 @@ export class InstallUseCase implements IInstallUseCase {
   }
 
   private async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
-    const hasUnprefixed = slugs.some((s) => !s.startsWith('@'));
-    if (!hasUnprefixed) return slugs;
-
-    const spaces = await this.spaceService.getSpaces();
-
-    if (spaces.length > 1) {
-      throw new Error(
-        `Your organization has multiple spaces. Please specify the space for each package using the @space/package format (e.g. @${spaces[0].slug}/my-package).`,
-      );
-    }
-
-    const defaultSpace = await this.spaceService.getDefaultSpace();
-    return slugs.map((slug) =>
-      slug.startsWith('@') ? slug : `@${defaultSpace.slug}/${slug}`,
-    );
+    return normalizePackageSlugs(slugs, this.spaceService);
   }
 
   private async validatePackageAccess(packages: string[]): Promise<void> {
@@ -381,6 +429,16 @@ export class InstallUseCase implements IInstallUseCase {
       result.filesDeleted++;
       await this.removeEmptyParentDirectories(fullPath, baseDirectory);
     }
+  }
+
+  private isContentFile(filePath: string): boolean {
+    return (
+      (filePath.includes('.packmind/standards/') ||
+        filePath.includes('.packmind/commands/') ||
+        filePath.includes('.packmind/skills/') ||
+        filePath.includes('.packmind/recipes/')) &&
+      filePath.endsWith('.md')
+    );
   }
 
   private async fileExists(filePath: string): Promise<boolean> {
