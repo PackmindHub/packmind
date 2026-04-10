@@ -1,7 +1,11 @@
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceAdminRequiredError,
+} from '@packmind/node-utils';
 import {
   AddMembersToSpaceCommand,
   IAccountsPort,
+  ISpacesPort,
   createOrganizationId,
   createSpaceId,
   createUserId,
@@ -11,7 +15,6 @@ import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
 import { stubLogger } from '@packmind/test-utils';
-import { SpaceAdminRequiredError } from '../../domain/errors/SpaceAdminRequiredError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
 import { AddMembersToSpaceUseCase } from './AddMembersToSpaceUseCase';
 
@@ -61,7 +64,12 @@ describe('AddMembersToSpaceUseCase', () => {
       emit: jest.fn().mockReturnValue(true),
     };
 
+    const spacesPort = {
+      findMembership: membershipService.findMembership,
+    } as unknown as ISpacesPort;
+
     useCase = new AddMembersToSpaceUseCase(
+      spacesPort,
       membershipService,
       accountsPort,
       eventEmitterService as unknown as PackmindEventEmitterService,

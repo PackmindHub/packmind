@@ -1,29 +1,30 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   IAccountsPort,
-  PackmindCommand,
+  ISpacesPort,
   PackmindResult,
-  SpaceId,
+  SpaceAdminCommand,
   UserSpaceRole,
 } from '@packmind/types';
-import { SpaceAdminRequiredError } from '../../domain/errors/SpaceAdminRequiredError';
-import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
+import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
 
 const defaultOrigin = 'AbstractSpaceAdminUseCase';
 
-export type SpaceAdminCommand = PackmindCommand & {
-  spaceId: SpaceId;
-};
-
 export type SpaceAdminContext = MemberContext;
+
+export class SpaceAdminRequiredError extends Error {
+  constructor(userId: string, spaceId: string) {
+    super(`User ${userId} is not an admin of space ${spaceId}`);
+    this.name = 'SpaceAdminRequiredError';
+  }
+}
 
 export abstract class AbstractSpaceAdminUseCase<
   Command extends SpaceAdminCommand,
   Result extends PackmindResult,
 > extends AbstractMemberUseCase<Command, Result> {
   constructor(
-    protected readonly membershipService: UserSpaceMembershipService,
+    protected readonly spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(defaultOrigin),
   ) {
@@ -33,7 +34,7 @@ export abstract class AbstractSpaceAdminUseCase<
   protected override async executeForMembers(
     command: Command & MemberContext,
   ): Promise<Result> {
-    const callerMembership = await this.membershipService.findMembership(
+    const callerMembership = await this.spacesPort.findMembership(
       command.user.id,
       command.spaceId,
     );
