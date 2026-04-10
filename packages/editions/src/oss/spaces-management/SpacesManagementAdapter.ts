@@ -2,6 +2,8 @@ import {
   BrowseSpacesCommand,
   BrowseSpacesResponse,
   CreateSpaceResponse,
+  DeleteSpaceCommand,
+  DeleteSpaceResponse,
   ISpacesManagementPort,
   JoinSpaceBySlugCommand,
   JoinSpaceCommand,
@@ -59,5 +61,12 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
     _command: LeaveSpaceCommand,
   ): Promise<LeaveSpaceResponse> {
     return {} as LeaveSpaceResponse;
+  }
+
+  async deleteSpace(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: DeleteSpaceCommand,
+  ): Promise<DeleteSpaceResponse> {
+    throw new Error('Method not implemented.');
   }
 }
