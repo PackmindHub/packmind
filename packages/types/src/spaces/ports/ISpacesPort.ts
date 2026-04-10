@@ -167,6 +167,12 @@ export interface ISpacesPort {
   ): Promise<UserSpaceMembership | null>;
 
   /**
+   * Remove a user's membership from a specific space.
+   * Low-level operation without admin checks.
+   */
+  removeSpaceMembership(userId: UserId, spaceId: SpaceId): Promise<boolean>;
+
+  /**
    * Update a space's mutable fields (name, type).
    * Slug is regenerated automatically when name changes.
    * Returns the updated space.

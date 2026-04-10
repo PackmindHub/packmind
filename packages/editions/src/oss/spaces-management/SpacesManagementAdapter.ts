@@ -6,6 +6,8 @@ import {
   JoinSpaceBySlugCommand,
   JoinSpaceCommand,
   JoinSpaceResponse,
+  LeaveSpaceCommand,
+  LeaveSpaceResponse,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
   UpdateSpaceCommand,
@@ -50,5 +52,12 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
     _command: UpdateSpaceCommand,
   ): Promise<UpdateSpaceResponse> {
     throw new Error('Method not implemented.');
+  }
+
+  async leaveSpace(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: LeaveSpaceCommand,
+  ): Promise<LeaveSpaceResponse> {
+    return {} as LeaveSpaceResponse;
   }
 }

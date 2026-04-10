@@ -143,6 +143,14 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return membershipService.findMembership(userId, spaceId);
   }
 
+  async removeSpaceMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<boolean> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.removeSpaceMembership(userId, spaceId);
+  }
+
   async findMembershipsByUserAndOrganization(
     userId: UserId,
     organizationId: OrganizationId,
