@@ -1,9 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  AbstractSpaceAdminUseCase,
+  PackmindEventEmitterService,
+  SpaceAdminContext,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   RemoveMemberFromSpaceCommand,
   RemoveMemberFromSpaceResponse,
   SpaceMembersRemovedEvent,
@@ -11,10 +16,6 @@ import {
 import { CannotRemoveFromDefaultSpaceError } from '../../domain/errors/CannotRemoveFromDefaultSpaceError';
 import { CannotRemoveSelfError } from '../../domain/errors/CannotRemoveSelfError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
-import {
-  AbstractSpaceAdminUseCase,
-  SpaceAdminContext,
-} from './AbstractSpaceAdminUseCase';
 
 const origin = 'RemoveMemberFromSpaceUseCase';
 
@@ -23,12 +24,13 @@ export class RemoveMemberFromSpaceUseCase extends AbstractSpaceAdminUseCase<
   RemoveMemberFromSpaceResponse
 > {
   constructor(
-    membershipService: UserSpaceMembershipService,
+    spacesPort: ISpacesPort,
+    private readonly membershipService: UserSpaceMembershipService,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(membershipService, accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
   protected async executeForSpaceAdmins(

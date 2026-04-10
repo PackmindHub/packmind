@@ -1,9 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  AbstractSpaceAdminUseCase,
+  PackmindEventEmitterService,
+  SpaceAdminContext,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   SpaceMembersRoleUpdatedEvent,
   UpdateMemberRoleCommand,
   UpdateMemberRoleResponse,
@@ -11,10 +16,6 @@ import {
 import { CannotUpdateOwnRoleError } from '../../domain/errors/CannotUpdateOwnRoleError';
 import { MemberNotFoundError } from '../../domain/errors/MemberNotFoundError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
-import {
-  AbstractSpaceAdminUseCase,
-  SpaceAdminContext,
-} from './AbstractSpaceAdminUseCase';
 
 const origin = 'UpdateMemberRoleUseCase';
 
@@ -23,12 +24,13 @@ export class UpdateMemberRoleUseCase extends AbstractSpaceAdminUseCase<
   UpdateMemberRoleResponse
 > {
   constructor(
-    membershipService: UserSpaceMembershipService,
+    spacesPort: ISpacesPort,
+    private readonly membershipService: UserSpaceMembershipService,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(membershipService, accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
   protected async executeForSpaceAdmins(

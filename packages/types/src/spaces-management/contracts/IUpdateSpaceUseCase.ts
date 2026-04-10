@@ -1,8 +1,7 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, SpaceAdminCommand } from '../../UseCase';
 import { Space, SpaceType } from '../../spaces/Space';
 
-export type UpdateSpaceCommand = PackmindCommand & {
-  spaceId: string;
+export type UpdateSpaceCommand = SpaceAdminCommand & {
   name?: string;
   type?: SpaceType;
 };

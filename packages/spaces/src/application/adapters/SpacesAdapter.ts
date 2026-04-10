@@ -171,6 +171,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<AddMembersToSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new AddMembersToSpaceUseCase(
+      this,
       membershipService,
       this.accountsPort,
       this.eventEmitterService,
@@ -183,6 +184,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<RemoveMemberFromSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new RemoveMemberFromSpaceUseCase(
+      this,
       membershipService,
       this.accountsPort,
       this.eventEmitterService,
@@ -203,6 +205,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<UpdateMemberRoleResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new UpdateMemberRoleUseCase(
+      this,
       membershipService,
       this.accountsPort,
       this.eventEmitterService,

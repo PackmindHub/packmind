@@ -1,19 +1,20 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  AbstractSpaceAdminUseCase,
+  PackmindEventEmitterService,
+  SpaceAdminContext,
+} from '@packmind/node-utils';
 import {
   AddMembersToSpaceCommand,
   AddMembersToSpaceResponse,
   createOrganizationId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   SpaceMembersAddedEvent,
   UserSpaceMembership,
 } from '@packmind/types';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
-import {
-  AbstractSpaceAdminUseCase,
-  SpaceAdminContext,
-} from './AbstractSpaceAdminUseCase';
 
 const origin = 'AddMembersToSpaceUseCase';
 
@@ -22,12 +23,13 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
   AddMembersToSpaceResponse
 > {
   constructor(
-    membershipService: UserSpaceMembershipService,
+    spacesPort: ISpacesPort,
+    private readonly membershipService: UserSpaceMembershipService,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(membershipService, accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
   protected async executeForSpaceAdmins(

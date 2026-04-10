@@ -1,18 +1,21 @@
 import {
   RemoveMemberFromSpaceCommand,
   IAccountsPort,
+  ISpacesPort,
   createOrganizationId,
   createSpaceId,
   createUserId,
   UserSpaceRole,
 } from '@packmind/types';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceAdminRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
-import { SpaceAdminRequiredError } from '../../domain/errors/SpaceAdminRequiredError';
 import { CannotRemoveFromDefaultSpaceError } from '../../domain/errors/CannotRemoveFromDefaultSpaceError';
 import { CannotRemoveSelfError } from '../../domain/errors/CannotRemoveSelfError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
@@ -63,7 +66,12 @@ describe('RemoveMemberFromSpaceUseCase', () => {
       emit: jest.fn().mockReturnValue(true),
     };
 
+    const spacesPort = {
+      findMembership: membershipService.findMembership,
+    } as unknown as ISpacesPort;
+
     useCase = new RemoveMemberFromSpaceUseCase(
+      spacesPort,
       membershipService,
       accountsPort,
       eventEmitterService as unknown as PackmindEventEmitterService,

@@ -18,9 +18,11 @@ import {
   UserId,
   UserSpaceRole,
 } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  AuthenticatedRequest,
   SpaceAdminRequiredError,
+} from '@packmind/node-utils';
+import {
   CannotRemoveFromDefaultSpaceError,
   CannotRemoveSelfError,
   CannotUpdateOwnRoleError,

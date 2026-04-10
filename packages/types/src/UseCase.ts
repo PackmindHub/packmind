@@ -18,6 +18,10 @@ export type SpaceMemberCommand = PackmindCommand & {
   spaceId: SpaceId;
 };
 
+export type SpaceAdminCommand = PackmindCommand & {
+  spaceId: SpaceId;
+};
+
 export type SystemPackmindCommand = {
   organizationId: string;
   userId?: string; // Optional for system operations
