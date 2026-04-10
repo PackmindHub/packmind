@@ -481,6 +481,101 @@ describe('InstallPackagesUseCase', () => {
     });
   });
 
+  describe('when a package is removed', () => {
+    const removedArtifactEntry = {
+      name: 'Removed Standard',
+      type: 'standard' as const,
+      id: 'removed-standard-id',
+      version: 1,
+      spaceId: 'public-space-id',
+      packageIds: ['removed-pkg-id'],
+      files: [
+        {
+          path: '.cursor/rules/removed-standard.mdc',
+          agent: CodingAgents.cursor,
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      command = {
+        ...command,
+        packagesSlugs: ['@public/my-package'],
+        packmindLockFile: {
+          lockfileVersion: 1,
+          packageSlugs: ['@public/my-package', '@public/removed-package'],
+          agents: [],
+          installedAt: new Date().toISOString(),
+          artifacts: {
+            'standard:removed-standard': removedArtifactEntry,
+          },
+        },
+      };
+
+      spacesPort.findMembership.mockResolvedValue(
+        createSpaceMembership(userId, 'public-space-id'),
+      );
+    });
+
+    it('adds artifact files to the delete section', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.fileUpdates.delete).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: '.cursor/rules/removed-standard.mdc',
+          }),
+        ]),
+      );
+    });
+
+    describe('when user has no access to the removed package space', () => {
+      const inaccessibleRemovedArtifact = {
+        name: 'Inaccessible Removed Standard',
+        type: 'standard' as const,
+        id: 'inaccessible-removed-standard-id',
+        version: 1,
+        spaceId: 'private-space-id',
+        packageIds: ['inaccessible-removed-pkg-id'],
+        files: [
+          {
+            path: '.cursor/rules/inaccessible-removed-standard.mdc',
+            agent: CodingAgents.cursor,
+          },
+        ],
+      };
+
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['@public/my-package'],
+          packmindLockFile: {
+            lockfileVersion: 1,
+            packageSlugs: ['@public/my-package', '@private/removed-package'],
+            agents: [],
+            installedAt: new Date().toISOString(),
+            artifacts: {
+              'standard:inaccessible-removed-standard':
+                inaccessibleRemovedArtifact,
+            },
+          },
+        };
+      });
+
+      it('adds artifact files to the delete section without error', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.fileUpdates.delete).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.cursor/rules/inaccessible-removed-standard.mdc',
+            }),
+          ]),
+        );
+      });
+    });
+  });
+
   describe('when a package is not found in an accessible space', () => {
     beforeEach(() => {
       spacesPort.findMembership.mockResolvedValue(
