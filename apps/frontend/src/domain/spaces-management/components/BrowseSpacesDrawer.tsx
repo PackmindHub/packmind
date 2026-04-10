@@ -23,7 +23,7 @@ interface BrowseSpacesDrawerProps {
   open: boolean;
   onClose: () => void;
   onSpaceClick: (space: Space) => void;
-  onJoinSpace: (spaceId: SpaceId) => void;
+  onJoinSpace: (spaceId: SpaceId, spaceName: string) => void;
   onCreateSpace?: () => void;
   containerRef?: RefObject<HTMLElement | null>;
   isLoading?: boolean;
@@ -283,7 +283,7 @@ function AllSpacesTab({
 }: Readonly<{
   spaces: BrowsableSpace[];
   searchQuery: string;
-  onJoinSpace: (spaceId: SpaceId) => void;
+  onJoinSpace: (spaceId: SpaceId, spaceName: string) => void;
   isJoining?: boolean;
 }>) {
   if (spaces.length === 0) {
@@ -333,7 +333,7 @@ function AllSpacesTab({
           <PMButton
             size="xs"
             variant="secondary"
-            onClick={() => onJoinSpace(space.id)}
+            onClick={() => onJoinSpace(space.id, space.name)}
             disabled={isJoining}
             data-testid={`browse-spaces-join-${space.id}`}
           >

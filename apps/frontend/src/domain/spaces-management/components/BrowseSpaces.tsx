@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { RefObject } from 'react';
-import { PMBox } from '@packmind/ui';
+import { PMBox, pmToaster } from '@packmind/ui';
 import { useNavigate } from 'react-router';
 import { Space, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -33,8 +33,24 @@ export function BrowseSpaces({
     setIsDrawerOpen(false);
   };
 
-  const handleJoinSpace = (spaceId: SpaceId) => {
-    joinMutation.mutate({ spaceId });
+  const handleJoinSpace = (spaceId: SpaceId, spaceName: string) => {
+    joinMutation.mutate(
+      { spaceId },
+      {
+        onSuccess: () => {
+          pmToaster.success({
+            title: 'Joined!',
+            description: `You've joined ${spaceName}.`,
+          });
+        },
+        onError: () => {
+          pmToaster.error({
+            title: 'Failed to join',
+            description: 'Something went wrong. Please try again.',
+          });
+        },
+      },
+    );
   };
 
   return (

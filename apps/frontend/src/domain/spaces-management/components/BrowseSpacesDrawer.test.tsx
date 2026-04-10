@@ -142,6 +142,7 @@ describe('BrowseSpacesDrawer', () => {
 
       expect(defaultProps.onJoinSpace).toHaveBeenCalledWith(
         createSpaceId('space-3'),
+        'Open Space',
       );
     });
   });
