@@ -70,11 +70,13 @@ const mockUseCurrentSpace = (
 
 const mockMutate = jest.fn();
 
+const mockLeaveMutate = jest.fn();
+
 const mockLeaveSpaceMutation = () => {
   jest
     .spyOn(SpacesManagementQueriesModule, 'useLeaveSpaceMutation')
     .mockReturnValue({
-      mutate: jest.fn(),
+      mutate: mockLeaveMutate,
       isPending: false,
     } as unknown as ReturnType<
       typeof SpacesManagementQueriesModule.useLeaveSpaceMutation
@@ -214,7 +216,7 @@ describe('SpaceDangerZoneSection', () => {
           const leaveButton = screen.getByRole('button', { name: 'Leave' });
           fireEvent.click(leaveButton);
 
-          expect(mockMutate).toHaveBeenCalledWith({ spaceId: 'space-1' });
+          expect(mockLeaveMutate).toHaveBeenCalledWith({ spaceId: 'space-1' });
         });
       });
     });
