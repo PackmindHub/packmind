@@ -24,7 +24,7 @@ interface BrowseSpacesDrawerProps {
   onClose: () => void;
   onSpaceClick: (space: Space) => void;
   onJoinSpace: (spaceId: SpaceId) => void;
-  onCreateSpace: () => void;
+  onCreateSpace?: () => void;
   containerRef?: RefObject<HTMLElement | null>;
   isLoading?: boolean;
   isError?: boolean;
@@ -83,17 +83,19 @@ export function BrowseSpacesDrawer({
               <PMDrawer.Title fontSize="sm" flex={1}>
                 Spaces
               </PMDrawer.Title>
-              <PMButton
-                size="xs"
-                variant="secondary"
-                onClick={onCreateSpace}
-                data-testid="browse-spaces-new-button"
-              >
-                <PMIcon fontSize="xs">
-                  <LuPlus />
-                </PMIcon>
-                New
-              </PMButton>
+              {onCreateSpace && (
+                <PMButton
+                  size="xs"
+                  variant="secondary"
+                  onClick={onCreateSpace}
+                  data-testid="browse-spaces-new-button"
+                >
+                  <PMIcon fontSize="xs">
+                    <LuPlus />
+                  </PMIcon>
+                  New
+                </PMButton>
+              )}
             </PMDrawer.Header>
 
             {/* Tabs */}
