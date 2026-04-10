@@ -7,6 +7,7 @@ import {
   PMNativeSelect,
   PMPageSection,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
 import { SpaceType } from '@packmind/types';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
@@ -45,6 +46,18 @@ export function SpaceAccessSection() {
       {
         onSuccess: () => {
           setAccessStatus(undefined);
+          pmToaster.create({
+            type: 'success',
+            title: 'Space visibility updated',
+            closable: true,
+          });
+        },
+        onError: () => {
+          pmToaster.create({
+            type: 'error',
+            title: 'Failed to update space visibility',
+            description: 'An unexpected error occurred. Please try again.',
+          });
         },
       },
     );
