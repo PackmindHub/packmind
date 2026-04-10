@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
@@ -16,8 +17,11 @@ import {
   MoveArtifactsToSpaceResponse,
   SpaceType,
 } from '@packmind/types';
+import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
+import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpacesManagementController } from './spaces-management.controller';
@@ -43,6 +47,7 @@ describe('SpacesManagementController', () => {
       moveArtifactsToSpace: jest.fn(),
       browseSpaces: jest.fn(),
       joinSpace: jest.fn(),
+      deleteSpace: jest.fn(),
     } as unknown as jest.Mocked<SpacesManagementService>;
     controller = new SpacesManagementController(service, logger);
   });
@@ -292,6 +297,82 @@ describe('SpacesManagementController', () => {
       it('throws ForbiddenException', async () => {
         await expect(
           controller.joinSpace(organizationId, spaceId, mockRequest),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+  });
+
+  describe('deleteSpace', () => {
+    const spaceId = 'space-1';
+
+    describe('when deleting a space successfully', () => {
+      beforeEach(async () => {
+        service.deleteSpace.mockResolvedValue(undefined);
+        await controller.deleteSpace(organizationId, spaceId, mockRequest);
+      });
+
+      it('calls service with correct params', () => {
+        expect(service.deleteSpace).toHaveBeenCalledWith({
+          userId: 'user-123',
+          organizationId,
+          spaceId,
+        });
+      });
+    });
+
+    describe('when the space is not found', () => {
+      beforeEach(() => {
+        service.deleteSpace.mockRejectedValue(new SpaceNotFoundError(spaceId));
+      });
+
+      it('throws NotFoundException', async () => {
+        await expect(
+          controller.deleteSpace(organizationId, spaceId, mockRequest),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+
+    describe('when the space is the default space', () => {
+      beforeEach(() => {
+        service.deleteSpace.mockRejectedValue(
+          new CannotDeleteDefaultSpaceError(spaceId),
+        );
+      });
+
+      it('throws UnprocessableEntityException', async () => {
+        await expect(
+          controller.deleteSpace(organizationId, spaceId, mockRequest),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('when the user is not authorized to delete the space', () => {
+      beforeEach(() => {
+        service.deleteSpace.mockRejectedValue(
+          new SpaceDeletionForbiddenError('user-123', spaceId),
+        );
+      });
+
+      it('throws ForbiddenException', async () => {
+        await expect(
+          controller.deleteSpace(organizationId, spaceId, mockRequest),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the user is not an organization admin', () => {
+      beforeEach(() => {
+        service.deleteSpace.mockRejectedValue(
+          new OrganizationAdminRequiredError({
+            userId: 'user-123',
+            organizationId,
+          }),
+        );
+      });
+
+      it('throws ForbiddenException', async () => {
+        await expect(
+          controller.deleteSpace(organizationId, spaceId, mockRequest),
         ).rejects.toThrow(ForbiddenException);
       });
     });
