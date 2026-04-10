@@ -1,4 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { SpaceType, createPackageId, createSpaceId } from '@packmind/types';
@@ -226,16 +232,19 @@ describe('SpaceDangerZoneSection', () => {
   });
 
   describe('when the delete dialog is opened', () => {
-    const openDeleteDialog = () => {
+    const openDeleteDialog = async () => {
       renderWithProviders(<SpaceDangerZoneSection />);
       const trigger = screen.getByRole('button', {
         name: /delete this space/i,
       });
-      fireEvent.click(trigger);
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      await screen.findByPlaceholderText('Enter space name');
     };
 
-    beforeEach(() => {
-      openDeleteDialog();
+    beforeEach(async () => {
+      await openDeleteDialog();
     });
 
     it('renders the confirmation input prompt', () => {
@@ -293,14 +302,17 @@ describe('SpaceDangerZoneSection', () => {
 
         expect(mockMutate).toHaveBeenCalledWith(
           { spaceId: 'space-1' },
-          expect.objectContaining({ onSuccess: expect.any(Function) }),
+          expect.objectContaining({
+            onSuccess: expect.any(Function),
+            onError: expect.any(Function),
+          }),
         );
       });
     });
   });
 
   describe('when the delete dialog is opened with impacted packages', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockListPackagesBySpaceQuery([
         {
           id: createPackageId('pkg-1'),
@@ -315,7 +327,10 @@ describe('SpaceDangerZoneSection', () => {
       const trigger = screen.getByRole('button', {
         name: /delete this space/i,
       });
-      fireEvent.click(trigger);
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      await screen.findByPlaceholderText('Enter space name');
     });
 
     it('displays the impacted package names', () => {

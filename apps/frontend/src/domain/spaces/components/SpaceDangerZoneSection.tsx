@@ -11,6 +11,7 @@ import {
   PMSeparator,
   PMText,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
 import { Package } from '@packmind/types';
 
@@ -106,14 +107,27 @@ function DeleteSpaceConfirmationDialog({
   spaceName: string;
   packages: Package[];
   isPending: boolean;
-  onConfirm: () => void;
+  onConfirm: (onSettled: () => void) => void;
 }>) {
+  const [open, setOpen] = useState(false);
   const [confirmationInput, setConfirmationInput] = useState('');
 
   const isConfirmEnabled = confirmationInput === spaceName && !isPending;
 
+  const handleOpenChange = (details: { open: boolean }) => {
+    if (!isPending) {
+      setOpen(details.open);
+    }
+  };
+
+  const handleConfirm = () => {
+    onConfirm(() => setOpen(false));
+  };
+
   return (
     <Dialog.Root
+      open={open}
+      onOpenChange={handleOpenChange}
       placement="center"
       onExitComplete={() => setConfirmationInput('')}
     >
@@ -174,12 +188,15 @@ function DeleteSpaceConfirmationDialog({
 
             <Dialog.Footer>
               <Dialog.ActionTrigger asChild>
-                <PMButton variant="tertiary">Cancel</PMButton>
+                <PMButton variant="tertiary" disabled={isPending}>
+                  Cancel
+                </PMButton>
               </Dialog.ActionTrigger>
               <PMButton
                 colorScheme="red"
                 disabled={!isConfirmEnabled}
-                onClick={onConfirm}
+                loading={isPending}
+                onClick={handleConfirm}
                 ml={3}
               >
                 Delete
@@ -252,10 +269,24 @@ export function SpaceDangerZoneSection() {
                 spaceName={space.name}
                 packages={packagesData?.packages ?? []}
                 isPending={deleteSpaceMutation.isPending}
-                onConfirm={() => {
+                onConfirm={(onSettled) => {
                   deleteSpaceMutation.mutate(
                     { spaceId: space.id },
-                    { onSuccess: () => nav.org.toDashboard() },
+                    {
+                      onSuccess: () => {
+                        onSettled();
+                        nav.org.toDashboard();
+                      },
+                      onError: () => {
+                        onSettled();
+                        pmToaster.create({
+                          type: 'error',
+                          title: 'Failed to delete space',
+                          description:
+                            'An error occurred while deleting the space. Please try again.',
+                        });
+                      },
+                    },
                   );
                 }}
               />
