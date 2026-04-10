@@ -11,6 +11,7 @@ import {
   Post,
   Param,
   Req,
+  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
@@ -28,6 +29,7 @@ import {
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpacesManagementService } from './spaces-management.service';
@@ -196,6 +198,41 @@ export class SpacesManagementController {
       }
       if (error instanceof SpaceNotJoinableError) {
         throw new ForbiddenException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Leave a space (user-initiated self-removal)
+   * POST /organizations/:orgId/spaces-management/:spaceId/leave
+   */
+  @Post(':spaceId/leave')
+  @HttpCode(204)
+  async leaveSpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces-management/:spaceId/leave - Leaving space',
+      { organizationId, spaceId },
+    );
+
+    try {
+      await this.spacesManagementService.leaveSpace({
+        userId,
+        organizationId,
+        spaceId,
+      });
+    } catch (error) {
+      if (error instanceof SpaceNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof CannotLeaveDefaultSpaceError) {
+        throw new UnprocessableEntityException(error.message);
       }
       throw error;
     }

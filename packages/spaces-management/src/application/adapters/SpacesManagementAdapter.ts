@@ -23,6 +23,8 @@ import {
   JoinSpaceCommand,
   JoinSpaceBySlugCommand,
   JoinSpaceResponse,
+  LeaveSpaceCommand,
+  LeaveSpaceResponse,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
   createOrganizationId,
@@ -32,6 +34,7 @@ import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { MoveArtifactsToSpaceUseCase } from '../usecases/MoveArtifactsToSpaceUseCase';
 import { BrowseSpacesUseCase } from '../usecases/BrowseSpacesUseCase';
 import { JoinSpaceUseCase } from '../usecases/JoinSpaceUseCase';
+import { LeaveSpaceUseCase } from '../usecases/LeaveSpaceUseCase';
 import { UpdateSpaceUseCase } from '../usecases/UpdateSpaceUseCase';
 
 /**
@@ -100,6 +103,15 @@ export class SpacesManagementAdapter
       ...command,
       spaceId: space.id,
     });
+  }
+
+  async leaveSpace(command: LeaveSpaceCommand): Promise<LeaveSpaceResponse> {
+    const useCase = new LeaveSpaceUseCase(
+      this.accountsPort,
+      this.spacesPort,
+      this.eventEmitterService,
+    );
+    return useCase.execute(command);
   }
 
   async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {

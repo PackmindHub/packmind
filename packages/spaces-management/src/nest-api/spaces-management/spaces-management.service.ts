@@ -11,6 +11,8 @@ import {
   JoinSpaceCommand,
   JoinSpaceBySlugCommand,
   JoinSpaceResponse,
+  LeaveSpaceCommand,
+  LeaveSpaceResponse,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
 } from '@packmind/types';
@@ -70,6 +72,14 @@ export class SpacesManagementService {
       spaceSlug: command.spaceSlug,
     });
     return this.spacesManagementAdapter.joinSpaceBySlug(command);
+  }
+
+  async leaveSpace(command: LeaveSpaceCommand): Promise<LeaveSpaceResponse> {
+    this.logger.info('Leaving space', {
+      organizationId: command.organizationId,
+      spaceId: command.spaceId,
+    });
+    return this.spacesManagementAdapter.leaveSpace(command);
   }
 
   async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {
