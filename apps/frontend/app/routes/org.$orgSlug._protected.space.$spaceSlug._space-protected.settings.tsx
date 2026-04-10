@@ -32,7 +32,10 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     (m) => m.userId === me.user.id,
   );
 
-  if (currentUserMember?.role !== 'admin') {
+  const isOrgAdmin = me.organization.role === 'admin';
+  const isSpaceAdmin = currentUserMember?.role === 'admin';
+
+  if (!isOrgAdmin && !isSpaceAdmin) {
     throw redirect(`/org/${params.orgSlug}/space/${params.spaceSlug}`);
   }
 
