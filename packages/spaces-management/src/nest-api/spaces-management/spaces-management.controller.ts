@@ -23,6 +23,7 @@ import {
   Space,
   SpaceType,
   BrowseSpacesResponse,
+  SpaceId,
 } from '@packmind/types';
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
@@ -207,7 +208,7 @@ export class SpacesManagementController {
   @Patch(':spaceId')
   async updateSpace(
     @Param('orgId') organizationId: OrganizationId,
-    @Param('spaceId') spaceId: string,
+    @Param('spaceId') spaceId: SpaceId,
     @Body() body: { name?: string; type?: SpaceType },
     @Req() request: AuthenticatedRequest,
   ): Promise<Space> {

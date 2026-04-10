@@ -1,11 +1,10 @@
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceAdminUseCase,
   PackmindEventEmitterService,
+  SpaceAdminContext,
 } from '@packmind/node-utils';
 import {
   createOrganizationId,
-  createSpaceId,
   createUserId,
   IAccountsPort,
   ISpacesPort,
@@ -17,32 +16,31 @@ import {
 import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 
-export class UpdateSpaceUseCase extends AbstractMemberUseCase<
+export class UpdateSpaceUseCase extends AbstractSpaceAdminUseCase<
   UpdateSpaceCommand,
   UpdateSpaceResponse
 > {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
-    super(accountsPort);
+    super(spacesPort, accountsPort);
   }
 
-  protected async executeForMembers(
-    command: UpdateSpaceCommand & MemberContext,
+  protected async executeForSpaceAdmins(
+    command: UpdateSpaceCommand & SpaceAdminContext,
   ): Promise<UpdateSpaceResponse> {
-    const spaceId = createSpaceId(command.spaceId);
     const organizationId = createOrganizationId(command.organizationId);
 
-    const space = await this.spacesPort.getSpaceById(spaceId);
+    const space = await this.spacesPort.getSpaceById(command.spaceId);
 
     if (!space || space.organizationId !== organizationId) {
-      throw new SpaceNotFoundError(spaceId);
+      throw new SpaceNotFoundError(command.spaceId);
     }
 
     if (command.type !== undefined && space.isDefaultSpace) {
-      throw new CannotUpdateDefaultSpaceVisibilityError(spaceId);
+      throw new CannotUpdateDefaultSpaceVisibilityError(command.spaceId);
     }
 
     const fields: { name?: string; type?: SpaceType } = {};
@@ -59,7 +57,10 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
       return space;
     }
 
-    const updatedSpace = await this.spacesPort.updateSpace(spaceId, fields);
+    const updatedSpace = await this.spacesPort.updateSpace(
+      command.spaceId,
+      fields,
+    );
 
     if (command.type !== undefined) {
       this.eventEmitterService.emit(
@@ -67,7 +68,7 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
           userId: createUserId(command.userId),
           organizationId,
           source: command.source ?? 'ui',
-          spaceId,
+          spaceId: command.spaceId,
           newVisibility: command.type,
         }),
       );

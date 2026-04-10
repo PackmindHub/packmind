@@ -6,11 +6,16 @@ import {
   ISpacesPort,
   SpaceType,
   UpdateSpaceCommand,
+  UserSpaceRole,
 } from '@packmind/types';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceAdminRequiredError,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
 import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { UpdateSpaceUseCase } from './UpdateSpaceUseCase';
@@ -25,11 +30,16 @@ describe('UpdateSpaceUseCase', () => {
     id: userId,
     memberships: [{ userId, organizationId, role: 'member' }],
   });
+  const adminMembership = userSpaceMembershipFactory({
+    userId,
+    spaceId,
+    role: UserSpaceRole.ADMIN,
+  });
 
   let useCase: UpdateSpaceUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<
-    Pick<ISpacesPort, 'getSpaceById' | 'updateSpace'>
+    Pick<ISpacesPort, 'getSpaceById' | 'updateSpace' | 'findMembership'>
   >;
   let eventEmitterService: jest.Mocked<
     Pick<PackmindEventEmitterService, 'emit'>
@@ -40,7 +50,7 @@ describe('UpdateSpaceUseCase', () => {
   ): UpdateSpaceCommand => ({
     userId: userId as unknown as string,
     organizationId: organizationId as unknown as string,
-    spaceId: spaceId as unknown as string,
+    spaceId,
     ...overrides,
   });
 
@@ -53,6 +63,7 @@ describe('UpdateSpaceUseCase', () => {
     spacesPort = {
       getSpaceById: jest.fn(),
       updateSpace: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue(adminMembership),
     };
 
     eventEmitterService = {
@@ -60,8 +71,8 @@ describe('UpdateSpaceUseCase', () => {
     };
 
     useCase = new UpdateSpaceUseCase(
-      accountsPort,
       spacesPort as unknown as ISpacesPort,
+      accountsPort,
       eventEmitterService as unknown as PackmindEventEmitterService,
     );
   });
@@ -223,6 +234,24 @@ describe('UpdateSpaceUseCase', () => {
         .catch(() => undefined);
 
       expect(eventEmitterService.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when user is not a space admin', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(
+        userSpaceMembershipFactory({
+          userId,
+          spaceId,
+          role: UserSpaceRole.MEMBER,
+        }),
+      );
+    });
+
+    it('throws SpaceAdminRequiredError', async () => {
+      await expect(
+        useCase.execute(buildCommand({ type: SpaceType.private })),
+      ).rejects.toThrow(SpaceAdminRequiredError);
     });
   });
 });
