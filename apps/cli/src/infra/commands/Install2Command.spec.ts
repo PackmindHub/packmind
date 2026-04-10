@@ -11,6 +11,7 @@ jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
   existsSync: jest.fn(),
   statSync: jest.fn(),
+  readdirSync: jest.fn().mockReturnValue([]),
 }));
 
 jest.mock('../../PackmindCliHexa', () => ({
@@ -28,10 +29,26 @@ jest.mock('@packmind/logger', () => ({
   LogLevel: { INFO: 'INFO' },
 }));
 
+import * as path from 'path';
 import { install2Handler } from './Install2Command';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+
+function makeDirent(name: string, isDir = true): fs.Dirent {
+  return {
+    name,
+    isDirectory: () => isDir,
+    isFile: () => !isDir,
+    isBlockDevice: () => false,
+    isCharacterDevice: () => false,
+    isSymbolicLink: () => false,
+    isFIFO: () => false,
+    isSocket: () => false,
+    path: '',
+    parentPath: '',
+  } as fs.Dirent;
+}
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
@@ -144,11 +161,12 @@ describe('install2Command', () => {
 
     describe('when no path is provided', () => {
       beforeEach(async () => {
+        mockFs.existsSync.mockReturnValue(false);
         await handler({ installPath: '', packages: [] });
       });
 
-      it('skips path validation', () => {
-        expect(mockFs.existsSync).not.toHaveBeenCalled();
+      it('skips directory-existence validation', () => {
+        expect(mockFs.statSync).not.toHaveBeenCalled();
       });
 
       it('calls install2 with process.cwd()', () => {
@@ -197,6 +215,170 @@ describe('install2Command', () => {
 
       it('exits with code 1', () => {
         expect(processExitSpy).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
+  describe('multi-directory discovery', () => {
+    describe('without --path: runs on root and recursive sub-directories with packmind.json', () => {
+      const subDir1 = path.join(process.cwd(), 'apps', 'frontend');
+      const subDir2 = path.join(process.cwd(), 'packages', 'core');
+
+      beforeEach(async () => {
+        // Root has packmind.json
+        mockFs.existsSync.mockImplementation((p) => {
+          const asStr = String(p);
+          return (
+            asStr === path.join(process.cwd(), 'packmind.json') ||
+            asStr === path.join(subDir1, 'packmind.json') ||
+            asStr === path.join(subDir2, 'packmind.json')
+          );
+        });
+        // readdirSync returns entries for root and sub-dirs
+        mockFs.readdirSync.mockImplementation((dirPath) => {
+          const asStr = String(dirPath);
+          if (asStr === process.cwd()) {
+            return [
+              makeDirent('apps'),
+              makeDirent('packages'),
+            ] as unknown as string[];
+          }
+          if (asStr === path.join(process.cwd(), 'apps')) {
+            return [makeDirent('frontend')] as unknown as string[];
+          }
+          if (asStr === path.join(process.cwd(), 'packages')) {
+            return [makeDirent('core')] as unknown as string[];
+          }
+          return [] as unknown as string[];
+        });
+        await handler({ installPath: '', packages: [] });
+      });
+
+      it('calls install2 for the root directory', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: process.cwd() }),
+        );
+      });
+
+      it('calls install2 for the first sub-directory with packmind.json', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: subDir1 }),
+        );
+      });
+
+      it('calls install2 for the second sub-directory with packmind.json', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: subDir2 }),
+        );
+      });
+
+      it('calls install2 exactly three times', () => {
+        expect(mockInstall2).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    describe('with --path: runs only on direct sub-directories (non-recursive)', () => {
+      const appsDir = path.resolve(process.cwd(), 'apps');
+      const frontendDir = path.join(appsDir, 'frontend');
+      const backendDir = path.join(appsDir, 'backend');
+
+      beforeEach(async () => {
+        mockFs.existsSync.mockImplementation((p) => {
+          const asStr = String(p);
+          // apps/ directory exists (for path validation)
+          if (asStr === appsDir) return true;
+          return (
+            asStr === path.join(frontendDir, 'packmind.json') ||
+            asStr === path.join(backendDir, 'packmind.json')
+          );
+        });
+        mockFs.statSync.mockReturnValue({
+          isDirectory: () => true,
+        } as fs.Stats);
+        // Non-recursive: only reads apps/ directly
+        mockFs.readdirSync.mockReturnValue([
+          makeDirent('frontend'),
+          makeDirent('backend'),
+          makeDirent('shared'),
+        ] as unknown as string[]);
+        await handler({ installPath: 'apps', packages: [] });
+      });
+
+      it('calls install2 for the frontend sub-directory', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: frontendDir }),
+        );
+      });
+
+      it('calls install2 for the backend sub-directory', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: backendDir }),
+        );
+      });
+
+      it('does not call install2 for sub-directories without packmind.json', () => {
+        expect(mockInstall2).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            baseDirectory: path.join(appsDir, 'shared'),
+          }),
+        );
+      });
+
+      it('calls install2 exactly twice', () => {
+        expect(mockInstall2).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('when one sub-directory install fails, continues with others and exits with 1', () => {
+      const appsDir = path.resolve(process.cwd(), 'apps');
+      const frontendDir = path.join(appsDir, 'frontend');
+      const backendDir = path.join(appsDir, 'backend');
+
+      beforeEach(async () => {
+        mockFs.existsSync.mockImplementation((p) => {
+          const asStr = String(p);
+          if (asStr === appsDir) return true;
+          return (
+            asStr === path.join(frontendDir, 'packmind.json') ||
+            asStr === path.join(backendDir, 'packmind.json')
+          );
+        });
+        mockFs.statSync.mockReturnValue({
+          isDirectory: () => true,
+        } as fs.Stats);
+        mockFs.readdirSync.mockReturnValue([
+          makeDirent('frontend'),
+          makeDirent('backend'),
+        ] as unknown as string[]);
+        mockInstall2.mockImplementation((cmd: { baseDirectory: string }) => {
+          if (cmd.baseDirectory === frontendDir) {
+            return Promise.reject(new Error('network failure'));
+          }
+          return Promise.resolve(makeResult({ standardsCount: 2 }));
+        });
+        await handler({ installPath: 'apps', packages: [] });
+      });
+
+      it('still calls install2 for the remaining directory', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: backendDir }),
+        );
+      });
+
+      it('reports the error', () => {
+        expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('network failure'),
+        );
+      });
+
+      it('exits with code 1', () => {
+        expect(processExitSpy).toHaveBeenCalledWith(1);
+      });
+
+      it('shows the combined install summary', () => {
+        expect(mockConsoleLogger.logConsole).toHaveBeenCalledWith(
+          expect.stringContaining('2 standards'),
+        );
       });
     });
   });
