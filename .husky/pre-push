@@ -1,4 +1,4 @@
 npm run typecheck:frontend
 npm run build
 npm run lint
-npm run test -- --tuiAutoExit --passWithNoTests
+PACKMIND_LOG_LEVEL=silent NODE_OPTIONS='--max-old-space-size=16384' ./node_modules/.bin/nx run-many -t test --exclude=cli-e2e-tests,@packmind/integration-tests --parallel=3 --tuiAutoExit --passWithNoTests
