@@ -49,6 +49,7 @@ You are auditing a section of the Packmind end-user documentation. Your job is t
 - High-level conceptual descriptions (e.g., "Packmind helps teams share knowledge")
 - References to third-party tools that Packmind integrates with via configuration (not code)
 - UI features that exist in the frontend but not as standalone packages
+- Do not infer feature availability per edition (OSS vs. Enterprise vs. Cloud) from package paths. Edition gating is controlled by TypeScript path aliases in `tsconfig.paths.oss.json` vs `tsconfig.paths.proprietary.json`, not by directory structure — see Category D for the full explanation
 
 ### Category D: Misleading Information (WARNING)
 
@@ -66,6 +67,7 @@ You are auditing a section of the Packmind end-user documentation. Your job is t
 **Not a finding (false positive):**
 - Vague future references ("we plan to add...")
 - Minor wording differences between pages about the same concept
+- Claims about feature availability per edition (e.g., "Enterprise only", "OSS only", "available in the Cloud version") cannot be verified by inspecting package directories. Edition gating in this repo is done at build time via TypeScript path aliases — `tsconfig.paths.oss.json` redirects `@packmind/<feature>` imports to `packages/editions/src/index.ts` (a **stubs aggregator** for the OSS build), while `tsconfig.paths.proprietary.json` redirects the same imports to the real top-level package such as `packages/linter/src/index.ts`. Consequences: (a) the presence of `packages/editions/src/oss/<feature>/` only means an OSS-build stub exists — it is **not evidence** the feature works in OSS; (b) the existence of a top-level `packages/<feature>/` package does **not** mean the feature ships in OSS, because the OSS tsconfig points elsewhere. Do not flag edition-availability claims based on either of these paths — verify against the two `tsconfig.paths.*.json` files if a check is unavoidable, otherwise skip.
 
 ### Category E: Missing Documentation Coverage (INFO)
 
