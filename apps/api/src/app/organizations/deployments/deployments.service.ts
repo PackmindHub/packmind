@@ -33,6 +33,8 @@ import {
   DeletePackagesBatchResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  NotifyArtefactsDistributionCommand,
+  NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   RemovePackageFromTargetsCommand,
@@ -178,6 +180,12 @@ export class DeploymentsService {
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResponse> {
     return this.deploymentAdapter.notifyDistribution(command);
+  }
+
+  async notifyArtefactsDistribution(
+    command: NotifyArtefactsDistributionCommand,
+  ): Promise<NotifyArtefactsDistributionResponse> {
+    return this.deploymentAdapter.notifyArtefactsDistribution(command);
   }
 
   async removePackageFromTargets(

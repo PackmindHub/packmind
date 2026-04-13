@@ -53,6 +53,8 @@ import {
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
   ListPackagesResponse,
+  NotifyArtefactsDistributionCommand,
+  NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PublishArtifactsCommand,
@@ -460,6 +462,21 @@ export interface IDeploymentPort {
   notifyDistribution(
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResponse>;
+
+  /**
+   * Notifies about a distribution using the packmind-lock file as the source of truth
+   *
+   * Unlike notifyDistribution (which resolves latest versions from package slugs),
+   * this use case uses the exact artifact versions recorded in the lock file.
+   * This is important when some packages may be invisible to the current user due
+   * to space membership restrictions — the lock file preserves the full installed state.
+   *
+   * @param command - Command containing git info and the packmind-lock file
+   * @returns Promise of the created distribution ID
+   */
+  notifyArtefactsDistribution(
+    command: NotifyArtefactsDistributionCommand,
+  ): Promise<NotifyArtefactsDistributionResponse>;
 
   /**
    * Removes a package from specified targets
