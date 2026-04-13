@@ -96,6 +96,7 @@ export class InstallUseCase implements IInstallUseCase {
     const response = await this.packmindGateway.deployment.install({
       packagesSlugs,
       packmindLockFile: effectiveLockFile,
+      agents: config?.agents,
     });
 
     result.missingAccess = response.missingAccess;

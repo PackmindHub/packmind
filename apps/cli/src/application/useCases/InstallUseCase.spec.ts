@@ -204,6 +204,37 @@ describe('InstallUseCase', () => {
         mockConfigFileRepository.addPackagesToConfig,
       ).not.toHaveBeenCalled();
     });
+
+    describe('when packmind.json has agents configured', () => {
+      beforeEach(() => {
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { '@space/pkg-a': '*' },
+          agents: ['claude-code', 'cursor'],
+        });
+      });
+
+      it('passes agents from packmind.json to the install call', async () => {
+        await useCase.execute({ baseDirectory: '/test' });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: ['claude-code', 'cursor'],
+          }),
+        );
+      });
+    });
+
+    describe('when packmind.json has no agents configured', () => {
+      it('passes undefined agents to the install call', async () => {
+        await useCase.execute({ baseDirectory: '/test' });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: undefined,
+          }),
+        );
+      });
+    });
   });
 
   describe('when packmind.json exists with an empty packages list', () => {
