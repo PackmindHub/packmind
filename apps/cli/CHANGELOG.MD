@@ -4,7 +4,11 @@
 
 ## Changed
 
+- the `install` command does not try to read data from a space the user can not access.
+
 ## Fixed
+
+- the `--path` option of `playbook diff` raised an error if there was no `packmind.json` file in the directory.
 
 ## Removed
 
