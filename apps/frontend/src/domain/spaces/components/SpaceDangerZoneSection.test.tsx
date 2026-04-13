@@ -4,9 +4,10 @@ import {
   fireEvent,
   waitFor,
   act,
+  within,
 } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { UIProvider } from '@packmind/ui';
+import { UIProvider, pmToaster } from '@packmind/ui';
 import { SpaceType, createPackageId, createSpaceId } from '@packmind/types';
 
 import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
@@ -45,6 +46,15 @@ jest.mock('../../../shared/hooks/useNavigation', () => ({
 jest.mock('../../accounts/hooks/useAuthContext', () => ({
   ...jest.requireActual('../../accounts/hooks/useAuthContext'),
   useAuthContext: jest.fn(),
+}));
+
+jest.mock('@packmind/ui', () => ({
+  ...jest.requireActual('@packmind/ui'),
+  pmToaster: {
+    create: jest.fn(),
+    success: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 const mockUseCurrentSpace = (
   overrides: Partial<ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>>,
@@ -163,16 +173,19 @@ describe('SpaceDangerZoneSection', () => {
   });
 
   describe('when the leave dialog is opened', () => {
-    const openLeaveDialog = () => {
+    const openLeaveDialog = async () => {
       renderWithProviders(<SpaceDangerZoneSection />);
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
-      fireEvent.click(trigger);
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      await screen.findByPlaceholderText('Enter space name');
     };
 
-    beforeEach(() => {
-      openLeaveDialog();
+    beforeEach(async () => {
+      await openLeaveDialog();
     });
 
     it('renders the confirmation input prompt', () => {
@@ -209,14 +222,20 @@ describe('SpaceDangerZoneSection', () => {
       });
 
       describe('when the user confirms leaving', () => {
-        it('calls the leave space mutation with the space ID', () => {
+        it('calls the leave space mutation with the space ID and lifecycle callbacks', () => {
           const input = screen.getByPlaceholderText('Enter space name');
           fireEvent.change(input, { target: { value: 'Test Space' } });
 
           const leaveButton = screen.getByRole('button', { name: 'Leave' });
           fireEvent.click(leaveButton);
 
-          expect(mockLeaveMutate).toHaveBeenCalledWith({ spaceId: 'space-1' });
+          expect(mockLeaveMutate).toHaveBeenCalledWith(
+            { spaceId: 'space-1' },
+            expect.objectContaining({
+              onSuccess: expect.any(Function),
+              onError: expect.any(Function),
+            }),
+          );
         });
       });
     });
@@ -230,6 +249,119 @@ describe('SpaceDangerZoneSection', () => {
 
         expect(leaveButton).toBeDisabled();
       });
+    });
+  });
+
+  describe('when the user clicks Leave with a slow mutation', () => {
+    const openDialogAndConfirm = async () => {
+      mockLeaveMutate.mockImplementation(() => {
+        // Simulate a slow mutation: do not invoke any callbacks
+      });
+
+      renderWithProviders(<SpaceDangerZoneSection />);
+      const trigger = screen.getByRole('button', {
+        name: /leave this space/i,
+      });
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      await screen.findByPlaceholderText('Enter space name');
+      const input = screen.getByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Test Space' } });
+      const dialog = screen.getByRole('dialog');
+      const leaveButton = within(dialog).getByRole('button', { name: 'Leave' });
+      await act(async () => {
+        fireEvent.click(leaveButton);
+      });
+      return dialog;
+    };
+
+    it('immediately disables the leave action button before the mutation resolves', async () => {
+      const dialog = await openDialogAndConfirm();
+
+      const leaveActionButton = within(dialog).getAllByRole('button', {
+        hidden: true,
+      })[1];
+      expect(leaveActionButton).toBeDisabled();
+    });
+
+    it('immediately disables the cancel button before the mutation resolves', async () => {
+      const dialog = await openDialogAndConfirm();
+
+      const cancelButton = within(dialog).getByRole('button', {
+        name: 'Cancel',
+      });
+      expect(cancelButton).toBeDisabled();
+    });
+  });
+
+  describe('when the leave mutation succeeds', () => {
+    it('shows a success toaster naming the left space', async () => {
+      mockLeaveMutate.mockImplementation(
+        (
+          _params: unknown,
+          options: { onSuccess?: () => void; onError?: () => void },
+        ) => {
+          options.onSuccess?.();
+        },
+      );
+
+      renderWithProviders(<SpaceDangerZoneSection />);
+      const trigger = screen.getByRole('button', {
+        name: /leave this space/i,
+      });
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      await screen.findByPlaceholderText('Enter space name');
+      const input = screen.getByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Test Space' } });
+      const leaveButton = screen.getByRole('button', { name: 'Leave' });
+      await act(async () => {
+        fireEvent.click(leaveButton);
+      });
+
+      expect(pmToaster.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'success',
+          description: expect.stringContaining('Test Space'),
+        }),
+      );
+    });
+  });
+
+  describe('when the leave mutation fails', () => {
+    it('shows an error toaster', async () => {
+      mockLeaveMutate.mockImplementation(
+        (
+          _params: unknown,
+          options: { onSuccess?: () => void; onError?: () => void },
+        ) => {
+          options.onError?.();
+        },
+      );
+
+      renderWithProviders(<SpaceDangerZoneSection />);
+      const trigger = screen.getByRole('button', {
+        name: /leave this space/i,
+      });
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      await screen.findByPlaceholderText('Enter space name');
+      const input = screen.getByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Test Space' } });
+      const leaveButton = screen.getByRole('button', { name: 'Leave' });
+      await act(async () => {
+        fireEvent.click(leaveButton);
+      });
+
+      expect(pmToaster.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          title: 'Failed to leave space',
+        }),
+      );
     });
   });
 

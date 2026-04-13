@@ -24,17 +24,38 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 function LeaveSpaceConfirmationDialog({
   spaceName,
+  isPending,
   onConfirm,
 }: Readonly<{
   spaceName: string;
-  onConfirm: () => void;
+  isPending: boolean;
+  onConfirm: (onSettled: () => void) => void;
 }>) {
+  const [open, setOpen] = useState(false);
   const [confirmationInput, setConfirmationInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isConfirmEnabled = confirmationInput === spaceName;
+  const isBusy = isPending || isSubmitting;
+  const isConfirmEnabled = confirmationInput === spaceName && !isBusy;
+
+  const handleOpenChange = (details: { open: boolean }) => {
+    if (!isBusy) {
+      setOpen(details.open);
+    }
+  };
+
+  const handleConfirm = () => {
+    setIsSubmitting(true);
+    onConfirm(() => {
+      setIsSubmitting(false);
+      setOpen(false);
+    });
+  };
 
   return (
     <Dialog.Root
+      open={open}
+      onOpenChange={handleOpenChange}
       placement="center"
       onExitComplete={() => setConfirmationInput('')}
     >
@@ -78,12 +99,15 @@ function LeaveSpaceConfirmationDialog({
 
             <Dialog.Footer>
               <Dialog.ActionTrigger asChild>
-                <PMButton variant="tertiary">Cancel</PMButton>
+                <PMButton variant="tertiary" disabled={isBusy}>
+                  Cancel
+                </PMButton>
               </Dialog.ActionTrigger>
               <PMButton
                 colorScheme="red"
                 disabled={!isConfirmEnabled}
-                onClick={onConfirm}
+                loading={isBusy}
+                onClick={handleConfirm}
                 ml={3}
               >
                 Leave
@@ -247,8 +271,30 @@ export function SpaceDangerZoneSection() {
           </PMVStack>
           <LeaveSpaceConfirmationDialog
             spaceName={space.name}
-            onConfirm={() => {
-              leaveSpaceMutation.mutate({ spaceId: space.id });
+            isPending={leaveSpaceMutation.isPending}
+            onConfirm={(onSettled) => {
+              leaveSpaceMutation.mutate(
+                { spaceId: space.id },
+                {
+                  onSuccess: () => {
+                    onSettled();
+                    pmToaster.create({
+                      type: 'success',
+                      title: 'Left space',
+                      description: `You've left ${space.name}.`,
+                    });
+                  },
+                  onError: () => {
+                    onSettled();
+                    pmToaster.create({
+                      type: 'error',
+                      title: 'Failed to leave space',
+                      description:
+                        'An error occurred while leaving the space. Please try again.',
+                    });
+                  },
+                },
+              );
             }}
           />
         </PMHStack>
