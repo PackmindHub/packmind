@@ -9,17 +9,19 @@ import { SpaceIdentitySection } from './SpaceIdentitySection';
 
 export function SpaceGeneralSettings() {
   const { space, spaceId } = useCurrentSpace();
-  const { user } = useAuthContext();
+  const { user, organization } = useAuthContext();
   const { data } = useGetSpaceMembersQuery(spaceId ?? '');
 
   const currentUserMember = data?.members?.find((m) => m.userId === user?.id);
   const isSpaceAdmin = currentUserMember?.role === 'admin';
+  const isOrgAdmin = organization?.role === 'admin';
+  const canDeleteSpace = isSpaceAdmin || isOrgAdmin;
 
   return (
     <PMVStack align="stretch" gap={6} pt={4}>
       {isSpaceAdmin && <SpaceIdentitySection />}
       {isSpaceAdmin && !space?.isDefaultSpace && <SpaceAccessSection />}
-      {!space?.isDefaultSpace && <SpaceDangerZoneSection />}
+      {canDeleteSpace && !space?.isDefaultSpace && <SpaceDangerZoneSection />}
     </PMVStack>
   );
 }
