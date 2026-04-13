@@ -18,6 +18,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
   SpaceCreatedEvent,
+  SpaceDeletedEvent,
   SpaceMembersAddedEvent,
   SpaceMembersRemovedEvent,
   SpaceMembersRoleUpdatedEvent,
@@ -551,6 +552,33 @@ describe('AmplitudeEventListener', () => {
           spaceName: 'My Space',
           spaceSlug: 'my-space',
           visibility: 'open',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('SpaceDeletedEvent', () => {
+    it('tracks space_deleted event with correct payload', async () => {
+      const event = new SpaceDeletedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        spaceId: createSpaceId('space-789'),
+        spaceName: 'My Space',
+        spaceSlug: 'my-space',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'space_deleted',
+        {
+          spaceId: 'space-789',
           source: 'ui',
         },
       );

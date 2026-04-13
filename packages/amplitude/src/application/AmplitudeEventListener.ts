@@ -26,6 +26,7 @@ import {
   ChangeProposalAcceptedEvent,
   ChangeProposalRejectedEvent,
   SpaceCreatedEvent,
+  SpaceDeletedEvent,
   SpaceMembersAddedEvent,
   SpaceMembersRemovedEvent,
   SpaceMembersRoleUpdatedEvent,
@@ -77,6 +78,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(ChangeProposalAcceptedEvent, this.onChangeProposalAccepted);
     this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
     this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
+    this.subscribe(SpaceDeletedEvent, this.onSpaceDeleted);
     this.subscribe(SpaceMembersAddedEvent, this.onSpaceMembersAdded);
     this.subscribe(SpaceMembersRemovedEvent, this.onSpaceMembersRemoved);
     this.subscribe(
@@ -378,6 +380,12 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       spaceName: payload.spaceName,
       spaceSlug: payload.spaceSlug,
       visibility: payload.visibility,
+    }));
+  };
+
+  private onSpaceDeleted = async (event: SpaceDeletedEvent): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'space_deleted', (payload) => ({
+      spaceId: payload.spaceId,
     }));
   };
 
