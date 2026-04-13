@@ -73,6 +73,7 @@ import {
   AllConfigsResult,
   Gateway,
   HierarchicalConfigResult,
+  INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
@@ -369,6 +370,13 @@ export class PackmindCliHexa {
       command,
     );
   };
+
+  public notifyArtefactsDistribution: Gateway<INotifyArtefactsDistribution> =
+    async (command) => {
+      return this.hexa.repositories.packmindGateway.deployment.notifyArtefactsDistribution(
+        command,
+      );
+    };
 
   public async uploadSkill(
     command: UploadSkillCommand,

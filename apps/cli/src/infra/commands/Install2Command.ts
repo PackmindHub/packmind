@@ -14,6 +14,7 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
+import { PackmindLockFile } from '@packmind/types';
 
 function findSubDirectoriesWithPackmindJson(
   dirPath: string,
@@ -121,6 +122,43 @@ function buildInstallSummary(result: IInstallResult): string {
   return `✅ Synced ${contentParts.join(', ')}`;
 }
 
+async function notifyArtefactsDistributionIfInGitRepo(params: {
+  packmindCliHexa: PackmindCliHexa;
+  dir: string;
+}): Promise<void> {
+  const { packmindCliHexa, dir } = params;
+  try {
+    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(dir);
+    if (!gitRoot) return;
+
+    const lockFilePath = path.join(dir, 'packmind-lock.json');
+    const content = fs.readFileSync(lockFilePath, 'utf-8');
+    const packmindLockFile = JSON.parse(content) as PackmindLockFile;
+
+    const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+    const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+
+    let relativePath = dir.startsWith(gitRoot)
+      ? dir.slice(gitRoot.length)
+      : '/';
+    if (!relativePath.startsWith('/')) {
+      relativePath = '/' + relativePath;
+    }
+    if (!relativePath.endsWith('/')) {
+      relativePath = relativePath + '/';
+    }
+
+    await packmindCliHexa.notifyArtefactsDistribution({
+      gitRemoteUrl,
+      gitBranch,
+      relativePath,
+      packmindLockFile,
+    });
+  } catch {
+    // Silently ignore all errors to not fail the install
+  }
+}
+
 export async function install2Handler({
   installPath,
   packages,
@@ -210,6 +248,11 @@ export async function install2Handler({
         packages: packages.length > 0 ? packages : undefined,
       });
       results.push(result);
+
+      await notifyArtefactsDistributionIfInGitRepo({
+        packmindCliHexa,
+        dir,
+      });
 
       if (result.missingAccess.length > 0) {
         let warning =

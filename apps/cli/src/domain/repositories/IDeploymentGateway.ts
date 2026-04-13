@@ -5,6 +5,7 @@ import {
   IGetDeployedContentUseCase,
   IGetRenderModeConfigurationUseCase,
   IInstallPackagesUseCase,
+  INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IPullContentUseCase,
 } from '@packmind/types';
@@ -15,6 +16,7 @@ export interface IDeploymentGateway {
   getDeployed: Gateway<IGetDeployedContentUseCase>;
   getContentByVersions: Gateway<IGetContentByVersionsUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
+  notifyArtefactsDistribution: Gateway<INotifyArtefactsDistribution>;
   getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase>;
   getLatestVersion(
     type: ArtifactType,
