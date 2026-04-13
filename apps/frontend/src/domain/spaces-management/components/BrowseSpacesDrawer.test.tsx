@@ -1,5 +1,5 @@
 // apps/frontend/src/domain/spaces-management/components/BrowseSpacesDrawer.test.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
@@ -181,6 +181,39 @@ describe('BrowseSpacesDrawer', () => {
       fireEvent.click(screen.getByTestId('browse-spaces-new-button'));
 
       expect(defaultProps.onCreateSpace).toHaveBeenCalled();
+    });
+  });
+
+  describe('when the drawer reopens after closing', () => {
+    function ControlledDrawer() {
+      const [open, setOpen] = useState(true);
+      return (
+        <>
+          <button
+            type="button"
+            data-testid="ctrl-toggle"
+            onClick={() => setOpen((prev) => !prev)}
+          >
+            toggle
+          </button>
+          <BrowseSpacesDrawer
+            {...defaultProps}
+            open={open}
+            onClose={() => setOpen(false)}
+          />
+        </>
+      );
+    }
+
+    it('clears the previously typed search query', () => {
+      renderWithProviders(<ControlledDrawer />);
+      fireEvent.change(screen.getByTestId('browse-spaces-search'), {
+        target: { value: 'Team' },
+      });
+      fireEvent.click(screen.getByTestId('ctrl-toggle'));
+      fireEvent.click(screen.getByTestId('ctrl-toggle'));
+
+      expect(screen.getByTestId('browse-spaces-search')).toHaveValue('');
     });
   });
 });

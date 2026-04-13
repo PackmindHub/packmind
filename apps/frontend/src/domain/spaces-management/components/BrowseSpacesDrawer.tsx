@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
 import {
   PMBox,
@@ -47,6 +47,12 @@ export function BrowseSpacesDrawer({
 }: Readonly<BrowseSpacesDrawerProps>) {
   const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery('');
+    }
+  }, [open]);
 
   const isSearchDisabled =
     (activeTab === 'my' && mySpaces.length === 0) ||
