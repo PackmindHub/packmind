@@ -152,8 +152,8 @@ export class PackmindCliHexa {
     return this.hexa.useCases.installPackages.execute(command);
   }
 
-  public async install2(command: IInstallCommand): Promise<IInstallResult> {
-    return this.hexa.useCases.install2.execute(command);
+  public async install(command: IInstallCommand): Promise<IInstallResult> {
+    return this.hexa.useCases.install.execute(command);
   }
 
   public async uninstall2(

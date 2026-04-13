@@ -108,7 +108,7 @@ describe('InstallUseCase', () => {
 
     it('throws an error indicating packmind.json is missing', async () => {
       await expect(useCase.execute({ baseDirectory: '/test' })).rejects.toThrow(
-        'No packmind.json found in this directory. Run `packmind-cli install-2 <@space/package>` first to install your packages.',
+        'No packmind.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
       );
     });
   });

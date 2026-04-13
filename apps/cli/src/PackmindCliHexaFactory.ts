@@ -68,7 +68,7 @@ export class PackmindCliHexaFactory {
     lintFilesAgainstRule: ILintFilesAgainstRule;
     lintFilesFromConfig: ILintFilesFromConfig;
     installPackages: IInstallPackagesUseCase;
-    install2: IInstallUseCase;
+    install: IInstallUseCase;
     uninstall2: IUninstallUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
     listPackages: IListPackagesUseCase;
@@ -102,7 +102,7 @@ export class PackmindCliHexaFactory {
       spaceService: new SpaceService(this.repositories.packmindGateway.spaces),
     };
 
-    const install2UseCase = new InstallUseCase(
+    const installUseCase = new InstallUseCase(
       this.repositories.packmindGateway,
       this.repositories.lockFileRepository,
       this.repositories.configFileRepository,
@@ -126,11 +126,11 @@ export class PackmindCliHexaFactory {
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,
       ),
-      install2: install2UseCase,
+      install: installUseCase,
       uninstall2: new UninstallUseCase(
         this.repositories.configFileRepository,
         this.services.spaceService,
-        install2UseCase,
+        installUseCase,
       ),
       installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
       listPackages: new ListPackagesUseCase(
