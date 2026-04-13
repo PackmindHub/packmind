@@ -69,7 +69,7 @@ export class PackmindCliHexaFactory {
     lintFilesFromConfig: ILintFilesFromConfig;
     installPackages: IInstallPackagesUseCase;
     install: IInstallUseCase;
-    uninstall2: IUninstallUseCase;
+    uninstall: IUninstallUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
@@ -127,7 +127,7 @@ export class PackmindCliHexaFactory {
         this.repositories.packmindGateway,
       ),
       install: installUseCase,
-      uninstall2: new UninstallUseCase(
+      uninstall: new UninstallUseCase(
         this.repositories.configFileRepository,
         this.services.spaceService,
         installUseCase,

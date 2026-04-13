@@ -6,7 +6,6 @@ import { config as dotenvConfig } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 import { installCommand } from './infra/commands/InstallCommand';
-import { uninstall2Command } from './infra/commands/Uninstall2Command';
 import { uninstallCommand } from './infra/commands/UninstallCommand';
 import { loginCommand } from './infra/commands/LoginCommand';
 import { logoutCommand } from './infra/commands/LogoutCommand';
@@ -101,7 +100,6 @@ const app = subcommands({
     diff: diffCommand,
     init: initCommand,
     install: installCommand,
-    'uninstall-2': uninstall2Command,
     lint: lintCommand,
     login: loginCommand,
     logout: logoutCommand,
