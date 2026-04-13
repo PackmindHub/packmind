@@ -1,14 +1,19 @@
-import { command, restPositionals, string, option } from 'cmd-ts';
+import { command, restPositionals, string, option, flag } from 'cmd-ts';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
+  formatCommand,
   logConsole,
   logErrorConsole,
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+import {
+  statusHandler,
+  InstallHandlerDependencies,
+} from './installPackagesHandler';
 
 function findSubDirectoriesWithPackmindJson(
   dirPath: string,
@@ -119,12 +124,43 @@ function buildInstallSummary(result: IInstallResult): string {
 export async function install2Handler({
   installPath,
   packages,
+  list,
+  show,
+  status,
 }: {
   installPath: string;
   packages: string[];
+  list: boolean;
+  show: string;
+  status: boolean;
 }): Promise<void> {
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+
+  if (status) {
+    const deps: InstallHandlerDependencies = {
+      packmindCliHexa,
+      exit: process.exit,
+      getCwd: () => process.cwd(),
+      log: console.log,
+      error: console.error,
+    };
+    await statusHandler({}, deps);
+    return;
+  }
+
+  if (list) {
+    logErrorConsole('Command "packmind-cli install --list" has been removed.');
+    logConsole(`Use ${formatCommand('packmind-cli packages list')} instead.`);
+    process.exit(1);
+  }
+
+  if (show) {
+    const showCommand = `packmind-cli packages show ${show}`;
+    logErrorConsole('Command "packmind-cli install --show" has been removed.');
+    logConsole(`Use ${formatCommand(showCommand)} instead.`);
+    process.exit(1);
+  }
 
   const cwd = installPath
     ? path.resolve(process.cwd(), installPath)
@@ -229,6 +265,21 @@ export const install2Command = command({
       type: string,
       displayName: 'packages',
       description: 'Package slugs to install (e.g. @my-space/my-package)',
+    }),
+    status: flag({
+      long: 'status',
+      description:
+        'Show status of all packmind.json files and their packages in the workspace',
+    }),
+    list: flag({
+      long: 'list',
+      description: '[Deprecated] List available packages',
+    }),
+    show: option({
+      type: string,
+      long: 'show',
+      description: '[Deprecated] Show details of a specific package',
+      defaultValue: () => '',
     }),
   },
   handler: install2Handler,
