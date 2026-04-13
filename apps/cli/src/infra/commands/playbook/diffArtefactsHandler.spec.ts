@@ -928,6 +928,77 @@ describe('diffArtefactsHandler', () => {
     });
   });
 
+  describe('when packmind.json is in an ancestor of --path', () => {
+    beforeEach(() => {
+      deps = { ...deps, path: '.claude' };
+      // configExists: false for /test/project/.claude, true for ancestor /test/project
+      mockPackmindCliHexa.configExists
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true);
+      mockPackmindCliHexa.findDescendantConfigs.mockResolvedValue([]);
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([]);
+    });
+
+    it('uses the ancestor directory as the target', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockPackmindCliHexa.diffArtefacts).toHaveBeenCalledWith(
+        expect.objectContaining({ baseDirectory: '/test/project' }),
+      );
+    });
+
+    it('exits with code 0', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    describe('filtering diffs to the specified path', () => {
+      const diffUnderPath = {
+        filePath: '.claude/my-skill/SKILL.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old', newValue: 'new' },
+        artifactName: 'My Skill',
+        artifactType: 'skill' as const,
+      };
+      const diffOutsidePath = {
+        filePath: '.github/my-skill/SKILL.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old', newValue: 'new' },
+        artifactName: 'Other Skill',
+        artifactType: 'skill' as const,
+      };
+
+      beforeEach(() => {
+        deps = { ...deps, path: '.claude' };
+        mockPackmindCliHexa.configExists
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(true);
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+          diffUnderPath,
+          diffOutsidePath,
+        ]);
+      });
+
+      it('only displays diffs under the specified path', async () => {
+        const result = await diffArtefactsHandler(deps);
+
+        expect(result.diffsFound).toBe(1);
+      });
+
+      it('excludes diffs outside the specified path', async () => {
+        await diffArtefactsHandler(deps);
+
+        expect(mockLog).not.toHaveBeenCalledWith(
+          expect.stringContaining('Other Skill'),
+        );
+      });
+    });
+  });
+
   describe('when not in a Packmind project', () => {
     beforeEach(() => {
       mockPackmindCliHexa.configExists.mockResolvedValue(false);

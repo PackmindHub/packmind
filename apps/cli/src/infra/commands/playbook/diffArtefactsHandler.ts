@@ -176,6 +176,7 @@ function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
 /**
  * Finds all target directories under searchPath that contain packmind.json.
  * Checks searchPath itself first, then looks for descendants.
+ * If no targets found, walks up ancestor directories to find the nearest packmind.json.
  */
 async function findTargetDirectories(
   searchPath: string,
@@ -194,6 +195,23 @@ async function findTargetDirectories(
   for (const dir of descendants) {
     if (!targets.includes(dir)) {
       targets.push(dir);
+    }
+  }
+
+  // If no targets found, walk up ancestor directories
+  if (targets.length === 0) {
+    let currentDir = nodePath.dirname(searchPath);
+    while (true) {
+      const ancestorExists = await packmindCliHexa.configExists(currentDir);
+      if (ancestorExists) {
+        targets.push(currentDir);
+        break;
+      }
+      const parentDir = nodePath.dirname(currentDir);
+      if (parentDir === currentDir) {
+        break;
+      }
+      currentDir = parentDir;
     }
   }
 
@@ -447,7 +465,19 @@ export async function diffArtefactsHandler(
         agents: config.agents,
       });
 
-      targetResults.push({ targetRelativePath, diffs });
+      // When searchPath is a subdirectory of targetDir (ancestor was used),
+      // filter diffs to only those whose filePath is under searchPath.
+      const filterPrefix = nodePath.relative(targetDir, searchPath);
+      const filteredDiffs =
+        filterPrefix !== '' && !filterPrefix.startsWith('..')
+          ? diffs.filter(
+              (d) =>
+                d.filePath === filterPrefix ||
+                d.filePath.startsWith(filterPrefix + '/'),
+            )
+          : diffs;
+
+      targetResults.push({ targetRelativePath, diffs: filteredDiffs });
     }
 
     // Handle case where all targets had no packages configured
