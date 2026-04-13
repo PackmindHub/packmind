@@ -1,4 +1,7 @@
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -43,7 +46,7 @@ describe('LeaveSpaceUseCase', () => {
   ): LeaveSpaceCommand => ({
     userId: userId as unknown as string,
     organizationId: organizationId as unknown as string,
-    spaceId: spaceId as unknown as string,
+    spaceId,
     ...overrides,
   });
 
@@ -55,8 +58,13 @@ describe('LeaveSpaceUseCase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
-      findMembership: jest.fn(),
-      removeSpaceMembership: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId,
+        spaceId,
+        role: UserSpaceRole.MEMBER,
+        createdBy: userId,
+      }),
+      removeSpaceMembership: jest.fn().mockResolvedValue(true),
     };
 
     eventEmitterService = {
@@ -64,8 +72,8 @@ describe('LeaveSpaceUseCase', () => {
     };
 
     useCase = new LeaveSpaceUseCase(
-      accountsPort,
       spacesPort as unknown as ISpacesPort,
+      accountsPort,
       eventEmitterService as unknown as PackmindEventEmitterService,
     );
   });
@@ -82,13 +90,6 @@ describe('LeaveSpaceUseCase', () => {
 
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
-      spacesPort.findMembership.mockResolvedValue({
-        userId,
-        spaceId,
-        role: UserSpaceRole.MEMBER,
-        createdBy: userId,
-      });
-      spacesPort.removeSpaceMembership.mockResolvedValue(true);
     });
 
     it('removes the membership', async () => {
@@ -136,36 +137,6 @@ describe('LeaveSpaceUseCase', () => {
         role: UserSpaceRole.ADMIN,
         createdBy: userId,
       });
-      spacesPort.removeSpaceMembership.mockResolvedValue(true);
-    });
-
-    it('removes the membership', async () => {
-      await useCase.execute(buildCommand());
-
-      expect(spacesPort.removeSpaceMembership).toHaveBeenCalledWith(
-        userId,
-        spaceId,
-      );
-    });
-  });
-
-  describe('when the user is the last member of the space', () => {
-    const space = spaceFactory({
-      id: spaceId,
-      name: 'My Space',
-      organizationId,
-      isDefaultSpace: false,
-    });
-
-    beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(space);
-      spacesPort.findMembership.mockResolvedValue({
-        userId,
-        spaceId,
-        role: UserSpaceRole.ADMIN,
-        createdBy: userId,
-      });
-      spacesPort.removeSpaceMembership.mockResolvedValue(true);
     });
 
     it('removes the membership', async () => {
@@ -241,30 +212,24 @@ describe('LeaveSpaceUseCase', () => {
   });
 
   describe('when the user is not a member of the space', () => {
-    const space = spaceFactory({
-      id: spaceId,
-      name: 'My Space',
-      organizationId,
-      isDefaultSpace: false,
-    });
-
     beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(space);
       spacesPort.findMembership.mockResolvedValue(null);
     });
 
-    it('returns without error', async () => {
-      await expect(useCase.execute(buildCommand())).resolves.toEqual({});
+    it('throws SpaceMembershipRequiredError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+        SpaceMembershipRequiredError,
+      );
     });
 
     it('does not attempt to remove a membership', async () => {
-      await useCase.execute(buildCommand());
+      await useCase.execute(buildCommand()).catch(() => undefined);
 
       expect(spacesPort.removeSpaceMembership).not.toHaveBeenCalled();
     });
 
     it('does not emit an event', async () => {
-      await useCase.execute(buildCommand());
+      await useCase.execute(buildCommand()).catch(() => undefined);
 
       expect(eventEmitterService.emit).not.toHaveBeenCalled();
     });

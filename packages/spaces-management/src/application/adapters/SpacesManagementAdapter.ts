@@ -110,8 +110,8 @@ export class SpacesManagementAdapter
 
   async leaveSpace(command: LeaveSpaceCommand): Promise<LeaveSpaceResponse> {
     const useCase = new LeaveSpaceUseCase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.eventEmitterService,
     );
     return useCase.execute(command);

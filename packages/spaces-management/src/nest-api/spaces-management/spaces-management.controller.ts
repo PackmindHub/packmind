@@ -16,7 +16,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  AuthenticatedRequest,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import {
   MoveArtifactsToSpaceResponse,
   OrganizationId,
@@ -214,7 +217,7 @@ export class SpacesManagementController {
   @HttpCode(204)
   async leaveSpace(
     @Param('orgId') organizationId: OrganizationId,
-    @Param('spaceId') spaceId: string,
+    @Param('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
   ): Promise<void> {
     const userId = request.user.userId;
@@ -231,7 +234,10 @@ export class SpacesManagementController {
         spaceId,
       });
     } catch (error) {
-      if (error instanceof SpaceNotFoundError) {
+      if (
+        error instanceof SpaceNotFoundError ||
+        error instanceof SpaceMembershipRequiredError
+      ) {
         throw new NotFoundException(error.message);
       }
       if (error instanceof CannotLeaveDefaultSpaceError) {

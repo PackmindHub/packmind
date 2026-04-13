@@ -1,11 +1,10 @@
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
   PackmindEventEmitterService,
+  SpaceMemberContext,
 } from '@packmind/node-utils';
 import {
   createOrganizationId,
-  createSpaceId,
   createUserId,
   IAccountsPort,
   ISpacesPort,
@@ -16,22 +15,22 @@ import {
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
 
-export class LeaveSpaceUseCase extends AbstractMemberUseCase<
+export class LeaveSpaceUseCase extends AbstractSpaceMemberUseCase<
   LeaveSpaceCommand,
   LeaveSpaceResponse
 > {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
-    super(accountsPort);
+    super(spacesPort, accountsPort);
   }
 
-  protected async executeForMembers(
-    command: LeaveSpaceCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: LeaveSpaceCommand & SpaceMemberContext,
   ): Promise<LeaveSpaceResponse> {
-    const spaceId = createSpaceId(command.spaceId);
+    const { spaceId } = command;
     const userId = createUserId(command.userId);
     const organizationId = createOrganizationId(command.organizationId);
 
@@ -43,15 +42,6 @@ export class LeaveSpaceUseCase extends AbstractMemberUseCase<
 
     if (space.isDefaultSpace) {
       throw new CannotLeaveDefaultSpaceError(spaceId);
-    }
-
-    const existingMembership = await this.spacesPort.findMembership(
-      userId,
-      spaceId,
-    );
-
-    if (!existingMembership) {
-      return {} as LeaveSpaceResponse;
     }
 
     await this.spacesPort.removeSpaceMembership(userId, spaceId);
