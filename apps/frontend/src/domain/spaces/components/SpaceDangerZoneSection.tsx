@@ -52,6 +52,14 @@ function LeaveSpaceConfirmationDialog({
     });
   };
 
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!isConfirmEnabled) {
+      return;
+    }
+    handleConfirm();
+  };
+
   return (
     <Dialog.Root
       open={open}
@@ -72,47 +80,49 @@ function LeaveSpaceConfirmationDialog({
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>Leave space</Dialog.Title>
-            </Dialog.Header>
+            <form onSubmit={handleSubmit}>
+              <Dialog.Header>
+                <Dialog.Title>Leave space</Dialog.Title>
+              </Dialog.Header>
 
-            <Dialog.Body>
-              <PMVStack gap={4} align="stretch">
-                <PMText>
-                  You are about to leave <strong>{spaceName}</strong>. You will
-                  lose access to its standards, commands, skills, and other
-                  content. You can rejoin later if the space is open or if an
-                  admin invites you.
-                </PMText>
-                <PMVStack gap={2} align="stretch">
-                  <PMText variant="body" fontSize="sm">
-                    Type <strong>{spaceName}</strong> to confirm:
+              <Dialog.Body>
+                <PMVStack gap={4} align="stretch">
+                  <PMText>
+                    You are about to leave <strong>{spaceName}</strong>. You
+                    will lose access to its standards, commands, skills, and
+                    other content. You can rejoin later if the space is open or
+                    if an admin invites you.
                   </PMText>
-                  <PMInput
-                    placeholder="Enter space name"
-                    value={confirmationInput}
-                    onChange={(e) => setConfirmationInput(e.target.value)}
-                  />
+                  <PMVStack gap={2} align="stretch">
+                    <PMText variant="body" fontSize="sm">
+                      Type <strong>{spaceName}</strong> to confirm:
+                    </PMText>
+                    <PMInput
+                      placeholder="Enter space name"
+                      value={confirmationInput}
+                      onChange={(e) => setConfirmationInput(e.target.value)}
+                    />
+                  </PMVStack>
                 </PMVStack>
-              </PMVStack>
-            </Dialog.Body>
+              </Dialog.Body>
 
-            <Dialog.Footer>
-              <Dialog.ActionTrigger asChild>
-                <PMButton variant="tertiary" disabled={isBusy}>
-                  Cancel
+              <Dialog.Footer>
+                <Dialog.ActionTrigger asChild>
+                  <PMButton type="button" variant="tertiary" disabled={isBusy}>
+                    Cancel
+                  </PMButton>
+                </Dialog.ActionTrigger>
+                <PMButton
+                  type="submit"
+                  colorScheme="red"
+                  disabled={!isConfirmEnabled}
+                  loading={isBusy}
+                  ml={3}
+                >
+                  Leave
                 </PMButton>
-              </Dialog.ActionTrigger>
-              <PMButton
-                colorScheme="red"
-                disabled={!isConfirmEnabled}
-                loading={isBusy}
-                onClick={handleConfirm}
-                ml={3}
-              >
-                Leave
-              </PMButton>
-            </Dialog.Footer>
+              </Dialog.Footer>
+            </form>
 
             <Dialog.CloseTrigger />
           </Dialog.Content>
@@ -148,6 +158,14 @@ function DeleteSpaceConfirmationDialog({
     onConfirm(() => setOpen(false));
   };
 
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!isConfirmEnabled) {
+      return;
+    }
+    handleConfirm();
+  };
+
   return (
     <Dialog.Root
       open={open}
@@ -168,64 +186,70 @@ function DeleteSpaceConfirmationDialog({
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>Delete space</Dialog.Title>
-            </Dialog.Header>
+            <form onSubmit={handleSubmit}>
+              <Dialog.Header>
+                <Dialog.Title>Delete space</Dialog.Title>
+              </Dialog.Header>
 
-            <Dialog.Body>
-              <PMVStack gap={4} align="stretch">
-                <PMText>
-                  This will permanently delete <strong>{spaceName}</strong> and
-                  all its standards, commands, skills, and members. This action
-                  cannot be undone.
-                </PMText>
-                {packages.length > 0 && (
+              <Dialog.Body>
+                <PMVStack gap={4} align="stretch">
+                  <PMText>
+                    This will permanently delete <strong>{spaceName}</strong>{' '}
+                    and all its standards, commands, skills, and members. This
+                    action cannot be undone.
+                  </PMText>
+                  {packages.length > 0 && (
+                    <PMVStack gap={2} align="stretch">
+                      <PMText variant="body" fontSize="sm">
+                        The following packages will be affected:
+                      </PMText>
+                      <PMVStack gap={1} align="stretch" pl={4}>
+                        {packages.map((pkg) => (
+                          <PMText key={pkg.id} variant="body" fontSize="sm">
+                            - {pkg.name}
+                          </PMText>
+                        ))}
+                      </PMVStack>
+                      <PMText variant="body" fontSize="sm">
+                        All deployments using these packages will stop receiving
+                        updates.
+                      </PMText>
+                    </PMVStack>
+                  )}
                   <PMVStack gap={2} align="stretch">
                     <PMText variant="body" fontSize="sm">
-                      The following packages will be affected:
+                      Type <strong>{spaceName}</strong> to confirm:
                     </PMText>
-                    <PMVStack gap={1} align="stretch" pl={4}>
-                      {packages.map((pkg) => (
-                        <PMText key={pkg.id} variant="body" fontSize="sm">
-                          - {pkg.name}
-                        </PMText>
-                      ))}
-                    </PMVStack>
-                    <PMText variant="body" fontSize="sm">
-                      All deployments using these packages will stop receiving
-                      updates.
-                    </PMText>
+                    <PMInput
+                      placeholder="Enter space name"
+                      value={confirmationInput}
+                      onChange={(e) => setConfirmationInput(e.target.value)}
+                    />
                   </PMVStack>
-                )}
-                <PMVStack gap={2} align="stretch">
-                  <PMText variant="body" fontSize="sm">
-                    Type <strong>{spaceName}</strong> to confirm:
-                  </PMText>
-                  <PMInput
-                    placeholder="Enter space name"
-                    value={confirmationInput}
-                    onChange={(e) => setConfirmationInput(e.target.value)}
-                  />
                 </PMVStack>
-              </PMVStack>
-            </Dialog.Body>
+              </Dialog.Body>
 
-            <Dialog.Footer>
-              <Dialog.ActionTrigger asChild>
-                <PMButton variant="tertiary" disabled={isPending}>
-                  Cancel
+              <Dialog.Footer>
+                <Dialog.ActionTrigger asChild>
+                  <PMButton
+                    type="button"
+                    variant="tertiary"
+                    disabled={isPending}
+                  >
+                    Cancel
+                  </PMButton>
+                </Dialog.ActionTrigger>
+                <PMButton
+                  type="submit"
+                  colorScheme="red"
+                  disabled={!isConfirmEnabled}
+                  loading={isPending}
+                  ml={3}
+                >
+                  Delete
                 </PMButton>
-              </Dialog.ActionTrigger>
-              <PMButton
-                colorScheme="red"
-                disabled={!isConfirmEnabled}
-                loading={isPending}
-                onClick={handleConfirm}
-                ml={3}
-              >
-                Delete
-              </PMButton>
-            </Dialog.Footer>
+              </Dialog.Footer>
+            </form>
 
             <Dialog.CloseTrigger />
           </Dialog.Content>

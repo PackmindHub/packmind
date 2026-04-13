@@ -238,6 +238,46 @@ describe('SpaceDangerZoneSection', () => {
           );
         });
       });
+
+      describe('when the user submits the confirmation with the Enter key', () => {
+        it('calls the leave space mutation with the space ID and lifecycle callbacks', () => {
+          const input = screen.getByPlaceholderText('Enter space name');
+          fireEvent.change(input, { target: { value: 'Test Space' } });
+
+          const form = input.closest('form');
+          if (!form) {
+            throw new Error(
+              'Expected the confirmation input to be inside a form',
+            );
+          }
+          fireEvent.submit(form);
+
+          expect(mockLeaveMutate).toHaveBeenCalledWith(
+            { spaceId: 'space-1' },
+            expect.objectContaining({
+              onSuccess: expect.any(Function),
+              onError: expect.any(Function),
+            }),
+          );
+        });
+      });
+
+      describe('when the user submits the confirmation with the Enter key but the space name is wrong', () => {
+        it('does not call the leave space mutation', () => {
+          const input = screen.getByPlaceholderText('Enter space name');
+          fireEvent.change(input, { target: { value: 'Wrong Name' } });
+
+          const form = input.closest('form');
+          if (!form) {
+            throw new Error(
+              'Expected the confirmation input to be inside a form',
+            );
+          }
+          fireEvent.submit(form);
+
+          expect(mockLeaveMutate).not.toHaveBeenCalled();
+        });
+      });
     });
 
     describe('when the user types the space name with different casing', () => {
@@ -441,6 +481,46 @@ describe('SpaceDangerZoneSection', () => {
             onError: expect.any(Function),
           }),
         );
+      });
+    });
+
+    describe('when the user submits the confirmation with the Enter key', () => {
+      it('calls the delete mutation with the correct space id', () => {
+        const input = screen.getByPlaceholderText('Enter space name');
+        fireEvent.change(input, { target: { value: 'Test Space' } });
+
+        const form = input.closest('form');
+        if (!form) {
+          throw new Error(
+            'Expected the confirmation input to be inside a form',
+          );
+        }
+        fireEvent.submit(form);
+
+        expect(mockMutate).toHaveBeenCalledWith(
+          { spaceId: 'space-1' },
+          expect.objectContaining({
+            onSuccess: expect.any(Function),
+            onError: expect.any(Function),
+          }),
+        );
+      });
+    });
+
+    describe('when the user submits the confirmation with the Enter key but the space name is wrong', () => {
+      it('does not call the delete mutation', () => {
+        const input = screen.getByPlaceholderText('Enter space name');
+        fireEvent.change(input, { target: { value: 'Wrong Name' } });
+
+        const form = input.closest('form');
+        if (!form) {
+          throw new Error(
+            'Expected the confirmation input to be inside a form',
+          );
+        }
+        fireEvent.submit(form);
+
+        expect(mockMutate).not.toHaveBeenCalled();
       });
     });
   });
