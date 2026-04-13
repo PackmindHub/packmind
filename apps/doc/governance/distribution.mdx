@@ -77,6 +77,8 @@ For example:
 
 ```bash
 packmind-cli install backend-standards frontend-react
+# Note: when using multiple spaces, you will need to prefix the packages with the space slug
+packmind-cli install @backend/standards @frontend/react
 ```
 
 This will:
@@ -106,7 +108,7 @@ The CLI approach is ideal for:
 
 - **CI/CD pipelines** - Automate distribution as part of your deployment process
 - **Local development** - Quickly install packages without leaving your terminal
-- **Monorepos** - Use `packmind-cli install --recursive` to install packages for all `packmind.json` files in the repository
+- **Monorepos** - Use `packmind-cli install` to install packages for all `packmind.json` files in the repository
 - **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
 
 ## Removing Packages
