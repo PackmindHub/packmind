@@ -16,6 +16,7 @@ import {
 import { LuPlus, LuUserPlus } from 'react-icons/lu';
 import type { Space, SpaceId, BrowsableSpace } from '@packmind/types';
 import { getSpaceColorPalette } from '../../organizations/components/sidebar/SpaceNavBlock';
+import { sortSpacesByName } from '../utils/sortSpacesByName';
 
 interface BrowseSpacesDrawerProps {
   mySpaces: Space[];
@@ -51,17 +52,21 @@ export function BrowseSpacesDrawer({
     (activeTab === 'my' && mySpaces.length === 0) ||
     (activeTab === 'all' && allSpaces.length === 0);
 
-  const filteredMySpaces = searchQuery.trim()
-    ? mySpaces.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : mySpaces;
+  const filteredMySpaces = sortSpacesByName(
+    searchQuery.trim()
+      ? mySpaces.filter((s) =>
+          s.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : mySpaces,
+  );
 
-  const filteredAllSpaces = searchQuery.trim()
-    ? allSpaces.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : allSpaces;
+  const filteredAllSpaces = sortSpacesByName(
+    searchQuery.trim()
+      ? allSpaces.filter((s) =>
+          s.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : allSpaces,
+  );
 
   return (
     <PMDrawer.Root
