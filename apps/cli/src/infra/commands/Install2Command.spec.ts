@@ -278,6 +278,72 @@ describe('install2Command', () => {
       });
     });
 
+    describe('with explicit packages: runs only on cwd', () => {
+      const subDir1 = path.join(process.cwd(), 'apps', 'frontend');
+      const subDir2 = path.join(process.cwd(), 'packages', 'core');
+
+      beforeEach(async () => {
+        mockFs.existsSync.mockImplementation((p) => {
+          const asStr = String(p);
+          return (
+            asStr === path.join(process.cwd(), 'packmind.json') ||
+            asStr === path.join(subDir1, 'packmind.json') ||
+            asStr === path.join(subDir2, 'packmind.json')
+          );
+        });
+        mockFs.readdirSync.mockImplementation((dirPath) => {
+          const asStr = String(dirPath);
+          if (asStr === process.cwd()) {
+            return [
+              makeDirent('apps'),
+              makeDirent('packages'),
+            ] as unknown as string[];
+          }
+          if (asStr === path.join(process.cwd(), 'apps')) {
+            return [makeDirent('frontend')] as unknown as string[];
+          }
+          if (asStr === path.join(process.cwd(), 'packages')) {
+            return [makeDirent('core')] as unknown as string[];
+          }
+          return [] as unknown as string[];
+        });
+        await handler({
+          installPath: '',
+          packages: ['@public-space/public', '@global/global'],
+        });
+      });
+
+      it('calls install2 only for the cwd', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: process.cwd() }),
+        );
+      });
+
+      it('does not call install2 for the first sub-directory', () => {
+        expect(mockInstall2).not.toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: subDir1 }),
+        );
+      });
+
+      it('does not call install2 for the second sub-directory', () => {
+        expect(mockInstall2).not.toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: subDir2 }),
+        );
+      });
+
+      it('calls install2 exactly once', () => {
+        expect(mockInstall2).toHaveBeenCalledTimes(1);
+      });
+
+      it('passes the packages to install2', () => {
+        expect(mockInstall2).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packages: ['@public-space/public', '@global/global'],
+          }),
+        );
+      });
+    });
+
     describe('with --path: runs only on direct sub-directories (non-recursive)', () => {
       const appsDir = path.resolve(process.cwd(), 'apps');
       const frontendDir = path.join(appsDir, 'frontend');
