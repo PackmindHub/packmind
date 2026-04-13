@@ -41,8 +41,11 @@ import {
   ListDistributionsBySkillCommand,
   SkillId,
   SpaceId,
+  NotifyArtefactsDistributionCommand,
+  NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
+  PackmindLockFile,
   RemovePackageFromTargetsCommand,
   RemovePackageFromTargetsResponse,
   CodingAgent,
@@ -829,6 +832,64 @@ export class DeploymentsController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'POST /organizations/:orgId/deployments/ - Failed to notify distribution',
+        {
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('notify-artifacts-distribution')
+  async notifyArtefactsDistribution(
+    @Param('orgId') organizationId: OrganizationId,
+    @Body()
+    body: {
+      gitRemoteUrl: string;
+      gitBranch: string;
+      relativePath: string;
+      packmindLockFile: PackmindLockFile;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<NotifyArtefactsDistributionResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Notifying artefacts distribution',
+      {
+        organizationId,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+      },
+    );
+
+    try {
+      const command: NotifyArtefactsDistributionCommand = {
+        userId: request.user.userId,
+        organizationId,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+        packmindLockFile: body.packmindLockFile,
+      };
+
+      const response =
+        await this.deploymentsService.notifyArtefactsDistribution(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Artefacts distribution notified successfully',
+        {
+          organizationId,
+          deploymentId: response.deploymentId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Failed to notify artefacts distribution',
         {
           organizationId,
           error: errorMessage,
