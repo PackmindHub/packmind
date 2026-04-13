@@ -15,6 +15,7 @@ import {
   PMMenu,
   PMPortal,
   PMAvatar,
+  PMVStack,
 } from '@packmind/ui';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router';
 import {
@@ -251,6 +252,7 @@ export const SidebarNavigation: React.FunctionComponent<
         width={sidebarWidth}
         logo={!isCollapsed}
         logoAction={<SidebarCollapseToggle />}
+        overrideChildrenStackCss={{ minH: 0, paddingBottom: 0 }}
         footerNav={
           <>
             <PMSeparator borderColor={'border.tertiary'} />
@@ -411,32 +413,39 @@ export const SidebarNavigation: React.FunctionComponent<
               </PMBox>
             )}
 
-            <SpaceNavBlock
-              key={defaultSpace.id}
-              space={defaultSpace}
-              orgSlug={orgSlug}
-              isActive={defaultSpace.slug === currentSpaceSlug}
-              isSelected={activeSpacePanel === defaultSpace.id}
-              onSpaceClick={() => {
-                if (defaultSpace.slug !== currentSpaceSlug) {
-                  setActiveSpacePanel(defaultSpace.id);
-                }
-              }}
-            />
-
-            {spaces && (
-              <CustomSpacesNavBlock
-                spaces={spaces}
+            <PMVStack
+              alignItems="stretch"
+              scrollbarColor="{colors.background.tertiary} transparent"
+              minHeight={0}
+              overflowY="auto"
+            >
+              <SpaceNavBlock
+                key={defaultSpace.id}
+                space={defaultSpace}
                 orgSlug={orgSlug}
-                currentSpaceSlug={currentSpaceSlug}
-                selectedSpaceId={activeSpacePanel}
-                onSpaceClick={(space) => {
-                  if (space.slug !== currentSpaceSlug) {
-                    setActiveSpacePanel(space.id);
+                isActive={defaultSpace.slug === currentSpaceSlug}
+                isSelected={activeSpacePanel === defaultSpace.id}
+                onSpaceClick={() => {
+                  if (defaultSpace.slug !== currentSpaceSlug) {
+                    setActiveSpacePanel(defaultSpace.id);
                   }
                 }}
               />
-            )}
+
+              {spaces && (
+                <CustomSpacesNavBlock
+                  spaces={spaces}
+                  orgSlug={orgSlug}
+                  currentSpaceSlug={currentSpaceSlug}
+                  selectedSpaceId={activeSpacePanel}
+                  onSpaceClick={(space) => {
+                    if (space.slug !== currentSpaceSlug) {
+                      setActiveSpacePanel(space.id);
+                    }
+                  }}
+                />
+              )}
+            </PMVStack>
           </PMBox>
         </PMBox>
       </PMVerticalNav>
