@@ -58,9 +58,16 @@ export const useCreateSpaceMutation = () => {
       return spacesManagementGateway.createSpace(organization.id, name, type);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: [...spacesQueryKeys.all],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: spacesQueryKeys.all,
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: spacesManagementQueryKeys.all,
+          refetchType: 'all',
+        }),
+      ]);
     },
   });
 };
