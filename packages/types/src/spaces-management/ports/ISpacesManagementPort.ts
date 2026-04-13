@@ -36,7 +36,7 @@ export const ISpacesManagementPortName = 'ISpacesManagementPort' as const;
 
 export interface ISpacesManagementPort {
   /**
-   * Create a private space and add the creator as admin member.
+   * Create a space and add the creator as admin member.
    */
   createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse>;
 

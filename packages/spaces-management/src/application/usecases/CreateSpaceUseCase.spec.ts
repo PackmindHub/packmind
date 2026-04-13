@@ -89,6 +89,12 @@ describe('CreateSpaceUseCase', () => {
       });
     });
 
+    it('adds only the creator as a member', async () => {
+      await useCase.execute(buildCommand());
+
+      expect(spacesPort.addSpaceMembership).toHaveBeenCalledTimes(1);
+    });
+
     it('returns the created space', async () => {
       const result = await useCase.execute(buildCommand());
 

@@ -47,7 +47,7 @@ export interface ISpacesPort {
 
   /**
    * Create a space for an organization (user-initiated).
-   * Requires admin privileges.
+   * Requires organization membership.
    */
   createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse>;
 
