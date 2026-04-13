@@ -7,7 +7,7 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { ISpaceService } from '../../domain/services/ISpaceService';
-import { SpaceType } from '@packmind/types';
+import { PackmindFileConfig, SpaceType } from '@packmind/types';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -72,10 +72,17 @@ export class InstallUseCase implements IInstallUseCase {
       normalizedPackages = await this.normalizePackageSlugs(command.packages!);
       await this.validatePackageAccess(normalizedPackages);
 
-      const configPackages = config ? Object.keys(config.packages) : [];
-      packagesSlugs = [...new Set([...configPackages, ...normalizedPackages])];
+      const normalizedConfigPackages = config
+        ? await this.normalizeAndSaveConfigPackages(baseDirectory, config)
+        : [];
+      packagesSlugs = [
+        ...new Set([...normalizedConfigPackages, ...normalizedPackages]),
+      ];
     } else {
-      packagesSlugs = Object.keys(config!.packages);
+      packagesSlugs = await this.normalizeAndSaveConfigPackages(
+        baseDirectory,
+        config!,
+      );
     }
 
     if (packagesSlugs.length === 0) {
@@ -239,6 +246,34 @@ export class InstallUseCase implements IInstallUseCase {
 
   private async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
     return normalizePackageSlugs(slugs, this.spaceService);
+  }
+
+  private async normalizeAndSaveConfigPackages(
+    baseDirectory: string,
+    config: PackmindFileConfig,
+  ): Promise<string[]> {
+    const originalSlugs = Object.keys(config.packages);
+    if (originalSlugs.length === 0) return [];
+
+    const normalizedSlugs = await this.normalizePackageSlugs(originalSlugs);
+    const hasChanges = normalizedSlugs.some(
+      (slug, i) => slug !== originalSlugs[i],
+    );
+
+    if (hasChanges) {
+      const normalizedPackagesMap: Record<string, string> = {};
+      for (let i = 0; i < normalizedSlugs.length; i++) {
+        normalizedPackagesMap[normalizedSlugs[i]] =
+          config.packages[originalSlugs[i]];
+      }
+      await this.configFileRepository.updateConfig(
+        baseDirectory,
+        'packages',
+        normalizedPackagesMap,
+      );
+    }
+
+    return normalizedSlugs;
   }
 
   private async validatePackageAccess(packages: string[]): Promise<void> {

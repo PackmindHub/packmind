@@ -165,6 +165,55 @@ describe('InstallUseCase', () => {
     });
   });
 
+  describe('when explicit packages are provided and config has unnormalized slugs', () => {
+    const mySpace = spaceFactory({
+      id: createSpaceId('space-1'),
+      slug: 'my-space',
+    });
+
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue(null);
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { 'existing-package': '*' },
+      });
+      mockSpaceService.getSpaces.mockResolvedValue([mySpace]);
+      mockSpaceService.getDefaultSpace.mockResolvedValue(mySpace);
+      mockSpaceService.getApiContext.mockReturnValue({
+        host: 'https://app.packmind.com',
+        organizationId: 'org-1',
+      });
+    });
+
+    it('normalizes and saves unnormalized config slugs before installing', async () => {
+      await useCase.execute({
+        packages: ['@my-space/new-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(mockConfigFileRepository.updateConfig).toHaveBeenCalledWith(
+        '/test',
+        'packages',
+        { '@my-space/existing-package': '*' },
+      );
+    });
+
+    it('installs using normalized slugs for both config and explicit packages', async () => {
+      await useCase.execute({
+        packages: ['@my-space/new-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packagesSlugs: expect.arrayContaining([
+            '@my-space/existing-package',
+            '@my-space/new-package',
+          ]),
+        }),
+      );
+    });
+  });
+
   describe('when packmind.json exists with packages and no explicit packages are provided', () => {
     beforeEach(() => {
       mockConfigFileRepository.readConfig.mockResolvedValue({
@@ -203,6 +252,41 @@ describe('InstallUseCase', () => {
       expect(
         mockConfigFileRepository.addPackagesToConfig,
       ).not.toHaveBeenCalled();
+    });
+
+    describe('when config has unnormalized slugs (without @space/ prefix)', () => {
+      const mySpace = spaceFactory({
+        id: createSpaceId('space-1'),
+        slug: 'my-space',
+      });
+
+      beforeEach(() => {
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { 'pkg-a': '*', 'pkg-b': '*' },
+        });
+        mockSpaceService.getSpaces.mockResolvedValue([mySpace]);
+        mockSpaceService.getDefaultSpace.mockResolvedValue(mySpace);
+      });
+
+      it('normalizes and saves the slugs in packmind.json', async () => {
+        await useCase.execute({ baseDirectory: '/test' });
+
+        expect(mockConfigFileRepository.updateConfig).toHaveBeenCalledWith(
+          '/test',
+          'packages',
+          { '@my-space/pkg-a': '*', '@my-space/pkg-b': '*' },
+        );
+      });
+
+      it('installs using the normalized slugs', async () => {
+        await useCase.execute({ baseDirectory: '/test' });
+
+        expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packagesSlugs: ['@my-space/pkg-a', '@my-space/pkg-b'],
+          }),
+        );
+      });
     });
 
     describe('when packmind.json has agents configured', () => {
