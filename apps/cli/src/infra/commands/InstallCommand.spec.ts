@@ -31,7 +31,7 @@ jest.mock('@packmind/logger', () => ({
 }));
 
 import * as path from 'path';
-import { install2Handler } from './Install2Command';
+import { installHandler } from './InstallCommand';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
@@ -71,11 +71,11 @@ const makeResult = (
   ...overrides,
 });
 
-const handler = install2Handler;
+const handler = installHandler;
 
-describe('install2Command', () => {
+describe('installCommand', () => {
   let processExitSpy: jest.SpyInstance;
-  let mockInstall2: jest.Mock;
+  let mockInstall: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -83,9 +83,9 @@ describe('install2Command', () => {
       .spyOn(process, 'exit')
       .mockImplementation(() => undefined as never);
 
-    mockInstall2 = jest.fn().mockResolvedValue(makeResult());
+    mockInstall = jest.fn().mockResolvedValue(makeResult());
     MockPackmindCliHexa.mockImplementation(
-      () => ({ install2: mockInstall2 }) as unknown as PackmindCliHexa,
+      () => ({ install: mockInstall }) as unknown as PackmindCliHexa,
     );
   });
 
@@ -93,7 +93,13 @@ describe('install2Command', () => {
     describe('when the path does not exist', () => {
       beforeEach(async () => {
         mockFs.existsSync.mockReturnValue(false);
-        await handler({ installPath: 'non/existing', packages: [] });
+        await handler({
+          installPath: 'non/existing',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
       it('logs an error message', () => {
@@ -106,8 +112,8 @@ describe('install2Command', () => {
         expect(processExitSpy).toHaveBeenCalledWith(1);
       });
 
-      it('does not call install2', () => {
-        expect(mockInstall2).not.toHaveBeenCalled();
+      it('does not call install', () => {
+        expect(mockInstall).not.toHaveBeenCalled();
       });
     });
 
@@ -120,6 +126,9 @@ describe('install2Command', () => {
         await handler({
           installPath: '.claude/commands/my-command.md',
           packages: [],
+          list: false,
+          show: '',
+          status: false,
         });
       });
 
@@ -133,8 +142,8 @@ describe('install2Command', () => {
         expect(processExitSpy).toHaveBeenCalledWith(1);
       });
 
-      it('does not call install2', () => {
-        expect(mockInstall2).not.toHaveBeenCalled();
+      it('does not call install', () => {
+        expect(mockInstall).not.toHaveBeenCalled();
       });
     });
 
@@ -144,15 +153,21 @@ describe('install2Command', () => {
         mockFs.statSync.mockReturnValue({
           isDirectory: () => true,
         } as fs.Stats);
-        await handler({ installPath: 'apps/frontend', packages: [] });
+        await handler({
+          installPath: 'apps/frontend',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
       it('does not exit', () => {
         expect(processExitSpy).not.toHaveBeenCalled();
       });
 
-      it('calls install2 with the resolved directory', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install with the resolved directory', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({
             baseDirectory: expect.stringContaining('apps/frontend'),
           }),
@@ -163,15 +178,21 @@ describe('install2Command', () => {
     describe('when no path is provided', () => {
       beforeEach(async () => {
         mockFs.existsSync.mockReturnValue(false);
-        await handler({ installPath: '', packages: [] });
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
       it('skips directory-existence validation', () => {
         expect(mockFs.statSync).not.toHaveBeenCalled();
       });
 
-      it('calls install2 with process.cwd()', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install with process.cwd()', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: process.cwd() }),
         );
       });
@@ -186,13 +207,19 @@ describe('install2Command', () => {
 
     describe('when there are missing access packages', () => {
       beforeEach(async () => {
-        mockInstall2.mockResolvedValue(
+        mockInstall.mockResolvedValue(
           makeResult({
             missingAccess: ['@my-space/pkg-a'],
             contentFilesChanged: 1,
           }),
         );
-        await handler({ installPath: 'apps/frontend', packages: [] });
+        await handler({
+          installPath: 'apps/frontend',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
       it('logs a warning with the package name', () => {
@@ -202,10 +229,16 @@ describe('install2Command', () => {
       });
     });
 
-    describe('when install2 throws', () => {
+    describe('when install throws', () => {
       beforeEach(async () => {
-        mockInstall2.mockRejectedValue(new Error('network failure'));
-        await handler({ installPath: 'apps/frontend', packages: [] });
+        mockInstall.mockRejectedValue(new Error('network failure'));
+        await handler({
+          installPath: 'apps/frontend',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
       it('logs the error message', () => {
@@ -252,29 +285,35 @@ describe('install2Command', () => {
           }
           return [] as unknown as string[];
         });
-        await handler({ installPath: '', packages: [] });
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
-      it('calls install2 for the root directory', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install for the root directory', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: process.cwd() }),
         );
       });
 
-      it('calls install2 for the first sub-directory with packmind.json', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install for the first sub-directory with packmind.json', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: subDir1 }),
         );
       });
 
-      it('calls install2 for the second sub-directory with packmind.json', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install for the second sub-directory with packmind.json', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: subDir2 }),
         );
       });
 
-      it('calls install2 exactly three times', () => {
-        expect(mockInstall2).toHaveBeenCalledTimes(3);
+      it('calls install exactly three times', () => {
+        expect(mockInstall).toHaveBeenCalledTimes(3);
       });
     });
 
@@ -310,33 +349,36 @@ describe('install2Command', () => {
         await handler({
           installPath: '',
           packages: ['@public-space/public', '@global/global'],
+          list: false,
+          show: '',
+          status: false,
         });
       });
 
-      it('calls install2 only for the cwd', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install only for the cwd', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: process.cwd() }),
         );
       });
 
-      it('does not call install2 for the first sub-directory', () => {
-        expect(mockInstall2).not.toHaveBeenCalledWith(
+      it('does not call install for the first sub-directory', () => {
+        expect(mockInstall).not.toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: subDir1 }),
         );
       });
 
-      it('does not call install2 for the second sub-directory', () => {
-        expect(mockInstall2).not.toHaveBeenCalledWith(
+      it('does not call install for the second sub-directory', () => {
+        expect(mockInstall).not.toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: subDir2 }),
         );
       });
 
-      it('calls install2 exactly once', () => {
-        expect(mockInstall2).toHaveBeenCalledTimes(1);
+      it('calls install exactly once', () => {
+        expect(mockInstall).toHaveBeenCalledTimes(1);
       });
 
-      it('passes the packages to install2', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('passes the packages to install', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({
             packages: ['@public-space/public', '@global/global'],
           }),
@@ -368,31 +410,37 @@ describe('install2Command', () => {
           makeDirent('backend'),
           makeDirent('shared'),
         ] as unknown as string[]);
-        await handler({ installPath: 'apps', packages: [] });
+        await handler({
+          installPath: 'apps',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
-      it('calls install2 for the frontend sub-directory', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install for the frontend sub-directory', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: frontendDir }),
         );
       });
 
-      it('calls install2 for the backend sub-directory', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('calls install for the backend sub-directory', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: backendDir }),
         );
       });
 
-      it('does not call install2 for sub-directories without packmind.json', () => {
-        expect(mockInstall2).not.toHaveBeenCalledWith(
+      it('does not call install for sub-directories without packmind.json', () => {
+        expect(mockInstall).not.toHaveBeenCalledWith(
           expect.objectContaining({
             baseDirectory: path.join(appsDir, 'shared'),
           }),
         );
       });
 
-      it('calls install2 exactly twice', () => {
-        expect(mockInstall2).toHaveBeenCalledTimes(2);
+      it('calls install exactly twice', () => {
+        expect(mockInstall).toHaveBeenCalledTimes(2);
       });
     });
 
@@ -417,17 +465,23 @@ describe('install2Command', () => {
           makeDirent('frontend'),
           makeDirent('backend'),
         ] as unknown as string[]);
-        mockInstall2.mockImplementation((cmd: { baseDirectory: string }) => {
+        mockInstall.mockImplementation((cmd: { baseDirectory: string }) => {
           if (cmd.baseDirectory === frontendDir) {
             return Promise.reject(new Error('network failure'));
           }
           return Promise.resolve(makeResult({ standardsCount: 2 }));
         });
-        await handler({ installPath: 'apps', packages: [] });
+        await handler({
+          installPath: 'apps',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
       });
 
-      it('still calls install2 for the remaining directory', () => {
-        expect(mockInstall2).toHaveBeenCalledWith(
+      it('still calls install for the remaining directory', () => {
+        expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({ baseDirectory: backendDir }),
         );
       });

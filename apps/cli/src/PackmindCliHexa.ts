@@ -152,14 +152,14 @@ export class PackmindCliHexa {
     return this.hexa.useCases.installPackages.execute(command);
   }
 
-  public async install2(command: IInstallCommand): Promise<IInstallResult> {
-    return this.hexa.useCases.install2.execute(command);
+  public async install(command: IInstallCommand): Promise<IInstallResult> {
+    return this.hexa.useCases.install.execute(command);
   }
 
-  public async uninstall2(
+  public async uninstall(
     command: IUninstallCommand,
   ): Promise<IUninstallResult> {
-    return this.hexa.useCases.uninstall2.execute(command);
+    return this.hexa.useCases.uninstall.execute(command);
   }
 
   public async diffArtefacts(
