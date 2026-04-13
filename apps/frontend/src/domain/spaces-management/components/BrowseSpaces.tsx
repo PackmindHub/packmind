@@ -77,22 +77,16 @@ export function BrowseSpaces({
         isLoading={isLoading}
         isError={isError}
         isJoining={joinMutation.isPending}
-        onCreateSpace={
-          organization?.role === 'admin'
-            ? () => {
-                setIsDrawerOpen(false);
-                setIsCreateDialogOpen(true);
-              }
-            : undefined
-        }
+        onCreateSpace={() => {
+          setIsDrawerOpen(false);
+          setIsCreateDialogOpen(true);
+        }}
         containerRef={containerRef}
       />
-      {organization?.role === 'admin' && (
-        <CreateSpaceDialog
-          open={isCreateDialogOpen}
-          setOpen={setIsCreateDialogOpen}
-        />
-      )}
+      <CreateSpaceDialog
+        open={isCreateDialogOpen}
+        setOpen={setIsCreateDialogOpen}
+      />
     </>
   );
 }
