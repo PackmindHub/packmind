@@ -1,6 +1,6 @@
 import React from 'react';
 import { PMBox } from '../PMBox/PMBox';
-import { PMVStack } from '../PMVStack/PMVStack';
+import { PMVStack, PMVStackProps } from '../PMVStack/PMVStack';
 import { PMHeading } from '../../typography/PMHeading';
 import { PMImage } from '../../content/PMImage/PMImage';
 import { List } from '@chakra-ui/react';
@@ -14,6 +14,7 @@ export interface IPMVerticalNavProps {
   logoAction?: React.ReactNode;
   width?: string | number;
   showLogoContainer?: boolean;
+  overrideChildrenStackCss?: Partial<PMVStackProps>;
 }
 
 function getLogoContainerJustify(
@@ -33,6 +34,7 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
   logoAction,
   width = '220px',
   showLogoContainer = true,
+  overrideChildrenStackCss,
 }) => {
   return (
     <PMVStack
@@ -66,7 +68,14 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
           {headerNav}
         </PMBox>
       )}
-      <PMVStack align="stretch" gap={6} height="100%" paddingY={4} width="100%">
+      <PMVStack
+        align="stretch"
+        gap={6}
+        height="100%"
+        paddingY={4}
+        width="100%"
+        {...overrideChildrenStackCss}
+      >
         {children}
       </PMVStack>
 
