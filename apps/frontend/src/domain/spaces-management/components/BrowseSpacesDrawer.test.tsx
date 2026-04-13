@@ -184,6 +184,48 @@ describe('BrowseSpacesDrawer', () => {
     });
   });
 
+  describe('when mySpaces contains a default space', () => {
+    const defaultSpace = spaceFactory({
+      id: createSpaceId('space-default'),
+      name: 'Zulu Default',
+      slug: 'zulu-default',
+      type: SpaceType.open,
+      organizationId,
+      isDefaultSpace: true,
+    });
+    const alphaSpace = spaceFactory({
+      id: createSpaceId('space-alpha'),
+      name: 'Alpha',
+      slug: 'alpha',
+      type: SpaceType.open,
+      organizationId,
+    });
+    const middleSpace = spaceFactory({
+      id: createSpaceId('space-middle'),
+      name: 'Middle',
+      slug: 'middle',
+      type: SpaceType.open,
+      organizationId,
+    });
+
+    it('renders the default space first and the rest sorted alphabetically', () => {
+      renderWithProviders(
+        <BrowseSpacesDrawer
+          {...defaultProps}
+          mySpaces={[middleSpace, defaultSpace, alphaSpace]}
+        />,
+      );
+
+      const items = screen.getAllByTestId(/^browse-spaces-my-/);
+
+      expect(items.map((el) => el.getAttribute('data-testid'))).toEqual([
+        'browse-spaces-my-space-default',
+        'browse-spaces-my-space-alpha',
+        'browse-spaces-my-space-middle',
+      ]);
+    });
+  });
+
   describe('when the drawer reopens after closing', () => {
     function ControlledDrawer() {
       const [open, setOpen] = useState(true);

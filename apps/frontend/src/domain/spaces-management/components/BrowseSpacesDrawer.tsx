@@ -58,13 +58,15 @@ export function BrowseSpacesDrawer({
     (activeTab === 'my' && mySpaces.length === 0) ||
     (activeTab === 'all' && allSpaces.length === 0);
 
-  const filteredMySpaces = sortSpacesByName(
-    searchQuery.trim()
-      ? mySpaces.filter((s) =>
-          s.name.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-      : mySpaces,
-  );
+  const searchedMySpaces = searchQuery.trim()
+    ? mySpaces.filter((s) =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : mySpaces;
+  const filteredMySpaces = [
+    ...searchedMySpaces.filter((s) => s.isDefaultSpace),
+    ...sortSpacesByName(searchedMySpaces.filter((s) => !s.isDefaultSpace)),
+  ];
 
   const filteredAllSpaces = sortSpacesByName(
     searchQuery.trim()
