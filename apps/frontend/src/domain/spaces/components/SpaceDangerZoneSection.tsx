@@ -199,8 +199,8 @@ function DeleteSpaceConfirmationDialog({
                 <PMVStack gap={4} align="stretch">
                   <PMText>
                     This will permanently delete <strong>{spaceName}</strong>{' '}
-                    and all its standards, commands, skills, and members. This
-                    action cannot be undone.
+                    and all its standards, commands, and skills. This action
+                    cannot be undone.
                   </PMText>
                   {packages.length > 0 && (
                     <PMVStack gap={2} align="stretch">
