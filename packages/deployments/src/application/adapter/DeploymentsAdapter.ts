@@ -77,6 +77,8 @@ import {
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  NotifyArtefactsDistributionCommand,
+  NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PackagesDeployment,
@@ -125,6 +127,7 @@ import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsB
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
+import { NotifyArtefactsDistributionUseCase } from '../useCases/notifyArtefactsDistribution/notifyArtefactsDistribution.usecase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/notifyDistribution.usecase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
@@ -185,6 +188,7 @@ export class DeploymentsAdapter
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUsecase;
+  private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
@@ -526,6 +530,18 @@ export class DeploymentsAdapter
       this.spacesPort,
     );
 
+    this._notifyArtefactsDistributionUseCase =
+      new NotifyArtefactsDistributionUseCase(
+        this.accountsPort,
+        this.recipesPort,
+        this.standardsPort,
+        this.skillsPort,
+        this.distributionRepository,
+        this.distributedPackageRepository,
+        this.deploymentsServices.getRenderModeConfigurationService(),
+        targetResolutionService,
+      );
+
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
       this.deploymentsServices.getPackageService(),
       this.deploymentsServices.getTargetService(),
@@ -766,6 +782,12 @@ export class DeploymentsAdapter
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResponse> {
     return this._notifyDistributionUseCase.execute(command);
+  }
+
+  async notifyArtefactsDistribution(
+    command: NotifyArtefactsDistributionCommand,
+  ): Promise<NotifyArtefactsDistributionResponse> {
+    return this._notifyArtefactsDistributionUseCase.execute(command);
   }
 
   async removePackageFromTargets(
