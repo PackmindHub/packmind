@@ -4,6 +4,7 @@ jest.mock('cmd-ts', () => ({
   command: jest.fn(),
   option: jest.fn(),
   restPositionals: jest.fn(),
+  flag: jest.fn(),
   string: 'string',
 }));
 

@@ -10,6 +10,10 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+import {
+  statusHandler,
+  InstallHandlerDependencies,
+} from './installPackagesHandler';
 
 function findSubDirectoriesWithPackmindJson(
   dirPath: string,
@@ -122,14 +126,28 @@ export async function install2Handler({
   packages,
   list,
   show,
+  status,
 }: {
   installPath: string;
   packages: string[];
   list: boolean;
   show: string;
+  status: boolean;
 }): Promise<void> {
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+
+  if (status) {
+    const deps: InstallHandlerDependencies = {
+      packmindCliHexa,
+      exit: process.exit,
+      getCwd: () => process.cwd(),
+      log: console.log,
+      error: console.error,
+    };
+    await statusHandler({}, deps);
+    return;
+  }
 
   if (list) {
     logErrorConsole('Command "packmind-cli install --list" has been removed.');
@@ -248,9 +266,14 @@ export const install2Command = command({
       displayName: 'packages',
       description: 'Package slugs to install (e.g. @my-space/my-package)',
     }),
+    status: flag({
+      long: 'status',
+      description:
+        'Show status of all packmind.json files and their packages in the workspace',
+    }),
     list: flag({
       long: 'list',
-      description: 'List available packages',
+      description: '[Deprecated] List available packages',
     }),
     show: option({
       type: string,
