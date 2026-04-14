@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { LuPlus, LuX } from 'react-icons/lu';
 
 import {
@@ -14,8 +14,8 @@ import {
   PMText,
   PMVStack,
   pmToaster,
+  pmCreateListCollection,
   pmUseFilter,
-  pmUseListCollection,
 } from '@packmind/ui';
 
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
@@ -35,16 +35,25 @@ function UserSearchCombobox({
   onSelect,
   disabled,
 }: Readonly<UserSearchComboboxProps>) {
+  const [inputValue, setInputValue] = useState('');
   const { contains } = pmUseFilter({ sensitivity: 'base' });
-  const { collection, filter } = pmUseListCollection({
-    initialItems: items,
-    filter: contains,
-  });
+
+  const collection = useMemo(
+    () =>
+      pmCreateListCollection({
+        items: inputValue
+          ? items.filter((item) => contains(item.label, inputValue))
+          : items,
+      }),
+    [items, inputValue, contains],
+  );
 
   return (
     <PMCombobox.Root
       collection={collection}
-      onInputValueChange={(e: { inputValue: string }) => filter(e.inputValue)}
+      onInputValueChange={(e: { inputValue: string }) =>
+        setInputValue(e.inputValue)
+      }
       onValueChange={(details: { value: string[] }) => onSelect(details.value)}
       value={[]}
       multiple
@@ -108,8 +117,6 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
       .filter((u) => !existingIds.has(u.userId) && !selectedIds.has(u.userId))
       .map((u) => ({ label: u.displayName, value: u.userId }));
   }, [existingMembers, selectedMembers, orgUsers]);
-
-  const comboboxKey = selectedMembers.map((m) => m.userId).join(',');
 
   const handleUserSelect = (userIds: string[]) => {
     if (userIds.length === 0) return;
@@ -186,7 +193,6 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
           <PMDialog.Body>
             <PMVStack gap={4} alignItems="stretch">
               <UserSearchCombobox
-                key={comboboxKey}
                 items={comboboxItems}
                 onSelect={handleUserSelect}
                 disabled={isPending}
