@@ -1,15 +1,8 @@
 import { Space } from '@packmind/types';
 import { ListCommandsResult } from '../../../domain/useCases/IListCommandsUseCase';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
-import {
-  formatSlug,
-  formatLabel,
-  formatHeader,
-  logConsole,
-  logErrorConsole,
-} from '../../utils/consoleLogger';
 import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
-import { resolveUrlBuilder, UrlBuilder } from '../../utils/urlBuilderUtils';
+import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
 
 type Command = ListCommandsResult[number];
 
@@ -43,35 +36,6 @@ function groupCommandsBySpace(
   return { groups, orphaned };
 }
 
-function displayGroupedCommands(
-  commands: Command[],
-  spaces: Space[],
-  buildUrl: UrlBuilder,
-): void {
-  const { groups, orphaned } = groupCommandsBySpace(commands, spaces);
-
-  for (const { space, cmds } of groups) {
-    logConsole(`Space "${space.name}":\n`);
-    for (const cmd of [...cmds].sort((a, b) => a.slug.localeCompare(b.slug))) {
-      logConsole(`  ${formatSlug(cmd.slug)}`);
-      logConsole(`  ${formatLabel('Name:')}  ${cmd.name}`);
-      const url = buildUrl(space.slug, cmd.id as string);
-      if (url) {
-        logConsole(`  ${formatLabel('Link:')}  ${url}`);
-      }
-      logConsole('');
-    }
-  }
-
-  for (const cmd of [...orphaned].sort((a, b) =>
-    a.slug.localeCompare(b.slug),
-  )) {
-    logConsole(`  ${formatSlug(cmd.slug)}`);
-    logConsole(`  ${formatLabel('Name:')}  ${cmd.name}`);
-    logConsole('');
-  }
-}
-
 export type ListCommandsArgs = { space?: string };
 
 export type ListCommandsHandlerDependencies = {
@@ -86,23 +50,34 @@ export async function listCommandsHandler(
   const { packmindCliHexa, exit } = deps;
 
   try {
-    logConsole('Fetching commands...\n');
+    const spaces = await packmindCliHexa.output.withLoader(
+      'Fetching spaces',
+      () => packmindCliHexa.getSpaces(),
+    );
 
-    const spaces = await packmindCliHexa.getSpaces();
     const matchedSpace = resolveSpaceFromArgs(args.space, spaces);
 
     if (args.space && !matchedSpace) {
-      logErrorConsole(`Space "@${args.space}" not found.`);
+      const availableSpaces = spaces
+        .map((space) => ` - @${space.slug}`)
+        .join('\n');
+      packmindCliHexa.output.notifyError(`Space "@${args.space}" not found.`, {
+        content: `Available spaces:\n${availableSpaces}`,
+      });
       exit(1);
       return;
     }
 
-    const commands = await packmindCliHexa.listCommands(
-      matchedSpace ? { spaceId: matchedSpace.id } : {},
+    const commands = await packmindCliHexa.output.withLoader(
+      'Fetching commands',
+      () =>
+        packmindCliHexa.listCommands(
+          matchedSpace ? { spaceId: matchedSpace.id } : {},
+        ),
     );
 
     if (commands.length === 0) {
-      logConsole(
+      packmindCliHexa.output.notifyInfo(
         matchedSpace
           ? `No commands found in space "@${matchedSpace.slug}".`
           : 'No commands found.',
@@ -111,19 +86,25 @@ export async function listCommandsHandler(
       return;
     }
 
-    logConsole(formatHeader(`📋 Commands (${commands.length})\n`));
-
+    const { groups } = groupCommandsBySpace(commands, spaces);
     const buildUrl = resolveUrlBuilder((id) => `commands/${id}`);
-    displayGroupedCommands(commands, spaces, buildUrl);
 
+    packmindCliHexa.output.listScopedArtefacts(
+      `📋 Commands (${commands.length})`,
+      groups.map(({ space, cmds }) => ({
+        title: `Space: ${space.name}`,
+        artefacts: cmds.map((cmd) => ({
+          title: cmd.name,
+          slug: cmd.slug,
+          url: buildUrl(space.slug, cmd.id),
+        })),
+      })),
+    );
     exit(0);
   } catch (err) {
-    logErrorConsole('Failed to list commands:');
-    if (err instanceof Error) {
-      logErrorConsole(err.message);
-    } else {
-      logErrorConsole(String(err));
-    }
+    packmindCliHexa.output.notifyError('Failed to list commands:', {
+      content: err instanceof Error ? err.message : String(err),
+    });
     exit(1);
   }
 }
