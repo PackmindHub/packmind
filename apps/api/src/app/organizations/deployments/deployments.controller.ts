@@ -41,11 +41,20 @@ import {
   ListDistributionsBySkillCommand,
   SkillId,
   SpaceId,
+  NotifyArtefactsDistributionCommand,
+  NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
+  PackmindLockFile,
   RemovePackageFromTargetsCommand,
   RemovePackageFromTargetsResponse,
   CodingAgent,
+  GetDashboardKpiCommand,
+  DashboardKpiResponse,
+  GetDashboardOutdatedCommand,
+  DashboardOutdatedResponse,
+  GetDashboardNonLiveCommand,
+  DashboardNonLiveResponse,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -826,6 +835,156 @@ export class DeploymentsController {
         {
           organizationId,
           error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('notify-artifacts-distribution')
+  async notifyArtefactsDistribution(
+    @Param('orgId') organizationId: OrganizationId,
+    @Body()
+    body: {
+      gitRemoteUrl: string;
+      gitBranch: string;
+      relativePath: string;
+      packmindLockFile: PackmindLockFile;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<NotifyArtefactsDistributionResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Notifying artefacts distribution',
+      {
+        organizationId,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+      },
+    );
+
+    try {
+      const command: NotifyArtefactsDistributionCommand = {
+        userId: request.user.userId,
+        organizationId,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+        packmindLockFile: body.packmindLockFile,
+      };
+
+      const response =
+        await this.deploymentsService.notifyArtefactsDistribution(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Artefacts distribution notified successfully',
+        {
+          organizationId,
+          deploymentId: response.deploymentId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/deployments/notify-artifacts-distribution - Failed to notify artefacts distribution',
+        {
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('dashboard/kpi')
+  async getDashboardKpi(
+    @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DashboardKpiResponse> {
+    this.logger.info('GET /organizations/:orgId/deployments/dashboard/kpi', {
+      organizationId,
+    });
+
+    try {
+      const command: GetDashboardKpiCommand = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+      };
+
+      return await this.deploymentsService.getDashboardKpi(command);
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/dashboard/kpi - Failed',
+        {
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('dashboard/outdated')
+  async getDashboardOutdated(
+    @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DashboardOutdatedResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/dashboard/outdated',
+      { organizationId },
+    );
+
+    try {
+      const command: GetDashboardOutdatedCommand = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+      };
+
+      return await this.deploymentsService.getDashboardOutdated(command);
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/dashboard/outdated - Failed',
+        {
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('dashboard/non-live')
+  async getDashboardNonLive(
+    @Param('orgId') organizationId: OrganizationId,
+    @Query('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DashboardNonLiveResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/dashboard/non-live',
+      { organizationId },
+    );
+
+    try {
+      const command: GetDashboardNonLiveCommand = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+      };
+
+      return await this.deploymentsService.getDashboardNonLive(command);
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/dashboard/non-live - Failed',
+        {
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
         },
       );
       throw error;

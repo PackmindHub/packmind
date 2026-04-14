@@ -110,8 +110,8 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
 
     // Create all use cases with non-null dependencies
     this._createSkill = new CreateSkillUsecase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.eventEmitterService,
@@ -135,23 +135,23 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     );
 
     this._deleteSkill = new DeleteSkillUsecase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.services.getSkillService(),
       this.eventEmitterService,
     );
 
     this._deleteSkillsBatch = new DeleteSkillsBatchUsecase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.services.getSkillService(),
       this.eventEmitterService,
     );
 
     this._getSkillById = new GetSkillByIdUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
-      this.spacesPort,
     );
 
     this._getSkillWithFiles = new GetSkillWithFilesUsecase(
@@ -168,9 +168,9 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     );
 
     this._listSkillsBySpace = new ListSkillsBySpaceUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
-      this.spacesPort,
     );
 
     this._getSkillVersion = new GetSkillVersionUsecase(
@@ -274,7 +274,12 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       userId: userId.substring(0, 6) + '*',
       includeDeleted: opts?.includeDeleted ?? false,
     });
-    return this.services.getSkillService().listSkillsBySpace(spaceId, opts);
+    return this._listSkillsBySpace.execute({
+      spaceId,
+      organizationId,
+      userId,
+      includeDeleted: opts?.includeDeleted ?? false,
+    });
   }
 
   async findSkillBySlug(

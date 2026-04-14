@@ -13,6 +13,9 @@ import {
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DashboardKpiResponse,
+  DashboardNonLiveResponse,
+  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -29,6 +32,9 @@ import {
   FindActiveStandardVersionsByTargetResponse,
   GetContentByVersionsCommand,
   GetContentByVersionsResponse,
+  GetDashboardKpiCommand,
+  GetDashboardNonLiveCommand,
+  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -52,6 +58,8 @@ import {
   IDeploymentPort,
   IGitPort,
   IGitPortName,
+  InstallPackagesCommand,
+  InstallPackagesResponse,
   IPullContentResponse,
   IRecipesPort,
   IRecipesPortName,
@@ -69,6 +77,8 @@ import {
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  NotifyArtefactsDistributionCommand,
+  NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PackagesDeployment,
@@ -117,6 +127,7 @@ import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsB
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
+import { NotifyArtefactsDistributionUseCase } from '../useCases/notifyArtefactsDistribution/notifyArtefactsDistribution.usecase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/notifyDistribution.usecase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
@@ -124,7 +135,11 @@ import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPacka
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
+import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
+import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
+import { GetDashboardOutdatedUseCase } from '../useCases/getDashboardOutdated/GetDashboardOutdatedUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
+import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
@@ -173,13 +188,18 @@ export class DeploymentsAdapter
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUsecase;
+  private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
   private _downloadDefaultSkillsZipForAgentUseCase!: DownloadDefaultSkillsZipForAgentUseCase;
   private _downloadSkillZipForAgentUseCase!: DownloadSkillZipForAgentUseCase;
   private _getContentByVersionsUseCase!: GetContentByVersionsUseCase;
+  private _getDashboardKpiUseCase!: GetDashboardKpiUseCase;
+  private _getDashboardOutdatedUseCase!: GetDashboardOutdatedUseCase;
+  private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
+  private _installPackagesUseCase!: InstallPackagesUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -389,6 +409,18 @@ export class DeploymentsAdapter
       this.spacesPort,
     );
 
+    this._installPackagesUseCase = new InstallPackagesUseCase(
+      this.deploymentsServices.getPackageService(),
+      this.recipesPort,
+      this.standardsPort,
+      this.skillsPort,
+      this.codingAgentPort,
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.accountsPort,
+      this.spacesPort,
+      ports.eventEmitterService,
+    );
+
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(
       targetResolutionService,
       this.distributionRepository,
@@ -410,10 +442,31 @@ export class DeploymentsAdapter
       this.accountsPort,
     );
 
+    this._getDashboardKpiUseCase = new GetDashboardKpiUseCase(
+      this.distributionRepository,
+      this.standardsPort,
+      this.recipesPort,
+      this.skillsPort,
+    );
+
+    this._getDashboardOutdatedUseCase = new GetDashboardOutdatedUseCase(
+      this.distributionRepository,
+      this.standardsPort,
+      this.recipesPort,
+      this.gitPort,
+    );
+
+    this._getDashboardNonLiveUseCase = new GetDashboardNonLiveUseCase(
+      this.distributionRepository,
+      this.standardsPort,
+      this.recipesPort,
+      this.skillsPort,
+    );
+
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
     );
 
     this._listPackagesUseCase = new ListPackagesUsecase(
@@ -427,18 +480,18 @@ export class DeploymentsAdapter
     );
 
     this._createPackageUseCase = new CreatePackageUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
     );
 
     this._updatePackageUseCase = new UpdatePackageUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
@@ -446,6 +499,7 @@ export class DeploymentsAdapter
     );
 
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
     );
@@ -455,9 +509,9 @@ export class DeploymentsAdapter
     );
 
     this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.spacesPort,
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
@@ -475,6 +529,18 @@ export class DeploymentsAdapter
       targetResolutionService,
       this.spacesPort,
     );
+
+    this._notifyArtefactsDistributionUseCase =
+      new NotifyArtefactsDistributionUseCase(
+        this.accountsPort,
+        this.recipesPort,
+        this.standardsPort,
+        this.skillsPort,
+        this.distributionRepository,
+        this.distributedPackageRepository,
+        this.deploymentsServices.getRenderModeConfigurationService(),
+        targetResolutionService,
+      );
 
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
       this.deploymentsServices.getPackageService(),
@@ -658,6 +724,12 @@ export class DeploymentsAdapter
     return this._pullAllContentUseCase.execute(command);
   }
 
+  async installPackages(
+    command: InstallPackagesCommand,
+  ): Promise<InstallPackagesResponse> {
+    return this._installPackagesUseCase.execute(command);
+  }
+
   async listPackagesBySpace(
     command: ListPackagesBySpaceCommand,
   ): Promise<ListPackagesBySpaceResponse> {
@@ -712,6 +784,12 @@ export class DeploymentsAdapter
     return this._notifyDistributionUseCase.execute(command);
   }
 
+  async notifyArtefactsDistribution(
+    command: NotifyArtefactsDistributionCommand,
+  ): Promise<NotifyArtefactsDistributionResponse> {
+    return this._notifyArtefactsDistributionUseCase.execute(command);
+  }
+
   async removePackageFromTargets(
     command: RemovePackageFromTargetsCommand,
   ): Promise<RemovePackageFromTargetsResponse> {
@@ -746,5 +824,23 @@ export class DeploymentsAdapter
     command: GetContentByVersionsCommand,
   ): Promise<GetContentByVersionsResponse> {
     return this._getContentByVersionsUseCase.execute(command);
+  }
+
+  async getDashboardKpi(
+    command: GetDashboardKpiCommand,
+  ): Promise<DashboardKpiResponse> {
+    return this._getDashboardKpiUseCase.execute(command);
+  }
+
+  async getDashboardOutdated(
+    command: GetDashboardOutdatedCommand,
+  ): Promise<DashboardOutdatedResponse> {
+    return this._getDashboardOutdatedUseCase.execute(command);
+  }
+
+  async getDashboardNonLive(
+    command: GetDashboardNonLiveCommand,
+  ): Promise<DashboardNonLiveResponse> {
+    return this._getDashboardNonLiveUseCase.execute(command);
   }
 }

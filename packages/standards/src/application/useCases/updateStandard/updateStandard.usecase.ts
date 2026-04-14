@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -36,26 +36,29 @@ import {
 const origin = 'UpdateStandardUsecase';
 
 export class UpdateStandardUsecase
-  extends AbstractMemberUseCase<UpdateStandardCommand, UpdateStandardResponse>
+  extends AbstractSpaceMemberUseCase<
+    UpdateStandardCommand,
+    UpdateStandardResponse
+  >
   implements IUpdateStandardUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
-    private readonly spacesPort: ISpacesPort | null,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('UpdateStandardUsecase initialized');
   }
 
-  async executeForMembers(
-    command: UpdateStandardCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: UpdateStandardCommand & SpaceMemberContext,
   ): Promise<UpdateStandardResponse> {
     const {
       standardId,
@@ -81,22 +84,20 @@ export class UpdateStandardUsecase
 
     try {
       // Validate that space belongs to organization
-      if (this.spacesPort) {
-        const space = await this.spacesPort.getSpaceById(spaceId);
-        if (!space) {
-          this.logger.error('Space not found', { spaceId });
-          throw new Error(`Space with id ${spaceId} not found`);
-        }
-        if (space.organizationId !== organizationId) {
-          this.logger.error('Space does not belong to organization', {
-            spaceId,
-            spaceOrganizationId: space.organizationId,
-            requestOrganizationId: organizationId,
-          });
-          throw new Error(
-            `Space ${spaceId} does not belong to organization ${organizationId}`,
-          );
-        }
+      const space = await this.spacesPort.getSpaceById(spaceId);
+      if (!space) {
+        this.logger.error('Space not found', { spaceId });
+        throw new Error(`Space with id ${spaceId} not found`);
+      }
+      if (space.organizationId !== organizationId) {
+        this.logger.error('Space does not belong to organization', {
+          spaceId,
+          spaceOrganizationId: space.organizationId,
+          requestOrganizationId: organizationId,
+        });
+        throw new Error(
+          `Space ${spaceId} does not belong to organization ${organizationId}`,
+        );
       }
 
       // Check if the standard exists

@@ -14,9 +14,9 @@ For a detailed breakdown of where standards, commands, and skills appear for eac
 
 <Note>
   **Default skills included** — All distributions automatically include
-  Packmind's default skills (such as `packmind-create-skill` for creating new
-  skills with AI assistance). These are added alongside your package contents
-  regardless of which distribution method you use.
+  Packmind's default skills (such as `packmind-update-playbook` for creating and
+  updating playbook artifacts with AI assistance). These are added alongside
+  your package contents regardless of which distribution method you use.
 </Note>
 
 <Tip>
@@ -77,7 +77,14 @@ For example:
 
 ```bash
 packmind-cli install backend-standards frontend-react
+# Note: when using multiple spaces, you will need to prefix the packages with the space slug
+packmind-cli install @backend/standards @frontend/react
 ```
+
+<Note>
+  When your organization uses multiple [Spaces](/concepts/spaces), prefix
+  package slugs with the space slug using `@space/package` notation.
+</Note>
 
 This will:
 
@@ -106,7 +113,7 @@ The CLI approach is ideal for:
 
 - **CI/CD pipelines** - Automate distribution as part of your deployment process
 - **Local development** - Quickly install packages without leaving your terminal
-- **Monorepos** - Use `packmind-cli install --recursive` to install packages for all `packmind.json` files in the repository
+- **Monorepos** - Use `packmind-cli install` to install packages for all `packmind.json` files in the repository
 - **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
 
 ## Removing Packages

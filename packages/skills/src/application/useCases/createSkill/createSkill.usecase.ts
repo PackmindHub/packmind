@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -21,24 +21,24 @@ import { SkillVersionService } from '../../services/SkillVersionService';
 
 const origin = 'CreateSkillUsecase';
 
-export class CreateSkillUsecase extends AbstractMemberUseCase<
+export class CreateSkillUsecase extends AbstractSpaceMemberUseCase<
   CreateSkillCommand,
   CreateSkillResponse
 > {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly skillService: SkillService,
     private readonly skillVersionService: SkillVersionService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
     this.logger.info('CreateSkillUsecase initialized');
   }
 
-  async executeForMembers(
-    command: CreateSkillCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: CreateSkillCommand & SpaceMemberContext,
   ): Promise<CreateSkillResponse> {
     const {
       name,

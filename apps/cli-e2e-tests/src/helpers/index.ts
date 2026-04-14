@@ -1,5 +1,6 @@
 export * from './runCli';
 export * from './describeWithUserSignedUp';
+export * from './describeWithExtraUser';
 export * from './userFactory';
 export * from './fileHelpers';
 export * from './setupGitRepo';
@@ -14,5 +15,5 @@ export type {
   ICommandGateway,
   IPackageGateway,
   IStandardGateway,
+  IChangeProposalGateway,
 } from './IPackmindGateway';
-export type { IChangeProposalGateway } from './gateways/ChangeProposalGateway';

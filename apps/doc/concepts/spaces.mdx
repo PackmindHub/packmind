@@ -1,0 +1,97 @@
+---
+title: 'Spaces: organize your playbook'
+---
+
+<Info>
+  **Enterprise Feature** — This functionality is only available in the
+  **Enterprise** version of Packmind.
+</Info>
+
+## What are Spaces?
+
+Spaces let you organize your playbook into distinct areas that reflect how your team works. A Space can represent a topic, a team, a programming language, a functional scope, or a technical scope — for example, "Backend", "React Frontend", "Security", or "Data Pipeline".
+
+Instead of managing all artifacts in a single flat list, Spaces give structure to your standards, commands, and skills so each group sees what is relevant to them.
+
+## The Global Space
+
+Every organization comes with a built-in **Global** space. It has special rules:
+
+- It **cannot be deleted**
+- Every members of the organization belong to this space
+
+The Global space is a good home for organization-wide conventions that apply to everyone.
+
+## Space Types
+
+Spaces have two visibility levels:
+
+| Type        | Visibility                              | Joining                                    |
+| ----------- | --------------------------------------- | ------------------------------------------ |
+| **Open**    | Visible to everyone in the organization | Anyone can browse and join via the sidebar |
+| **Private** | Hidden from non-members                 | Must be added by a space administrator     |
+
+Space visibility can be changed at any time — an open space can become private, and a private space can become open.
+
+<Note>Space names must be **unique** within an organization.</Note>
+
+## Creating a Space
+
+Any organization member — whether admin or regular member — can create a space. Click **Browse** in the sidebar to see all available spaces, then click **New** to create one. Provide a name and choose a visibility level (open or private).
+
+## Roles Within a Space
+
+Each space has its own set of roles, separate from [organization roles](/administration/manage-users):
+
+| Action              | Space Admin | Space Member | Organization Admin |
+| ------------------- | ----------- | ------------ | ------------------ |
+| Add/remove members  | Yes         | No           | No                 |
+| Change member roles | Yes         | No           | No                 |
+| Delete the space    | Yes         | No           | Yes                |
+
+The creator of a space becomes its first administrator.
+
+<Info>
+  Space roles are independent from organization roles. A user can be an
+  administrator in one space and a regular member in another.
+</Info>
+
+## Leaving a Space
+
+Any member can leave a space on their own at any time — except the Global space, which cannot be left.
+
+## Deleting a Space
+
+Only **space administrators** and **organization administrators** can delete a space.
+
+<Warning>
+  Deleting a space **permanently removes all its artifacts** — standards,
+  commands, and skills contained in that space are deleted. This action cannot
+  be undone. The Global space cannot be deleted.
+</Warning>
+
+## Spaces and the CLI
+
+### Package slug prefixing
+
+When your organization uses multiple spaces, package slugs are prefixed with the space slug using `@space/package` notation:
+
+```bash
+packmind-cli install @backend/standards @frontend/react
+```
+
+### Access warnings during install
+
+If your `packmind.json` references packages from spaces you do not currently have access to, the `install` command displays a warning. However, this does **not** affect your existing configuration — files from those packages are **not removed**, they simply will not be updated.
+
+To resolve access issues:
+
+- **Open spaces** — join the space via the sidebar in the Packmind app
+- **Private spaces** — ask a space administrator or a colleague to add you
+
+## Related Documentation
+
+- [Packages Management](/concepts/packages-management) — group artifacts into packages within a space
+- [Distribute Artifacts](/governance/distribution) — distribute packages from spaces to your repositories
+- [Manage Users](/administration/manage-users) — organization-level roles and permissions
+- [CLI Documentation](/tools/cli) — CLI commands including install with space-prefixed packages

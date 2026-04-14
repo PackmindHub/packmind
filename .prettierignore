@@ -12,9 +12,10 @@
 **/.claude
 **/.junie
 **/.cursor
+**/.gitlab/
 CLAUDE.md
 AGENTS.md
 **/AGENTS.md
 .docusaurus
 dockerfile/helm-chart/**
-
+packmind-lock.json

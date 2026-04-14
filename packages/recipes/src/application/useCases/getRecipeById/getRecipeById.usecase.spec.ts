@@ -10,6 +10,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 
 describe('GetRecipeByIdUsecase', () => {
@@ -30,12 +31,19 @@ describe('GetRecipeByIdUsecase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({
+        userId: createUserId('00000000-0000-0000-0000-000000000001'),
+        spaceId: createSpaceId('00000000-0000-0000-0000-000000000002'),
+        role: 'member',
+        createdBy: createUserId('00000000-0000-0000-0000-000000000001'),
+        updatedBy: createUserId('00000000-0000-0000-0000-000000000001'),
+      }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     usecase = new GetRecipeByIdUsecase(
+      spacesPort,
       accountsAdapter,
       recipeService,
-      spacesPort,
       stubLogger(),
     );
   });
@@ -393,6 +401,57 @@ describe('GetRecipeByIdUsecase', () => {
         ).rejects.toThrow(
           `Recipe ${recipeId} does not belong to space ${spaceId}`,
         );
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      beforeEach(() => {
+        spacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws a SpaceMembershipRequiredError', async () => {
+        const organizationId = createOrganizationId('org-1');
+        const spaceId = createSpaceId('space-1');
+        const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
+
+        const organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        const user = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [
+            {
+              userId,
+              organizationId,
+              role: 'member' as const,
+            },
+          ],
+        };
+        const space: Space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
+
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+
+        await expect(
+          usecase.execute({
+            userId,
+            organizationId,
+            spaceId,
+            recipeId,
+          }),
+        ).rejects.toThrow(SpaceMembershipRequiredError);
       });
     });
 

@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   GetSkillByIdCommand,
   GetSkillByIdResponse,
@@ -12,21 +15,21 @@ import { SkillService } from '../../services/SkillService';
 const origin = 'GetSkillByIdUsecase';
 
 export class GetSkillByIdUsecase
-  extends AbstractMemberUseCase<GetSkillByIdCommand, GetSkillByIdResponse>
+  extends AbstractSpaceMemberUseCase<GetSkillByIdCommand, GetSkillByIdResponse>
   implements IGetSkillByIdUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly skillService: SkillService,
-    private readonly spacesPort: ISpacesPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('GetSkillByIdUsecase initialized');
   }
 
-  async executeForMembers(
-    command: GetSkillByIdCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: GetSkillByIdCommand & SpaceMemberContext,
   ): Promise<GetSkillByIdResponse> {
     this.logger.info('Getting skill by ID', {
       id: command.skillId,
@@ -35,11 +38,6 @@ export class GetSkillByIdUsecase
 
     try {
       // Verify the space belongs to the organization
-      if (!this.spacesPort) {
-        this.logger.error('SpacesPort not available for space validation');
-        throw new Error('SpacesPort not available');
-      }
-
       const space = await this.spacesPort.getSpaceById(command.spaceId);
       if (!space) {
         this.logger.warn('Space not found', { spaceId: command.spaceId });

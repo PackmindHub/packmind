@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -11,6 +11,7 @@ import {
   DeleteStandardResponse,
   IAccountsPort,
   IDeleteStandardUseCase,
+  ISpacesPort,
   StandardDeletedEvent,
 } from '@packmind/types';
 import { StandardService } from '../../services/StandardService';
@@ -18,20 +19,24 @@ import { StandardService } from '../../services/StandardService';
 const origin = 'DeleteStandardUsecase';
 
 export class DeleteStandardUsecase
-  extends AbstractMemberUseCase<DeleteStandardCommand, DeleteStandardResponse>
+  extends AbstractSpaceMemberUseCase<
+    DeleteStandardCommand,
+    DeleteStandardResponse
+  >
   implements IDeleteStandardUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  protected async executeForMembers(
-    command: DeleteStandardCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: DeleteStandardCommand & SpaceMemberContext,
   ): Promise<DeleteStandardResponse> {
     const { standardId, organizationId, userId, source = 'ui' } = command;
 

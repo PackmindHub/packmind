@@ -1,7 +1,15 @@
-import { IRepository, Rule, StandardVersionId } from '@packmind/types';
+import {
+  IRepository,
+  Rule,
+  RuleId,
+  SpaceId,
+  StandardVersionId,
+} from '@packmind/types';
 
 export interface IRuleRepository extends IRepository<Rule> {
   findByStandardVersionId(
     standardVersionId: StandardVersionId,
   ): Promise<Rule[]>;
+
+  findByIdInSpace(ruleId: RuleId, spaceId: SpaceId): Promise<Rule | null>;
 }

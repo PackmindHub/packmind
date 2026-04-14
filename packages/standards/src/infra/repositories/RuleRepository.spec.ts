@@ -6,7 +6,13 @@ import {
   itHandlesSoftDelete,
   stubLogger,
 } from '@packmind/test-utils';
-import { createRuleId, Rule, Standard, StandardVersion } from '@packmind/types';
+import {
+  createRuleId,
+  createSpaceId,
+  Rule,
+  Standard,
+  StandardVersion,
+} from '@packmind/types';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ruleFactory } from '../../../test/ruleFactory';
@@ -138,6 +144,59 @@ describe('RuleRepository', () => {
         standardVersion.id,
       );
       expect(foundRules).toEqual([]);
+    });
+  });
+
+  describe('findByIdInSpace', () => {
+    describe('when rule belongs to the space', () => {
+      it('returns the rule', async () => {
+        const spaceId = createSpaceId(uuidv4());
+        const standard = await standardRepo.save(
+          standardFactory({ slug: `standard-${uuidv4()}`, spaceId }),
+        );
+        const standardVersion = await standardVersionRepo.save(
+          standardVersionFactory({ standardId: standard.id }),
+        );
+        const rule = ruleFactory({ standardVersionId: standardVersion.id });
+        await ruleRepository.add(rule);
+
+        const result = await ruleRepository.findByIdInSpace(rule.id, spaceId);
+
+        expect(result).toEqual(rule);
+      });
+    });
+
+    describe('when rule belongs to a different space', () => {
+      it('returns null', async () => {
+        const spaceId = createSpaceId(uuidv4());
+        const otherSpaceId = createSpaceId(uuidv4());
+        const standard = await standardRepo.save(
+          standardFactory({ slug: `standard-${uuidv4()}`, spaceId }),
+        );
+        const standardVersion = await standardVersionRepo.save(
+          standardVersionFactory({ standardId: standard.id }),
+        );
+        const rule = ruleFactory({ standardVersionId: standardVersion.id });
+        await ruleRepository.add(rule);
+
+        const result = await ruleRepository.findByIdInSpace(
+          rule.id,
+          otherSpaceId,
+        );
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('when rule does not exist', () => {
+      it('returns null', async () => {
+        const result = await ruleRepository.findByIdInSpace(
+          createRuleId(uuidv4()),
+          createSpaceId(uuidv4()),
+        );
+
+        expect(result).toBeNull();
+      });
     });
   });
 

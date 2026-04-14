@@ -1,6 +1,4 @@
 import * as path from 'path';
-import * as yaml from 'yaml';
-import slug from 'slug';
 
 import {
   ApplyPlaybookProposalItem,
@@ -8,26 +6,22 @@ import {
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
   ChangeProposalType,
-  FileModification,
-  NewSkillPayload,
   RecipeId,
   SkillId,
   SpaceId,
   StandardId,
   TargetId,
 } from '@packmind/types';
-import { parseSkillMd } from '@packmind/node-utils';
 
-import { parseStandardMd } from '../../../application/utils/parseStandardMd';
-import { parseLenientStandard } from '../../../application/utils/parseLenientStandard';
-import { parseCommandFile } from '../../../application/utils/parseCommandFile';
+import { checkForDuplicateNames } from './submit/duplicateNameChecker';
+import { createTargetContextResolver } from './submit/targetContextResolver';
+import { buildProposals, ProposalItem } from './submit/proposalBuilder';
 import {
-  compareStandardFields,
-  compareCommandFields,
-  compareSkillDefinitionFields,
-} from '../../../application/utils/artifactComparison';
-import { normalizePath } from '../../../application/utils/pathUtils';
-import { findNearestConfigDir } from '../../../application/utils/findNearestConfigDir';
+  fetchAvailablePackageSlugs,
+  logPackageAddGuidance,
+  logRemovedPackagesNotification,
+  collectParts,
+} from './submit/submitLogger';
 import {
   formatCommand,
   logConsole,
@@ -36,7 +30,6 @@ import {
   logSuccessConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
-import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
 import { isCommunityEditionError } from '../../../domain/errors/CommunityEditionError';
 import { capitalize } from '../../utils/stringUtils';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
@@ -45,9 +38,6 @@ import {
   PlaybookChangeEntry,
 } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
-import { PackmindLockFile } from '../../../domain/repositories/PackmindLockFile';
-import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
-import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -60,14 +50,6 @@ export type PlaybookSubmitHandlerDependencies = {
   openEditor: (prefill: string) => string | null;
   unlinkSync: (filePath: string) => void;
   rmSync: (dirPath: string, options?: { recursive?: boolean }) => void;
-};
-
-type ProposalItem = {
-  type: ChangeProposalType;
-  artefactId: string | null;
-  payload: unknown;
-  targetId: string | undefined;
-  spaceId: string;
 };
 
 function buildEditorPrefill(changes: PlaybookChangeEntry[]): string {
@@ -88,552 +70,6 @@ function stripCommentLines(text: string): string {
     .filter((line) => !line.startsWith('#'))
     .join('\n')
     .trim();
-}
-
-function resolveArtifactIdFromLockFile(
-  filePath: string,
-  lockFile: PackmindLockFile | null,
-): string | null {
-  if (!lockFile) return null;
-  const normalized = normalizePath(filePath);
-  for (const entry of Object.values(lockFile.artifacts)) {
-    for (const file of entry.files) {
-      const normalizedFilePath = normalizePath(file.path);
-      if (
-        normalizedFilePath === normalized ||
-        (entry.type === 'skill' &&
-          normalizedFilePath.startsWith(normalized + '/'))
-      ) {
-        return entry.id;
-      }
-    }
-  }
-  return null;
-}
-
-function buildCreatedStandardProposals(
-  entry: PlaybookChangeEntry,
-): ProposalItem[] {
-  const parsed = parseStandardMd(entry.content, entry.filePath);
-  if (parsed) {
-    return [
-      {
-        type: ChangeProposalType.createStandard,
-        artefactId: null,
-        payload: {
-          name: parsed.name,
-          description: parsed.description,
-          scope: parsed.scope,
-          rules: parsed.rules.map((r) => ({ content: r })),
-        },
-        targetId: entry.targetId,
-        spaceId: entry.spaceId,
-      },
-    ];
-  }
-
-  const lenient = parseLenientStandard(entry.content);
-  if (lenient) {
-    return [
-      {
-        type: ChangeProposalType.createStandard,
-        artefactId: null,
-        payload: {
-          name: lenient.name,
-          description: lenient.description,
-          scope: '',
-          rules: lenient.rules.map((r) => ({ content: r })),
-        },
-        targetId: entry.targetId,
-        spaceId: entry.spaceId,
-      },
-    ];
-  }
-
-  return [];
-}
-
-function buildCreatedCommandProposals(
-  entry: PlaybookChangeEntry,
-): ProposalItem[] {
-  const parsed = parseCommandFile(entry.content, entry.filePath);
-  const content = parsed.success ? parsed.parsed.content : entry.content;
-
-  return [
-    {
-      type: ChangeProposalType.createCommand,
-      artefactId: null,
-      payload: {
-        name: entry.artifactName,
-        content,
-      },
-      targetId: entry.targetId,
-      spaceId: entry.spaceId,
-    },
-  ];
-}
-
-function buildCreatedSkillProposals(
-  entry: PlaybookChangeEntry,
-): ProposalItem[] {
-  const parsed = yaml.parse(entry.content);
-  return [
-    {
-      type: ChangeProposalType.createSkill,
-      artefactId: null,
-      payload: {
-        name: parsed.name,
-        description: parsed.description,
-        prompt: parsed.prompt,
-        skillMdPermissions: parsed.skillMdPermissions ?? '',
-        ...(parsed.license ? { license: parsed.license } : {}),
-        ...(parsed.compatibility
-          ? { compatibility: parsed.compatibility }
-          : {}),
-        ...(parsed.metadata ? { metadata: parsed.metadata } : {}),
-        ...(parsed.allowedTools ? { allowedTools: parsed.allowedTools } : {}),
-        ...(parsed.files ? { files: parsed.files } : {}),
-      },
-      targetId: entry.targetId,
-      spaceId: entry.spaceId,
-    },
-  ];
-}
-
-function buildUpdatedStandardProposals(
-  entry: PlaybookChangeEntry,
-  artifactId: string | null,
-  deployedContent: string | null,
-): ProposalItem[] {
-  if (!artifactId) return [];
-
-  const base = {
-    artefactId: artifactId,
-    targetId: entry.targetId,
-    spaceId: entry.spaceId,
-  };
-
-  if (deployedContent) {
-    const fieldChanges = compareStandardFields(
-      entry.content,
-      deployedContent,
-      entry.filePath,
-    );
-    return fieldChanges.map((change) => ({
-      ...base,
-      type: change.type,
-      payload: change.payload,
-    }));
-  }
-
-  // No deployed content: parse local and emit all rules as adds
-  const localParsed = parseStandardMd(entry.content, entry.filePath);
-  if (!localParsed) return [];
-
-  const proposals: ProposalItem[] = [];
-  const localRules = new Set(localParsed.rules);
-  for (const rule of localRules) {
-    proposals.push({
-      ...base,
-      type: ChangeProposalType.addRule,
-      payload: { item: { content: rule } },
-    });
-  }
-  return proposals;
-}
-
-function buildUpdatedCommandProposals(
-  entry: PlaybookChangeEntry,
-  artifactId: string | null,
-  deployedContent: string | null,
-): ProposalItem[] {
-  if (!artifactId || !deployedContent) return [];
-
-  const fieldChanges = compareCommandFields(
-    entry.content,
-    deployedContent,
-    entry.filePath,
-  );
-
-  const base = {
-    artefactId: artifactId,
-    targetId: entry.targetId,
-    spaceId: entry.spaceId,
-  };
-
-  return fieldChanges.map((change) => ({
-    ...base,
-    type: change.type,
-    payload: change.payload,
-  }));
-}
-
-function buildUpdatedSkillProposals(
-  entry: PlaybookChangeEntry,
-  artifactId: string | null,
-  deployedFiles: FileModification[],
-): ProposalItem[] {
-  if (!artifactId) return [];
-
-  const proposals: ProposalItem[] = [];
-  const base: Pick<ProposalItem, 'artefactId' | 'targetId' | 'spaceId'> = {
-    artefactId: artifactId,
-    targetId: entry.targetId,
-    spaceId: entry.spaceId,
-  };
-
-  // Parse the local YAML content (NewSkillPayload)
-  let local: NewSkillPayload;
-  try {
-    local = yaml.parse(entry.content);
-  } catch {
-    logWarningConsole(
-      `Skipping "${entry.artifactName}" — failed to parse local skill content.`,
-    );
-    return [];
-  }
-
-  // Find the deployed SKILL.md to compare against
-  const normalizedEntryPath = normalizePath(entry.filePath);
-  const skillMdFile = deployedFiles.find((f) => {
-    const normalized = normalizePath(f.path);
-    return (
-      normalized.startsWith(normalizedEntryPath + '/') &&
-      normalized.endsWith('/SKILL.md')
-    );
-  });
-
-  if (skillMdFile?.content) {
-    const deployed = parseSkillMd(skillMdFile.content);
-    if (deployed) {
-      // Compare SKILL.md fields and generate granular proposals
-      const fieldChanges = compareSkillDefinitionFields(local, deployed);
-      proposals.push(
-        ...fieldChanges.map((change) => ({
-          ...base,
-          type: change.type,
-          payload: change.payload,
-        })),
-      );
-    } else {
-      // Fallback: if parsing fails, submit prompt as full update
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateSkillPrompt,
-        payload: { oldValue: '', newValue: local.prompt },
-      });
-    }
-  } else {
-    logWarningConsole(
-      `Skipping "${entry.artifactName}" — deployed SKILL.md content not found.`,
-    );
-    return [];
-  }
-
-  // Handle helper files
-  const deployedHelperFiles = deployedFiles.filter((f) => {
-    const normalized = normalizePath(f.path);
-    return (
-      normalized.startsWith(normalizedEntryPath + '/') &&
-      !normalized.endsWith('/SKILL.md') &&
-      f.skillFileId
-    );
-  });
-
-  const localFiles = local.files ?? [];
-
-  // Updated or unchanged helper files
-  for (const deployed of deployedHelperFiles) {
-    const relativePath = normalizePath(deployed.path).slice(
-      normalizedEntryPath.length + 1,
-    );
-    const localFile = localFiles.find((f) => f.path === relativePath);
-
-    if (!localFile) {
-      // File deleted locally
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.deleteSkillFile,
-        payload: {
-          targetId: deployed.skillFileId,
-          item: {
-            id: deployed.skillFileId,
-            path: relativePath,
-            content: deployed.content ?? '',
-            permissions: deployed.skillFilePermissions ?? 'read',
-            isBase64: 'isBase64' in deployed ? !!deployed.isBase64 : false,
-          },
-        },
-      });
-    } else if (localFile.content !== deployed.content) {
-      // File content changed
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateSkillFileContent,
-        payload: {
-          targetId: deployed.skillFileId,
-          oldValue: deployed.content ?? '',
-          newValue: localFile.content,
-          isBase64: localFile.isBase64 ?? false,
-        },
-      });
-    }
-
-    // Check for permission changes (independent of content changes)
-    const localPermissions = localFile?.permissions ?? 'rw-r--r--';
-    const deployedPermissions = deployed.skillFilePermissions ?? 'read';
-    if (localFile && localPermissions !== deployedPermissions) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.updateSkillFilePermissions,
-        payload: {
-          targetId: deployed.skillFileId,
-          oldValue: deployedPermissions,
-          newValue: localPermissions,
-        },
-      });
-    }
-  }
-
-  // New helper files (exist locally but not deployed)
-  const deployedRelativePaths = new Set(
-    deployedHelperFiles.map((f) =>
-      normalizePath(f.path).slice(normalizedEntryPath.length + 1),
-    ),
-  );
-  for (const localFile of localFiles) {
-    if (!deployedRelativePaths.has(localFile.path)) {
-      proposals.push({
-        ...base,
-        type: ChangeProposalType.addSkillFile,
-        payload: {
-          item: {
-            path: localFile.path,
-            content: localFile.content,
-            permissions: localFile.permissions ?? 'rw-r--r--',
-            isBase64: localFile.isBase64 ?? false,
-          },
-        },
-      });
-    }
-  }
-
-  return proposals;
-}
-
-function buildRemovedProposals(
-  entry: PlaybookChangeEntry,
-  artifactId: string,
-  lockFile: PackmindLockFile | null,
-): ProposalItem[] {
-  const typeMap: Record<string, ChangeProposalType> = {
-    standard: ChangeProposalType.removeStandard,
-    command: ChangeProposalType.removeCommand,
-    skill: ChangeProposalType.removeSkill,
-  };
-
-  const proposalType = typeMap[entry.artifactType];
-  if (!proposalType) return [];
-
-  const lockEntry = lockFile
-    ? Object.values(lockFile.artifacts).find((e) => e.id === artifactId)
-    : undefined;
-  const packageIds = lockEntry?.packageIds ?? [];
-
-  return [
-    {
-      type: proposalType,
-      artefactId: artifactId,
-      payload: { packageIds },
-      targetId: entry.targetId,
-      spaceId: entry.spaceId,
-    },
-  ];
-}
-
-function findDeployedContentForPath(
-  filePath: string,
-  deployedFiles: FileModification[],
-): string | null {
-  const normalized = normalizePath(filePath);
-  const match = deployedFiles.find((f) => normalizePath(f.path) === normalized);
-  return match?.content ?? null;
-}
-
-async function checkForDuplicateNames(
-  createdEntries: PlaybookChangeEntry[],
-  packmindGateway: IPackmindGateway,
-): Promise<string[]> {
-  const errors: string[] = [];
-
-  // Group by (spaceId, artifactType)
-  const groups = new Map<string, PlaybookChangeEntry[]>();
-  for (const entry of createdEntries) {
-    const key = `${entry.spaceId}:${entry.artifactType}`;
-    const existing = groups.get(key) ?? [];
-    existing.push(entry);
-    groups.set(key, existing);
-  }
-
-  // Check duplicates among staged entries themselves
-  for (const [, entries] of groups) {
-    const seen = new Map<string, string>();
-    for (const entry of entries) {
-      const sluggedName = slug(entry.artifactName);
-      if (seen.has(sluggedName)) {
-        errors.push(
-          `A ${entry.artifactType} named "${entry.artifactName}" is staged multiple times. Remove the duplicate with "playbook unstage" or rename the artifact.`,
-        );
-      } else {
-        seen.set(sluggedName, entry.artifactName);
-      }
-    }
-  }
-
-  // Fetch existing artifacts and check collisions
-  for (const [key, entries] of groups) {
-    const [rawSpaceId, artifactType] = key.split(':');
-    const typedSpaceId = rawSpaceId as SpaceId;
-    try {
-      let existingNames: string[] = [];
-      if (artifactType === 'standard') {
-        const response = await packmindGateway.standards.list({
-          spaceId: typedSpaceId,
-        });
-        existingNames = response.standards.map((s) => s.name);
-      } else if (artifactType === 'command') {
-        const response = await packmindGateway.commands.list({
-          spaceId: typedSpaceId,
-        });
-        existingNames = response.recipes.map((r) => r.name);
-      } else if (artifactType === 'skill') {
-        const response = await packmindGateway.skills.list({
-          spaceId: typedSpaceId,
-        });
-        existingNames = response.map((s) => s.name);
-      }
-
-      const existingNamesSlugged = new Set(existingNames.map((n) => slug(n)));
-
-      for (const entry of entries) {
-        if (existingNamesSlugged.has(slug(entry.artifactName))) {
-          errors.push(
-            `A ${entry.artifactType} named "${entry.artifactName}" already exists in this space. Use "playbook unstage" to remove it or rename the artifact.`,
-          );
-        }
-      }
-    } catch {
-      // Gateway failure — skip pre-flight check for this group
-    }
-  }
-
-  return errors;
-}
-
-async function fetchAvailablePackageSlugs(
-  packmindCliHexa: PackmindCliHexa,
-  spaceIds: SpaceId[],
-): Promise<string[]> {
-  try {
-    const allSpaces = await packmindCliHexa.getSpaces();
-    const relevantSpaces = allSpaces.filter((s) =>
-      spaceIds.includes(s.id as SpaceId),
-    );
-    const packagesBySpace = await Promise.all(
-      relevantSpaces.map(async (space) => ({
-        space,
-        packages: await packmindCliHexa.listPackages({
-          spaceId: space.id as SpaceId,
-        }),
-      })),
-    );
-    const multipleSpaces = relevantSpaces.length > 1;
-    return packagesBySpace.flatMap(({ space, packages }) =>
-      packages.map((pkg) =>
-        multipleSpaces ? `@${space.slug}/${pkg.slug}` : pkg.slug,
-      ),
-    );
-  } catch {
-    return [];
-  }
-}
-
-function logPackageAddGuidance(
-  created: {
-    standards: Array<{ slug: string }>;
-    commands: Array<{ slug: string }>;
-    skills: Array<{ slug: string }>;
-  },
-  packageSlugs: string[],
-): void {
-  const { standards, commands, skills } = created;
-  const totalCount = standards.length + commands.length + skills.length;
-  if (totalCount === 0) return;
-
-  const pkgPlaceholder =
-    packageSlugs.length === 1 ? packageSlugs[0] : '<package-slug>';
-
-  if (totalCount === 1) {
-    logInfoConsole('To add the created artifact to a package, run:');
-    if (standards.length === 1) {
-      logInfoConsole(
-        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --standard ${standards[0].slug}\``)}`,
-      );
-    } else if (commands.length === 1) {
-      logInfoConsole(
-        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --command ${commands[0].slug}\``)}`,
-      );
-    } else if (skills.length === 1) {
-      logInfoConsole(
-        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --skill ${skills[0].slug}\``)}`,
-      );
-    }
-  } else {
-    logInfoConsole(
-      `To add the created artifacts to a package, use ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --standard <artifact-slug>\``)} for each artifact.`,
-    );
-  }
-
-  if (packageSlugs.length > 1) {
-    logInfoConsole(`  Available packages: ${packageSlugs.join(', ')}`);
-  }
-}
-
-async function logRemovedPackagesNotification(
-  packmindCliHexa: PackmindCliHexa,
-  packageIds: Set<string>,
-): Promise<void> {
-  if (packageIds.size === 0) return;
-  try {
-    const [allPackages, allSpaces] = await Promise.all([
-      packmindCliHexa.listPackages({}),
-      packmindCliHexa.getSpaces(),
-    ]);
-    const affectedPackages = allPackages.filter((pkg) =>
-      packageIds.has(pkg.id as string),
-    );
-
-    if (affectedPackages.length === 0) return;
-
-    const buildUrl = resolveUrlBuilder((id) => `packages/${id}`);
-    const spaceById = new Map(allSpaces.map((s) => [s.id as string, s]));
-
-    logWarningConsole(
-      'Some changes could not be applied: playbook submit does not allow remove artefacts. Review the following affected packages:',
-    );
-    for (const pkg of affectedPackages) {
-      const space = spaceById.get(pkg.spaceId as string);
-      const spaceSlug = space?.slug ?? '';
-      const url = buildUrl(spaceSlug, pkg.id as string);
-      if (url) {
-        logInfoConsole(`  - ${pkg.name}: ${url}`);
-      } else {
-        logInfoConsole(`  - ${pkg.name}`);
-      }
-    }
-  } catch {
-    // Best effort — don't fail if package info can't be fetched
-  }
 }
 
 export async function playbookSubmitHandler(
@@ -697,133 +133,32 @@ export async function playbookSubmitHandler(
   }
 
   // Per-target lock file resolution cache
-  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-
-  type TargetContext = {
-    lockFile: PackmindLockFile | null;
-    deployedFiles: FileModification[];
-    projectDir: string | null;
-  };
-
-  const targetContextCache = new Map<string, TargetContext>();
-
-  async function getTargetContext(
-    entry: PlaybookChangeEntry,
-  ): Promise<TargetContext> {
-    const key = entry.configDir ?? '__cwd__';
-    if (targetContextCache.has(key)) return targetContextCache.get(key)!;
-
-    let projectDir: string | null;
-    if (entry.configDir !== undefined && gitRoot) {
-      projectDir = path.join(gitRoot, entry.configDir);
-    } else {
-      projectDir = await findNearestConfigDir(cwd, packmindCliHexa);
-    }
-
-    const lockFile = projectDir
-      ? await lockFileRepository.read(projectDir)
-      : null;
-    const deployedFiles =
-      lockFile && Object.keys(lockFile.artifacts).length > 0
-        ? await fetchDeployedFiles(
-            packmindCliHexa.getPackmindGateway(),
-            lockFile,
-          )
-        : [];
-
-    const ctx = { lockFile, deployedFiles, projectDir };
-    targetContextCache.set(key, ctx);
-    return ctx;
-  }
+  const resolver = await createTargetContextResolver({
+    lockFileRepository,
+    cwd,
+    packmindCliHexa,
+  });
 
   // Build proposals
-  const allProposals: ProposalItem[] = [];
+  const { proposals: allProposals, conflicts } = await buildProposals(
+    changes,
+    resolver.getTargetContext,
+  );
 
-  for (const entry of changes) {
-    const ctx = await getTargetContext(entry);
-
-    // Fall back to the lock file's targetId for entries staged before the fix
-    // where resolveDeployedContext couldn't resolve it (e.g. no git provider configured).
-    if (!entry.targetId && ctx.lockFile?.targetId) {
-      entry.targetId = ctx.lockFile.targetId;
+  // Pre-flight: reject when the same artifact is updated from multiple agents
+  if (conflicts.length > 0) {
+    for (const conflict of conflicts) {
+      const agents = conflict.entries.map((e) => e.codingAgent).join(', ');
+      const paths = conflict.entries
+        .map((e) => `  - ${e.filePath} (${e.codingAgent})`)
+        .join('\n');
+      logErrorConsole(
+        `${capitalize(conflict.artifactType)} "${conflict.artifactName}" is modified from multiple agents (${agents}):\n${paths}\n` +
+          'Only one agent version can be submitted at a time. Use "playbook unstage" to remove one.',
+      );
     }
-
-    if (entry.changeType === 'created') {
-      switch (entry.artifactType) {
-        case 'standard':
-          allProposals.push(...buildCreatedStandardProposals(entry));
-          break;
-        case 'command':
-          allProposals.push(...buildCreatedCommandProposals(entry));
-          break;
-        case 'skill':
-          allProposals.push(...buildCreatedSkillProposals(entry));
-          break;
-      }
-    } else if (entry.changeType === 'removed') {
-      const artifactId = resolveArtifactIdFromLockFile(
-        entry.filePath,
-        ctx.lockFile,
-      );
-      if (!artifactId) {
-        logWarningConsole(
-          `Skipping "${entry.artifactName}" — artifact not found in lock file.`,
-        );
-        continue;
-      }
-      allProposals.push(
-        ...buildRemovedProposals(entry, artifactId, ctx.lockFile),
-      );
-    } else {
-      const artifactId = resolveArtifactIdFromLockFile(
-        entry.filePath,
-        ctx.lockFile,
-      );
-
-      if (!artifactId) {
-        logWarningConsole(
-          `Skipping "${entry.artifactName}" — artifact not found in lock file. Try running a deploy first.`,
-        );
-        continue;
-      }
-
-      const deployedContent = findDeployedContentForPath(
-        entry.filePath,
-        ctx.deployedFiles,
-      );
-
-      if (
-        !deployedContent &&
-        (entry.artifactType === 'standard' || entry.artifactType === 'command')
-      ) {
-        logWarningConsole(
-          `Skipping "${entry.artifactName}" — deployed content unavailable. Run \`packmind pull\` to sync before submitting updates.`,
-        );
-        continue;
-      }
-
-      switch (entry.artifactType) {
-        case 'standard':
-          allProposals.push(
-            ...buildUpdatedStandardProposals(
-              entry,
-              artifactId,
-              deployedContent,
-            ),
-          );
-          break;
-        case 'command':
-          allProposals.push(
-            ...buildUpdatedCommandProposals(entry, artifactId, deployedContent),
-          );
-          break;
-        case 'skill':
-          allProposals.push(
-            ...buildUpdatedSkillProposals(entry, artifactId, ctx.deployedFiles),
-          );
-          break;
-      }
-    }
+    exit(1);
+    return;
   }
 
   if (allProposals.length === 0) {
@@ -898,9 +233,16 @@ export async function playbookSubmitHandler(
         directUpdate: true,
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      logErrorConsole(`Failed to apply changes: ${errorMessage}`);
+      const err = error as Error & { statusCode?: number };
+      if (err.statusCode === 422) {
+        logErrorConsole('Failed to apply changes: a conflict was detected.');
+        logInfoConsole(
+          'This usually means the artifact was modified since your last pull.\n' +
+            'Run `packmind pull` to sync your local state, then retry.',
+        );
+      } else {
+        logErrorConsole(`Failed to apply changes: ${err.message}`);
+      }
       exit(1);
       return;
     }
@@ -921,25 +263,6 @@ export async function playbookSubmitHandler(
     }
 
     await logRemovedPackagesNotification(packmindCliHexa, removalPackageIds);
-
-    const formatCount = (
-      items: readonly unknown[],
-      noun: string,
-    ): string | null =>
-      items.length > 0
-        ? `${items.length} ${noun}${items.length !== 1 ? 's' : ''}`
-        : null;
-
-    const collectParts = (counts: {
-      standards: readonly unknown[];
-      commands: readonly unknown[];
-      skills: readonly unknown[];
-    }): string[] =>
-      [
-        formatCount(counts.standards, 'standard'),
-        formatCount(counts.commands, 'command'),
-        formatCount(counts.skills, 'skill'),
-      ].filter((p): p is string => p !== null);
 
     const createdParts = collectParts(response.created);
     const updatedParts = collectParts(response.updated);
@@ -972,6 +295,7 @@ export async function playbookSubmitHandler(
       createdSpaceIds,
     );
     logPackageAddGuidance(response.created, packageSlugs);
+
     exit(0);
     return;
   }
@@ -1042,7 +366,7 @@ export async function playbookSubmitHandler(
           (c) => c.changeType === 'removed',
         );
         for (const entry of removedEntries) {
-          const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+          const entryCtx = resolver.getCachedContext(entry.configDir);
           if (!entryCtx?.projectDir) continue;
           try {
             const fullPath = path.join(entryCtx.projectDir, entry.filePath);
@@ -1073,7 +397,7 @@ export async function playbookSubmitHandler(
         (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
       );
       for (const entry of removedEntries) {
-        const entryCtx = targetContextCache.get(entry.configDir ?? '__cwd__');
+        const entryCtx = resolver.getCachedContext(entry.configDir);
         if (!entryCtx?.projectDir) continue;
         try {
           const fullPath = path.join(entryCtx.projectDir, entry.filePath);

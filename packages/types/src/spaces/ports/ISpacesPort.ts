@@ -1,6 +1,6 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
-import { Space } from '../Space';
+import { Space, SpaceType } from '../Space';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
 import {
@@ -147,4 +147,38 @@ export interface ISpacesPort {
   updateMemberRole(
     command: UpdateMemberRoleCommand,
   ): Promise<UpdateMemberRoleResponse>;
+
+  /**
+   * Remove all space memberships for a user within an organization.
+   * Used when a user is removed from the organization.
+   */
+  removeUserFromOrganizationSpaces(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<void>;
+
+  /**
+   * Find a user's membership in a specific space.
+   * Returns null if the user is not a member of the space.
+   */
+  findMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<UserSpaceMembership | null>;
+
+  /**
+   * Remove a user's membership from a specific space.
+   * Low-level operation without admin checks.
+   */
+  removeSpaceMembership(userId: UserId, spaceId: SpaceId): Promise<boolean>;
+
+  /**
+   * Update a space's mutable fields (name, type).
+   * Slug is regenerated automatically when name changes.
+   * Returns the updated space.
+   */
+  updateSpace(
+    spaceId: SpaceId,
+    fields: { name?: string; type?: SpaceType },
+  ): Promise<Space>;
 }

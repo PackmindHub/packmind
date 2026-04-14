@@ -187,12 +187,14 @@ export class StandardsAdapter
     );
 
     this._deleteStandard = new DeleteStandardUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
     );
 
     this._deleteStandardsBatch = new DeleteStandardsBatchUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
@@ -209,19 +211,20 @@ export class StandardsAdapter
 
     // Use cases that depend on accountsPort (required)
     this._getStandardById = new GetStandardByIdUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
-      this.spacesPort,
     );
 
     this._listStandardsBySpace = new ListStandardsBySpaceUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
-      this.spacesPort,
     );
 
     // Use cases that depend on delayed jobs (required)
     this._createStandard = new CreateStandardUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
@@ -231,17 +234,18 @@ export class StandardsAdapter
     );
 
     this._updateStandard = new UpdateStandardUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
       this.repositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
-      this.spacesPort,
       this.eventEmitterService,
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
@@ -264,6 +268,7 @@ export class StandardsAdapter
     );
 
     this._createStandardSamples = new CreateStandardSamplesUsecase(
+      this.spacesPort,
       this.accountsPort,
       this,
       this.eventEmitterService,
@@ -271,13 +276,14 @@ export class StandardsAdapter
 
     // Use case that depends on accountsPort, deploymentsPort, and spacesPort
     this._createStandardWithPackages = new CreateStandardWithPackagesUsecase(
+      this.spacesPort,
       this.accountsPort,
       this._createStandardWithExamples,
       this.deploymentsPort,
-      this.spacesPort,
     );
 
     this._createRuleExample = new CreateRuleExampleUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.repositories.getRuleExampleRepository(),
       this.repositories.getRuleRepository(),
@@ -287,6 +293,7 @@ export class StandardsAdapter
     );
 
     this._updateRuleExample = new UpdateRuleExampleUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.repositories,
       this.eventEmitterService,
@@ -294,6 +301,7 @@ export class StandardsAdapter
     );
 
     this._deleteRuleExample = new DeleteRuleExampleUsecase(
+      this.spacesPort,
       this.accountsPort,
       this.repositories,
       this.eventEmitterService,

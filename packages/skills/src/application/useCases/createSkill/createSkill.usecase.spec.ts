@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateSkillCommand,
@@ -11,6 +14,7 @@ import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  SpaceId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
@@ -38,6 +42,7 @@ describe('CreateSkillUsecase', () => {
       createSpace: jest.fn(),
       listSpacesByOrganization: jest.fn(),
       getSpaceBySlug: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
     } as jest.Mocked<ISpacesPort>;
 
     skillService = {
@@ -56,8 +61,8 @@ describe('CreateSkillUsecase', () => {
     stubbedLogger = stubLogger();
 
     usecase = new CreateSkillUsecase(
-      accountsPort,
       spacesPort,
+      accountsPort,
       skillService,
       skillVersionService,
       eventEmitterService,
@@ -73,7 +78,7 @@ describe('CreateSkillUsecase', () => {
     describe('with unique slug in space', () => {
       let userId: string;
       let organizationId: string;
-      let spaceId: string;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
       let space: Space;
@@ -592,7 +597,7 @@ describe('CreateSkillUsecase', () => {
       let userId: string;
       let organizationId: string;
       let otherOrganizationId: string;
-      let spaceId: string;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
       let command: CreateSkillCommand;
@@ -645,6 +650,81 @@ describe('CreateSkillUsecase', () => {
         }
 
         expect(spacesPort.getSpaceById).not.toHaveBeenCalled();
+      });
+
+      it('does not call addSkill', async () => {
+        try {
+          await usecase.execute(command);
+        } catch {
+          // Expected error
+        }
+
+        expect(skillService.addSkill).not.toHaveBeenCalled();
+      });
+
+      it('does not call addSkillVersion', async () => {
+        try {
+          await usecase.execute(command);
+        } catch {
+          // Expected error
+        }
+
+        expect(skillVersionService.addSkillVersion).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when user is not a member of the space', () => {
+      let userId: string;
+      let organizationId: string;
+      let spaceId: string;
+      let user: User;
+      let organization: Organization;
+      let space: Space;
+      let command: CreateSkillCommand;
+
+      beforeEach(() => {
+        userId = createUserId(uuidv4());
+        organizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
+
+        user = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hashed_password',
+          memberships: [{ organizationId, role: 'member', userId }],
+          active: true,
+        };
+        organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
+
+        command = {
+          userId,
+          organizationId,
+          spaceId,
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
+        };
+
+        accountsPort.getUserById.mockResolvedValue(user);
+        accountsPort.getOrganizationById.mockResolvedValue(organization);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        spacesPort.findMembership.mockResolvedValue(null);
+      });
+
+      it('throws SpaceMembershipRequiredError', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
       });
 
       it('does not call addSkill', async () => {

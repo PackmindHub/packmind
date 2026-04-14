@@ -87,6 +87,7 @@ describe('Add rule to standard integration', () => {
           ruleContent: 'Some new rule',
           organizationId: organization.id,
           userId: user.id,
+          spaceId: space.id,
         }),
       ).rejects.toThrow(
         'Standard slug not found, please check current standards first',
@@ -95,7 +96,7 @@ describe('Add rule to standard integration', () => {
   });
 
   describe('when standard slug exists but belongs to different organization', () => {
-    test('An error is thrown', async () => {
+    test('An error is thrown because user is not a member of the space', async () => {
       // Create another organization and user
       const otherSignUpResult = await testApp.accountsHexa
         .getAdapter()
@@ -107,15 +108,17 @@ describe('Add rule to standard integration', () => {
       const otherUser = otherSignUpResult.user;
 
       // Try to add rule to standard from the first organization using the second organization's context
+      // Space membership check rejects before the slug check
       await expect(
         testApp.standardsHexa.getAdapter().addRuleToStandard({
           standardSlug: standard.slug,
           ruleContent: 'Unauthorized rule',
           organizationId: otherSignUpResult.organization.id,
           userId: otherUser.id,
+          spaceId: space.id,
         }),
       ).rejects.toThrow(
-        'Standard slug not found, please check current standards first',
+        `User ${otherUser.id} is not a member of space ${space.id}`,
       );
     });
   });
@@ -136,6 +139,7 @@ describe('Add rule to standard integration', () => {
           ruleContent: newRuleContent,
           organizationId: organization.id,
           userId: user.id,
+          spaceId: space.id,
         });
       newStandardVersion = result.standardVersion;
 
@@ -209,6 +213,7 @@ describe('Add rule to standard integration', () => {
         ruleContent: firstRuleContent,
         organizationId: organization.id,
         userId: user.id,
+        spaceId: space.id,
       });
 
       secondResult = await testApp.standardsHexa
@@ -218,6 +223,7 @@ describe('Add rule to standard integration', () => {
           ruleContent: secondRuleContent,
           organizationId: organization.id,
           userId: user.id,
+          spaceId: space.id,
         });
 
       finalRules = await testApp.standardsHexa
@@ -281,6 +287,7 @@ describe('Add rule to standard integration', () => {
           ruleContent: newRuleContent,
           organizationId: organization.id,
           userId: user.id,
+          spaceId: space.id,
         });
       newStandardVersion = result.standardVersion;
 

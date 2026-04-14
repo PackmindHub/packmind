@@ -14,7 +14,7 @@ Many teams struggle with documentation that nobody reads or maintains—wikis an
 
 A standard is an agreed-upon, documented set of rules or criteria that ensures consistent, compatible, and high-quality code across your team.
 
-Here is a basic example of standard:
+Here is a basic example of a standard:
 
 <AccordionGroup>
   <Accordion title="Example: Back-end unit tests">
@@ -22,7 +22,7 @@ Here is a basic example of standard:
 
     **Rules for this standard**:
 
-    - Use assertive names in test names (`it("returns ..."` instead of `it("should return")` ))
+    - Use assertive names in test names (`it("returns ..."` instead of `it("should return")`)
     - Structure tests with the AAA pattern
     - Single expect per test
 
@@ -31,12 +31,12 @@ Here is a basic example of standard:
 
 ## Create Standards with AI Agents
 
-You can create standards using the `/packmind-create-standard` command in your AI coding assistant.
+You can create standards using the `/packmind-update-playbook` skill in your AI coding assistant.
 
 Simply type:
 
 ```
-/packmind-create-standard
+/packmind-update-playbook create a Packmind standard about unit tests with Jest
 ```
 
 Or use a natural language prompt like:
@@ -52,13 +52,13 @@ For more details, see the [Create Your First Standard](/getting-started/gs-creat
 
 ## Create Standards Through UI
 
-Go in the **Standards** menu and create your first standard.
+Go to the **Standards** menu and create your first standard.
 The description area supports Markdown so you can give more context about it.
 
 Add your first rules, ideally with one clear detailed sentence.
 
 The _scope_ let you define files and folders patterns where the standard applies.
-For instance, you may want to use `**/*.spec.ts` if your standards is related to tests.
+For instance, you may want to use `**/*.spec.ts` if your standard is related to tests.
 
 You can update your standard later to add and remove rules. Each rule can be documented with code examples as well.
 
@@ -67,10 +67,19 @@ You can update your standard later to add and remove rules. Each rule can be doc
 Every time you update a standard, this creates a new version.
 This keeps track of the history of your changes, and it's useful to keep track of which versions are currently distributed to Git repositories.
 
+You can submit local changes to your standards using:
+
+```shell
+packmind-cli playbook add <path/to/standard.md>
+packmind-cli playbook submit
+```
+
 <Info>
-  **CLI update support** — The CLI currently allows creating standards but not
-  yet updating them. You can update standards through the web app. CLI support
-  for updating standards is coming in Q1 2026.
+  Use `--no-review` to trigger a [direct
+  update](/playbook-maintenance/updating-your-playbook#direct-updates). Omit
+  `--no-review` to use the [change
+  proposals](/playbook-maintenance/change-proposals) system and get validation
+  of your changes.
 </Info>
 
 ## Where Standards Appear After Distribution

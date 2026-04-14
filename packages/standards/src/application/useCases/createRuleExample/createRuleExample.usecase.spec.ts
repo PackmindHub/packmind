@@ -1,12 +1,17 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateRuleExampleCommand,
   createOrganizationId,
   createRuleId,
+  createSpaceId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   Organization,
   ProgrammingLanguage,
   RuleUpdatedEvent,
@@ -16,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ruleExampleFactory } from '../../../../test/ruleExampleFactory';
 import { ruleFactory } from '../../../../test/ruleFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
+import { RuleNotInSpaceError } from '../../../domain/errors/RuleNotInSpaceError';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
@@ -24,6 +30,7 @@ import { CreateRuleExampleUsecase } from './createRuleExample.usecase';
 describe('CreateRuleExampleUsecase', () => {
   let createRuleExampleUsecase: CreateRuleExampleUsecase;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let standardVersionRepository: jest.Mocked<IStandardVersionRepository>;
@@ -32,6 +39,7 @@ describe('CreateRuleExampleUsecase', () => {
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
+  const spaceId = createSpaceId(uuidv4());
 
   const user: User = {
     id: userId,
@@ -39,6 +47,7 @@ describe('CreateRuleExampleUsecase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
+    trial: false,
   };
   const organization: Organization = {
     id: organizationId,
@@ -51,6 +60,10 @@ describe('CreateRuleExampleUsecase', () => {
       getUserById: jest.fn(),
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
+
+    spacesPort = {
+      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     ruleExampleRepository = {
       add: jest.fn(),
@@ -66,6 +79,7 @@ describe('CreateRuleExampleUsecase', () => {
     ruleRepository = {
       add: jest.fn(),
       findById: jest.fn(),
+      findByIdInSpace: jest.fn(),
       findAll: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -96,6 +110,7 @@ describe('CreateRuleExampleUsecase', () => {
     accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
     createRuleExampleUsecase = new CreateRuleExampleUsecase(
+      spacesPort,
       accountsAdapter,
       ruleExampleRepository,
       ruleRepository,
@@ -121,6 +136,7 @@ describe('CreateRuleExampleUsecase', () => {
       const command: CreateRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'const variable = value;',
@@ -134,7 +150,7 @@ describe('CreateRuleExampleUsecase', () => {
         negative: 'var variable = value;',
       });
 
-      ruleRepository.findById.mockResolvedValue(rule);
+      ruleRepository.findByIdInSpace.mockResolvedValue(rule);
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
@@ -153,6 +169,7 @@ describe('CreateRuleExampleUsecase', () => {
       const command: CreateRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'const variable = value;',
@@ -166,7 +183,7 @@ describe('CreateRuleExampleUsecase', () => {
         negative: 'var variable = value;',
       });
 
-      ruleRepository.findById.mockResolvedValue(rule);
+      ruleRepository.findByIdInSpace.mockResolvedValue(rule);
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
@@ -177,22 +194,23 @@ describe('CreateRuleExampleUsecase', () => {
       );
     });
 
-    describe('when rule does not exist', () => {
-      it('throws an error', async () => {
+    describe('when rule is not found in space', () => {
+      it('throws RuleNotInSpaceError', async () => {
         const ruleId = createRuleId(uuidv4());
         const command: CreateRuleExampleCommand = {
           userId,
           organizationId,
+          spaceId,
           ruleId,
           lang: ProgrammingLanguage.JAVASCRIPT,
           positive: 'const variable = value;',
           negative: 'var variable = value;',
         };
 
-        ruleRepository.findById.mockResolvedValue(null);
+        ruleRepository.findByIdInSpace.mockResolvedValue(null);
 
         await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
-          `Rule with id ${ruleId} not found`,
+          RuleNotInSpaceError,
         );
       });
     });
@@ -203,6 +221,7 @@ describe('CreateRuleExampleUsecase', () => {
         const command: CreateRuleExampleCommand = {
           userId,
           organizationId,
+          spaceId,
           ruleId,
           lang: '' as ProgrammingLanguage,
           positive: 'const variable = value;',
@@ -225,6 +244,7 @@ describe('CreateRuleExampleUsecase', () => {
       const command: CreateRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: '',
@@ -238,7 +258,7 @@ describe('CreateRuleExampleUsecase', () => {
         negative: 'var variable = value;',
       });
 
-      ruleRepository.findById.mockResolvedValue(rule);
+      ruleRepository.findByIdInSpace.mockResolvedValue(rule);
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
@@ -257,6 +277,7 @@ describe('CreateRuleExampleUsecase', () => {
       const command: CreateRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'const variable = value;',
@@ -270,7 +291,7 @@ describe('CreateRuleExampleUsecase', () => {
         negative: '',
       });
 
-      ruleRepository.findById.mockResolvedValue(rule);
+      ruleRepository.findByIdInSpace.mockResolvedValue(rule);
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
@@ -289,18 +310,39 @@ describe('CreateRuleExampleUsecase', () => {
       const command: CreateRuleExampleCommand = {
         userId,
         organizationId,
+        spaceId,
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'const variable = value;',
         negative: 'var variable = value;',
       };
 
-      ruleRepository.findById.mockResolvedValue(rule);
+      ruleRepository.findByIdInSpace.mockResolvedValue(rule);
       ruleExampleRepository.add.mockRejectedValue(new Error('Database error'));
 
       await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
         'Database error',
       );
+    });
+
+    describe('when user is not a member of the space', () => {
+      it('throws SpaceMembershipRequiredError', async () => {
+        spacesPort.findMembership.mockResolvedValue(null);
+
+        const command: CreateRuleExampleCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          ruleId: createRuleId(uuidv4()),
+          lang: ProgrammingLanguage.JAVASCRIPT,
+          positive: 'const variable = value;',
+          negative: 'var variable = value;',
+        };
+
+        await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
+      });
     });
   });
 });

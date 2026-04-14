@@ -440,6 +440,275 @@ describe('PackmindLockFileService', () => {
     });
   });
 
+  describe('mergeWithExistingLockFile', () => {
+    const newLockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      packageSlugs: ['@team-a/pkg-a'],
+      agents: ['claude'],
+      installedAt: FIXED_DATE,
+      targetId: 'target-1',
+      artifacts: {
+        'standard:accessible-standard': {
+          name: 'Accessible Standard',
+          type: 'standard',
+          id: 'std-1',
+          version: 2,
+          spaceId: 'space-accessible',
+          packageIds: ['pkg-a'],
+          files: [
+            { path: '.claude/rules/accessible-standard.md', agent: 'claude' },
+          ],
+        },
+      },
+    };
+
+    describe('when existingLockFile is null', () => {
+      it('returns newLockFile unchanged', () => {
+        const result = service.mergeWithExistingLockFile(newLockFile, null, [
+          'pkg-a',
+        ]);
+
+        expect(result).toEqual(newLockFile);
+      });
+    });
+
+    describe('when all existing entries also exist in the new lock file', () => {
+      it('returns newLockFile without preserving old entries', () => {
+        const existingLockFile: PackmindLockFile = {
+          lockfileVersion: 1,
+          packageSlugs: ['@team-a/pkg-a'],
+          agents: ['claude'],
+          installedAt: '2024-01-01T00:00:00.000Z',
+          targetId: 'target-1',
+          artifacts: {
+            'standard:accessible-standard': {
+              name: 'Accessible Standard OLD',
+              type: 'standard',
+              id: 'std-1',
+              version: 1,
+              spaceId: 'space-accessible',
+              packageIds: ['pkg-a'],
+              files: [
+                {
+                  path: '.claude/rules/accessible-standard.md',
+                  agent: 'claude',
+                },
+              ],
+            },
+          },
+        };
+
+        const result = service.mergeWithExistingLockFile(
+          newLockFile,
+          existingLockFile,
+          ['pkg-a'],
+        );
+
+        expect(result.artifacts['standard:accessible-standard'].version).toBe(
+          2,
+        );
+      });
+    });
+
+    describe('when existing entries belong to inaccessible packages', () => {
+      const existingLockFile: PackmindLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
+        agents: ['claude'],
+        installedAt: '2024-01-01T00:00:00.000Z',
+        targetId: 'target-1',
+        artifacts: {
+          'standard:accessible-standard': {
+            name: 'Accessible Standard OLD',
+            type: 'standard',
+            id: 'std-1',
+            version: 1,
+            spaceId: 'space-accessible',
+            packageIds: ['pkg-a'],
+            files: [
+              {
+                path: '.claude/rules/accessible-standard.md',
+                agent: 'claude',
+              },
+            ],
+          },
+          'command:private-recipe': {
+            name: 'Private Recipe',
+            type: 'command',
+            id: 'recipe-private',
+            version: 5,
+            spaceId: 'space-private',
+            packageIds: ['pkg-private'],
+            files: [
+              {
+                path: '.claude/commands/private-recipe.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      };
+
+      let result: PackmindLockFile;
+
+      beforeEach(() => {
+        result = service.mergeWithExistingLockFile(
+          newLockFile,
+          existingLockFile,
+          ['pkg-a'],
+        );
+      });
+
+      it('preserves inaccessible artifact entries in the merged result', () => {
+        expect(result.artifacts['command:private-recipe']).toEqual(
+          existingLockFile.artifacts['command:private-recipe'],
+        );
+      });
+
+      it('keeps new entries taking precedence over existing ones', () => {
+        expect(result.artifacts['standard:accessible-standard']).toEqual(
+          newLockFile.artifacts['standard:accessible-standard'],
+        );
+      });
+
+      it('preserves package slugs from inaccessible packages, sorted', () => {
+        expect(result.packageSlugs).toEqual([
+          '@private-team/pkg-private',
+          '@team-a/pkg-a',
+        ]);
+      });
+    });
+
+    describe('when new entry has empty packageIds but existing has metadata', () => {
+      const newLockFileWithEmptyMetadata: PackmindLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['@team-a/pkg-a'],
+        agents: ['claude'],
+        installedAt: FIXED_DATE,
+        targetId: 'target-1',
+        artifacts: {
+          'command:moved-recipe': {
+            name: 'Moved Recipe',
+            type: 'command',
+            id: 'recipe-moved',
+            version: 1,
+            spaceId: '',
+            packageIds: [],
+            files: [
+              {
+                path: '.claude/commands/moved-recipe.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      };
+
+      const existingLockFile: PackmindLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
+        agents: ['claude'],
+        installedAt: '2024-01-01T00:00:00.000Z',
+        targetId: 'target-1',
+        artifacts: {
+          'command:moved-recipe': {
+            name: 'Moved Recipe',
+            type: 'command',
+            id: 'recipe-moved',
+            version: 1,
+            spaceId: 'space-private',
+            packageIds: ['pkg-private'],
+            files: [
+              {
+                path: '.claude/commands/moved-recipe.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      };
+
+      let result: PackmindLockFile;
+
+      beforeEach(() => {
+        result = service.mergeWithExistingLockFile(
+          newLockFileWithEmptyMetadata,
+          existingLockFile,
+          ['pkg-a'],
+        );
+      });
+
+      it('preserves existing spaceId', () => {
+        expect(result.artifacts['command:moved-recipe'].spaceId).toBe(
+          'space-private',
+        );
+      });
+
+      it('preserves existing packageIds', () => {
+        expect(result.artifacts['command:moved-recipe'].packageIds).toEqual([
+          'pkg-private',
+        ]);
+      });
+    });
+
+    describe('when artifact was removed from an accessible package', () => {
+      it('does not preserve the removed artifact', () => {
+        const existingLockFile: PackmindLockFile = {
+          lockfileVersion: 1,
+          packageSlugs: ['@team-a/pkg-a'],
+          agents: ['claude'],
+          installedAt: '2024-01-01T00:00:00.000Z',
+          targetId: 'target-1',
+          artifacts: {
+            'command:removed-recipe': {
+              name: 'Removed Recipe',
+              type: 'command',
+              id: 'recipe-removed',
+              version: 1,
+              spaceId: 'space-a',
+              packageIds: ['pkg-a'],
+              files: [
+                {
+                  path: '.claude/commands/removed-recipe.md',
+                  agent: 'claude',
+                },
+              ],
+            },
+          },
+        };
+
+        const result = service.mergeWithExistingLockFile(
+          newLockFile,
+          existingLockFile,
+          ['pkg-a'],
+        );
+
+        expect(result.artifacts['command:removed-recipe']).toBeUndefined();
+      });
+    });
+
+    describe('when existing lock file has duplicate package slugs with new', () => {
+      it('deduplicates package slugs', () => {
+        const existingLockFile: PackmindLockFile = {
+          lockfileVersion: 1,
+          packageSlugs: ['@team-a/pkg-a', '@team-b/pkg-b'],
+          agents: ['claude'],
+          installedAt: '2024-01-01T00:00:00.000Z',
+          targetId: 'target-1',
+          artifacts: {},
+        };
+
+        const result = service.mergeWithExistingLockFile(
+          newLockFile,
+          existingLockFile,
+          ['pkg-a'],
+        );
+
+        expect(result.packageSlugs).toEqual(['@team-a/pkg-a', '@team-b/pkg-b']);
+      });
+    });
+  });
+
   describe('createLockFileModification', () => {
     it('returns a FileModification with path packmind-lock.json', () => {
       const lockFile: PackmindLockFile = {

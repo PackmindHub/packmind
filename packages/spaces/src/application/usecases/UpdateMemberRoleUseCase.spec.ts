@@ -1,6 +1,11 @@
 import {
+  PackmindEventEmitterService,
+  SpaceAdminRequiredError,
+} from '@packmind/node-utils';
+import {
   UpdateMemberRoleCommand,
   IAccountsPort,
+  ISpacesPort,
   createOrganizationId,
   createSpaceId,
   createUserId,
@@ -10,7 +15,6 @@ import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
-import { SpaceAdminRequiredError } from '../../domain/errors/SpaceAdminRequiredError';
 import { CannotUpdateOwnRoleError } from '../../domain/errors/CannotUpdateOwnRoleError';
 import { MemberNotFoundError } from '../../domain/errors/MemberNotFoundError';
 import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
@@ -31,6 +35,9 @@ describe('UpdateMemberRoleUseCase', () => {
   let useCase: UpdateMemberRoleUseCase;
   let membershipService: jest.Mocked<UserSpaceMembershipService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let eventEmitterService: jest.Mocked<
+    Pick<PackmindEventEmitterService, 'emit'>
+  >;
 
   const buildCommand = (
     overrides?: Partial<UpdateMemberRoleCommand>,
@@ -54,9 +61,19 @@ describe('UpdateMemberRoleUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
+
+    const spacesPort = {
+      findMembership: membershipService.findMembership,
+    } as unknown as ISpacesPort;
+
     useCase = new UpdateMemberRoleUseCase(
+      spacesPort,
       membershipService,
       accountsPort,
+      eventEmitterService as unknown as PackmindEventEmitterService,
       stubLogger(),
     );
   });
@@ -89,6 +106,20 @@ describe('UpdateMemberRoleUseCase', () => {
           targetUserId,
           spaceId,
           UserSpaceRole.MEMBER,
+        );
+      });
+
+      it('emits SpaceMembersRoleUpdatedEvent', async () => {
+        await useCase.execute(buildCommand({ role: UserSpaceRole.MEMBER }));
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [targetUserId],
+              newRole: UserSpaceRole.MEMBER,
+            }),
+          }),
         );
       });
     });
@@ -178,6 +209,14 @@ describe('UpdateMemberRoleUseCase', () => {
           .catch(() => undefined);
 
         expect(membershipService.updateMembershipRole).not.toHaveBeenCalled();
+      });
+
+      it('does not emit SpaceMembersRoleUpdatedEvent', async () => {
+        await useCase
+          .execute(buildCommand({ targetUserId: userId }))
+          .catch(() => undefined);
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

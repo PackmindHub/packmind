@@ -56,7 +56,7 @@ export class CaptureRecipeWithPackagesUsecase
     });
 
     // Step 1: Validate space exists and belongs to organization
-    const space = await this.spacesPort.getSpaceById(createSpaceId(spaceId));
+    const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {
       throw new Error(`Space with id ${spaceId} not found`);
     }

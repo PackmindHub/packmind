@@ -23,6 +23,7 @@ import {
   UpdateMemberRoleCommand,
   UpdateMemberRoleResponse,
   SpaceId,
+  SpaceType,
   UserId,
   UserSpaceMembership,
   UserSpaceRole,
@@ -123,6 +124,33 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return membershipService.addSpaceMembership(membership);
   }
 
+  async removeUserFromOrganizationSpaces(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.removeUserFromOrganizationSpaces(
+      userId,
+      organizationId,
+    );
+  }
+
+  async findMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<UserSpaceMembership | null> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.findMembership(userId, spaceId);
+  }
+
+  async removeSpaceMembership(
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<boolean> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.removeSpaceMembership(userId, spaceId);
+  }
+
   async findMembershipsByUserAndOrganization(
     userId: UserId,
     organizationId: OrganizationId,
@@ -140,6 +168,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new ListSpaceMembersUseCase(
       membershipService,
+      this,
       this.accountsPort,
     );
     return useCase.execute(command);
@@ -150,8 +179,10 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<AddMembersToSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new AddMembersToSpaceUseCase(
+      this,
       membershipService,
       this.accountsPort,
+      this.eventEmitterService,
     );
     return useCase.execute(command);
   }
@@ -161,10 +192,20 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<RemoveMemberFromSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new RemoveMemberFromSpaceUseCase(
+      this,
       membershipService,
       this.accountsPort,
+      this.eventEmitterService,
     );
     return useCase.execute(command);
+  }
+
+  async updateSpace(
+    spaceId: SpaceId,
+    fields: { name?: string; type?: SpaceType },
+  ): Promise<Space> {
+    const spaceService = this.hexa.getSpaceService();
+    return spaceService.updateSpace(spaceId, fields);
   }
 
   async updateMemberRole(
@@ -172,8 +213,10 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<UpdateMemberRoleResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     const useCase = new UpdateMemberRoleUseCase(
+      this,
       membershipService,
       this.accountsPort,
+      this.eventEmitterService,
     );
     return useCase.execute(command);
   }

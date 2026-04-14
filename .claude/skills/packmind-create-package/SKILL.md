@@ -101,3 +101,4 @@ After creating a package, content can be added via:
 
 1. **MCP tools**: Use `packageSlugs` parameter when creating standards/commands
 2. **Web interface**: Navigate to the package URL and add items manually
+

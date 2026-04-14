@@ -21,6 +21,14 @@ import {
   IInstallPackagesResult,
 } from './domain/useCases/IInstallPackagesUseCase';
 import {
+  IInstallCommand,
+  IInstallResult,
+} from './domain/useCases/IInstallUseCase';
+import {
+  IUninstallCommand,
+  IUninstallResult,
+} from './domain/useCases/IUninstallUseCase';
+import {
   IInstallDefaultSkillsCommand,
   IInstallDefaultSkillsResult,
 } from './domain/useCases/IInstallDefaultSkillsUseCase';
@@ -65,6 +73,7 @@ import {
   AllConfigsResult,
   Gateway,
   HierarchicalConfigResult,
+  INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
@@ -141,6 +150,16 @@ export class PackmindCliHexa {
     command: IInstallPackagesCommand,
   ): Promise<IInstallPackagesResult> {
     return this.hexa.useCases.installPackages.execute(command);
+  }
+
+  public async install(command: IInstallCommand): Promise<IInstallResult> {
+    return this.hexa.useCases.install.execute(command);
+  }
+
+  public async uninstall(
+    command: IUninstallCommand,
+  ): Promise<IUninstallResult> {
+    return this.hexa.useCases.uninstall.execute(command);
   }
 
   public async diffArtefacts(
@@ -351,6 +370,13 @@ export class PackmindCliHexa {
       command,
     );
   };
+
+  public notifyArtefactsDistribution: Gateway<INotifyArtefactsDistribution> =
+    async (command) => {
+      return this.hexa.repositories.packmindGateway.deployment.notifyArtefactsDistribution(
+        command,
+      );
+    };
 
   public async uploadSkill(
     command: UploadSkillCommand,

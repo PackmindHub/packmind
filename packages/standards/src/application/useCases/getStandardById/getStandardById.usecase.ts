@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
+} from '@packmind/node-utils';
 import {
   GetStandardByIdCommand,
   GetStandardByIdResponse,
@@ -12,21 +15,24 @@ import { StandardService } from '../../services/StandardService';
 const origin = 'GetStandardByIdUsecase';
 
 export class GetStandardByIdUsecase
-  extends AbstractMemberUseCase<GetStandardByIdCommand, GetStandardByIdResponse>
+  extends AbstractSpaceMemberUseCase<
+    GetStandardByIdCommand,
+    GetStandardByIdResponse
+  >
   implements IGetStandardByIdUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsAdapter: IAccountsPort,
     private readonly standardService: StandardService,
-    private readonly spacesPort: ISpacesPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, logger);
+    super(spacesPort, accountsAdapter, logger);
     this.logger.info('GetStandardByIdUsecase initialized');
   }
 
-  async executeForMembers(
-    command: GetStandardByIdCommand & MemberContext,
+  async executeForSpaceMembers(
+    command: GetStandardByIdCommand & SpaceMemberContext,
   ): Promise<GetStandardByIdResponse> {
     this.logger.info('Getting standard by ID', {
       id: command.standardId,
@@ -35,11 +41,6 @@ export class GetStandardByIdUsecase
 
     try {
       // Verify the space belongs to the organization
-      if (!this.spacesPort) {
-        this.logger.error('SpacesPort not available for space validation');
-        throw new Error('SpacesPort not available');
-      }
-
       const space = await this.spacesPort.getSpaceById(command.spaceId);
       if (!space) {
         this.logger.warn('Space not found', { spaceId: command.spaceId });

@@ -5,6 +5,9 @@ import {
   CreatePackageCommand,
   CreatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DashboardKpiResponse,
+  DashboardNonLiveResponse,
+  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -20,6 +23,9 @@ import {
   FindActiveStandardVersionsByTargetResponse,
   GetContentByVersionsCommand,
   GetContentByVersionsResponse,
+  GetDashboardKpiCommand,
+  GetDashboardNonLiveCommand,
+  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -36,6 +42,8 @@ import {
   GetTargetByIdResponse,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
+  InstallPackagesCommand,
+  InstallPackagesResponse,
   IPullContentResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -45,6 +53,8 @@ import {
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
   ListPackagesResponse,
+  NotifyArtefactsDistributionCommand,
+  NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PublishArtifactsCommand,
@@ -330,6 +340,21 @@ export interface IDeploymentPort {
   pullAllContent(command: PullContentCommand): Promise<IPullContentResponse>;
 
   /**
+   * Installs packages for an organization, respecting space-level access control.
+   *
+   * For each package slug, checks if the user has access to the corresponding space.
+   * Packages in inaccessible spaces are listed in `missingAccess` and their artifacts
+   * are preserved from the provided `packmindLockFile`. Only accessible packages are
+   * deployed and their artifacts are updated.
+   *
+   * @param command - Command containing packagesSlugs, packmindLockFile, and optional agents
+   * @returns Promise resolving to file updates, missing access list, resolved agents, and skill folders
+   */
+  installPackages(
+    command: InstallPackagesCommand,
+  ): Promise<InstallPackagesResponse>;
+
+  /**
    * Lists all packages in a specific space
    *
    * @param command - Command containing spaceId and organizationId
@@ -439,6 +464,21 @@ export interface IDeploymentPort {
   ): Promise<NotifyDistributionResponse>;
 
   /**
+   * Notifies about a distribution using the packmind-lock file as the source of truth
+   *
+   * Unlike notifyDistribution (which resolves latest versions from package slugs),
+   * this use case uses the exact artifact versions recorded in the lock file.
+   * This is important when some packages may be invisible to the current user due
+   * to space membership restrictions — the lock file preserves the full installed state.
+   *
+   * @param command - Command containing git info and the packmind-lock file
+   * @returns Promise of the created distribution ID
+   */
+  notifyArtefactsDistribution(
+    command: NotifyArtefactsDistributionCommand,
+  ): Promise<NotifyArtefactsDistributionResponse>;
+
+  /**
    * Removes a package from specified targets
    *
    * For each target:
@@ -525,4 +565,16 @@ export interface IDeploymentPort {
   getContentByVersions(
     command: GetContentByVersionsCommand,
   ): Promise<GetContentByVersionsResponse>;
+
+  getDashboardKpi(
+    command: GetDashboardKpiCommand,
+  ): Promise<DashboardKpiResponse>;
+
+  getDashboardOutdated(
+    command: GetDashboardOutdatedCommand,
+  ): Promise<DashboardOutdatedResponse>;
+
+  getDashboardNonLive(
+    command: GetDashboardNonLiveCommand,
+  ): Promise<DashboardNonLiveResponse>;
 }

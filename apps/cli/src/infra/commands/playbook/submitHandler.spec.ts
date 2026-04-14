@@ -3094,6 +3094,106 @@ describe('playbookSubmitHandler', () => {
         );
       });
     });
+
+    describe('when entries include removals', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry(),
+          makeEntry({
+            changeType: 'removed',
+            artifactName: 'Old Standard',
+            filePath: '.packmind/standards/old-standard.md',
+          }),
+        ]);
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/old-standard': {
+              name: 'Old Standard',
+              type: 'standard',
+              id: 'std-old',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/old-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+      });
+
+      it('includes removal proposals in batchApply', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        const batchApplyCall =
+          mockGateway.changeProposals.batchApply.mock.calls[0][0];
+        const proposalTypes = batchApplyCall.proposals.map(
+          (p: { type: ChangeProposalType }) => p.type,
+        );
+
+        expect(proposalTypes).toContain(ChangeProposalType.removeStandard);
+      });
+
+      it('clears removal entries from playbook', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          '.packmind/standards/old-standard.md',
+          'space-123',
+        );
+      });
+    });
+
+    describe('when all entries are removals', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'removed',
+            artifactName: 'Old Standard',
+            filePath: '.packmind/standards/old-standard.md',
+          }),
+        ]);
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/old-standard': {
+              name: 'Old Standard',
+              type: 'standard',
+              id: 'std-old',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/old-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+      });
+
+      it('calls batchApply with the removal proposal', async () => {
+        await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+        expect(mockGateway.changeProposals.batchApply).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('when batchCreate throws CommunityEditionError', () => {
@@ -3118,6 +3218,133 @@ describe('playbookSubmitHandler', () => {
       await playbookSubmitHandler(
         buildDeps({ message: 'test', noReview: false }),
       );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when the same artifact is updated from multiple agents', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: ['claude-code', 'copilot'],
+        installedAt: '2026-03-17T00:00:00.000Z',
+        cliVersion: '1.0.0',
+        targetId: 'target-456',
+        artifacts: {
+          'commands/my-command': {
+            name: 'My Command',
+            type: 'command',
+            id: 'cmd-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude-code' },
+              {
+                path: '.github/copilot/commands/my-command.md',
+                agent: 'copilot',
+              },
+            ],
+          },
+        },
+      });
+      mockGateway.deployment.getContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/commands/my-command.md',
+              content: '---\nname: My Command\n---\nOriginal content',
+            },
+            {
+              path: '.github/copilot/commands/my-command.md',
+              content: '---\nname: My Command\n---\nOriginal content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        targetId: 'target-456',
+        resolvedAgents: [],
+      });
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from claude',
+          filePath: '.claude/commands/my-command.md',
+          codingAgent: 'claude-code',
+        }),
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'command',
+          artifactName: 'My Command',
+          content: '---\nname: My Command\n---\nUpdated from copilot',
+          filePath: '.github/copilot/commands/my-command.md',
+          codingAgent: 'copilot',
+        }),
+      ]);
+    });
+
+    it('logs an error mentioning claude-code agent', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('claude-code'),
+      );
+    });
+
+    it('logs an error mentioning copilot agent', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('copilot'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call batchApply', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(mockGateway.changeProposals.batchApply).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when batchApply returns a 422 error', () => {
+    beforeEach(() => {
+      mockPlaybookLocalRepository.getChanges.mockReturnValue([makeEntry()]);
+      const error: Error & { statusCode?: number } = new Error(
+        'Unprocessable Entity',
+      );
+      error.statusCode = 422;
+      mockGateway.changeProposals.batchApply.mockRejectedValue(error);
+    });
+
+    it('logs a conflict-oriented error message', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('conflict was detected'),
+      );
+    });
+
+    it('suggests running packmind pull', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('packmind pull'),
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await playbookSubmitHandler(buildDeps({ noReview: true }));
 
       expect(mockExit).toHaveBeenCalledWith(1);
     });

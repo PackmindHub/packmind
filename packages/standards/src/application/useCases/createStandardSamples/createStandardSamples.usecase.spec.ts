@@ -1,10 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardSamplesCommand,
   CreateStandardSamplesResponse,
   IAccountsPort,
+  ISpacesPort,
   IStandardsPort,
   Organization,
   OrganizationId,
@@ -25,6 +29,7 @@ jest.mock('../../../../samples');
 
 describe('CreateStandardSamplesUsecase', () => {
   let usecase: CreateStandardSamplesUsecase;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -59,6 +64,12 @@ describe('CreateStandardSamplesUsecase', () => {
       slug: 'test-org',
     };
 
+    spacesPort = {
+      findMembership: jest
+        .fn()
+        .mockResolvedValue({ userId: testUserId, spaceId: testSpaceId }),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     accountsPort = {
       getUserById: jest.fn().mockResolvedValue(user),
       getOrganizationById: jest.fn().mockResolvedValue(organization),
@@ -75,6 +86,7 @@ describe('CreateStandardSamplesUsecase', () => {
     stubbedLogger = stubLogger();
 
     usecase = new CreateStandardSamplesUsecase(
+      spacesPort,
       accountsPort,
       standardsPort,
       eventEmitterService,
@@ -84,6 +96,25 @@ describe('CreateStandardSamplesUsecase', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('when the user is not a member of the space', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(null);
+    });
+
+    it('throws a SpaceMembershipRequiredError', async () => {
+      const command: CreateStandardSamplesCommand = {
+        userId: testUserId.toString(),
+        organizationId: testOrganizationId,
+        spaceId: testSpaceId,
+        samples: [{ type: 'language', id: 'java' }],
+      };
+
+      await expect(usecase.execute(command)).rejects.toThrow(
+        SpaceMembershipRequiredError,
+      );
+    });
   });
 
   describe('executeForMembers', () => {

@@ -128,7 +128,7 @@ describeForVersion('> 0.24.0', 'config agents commands', () => {
         });
 
         it('mentions organization settings in output', () => {
-          expect(rmResult.stdout).toContain('organization settings');
+          expect(rmResult.stderr).toContain('organization settings');
         });
       });
 

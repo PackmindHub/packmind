@@ -11,7 +11,10 @@ import { standardVersionFactory } from '../../../../test/standardVersionFactory'
 import { ruleFactory } from '../../../../test/ruleFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   AddRuleToStandardCommand,
@@ -20,6 +23,7 @@ import {
   createSpaceId,
   createUserId,
   IAccountsPort,
+  ISpacesPort,
   Organization,
   OrganizationId,
   ProgrammingLanguage,
@@ -34,6 +38,7 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 
 describe('AddRuleToStandardUsecase', () => {
   let addRuleToStandardUsecase: AddRuleToStandardUsecase;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
@@ -45,10 +50,12 @@ describe('AddRuleToStandardUsecase', () => {
 
   let organizationId: OrganizationId;
   let userId: UserId;
+  let spaceId: SpaceId;
 
   beforeEach(() => {
     organizationId = createOrganizationId(uuidv4());
     userId = createUserId(uuidv4());
+    spaceId = createSpaceId(uuidv4());
 
     const user: User = {
       id: userId,
@@ -56,6 +63,7 @@ describe('AddRuleToStandardUsecase', () => {
       passwordHash: 'hashed_password',
       memberships: [{ organizationId, role: 'member', userId }],
       active: true,
+      trial: false,
     };
 
     const organization: Organization = {
@@ -63,6 +71,10 @@ describe('AddRuleToStandardUsecase', () => {
       name: 'Test Org',
       slug: 'test-org',
     };
+
+    spacesPort = {
+      findMembership: jest.fn().mockResolvedValue({ userId, spaceId }),
+    } as unknown as jest.Mocked<ISpacesPort>;
 
     // Mock AccountsPort
     accountsPort = {
@@ -123,6 +135,7 @@ describe('AddRuleToStandardUsecase', () => {
     generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
     addRuleToStandardUsecase = new AddRuleToStandardUsecase(
+      spacesPort,
       accountsPort,
       standardService,
       standardVersionService,
@@ -156,6 +169,7 @@ describe('AddRuleToStandardUsecase', () => {
             'Use descriptive test names that explain expected behavior',
           userId,
           organizationId,
+          spaceId,
         };
 
         existingStandard = standardFactory({
@@ -166,6 +180,7 @@ describe('AddRuleToStandardUsecase', () => {
           version: 2,
           userId,
           scope: 'frontend',
+          spaceId,
         });
 
         latestVersion = standardVersionFactory({
@@ -320,11 +335,13 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Test rule content',
           userId,
           organizationId,
+          spaceId,
         };
 
         const existingStandard = standardFactory({
           // Same organization
           slug: 'test-standard',
+          spaceId,
         });
 
         const latestVersion = standardVersionFactory({
@@ -361,6 +378,7 @@ describe('AddRuleToStandardUsecase', () => {
             ruleContent: 'Test rule content',
             userId,
             organizationId,
+            spaceId,
           };
 
           try {
@@ -396,6 +414,7 @@ describe('AddRuleToStandardUsecase', () => {
             ruleContent: 'Test rule content',
             userId,
             organizationId,
+            spaceId,
           };
 
           try {
@@ -425,10 +444,12 @@ describe('AddRuleToStandardUsecase', () => {
             ruleContent: 'Test rule content',
             userId,
             organizationId,
+            spaceId,
           };
 
           const existingStandard = standardFactory({
             slug: 'test-standard',
+            spaceId,
           });
 
           standardService.findStandardBySlug.mockResolvedValue(
@@ -452,11 +473,13 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Test rule content',
           userId,
           organizationId,
+          spaceId,
         };
 
         const existingStandard = standardFactory({
           slug: 'test-standard',
           version: 1,
+          spaceId,
         });
 
         const latestVersion = standardVersionFactory({
@@ -491,11 +514,13 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'New rule content',
           userId,
           organizationId,
+          spaceId,
         };
 
         existingStandard = standardFactory({
           slug: 'test-standard',
           version: 5, // Start from version 5
+          spaceId,
         });
 
         const latestVersion = standardVersionFactory({
@@ -549,10 +574,12 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'New coding rule',
           userId,
           organizationId,
+          spaceId,
         };
 
         const existingStandard = standardFactory({
           slug: 'test-standard',
+          spaceId,
         });
 
         const latestVersion = standardVersionFactory({
@@ -596,10 +623,12 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'First rule for this standard',
           userId,
           organizationId,
+          spaceId,
         };
 
         const existingStandard = standardFactory({
           slug: 'test-standard',
+          spaceId,
         });
 
         const latestVersion = standardVersionFactory({
@@ -644,6 +673,7 @@ describe('AddRuleToStandardUsecase', () => {
           name: 'Frontend Testing Standard',
           slug: 'frontend-testing',
           version: 1,
+          spaceId,
           userId,
         });
 
@@ -679,6 +709,7 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Use descriptive test names',
           userId,
           organizationId,
+          spaceId,
           examples: [
             {
               positive: 'it("calculates total correctly", () => {...})',
@@ -715,6 +746,7 @@ describe('AddRuleToStandardUsecase', () => {
             ruleContent: 'Use descriptive test names',
             userId,
             organizationId,
+            spaceId,
             examples: [
               {
                 positive: 'it("calculates total correctly", () => {...})',
@@ -750,6 +782,7 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Use descriptive test names',
           userId,
           organizationId,
+          spaceId,
           examples: [
             {
               positive: 'valid example',
@@ -779,6 +812,7 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Use descriptive test names',
           userId,
           organizationId,
+          spaceId,
           examples: [],
         };
 
@@ -802,6 +836,7 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Use descriptive test names',
           userId,
           organizationId,
+          spaceId,
           // examples not provided
         };
 
@@ -824,10 +859,8 @@ describe('AddRuleToStandardUsecase', () => {
       let existingStandard: Standard;
       let latestVersion: StandardVersion;
       let newVersion: StandardVersion;
-      let spaceId: SpaceId;
 
       beforeEach(() => {
-        spaceId = createSpaceId(uuidv4());
         existingStandard = standardFactory({
           id: createStandardId(uuidv4()),
           slug: 'test-standard',
@@ -865,6 +898,7 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Test rule content',
           userId,
           organizationId,
+          spaceId,
         };
 
         await addRuleToStandardUsecase.execute(inputData);
@@ -889,6 +923,7 @@ describe('AddRuleToStandardUsecase', () => {
           ruleContent: 'Test rule content',
           userId,
           organizationId,
+          spaceId,
         };
 
         await addRuleToStandardUsecase.execute(inputData);
@@ -900,6 +935,48 @@ describe('AddRuleToStandardUsecase', () => {
             }),
           }),
         );
+      });
+    });
+
+    describe('when standard does not belong to the space', () => {
+      it('throws an error', async () => {
+        const otherSpaceId = createSpaceId(uuidv4());
+        const existingStandard = standardFactory({
+          slug: 'test-standard',
+          spaceId: otherSpaceId,
+        });
+
+        standardService.findStandardBySlug.mockResolvedValue(existingStandard);
+
+        const inputData: AddRuleToStandardCommand = {
+          standardSlug: 'test-standard',
+          ruleContent: 'Test rule content',
+          userId,
+          organizationId,
+          spaceId,
+        };
+
+        await expect(
+          addRuleToStandardUsecase.execute(inputData),
+        ).rejects.toThrow('Standard does not belong to the requested space');
+      });
+    });
+
+    describe('when user is not a member of the space', () => {
+      it('throws SpaceMembershipRequiredError', async () => {
+        spacesPort.findMembership.mockResolvedValue(null);
+
+        const inputData: AddRuleToStandardCommand = {
+          standardSlug: 'test-standard',
+          ruleContent: 'Test rule content',
+          userId,
+          organizationId,
+          spaceId,
+        };
+
+        await expect(
+          addRuleToStandardUsecase.execute(inputData),
+        ).rejects.toThrow(SpaceMembershipRequiredError);
       });
     });
   });

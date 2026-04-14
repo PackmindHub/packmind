@@ -2,22 +2,33 @@
 
 ## Added
 
+## Changed
+
+- the `install` command does not try to read data from a space the user can not access.
+
+## Fixed
+
+- the `--path` option of `playbook diff` raised an error if there was no `packmind.json` file in the directory.
+
+## Removed
+
+# [0.25.0] - 2026-04-07
+
+## Added
+
 - Support OpenCode as a new AI coding agent target for `install`, `diff`, and `config agents` commands
 - Support Codex as a new AI coding agent target for `config agents` with recursive `.agents/skills` detection
-- `agents list` command to display configured AI coding agents across all `packmind.json` files in a matrix view, with source tracking (local vs. organization settings)
-- `agents add` command to add coding agents to `packmind.json` files, with confirmation when overriding organization-level defaults
-- `agents rm` command to remove coding agents from `packmind.json` files, with automatic cleanup when all agents are removed
+- `config agents list` command to display configured AI coding agents across all `packmind.json` files in a matrix view, with source tracking (local vs. organization settings)
+- `config agents add` command to add coding agents to `packmind.json` files, with confirmation when overriding organization-level defaults
+- `config agents rm` command to remove coding agents from `packmind.json` files, with automatic cleanup when all agents are removed
 
 ## Changed
 
-- Move `agents list`, `agents add`, and `agents rm` subcommands under `config agents` (now `config agents list`, `config agents add`, `config agents rm`). The previous interactive `config agents` command is now available as `config agents setup`.
 - Do not render packmind skills which requires an older version of the cli #273
 
 ## Fixed
 
 - changes in the standards rendered for agents were incorreclty treated.
-
-## Removed
 
 # [0.24.0] - 2026-03-30
 
@@ -302,7 +313,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.24.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.25.0...HEAD
+[0.25.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.24.0...release-cli/0.25.0
 [0.24.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.23.0...release-cli/0.24.0
 [0.23.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.22.0...release-cli/0.23.0
 [0.22.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.21.1...release-cli/0.22.0

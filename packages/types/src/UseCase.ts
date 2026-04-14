@@ -2,6 +2,7 @@
 // That's pretty ugly, but we need to rely on the any type for infering properly the use case types.
 
 import { PackmindEventSource } from './events';
+import { SpaceId } from './spaces/SpaceId';
 
 export type PublicPackmindCommand = object;
 export type PublicEmptyPackmindCommand = Record<string, never>;
@@ -11,6 +12,14 @@ export type PackmindCommand = {
   organizationId: string;
   source?: PackmindEventSource;
   originSkill?: string;
+};
+
+export type SpaceMemberCommand = PackmindCommand & {
+  spaceId: SpaceId;
+};
+
+export type SpaceAdminCommand = PackmindCommand & {
+  spaceId: SpaceId;
 };
 
 export type SystemPackmindCommand = {

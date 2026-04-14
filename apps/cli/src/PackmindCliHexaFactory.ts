@@ -17,6 +17,10 @@ import { DiffViolationFilterService } from './application/services/DiffViolation
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 import { IInstallPackagesUseCase } from './domain/useCases/IInstallPackagesUseCase';
 import { InstallPackagesUseCase } from './application/useCases/InstallPackagesUseCase';
+import { IInstallUseCase } from './domain/useCases/IInstallUseCase';
+import { InstallUseCase } from './application/useCases/InstallUseCase';
+import { IUninstallUseCase } from './domain/useCases/IUninstallUseCase';
+import { UninstallUseCase } from './application/useCases/UninstallUseCase';
 import { IInstallDefaultSkillsUseCase } from './domain/useCases/IInstallDefaultSkillsUseCase';
 import { InstallDefaultSkillsUseCase } from './application/useCases/InstallDefaultSkillsUseCase';
 import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
@@ -64,6 +68,8 @@ export class PackmindCliHexaFactory {
     lintFilesAgainstRule: ILintFilesAgainstRule;
     lintFilesFromConfig: ILintFilesFromConfig;
     installPackages: IInstallPackagesUseCase;
+    install: IInstallUseCase;
+    uninstall: IUninstallUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
@@ -96,6 +102,13 @@ export class PackmindCliHexaFactory {
       spaceService: new SpaceService(this.repositories.packmindGateway.spaces),
     };
 
+    const installUseCase = new InstallUseCase(
+      this.repositories.packmindGateway,
+      this.repositories.lockFileRepository,
+      this.repositories.configFileRepository,
+      this.services.spaceService,
+    );
+
     this.useCases = {
       executeSingleFileAst: new ExecuteSingleFileAstUseCase(
         this.services.linterExecutionUseCase,
@@ -112,6 +125,12 @@ export class PackmindCliHexaFactory {
       ),
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,
+      ),
+      install: installUseCase,
+      uninstall: new UninstallUseCase(
+        this.repositories.configFileRepository,
+        this.services.spaceService,
+        installUseCase,
       ),
       installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
       listPackages: new ListPackagesUseCase(

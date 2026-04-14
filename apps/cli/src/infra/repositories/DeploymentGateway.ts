@@ -5,6 +5,8 @@ import {
   IGetContentByVersionsUseCase,
   IGetDeployedContentUseCase,
   IGetRenderModeConfigurationUseCase,
+  IInstallPackagesUseCase,
+  INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IPullContentUseCase,
 } from '@packmind/types';
@@ -60,6 +62,23 @@ export class DeploymentGateway implements IDeploymentGateway {
     );
   };
 
+  public install: Gateway<IInstallPackagesUseCase> = async (command) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/install`,
+      {
+        method: 'POST',
+        body: {
+          packagesSlugs: command.packagesSlugs,
+          packmindLockFile: command.packmindLockFile,
+          ...(command.relativePath && { relativePath: command.relativePath }),
+          ...(command.agents !== undefined && { agents: command.agents }),
+        },
+      },
+    );
+  };
+
   public getDeployed: Gateway<IGetDeployedContentUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
 
@@ -107,6 +126,23 @@ export class DeploymentGateway implements IDeploymentGateway {
       },
     );
   };
+
+  public notifyArtefactsDistribution: Gateway<INotifyArtefactsDistribution> =
+    async (command) => {
+      const { organizationId } = this.httpClient.getAuthContext();
+      return this.httpClient.request(
+        `/api/v0/organizations/${organizationId}/deployments/notify-artifacts-distribution`,
+        {
+          method: 'POST',
+          body: {
+            gitRemoteUrl: command.gitRemoteUrl,
+            gitBranch: command.gitBranch,
+            relativePath: command.relativePath,
+            packmindLockFile: command.packmindLockFile,
+          },
+        },
+      );
+    };
 
   public getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =
     async () => {

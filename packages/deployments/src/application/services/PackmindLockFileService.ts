@@ -128,6 +128,50 @@ export class PackmindLockFileService {
     };
   }
 
+  mergeWithExistingLockFile(
+    newLockFile: PackmindLockFile,
+    existingLockFile: PackmindLockFile | null,
+    accessiblePackageIds: string[],
+  ): PackmindLockFile {
+    if (!existingLockFile?.artifacts) {
+      return newLockFile;
+    }
+
+    const accessibleSet = new Set(accessiblePackageIds);
+    const mergedArtifacts = { ...newLockFile.artifacts };
+
+    for (const [key, entry] of Object.entries(existingLockFile.artifacts)) {
+      const belongsToAccessiblePackage = entry.packageIds.some((id) =>
+        accessibleSet.has(id),
+      );
+
+      if (key in mergedArtifacts) {
+        // Artifact in both — keep existing if new entry lost its metadata
+        if (
+          mergedArtifacts[key].packageIds.length === 0 &&
+          entry.packageIds.length > 0
+        ) {
+          mergedArtifacts[key] = entry;
+        }
+      } else if (!belongsToAccessiblePackage) {
+        // Artifact only in existing and belongs to inaccessible package — preserve
+        mergedArtifacts[key] = entry;
+      }
+      // else: artifact was removed from an accessible package — don't preserve
+    }
+
+    const allPackageSlugs = new Set([
+      ...newLockFile.packageSlugs,
+      ...(existingLockFile.packageSlugs ?? []),
+    ]);
+
+    return {
+      ...newLockFile,
+      packageSlugs: [...allPackageSlugs].sort((a, b) => a.localeCompare(b)),
+      artifacts: mergedArtifacts,
+    };
+  }
+
   createLockFileModification(lockFile: PackmindLockFile): FileModification {
     return {
       path: 'packmind-lock.json',

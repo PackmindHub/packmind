@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
+  SpaceMemberContext,
   PackmindEventEmitterService,
   getErrorMessage,
 } from '@packmind/node-utils';
@@ -10,6 +10,7 @@ import {
   CreateStandardSamplesResponse,
   IAccountsPort,
   ICreateStandardSamplesUseCase,
+  ISpacesPort,
   IStandardsPort,
   OrganizationId,
   ProgrammingLanguage,
@@ -30,23 +31,24 @@ import {
 const origin = 'CreateStandardSamplesUsecase';
 
 export class CreateStandardSamplesUsecase
-  extends AbstractMemberUseCase<
+  extends AbstractSpaceMemberUseCase<
     CreateStandardSamplesCommand,
     CreateStandardSamplesResponse
   >
   implements ICreateStandardSamplesUseCase
 {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(spacesPort, accountsPort, logger);
   }
 
-  protected async executeForMembers(
-    command: CreateStandardSamplesCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: CreateStandardSamplesCommand & SpaceMemberContext,
   ): Promise<CreateStandardSamplesResponse> {
     const { organizationId, spaceId, samples, userId } = command;
 

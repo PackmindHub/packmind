@@ -50,7 +50,7 @@ export async function removeAgentsHandler(
 
   const configuredAgents = [
     ...new Set(validEntries.flatMap(({ config }) => config.agents ?? [])),
-  ].sort();
+  ].sort((a, b) => a.localeCompare(b));
 
   if (args.agentNames.length === 0) {
     logErrorConsole('No agents specified.');
