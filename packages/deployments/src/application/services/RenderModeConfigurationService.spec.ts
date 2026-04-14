@@ -311,19 +311,27 @@ describe('RenderModeConfigurationService', () => {
       });
     });
 
-    describe('when commandAgents are undefined', () => {
-      it('resolves agents from organization configuration', async () => {
+    describe('when commandAgents are undefined or empty', () => {
+      beforeEach(async () => {
         const configuration = renderModeConfigurationFactory({
           organizationId,
           activeRenderModes: [RenderMode.PACKMIND, RenderMode.CLAUDE],
         });
 
         repository.findByOrganizationId.mockResolvedValue(configuration);
+      });
 
+      it('resolves agents from organization configuration for undefined commandAgents', async () => {
         const agents = await service.resolveCodingAgents(
           undefined,
           organizationId,
         );
+
+        expect(agents).toEqual(['packmind', 'claude']);
+      });
+
+      it('resolves agents from organization configuration for empty commandAgents', async () => {
+        const agents = await service.resolveCodingAgents([], organizationId);
 
         expect(agents).toEqual(['packmind', 'claude']);
       });

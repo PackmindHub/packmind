@@ -104,11 +104,25 @@ describe('InstallUseCase', () => {
   describe('when no packmind.json exists and no explicit packages are provided', () => {
     beforeEach(() => {
       mockConfigFileRepository.readConfig.mockResolvedValue(null);
+      mockConfigFileRepository.configExists.mockResolvedValue(false);
     });
 
     it('throws an error indicating packmind.json is missing', async () => {
       await expect(useCase.execute({ baseDirectory: '/test' })).rejects.toThrow(
         'No packmind.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
+      );
+    });
+  });
+
+  describe('when packmind.json exists but is malformed and no explicit packages are provided', () => {
+    beforeEach(() => {
+      mockConfigFileRepository.readConfig.mockResolvedValue(null);
+      mockConfigFileRepository.configExists.mockResolvedValue(true);
+    });
+
+    it('throws an error indicating packmind.json cannot be parsed', async () => {
+      await expect(useCase.execute({ baseDirectory: '/test' })).rejects.toThrow(
+        'packmind.json exists but could not be parsed. Please fix the JSON syntax errors and try again.',
       );
     });
   });

@@ -70,7 +70,7 @@ export class RenderModeConfigurationService {
     commandAgents: CodingAgent[] | undefined,
     organizationId: OrganizationId,
   ): Promise<CodingAgent[]> {
-    if (commandAgents !== undefined) {
+    if (commandAgents !== undefined && commandAgents.length > 0) {
       const codingAgents = normalizeCodingAgents(commandAgents);
       this.logger.info('Using agents from command', { codingAgents });
       return codingAgents;
