@@ -56,6 +56,7 @@ import { SubmitDiffsUseCase } from './application/useCases/SubmitDiffsUseCase';
 import { ICheckDiffsUseCase } from './domain/useCases/ICheckDiffsUseCase';
 import { CheckDiffsUseCase } from './application/useCases/CheckDiffsUseCase';
 import { SpaceService } from './application/services/SpaceService';
+import { CliOutput } from './infra/repositories/CliOutput';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -92,6 +93,7 @@ export class PackmindCliHexaFactory {
       packmindGateway: new PackmindGateway(loadApiKey()),
       configFileRepository: new ConfigFileRepository(),
       lockFileRepository: new LockFileRepository(),
+      output: new CliOutput(),
     };
 
     this.services = {
