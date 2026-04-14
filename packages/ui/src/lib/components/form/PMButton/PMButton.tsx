@@ -15,7 +15,7 @@ export type PMButtonVariants =
   | 'warning'
   | 'danger';
 
-export interface IPMButtonProps extends ButtonProps {
+export interface IPMButtonProps extends Omit<ButtonProps, 'variant'> {
   variant?: PMButtonVariants;
   children: React.ReactNode;
 }
@@ -24,7 +24,7 @@ export const PMButton = (props: IPMButtonProps) => {
   const { children, variant = 'primary', ...buttonProps } = props;
 
   return (
-    <Button {...buttonProps} variant={variant}>
+    <Button {...buttonProps} variant={variant as ButtonProps['variant']}>
       {children}
     </Button>
   );

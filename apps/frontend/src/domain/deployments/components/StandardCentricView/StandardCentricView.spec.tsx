@@ -6,9 +6,9 @@ import { StandardCentricView } from './StandardCentricView';
 import {
   createStandardDeploymentStatus,
   createRepositoryStandardDeploymentInfo,
-} from '@packmind/deployments/test';
-import { standardFactory } from '@packmind/standards/test';
-import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
+  standardFactory,
+  gitRepoFactory,
+} from '@packmind/test-utils';
 
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(<UIProvider>{ui}</UIProvider>);

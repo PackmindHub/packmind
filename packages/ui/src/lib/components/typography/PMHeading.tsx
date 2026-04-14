@@ -24,7 +24,7 @@ export function PMHeading({
   return (
     <Heading
       as={level}
-      size={level}
+      size={level as HeadingProps['size']}
       {...rest}
       color={`{colors.text.${color}}`}
       {...headingProps}

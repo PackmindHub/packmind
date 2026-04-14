@@ -21,7 +21,7 @@ import {
 import {
   createDeploymentOverview,
   createStandardDeploymentOverview,
-} from '@packmind/deployments/test';
+} from '@packmind/test-utils';
 
 // Mock react-router
 const mockSetSearchParams = jest.fn();

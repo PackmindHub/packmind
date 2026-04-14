@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PMFormContainer } from './PMFormContainer';
 import { PMInput } from '../PMInput/PMInput';
 import { PMButton } from '../PMButton/PMButton';
