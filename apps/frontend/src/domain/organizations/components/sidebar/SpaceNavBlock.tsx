@@ -1,15 +1,12 @@
 import React from 'react';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
   PMAvatar,
   PMBox,
-  PMFeatureFlag,
   PMIconButton,
   PMSeparator,
   PMStatus,
   PMText,
   PMTooltip,
-  SPACE_SETTINGS_FEATURE_KEY,
 } from '@packmind/ui';
 import {
   LuBookCheck,
@@ -21,17 +18,17 @@ import {
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import { SpaceVisibilityIcon } from './SpaceVisibilityIcon';
 import { useNavigate } from 'react-router';
-import type { Space } from '@packmind/types';
+import type { UserSpaceWithRole } from '@packmind/types';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
-import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
 import { SidebarNavigationLink } from '../SidebarNavigation';
 import { useSidebarCollapse } from '../SidebarCollapseContext';
 import { SpaceNavSections } from './SpaceNavSections';
 
 interface SpaceNavBlockProps {
-  space: Space;
+  space: UserSpaceWithRole;
   orgSlug: string;
   isActive: boolean;
   isSelected: boolean;
@@ -101,7 +98,10 @@ export function SpaceNavBlock({
 function CollapsedSpaceNavItems({
   space,
   orgSlug,
-}: Readonly<{ space: Space; orgSlug: string }>): React.ReactElement {
+}: Readonly<{
+  space: UserSpaceWithRole;
+  orgSlug: string;
+}>): React.ReactElement {
   return (
     <>
       <SidebarNavigationLink
@@ -155,13 +155,13 @@ function ExpandedSpaceNavBlock({
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
 
   return (
     <PMBox>
       {!isActive && (
         <SpaceNameRow
           space={space}
+          orgSlug={orgSlug}
           isActive={isActive}
           isSelected={isSelected}
           onSpaceClick={onSpaceClick}
@@ -171,46 +171,51 @@ function ExpandedSpaceNavBlock({
       {isActive && (
         <PMBox mt={1} bg="background.secondary" borderRadius="md" py={1.5}>
           <PMBox
-            paddingX={3}
+            pl={3}
+            pr={2}
             paddingY={1}
             display="flex"
             alignItems="center"
             justifyContent="space-between"
           >
-            <PMText
-              fontSize="xs"
-              fontWeight="semibold"
-              textProps={{ color: 'primary' }}
+            <PMBox
+              display="flex"
+              alignItems="center"
+              flex={1}
+              minW={0}
               overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
             >
-              <PMStatus.Root
-                colorPalette={getSpaceColorPalette(space.name)}
-                as="span"
-                mr={1.5}
+              <PMText
+                fontSize="xs"
+                fontWeight="semibold"
+                textProps={{ color: 'primary' }}
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+                minW={0}
               >
-                <PMStatus.Indicator />
-              </PMStatus.Root>
-              {space.name}
-            </PMText>
-            <PMFeatureFlag
-              featureKeys={[SPACE_SETTINGS_FEATURE_KEY]}
-              featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-              userEmail={user?.email}
+                <PMStatus.Root
+                  colorPalette={getSpaceColorPalette(space.name)}
+                  as="span"
+                  mr={1.5}
+                >
+                  <PMStatus.Indicator />
+                </PMStatus.Root>
+                {space.name}
+              </PMText>
+              <SpaceVisibilityIcon type={space.type} />
+            </PMBox>
+            <PMIconButton
+              aria-label="Space settings"
+              size="2xs"
+              variant="ghost"
+              onClick={() =>
+                navigate(routes.space.toSettings(orgSlug, space.slug))
+              }
+              data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
             >
-              <PMIconButton
-                aria-label="Space settings"
-                size="2xs"
-                variant="ghost"
-                onClick={() =>
-                  navigate(routes.space.toSettings(orgSlug, space.slug))
-                }
-                data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
-              >
-                <LuSlidersHorizontal />
-              </PMIconButton>
-            </PMFeatureFlag>
+              <LuSlidersHorizontal />
+            </PMIconButton>
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
@@ -226,6 +231,7 @@ function CollapsedSpaceNavBlock({
   onSpaceClick,
 }: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
+  const navigate = useNavigate();
 
   return (
     <PMBox
@@ -237,30 +243,61 @@ function CollapsedSpaceNavBlock({
       borderRadius="md"
       py={isActive ? 1.5 : 0}
     >
-      <PMTooltip label={space.name}>
-        <PMBox
-          as="button"
-          onClick={onSpaceClick}
-          cursor="pointer"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <PMAvatar.Root
-            size="xs"
-            borderRadius="sm"
-            backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
-            color="text.primary"
-            {...(isActive && {
-              outline: '2px solid',
-              outlineColor: 'border.primary',
-              outlineOffset: '2px',
-            })}
+      <PMBox
+        display="flex"
+        alignItems="center"
+        gap={0.5}
+        {...(!isActive && {
+          css: {
+            '& .space-settings-btn': {
+              opacity: 0,
+              transition: 'opacity 0.15s',
+            },
+            '&:hover .space-settings-btn': { opacity: 1 },
+          },
+        })}
+      >
+        <PMTooltip label={space.name}>
+          <PMBox
+            as="button"
+            onClick={onSpaceClick}
+            cursor="pointer"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
           >
-            <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
-          </PMAvatar.Root>
-        </PMBox>
-      </PMTooltip>
+            <PMAvatar.Root
+              size="xs"
+              borderRadius="sm"
+              backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
+              color="text.primary"
+              {...(isActive && {
+                outline: '2px solid',
+                outlineColor: 'border.primary',
+                outlineOffset: '2px',
+              })}
+            >
+              <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
+            </PMAvatar.Root>
+          </PMBox>
+        </PMTooltip>
+
+        {!isActive && (
+          <PMIconButton
+            className="space-settings-btn"
+            aria-label="Space settings"
+            size="2xs"
+            variant="ghost"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              navigate(routes.space.toSettings(orgSlug, space.slug));
+            }}
+            data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+          >
+            <LuSlidersHorizontal />
+          </PMIconButton>
+        )}
+      </PMBox>
 
       {isActive && (
         <PMBox
@@ -279,22 +316,25 @@ function CollapsedSpaceNavBlock({
 
 function SpaceNameRow({
   space,
+  orgSlug,
   isActive,
   isSelected,
   onSpaceClick,
 }: Readonly<{
-  space: Space;
+  space: UserSpaceWithRole;
+  orgSlug: string;
   isActive: boolean;
   isSelected: boolean;
   onSpaceClick: () => void;
 }>): React.ReactElement {
+  const navigate = useNavigate();
+
   return (
     <PMBox
       as="button"
       onClick={onSpaceClick}
       display="flex"
       alignItems="center"
-      gap={2}
       paddingX={2}
       paddingY={1}
       borderRadius="sm"
@@ -304,26 +344,47 @@ function SpaceNameRow({
       bg="transparent"
       _hover={isActive ? undefined : { backgroundColor: 'blue.900' }}
       transition="background-color 0.15s"
+      css={{
+        '& .space-settings-btn': { opacity: 0, transition: 'opacity 0.15s' },
+        '&:hover .space-settings-btn': { opacity: 1 },
+      }}
     >
-      <PMText
-        fontSize="xs"
-        fontWeight={isSelected ? 'bold' : isActive ? 'semibold' : 'medium'}
-        textProps={{
-          color: isSelected ? 'branding.primary' : 'primary',
-        }}
-        overflow="hidden"
-        textOverflow="ellipsis"
-        whiteSpace="nowrap"
-      >
-        <PMStatus.Root
-          colorPalette={getSpaceColorPalette(space.name)}
-          as="span"
-          mr={1.5}
+      <PMBox display="flex" alignItems="center" flex={1} minW={0}>
+        <PMText
+          fontSize="xs"
+          fontWeight={isSelected ? 'bold' : isActive ? 'semibold' : 'medium'}
+          textProps={{
+            color: isSelected ? 'branding.primary' : 'primary',
+          }}
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+          minW={0}
         >
-          <PMStatus.Indicator />
-        </PMStatus.Root>
-        {space.name}
-      </PMText>
+          <PMStatus.Root
+            colorPalette={getSpaceColorPalette(space.name)}
+            as="span"
+            mr={1.5}
+          >
+            <PMStatus.Indicator />
+          </PMStatus.Root>
+          {space.name}
+        </PMText>
+        <SpaceVisibilityIcon type={space.type} />
+      </PMBox>
+      <PMIconButton
+        className="space-settings-btn"
+        aria-label="Space settings"
+        size="2xs"
+        variant="ghost"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          navigate(routes.space.toSettings(orgSlug, space.slug));
+        }}
+        data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+      >
+        <LuSlidersHorizontal />
+      </PMIconButton>
     </PMBox>
   );
 }
