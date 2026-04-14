@@ -2,6 +2,11 @@
 title: 'Change Proposals'
 ---
 
+<Info>
+  **Enterprise Feature** — This functionality is only available in the
+  **Enterprise** version of Packmind.
+</Info>
+
 Change proposals are one of two ways to update your playbook. Unlike [direct updates](/playbook-maintenance/updating-your-playbook#direct-updates), change proposals require team review before changes are applied.
 
 <Note>
@@ -175,7 +180,7 @@ The message has a maximum length of 1024 characters. If you omit the `-m` flag i
 
 #### Duplicate name detection
 
-Before submitting, Packmind checks whether any artifact you are creating already exists in the target space (by name, case-insensitive). If a duplicate is found, the submission is rejected with an error:
+Before submitting, Packmind checks whether any artifact you are creating already exists in the target [space](/concepts/spaces) (by name, case-insensitive). If a duplicate is found, the submission is rejected with an error:
 
 ```
 Error: A standard named "My Standard" already exists in this space.

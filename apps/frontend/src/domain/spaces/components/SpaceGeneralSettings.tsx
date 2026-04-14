@@ -21,7 +21,9 @@ export function SpaceGeneralSettings() {
     <PMVStack align="stretch" gap={6} pt={4}>
       {isSpaceAdmin && <SpaceIdentitySection />}
       {isSpaceAdmin && !space?.isDefaultSpace && <SpaceAccessSection />}
-      {canDeleteSpace && !space?.isDefaultSpace && <SpaceDangerZoneSection />}
+      {!space?.isDefaultSpace && (
+        <SpaceDangerZoneSection canDeleteSpace={canDeleteSpace} />
+      )}
     </PMVStack>
   );
 }

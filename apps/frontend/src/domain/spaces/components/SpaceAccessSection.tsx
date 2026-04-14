@@ -11,7 +11,7 @@ import {
 } from '@packmind/ui';
 import { SpaceType } from '@packmind/types';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
-import { useUpdateSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
+import { useUpdateSpaceMutation } from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
 
 const ACCESS_STATUS_OPTIONS = [
   {

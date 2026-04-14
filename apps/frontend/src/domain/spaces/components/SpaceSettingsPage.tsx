@@ -13,7 +13,7 @@ export function SpaceSettingsPage() {
 
   const currentUserMember = data?.members?.find((m) => m.userId === user?.id);
   const isSpaceAdmin = currentUserMember?.role === 'admin';
-  const showGeneralTab = isSpaceAdmin || !space?.isDefaultSpace;
+  const showGeneralTab = isSpaceAdmin && !space?.isDefaultSpace;
 
   const tabs = [
     ...(showGeneralTab

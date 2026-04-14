@@ -11,7 +11,7 @@ import { UIProvider, pmToaster } from '@packmind/ui';
 import { SpaceType, createPackageId, createSpaceId } from '@packmind/types';
 
 import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
-import * as SpacesManagementQueriesModule from '../../spaces-management/api/queries/SpacesManagementQueries';
+import * as SpacesManagementQueriesModule from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
 import * as DeploymentsQueriesModule from '../../deployments/api/queries/DeploymentsQueries';
 import * as UseNavigationModule from '../../../shared/hooks/useNavigation';
 import * as UseAuthContextModule from '../../accounts/hooks/useAuthContext';
@@ -23,10 +23,10 @@ jest.mock('../hooks/useCurrentSpace', () => ({
 }));
 
 jest.mock(
-  '../../spaces-management/api/queries/SpacesManagementQueries',
+  '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
   () => ({
     ...jest.requireActual(
-      '../../spaces-management/api/queries/SpacesManagementQueries',
+      '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
     ),
     useLeaveSpaceMutation: jest.fn(),
     useDeleteSpaceMutation: jest.fn(),
@@ -164,7 +164,7 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('does not render the leave button', () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
 
       expect(
         screen.queryByRole('button', { name: /leave this space/i }),
@@ -187,7 +187,7 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('shows the rejoin-anytime message in the danger zone description', () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
 
       expect(
         screen.getByText(/You can rejoin whenever you want\./),
@@ -195,7 +195,7 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('shows the rejoin-anytime message in the leave confirmation dialog', async () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -225,7 +225,7 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('shows the ask-administrator message in the danger zone description', () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
 
       expect(
         screen.getByText(/You'll have to ask an administrator to rejoin\./),
@@ -233,7 +233,7 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('shows the ask-administrator message in the leave confirmation dialog', async () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -265,7 +265,7 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('shows the ask-administrator message in the danger zone description', () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
 
       expect(
         screen.getByText(/You'll have to ask an administrator to rejoin\./),
@@ -275,7 +275,7 @@ describe('SpaceDangerZoneSection', () => {
 
   describe('when the leave dialog is opened', () => {
     const openLeaveDialog = async () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -399,7 +399,7 @@ describe('SpaceDangerZoneSection', () => {
         // Simulate a slow mutation: do not invoke any callbacks
       });
 
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -447,7 +447,7 @@ describe('SpaceDangerZoneSection', () => {
         },
       );
 
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -482,7 +482,7 @@ describe('SpaceDangerZoneSection', () => {
         },
       );
 
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -508,7 +508,7 @@ describe('SpaceDangerZoneSection', () => {
 
   describe('when the delete dialog is opened', () => {
     const openDeleteDialog = async () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /delete this space/i,
       });
@@ -638,7 +638,7 @@ describe('SpaceDangerZoneSection', () => {
           name: '@test/other-package',
         },
       ]);
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
       const trigger = screen.getByRole('button', {
         name: /delete this space/i,
       });
@@ -668,7 +668,7 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('does not render the delete button', () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
 
       expect(
         screen.queryByRole('button', { name: /delete this space/i }),
@@ -691,10 +691,28 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('renders the delete button', () => {
-      renderWithProviders(<SpaceDangerZoneSection />);
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
 
       expect(
         screen.getByRole('button', { name: /delete this space/i }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when canDeleteSpace is false', () => {
+    it('does not render the delete button', () => {
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={false} />);
+
+      expect(
+        screen.queryByRole('button', { name: /delete this space/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders the leave button', () => {
+      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={false} />);
+
+      expect(
+        screen.getByRole('button', { name: /leave this space/i }),
       ).toBeInTheDocument();
     });
   });

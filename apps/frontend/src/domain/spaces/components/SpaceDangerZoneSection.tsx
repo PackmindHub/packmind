@@ -15,9 +15,11 @@ import {
 } from '@packmind/ui';
 import { Package, SpaceType } from '@packmind/types';
 
-import { useLeaveSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
+import {
+  useLeaveSpaceMutation,
+  useDeleteSpaceMutation,
+} from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
-import { useDeleteSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -263,7 +265,9 @@ function DeleteSpaceConfirmationDialog({
   );
 }
 
-export function SpaceDangerZoneSection() {
+export function SpaceDangerZoneSection({
+  canDeleteSpace,
+}: Readonly<{ canDeleteSpace: boolean }>) {
   const { space } = useCurrentSpace();
   const leaveSpaceMutation = useLeaveSpaceMutation();
   const { organization } = useAuthContext();
@@ -331,7 +335,7 @@ export function SpaceDangerZoneSection() {
           />
         </PMHStack>
 
-        {!space.isDefaultSpace && (
+        {canDeleteSpace && (
           <>
             <PMSeparator />
 
