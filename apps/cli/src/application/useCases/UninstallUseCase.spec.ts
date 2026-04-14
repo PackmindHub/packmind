@@ -70,12 +70,28 @@ describe('UninstallUseCase', () => {
   describe('when no packmind.json exists', () => {
     beforeEach(() => {
       mockConfigFileRepository.readConfig.mockResolvedValue(null);
+      mockConfigFileRepository.configExists.mockResolvedValue(false);
     });
 
     it('throws an error', async () => {
       await expect(
         useCase.execute({ packages: ['@my-space/package-a'] }),
       ).rejects.toThrow('No packmind.json found');
+    });
+  });
+
+  describe('when packmind.json exists but is malformed', () => {
+    beforeEach(() => {
+      mockConfigFileRepository.readConfig.mockResolvedValue(null);
+      mockConfigFileRepository.configExists.mockResolvedValue(true);
+    });
+
+    it('throws an error indicating the file cannot be parsed', async () => {
+      await expect(
+        useCase.execute({ packages: ['@my-space/package-a'] }),
+      ).rejects.toThrow(
+        'packmind.json exists but could not be parsed. Please fix the JSON syntax errors and try again.',
+      );
     });
   });
 

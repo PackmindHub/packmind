@@ -20,6 +20,13 @@ export class UninstallUseCase implements IUninstallUseCase {
 
     const config = await this.configFileRepository.readConfig(baseDirectory);
     if (!config) {
+      const configFileExists =
+        await this.configFileRepository.configExists(baseDirectory);
+      if (configFileExists) {
+        throw new Error(
+          'packmind.json exists but could not be parsed. Please fix the JSON syntax errors and try again.',
+        );
+      }
       throw new Error(
         'No packmind.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
       );
