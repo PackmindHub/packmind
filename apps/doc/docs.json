@@ -65,7 +65,8 @@
         "pages": [
           "playbook-maintenance/updating-your-playbook",
           "playbook-maintenance/change-proposals",
-          "playbook-maintenance/update-from-external-sources"
+          "playbook-maintenance/update-from-external-sources",
+          "concepts/spaces"
         ]
       },
       {
@@ -159,6 +160,10 @@
     {
       "source": "/artifact-rendering",
       "destination": "/concepts/artifact-rendering"
+    },
+    {
+      "source": "/spaces",
+      "destination": "/concepts/spaces"
     },
     {
       "source": "/cli",
