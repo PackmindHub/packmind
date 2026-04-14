@@ -16,6 +16,7 @@ import {
 import { LuPlus, LuUserPlus } from 'react-icons/lu';
 import type { Space, SpaceId, BrowsableSpace } from '@packmind/types';
 import { getSpaceColorPalette } from '../../organizations/components/sidebar/SpaceNavBlock';
+import { SpaceVisibilityIcon } from '../../organizations/components/sidebar/SpaceVisibilityIcon';
 import { sortSpacesByName } from '../utils/sortSpacesByName';
 
 interface BrowseSpacesDrawerProps {
@@ -271,17 +272,19 @@ function MySpacesTab({
           >
             <PMStatus.Indicator />
           </PMStatus.Root>
-          <PMText
-            fontSize="sm"
-            color="secondary"
-            overflow="hidden"
-            textOverflow="ellipsis"
-            whiteSpace="nowrap"
-            flex={1}
-            minW={0}
-          >
-            {space.name}
-          </PMText>
+          <PMBox display="flex" alignItems="center" flex={1} minW={0}>
+            <PMText
+              fontSize="sm"
+              color="secondary"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+              minW={0}
+            >
+              {space.name}
+            </PMText>
+            <SpaceVisibilityIcon type={space.type} />
+          </PMBox>
         </PMBox>
       ))}
     </>
