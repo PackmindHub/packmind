@@ -160,6 +160,7 @@ function ExpandedSpaceNavBlock({
       {!isActive && (
         <SpaceNameRow
           space={space}
+          orgSlug={orgSlug}
           isActive={isActive}
           isSelected={isSelected}
           onSpaceClick={onSpaceClick}
@@ -218,6 +219,7 @@ function CollapsedSpaceNavBlock({
   onSpaceClick,
 }: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
+  const navigate = useNavigate();
 
   return (
     <PMBox
@@ -229,30 +231,61 @@ function CollapsedSpaceNavBlock({
       borderRadius="md"
       py={isActive ? 1.5 : 0}
     >
-      <PMTooltip label={space.name}>
-        <PMBox
-          as="button"
-          onClick={onSpaceClick}
-          cursor="pointer"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <PMAvatar.Root
-            size="xs"
-            borderRadius="sm"
-            backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
-            color="text.primary"
-            {...(isActive && {
-              outline: '2px solid',
-              outlineColor: 'border.primary',
-              outlineOffset: '2px',
-            })}
+      <PMBox
+        display="flex"
+        alignItems="center"
+        gap={0.5}
+        {...(!isActive && {
+          css: {
+            '& .space-settings-btn': {
+              opacity: 0,
+              transition: 'opacity 0.15s',
+            },
+            '&:hover .space-settings-btn': { opacity: 1 },
+          },
+        })}
+      >
+        <PMTooltip label={space.name}>
+          <PMBox
+            as="button"
+            onClick={onSpaceClick}
+            cursor="pointer"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
           >
-            <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
-          </PMAvatar.Root>
-        </PMBox>
-      </PMTooltip>
+            <PMAvatar.Root
+              size="xs"
+              borderRadius="sm"
+              backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
+              color="text.primary"
+              {...(isActive && {
+                outline: '2px solid',
+                outlineColor: 'border.primary',
+                outlineOffset: '2px',
+              })}
+            >
+              <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
+            </PMAvatar.Root>
+          </PMBox>
+        </PMTooltip>
+
+        {!isActive && (
+          <PMIconButton
+            className="space-settings-btn"
+            aria-label="Space settings"
+            size="2xs"
+            variant="ghost"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              navigate(routes.space.toSettings(orgSlug, space.slug));
+            }}
+            data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+          >
+            <LuSlidersHorizontal />
+          </PMIconButton>
+        )}
+      </PMBox>
 
       {isActive && (
         <PMBox
@@ -271,15 +304,19 @@ function CollapsedSpaceNavBlock({
 
 function SpaceNameRow({
   space,
+  orgSlug,
   isActive,
   isSelected,
   onSpaceClick,
 }: Readonly<{
   space: UserSpaceWithRole;
+  orgSlug: string;
   isActive: boolean;
   isSelected: boolean;
   onSpaceClick: () => void;
 }>): React.ReactElement {
+  const navigate = useNavigate();
+
   return (
     <PMBox
       as="button"
@@ -296,6 +333,10 @@ function SpaceNameRow({
       bg="transparent"
       _hover={isActive ? undefined : { backgroundColor: 'blue.900' }}
       transition="background-color 0.15s"
+      css={{
+        '& .space-settings-btn': { opacity: 0, transition: 'opacity 0.15s' },
+        '&:hover .space-settings-btn': { opacity: 1 },
+      }}
     >
       <PMText
         fontSize="xs"
@@ -306,6 +347,7 @@ function SpaceNameRow({
         overflow="hidden"
         textOverflow="ellipsis"
         whiteSpace="nowrap"
+        flex={1}
       >
         <PMStatus.Root
           colorPalette={getSpaceColorPalette(space.name)}
@@ -316,6 +358,19 @@ function SpaceNameRow({
         </PMStatus.Root>
         {space.name}
       </PMText>
+      <PMIconButton
+        className="space-settings-btn"
+        aria-label="Space settings"
+        size="2xs"
+        variant="ghost"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          navigate(routes.space.toSettings(orgSlug, space.slug));
+        }}
+        data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+      >
+        <LuSlidersHorizontal />
+      </PMIconButton>
     </PMBox>
   );
 }
