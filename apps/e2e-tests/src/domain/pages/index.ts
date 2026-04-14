@@ -1,4 +1,4 @@
-import { SignUpWithOrganizationCommand } from '@packmind/types';
+import { SignUpWithOrganizationCommand, SpaceType } from '@packmind/types';
 
 export interface IPackmindPage {
   waitForLoaded(): Promise<void>;
@@ -13,7 +13,10 @@ export interface IPackmindAppPage extends IPackmindPage {
   openSettings(): Promise<ISettingsPage>;
   openIntegrations(): Promise<ICliSetupPage>;
   openSpaceSettings(): Promise<ISpaceSettingsPage>;
-  createSpace(name: string): Promise<IDashboardPage>;
+  createSpace(
+    name: string,
+    options?: { type?: SpaceType },
+  ): Promise<IDashboardPage>;
   navigateToDashboard(): Promise<IDashboardPage>;
   navigateToSpace(spaceName: string): Promise<IDashboardPage>;
   signOut(): Promise<void>;

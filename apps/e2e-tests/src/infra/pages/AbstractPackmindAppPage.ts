@@ -14,6 +14,7 @@ import {
   SidebarAccountsMenuDataTestIds,
   SidebarNavigationDataTestId,
 } from '@packmind/frontend';
+import { SpaceType } from '@packmind/types';
 
 export abstract class AbstractPackmindAppPage
   extends AbstractPackmindPage
@@ -69,10 +70,21 @@ export abstract class AbstractPackmindAppPage
     return this.pageFactory.getSpaceSettingsPage();
   }
 
-  async createSpace(name: string): Promise<IDashboardPage> {
+  async createSpace(
+    name: string,
+    options?: { type?: SpaceType },
+  ): Promise<IDashboardPage> {
     await this.page.getByTestId('browse-spaces-trigger').click();
     await this.page.getByTestId('browse-spaces-new-button').click();
     await this.page.getByTestId('create-space-name-input').fill(name);
+
+    if (options?.type) {
+      await this.page
+        .getByTestId('create-space-type-select')
+        .locator('select')
+        .selectOption(options.type);
+    }
+
     await this.page.getByTestId('create-space-submit').click();
 
     // Wait for dialog to close and navigation to the new space dashboard
