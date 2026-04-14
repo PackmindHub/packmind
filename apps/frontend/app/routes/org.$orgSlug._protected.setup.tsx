@@ -104,6 +104,12 @@ export default function SetupIndexRouteModule() {
                 label="Playbook management"
                 exact
               />,
+              <SidebarNavigationLink
+                key="use-cases"
+                url={orgSlug ? routes.org.toSetupUseCases(orgSlug) : '#'}
+                label="Use cases"
+                exact
+              />,
             ]}
           />
         </PMVerticalNav>
