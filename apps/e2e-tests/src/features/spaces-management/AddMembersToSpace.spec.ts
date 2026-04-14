@@ -15,7 +15,7 @@ const test = testWithApi.extend<{
   },
 });
 
-test.describe.skip('Add members to a space', () => {
+test.describe('Add members to a space', () => {
   test('organization member can be added to a new space', async ({
     dashboardPage,
   }) => {
