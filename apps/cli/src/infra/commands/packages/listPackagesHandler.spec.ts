@@ -3,31 +3,26 @@ import {
   ListHandlerDependencies,
   listPackagesHandler,
 } from './listPackagesHandler';
-import * as consoleLogger from '../../utils/consoleLogger';
+import { IOutput } from '../../../domain/repositories/IOutput';
+import { createMockOutput } from '../../../mocks/createMockRepositories';
 import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '@packmind/deployments/test';
 
-// Mock the consoleLogger module to avoid chalk ESM issues
-jest.mock('../../utils/consoleLogger', () => ({
-  logConsole: jest.fn(),
-  logInfoConsole: jest.fn(),
-  logErrorConsole: jest.fn(),
-  formatSlug: jest.fn((slug: string) => slug),
-  formatLabel: jest.fn((label: string) => label),
-  formatCommand: jest.fn((cmd: string) => cmd),
-}));
-
 describe('listPackagesHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
+  let mockOutput: jest.Mocked<IOutput>;
   let mockExit: jest.Mock;
   let deps: ListHandlerDependencies;
 
   const defaultSpace = spaceFactory({ name: 'Default', slug: 'default' });
 
   beforeEach(() => {
+    mockOutput = createMockOutput();
+
     mockPackmindCliHexa = {
       listPackages: jest.fn(),
       getSpaces: jest.fn().mockResolvedValue([defaultSpace]),
+      output: mockOutput,
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -66,21 +61,18 @@ describe('listPackagesHandler', () => {
       expect(mockPackmindCliHexa.listPackages).toHaveBeenCalledWith({});
     });
 
-    it('logs fetching message', () => {
-      expect(consoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        'Fetching available packages...',
-      );
-    });
-
-    it('logs available packages header', () => {
-      expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-        '\nAvailable packages:\n',
-      );
-    });
-
-    it('displays packages sorted alphabetically', () => {
-      expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-        expect.stringContaining('alpha'),
+    it('displays packages grouped by space', () => {
+      expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+        expect.stringContaining('Packages (2)'),
+        expect.arrayContaining([
+          expect.objectContaining({
+            artefacts: expect.arrayContaining([
+              expect.objectContaining({ slug: '@default/alpha' }),
+              expect.objectContaining({ slug: '@default/zebra' }),
+            ]),
+          }),
+        ]),
+        expect.anything(),
       );
     });
 
@@ -96,9 +88,7 @@ describe('listPackagesHandler', () => {
     });
 
     it('displays no packages message', () => {
-      expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-        'No packages found.',
-      );
+      expect(mockOutput.notifyInfo).toHaveBeenCalledWith('No packages found.');
     });
 
     it('exits with 0', () => {
@@ -119,29 +109,31 @@ describe('listPackagesHandler', () => {
       await listPackagesHandler({}, deps);
     });
 
-    it('displays space header', () => {
-      expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-        'Space "Global":\n',
+    it('displays packages grouped under the space', () => {
+      expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+        expect.stringContaining('Packages (2)'),
+        expect.arrayContaining([
+          expect.objectContaining({
+            title: 'Space: Global',
+            artefacts: expect.arrayContaining([
+              expect.objectContaining({ slug: '@global/alpha' }),
+              expect.objectContaining({ slug: '@global/backend' }),
+            ]),
+          }),
+        ]),
+        expect.anything(),
       );
     });
 
-    describe('displays packages with @space/slug format', () => {
-      it('displays @global/alpha', () => {
-        expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-          expect.stringContaining('@global/alpha'),
-        );
-      });
-
-      it('displays @global/backend', () => {
-        expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-          expect.stringContaining('@global/backend'),
-        );
-      });
-    });
-
     it('uses @space/slug format in install example', () => {
-      expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-        expect.stringContaining('packmind-cli install @global/alpha'),
+      expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({
+          exampleCommand: expect.stringContaining(
+            'packmind-cli install @global/alpha',
+          ),
+        }),
       );
     });
 
@@ -174,15 +166,25 @@ describe('listPackagesHandler', () => {
       });
 
       it('displays the matching package', () => {
-        expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-          expect.stringContaining('@backend/api'),
+        expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.arrayContaining([
+            expect.objectContaining({
+              artefacts: expect.arrayContaining([
+                expect.objectContaining({ slug: '@backend/api' }),
+              ]),
+            }),
+          ]),
+          expect.anything(),
         );
       });
 
       it('does not display packages from other spaces', () => {
-        expect(consoleLogger.logConsole).not.toHaveBeenCalledWith(
-          expect.stringContaining('@frontend/ui'),
+        const calls = mockOutput.listScopedArtefacts.mock.calls;
+        const allSlugs = calls.flatMap(([, groups]) =>
+          groups.flatMap((g) => g.artefacts.map((a) => a.slug)),
         );
+        expect(allSlugs).not.toContain('@frontend/ui');
       });
     });
 
@@ -202,14 +204,16 @@ describe('listPackagesHandler', () => {
       });
 
       it('displays the matching package', () => {
-        expect(consoleLogger.logConsole).toHaveBeenCalledWith(
-          expect.stringContaining('@backend/api'),
-        );
-      });
-
-      it('does not display packages from other spaces', () => {
-        expect(consoleLogger.logConsole).not.toHaveBeenCalledWith(
-          expect.stringContaining('@frontend/ui'),
+        expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.arrayContaining([
+            expect.objectContaining({
+              artefacts: expect.arrayContaining([
+                expect.objectContaining({ slug: '@backend/api' }),
+              ]),
+            }),
+          ]),
+          expect.anything(),
         );
       });
     });
@@ -219,9 +223,12 @@ describe('listPackagesHandler', () => {
         await listPackagesHandler({ space: 'unknown' }, deps);
       });
 
-      it('logs an error', () => {
-        expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+      it('logs an error with available spaces', () => {
+        expect(mockOutput.notifyError).toHaveBeenCalledWith(
           'Space "@unknown" not found.',
+          expect.objectContaining({
+            content: expect.stringContaining('Available spaces:'),
+          }),
         );
       });
 
@@ -248,7 +255,7 @@ describe('listPackagesHandler', () => {
       });
 
       it('shows no-packages message', () => {
-        expect(consoleLogger.logConsole).toHaveBeenCalledWith(
+        expect(mockOutput.notifyInfo).toHaveBeenCalledWith(
           'No packages found in space "@backend".',
         );
       });
@@ -269,15 +276,12 @@ describe('listPackagesHandler', () => {
       await listPackagesHandler({ space: 'unknown' }, deps);
     });
 
-    it('logs space not found with @ prefix', () => {
-      expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+    it('logs space not found with available spaces', () => {
+      expect(mockOutput.notifyError).toHaveBeenCalledWith(
         'Space "@unknown" not found.',
-      );
-    });
-
-    it('lists available spaces with @ prefix', () => {
-      expect(consoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        'Available spaces: @global, @backend',
+        expect.objectContaining({
+          content: expect.stringContaining('Available spaces:'),
+        }),
       );
     });
 
@@ -292,9 +296,12 @@ describe('listPackagesHandler', () => {
       await listPackagesHandler({}, deps);
     });
 
-    it('displays unable to list spaces message', () => {
-      expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        'Unable to list organization spaces.',
+    it('displays unable to list spaces error', () => {
+      expect(mockOutput.notifyError).toHaveBeenCalledWith(
+        'Failed to list packages:',
+        expect.objectContaining({
+          content: 'Unable to list organization spaces.',
+        }),
       );
     });
 
@@ -311,15 +318,10 @@ describe('listPackagesHandler', () => {
       await listPackagesHandler({}, deps);
     });
 
-    it('displays failed to list packages message', () => {
-      expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+    it('displays failed to list packages error with message', () => {
+      expect(mockOutput.notifyError).toHaveBeenCalledWith(
         'Failed to list packages:',
-      );
-    });
-
-    it('displays error message', () => {
-      expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        'Network error',
+        expect.objectContaining({ content: 'Network error' }),
       );
     });
 
