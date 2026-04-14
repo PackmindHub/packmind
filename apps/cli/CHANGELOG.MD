@@ -1,6 +1,4 @@
-# [Unreleased]
-
-## Added
+# [0.26.0] - 2026-04-14
 
 ## Changed
 
@@ -9,8 +7,6 @@
 ## Fixed
 
 - the `--path` option of `playbook diff` raised an error if there was no `packmind.json` file in the directory.
-
-## Removed
 
 # [0.25.0] - 2026-04-07
 
@@ -313,7 +309,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.25.0...HEAD
+[0.26.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.25.0...release-cli/0.26.0
 [0.25.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.24.0...release-cli/0.25.0
 [0.24.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.23.0...release-cli/0.24.0
 [0.23.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.22.0...release-cli/0.23.0
