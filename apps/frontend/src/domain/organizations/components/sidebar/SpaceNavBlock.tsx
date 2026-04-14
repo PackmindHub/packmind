@@ -18,6 +18,7 @@ import {
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import { SpaceVisibilityIcon } from './SpaceVisibilityIcon';
 import { useNavigate } from 'react-router';
 import type { UserSpaceWithRole } from '@packmind/types';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
@@ -170,29 +171,40 @@ function ExpandedSpaceNavBlock({
       {isActive && (
         <PMBox mt={1} bg="background.secondary" borderRadius="md" py={1.5}>
           <PMBox
-            paddingX={3}
+            pl={3}
+            pr={2}
             paddingY={1}
             display="flex"
             alignItems="center"
             justifyContent="space-between"
           >
-            <PMText
-              fontSize="xs"
-              fontWeight="semibold"
-              textProps={{ color: 'primary' }}
+            <PMBox
+              display="flex"
+              alignItems="center"
+              flex={1}
+              minW={0}
               overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
             >
-              <PMStatus.Root
-                colorPalette={getSpaceColorPalette(space.name)}
-                as="span"
-                mr={1.5}
+              <PMText
+                fontSize="xs"
+                fontWeight="semibold"
+                textProps={{ color: 'primary' }}
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+                minW={0}
               >
-                <PMStatus.Indicator />
-              </PMStatus.Root>
-              {space.name}
-            </PMText>
+                <PMStatus.Root
+                  colorPalette={getSpaceColorPalette(space.name)}
+                  as="span"
+                  mr={1.5}
+                >
+                  <PMStatus.Indicator />
+                </PMStatus.Root>
+                {space.name}
+              </PMText>
+              <SpaceVisibilityIcon type={space.type} />
+            </PMBox>
             <PMIconButton
               aria-label="Space settings"
               size="2xs"
@@ -323,7 +335,6 @@ function SpaceNameRow({
       onClick={onSpaceClick}
       display="flex"
       alignItems="center"
-      gap={2}
       paddingX={2}
       paddingY={1}
       borderRadius="sm"
@@ -338,26 +349,29 @@ function SpaceNameRow({
         '&:hover .space-settings-btn': { opacity: 1 },
       }}
     >
-      <PMText
-        fontSize="xs"
-        fontWeight={isSelected ? 'bold' : isActive ? 'semibold' : 'medium'}
-        textProps={{
-          color: isSelected ? 'branding.primary' : 'primary',
-        }}
-        overflow="hidden"
-        textOverflow="ellipsis"
-        whiteSpace="nowrap"
-        flex={1}
-      >
-        <PMStatus.Root
-          colorPalette={getSpaceColorPalette(space.name)}
-          as="span"
-          mr={1.5}
+      <PMBox display="flex" alignItems="center" flex={1} minW={0}>
+        <PMText
+          fontSize="xs"
+          fontWeight={isSelected ? 'bold' : isActive ? 'semibold' : 'medium'}
+          textProps={{
+            color: isSelected ? 'branding.primary' : 'primary',
+          }}
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+          minW={0}
         >
-          <PMStatus.Indicator />
-        </PMStatus.Root>
-        {space.name}
-      </PMText>
+          <PMStatus.Root
+            colorPalette={getSpaceColorPalette(space.name)}
+            as="span"
+            mr={1.5}
+          >
+            <PMStatus.Indicator />
+          </PMStatus.Root>
+          {space.name}
+        </PMText>
+        <SpaceVisibilityIcon type={space.type} />
+      </PMBox>
       <PMIconButton
         className="space-settings-btn"
         aria-label="Space settings"
