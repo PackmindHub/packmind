@@ -72,7 +72,7 @@ After installation, the `packmind-cli` command will be available globally.
 **npx** (no installation required):
 
 ```bash
-npx @packmind/cli install --list
+npx @packmind/cli login
 ```
 
 This runs the CLI directly without installing it, always using the latest version.
@@ -224,7 +224,7 @@ source ~/.zshrc
 - name: Install Packmind packages
   env:
     PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
-  run: packmind-cli install -r
+  run: packmind-cli install
 ```
 
 <Tip>
@@ -445,13 +445,13 @@ Download commands, standards, and skills from packages to your local machine.
 ### List Available Packages
 
 ```bash
-packmind-cli install --list
+packmind-cli packages list
 ```
 
 ### View Package Details
 
 ```bash
-packmind-cli install --show <package-slug>
+packmind-cli packages show <package-slug>
 ```
 
 ### View Workspace Status
@@ -519,11 +519,6 @@ To scope the recursive install to a specific directory, use the `--path` option:
 ```bash
 packmind-cli install --path apps/frontend
 ```
-
-<Warning>
-  The `-r` / `--recursive` flag is deprecated. Install is now recursive by
-  default. Using the flag still works but will print a deprecation warning.
-</Warning>
 
 <Tip>
   **AI Agent Rendering** — The files created by the install command depend on
