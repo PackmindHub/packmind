@@ -19,10 +19,7 @@ export class ListStandardsUseCase implements IListStandardsUseCase {
       const response = await this.packmindGateway.standards.list({
         spaceId: command.spaceId,
       });
-      return response.standards.map((s) => ({
-        ...s,
-        spaceId: command.spaceId as string,
-      }));
+      return response.standards;
     }
 
     const spaces = await this.spaceService.getSpaces();
@@ -30,9 +27,7 @@ export class ListStandardsUseCase implements IListStandardsUseCase {
       spaces.map((space) =>
         this.packmindGateway.standards
           .list({ spaceId: space.id })
-          .then((r) =>
-            r.standards.map((s) => ({ ...s, spaceId: space.id as string })),
-          ),
+          .then((r) => r.standards),
       ),
     );
     return results.flat();

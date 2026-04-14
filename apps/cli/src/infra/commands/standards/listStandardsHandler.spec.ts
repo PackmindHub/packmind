@@ -3,35 +3,40 @@ import {
   ListStandardsHandlerDependencies,
 } from './listStandardsHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
-import { SpaceType } from '@packmind/types';
+import { IOutput } from '../../../domain/repositories/IOutput';
+import { createMockOutput } from '../../../mocks/createMockRepositories';
+import { createSpaceId } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
+import { standardFactory } from '@packmind/standards/test';
 
-const mockSpaceA = {
-  id: 'space-a',
+const spaceAId = createSpaceId('space-a');
+const spaceBId = createSpaceId('space-b');
+
+const mockSpaceA = spaceFactory({
+  id: spaceAId,
   slug: 'space-a',
   name: 'Space A',
-  type: SpaceType.open,
-  organizationId: 'org-id',
   isDefaultSpace: true,
-};
-
-const mockSpaceB = {
-  id: 'space-b',
+});
+const mockSpaceB = spaceFactory({
+  id: spaceBId,
   slug: 'space-b',
   name: 'Space B',
-  type: SpaceType.open,
-  organizationId: 'org-id',
-  isDefaultSpace: false,
-};
+});
 
 describe('listStandardsHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
+  let mockOutput: jest.Mocked<IOutput>;
   let mockExit: jest.Mock;
   let deps: ListStandardsHandlerDependencies;
 
   beforeEach(() => {
+    mockOutput = createMockOutput();
+
     mockPackmindCliHexa = {
       listStandards: jest.fn(),
       getSpaces: jest.fn().mockResolvedValue([mockSpaceA, mockSpaceB]),
+      output: mockOutput,
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -40,33 +45,22 @@ describe('listStandardsHandler', () => {
       packmindCliHexa: mockPackmindCliHexa,
       exit: mockExit,
     };
-
-    jest.spyOn(console, 'log').mockReturnValue(undefined);
-    jest.spyOn(console, 'error').mockReturnValue(undefined);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   describe('when no space filter is provided', () => {
     describe('when standards exist across multiple spaces', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.listStandards.mockResolvedValue([
-          {
-            id: 'id-z',
+          standardFactory({
             slug: 'zebra-standard',
             name: 'Zebra Standard',
-            description: 'Desc Z',
-            spaceId: 'space-a',
-          },
-          {
-            id: 'id-a',
+            spaceId: spaceAId,
+          }),
+          standardFactory({
             slug: 'alpha-standard',
             name: 'Alpha Standard',
-            description: 'Desc A',
-            spaceId: 'space-b',
-          },
+            spaceId: spaceBId,
+          }),
         ]);
 
         await listStandardsHandler({}, deps);
@@ -76,33 +70,30 @@ describe('listStandardsHandler', () => {
         expect(mockPackmindCliHexa.listStandards).toHaveBeenCalledWith({});
       });
 
-      it('displays header with total count', () => {
-        const logCalls = (console.log as jest.Mock).mock.calls.map(
-          (c) => c[0] as string,
+      it('displays the standards grouped by spaces', () => {
+        expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+          expect.stringContaining('Standards (2)'),
+          [
+            {
+              title: 'Space: Space A',
+              artefacts: [
+                expect.objectContaining({
+                  slug: 'zebra-standard',
+                  title: 'Zebra Standard',
+                }),
+              ],
+            },
+            {
+              title: 'Space: Space B',
+              artefacts: [
+                expect.objectContaining({
+                  slug: 'alpha-standard',
+                  title: 'Alpha Standard',
+                }),
+              ],
+            },
+          ],
         );
-        expect(logCalls.find((c) => c.includes('Standards (2)'))).toBeDefined();
-      });
-
-      describe('displays space group headers', () => {
-        let logCalls: string[];
-
-        beforeEach(() => {
-          logCalls = (console.log as jest.Mock).mock.calls.map(
-            (c) => c[0] as string,
-          );
-        });
-
-        it('displays Space A header', () => {
-          expect(
-            logCalls.find((c) => c.includes('Space "Space A"')),
-          ).toBeDefined();
-        });
-
-        it('displays Space B header', () => {
-          expect(
-            logCalls.find((c) => c.includes('Space "Space B"')),
-          ).toBeDefined();
-        });
       });
 
       it('exits with code 0', () => {
@@ -117,7 +108,9 @@ describe('listStandardsHandler', () => {
       });
 
       it('displays empty message', () => {
-        expect(console.log).toHaveBeenCalledWith('No standards found.');
+        expect(mockOutput.notifyInfo).toHaveBeenCalledWith(
+          expect.stringContaining('No standards found.'),
+        );
       });
 
       it('exits with code 0', () => {
@@ -130,13 +123,11 @@ describe('listStandardsHandler', () => {
     describe('when the space exists', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.listStandards.mockResolvedValue([
-          {
-            id: 'id-a',
+          standardFactory({
             slug: 'alpha-standard',
             name: 'Alpha Standard',
-            description: 'Desc A',
-            spaceId: 'space-a',
-          },
+            spaceId: spaceAId,
+          }),
         ]);
 
         await listStandardsHandler({ space: 'space-a' }, deps);
@@ -148,13 +139,21 @@ describe('listStandardsHandler', () => {
         });
       });
 
-      it('displays the space group header', () => {
-        const logCalls = (console.log as jest.Mock).mock.calls.map(
-          (c) => c[0] as string,
+      it('displays the space group', () => {
+        expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+          expect.stringContaining('Standards (1)'),
+          [
+            {
+              title: 'Space: Space A',
+              artefacts: [
+                expect.objectContaining({
+                  slug: 'alpha-standard',
+                  title: 'Alpha Standard',
+                }),
+              ],
+            },
+          ],
         );
-        expect(
-          logCalls.find((c) => c.includes('Space "Space A"')),
-        ).toBeDefined();
       });
 
       it('exits with code 0', () => {
@@ -169,8 +168,8 @@ describe('listStandardsHandler', () => {
       });
 
       it('displays space-specific empty message', () => {
-        expect(console.log).toHaveBeenCalledWith(
-          'No standards found in space "@space-a".',
+        expect(mockOutput.notifyInfo).toHaveBeenCalledWith(
+          expect.stringContaining('No standards found in space "@space-a"'),
         );
       });
 
@@ -185,9 +184,11 @@ describe('listStandardsHandler', () => {
       });
 
       it('displays an error message', () => {
-        expect(console.error).toHaveBeenCalledWith(
-          expect.anything(),
+        expect(mockOutput.notifyError).toHaveBeenCalledWith(
           expect.stringContaining('Space "@unknown-space" not found.'),
+          {
+            content: expect.stringContaining('Available spaces:'),
+          },
         );
       });
 
@@ -207,9 +208,11 @@ describe('listStandardsHandler', () => {
     });
 
     it('displays error message', () => {
-      expect(console.error).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.stringContaining('Network error'),
+      expect(mockOutput.notifyError).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to list standards:'),
+        expect.objectContaining({
+          content: expect.stringContaining('Network error'),
+        }),
       );
     });
 

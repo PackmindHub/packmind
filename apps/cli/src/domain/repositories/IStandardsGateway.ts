@@ -1,5 +1,9 @@
 // Standard creation types (atomic)
-import { Gateway, IListStandardsBySpaceUseCase } from '@packmind/types';
+import {
+  Gateway,
+  IListStandardsBySpaceUseCase,
+  SpaceId,
+} from '@packmind/types';
 
 export type CreateStandardInSpaceCommand = {
   name: string;
@@ -38,7 +42,7 @@ export type ListedStandard = {
   slug: string;
   name: string;
   description: string;
-  spaceId: string;
+  spaceId: SpaceId;
 };
 
 export type ListStandardsResult = ListedStandard[];
