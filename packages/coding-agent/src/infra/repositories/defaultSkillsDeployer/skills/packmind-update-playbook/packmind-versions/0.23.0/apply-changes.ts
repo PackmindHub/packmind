@@ -42,6 +42,11 @@ Determine which agent context you are running in. The agent directories are:
 
 **Important**: Packmind packages can be installed in subdirectories, not just the repo root. Search for \`**/packmind-lock.json\` across the entire project tree to find all installed locations. Each lock file lists all files per artifact with their agent — use the path matching your agent.
 
+Before writing or editing any artifact, read the corresponding creation procedure for content format and structure guidance:
+- Standard: [create-standard-procedure.md](../../references/create-standard-procedure.md)
+- Command: [create-command-procedure.md](../../references/create-command-procedure.md)
+- Skill: [create-skill-procedure.md](../../references/create-skill-procedure.md)
+
 **For updated artifacts**, find and edit the file at your agent's path. The lock file tells you the exact relative path. Remember that artifacts may live in nested project directories (e.g. \`packages/api/.claude/rules/packmind/\`, \`apps/backend/.claude/commands/\`).
 
 **For new artifacts**, write files at the agent-specific location within the directory that contains the relevant \`packmind-lock.json\`:
