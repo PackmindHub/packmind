@@ -81,9 +81,19 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     merged.skillsRemoved += r.skillsRemoved;
     merged.skillDirectoriesDeleted += r.skillDirectoriesDeleted;
     merged.missingAccess.push(...r.missingAccess);
-    if (!merged.joinSpaceUrl && r.joinSpaceUrl) {
-      merged.joinSpaceUrl = r.joinSpaceUrl;
-    }
+  }
+
+  merged.missingAccess = [...new Set(merged.missingAccess)];
+
+  const urlsFromResultsWithMissingAccess = results
+    .filter((r) => r.missingAccess.length > 0)
+    .map((r) => r.joinSpaceUrl);
+  const uniqueUrls = new Set(urlsFromResultsWithMissingAccess.filter(Boolean));
+  if (
+    uniqueUrls.size === 1 &&
+    !urlsFromResultsWithMissingAccess.some((u) => u === undefined)
+  ) {
+    merged.joinSpaceUrl = [...uniqueUrls][0];
   }
 
   return merged;
@@ -256,18 +266,6 @@ export async function installHandler({
         packmindCliHexa,
         dir,
       });
-
-      if (result.missingAccess.length > 0) {
-        let warning =
-          `⚠️  You don't have access to the following packages (their artifacts were preserved from the lock file):\n` +
-          result.missingAccess.map((s) => `  - ${s}`).join('\n');
-
-        if (result.joinSpaceUrl) {
-          warning += `\n\n  👉 Join the space to get access: ${result.joinSpaceUrl}`;
-        }
-
-        logWarningConsole(warning);
-      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -280,6 +278,19 @@ export async function installHandler({
   }
 
   const combined = mergeInstallResults(results);
+
+  if (combined.missingAccess.length > 0) {
+    let warning =
+      `⚠️  You don't have access to the following packages (their artifacts were preserved from the lock file):\n` +
+      combined.missingAccess.map((s) => `  - ${s}`).join('\n');
+
+    if (combined.joinSpaceUrl) {
+      warning += `\n\n  👉 Join the space to get access: ${combined.joinSpaceUrl}`;
+    }
+
+    logWarningConsole(warning);
+  }
+
   logConsole(buildInstallSummary(combined));
 
   const allErrors = [...combined.errors, ...thrownErrors];
