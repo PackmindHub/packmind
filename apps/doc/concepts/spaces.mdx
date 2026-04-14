@@ -18,8 +18,7 @@ Instead of managing all artifacts in a single flat list, Spaces give structure t
 Every organization comes with a built-in **Global** space. It has special rules:
 
 - It **cannot be deleted**
-- **No one can leave** the Global space
-- When a user joins an organization, they are **automatically added** to the Global space
+- Every members of the organization belong to this space
 
 The Global space is a good home for organization-wide conventions that apply to everyone.
 
@@ -27,10 +26,10 @@ The Global space is a good home for organization-wide conventions that apply to 
 
 Spaces have two visibility levels:
 
-| Type        | Visibility                     | Joining                                    |
-| ----------- | ------------------------------ | ------------------------------------------ |
-| **Open**    | Visible to everyone in the org | Anyone can browse and join via the sidebar |
-| **Private** | Hidden from non-members        | Must be added by a space administrator     |
+| Type        | Visibility                              | Joining                                    |
+| ----------- | --------------------------------------- | ------------------------------------------ |
+| **Open**    | Visible to everyone in the organization | Anyone can browse and join via the sidebar |
+| **Private** | Hidden from non-members                 | Must be added by a space administrator     |
 
 Space visibility can be changed at any time — an open space can become private, and a private space can become open.
 
@@ -44,11 +43,11 @@ Any organization member — whether admin or regular member — can create a spa
 
 Each space has its own set of roles, separate from [organization roles](/administration/manage-users):
 
-| Action              | Space Admin | Space Member | Org Admin |
-| ------------------- | ----------- | ------------ | --------- |
-| Add/remove members  | Yes         | No           | No        |
-| Change member roles | Yes         | No           | No        |
-| Delete the space    | Yes         | No           | Yes       |
+| Action              | Space Admin | Space Member | Organization Admin |
+| ------------------- | ----------- | ------------ | ------------------ |
+| Add/remove members  | Yes         | No           | No                 |
+| Change member roles | Yes         | No           | No                 |
+| Delete the space    | Yes         | No           | Yes                |
 
 The creator of a space becomes its first administrator.
 
