@@ -33,6 +33,7 @@ import {
 import { SpaceSlugConflictError } from '@packmind/spaces';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
@@ -364,7 +365,10 @@ export class SpacesManagementController {
         ...body,
       });
     } catch (error) {
-      if (error instanceof ArtifactNameConflictError) {
+      if (
+        error instanceof ArtifactNameConflictError ||
+        error instanceof ArtifactSlugConflictError
+      ) {
         throw new ConflictException(error.message);
       }
 

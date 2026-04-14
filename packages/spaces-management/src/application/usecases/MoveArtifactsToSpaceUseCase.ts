@@ -26,6 +26,7 @@ import {
   UserId,
 } from '@packmind/types';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 
@@ -221,12 +222,22 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
         userId as unknown as string,
       );
       const destSlugs = new Set(destStandards.map((s) => s.slug));
+      const destNames = new Set(destStandards.map((s) => s.name));
 
       for (const artifact of standardArtifacts) {
         const standard = await this.standardsPort.getStandard(
           (artifact as ArtifactReference<'standard'>).id,
         );
-        if (standard && destSlugs.has(standard.slug)) {
+        if (!standard) continue;
+
+        if (destSlugs.has(standard.slug)) {
+          throw new ArtifactSlugConflictError(
+            'standard',
+            standard.slug,
+            destinationSpaceName,
+          );
+        }
+        if (destNames.has(standard.name)) {
           throw new ArtifactNameConflictError(
             'standard',
             standard.name,
@@ -243,12 +254,22 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
         userId as unknown as string,
       );
       const destSlugs = new Set(destSkills.map((s) => s.slug));
+      const destNames = new Set(destSkills.map((s) => s.name));
 
       for (const artifact of skillArtifacts) {
         const skill = await this.skillsPort.getSkill(
           (artifact as ArtifactReference<'skill'>).id,
         );
-        if (skill && destSlugs.has(skill.slug)) {
+        if (!skill) continue;
+
+        if (destSlugs.has(skill.slug)) {
+          throw new ArtifactSlugConflictError(
+            'skill',
+            skill.slug,
+            destinationSpaceName,
+          );
+        }
+        if (destNames.has(skill.name)) {
           throw new ArtifactNameConflictError(
             'skill',
             skill.name,
@@ -265,12 +286,22 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
         userId,
       });
       const destSlugs = new Set(destRecipes.map((r) => r.slug));
+      const destNames = new Set(destRecipes.map((r) => r.name));
 
       for (const artifact of commandArtifacts) {
         const recipe = await this.recipesPort.getRecipeByIdInternal(
           (artifact as ArtifactReference<'command'>).id,
         );
-        if (recipe && destSlugs.has(recipe.slug)) {
+        if (!recipe) continue;
+
+        if (destSlugs.has(recipe.slug)) {
+          throw new ArtifactSlugConflictError(
+            'command',
+            recipe.slug,
+            destinationSpaceName,
+          );
+        }
+        if (destNames.has(recipe.name)) {
           throw new ArtifactNameConflictError(
             'command',
             recipe.name,

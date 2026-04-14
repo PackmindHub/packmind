@@ -22,6 +22,7 @@ import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { stubLogger } from '@packmind/test-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { MoveArtifactsToSpaceUseCase } from './MoveArtifactsToSpaceUseCase';
@@ -586,13 +587,177 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           standardFactory({
             id: standardId,
             slug: conflictingSlug,
-            name: 'Git commit guidelines',
+            name: 'My Git Guidelines',
             spaceId: sourceSpaceId,
           }),
         );
         standardsPort.listStandardsBySpace.mockResolvedValue([
           standardFactory({
             slug: conflictingSlug,
+            name: 'Git commit guidelines',
+            spaceId: destinationSpaceId,
+          }),
+        ]);
+      });
+
+      it('throws ArtifactSlugConflictError', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({
+              artifacts: [{ id: standardId, type: 'standard' }],
+            }),
+          ),
+        ).rejects.toThrow(ArtifactSlugConflictError);
+      });
+
+      describe('when the move is attempted', () => {
+        beforeEach(async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                artifacts: [{ id: standardId, type: 'standard' }],
+              }),
+            )
+            .catch(() => {
+              /* expected */
+            });
+        });
+
+        it('does not duplicate the standard', () => {
+          expect(standardsPort.duplicateStandardToSpace).not.toHaveBeenCalled();
+        });
+
+        it('does not mark the standard as moved', () => {
+          expect(standardsPort.markStandardAsMoved).not.toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('when a skill with the same slug already exists in the destination space', () => {
+      const skillId = createSkillId('skill-to-move');
+      const conflictingSlug = 'commit';
+
+      beforeEach(() => {
+        skillsPort.getSkill.mockResolvedValue(
+          skillFactory({
+            id: skillId,
+            slug: conflictingSlug,
+            name: 'Commit Skill',
+            spaceId: sourceSpaceId,
+          }),
+        );
+        skillsPort.listSkillsBySpace.mockResolvedValue([
+          skillFactory({
+            slug: conflictingSlug,
+            name: 'commit',
+            spaceId: destinationSpaceId,
+          }),
+        ]);
+      });
+
+      it('throws ArtifactSlugConflictError', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({
+              artifacts: [{ id: skillId, type: 'skill' }],
+            }),
+          ),
+        ).rejects.toThrow(ArtifactSlugConflictError);
+      });
+
+      describe('when the move is attempted', () => {
+        beforeEach(async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                artifacts: [{ id: skillId, type: 'skill' }],
+              }),
+            )
+            .catch(() => {
+              /* expected */
+            });
+        });
+
+        it('does not duplicate the skill', () => {
+          expect(skillsPort.duplicateSkillToSpace).not.toHaveBeenCalled();
+        });
+
+        it('does not mark the skill as moved', () => {
+          expect(skillsPort.markSkillAsMoved).not.toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('when a command with the same slug already exists in the destination space', () => {
+      const recipeId = createRecipeId('recipe-to-move');
+      const conflictingSlug = 'release-cli';
+
+      beforeEach(() => {
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(
+          recipeFactory({
+            id: recipeId,
+            slug: conflictingSlug,
+            name: 'Release CLI Command',
+            spaceId: sourceSpaceId,
+          }),
+        );
+        recipesPort.listRecipesBySpace.mockResolvedValue([
+          recipeFactory({
+            slug: conflictingSlug,
+            name: 'release-cli',
+            spaceId: destinationSpaceId,
+          }),
+        ]);
+      });
+
+      it('throws ArtifactSlugConflictError', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({
+              artifacts: [{ id: recipeId, type: 'command' }],
+            }),
+          ),
+        ).rejects.toThrow(ArtifactSlugConflictError);
+      });
+
+      describe('when the move is attempted', () => {
+        beforeEach(async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                artifacts: [{ id: recipeId, type: 'command' }],
+              }),
+            )
+            .catch(() => {
+              /* expected */
+            });
+        });
+
+        it('does not duplicate the recipe', () => {
+          expect(recipesPort.duplicateRecipeToSpace).not.toHaveBeenCalled();
+        });
+
+        it('does not mark the recipe as moved', () => {
+          expect(recipesPort.markRecipeAsMoved).not.toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('when a standard with the same name already exists in the destination space', () => {
+      const standardId = createStandardId('standard-to-move');
+
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue(
+          standardFactory({
+            id: standardId,
+            slug: 'unique-standard-slug',
+            name: 'Git commit guidelines',
+            spaceId: sourceSpaceId,
+          }),
+        );
+        standardsPort.listStandardsBySpace.mockResolvedValue([
+          standardFactory({
+            slug: 'different-slug',
             name: 'Git commit guidelines',
             spaceId: destinationSpaceId,
           }),
@@ -632,22 +797,21 @@ describe('MoveArtifactsToSpaceUseCase', () => {
       });
     });
 
-    describe('when a skill with the same slug already exists in the destination space', () => {
+    describe('when a skill with the same name already exists in the destination space', () => {
       const skillId = createSkillId('skill-to-move');
-      const conflictingSlug = 'commit';
 
       beforeEach(() => {
         skillsPort.getSkill.mockResolvedValue(
           skillFactory({
             id: skillId,
-            slug: conflictingSlug,
+            slug: 'unique-skill-slug',
             name: 'commit',
             spaceId: sourceSpaceId,
           }),
         );
         skillsPort.listSkillsBySpace.mockResolvedValue([
           skillFactory({
-            slug: conflictingSlug,
+            slug: 'different-slug',
             name: 'commit',
             spaceId: destinationSpaceId,
           }),
@@ -687,22 +851,21 @@ describe('MoveArtifactsToSpaceUseCase', () => {
       });
     });
 
-    describe('when a command with the same slug already exists in the destination space', () => {
+    describe('when a command with the same name already exists in the destination space', () => {
       const recipeId = createRecipeId('recipe-to-move');
-      const conflictingSlug = 'release-cli';
 
       beforeEach(() => {
         recipesPort.getRecipeByIdInternal.mockResolvedValue(
           recipeFactory({
             id: recipeId,
-            slug: conflictingSlug,
+            slug: 'unique-recipe-slug',
             name: 'release-cli',
             spaceId: sourceSpaceId,
           }),
         );
         recipesPort.listRecipesBySpace.mockResolvedValue([
           recipeFactory({
-            slug: conflictingSlug,
+            slug: 'different-slug',
             name: 'release-cli',
             spaceId: destinationSpaceId,
           }),
@@ -742,7 +905,7 @@ describe('MoveArtifactsToSpaceUseCase', () => {
       });
     });
 
-    describe('when artifacts have different slugs than those in the destination space', () => {
+    describe('when artifacts have different slugs and names than those in the destination space', () => {
       const standardId = createStandardId('standard-to-move');
 
       beforeEach(() => {
