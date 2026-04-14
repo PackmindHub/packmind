@@ -44,26 +44,10 @@ jobs:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
           DD_APPLICATION_KEY: ${{ secrets.DD_APPLICATION_KEY }}
 
-      - name: Debug MCP config
-        run: |
-          echo "=== MCP config validation ==="
-          if jq empty /tmp/datadog-mcp-config.json 2>/dev/null; then
-            echo "✅ Valid JSON"
-          else
-            echo "❌ Invalid JSON"
-            cat /tmp/datadog-mcp-config.json
-            exit 1
-          fi
-          echo "Server type: $(jq -r '.mcpServers["datadog-mcp"].type' /tmp/datadog-mcp-config.json)"
-          echo "URL set: $(jq -r '.mcpServers["datadog-mcp"].url | length > 0' /tmp/datadog-mcp-config.json)"
-          echo "API key set: $(jq -r '.mcpServers["datadog-mcp"].headers.DD_API_KEY | length > 0' /tmp/datadog-mcp-config.json)"
-          echo "App key set: $(jq -r '.mcpServers["datadog-mcp"].headers.DD_APPLICATION_KEY | length > 0' /tmp/datadog-mcp-config.json)"
-
       - name: Run Datadog Error Analysis
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          show_full_output: true
           prompt: "/datadog-analysis"
           settings: |
             {
