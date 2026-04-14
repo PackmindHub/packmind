@@ -6,6 +6,7 @@ import {
   ICommandsPage,
   ISettingsPage,
   ISkillsPage,
+  ISpaceSettingsPage,
   IStandardsPage,
 } from '../../domain/pages';
 import { AbstractPackmindPage } from './AbstractPackmindPage';
@@ -58,6 +59,16 @@ export abstract class AbstractPackmindAppPage
     return this.pageFactory.getCliSetupPage();
   }
 
+  async openSpaceSettings(): Promise<ISpaceSettingsPage> {
+    await this.page
+      .locator(
+        `[data-testid="${SidebarNavigationDataTestId.SpaceSettingsLink}"]:not(.space-settings-btn)`,
+      )
+      .click();
+
+    return this.pageFactory.getSpaceSettingsPage();
+  }
+
   async createSpace(name: string): Promise<IDashboardPage> {
     await this.page.getByTestId('browse-spaces-trigger').click();
     await this.page.getByTestId('browse-spaces-new-button').click();
@@ -68,6 +79,12 @@ export abstract class AbstractPackmindAppPage
     await this.page
       .getByTestId('create-space-name-input')
       .waitFor({ state: 'hidden' });
+
+    return this.pageFactory.getDashboardPage();
+  }
+
+  async navigateToDashboard(): Promise<IDashboardPage> {
+    await this.page.getByRole('link', { name: 'Dashboard' }).first().click();
 
     return this.pageFactory.getDashboardPage();
   }
@@ -90,6 +107,9 @@ export abstract class AbstractPackmindAppPage
 
     // Wait for actual navigation (URL was already matching /org/** so waitForLoaded won't wait)
     await this.page.waitForURL((url) => url.toString() !== currentUrl);
+
+    // Wait for the space drawer to close (it closes via useEffect on pathname change)
+    await drawer.waitFor({ state: 'hidden' });
 
     return this.pageFactory.getDashboardPage();
   }

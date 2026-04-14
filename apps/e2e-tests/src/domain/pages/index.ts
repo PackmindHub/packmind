@@ -12,7 +12,9 @@ export interface IPackmindAppPage extends IPackmindPage {
   openPackages(): Promise<IPackagesPage>;
   openSettings(): Promise<ISettingsPage>;
   openIntegrations(): Promise<ICliSetupPage>;
+  openSpaceSettings(): Promise<ISpaceSettingsPage>;
   createSpace(name: string): Promise<IDashboardPage>;
+  navigateToDashboard(): Promise<IDashboardPage>;
   navigateToSpace(spaceName: string): Promise<IDashboardPage>;
   signOut(): Promise<void>;
 }
@@ -91,6 +93,14 @@ export interface ICliSetupPage extends IPackmindAppPage {
   getApiKey(): Promise<string>;
 }
 
+export interface ISpaceSettingsPage extends IPackmindAppPage {
+  openMembersTab(): Promise<void>;
+  clickAddMembers(): Promise<void>;
+  searchAndSelectMember(displayName: string): Promise<void>;
+  submitAddMembers(): Promise<void>;
+  listMembers(): Promise<{ displayName: string }[]>;
+}
+
 export interface IInvitationPage extends IPackmindPage {
   activateAccount(password: string): Promise<IDashboardPage>;
 }
@@ -139,4 +149,5 @@ export interface IPageFactory {
   getStartTrialAgentSelectorPage(): Promise<IStartTrialAgentSelectorPage>;
   getStartTrialAgentPage(agent: string): Promise<IStartTrialAgentPage>;
   getActivateAccountPage(): Promise<IActivateAccountPage>;
+  getSpaceSettingsPage(): Promise<ISpaceSettingsPage>;
 }
