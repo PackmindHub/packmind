@@ -13,7 +13,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { Package } from '@packmind/types';
+import { Package, SpaceType } from '@packmind/types';
 
 import { useLeaveSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
@@ -24,10 +24,12 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 function LeaveSpaceConfirmationDialog({
   spaceName,
+  spaceType,
   isPending,
   onConfirm,
 }: Readonly<{
   spaceName: string;
+  spaceType: SpaceType;
   isPending: boolean;
   onConfirm: (onSettled: () => void) => void;
 }>) {
@@ -90,8 +92,10 @@ function LeaveSpaceConfirmationDialog({
                   <PMText>
                     You are about to leave <strong>{spaceName}</strong>. You
                     will lose access to its standards, commands, skills, and
-                    other content. You can rejoin later if the space is open or
-                    if an admin invites you.
+                    other content.{' '}
+                    {spaceType === SpaceType.open
+                      ? 'You can rejoin whenever you want.'
+                      : "You'll have to ask an administrator to rejoin."}
                   </PMText>
                   <PMVStack gap={2} align="stretch">
                     <PMText variant="body" fontSize="sm">
@@ -290,11 +294,15 @@ export function SpaceDangerZoneSection() {
             <PMText fontWeight="medium">Leave this space</PMText>
             <PMText variant="body" color="secondary" fontSize="sm">
               You will lose access to all standards, commands, skills, and other
-              content. You can rejoin later if invited.
+              content.{' '}
+              {space.type === SpaceType.open
+                ? 'You can rejoin whenever you want.'
+                : "You'll have to ask an administrator to rejoin."}
             </PMText>
           </PMVStack>
           <LeaveSpaceConfirmationDialog
             spaceName={space.name}
+            spaceType={space.type}
             isPending={leaveSpaceMutation.isPending}
             onConfirm={(onSettled) => {
               leaveSpaceMutation.mutate(

@@ -172,6 +172,107 @@ describe('SpaceDangerZoneSection', () => {
     });
   });
 
+  describe('when the space is open', () => {
+    beforeEach(() => {
+      mockUseCurrentSpace({
+        space: {
+          id: 'space-1',
+          name: 'Test Space',
+          slug: 'test-space',
+          type: SpaceType.open,
+          organizationId: 'org-1',
+          isDefaultSpace: false,
+        },
+      });
+    });
+
+    it('shows the rejoin-anytime message in the danger zone description', () => {
+      renderWithProviders(<SpaceDangerZoneSection />);
+
+      expect(
+        screen.getByText(/You can rejoin whenever you want\./),
+      ).toBeInTheDocument();
+    });
+
+    it('shows the rejoin-anytime message in the leave confirmation dialog', async () => {
+      renderWithProviders(<SpaceDangerZoneSection />);
+      const trigger = screen.getByRole('button', {
+        name: /leave this space/i,
+      });
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      const dialog = await screen.findByRole('dialog');
+
+      expect(
+        within(dialog).getByText(/You can rejoin whenever you want\./),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the space is restricted', () => {
+    beforeEach(() => {
+      mockUseCurrentSpace({
+        space: {
+          id: 'space-1',
+          name: 'Test Space',
+          slug: 'test-space',
+          type: SpaceType.restricted,
+          organizationId: 'org-1',
+          isDefaultSpace: false,
+        },
+      });
+    });
+
+    it('shows the ask-administrator message in the danger zone description', () => {
+      renderWithProviders(<SpaceDangerZoneSection />);
+
+      expect(
+        screen.getByText(/You'll have to ask an administrator to rejoin\./),
+      ).toBeInTheDocument();
+    });
+
+    it('shows the ask-administrator message in the leave confirmation dialog', async () => {
+      renderWithProviders(<SpaceDangerZoneSection />);
+      const trigger = screen.getByRole('button', {
+        name: /leave this space/i,
+      });
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      const dialog = await screen.findByRole('dialog');
+
+      expect(
+        within(dialog).getByText(
+          /You'll have to ask an administrator to rejoin\./,
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the space is private', () => {
+    beforeEach(() => {
+      mockUseCurrentSpace({
+        space: {
+          id: 'space-1',
+          name: 'Test Space',
+          slug: 'test-space',
+          type: SpaceType.private,
+          organizationId: 'org-1',
+          isDefaultSpace: false,
+        },
+      });
+    });
+
+    it('shows the ask-administrator message in the danger zone description', () => {
+      renderWithProviders(<SpaceDangerZoneSection />);
+
+      expect(
+        screen.getByText(/You'll have to ask an administrator to rejoin\./),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('when the leave dialog is opened', () => {
     const openLeaveDialog = async () => {
       renderWithProviders(<SpaceDangerZoneSection />);
