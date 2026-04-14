@@ -1,37 +1,7 @@
-import { Space } from '@packmind/types';
-import { IListSkillsResult } from '../../../domain/useCases/IListSkillsUseCase';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
 import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
-
-type Skill = IListSkillsResult[number];
-
-function groupSkillsBySpace(
-  skills: Skill[],
-  spaces: Space[],
-): Array<{ space: Space; items: Skill[] }> {
-  const spaceMap = new Map<string, Space>(
-    spaces.map((s) => [s.id as string, s]),
-  );
-  const groupsMap = new Map<string, { space: Space; items: Skill[] }>();
-
-  for (const skill of skills) {
-    const space = spaceMap.get(skill.spaceId);
-    if (!space) {
-      continue;
-    }
-    let group = groupsMap.get(space.id as string);
-    if (!group) {
-      group = { space, items: [] };
-      groupsMap.set(space.id as string, group);
-    }
-    group.items.push(skill);
-  }
-
-  return [...groupsMap.values()].sort((a, b) =>
-    a.space.name.localeCompare(b.space.name),
-  );
-}
+import { groupArtefactBySpaces } from '../../utils/groupArtefactsBySpaces';
 
 export type ListSkillsArgs = { space?: string };
 
@@ -82,20 +52,18 @@ export async function listSkillsHandler(
     }
 
     const buildUrl = resolveUrlBuilder((slug) => `skills/${slug}/files`);
-    const groups = groupSkillsBySpace(skills, spaces);
+    const groups = groupArtefactBySpaces(skills, spaces);
 
     packmindCliHexa.output.listScopedArtefacts(
       `📋 Skills (${skills.length})`,
-      groups.map(({ space, items }) => ({
+      groups.map(({ space, artefacts }) => ({
         title: `Space: ${space.name}`,
-        artefacts: [...items]
-          .sort((a, b) => a.slug.localeCompare(b.slug))
-          .map((skill) => ({
-            title: skill.name,
-            slug: skill.slug,
-            description: skill.description ?? undefined,
-            url: buildUrl(space.slug, skill.slug),
-          })),
+        artefacts: artefacts.map((skill) => ({
+          title: skill.name,
+          slug: skill.slug,
+          description: skill.description ?? undefined,
+          url: buildUrl(space.slug, skill.slug),
+        })),
       })),
     );
 

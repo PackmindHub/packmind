@@ -1,40 +1,7 @@
-import { Space } from '@packmind/types';
-import { ListCommandsResult } from '../../../domain/useCases/IListCommandsUseCase';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
 import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
-
-type Command = ListCommandsResult[number];
-
-function groupCommandsBySpace(
-  commands: Command[],
-  spaces: Space[],
-): { groups: Array<{ space: Space; cmds: Command[] }>; orphaned: Command[] } {
-  const spaceMap = new Map<string, Space>(
-    spaces.map((s) => [s.id as string, s]),
-  );
-  const groupsMap = new Map<string, { space: Space; cmds: Command[] }>();
-  const orphaned: Command[] = [];
-
-  for (const cmd of commands) {
-    const space = spaceMap.get(cmd.spaceId as string);
-    if (!space) {
-      orphaned.push(cmd);
-      continue;
-    }
-    let group = groupsMap.get(space.id as string);
-    if (!group) {
-      group = { space, cmds: [] };
-      groupsMap.set(space.id as string, group);
-    }
-    group.cmds.push(cmd);
-  }
-
-  const groups = [...groupsMap.values()].sort((a, b) =>
-    a.space.name.localeCompare(b.space.name),
-  );
-  return { groups, orphaned };
-}
+import { groupArtefactBySpaces } from '../../utils/groupArtefactsBySpaces';
 
 export type ListCommandsArgs = { space?: string };
 
@@ -86,14 +53,14 @@ export async function listCommandsHandler(
       return;
     }
 
-    const { groups } = groupCommandsBySpace(commands, spaces);
+    const groupedCommands = groupArtefactBySpaces(commands, spaces);
     const buildUrl = resolveUrlBuilder((id) => `commands/${id}`);
 
     packmindCliHexa.output.listScopedArtefacts(
       `📋 Commands (${commands.length})`,
-      groups.map(({ space, cmds }) => ({
+      groupedCommands.map(({ space, artefacts }) => ({
         title: `Space: ${space.name}`,
-        artefacts: cmds.map((cmd) => ({
+        artefacts: artefacts.map((cmd) => ({
           title: cmd.name,
           slug: cmd.slug,
           url: buildUrl(space.slug, cmd.id),

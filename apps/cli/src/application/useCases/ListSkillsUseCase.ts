@@ -24,7 +24,7 @@ export class ListSkillsUseCase implements IListSkillsUseCase {
         slug: s.slug,
         name: s.name,
         description: s.description,
-        spaceId: command.spaceId as string,
+        spaceId: s.spaceId,
       }));
     }
 
@@ -38,7 +38,7 @@ export class ListSkillsUseCase implements IListSkillsUseCase {
               slug: s.slug,
               name: s.name,
               description: s.description,
-              spaceId: space.id as string,
+              spaceId: space.id,
             })),
           ),
       ),

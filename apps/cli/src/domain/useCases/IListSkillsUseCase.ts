@@ -4,7 +4,7 @@ export type ListedSkill = {
   slug: string;
   name: string;
   description: string;
-  spaceId: string;
+  spaceId: SpaceId;
 };
 
 export type IListSkillsCommand = { spaceId?: SpaceId };

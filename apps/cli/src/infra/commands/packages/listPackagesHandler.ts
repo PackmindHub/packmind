@@ -1,36 +1,9 @@
-import { Package, Space } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
 import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
+import { groupArtefactBySpaces } from '../../utils/groupArtefactsBySpaces';
 
 export type ListPackagesArgs = { space?: string };
-
-function groupPackagesBySpace(
-  packages: Package[],
-  spaces: Space[],
-): Array<{ space: Space; pkgs: Package[] }> {
-  const spaceMap = new Map<string, Space>(
-    spaces.map((s) => [s.id as string, s]),
-  );
-  const groupsMap = new Map<string, { space: Space; pkgs: Package[] }>();
-
-  for (const pkg of packages) {
-    const space = spaceMap.get(pkg.spaceId as string);
-    if (!space) {
-      continue;
-    }
-    let group = groupsMap.get(space.id as string);
-    if (!group) {
-      group = { space, pkgs: [] };
-      groupsMap.set(space.id as string, group);
-    }
-    group.pkgs.push(pkg);
-  }
-
-  return [...groupsMap.values()].sort((a, b) =>
-    a.space.name.localeCompare(b.space.name),
-  );
-}
 
 export type ListHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -84,18 +57,16 @@ export async function listPackagesHandler(
     }
 
     const buildUrl = resolveUrlBuilder((id) => `packages/${id}`);
-    const groups = groupPackagesBySpace(packages, spaces);
+    const groups = groupArtefactBySpaces(packages, spaces);
 
-    const scopedArtefacts = groups.map(({ space, pkgs }) => ({
+    const scopedArtefacts = groups.map(({ space, artefacts }) => ({
       title: `Space: ${space.name}`,
-      artefacts: [...pkgs]
-        .sort((a, b) => a.slug.localeCompare(b.slug))
-        .map((pkg) => ({
-          title: pkg.name,
-          slug: `@${space.slug}/${pkg.slug}`,
-          description: pkg.description,
-          url: buildUrl(space.slug, pkg.id as string),
-        })),
+      artefacts: artefacts.map((pkg) => ({
+        title: pkg.name,
+        slug: `@${space.slug}/${pkg.slug}`,
+        description: pkg.description,
+        url: buildUrl(space.slug, pkg.id as string),
+      })),
     }));
 
     const firstSlug =
