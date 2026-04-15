@@ -35,11 +35,6 @@ import {
 } from 'react-icons/lu';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
 import {
-  PMFeatureFlag,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  SPACES_MANAGEMENT_FEATURE_KEY,
-} from '@packmind/ui';
-import {
   SidebarAccountsMenuDataTestIds,
   SidebarNavigationDataTestId,
 } from '@packmind/frontend';
@@ -403,13 +398,7 @@ export const SidebarNavigation: React.FunctionComponent<
                 >
                   Spaces
                 </PMText>
-                <PMFeatureFlag
-                  featureKeys={[SPACES_MANAGEMENT_FEATURE_KEY]}
-                  featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-                  userEmail={user?.email}
-                >
-                  <BrowseSpaces />
-                </PMFeatureFlag>
+                <BrowseSpaces />
               </PMBox>
             )}
 
