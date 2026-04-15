@@ -97,21 +97,11 @@ Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeO
 
 Full standard is available here for further request: [Typescript good practices](.packmind/standards/typescript-good-practices.md)
 
-# Standard: Testing good practices
+# Standard: Compliance - Logging Personal Information
 
-Standardize unit test structure and naming in TypeScript/TSX test files using verb-first descriptions, Arrange-Act-Assert flow without comments, nested describe('when...') context blocks, and single-expect test cases to improve readability, maintainability, and debugging. :
-* Follow  'Arrange, Act, Assert' pattern
-* Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
-* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
-* Use assertive, verb-first unit test names instead of starting with 'should'
-* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
+Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries. :
+* Never log personal information in clear text across all log levels. Always mask sensitive data such as emails, phone numbers, IP addresses, and other personally identifiable information before logging.
+* Use the standard masking format of first 6 characters followed by "*" for logging user emails. This ensures consistency across the codebase and makes it easier to audit logs for compliance.
 
-Full standard is available here for further request: [Testing good practices](.packmind/standards/testing-good-practices.md)
-
-# Standard: Packmind Proprietary
-
-Prohibit imports from '@packmind/editions' in proprietary codebases to prevent unintended use of open-source–only modules and ensure proper licensing boundaries. :
-* Never import something from '@packmind/editions', this is for OSS only
-
-Full standard is available here for further request: [Packmind Proprietary](.packmind/standards/packmind-proprietary.md)
+Full standard is available here for further request: [Compliance - Logging Personal Information](.packmind/standards/compliance-logging-personal-information.md)
 <!-- end: Packmind standards -->_

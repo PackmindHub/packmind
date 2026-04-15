@@ -1,11 +1,8 @@
 import { command, string, positional, option, optional } from 'cmd-ts';
 import { originSkillOption } from '../sharedOptions';
 import { SpaceSlug } from '../customParameters/SpaceSlug';
-import {
-  logErrorConsole,
-  logConsole,
-  formatCommand,
-} from '../../utils/consoleLogger';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 
 export const addSkillCommand = command({
   name: 'add',
@@ -26,9 +23,16 @@ export const addSkillCommand = command({
     originSkill: originSkillOption,
   },
   handler: async () => {
-    logErrorConsole('Command "packmind-cli skills add" has been removed.');
-    logConsole(
-      `Use ${formatCommand('packmind-cli playbook add <path>')} instead.`,
+    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
+    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+
+    packmindCliHexa.output.notifyError(
+      'Command "packmind-cli skills add" has been removed.',
+      {
+        content: 'Use the "playbook add" command instead:',
+        exampleCommand:
+          'packmind-cli playbook add .packmind/commands/my-command.md',
+      },
     );
     process.exit(1);
   },

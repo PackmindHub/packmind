@@ -1,7 +1,7 @@
 {
   "lockfileVersion": 1,
   "packageSlugs": [
-    "@global/integration-tests"
+    "@testing/integration-tests"
   ],
   "agents": [
     "agents_md",
@@ -11,17 +11,16 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-09T14:34:22.315Z",
-  "targetId": "f3730c1d-8899-4689-bdd3-a8e281b1430e",
+  "installedAt": "2026-04-15T09:56:02.719Z",
   "artifacts": {
     "standard:integration-tests-structure-and-patterns": {
       "name": "Integration Tests Structure and Patterns",
       "type": "standard",
-      "id": "969ff6c8-c847-4f32-9162-54165825bded",
+      "id": "80eceb6f-2b84-412a-8a04-448f773c55a2",
       "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "spaceId": "87658623-3c00-4018-9240-a713cf50d70f",
       "packageIds": [
-        "93f50f80-a364-4205-a4b4-377856b19842"
+        "cf48e722-dd33-484b-b247-78dd427ef1c3"
       ],
       "files": [
         {

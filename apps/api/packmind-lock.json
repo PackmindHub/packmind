@@ -1,7 +1,7 @@
 {
   "lockfileVersion": 1,
   "packageSlugs": [
-    "@global/nestjs"
+    "@backend/nestjs"
   ],
   "agents": [
     "agents_md",
@@ -11,17 +11,16 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-09T14:34:13.769Z",
-  "targetId": "ba90844f-fccf-4b1d-9624-f875ba9daea2",
+  "installedAt": "2026-04-15T09:56:01.533Z",
   "artifacts": {
     "standard:rest-api-endpoint-design": {
       "name": "REST API Endpoint Design",
       "type": "standard",
-      "id": "a8417805-402a-468c-9248-cc64d77d7809",
+      "id": "0c6060b2-c18f-4813-a426-fbe9b360b3ef",
       "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
-        "a37068f3-1193-458b-bfa1-f62bd5f33a83"
+        "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
       ],
       "files": [
         {
@@ -45,11 +44,11 @@
     "standard:nestjs-module-hierarchy": {
       "name": "NestJS Module Hierarchy",
       "type": "standard",
-      "id": "f6404dc7-632c-4ee6-9f56-723990dd5e39",
+      "id": "de5534ef-38f4-48ab-ab54-36538369727b",
       "version": 3,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
-        "a37068f3-1193-458b-bfa1-f62bd5f33a83"
+        "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
       ],
       "files": [
         {

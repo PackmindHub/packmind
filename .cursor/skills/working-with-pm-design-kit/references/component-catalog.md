@@ -74,6 +74,7 @@ Complete inventory of all PM-prefixed components in `@packmind/ui`, organized by
 | **PMEmptyState** | `title: string`, `description?: string`, `icon?: ReactNode`, `children?: ReactNode` | Title as h3, children for actions |
 | **PMMarkdownViewer** | `content?: string`, `htmlContent?: string`, `sanitize?: boolean` (default: true) | DOMPurify + marked |
 | **PMDataList** | `items: {label, value}[]` | Key-value pair display |
+| **PMColorSwatch** | Chakra ColorSwatchProps | Displays a color sample |
 | **PMFeatureFlag** | `featureKeys: string[]`, `featureDomainMap`, `userEmail?` | Conditional rendering |
 | **PMStat** | Chakra StatProps | Statistic display |
 
@@ -104,4 +105,14 @@ Complete inventory of all PM-prefixed components in `@packmind/ui`, organized by
 | **PMMenu** | Chakra MenuProps | Compound: `.Root`, `.Trigger` + all Chakra Menu members |
 | **PMTreeView** | All Chakra TreeView members | Compound: `.Root`, `.Branch`, `.BranchContent`, `.Item`, `.ItemText`, etc. Helpers: `createTreeCollection`, `createFileTreeCollection` |
 | **PMCarousel** | Chakra CarouselProps | Compound: `.Root`, `.Control`, `.NextTrigger`, `.PrevTrigger`, `.Item`, `.ItemGroup`, `.Indicator` |
+| **PMTabsCompound** | `TabsRootProps` (Root), `value`, `children`, `disabled?` (Trigger), `value`, `children` (Content) | Compound: `.Root`, `.List`, `.Trigger`, `.Content`. Preferred over `PMTabs` for flexible tab layouts. Uses SlotComponent pattern |
 | **PMTimeline** | Chakra TimelineProps | Compound: `.Root`, `.Item`, `.Content`, `.Separator`, `.Indicator`, `.Connector`, `.Title`, `.Description` |
+
+## Hooks
+
+| Hook | Key Props / Options | Notes |
+|------|---------------------|-------|
+| **useTableSort** | `options?: { defaultSortKey?, defaultSortDirection? }` | Returns `{ sortKey, sortDirection, handleSort, getSortDirection }`. Use with `PMTable`'s `onSort` prop |
+| **pmUseFilter** | Chakra useFilter API | Re-export of Chakra's `useFilter` for filtering collections |
+| **pmUseListCollection** | Chakra useListCollection API | Re-export of Chakra's `useListCollection`. Useful with `PMSelect`, `PMCombobox` |
+| **pmUseToken** | Chakra useToken API | Re-export of Chakra's `useToken` for accessing design tokens programmatically |
