@@ -8,6 +8,12 @@
 
 ## Removed
 
+# [1.13.1] - 2026-04-15
+
+## Fixed
+
+- Fix issue with feature-flag that prevented users to create new space
+
 # [1.13.0] - 2026-04-15
 
 ## Added
@@ -276,7 +282,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.13.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.13.1...HEAD
+[1.13.1]: https://github.com/PackmindHub/packmind/compare/release/1.13.0...release/1.13.1
 [1.13.0]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...release/1.13.0
 [1.12.0]: https://github.com/PackmindHub/packmind/compare/release/1.11.1...release/1.12.0
 [1.11.1]: https://github.com/PackmindHub/packmind/compare/release/1.11.0...release/1.11.1
