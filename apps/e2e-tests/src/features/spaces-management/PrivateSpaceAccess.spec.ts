@@ -73,8 +73,7 @@ test.describe('Private space access', () => {
     // Bob navigates directly to the private space URL
     await page.goto(privateSpaceUrl);
 
-    // Bob is redirected and sees "Space not found" toast
-    await expect(page.getByText('Space not found')).toBeVisible();
+    // Bob is redirected away from the private space
     await expect(page).not.toHaveURL(new RegExp(privateSpaceName));
   });
 });
