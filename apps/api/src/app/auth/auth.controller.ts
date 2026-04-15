@@ -35,7 +35,7 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   TooManyLoginAttemptsError,
-  InvalidEmailOrPasswordError,
+  ExpectedAuthError,
   CreateCliLoginCodeResponse,
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
@@ -207,27 +207,35 @@ export class AuthController {
 
       return result;
     } catch (error) {
-      this.logger.error(`POST /auth/signin - Failed to sign in user`, {
-        email: maskEmail(signInRequest.email),
-        error: getErrorMessage(error),
-      });
+      // Expected auth errors are legitimate user-facing outcomes (wrong
+      // password, rate limit reached) — not application bugs. Log them at
+      // warn level without stack trace so Datadog error dashboards stay
+      // focused on real incidents.
+      if (error instanceof ExpectedAuthError) {
+        this.logger.warn(`POST /auth/signin - ${error.name}`, {
+          email: maskEmail(signInRequest.email),
+          reason: error.message,
+        });
 
-      // Handle rate limiting errors with 429 status
-      if (error instanceof TooManyLoginAttemptsError) {
-        throw new HttpException(
-          {
-            message: getErrorMessage(error),
-            bannedUntil: error.bannedUntil.toISOString(),
-          },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
+        if (error instanceof TooManyLoginAttemptsError) {
+          throw new HttpException(
+            {
+              message: error.message,
+              bannedUntil: error.bannedUntil.toISOString(),
+            },
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
+        }
 
-      // Convert domain error to HTTP exception (prevents stack trace logging)
-      if (error instanceof InvalidEmailOrPasswordError) {
+        // InvalidEmailOrPasswordError (and future ExpectedAuthError subclasses)
         throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
       }
 
+      // Unexpected error: keep error-level logging and let NestJS map it to 500.
+      this.logger.error(`POST /auth/signin - Unexpected sign-in failure`, {
+        email: maskEmail(signInRequest.email),
+        error: getErrorMessage(error),
+      });
       throw error;
     }
   }

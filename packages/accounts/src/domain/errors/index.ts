@@ -1,3 +1,4 @@
+export { ExpectedAuthError } from './ExpectedAuthError';
 export { EmailAlreadyExistsError } from './EmailAlreadyExistsError';
 export {
   OrganizationSlugConflictError,
