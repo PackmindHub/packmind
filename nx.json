@@ -115,6 +115,6 @@
     "enabled": false,
     "autoExit": true
   },
-  "useDaemonProcess": false,
+  "useDaemonProcess": true,
   "cacheDirectory": ".nx/cache"
 }
