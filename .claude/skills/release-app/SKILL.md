@@ -1,8 +1,22 @@
 ---
+name: release-app
 description: 'Create and push a Packmind release by verifying a clean git state, bumping package versions, updating CHANGELOG links and dates, tagging `release/{{version}}`, and preparing the next Unreleased section to ensure a consistent, traceable release workflow when publishing a new version.'
 ---
 
 Create a Packmind release with version {{version}}. Follow these steps:
+
+0. **Confirm Feature Flag Audit has been run (MANDATORY PRE-CHECK)**:
+
+   Before doing ANY other step, stop and ask the user to confirm that the `feature-flags-audit` skill has been invoked on the `packmind-proprietary` repository. The purpose of this check is to avoid shipping a release that still contains feature flags which should have been removed.
+
+   Ask the user explicitly:
+
+   > Has the `feature-flags-audit` skill been run on `packmind-proprietary` prior to this release? (yes / no)
+
+   * If the user answers **yes**, proceed to step 1.
+   * If the user answers **no** (or anything other than an explicit yes), **abort the release** and instruct the user to run the `feature-flags-audit` skill first, review the resulting report, remove any stale/shipped flags, and then re-invoke this skill.
+
+   Do NOT proceed to step 1 until the user has explicitly confirmed with `yes`.
 
 1. **Verify clean git status**: Check that `git status` shows no uncommitted changes. If there are changes, fail and ask the user to commit or stash them first.
 
