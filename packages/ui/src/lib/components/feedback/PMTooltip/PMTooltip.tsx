@@ -40,7 +40,7 @@ export const PMTooltip: React.FC<PMTooltipProps> = ({
   openDelay = 500,
   closeDelay = 0,
   showArrow = true,
-  zIndex = 9999,
+  zIndex = 1300,
 }) => {
   if (disabled || !label) {
     return children as React.ReactElement;
