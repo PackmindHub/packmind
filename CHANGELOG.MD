@@ -2,6 +2,16 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.13.0] - 2026-04-15
+
+## Added
+
 - Support OpenCode as a new AI coding agent: standards rendered in `AGENTS.md`, commands and skills deployed to `.opencode/commands/` and `.opencode/skills/`
 - Support Codex as a new AI coding agent: standards rendered in `AGENTS.md`, skills deployed to `.agents/skills/`
 - Introduce spaces to organize artifacts and packages in an organization - Enterprise version only
@@ -9,10 +19,6 @@
 ## Changed
 
 - Updated `packmind-playbook-update` skill to support the new `playbook` commands of the cli
-
-## Fixed
-
-## Removed
 
 # [1.12.0] - 2026-03-25
 
@@ -270,7 +276,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.13.0...HEAD
+[1.13.0]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...release/1.13.0
 [1.12.0]: https://github.com/PackmindHub/packmind/compare/release/1.11.1...release/1.12.0
 [1.11.1]: https://github.com/PackmindHub/packmind/compare/release/1.11.0...release/1.11.1
 [1.11.0]: https://github.com/PackmindHub/packmind/compare/release/1.10.0...release/1.11.0
