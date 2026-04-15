@@ -10,7 +10,7 @@ import {
   PMCheckbox,
   PMAlert,
   PMAlertDialog,
-  PMButtonGroup,
+  PMHStack,
   PMInput,
   PMBadge,
   useTableSort,
@@ -400,43 +400,46 @@ export const RecipesList = ({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </PMBox>
-          <PMButtonGroup size="sm" mb={4}>
-            <PMAlertDialog
-              trigger={
-                <PMButton
-                  variant="secondary"
-                  loading={deleteBatchMutation.isPending}
-                  disabled={!isSomeSelected}
-                >
-                  {`Delete (${selectedRecipeIds.length})`}
-                </PMButton>
-              }
-              title="Delete Recipes"
-              message={RECIPE_MESSAGES.confirmation.deleteBatchRecipes(
-                selectedRecipeIds.length,
-              )}
-              confirmText="Delete"
-              cancelText="Cancel"
-              confirmColorScheme="red"
-              onConfirm={handleBatchDelete}
-              open={deleteDialogOpen}
-              onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-              isLoading={deleteBatchMutation.isPending}
-            />
-            <SpacesManagementActions
-              artifactType="command"
-              selectedIds={selectedRecipeIds}
-              isSomeSelected={isSomeSelected}
-              onSuccess={() => setSelectedRecipeIds([])}
-            />
-            <PMButton
-              variant="secondary"
-              onClick={() => setSelectedRecipeIds([])}
-              disabled={!isSomeSelected}
-            >
-              Clear Selection
-            </PMButton>
-          </PMButtonGroup>
+          <PMBox mb={2}>
+            <PMHStack gap={2}>
+              <PMAlertDialog
+                trigger={
+                  <PMButton
+                    variant="secondary"
+                    loading={deleteBatchMutation.isPending}
+                    disabled={!isSomeSelected}
+                  >
+                    {`Delete (${selectedRecipeIds.length})`}
+                  </PMButton>
+                }
+                title="Delete Recipes"
+                message={RECIPE_MESSAGES.confirmation.deleteBatchRecipes(
+                  selectedRecipeIds.length,
+                )}
+                confirmText="Delete"
+                cancelText="Cancel"
+                confirmColorScheme="red"
+                onConfirm={handleBatchDelete}
+                open={deleteDialogOpen}
+                onOpenChange={({ open }) => setDeleteDialogOpen(open)}
+                isLoading={deleteBatchMutation.isPending}
+              />
+              <SpacesManagementActions
+                artifactType="command"
+                selectedIds={selectedRecipeIds}
+                isSomeSelected={isSomeSelected}
+                onSuccess={() => setSelectedRecipeIds([])}
+              />
+              <PMButton
+                variant="secondary"
+                onClick={() => setSelectedRecipeIds([])}
+                size="sm"
+                disabled={!isSomeSelected}
+              >
+                Clear Selection
+              </PMButton>
+            </PMHStack>
+          </PMBox>
           <PMTable
             columns={columns}
             data={tableData}
