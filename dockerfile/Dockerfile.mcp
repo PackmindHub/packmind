@@ -6,7 +6,7 @@ ENV NODE_ENV=production
 RUN apk add --no-cache \
         openssl=3.5.6-r0 \
         bash=5.2.37-r0 \
-        ca-certificates=20250911-r0
+        ca-certificates=20260413-r0
 
 # Use the existing node user from the base image
 USER node
