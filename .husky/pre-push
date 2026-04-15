@@ -1,4 +1,24 @@
-npm run typecheck:frontend
-npm run build
-npm run lint
-PACKMIND_LOG_LEVEL=silent NODE_OPTIONS='--max-old-space-size=16384' ./node_modules/.bin/nx run-many -t test --exclude=cli-e2e-tests,@packmind/integration-tests --parallel=3 --tuiAutoExit --passWithNoTests
+set -eu
+
+# Refresh origin/main so `affected` has an accurate base.
+git fetch origin main --quiet 2>/dev/null || true
+
+# Base for `nx affected` — fall back if origin/main is unavailable.
+BASE=$(git merge-base HEAD origin/main 2>/dev/null || echo "HEAD~1")
+
+export PACKMIND_LOG_LEVEL=silent
+export NODE_OPTIONS='--max-old-space-size=16384'
+
+# Always typecheck the frontend, regardless of what `affected` detects.
+# Cached by Nx, so this is a no-op cache hit when nothing in the frontend changed.
+./node_modules/.bin/nx run frontend:typecheck --tuiAutoExit
+
+# passWithNoTests is already set in jest.preset.ts, so no need to pass it on the CLI
+# (it would otherwise be forwarded to vite/eslint/tsc which don't know it).
+./node_modules/.bin/nx affected \
+  -t lint test typecheck build \
+  --base="$BASE" \
+  --parallel=6 \
+  --nxBail \
+  --tuiAutoExit \
+  --exclude=cli-e2e-tests,@packmind/integration-tests
