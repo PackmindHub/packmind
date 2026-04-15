@@ -49,6 +49,7 @@ describe('GetDetectionProgramsForPackagesUseCase', () => {
       getLatestRulesByStandardId: jest.fn(),
       getRulesByStandardId: jest.fn(),
       listStandardsBySpace: jest.fn(),
+      listAllStandardsByOrganization: jest.fn(),
       getRuleCodeExamples: jest.fn(),
       findStandardBySlug: jest.fn(),
       getLatestStandardVersion: jest.fn(),
@@ -114,7 +115,9 @@ describe('GetDetectionProgramsForPackagesUseCase', () => {
 
       spacesAdapter.listSpacesByOrganization.mockResolvedValue(spaces as never);
 
-      standardsAdapter.listStandardsBySpace.mockResolvedValue([standard]);
+      standardsAdapter.listAllStandardsByOrganization.mockResolvedValue([
+        standard,
+      ]);
       standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([rule]);
 
       deploymentsAdapter.getPackageSummary.mockResolvedValue({
@@ -265,7 +268,9 @@ describe('GetDetectionProgramsForPackagesUseCase', () => {
         { id: spaceId, name: 'Test Space', slug: 'global' } as never,
       ]);
 
-      standardsAdapter.listStandardsBySpace.mockResolvedValue([standard]);
+      standardsAdapter.listAllStandardsByOrganization.mockResolvedValue([
+        standard,
+      ]);
       standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([rule]);
 
       deploymentsAdapter.getPackageSummary.mockResolvedValue({

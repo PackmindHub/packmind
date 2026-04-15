@@ -53,17 +53,11 @@ export class GetDetectionProgramsForPackagesUseCase implements IGetDetectionProg
       createOrganizationId(command.organizationId),
     );
 
-    // Get all standards across all spaces
-    const standardsPerSpace = await Promise.all(
-      spaces.map((space) =>
-        this.standardsAdapter!.listStandardsBySpace(
-          space.id,
-          createOrganizationId(command.organizationId),
-          command.userId,
-        ),
-      ),
-    );
-    const allStandards = standardsPerSpace.flat();
+    // Get all standards across all spaces (no membership check)
+    const allStandards =
+      await this.standardsAdapter.listAllStandardsByOrganization(
+        createOrganizationId(command.organizationId),
+      );
 
     for (const slug of command.packagesSlugs) {
       try {
@@ -104,7 +98,7 @@ export class GetDetectionProgramsForPackagesUseCase implements IGetDetectionProg
         for (const standard of matchingStandards) {
           try {
             const rules =
-              await this.standardsAdapter!.getLatestRulesByStandardId(
+              await this.standardsAdapter.getLatestRulesByStandardId(
                 standard.id,
               );
 
