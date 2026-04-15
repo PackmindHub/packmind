@@ -1,6 +1,7 @@
-export class InvalidEmailOrPasswordError extends Error {
+import { ExpectedAuthError } from './ExpectedAuthError';
+
+export class InvalidEmailOrPasswordError extends ExpectedAuthError {
   constructor() {
-    super('Invalid email or password');
-    this.name = 'InvalidEmailOrPasswordError';
+    super('Invalid email or password', 'InvalidEmailOrPasswordError');
   }
 }
