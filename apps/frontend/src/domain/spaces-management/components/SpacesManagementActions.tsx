@@ -22,7 +22,6 @@ export function SpacesManagementActions({
   onSuccess,
 }: SpacesManagementActionsProps): React.ReactElement {
   const [moveDialogOpen, setMoveDialogOpen] = React.useState(false);
-  const { user } = useAuthContext();
 
   return (
     <>
