@@ -354,7 +354,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   if (isError) return <PMText color="error">Error loading skills.</PMText>;
 
   if (!skills?.length) {
-    return <SkillsBlankState spaceSlug={spaceSlug} />;
+    return <SkillsBlankState orgSlug={orgSlug} spaceSlug={spaceSlug} />;
   }
 
   return (
