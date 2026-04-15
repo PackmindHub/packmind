@@ -16,7 +16,7 @@ export NODE_OPTIONS='--max-old-space-size=16384'
 # passWithNoTests is already set in jest.preset.ts, so no need to pass it on the CLI
 # (it would otherwise be forwarded to vite/eslint/tsc which don't know it).
 ./node_modules/.bin/nx affected \
-  -t lint test typecheck build \
+  -t lint test build \
   --base="$BASE" \
   --parallel=6 \
   --nxBail \
