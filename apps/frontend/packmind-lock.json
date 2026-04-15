@@ -1,6 +1,8 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["@global/frontend"],
+  "packageSlugs": [
+    "@frontend/react"
+  ],
   "agents": [
     "agents_md",
     "claude",
@@ -9,93 +11,17 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-01T14:26:26.609Z",
+  "installedAt": "2026-04-15T09:56:02.243Z",
   "artifacts": {
-    "command:gateway-pattern-implementation-in-packmind-frontend": {
-      "name": "Gateway Pattern Implementation in Packmind Frontend",
-      "type": "command",
-      "id": "ef745515-4898-4a34-8762-5c3a7a2d0f63",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
-      "files": [
-        {
-          "path": ".packmind/commands/gateway-pattern-implementation-in-packmind-frontend.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/gateway-pattern-implementation-in-packmind-frontend.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/gateway-pattern-implementation-in-packmind-frontend.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/gateway-pattern-implementation-in-packmind-frontend.md",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "standard:frontend-testing": {
-      "name": "Frontend testing",
-      "type": "standard",
-      "id": "1c291279-ac40-482c-b66f-ae7d74e3698a",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
-      "files": [
-        {
-          "path": ".packmind/standards/frontend-testing.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-frontend-testing.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-frontend-testing.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-frontend-testing.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "standard:frontend-data-flow": {
-      "name": "Frontend Data Flow",
-      "type": "standard",
-      "id": "3d06e76d-af52-4bf7-a0c4-88b8ad7c4990",
-      "version": 4,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
-      "files": [
-        {
-          "path": ".packmind/standards/frontend-data-flow.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-frontend-data-flow.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-frontend-data-flow.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-frontend-data-flow.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:frontend-navigation-with-react-router": {
       "name": "Frontend Navigation with React Router",
       "type": "standard",
-      "id": "3e7b9558-19af-4313-82f9-0a8c16a3f8de",
+      "id": "1ada3096-d94b-4f11-bbda-9b9b80938262",
       "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "packageIds": [
+        "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
+      ],
       "files": [
         {
           "path": ".packmind/standards/frontend-navigation-with-react-router.md",
@@ -118,10 +44,12 @@
     "standard:frontend-error-management": {
       "name": "Frontend Error Management",
       "type": "standard",
-      "id": "4e6cc1cb-c715-4843-8c24-46728617ca9a",
+      "id": "384d604c-b9bc-49c1-b4c3-106dc5a0507f",
       "version": 3,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "packageIds": [
+        "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
+      ],
       "files": [
         {
           "path": ".packmind/standards/frontend-error-management.md",
@@ -141,39 +69,15 @@
         }
       ]
     },
-    "standard:jest-test-suite-organization-and-patterns": {
-      "name": "Jest Test Suite Organization and Patterns",
-      "type": "standard",
-      "id": "85f88ffe-8bb5-475a-94cf-2924b3d28866",
-      "version": 6,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
-      "files": [
-        {
-          "path": ".packmind/standards/jest-test-suite-organization-and-patterns.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-jest-test-suite-organization-and-patterns.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-jest-test-suite-organization-and-patterns.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-jest-test-suite-organization-and-patterns.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:tanstack-query-key-management": {
       "name": "TanStack Query Key Management",
       "type": "standard",
-      "id": "860201c0-a89b-452a-acf0-8f6b5b16ce57",
-      "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["f1ac58c9-c246-419f-ae3e-f0ab6951308c"],
+      "id": "3eef6c4e-ad66-404e-a7b5-332148bafa41",
+      "version": 3,
+      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "packageIds": [
+        "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
+      ],
       "files": [
         {
           "path": ".packmind/standards/tanstack-query-key-management.md",
@@ -189,6 +93,34 @@
         },
         {
           "path": ".cursor/rules/packmind/standard-tanstack-query-key-management.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:frontend-data-flow": {
+      "name": "Frontend Data Flow",
+      "type": "standard",
+      "id": "fd08d95a-9a38-4187-95d1-b2b93b828819",
+      "version": 4,
+      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "packageIds": [
+        "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
+      ],
+      "files": [
+        {
+          "path": ".packmind/standards/frontend-data-flow.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-frontend-data-flow.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-frontend-data-flow.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-frontend-data-flow.mdc",
           "agent": "cursor"
         }
       ]

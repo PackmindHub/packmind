@@ -1,6 +1,8 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["@global/e2e"],
+  "packageSlugs": [
+    "@testing/e2e"
+  ],
   "agents": [
     "agents_md",
     "claude",
@@ -9,15 +11,17 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-01T14:26:26.312Z",
+  "installedAt": "2026-04-15T09:56:02.017Z",
   "artifacts": {
     "standard:e2e-page-object": {
       "name": "[E2E] Page object",
       "type": "standard",
-      "id": "d17c4b7f-61a6-43af-a88a-ce1f787ea121",
+      "id": "18b55187-d87e-43c1-987d-e66cf2b0af6f",
       "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["089886ae-99f4-4e02-bf0e-00ef30b1f6d3"],
+      "spaceId": "87658623-3c00-4018-9240-a713cf50d70f",
+      "packageIds": [
+        "05033877-0641-4cc3-a87c-0926ef8f5283"
+      ],
       "files": [
         {
           "path": ".packmind/standards/e2e-page-object.md",
@@ -40,10 +44,12 @@
     "standard:e2e-writing-e2e-tests": {
       "name": "[E2E] Writing E2E tests",
       "type": "standard",
-      "id": "895b4321-da5f-4eca-84f7-47c9f2b7a888",
+      "id": "85e36b83-e56b-49ba-a8b8-f4dc7523b0f1",
       "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["089886ae-99f4-4e02-bf0e-00ef30b1f6d3"],
+      "spaceId": "87658623-3c00-4018-9240-a713cf50d70f",
+      "packageIds": [
+        "05033877-0641-4cc3-a87c-0926ef8f5283"
+      ],
       "files": [
         {
           "path": ".packmind/standards/e2e-writing-e2e-tests.md",

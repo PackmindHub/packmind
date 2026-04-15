@@ -57,6 +57,22 @@ Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods 
 
 Full standard is available here for further request: [CLI Gateway Implementation](.packmind/standards/cli-packmindgateway-method-implementation.md)
 
+# Standard: CLI Use Case Structure
+
+Enforce CLI use case separation by defining IPublicUseCase<Command, Response> interfaces with co-located Command/Response types in apps/cli/src/domain/useCases/ and implementing business-only logic in apps/cli/src/application/useCases/ using custom errors from apps/cli/src/domain/errors/ (no console or output handlers) to improve modularity, reuse, and predictable error handling. :
+* Base all use case interfaces on IPublicUseCase<Command, Response> from @packmind/types
+* Create new error classes for domain-specific failure scenarios when existing errors do not apply
+* Define Command and Response types in the same file as the use case interface
+* Define use case interfaces in src/domain/useCases/ directory
+* Document the errors that a use case can throw so handlers know which error types to catch
+* Export error classes from individual files in src/domain/errors/ for reusability across use cases
+* Implement use cases in src/application/useCases/ directory
+* Keep use cases focused on business logic without any user output (no console logging, no outputError/outputSuccess calls)
+* Name error classes descriptively to indicate the specific failure condition (e.g., PackageNotFoundError, AccessDenied, InvalidStandardFormat)
+* Throw custom domain errors defined in src/domain/errors/ instead of generic Error instances
+
+Full standard is available here for further request: [CLI Use Case Structure](.packmind/standards/cli-use-case-structure.md)
+
 # Standard: CLI Command Structure
 
 Enforce cmd-ts CLI command definitions (Command.ts) to contain only name/description/args and delegate to separate Handler.ts functions that validate inputs, run PackmindCliHexa with PackmindLogger, handle domain errors, and standardize output/exit codes via consoleLogger utilities to improve testability, maintainability, and consistent user feedback. :
@@ -74,20 +90,4 @@ Enforce cmd-ts CLI command definitions (Command.ts) to contain only name/descrip
 * Write comprehensive tests for all handler functions covering validation, success paths, and all error scenarios
 
 Full standard is available here for further request: [CLI Command Structure](.packmind/standards/cli-command-structure.md)
-
-# Standard: CLI Use Case Structure
-
-Enforce CLI use case separation by defining IPublicUseCase<Command, Response> interfaces with co-located Command/Response types in apps/cli/src/domain/useCases/ and implementing business-only logic in apps/cli/src/application/useCases/ using custom errors from apps/cli/src/domain/errors/ (no console or output handlers) to improve modularity, reuse, and predictable error handling. :
-* Base all use case interfaces on IPublicUseCase<Command, Response> from @packmind/types
-* Create new error classes for domain-specific failure scenarios when existing errors do not apply
-* Define Command and Response types in the same file as the use case interface
-* Define use case interfaces in src/domain/useCases/ directory
-* Document the errors that a use case can throw so handlers know which error types to catch
-* Export error classes from individual files in src/domain/errors/ for reusability across use cases
-* Implement use cases in src/application/useCases/ directory
-* Keep use cases focused on business logic without any user output (no console logging, no outputError/outputSuccess calls)
-* Name error classes descriptively to indicate the specific failure condition (e.g., PackageNotFoundError, AccessDenied, InvalidStandardFormat)
-* Throw custom domain errors defined in src/domain/errors/ instead of generic Error instances
-
-Full standard is available here for further request: [CLI Use Case Structure](.packmind/standards/cli-use-case-structure.md)
 <!-- end: Packmind standards -->

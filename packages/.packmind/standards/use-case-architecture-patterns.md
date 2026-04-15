@@ -7,10 +7,12 @@ This standard defines how to structure use cases in the Packmind monorepo follow
 * Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
 * Extend PackmindCommand for authenticated use case commands that include userId and organizationId, or extend PublicPackmindCommand for public endpoints without authentication
 * Export exactly three type definitions from each use case contract file: {Name}Command for input parameters, {Name}Response for return value, and I{Name}UseCase as the interface combining both
-* Extend AbstractMemberUseCase and implement executeForMembers method for use cases requiring the user to be a member of an organization, with automatic user and organization validation
+* Extend AbstractMemberUseCase and implement executeForMembers method for organization-scoped use cases that do NOT operate within a specific space, with automatic user and organization validation
 * Extend AbstractAdminUseCase and implement executeForAdmins method for use cases requiring admin privileges, with automatic validation that the user is a member with admin role
 * Implement IPublicUseCase interface directly with an execute method for public use cases that don't require authentication, without extending any abstract use case class
 * Restrict use case classes to expose only the execute method for public use cases or executeForMembers/executeForAdmins methods for member/admin use cases, with no other public methods
 * Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions
 * Never spread commands as multiple arguments in hexagon or UseCase classes; always pass the complete command object to maintain type safety and reduce errors
 * Reuse existing use cases through port/adapter interfaces instead of instantiating them directly within use cases
+* Extend AbstractSpaceMemberUseCase and implement executeForSpaceMembers method for use cases operating within a specific space (command includes spaceId), with automatic user, organization, and space membership validation
+* Extend SpaceMemberCommand instead of PackmindCommand for use case commands that include a spaceId to get both organizationId and spaceId typing

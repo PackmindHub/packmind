@@ -1,6 +1,8 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["@global/cli"],
+  "packageSlugs": [
+    "@cli/implementation"
+  ],
   "agents": [
     "agents_md",
     "claude",
@@ -9,15 +11,17 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-01T14:26:25.716Z",
+  "installedAt": "2026-04-15T09:56:01.779Z",
   "artifacts": {
     "standard:cli-packmindgateway-method-implementation": {
       "name": "CLI Gateway Implementation",
       "type": "standard",
-      "id": "0c29c0e5-16d3-4dcd-801c-6efcf599cfe0",
+      "id": "7cf59fd6-6609-4bc9-9a2c-a6cd247b579f",
       "version": 4,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["fecacf03-4f54-4c5d-86b3-ce1d79325f67"],
+      "spaceId": "44d5cfee-46a6-495f-802e-bfd12dcdc953",
+      "packageIds": [
+        "3b20fba1-2669-415f-8433-f3b2bd86c70b"
+      ],
       "files": [
         {
           "path": ".packmind/standards/cli-packmindgateway-method-implementation.md",
@@ -37,39 +41,15 @@
         }
       ]
     },
-    "standard:cli-command-structure": {
-      "name": "CLI Command Structure",
-      "type": "standard",
-      "id": "560cfcf7-b91e-4a1f-8390-4646dceee7c2",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["fecacf03-4f54-4c5d-86b3-ce1d79325f67"],
-      "files": [
-        {
-          "path": ".packmind/standards/cli-command-structure.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-cli-command-structure.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-cli-command-structure.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-cli-command-structure.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:cli-use-case-structure": {
       "name": "CLI Use Case Structure",
       "type": "standard",
-      "id": "7048ab48-07e3-4dcc-a492-d581a5bbf4e2",
+      "id": "8c908c7b-f1b1-4496-8465-98651785390b",
       "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["fecacf03-4f54-4c5d-86b3-ce1d79325f67"],
+      "spaceId": "44d5cfee-46a6-495f-802e-bfd12dcdc953",
+      "packageIds": [
+        "3b20fba1-2669-415f-8433-f3b2bd86c70b"
+      ],
       "files": [
         {
           "path": ".packmind/standards/cli-use-case-structure.md",
@@ -85,6 +65,34 @@
         },
         {
           "path": ".cursor/rules/packmind/standard-cli-use-case-structure.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:cli-command-structure": {
+      "name": "CLI Command Structure",
+      "type": "standard",
+      "id": "c2e51769-e829-49cd-98cc-543462db6fe7",
+      "version": 1,
+      "spaceId": "44d5cfee-46a6-495f-802e-bfd12dcdc953",
+      "packageIds": [
+        "3b20fba1-2669-415f-8433-f3b2bd86c70b"
+      ],
+      "files": [
+        {
+          "path": ".packmind/standards/cli-command-structure.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-cli-command-structure.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-cli-command-structure.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-cli-command-structure.mdc",
           "agent": "cursor"
         }
       ]

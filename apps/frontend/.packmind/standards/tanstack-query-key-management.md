@@ -10,3 +10,4 @@ TanStack Query uses prefix matching to invalidate cached queries, matching keys 
 * Use query invalidation with prefix matching from key start in correct hierarchical order
 * Define query keys in a dedicated queryKeys.ts file in the domain's api folder for centralized management
 * Follow hierarchical query key structure: organization scope, domain scope, operation, then identifiers for consistent invalidation patterns
+* In mutation onSuccess, invalidate every affected sibling query-key scope; prefix matching cannot bridge siblings

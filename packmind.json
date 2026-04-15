@@ -1,7 +1,9 @@
 {
   "packages": {
     "@global/generic": "*",
-    "@global/playground": "*",
-    "generic": "*"
+    "@backend/generic": "*",
+    "@frontend/playground": "*",
+    "@testing/cli-e2e": "*",
+    "@frontend/generic": "*"
   }
 }

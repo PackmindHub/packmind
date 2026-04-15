@@ -1,0 +1,14 @@
+---
+globs: Repositories extending SpaceScopedRepository or OrganizationScopedRepository (**/infra/repositories/*Repository.ts)
+alwaysApply: false
+---
+# Standard: Scoped Repository Patterns
+
+Enforce tenant-safe repository query and write patterns in Packmind repositories extending SpaceScopedRepository or OrganizationScopedRepository by using createScopedQueryBuilder, avoiding findById overrides, requiring scope IDs on collection methods, delegating saves/updates to this.add(), and testing cross-scope isolation to ensure consistent data isolation and soft-delete correctness. :
+* Delegate write operations (`save`, `update`) to the inherited `this.add()` method
+* Do not override `findById` in scoped repositories — the base class handles soft delete via `QueryOption.includeDeleted`
+* Include `spaceId` or `organizationId` as a parameter on all collection-returning domain interface methods
+* Test cross-scope isolation for every finder method returning collections
+* Use `createScopedQueryBuilder(spaceId)` or `createScopedQueryBuilder(organizationId)` for all finder methods in scoped repositories
+
+Full standard is available here for further request: [Scoped Repository Patterns](../../../.packmind/standards/scoped-repository-patterns.md)

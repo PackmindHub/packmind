@@ -1,5 +1,5 @@
 {
   "packages": {
-    "@global/integration-tests": "*"
+    "@testing/integration-tests": "*"
   }
 }

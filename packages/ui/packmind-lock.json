@@ -1,6 +1,8 @@
 {
   "lockfileVersion": 1,
-  "packageSlugs": ["@global/design-system"],
+  "packageSlugs": [
+    "@frontend/ui-components"
+  ],
   "agents": [
     "agents_md",
     "claude",
@@ -9,41 +11,17 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-01T14:26:27.936Z",
+  "installedAt": "2026-04-15T09:56:03.125Z",
   "artifacts": {
-    "command:wrapping-chakra-ui-with-slot-components": {
-      "name": "Wrapping Chakra UI with Slot Components",
-      "type": "command",
-      "id": "9c0df659-eb9f-4e37-b915-8540f982d6f2",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["41dd679d-01d1-4e20-8348-006616433412"],
-      "files": [
-        {
-          "path": ".packmind/commands/wrapping-chakra-ui-with-slot-components.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/wrapping-chakra-ui-with-slot-components.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/wrapping-chakra-ui-with-slot-components.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/wrapping-chakra-ui-with-slot-components.md",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:front-end-ui-and-design-systems": {
       "name": "Front-end UI and Design Systems",
       "type": "standard",
-      "id": "4135f974-b52a-4d6b-a222-9894e8998c3f",
+      "id": "d7d5254e-ba15-49eb-b6af-82678074d598",
       "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": ["41dd679d-01d1-4e20-8348-006616433412"],
+      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "packageIds": [
+        "720cc588-f184-4029-9d13-027f18da2ab3"
+      ],
       "files": [
         {
           "path": ".packmind/standards/front-end-ui-and-design-systems.md",
