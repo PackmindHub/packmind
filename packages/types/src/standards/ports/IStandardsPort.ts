@@ -51,6 +51,9 @@ export interface IStandardsPort {
     userId: string,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Standard[]>;
+  listAllStandardsByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Standard[]>;
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]>;
   findStandardBySlug(
     slug: string,
