@@ -442,6 +442,24 @@ export class StandardsAdapter
     return response.standards;
   }
 
+  async listAllStandardsByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Standard[]> {
+    if (!this.spacesPort) {
+      this.logger.warn('SpacesPort not available, returning empty results');
+      return [];
+    }
+
+    const spaces =
+      await this.spacesPort.listSpacesByOrganization(organizationId);
+    const standardsPerSpace = await Promise.all(
+      spaces.map((space) =>
+        this.services.getStandardService().listStandardsBySpace(space.id),
+      ),
+    );
+    return standardsPerSpace.flat();
+  }
+
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]> {
     return this.repositories.getRuleExampleRepository().findByRuleId(id);
   }
