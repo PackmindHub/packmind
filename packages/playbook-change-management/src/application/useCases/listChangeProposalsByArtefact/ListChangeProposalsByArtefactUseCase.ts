@@ -18,9 +18,14 @@ import {
   StandardId,
   ChangeProposalStatus,
 } from '@packmind/types';
+import { ArtefactNotFoundError } from '../../../domain/errors/ArtefactNotFoundError';
+import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ConflictDetectionService } from '../../services/ConflictDetectionService';
-import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
+import {
+  ArtefactType,
+  validateArtefactInSpace,
+} from '../../services/validateArtefactInSpace';
 
 const origin = 'ListChangeProposalsByArtefactUseCase';
 
@@ -50,13 +55,25 @@ export class ListChangeProposalsByArtefactUseCase<
   async executeForSpaceMembers(
     command: ListChangeProposalsByArtefactCommand<T> & SpaceMemberContext,
   ): Promise<ListChangeProposalsByArtefactResponse> {
-    const artefactType = await validateArtefactInSpace(
-      command.artefactId,
-      command.spaceId,
-      this.standardsPort,
-      this.recipesPort,
-      this.skillsPort,
-    );
+    let artefactType: ArtefactType;
+    try {
+      artefactType = await validateArtefactInSpace(
+        command.artefactId,
+        command.spaceId,
+        this.standardsPort,
+        this.recipesPort,
+        this.skillsPort,
+      );
+    } catch (error) {
+      if (
+        error instanceof ArtefactNotFoundError ||
+        error instanceof ArtefactNotInSpaceError
+      ) {
+        this.logger.warn(error.message);
+        return { changeProposals: [], currentPackageIds: [] };
+      }
+      throw error;
+    }
 
     const [allProposals, { packages }] = await Promise.all([
       this.service.findProposalsByArtefact(command.spaceId, command.artefactId),

@@ -31,8 +31,6 @@ import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { standardFactory } from '@packmind/standards/test/standardFactory';
 import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { changeProposalFactory } from '../../../../test/changeProposalFactory';
-import { ArtefactNotFoundError } from '../../../domain/errors/ArtefactNotFoundError';
-import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpaceError';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ConflictDetectionService } from '../../services/ConflictDetectionService';
 import { ListChangeProposalsByArtefactUseCase } from './ListChangeProposalsByArtefactUseCase';
@@ -508,16 +506,20 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       skillsPort.getSkill.mockResolvedValue(null);
     });
 
-    it('throws ArtefactNotFoundError', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ArtefactNotFoundError,
-      );
+    it('returns an empty changeProposals array', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.changeProposals).toEqual([]);
+    });
+
+    it('returns an empty currentPackageIds array', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.currentPackageIds).toEqual([]);
     });
 
     it('does not call service', async () => {
-      await useCase.execute(command).catch(() => {
-        /* expected rejection */
-      });
+      await useCase.execute(command);
 
       expect(service.findProposalsByArtefact).not.toHaveBeenCalled();
     });
@@ -536,16 +538,20 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       standardsPort.getStandard.mockResolvedValue(differentStandard);
     });
 
-    it('throws ArtefactNotInSpaceError', async () => {
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ArtefactNotInSpaceError,
-      );
+    it('returns an empty changeProposals array', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.changeProposals).toEqual([]);
+    });
+
+    it('returns an empty currentPackageIds array', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.currentPackageIds).toEqual([]);
     });
 
     it('does not call service', async () => {
-      await useCase.execute(command).catch(() => {
-        /* expected rejection */
-      });
+      await useCase.execute(command);
 
       expect(service.findProposalsByArtefact).not.toHaveBeenCalled();
     });
