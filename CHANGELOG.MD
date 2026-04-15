@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- Fix issue with feature-flag that prevented users to create new space
+
 ## Removed
 
 # [1.13.0] - 2026-04-15
