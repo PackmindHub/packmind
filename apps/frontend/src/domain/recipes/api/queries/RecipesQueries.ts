@@ -11,7 +11,6 @@ import {
   getRecipesBySpaceKey,
   getRecipeByIdKey,
   getRecipeVersionsKey,
-  RECIPES_QUERY_SCOPE,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -231,9 +230,9 @@ export const useDeleteRecipeMutation = () => {
         return oldData;
       });
 
-      // Invalidate all recipes to trigger background refetch
+      // Invalidate the space-scoped recipes list to trigger background refetch
       await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, RECIPES_QUERY_SCOPE],
+        queryKey: getRecipesBySpaceKey(spaceId),
       });
 
       // Deployments orphaned (same as standards)
@@ -282,7 +281,7 @@ export const useDeleteRecipesBatchMutation = () => {
     onSuccess: async () => {
       // Same as useDeleteRecipeMutation
       await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, RECIPES_QUERY_SCOPE],
+        queryKey: getRecipesBySpaceKey(spaceId),
       });
 
       await queryClient.invalidateQueries({
