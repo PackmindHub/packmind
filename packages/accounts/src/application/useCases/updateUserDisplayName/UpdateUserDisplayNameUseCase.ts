@@ -7,8 +7,10 @@ import {
   UpdateUserDisplayNameResponse,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
+import { InvalidDisplayNameError } from '../../../domain/errors';
 
 const origin = 'UpdateUserDisplayNameUseCase';
+const MAX_DISPLAY_NAME_LENGTH = 255;
 
 export class UpdateUserDisplayNameUseCase
   extends AbstractMemberUseCase<
@@ -31,13 +33,26 @@ export class UpdateUserDisplayNameUseCase
   ): Promise<UpdateUserDisplayNameResponse> {
     const { user, displayName } = command;
 
-    const trimmedDisplayName = displayName?.trim() || null;
+    const normalizedDisplayName = this.normalize(displayName);
+
+    if (
+      normalizedDisplayName !== null &&
+      normalizedDisplayName.length > MAX_DISPLAY_NAME_LENGTH
+    ) {
+      throw InvalidDisplayNameError.tooLong();
+    }
 
     const updatedUser = await this.userService.updateUser({
       ...user,
-      displayName: trimmedDisplayName,
+      displayName: normalizedDisplayName,
     });
 
     return { displayName: updatedUser.displayName };
+  }
+
+  private normalize(displayName: string | null): string | null {
+    if (displayName === null) return null;
+    const trimmed = displayName.trim().replace(/\s+/g, ' ');
+    return trimmed || null;
   }
 }

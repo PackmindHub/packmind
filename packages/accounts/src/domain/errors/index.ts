@@ -21,3 +21,4 @@ export { PasswordResetTokenNotFoundError } from './PasswordResetTokenNotFoundErr
 export { PasswordResetTokenExpiredError } from './PasswordResetTokenExpiredError';
 export { InvalidTrialActivationTokenError } from './InvalidTrialActivationTokenError';
 export { InvalidOrganizationNameError } from './InvalidOrganizationNameError';
+export { InvalidDisplayNameError } from './InvalidDisplayNameError';

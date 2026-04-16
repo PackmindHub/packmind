@@ -11,6 +11,7 @@ import {
 import { organizationFactory, userFactory } from '../../../../test';
 import { UserService } from '../../services/UserService';
 import { UpdateUserDisplayNameUseCase } from './UpdateUserDisplayNameUseCase';
+import { InvalidDisplayNameError } from '../../../domain/errors';
 
 describe('UpdateUserDisplayNameUseCase', () => {
   let useCase: UpdateUserDisplayNameUseCase;
@@ -149,6 +150,101 @@ describe('UpdateUserDisplayNameUseCase', () => {
 
       it('returns the trimmed display name', () => {
         expect(result).toEqual({ displayName: 'Joan Racenet' });
+      });
+    });
+
+    describe('when display name has consecutive spaces', () => {
+      let result: UpdateUserDisplayNameResponse;
+
+      beforeEach(async () => {
+        const command: UpdateUserDisplayNameCommand & MemberContext = {
+          userId: String(userId),
+          organizationId,
+          displayName: 'Joan    Racenet',
+          user,
+          organization,
+          membership,
+        };
+
+        mockUserService.updateUser.mockResolvedValue({
+          ...user,
+          displayName: 'Joan Racenet',
+        });
+
+        result = await useCase.executeForMembers(command);
+      });
+
+      it('normalizes consecutive spaces to single space', () => {
+        expect(mockUserService.updateUser).toHaveBeenCalledWith({
+          ...user,
+          displayName: 'Joan Racenet',
+        });
+      });
+
+      it('returns the normalized display name', () => {
+        expect(result).toEqual({ displayName: 'Joan Racenet' });
+      });
+    });
+
+    describe('when display name exceeds max length', () => {
+      it('throws InvalidDisplayNameError', async () => {
+        const command: UpdateUserDisplayNameCommand & MemberContext = {
+          userId: String(userId),
+          organizationId,
+          displayName: 'a'.repeat(256),
+          user,
+          organization,
+          membership,
+        };
+
+        await expect(useCase.executeForMembers(command)).rejects.toThrow(
+          InvalidDisplayNameError,
+        );
+      });
+
+      it('does not call updateUser', async () => {
+        const command: UpdateUserDisplayNameCommand & MemberContext = {
+          userId: String(userId),
+          organizationId,
+          displayName: 'a'.repeat(256),
+          user,
+          organization,
+          membership,
+        };
+
+        await expect(useCase.executeForMembers(command)).rejects.toThrow();
+        expect(mockUserService.updateUser).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when display name is exactly max length', () => {
+      let result: UpdateUserDisplayNameResponse;
+
+      beforeEach(async () => {
+        const name = 'a'.repeat(255);
+        const command: UpdateUserDisplayNameCommand & MemberContext = {
+          userId: String(userId),
+          organizationId,
+          displayName: name,
+          user,
+          organization,
+          membership,
+        };
+
+        mockUserService.updateUser.mockResolvedValue({
+          ...user,
+          displayName: name,
+        });
+
+        result = await useCase.executeForMembers(command);
+      });
+
+      it('accepts the display name', () => {
+        expect(mockUserService.updateUser).toHaveBeenCalled();
+      });
+
+      it('returns the display name', () => {
+        expect(result.displayName).toHaveLength(255);
       });
     });
 
