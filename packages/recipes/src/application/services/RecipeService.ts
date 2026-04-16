@@ -271,13 +271,11 @@ export class RecipeService {
     });
 
     try {
-      // 1. Read the original recipe
       const original = await this.recipeRepository.findById(recipeId);
       if (!original) {
         throw new Error(`Recipe with id ${recipeId} not found`);
       }
 
-      // 2. Create new recipe with fresh ID
       const newRecipeId = createRecipeId(uuidv4());
       const newRecipe: Recipe = {
         id: newRecipeId,
@@ -292,13 +290,11 @@ export class RecipeService {
       };
       const savedRecipe = await this.recipeRepository.add(newRecipe);
 
-      // 3. Read all versions for this recipe
       const versions =
         await this.recipeVersionRepository.findByRecipeId(recipeId);
 
-      for (const version of versions) {
-        // 4. Create new version with fresh ID, linked to new recipe
-        await this.recipeVersionRepository.add({
+      if (versions.length > 0) {
+        const newVersions = versions.map((version) => ({
           id: createRecipeVersionId(uuidv4()),
           recipeId: newRecipeId,
           name: version.name,
@@ -308,7 +304,8 @@ export class RecipeService {
           summary: version.summary,
           gitCommit: version.gitCommit,
           userId: version.userId,
-        });
+        }));
+        await this.recipeVersionRepository.addMany(newVersions);
       }
 
       this.logger.info('Recipe duplicated to space successfully', {

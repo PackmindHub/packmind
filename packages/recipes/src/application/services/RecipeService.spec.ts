@@ -30,6 +30,7 @@ describe('RecipeService', () => {
   beforeEach(() => {
     recipeRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
@@ -41,6 +42,7 @@ describe('RecipeService', () => {
 
     recipeVersionRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -410,7 +412,9 @@ describe('RecipeService', () => {
         recipeVersionRepository.findByRecipeId = jest
           .fn()
           .mockResolvedValue([version]);
-        recipeVersionRepository.add = jest.fn().mockResolvedValue(version);
+        recipeVersionRepository.addMany = jest
+          .fn()
+          .mockResolvedValue([version]);
       });
 
       it('creates a new recipe in the destination space', async () => {
@@ -439,14 +443,14 @@ describe('RecipeService', () => {
           newUserId,
         );
 
-        expect(recipeVersionRepository.add).toHaveBeenCalledWith(
+        expect(recipeVersionRepository.addMany).toHaveBeenCalledWith([
           expect.objectContaining({
             name: version.name,
             slug: version.slug,
             content: version.content,
             version: version.version,
           }),
-        );
+        ]);
       });
 
       it('returns the duplicated recipe', async () => {
@@ -506,17 +510,25 @@ describe('RecipeService', () => {
         recipeVersionRepository.findByRecipeId = jest
           .fn()
           .mockResolvedValue([version1, version2]);
-        recipeVersionRepository.add = jest.fn().mockResolvedValue(version1);
+        recipeVersionRepository.addMany = jest
+          .fn()
+          .mockResolvedValue([version1, version2]);
       });
 
-      it('copies all versions', async () => {
+      it('copies all versions in a single bulk call', async () => {
         await recipeService.duplicateRecipeToSpace(
           recipeId,
           destinationSpaceId,
           newUserId,
         );
 
-        expect(recipeVersionRepository.add).toHaveBeenCalledTimes(2);
+        expect(recipeVersionRepository.addMany).toHaveBeenCalledTimes(1);
+        expect(recipeVersionRepository.addMany).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ name: version1.name }),
+            expect.objectContaining({ name: version2.name }),
+          ]),
+        );
       });
     });
 
@@ -578,7 +590,7 @@ describe('RecipeService', () => {
           newUserId,
         );
 
-        expect(recipeVersionRepository.add).not.toHaveBeenCalled();
+        expect(recipeVersionRepository.addMany).not.toHaveBeenCalled();
       });
 
       it('returns the duplicated recipe', async () => {
