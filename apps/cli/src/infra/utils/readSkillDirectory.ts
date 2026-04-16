@@ -35,7 +35,11 @@ const MAX_FILE_SIZE_MB = 10;
  * Glob patterns for files and directories that should be excluded from skill uploads.
  * Add patterns here to blacklist additional files or directories.
  */
-const BLACKLIST_PATTERNS = ['**/.DS_Store'];
+const BLACKLIST_PATTERNS = [
+  '**/.DS_Store',
+  '**/node_modules',
+  '**/node_modules/**',
+];
 
 /**
  * Checks if a relative path matches any of the blacklist patterns.
