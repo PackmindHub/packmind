@@ -66,6 +66,7 @@ describe('StandardService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findByStandardVersionId: jest.fn(),
+      findByStandardVersionIds: jest.fn(),
     };
 
     ruleExampleRepository = {
@@ -75,6 +76,7 @@ describe('StandardService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findByRuleId: jest.fn(),
+      findByRuleIds: jest.fn(),
       updateById: jest.fn(),
     };
 
@@ -516,11 +518,11 @@ describe('StandardService', () => {
         standardVersionRepository.addMany = jest
           .fn()
           .mockResolvedValue([version]);
-        ruleRepository.findByStandardVersionId = jest
+        ruleRepository.findByStandardVersionIds = jest
           .fn()
           .mockResolvedValue([rule]);
         ruleRepository.addMany = jest.fn().mockResolvedValue([rule]);
-        ruleExampleRepository.findByRuleId = jest
+        ruleExampleRepository.findByRuleIds = jest
           .fn()
           .mockResolvedValue([example]);
         ruleExampleRepository.addMany = jest.fn().mockResolvedValue([example]);
@@ -686,27 +688,15 @@ describe('StandardService', () => {
         standardVersionRepository.addMany = jest
           .fn()
           .mockResolvedValue([version1, version2]);
-        ruleRepository.findByStandardVersionId = jest
+        ruleRepository.findByStandardVersionIds = jest
           .fn()
-          .mockImplementation((versionId) => {
-            if (versionId === version1.id)
-              return Promise.resolve([rule1v1, rule2v1]);
-            if (versionId === version2.id)
-              return Promise.resolve([rule1v2, rule2v2]);
-            return Promise.resolve([]);
-          });
+          .mockResolvedValue([rule1v1, rule2v1, rule1v2, rule2v2]);
         ruleRepository.addMany = jest
           .fn()
           .mockResolvedValue([rule1v1, rule2v1, rule1v2, rule2v2]);
-        ruleExampleRepository.findByRuleId = jest
+        ruleExampleRepository.findByRuleIds = jest
           .fn()
-          .mockImplementation((ruleId) => {
-            if (ruleId === rule1v1.id) return Promise.resolve([example1]);
-            if (ruleId === rule2v1.id) return Promise.resolve([example2]);
-            if (ruleId === rule1v2.id) return Promise.resolve([example3]);
-            if (ruleId === rule2v2.id) return Promise.resolve([example4]);
-            return Promise.resolve([]);
-          });
+          .mockResolvedValue([example1, example2, example3, example4]);
         ruleExampleRepository.addMany = jest
           .fn()
           .mockResolvedValue([example1, example2, example3, example4]);

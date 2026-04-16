@@ -50,6 +50,34 @@ export class RuleExampleRepository
       .getOne();
   }
 
+  async findByRuleIds(ruleIds: RuleId[]): Promise<RuleExample[]> {
+    if (ruleIds.length === 0) return [];
+
+    this.logger.info('Finding rule examples by rule IDs', {
+      count: ruleIds.length,
+    });
+
+    try {
+      const ruleExamples = await this.repository
+        .createQueryBuilder('ruleExample')
+        .where('ruleExample.ruleId IN (:...ruleIds)', {
+          ruleIds: ruleIds as string[],
+        })
+        .getMany();
+      this.logger.info('Rule examples found by rule IDs', {
+        requestedCount: ruleIds.length,
+        foundCount: ruleExamples.length,
+      });
+      return ruleExamples;
+    } catch (error) {
+      this.logger.error('Failed to find rule examples by rule IDs', {
+        count: ruleIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findByRuleId(ruleId: RuleId): Promise<RuleExample[]> {
     this.logger.info('Finding rule examples by rule ID', {
       ruleId,

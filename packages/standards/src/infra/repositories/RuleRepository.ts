@@ -44,6 +44,36 @@ export class RuleRepository
       .getOne();
   }
 
+  async findByStandardVersionIds(
+    standardVersionIds: StandardVersionId[],
+  ): Promise<Rule[]> {
+    if (standardVersionIds.length === 0) return [];
+
+    this.logger.info('Finding rules by standard version IDs', {
+      count: standardVersionIds.length,
+    });
+
+    try {
+      const rules = await this.repository
+        .createQueryBuilder('rule')
+        .where('rule.standardVersionId IN (:...standardVersionIds)', {
+          standardVersionIds: standardVersionIds as string[],
+        })
+        .getMany();
+      this.logger.info('Rules found by standard version IDs', {
+        requestedCount: standardVersionIds.length,
+        foundCount: rules.length,
+      });
+      return rules;
+    } catch (error) {
+      this.logger.error('Failed to find rules by standard version IDs', {
+        count: standardVersionIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findByStandardVersionId(
     standardVersionId: StandardVersionId,
   ): Promise<Rule[]> {
