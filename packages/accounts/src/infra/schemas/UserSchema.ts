@@ -19,6 +19,12 @@ export const UserSchema = new EntitySchema<
       length: 255,
       unique: true,
     },
+    displayName: {
+      name: 'display_name',
+      type: 'varchar',
+      length: 255,
+      nullable: true,
+    },
     passwordHash: {
       name: 'password_hash',
       type: 'varchar',

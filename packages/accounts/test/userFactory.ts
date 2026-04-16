@@ -18,6 +18,7 @@ export const userFactory: Factory<User> = (user?: Partial<User>) => {
   return {
     id,
     email: 'testuser@packmind.com',
+    displayName: null,
     passwordHash: 'hashedpassword123',
     active: true,
     memberships: [organizationMembership],

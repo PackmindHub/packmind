@@ -18,6 +18,7 @@ export type UserOrganizationMembership = {
 export type User = {
   id: UserId;
   email: string;
+  displayName: string | null;
   passwordHash: string | null;
   active: boolean;
   memberships: UserOrganizationMembership[];
