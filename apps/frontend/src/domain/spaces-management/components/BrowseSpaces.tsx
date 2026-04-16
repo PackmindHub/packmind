@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import type { RefObject } from 'react';
-import { PMBox, pmToaster } from '@packmind/ui';
+import { pmToaster } from '@packmind/ui';
 import { useNavigate } from 'react-router';
 import { SpaceId, UserSpaceWithRole } from '@packmind/types';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
-import { BrowseSpacesDrawer } from './BrowseSpacesDrawer';
+import { BrowseSpacesDrawer, BrowseSpacesTab } from './BrowseSpacesDrawer';
 import { CreateSpaceDialog } from './CreateSpaceDialog';
 import {
   useBrowseSpacesQuery,
@@ -16,13 +16,18 @@ import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 
 interface BrowseSpacesProps {
+  open: boolean;
+  onClose: () => void;
+  initialTab?: BrowseSpacesTab;
   containerRef?: RefObject<HTMLElement | null>;
 }
 
 export function BrowseSpaces({
+  open,
+  onClose,
+  initialTab,
   containerRef,
 }: Readonly<BrowseSpacesProps>): React.ReactElement {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { organization } = useAuthContext();
@@ -36,7 +41,7 @@ export function BrowseSpaces({
     if (organization?.slug) {
       navigate(routes.space.toDashboard(organization.slug, space.slug));
     }
-    setIsDrawerOpen(false);
+    onClose();
   };
 
   const handleJoinSpace = (spaceId: SpaceId, spaceName: string) => {
@@ -61,23 +66,11 @@ export function BrowseSpaces({
 
   return (
     <>
-      <PMBox
-        as="button"
-        fontSize="10px"
-        color="text.faded"
-        cursor="pointer"
-        _hover={{ color: 'text.primary' }}
-        transition="color 0.15s"
-        onClick={() => setIsDrawerOpen(true)}
-        data-testid="browse-spaces-trigger"
-      >
-        Browse
-      </PMBox>
       <BrowseSpacesDrawer
         mySpaces={mySpaces ?? []}
         allSpaces={browseData?.allSpaces ?? []}
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        open={open}
+        onClose={onClose}
         onSpaceClick={handleSpaceClick}
         onJoinSpace={handleJoinSpace}
         onPinSpace={(spaceId) => pinMutation.mutate({ spaceId })}
@@ -86,10 +79,11 @@ export function BrowseSpaces({
         isError={isError}
         isJoining={joinMutation.isPending}
         onCreateSpace={() => {
-          setIsDrawerOpen(false);
+          onClose();
           setIsCreateDialogOpen(true);
         }}
         containerRef={containerRef}
+        initialTab={initialTab}
       />
       <CreateSpaceDialog
         open={isCreateDialogOpen}
