@@ -33,6 +33,10 @@ export const UserSpaceMembershipSchema = new EntitySchema<
       type: 'uuid',
       nullable: false,
     },
+    pinned: {
+      type: 'boolean',
+      default: false,
+    },
     ...timestampsSchemas,
   },
   relations: {
