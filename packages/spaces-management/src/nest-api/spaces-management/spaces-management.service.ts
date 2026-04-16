@@ -17,6 +17,10 @@ import {
   UpdateSpaceResponse,
   DeleteSpaceCommand,
   DeleteSpaceResponse,
+  PinSpaceCommand,
+  PinSpaceResponse,
+  UnpinSpaceCommand,
+  UnpinSpaceResponse,
 } from '@packmind/types';
 import { SpacesManagementHexa } from '../../SpacesManagementHexa';
 
@@ -98,5 +102,19 @@ export class SpacesManagementService {
       spaceId: command.spaceId,
     });
     return this.spacesManagementAdapter.deleteSpace(command);
+  }
+
+  async pinSpace(command: PinSpaceCommand): Promise<PinSpaceResponse> {
+    this.logger.info('Pinning space', {
+      spaceId: command.spaceId,
+    });
+    return this.spacesManagementAdapter.pinSpace(command);
+  }
+
+  async unpinSpace(command: UnpinSpaceCommand): Promise<UnpinSpaceResponse> {
+    this.logger.info('Unpinning space', {
+      spaceId: command.spaceId,
+    });
+    return this.spacesManagementAdapter.unpinSpace(command);
   }
 }

@@ -36,7 +36,9 @@ import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConfl
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
+import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
+import { SpaceMembershipNotFoundError } from '../../domain/errors/SpaceMembershipNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpacesManagementService } from './spaces-management.service';
@@ -382,6 +384,76 @@ export class SpacesManagementController {
           error: errorMessage,
         },
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Pin a space for the current user
+   * POST /organizations/:orgId/spaces-management/:spaceId/pin
+   */
+  @Post(':spaceId/pin')
+  @HttpCode(204)
+  async pinSpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces-management/:spaceId/pin - Pinning space',
+      { organizationId, userId, spaceId },
+    );
+
+    try {
+      await this.spacesManagementService.pinSpace({
+        userId,
+        organizationId,
+        spaceId,
+      });
+    } catch (error) {
+      if (error instanceof CannotPinDefaultSpaceError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof SpaceMembershipNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Unpin a space for the current user
+   * DELETE /organizations/:orgId/spaces-management/:spaceId/pin
+   */
+  @Delete(':spaceId/pin')
+  @HttpCode(204)
+  async unpinSpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces-management/:spaceId/pin - Unpinning space',
+      { organizationId, userId, spaceId },
+    );
+
+    try {
+      await this.spacesManagementService.unpinSpace({
+        userId,
+        organizationId,
+        spaceId,
+      });
+    } catch (error) {
+      if (error instanceof CannotPinDefaultSpaceError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof SpaceMembershipNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
       throw error;
     }
   }
