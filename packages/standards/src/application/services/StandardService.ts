@@ -287,13 +287,11 @@ export class StandardService {
     });
 
     try {
-      // 1. Read the original standard
       const original = await this.standardRepository.findById(standardId);
       if (!original) {
         throw new Error(`Standard with id ${standardId} not found`);
       }
 
-      // 2. Create new standard with fresh ID
       const newStandardId = createStandardId(uuidv4());
       const newStandard: Standard = {
         id: newStandardId,
@@ -309,59 +307,80 @@ export class StandardService {
         movedTo: null,
       };
       const savedStandard = await this.standardRepository.add(newStandard);
-      const ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }> = [];
 
-      // 3. Read all versions for this standard
       const versions =
         await this.standardVersionRepository.findByStandardId(standardId);
 
-      for (const version of versions) {
-        // 4. Create new version with fresh ID, linked to new standard
-        const newVersionId = createStandardVersionId(uuidv4());
-        await this.standardVersionRepository.add({
-          id: newVersionId,
-          standardId: newStandardId,
-          name: version.name,
-          slug: version.slug,
-          description: version.description,
-          version: version.version,
-          summary: version.summary,
-          gitCommit: version.gitCommit,
-          userId: version.userId,
-          scope: version.scope,
+      if (versions.length === 0) {
+        this.logger.info('Standard duplicated to space successfully', {
+          originalStandardId: standardId,
+          newStandardId,
+          destinationSpaceId,
+          versionsCount: 0,
+          ruleMappingsCount: 0,
         });
+        return { standard: savedStandard, ruleMappings: [] };
+      }
 
-        // 5. Read all rules for this version
-        const rules = await this.ruleRepository.findByStandardVersionId(
-          version.id,
-        );
+      const newVersions = versions.map((version) => ({
+        id: createStandardVersionId(uuidv4()),
+        standardId: newStandardId,
+        name: version.name,
+        slug: version.slug,
+        description: version.description,
+        version: version.version,
+        summary: version.summary,
+        gitCommit: version.gitCommit,
+        userId: version.userId,
+        scope: version.scope,
+      }));
+      await this.standardVersionRepository.addMany(newVersions);
 
-        for (const rule of rules) {
-          // 6. Create new rule with fresh ID, linked to new version
-          const newRuleId = createRuleId(uuidv4());
-          await this.ruleRepository.add({
-            id: newRuleId,
-            content: rule.content,
-            standardVersionId: newVersionId,
-          });
-          ruleMappings.push({ oldRuleId: rule.id, newRuleId });
+      const versionIdMap = new Map(
+        versions.map((v, i) => [v.id, newVersions[i].id]),
+      );
 
-          // 7. Read all examples for this rule
-          const examples = await this.ruleExampleRepository.findByRuleId(
-            rule.id,
-          );
+      const rulesPerVersion = await Promise.all(
+        versions.map((v) => this.ruleRepository.findByStandardVersionId(v.id)),
+      );
+      const allOriginalRules = rulesPerVersion.flat();
 
-          for (const example of examples) {
-            // 8. Create new example with fresh ID, linked to new rule
-            await this.ruleExampleRepository.add({
-              id: createRuleExampleId(uuidv4()),
-              lang: example.lang,
-              positive: example.positive,
-              negative: example.negative,
-              ruleId: newRuleId,
-            });
-          }
-        }
+      const ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }> = [];
+      const newRules = allOriginalRules.map((rule) => {
+        const newRuleId = createRuleId(uuidv4());
+        ruleMappings.push({ oldRuleId: rule.id, newRuleId });
+        return {
+          id: newRuleId,
+          content: rule.content,
+          standardVersionId: versionIdMap.get(rule.standardVersionId)!,
+        };
+      });
+
+      if (newRules.length > 0) {
+        await this.ruleRepository.addMany(newRules);
+      }
+
+      const ruleIdMap = new Map(
+        allOriginalRules.map((r, i) => [r.id, newRules[i].id]),
+      );
+
+      const examplesPerRule = await Promise.all(
+        allOriginalRules.map((r) =>
+          this.ruleExampleRepository.findByRuleId(r.id),
+        ),
+      );
+      const allOriginalExamples = examplesPerRule.flat();
+
+      const newExamples = allOriginalExamples.map((example) => ({
+        id: createRuleExampleId(uuidv4()),
+        lang: example.lang,
+        positive: example.positive,
+        negative: example.negative,
+        ruleId: ruleIdMap.get(example.ruleId)!,
+      }));
+
+      if (newExamples.length > 0) {
+        await this.ruleExampleRepository.addMany(newExamples);
       }
 
       this.logger.info('Standard duplicated to space successfully', {

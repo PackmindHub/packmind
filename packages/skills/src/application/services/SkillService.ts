@@ -252,13 +252,11 @@ export class SkillService {
     });
 
     try {
-      // 1. Read the original skill
       const original = await this.skillRepository.findById(skillId);
       if (!original) {
         throw new Error(`Skill with id ${skillId} not found`);
       }
 
-      // 2. Create new skill with fresh ID
       const newSkillId = createSkillId(uuidv4());
       const now = new Date();
       const newSkill: Skill = {
@@ -281,45 +279,56 @@ export class SkillService {
       };
       const savedSkill = await this.skillRepository.add(newSkill);
 
-      // 3. Read all versions for this skill
       const versions = await this.skillVersionRepository.findBySkillId(skillId);
 
-      for (const version of versions) {
-        // 4. Create new version with fresh ID, linked to new skill
-        const newVersionId = createSkillVersionId(uuidv4());
-        await this.skillVersionRepository.add({
-          id: newVersionId,
-          skillId: newSkillId,
-          version: version.version,
-          userId: version.userId,
-          name: version.name,
-          slug: version.slug,
-          description: version.description,
-          prompt: version.prompt,
-          allowedTools: version.allowedTools,
-          license: version.license,
-          compatibility: version.compatibility,
-          metadata: version.metadata,
-          additionalProperties: version.additionalProperties,
+      if (versions.length === 0) {
+        this.logger.info('Skill duplicated to space successfully', {
+          originalSkillId: skillId,
+          newSkillId,
+          destinationSpaceId,
+          versionsCount: 0,
         });
+        return savedSkill;
+      }
 
-        // 5. Read all files for this version
-        const files = await this.skillFileRepository.findBySkillVersionId(
-          version.id,
-        );
+      const newVersions = versions.map((version) => ({
+        id: createSkillVersionId(uuidv4()),
+        skillId: newSkillId,
+        version: version.version,
+        userId: version.userId,
+        name: version.name,
+        slug: version.slug,
+        description: version.description,
+        prompt: version.prompt,
+        allowedTools: version.allowedTools,
+        license: version.license,
+        compatibility: version.compatibility,
+        metadata: version.metadata,
+        additionalProperties: version.additionalProperties,
+      }));
+      await this.skillVersionRepository.addMany(newVersions);
 
-        if (files.length > 0) {
-          // 6. Create new files with fresh IDs, linked to new version
-          const newFiles = files.map((file) => ({
-            id: createSkillFileId(uuidv4()),
-            skillVersionId: newVersionId,
-            path: file.path,
-            content: file.content,
-            permissions: file.permissions,
-            isBase64: file.isBase64,
-          }));
-          await this.skillFileRepository.addMany(newFiles);
-        }
+      const versionIdMap = new Map(
+        versions.map((v, i) => [v.id, newVersions[i].id]),
+      );
+
+      const filesPerVersion = await Promise.all(
+        versions.map((v) =>
+          this.skillFileRepository.findBySkillVersionId(v.id),
+        ),
+      );
+      const allOriginalFiles = filesPerVersion.flat();
+
+      if (allOriginalFiles.length > 0) {
+        const newFiles = allOriginalFiles.map((file) => ({
+          id: createSkillFileId(uuidv4()),
+          skillVersionId: versionIdMap.get(file.skillVersionId)!,
+          path: file.path,
+          content: file.content,
+          permissions: file.permissions,
+          isBase64: file.isBase64,
+        }));
+        await this.skillFileRepository.addMany(newFiles);
       }
 
       this.logger.info('Skill duplicated to space successfully', {
