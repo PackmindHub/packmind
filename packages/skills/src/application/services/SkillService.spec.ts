@@ -57,6 +57,7 @@ describe('SkillService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findBySkillVersionId: jest.fn(),
+      findBySkillVersionIds: jest.fn(),
       addMany: jest.fn(),
     };
 
@@ -442,7 +443,7 @@ describe('SkillService', () => {
           .fn()
           .mockResolvedValue([version]);
         skillVersionRepository.addMany = jest.fn().mockResolvedValue([version]);
-        skillFileRepository.findBySkillVersionId = jest
+        skillFileRepository.findBySkillVersionIds = jest
           .fn()
           .mockResolvedValue([file]);
         skillFileRepository.addMany = jest.fn().mockResolvedValue([file]);
@@ -576,13 +577,9 @@ describe('SkillService', () => {
         skillVersionRepository.addMany = jest
           .fn()
           .mockResolvedValue([version1, version2]);
-        skillFileRepository.findBySkillVersionId = jest
+        skillFileRepository.findBySkillVersionIds = jest
           .fn()
-          .mockImplementation((versionId) => {
-            if (versionId === version1.id) return Promise.resolve([file1]);
-            if (versionId === version2.id) return Promise.resolve([file2]);
-            return Promise.resolve([]);
-          });
+          .mockResolvedValue([file1, file2]);
         skillFileRepository.addMany = jest.fn().mockResolvedValue([]);
       });
 
@@ -635,7 +632,7 @@ describe('SkillService', () => {
           .fn()
           .mockResolvedValue([version]);
         skillVersionRepository.addMany = jest.fn().mockResolvedValue([version]);
-        skillFileRepository.findBySkillVersionId = jest
+        skillFileRepository.findBySkillVersionIds = jest
           .fn()
           .mockResolvedValue([]);
       });

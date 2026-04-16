@@ -29,6 +29,37 @@ export class SkillFileRepository
     };
   }
 
+  async findBySkillVersionIds(
+    skillVersionIds: SkillVersionId[],
+  ): Promise<SkillFile[]> {
+    if (skillVersionIds.length === 0) return [];
+
+    this.logger.info('Finding skill files by version IDs', {
+      count: skillVersionIds.length,
+    });
+
+    try {
+      const files = await this.repository
+        .createQueryBuilder('skillFile')
+        .where('skillFile.skillVersionId IN (:...skillVersionIds)', {
+          skillVersionIds: skillVersionIds as string[],
+        })
+        .getMany();
+
+      this.logger.info('Skill files found by version IDs', {
+        requestedCount: skillVersionIds.length,
+        foundCount: files.length,
+      });
+      return files;
+    } catch (error) {
+      this.logger.error('Failed to find skill files by version IDs', {
+        count: skillVersionIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findBySkillVersionId(
     skillVersionId: SkillVersionId,
   ): Promise<SkillFile[]> {
