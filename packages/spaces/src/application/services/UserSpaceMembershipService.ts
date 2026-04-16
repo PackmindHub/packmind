@@ -134,6 +134,18 @@ export class UserSpaceMembershipService {
     return this.userSpaceMembershipRepository.removeMembership(userId, spaceId);
   }
 
+  async updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean> {
+    return this.userSpaceMembershipRepository.updateMembershipPinned(
+      userId,
+      spaceId,
+      pinned,
+    );
+  }
+
   async getSpaceById(spaceId: SpaceId): Promise<Space | null> {
     return this.spaceRepository.findById(spaceId);
   }
