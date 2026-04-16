@@ -1,34 +1,12 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
+import { hashNameToSpaceColor } from '../lib/hashNameToSpaceColor';
 
 const origin = 'AddColorToSpaces1803000000000';
 
-const SPACE_COLOR_PALETTES = [
-  'red',
-  'orange',
-  'yellow',
-  'green',
-  'teal',
-  'blue',
-  'cyan',
-  'purple',
-  'pink',
-] as const;
-
-export function hashNameToSpaceColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = Math.trunc(hash * 31 + (name.codePointAt(i) ?? 0));
-  }
-  return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
-}
-
 export class AddColorToSpaces1803000000000 implements MigrationInterface {
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   public async up(queryRunner: QueryRunner): Promise<void> {

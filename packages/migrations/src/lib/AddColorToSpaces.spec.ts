@@ -1,4 +1,4 @@
-import { hashNameToSpaceColor } from './1803000000000-AddColorToSpaces';
+import { hashNameToSpaceColor } from './hashNameToSpaceColor';
 
 describe('hashNameToSpaceColor', () => {
   describe('when matching the frontend getSpaceColorPalette behavior', () => {
