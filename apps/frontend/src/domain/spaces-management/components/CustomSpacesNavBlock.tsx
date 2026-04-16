@@ -33,7 +33,7 @@ export function CustomSpacesNavBlock({
       {pinnedSpaces.length > 0 && (
         <>
           <PMBox px={3} pt={3} pb={1}>
-            <PMText fontSize="2xs" fontWeight="semibold" color="text.faded">
+            <PMText fontSize="2xs" fontWeight="semibold" color="faded">
               Pinned
             </PMText>
           </PMBox>
@@ -50,7 +50,7 @@ export function CustomSpacesNavBlock({
         </>
       )}
       <PMBox px={3} pt={3} pb={1}>
-        <PMText fontSize="2xs" fontWeight="semibold" color="text.faded">
+        <PMText fontSize="2xs" fontWeight="semibold" color="faded">
           My spaces
         </PMText>
       </PMBox>
