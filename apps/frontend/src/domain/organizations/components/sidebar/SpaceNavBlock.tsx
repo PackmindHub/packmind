@@ -39,26 +39,6 @@ interface SpaceNavBlockProps {
   onSpaceClick: () => void;
 }
 
-const SPACE_COLOR_PALETTES = [
-  'red',
-  'orange',
-  'yellow',
-  'green',
-  'teal',
-  'blue',
-  'cyan',
-  'purple',
-  'pink',
-] as const;
-
-export function getSpaceColorPalette(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = Math.trunc(hash * 31 + (name.codePointAt(i) ?? 0));
-  }
-  return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
-}
-
 export function getSpaceInitials(name: string): string {
   return name
     .split(/\s+/)
@@ -195,11 +175,7 @@ function ExpandedSpaceNavBlock({
                 whiteSpace="nowrap"
                 minW={0}
               >
-                <PMStatus.Root
-                  colorPalette={getSpaceColorPalette(space.name)}
-                  as="span"
-                  mr={1.5}
-                >
+                <PMStatus.Root colorPalette={space.color} as="span" mr={1.5}>
                   <PMStatus.Indicator />
                 </PMStatus.Root>
                 {space.name}
@@ -299,7 +275,7 @@ function CollapsedSpaceNavBlock({
             <PMAvatar.Root
               size="xs"
               borderRadius="sm"
-              backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
+              backgroundColor={`${space.color}.solid`}
               color="text.primary"
               {...(isActive && {
                 outline: '2px solid',
@@ -419,11 +395,7 @@ function SpaceNameRow({
           whiteSpace="nowrap"
           minW={0}
         >
-          <PMStatus.Root
-            colorPalette={getSpaceColorPalette(space.name)}
-            as="span"
-            mr={1.5}
-          >
+          <PMStatus.Root colorPalette={space.color} as="span" mr={1.5}>
             <PMStatus.Indicator />
           </PMStatus.Root>
           {space.name}

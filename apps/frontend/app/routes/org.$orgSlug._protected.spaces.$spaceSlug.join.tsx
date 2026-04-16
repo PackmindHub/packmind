@@ -17,7 +17,6 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { getSpaceColorPalette } from '../../src/domain/organizations/components/sidebar/SpaceNavBlock';
 
 // ─── CLIENT LOADER ───────────────────────────────────────────────────────
 export async function clientLoader({
@@ -108,7 +107,7 @@ export default function JoinSpaceRouteModule() {
   return (
     <PMBox display="flex" justifyContent="center" alignItems="center" h="100%">
       <PMVStack align="center" gap={6} maxW="sm" textAlign="center">
-        <PMStatus.Root colorPalette={getSpaceColorPalette(space.name)}>
+        <PMStatus.Root colorPalette={space.color}>
           <PMStatus.Indicator boxSize={4} />
         </PMStatus.Root>
         <PMVStack gap={2}>
