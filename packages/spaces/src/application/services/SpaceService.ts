@@ -3,8 +3,10 @@ import {
   createSpaceId,
   OrganizationId,
   Space,
+  SpaceColor,
   SpaceId,
   SpaceType,
+  SPACE_COLOR_PALETTES,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,6 +14,14 @@ import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictErr
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 
 const origin = 'SpaceService';
+
+function deriveColorFromName(name: string): SpaceColor {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = Math.trunc(hash * 31 + (name.codePointAt(i) ?? 0));
+  }
+  return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
+}
 
 export const DEFAULT_SPACE_NAME = 'Global';
 
@@ -49,6 +59,7 @@ export class SpaceService {
         type,
         organizationId,
         isDefaultSpace,
+        color: deriveColorFromName(name),
       };
 
       const createdSpace = await this.spaceRepository.add(space);
@@ -145,31 +156,38 @@ export class SpaceService {
 
   async updateSpace(
     spaceId: SpaceId,
-    fields: { name?: string; type?: SpaceType },
+    fields: { name?: string; type?: SpaceType; color?: SpaceColor },
   ): Promise<Space> {
     this.logger.info('Updating space', { spaceId });
 
-    const repoFields: { name?: string; slug?: string; type?: SpaceType } = {};
+    const repoFields: {
+      name?: string;
+      type?: SpaceType;
+      color?: SpaceColor;
+    } = {};
 
     if (fields.name !== undefined) {
       const space = await this.spaceRepository.findById(spaceId);
       if (!space) {
         throw new Error(`Space ${spaceId} not found`);
       }
-      const newSlug = slug(fields.name);
+      const candidateSlug = slug(fields.name);
       const existingBySlug = await this.spaceRepository.findBySlug(
-        newSlug,
+        candidateSlug,
         space.organizationId,
       );
       if (existingBySlug && existingBySlug.id !== spaceId) {
         throw new SpaceSlugConflictError(fields.name, space.organizationId);
       }
       repoFields.name = fields.name;
-      repoFields.slug = newSlug;
     }
 
     if (fields.type !== undefined) {
       repoFields.type = fields.type;
+    }
+
+    if (fields.color !== undefined) {
+      repoFields.color = fields.color;
     }
 
     return this.spaceRepository.updateFields(spaceId, repoFields);
