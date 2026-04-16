@@ -14,9 +14,14 @@ import {
   LuHouse,
   LuPackage,
   LuSlidersHorizontal,
+  LuStar,
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import {
+  usePinSpaceMutation,
+  useUnpinSpaceMutation,
+} from '../../../spaces-management/api/queries/SpacesManagementQueries';
 import { SpaceVisibilityIcon } from './SpaceVisibilityIcon';
 import { useNavigate } from 'react-router';
 import type { UserSpaceWithRole } from '@packmind/types';
@@ -149,6 +154,8 @@ function ExpandedSpaceNavBlock({
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox>
@@ -199,6 +206,32 @@ function ExpandedSpaceNavBlock({
               </PMText>
               <SpaceVisibilityIcon type={space.type} />
             </PMBox>
+            {!space.isDefaultSpace && (
+              <PMBox
+                as="button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  if (space.pinned) {
+                    unpinMutation.mutate({ spaceId: space.id });
+                  } else {
+                    pinMutation.mutate({ spaceId: space.id });
+                  }
+                }}
+                title={space.pinned ? 'Unpin space' : 'Pin space'}
+                flexShrink={0}
+                color={space.pinned ? 'yellow.400' : 'text.faded'}
+                _hover={{ color: 'yellow.400' }}
+                display="flex"
+                alignItems="center"
+                mr={1}
+                data-testid={`space-pin-toggle-${space.id}`}
+              >
+                <LuStar
+                  size={12}
+                  fill={space.pinned ? 'currentColor' : 'none'}
+                />
+              </PMBox>
+            )}
             <PMIconButton
               aria-label="Space settings"
               size="2xs"
@@ -226,6 +259,8 @@ function CollapsedSpaceNavBlock({
 }: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox
@@ -276,6 +311,31 @@ function CollapsedSpaceNavBlock({
           </PMBox>
         </PMTooltip>
 
+        {!isActive && !space.isDefaultSpace && (
+          <PMBox
+            as="button"
+            className="space-settings-btn"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              if (space.pinned) {
+                unpinMutation.mutate({ spaceId: space.id });
+              } else {
+                pinMutation.mutate({ spaceId: space.id });
+              }
+            }}
+            title={space.pinned ? 'Unpin space' : 'Pin space'}
+            flexShrink={0}
+            transition="opacity 0.15s"
+            color={space.pinned ? 'yellow.400' : 'text.faded'}
+            _hover={{ color: 'yellow.400' }}
+            display="flex"
+            alignItems="center"
+            data-testid={`space-pin-toggle-${space.id}`}
+          >
+            <LuStar size={12} fill={space.pinned ? 'currentColor' : 'none'} />
+          </PMBox>
+        )}
+
         {!isActive && (
           <PMIconButton
             className="space-settings-btn"
@@ -322,6 +382,8 @@ function SpaceNameRow({
   onSpaceClick: () => void;
 }>): React.ReactElement {
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox
@@ -366,6 +428,30 @@ function SpaceNameRow({
         </PMText>
         <SpaceVisibilityIcon type={space.type} />
       </PMBox>
+      {!space.isDefaultSpace && (
+        <PMBox
+          as="button"
+          className="space-settings-btn"
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (space.pinned) {
+              unpinMutation.mutate({ spaceId: space.id });
+            } else {
+              pinMutation.mutate({ spaceId: space.id });
+            }
+          }}
+          title={space.pinned ? 'Unpin space' : 'Pin space'}
+          flexShrink={0}
+          transition="opacity 0.15s"
+          color={space.pinned ? 'yellow.400' : 'text.faded'}
+          _hover={{ color: 'yellow.400' }}
+          display="flex"
+          alignItems="center"
+          data-testid={`space-pin-toggle-${space.id}`}
+        >
+          <LuStar size={12} fill={space.pinned ? 'currentColor' : 'none'} />
+        </PMBox>
+      )}
       <PMIconButton
         className="space-settings-btn"
         aria-label="Space settings"
