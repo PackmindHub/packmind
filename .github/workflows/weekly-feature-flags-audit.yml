@@ -1,4 +1,4 @@
-name: Weekly Packmind Skill
+name: Weekly Feature Flags Audit
 
 on:
   schedule:
@@ -16,32 +16,21 @@ permissions:
   id-token: write
 
 jobs:
-  playbook-cli-audit:
+  feature-flags-audit:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Install Packmind CLI
-        run: npm i -g @packmind/cli
-
-      - name: Run Playbook CLI Audit
+      - name: Run Feature Flags Audit
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: "/playbook-cli-audit"
+          prompt: "/feature-flags-audit\n\nWrite the report to `feature-flags-audit-report.md` at the project root."
           settings: |
             {
               "permissions": {
                 "allow": [
-                  "Bash(echo *)",
-                  "Bash(git remote *)",
-                  "Bash(mkdir *)",
-                  "Bash(packmind-cli *)",
                   "Agent",
                   "Read",
                   "Write",
@@ -55,22 +44,22 @@ jobs:
       - name: Display report
         if: always()
         run: |
-          if [ -f "playbook-cli-audit-report.md" ]; then
-            echo "=== Playbook CLI Audit Report ==="
-            cat "playbook-cli-audit-report.md"
-            echo "## Playbook CLI Audit Report" >> "$GITHUB_STEP_SUMMARY"
-            cat "playbook-cli-audit-report.md" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "feature-flags-audit-report.md" ]; then
+            echo "=== Feature Flags Audit Report ==="
+            cat "feature-flags-audit-report.md"
+            echo "## Feature Flags Audit Report" >> "$GITHUB_STEP_SUMMARY"
+            cat "feature-flags-audit-report.md" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "No report file found."
             echo "No report file found." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Prepare Slack payload
-        if: always() && hashFiles('playbook-cli-audit-report.md') != ''
+        if: always() && hashFiles('feature-flags-audit-report.md') != ''
         run: |
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           MAX_LENGTH=3800
-          REPORT=$(cat playbook-cli-audit-report.md)
+          REPORT=$(cat feature-flags-audit-report.md)
           if [ ${#REPORT} -gt $MAX_LENGTH ]; then
             REPORT="${REPORT:0:$MAX_LENGTH}..."$'\n\n'"Full report: $RUN_URL"
           else
@@ -86,7 +75,7 @@ jobs:
           echo "${EOF_DELIMITER}" >> "$GITHUB_ENV"
 
       - name: Send report to Slack
-        if: always() && hashFiles('playbook-cli-audit-report.md') != ''
+        if: always() && hashFiles('feature-flags-audit-report.md') != ''
         uses: slackapi/slack-github-action@v2
         with:
           method: chat.postMessage
@@ -97,7 +86,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playbook-cli-audit-report
-          path: playbook-cli-audit-report.md
+          name: feature-flags-audit-report
+          path: feature-flags-audit-report.md
           if-no-files-found: warn
           retention-days: 30
