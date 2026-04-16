@@ -29,6 +29,10 @@ import {
   UpdateSpaceResponse,
   DeleteSpaceCommand,
   DeleteSpaceResponse,
+  PinSpaceCommand,
+  PinSpaceResponse,
+  UnpinSpaceCommand,
+  UnpinSpaceResponse,
   createOrganizationId,
 } from '@packmind/types';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
@@ -39,6 +43,8 @@ import { JoinSpaceUseCase } from '../usecases/JoinSpaceUseCase';
 import { LeaveSpaceUseCase } from '../usecases/LeaveSpaceUseCase';
 import { UpdateSpaceUseCase } from '../usecases/UpdateSpaceUseCase';
 import { DeleteSpaceUseCase } from '../usecases/DeleteSpaceUseCase';
+import { PinSpaceUseCase } from '../usecases/PinSpaceUseCase';
+import { UnpinSpaceUseCase } from '../usecases/UnpinSpaceUseCase';
 
 /**
  * SpacesManagementAdapter - Implements the ISpacesManagementPort interface for cross-domain access
@@ -128,6 +134,24 @@ export class SpacesManagementAdapter
 
   async deleteSpace(command: DeleteSpaceCommand): Promise<DeleteSpaceResponse> {
     const useCase = new DeleteSpaceUseCase(
+      this.accountsPort,
+      this.spacesPort,
+      this.eventEmitterService,
+    );
+    return useCase.execute(command);
+  }
+
+  async pinSpace(command: PinSpaceCommand): Promise<PinSpaceResponse> {
+    const useCase = new PinSpaceUseCase(
+      this.accountsPort,
+      this.spacesPort,
+      this.eventEmitterService,
+    );
+    return useCase.execute(command);
+  }
+
+  async unpinSpace(command: UnpinSpaceCommand): Promise<UnpinSpaceResponse> {
+    const useCase = new UnpinSpaceUseCase(
       this.accountsPort,
       this.spacesPort,
       this.eventEmitterService,

@@ -27,6 +27,14 @@ import {
   DeleteSpaceCommand,
   DeleteSpaceResponse,
 } from '../contracts/IDeleteSpaceUseCase';
+import {
+  PinSpaceCommand,
+  PinSpaceResponse,
+} from '../contracts/IPinSpaceUseCase';
+import {
+  UnpinSpaceCommand,
+  UnpinSpaceResponse,
+} from '../contracts/IUnpinSpaceUseCase';
 
 /**
  * Port interface for cross-domain access to Spaces Management functionality
@@ -76,4 +84,14 @@ export interface ISpacesManagementPort {
    * Delete a space and all its memberships.
    */
   deleteSpace(command: DeleteSpaceCommand): Promise<DeleteSpaceResponse>;
+
+  /**
+   * Pin a space for the current user.
+   */
+  pinSpace(command: PinSpaceCommand): Promise<PinSpaceResponse>;
+
+  /**
+   * Unpin a space for the current user.
+   */
+  unpinSpace(command: UnpinSpaceCommand): Promise<UnpinSpaceResponse>;
 }
