@@ -11,7 +11,6 @@ import {
 import {
   LuBookCheck,
   LuEye,
-  LuGitPullRequestArrow,
   LuHouse,
   LuPackage,
   LuSlidersHorizontal,
@@ -125,11 +124,6 @@ function CollapsedSpaceNavItems({
         label="Skills"
         icon={<LuWandSparkles />}
         data-testid={SidebarNavigationDataTestId.SkillsLink}
-      />
-      <SidebarNavigationLink
-        url={routes.space.toReviewChanges(orgSlug, space.slug)}
-        label="Review changes"
-        icon={<LuGitPullRequestArrow />}
       />
       <PMSeparator borderColor="border.primary" my={1} w={'full'} />
       <SidebarNavigationLink
