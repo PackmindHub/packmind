@@ -23,6 +23,11 @@ import { getSpaceColorPalette } from '../../organizations/components/sidebar/Spa
 import { SpaceVisibilityIcon } from '../../organizations/components/sidebar/SpaceVisibilityIcon';
 import { sortSpacesByName } from '../utils/sortSpacesByName';
 
+export enum BrowseSpacesTab {
+  MY_SPACES = 'my',
+  ALL_SPACES = 'all',
+}
+
 interface BrowseSpacesDrawerProps {
   mySpaces: UserSpaceWithRole[];
   allSpaces: BrowsableSpace[];
@@ -37,6 +42,7 @@ interface BrowseSpacesDrawerProps {
   isLoading?: boolean;
   isError?: boolean;
   isJoining?: boolean;
+  initialTab?: BrowseSpacesTab;
 }
 
 export function BrowseSpacesDrawer({
@@ -53,8 +59,9 @@ export function BrowseSpacesDrawer({
   isLoading,
   isError,
   isJoining,
+  initialTab = BrowseSpacesTab.MY_SPACES,
 }: Readonly<BrowseSpacesDrawerProps>) {
-  const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
+  const [activeTab, setActiveTab] = useState<BrowseSpacesTab>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -63,9 +70,15 @@ export function BrowseSpacesDrawer({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (open) {
+      setActiveTab(initialTab);
+    }
+  }, [open, initialTab]);
+
   const isSearchDisabled =
-    (activeTab === 'my' && mySpaces.length === 0) ||
-    (activeTab === 'all' && allSpaces.length === 0);
+    (activeTab === BrowseSpacesTab.MY_SPACES && mySpaces.length === 0) ||
+    (activeTab === BrowseSpacesTab.ALL_SPACES && allSpaces.length === 0);
 
   const searchedMySpaces = searchQuery.trim()
     ? mySpaces.filter((s) =>
@@ -134,14 +147,14 @@ export function BrowseSpacesDrawer({
               <PMHStack gap={0}>
                 <TabButton
                   label="My spaces"
-                  isActive={activeTab === 'my'}
-                  onClick={() => setActiveTab('my')}
+                  isActive={activeTab === BrowseSpacesTab.MY_SPACES}
+                  onClick={() => setActiveTab(BrowseSpacesTab.MY_SPACES)}
                   data-testid="browse-spaces-tab-my-spaces"
                 />
                 <TabButton
                   label="All spaces"
-                  isActive={activeTab === 'all'}
-                  onClick={() => setActiveTab('all')}
+                  isActive={activeTab === BrowseSpacesTab.ALL_SPACES}
+                  onClick={() => setActiveTab(BrowseSpacesTab.ALL_SPACES)}
                   data-testid="browse-spaces-tab-all-spaces"
                 />
               </PMHStack>
@@ -177,7 +190,7 @@ export function BrowseSpacesDrawer({
                 </PMBox>
               ) : (
                 <>
-                  {activeTab === 'my' && (
+                  {activeTab === BrowseSpacesTab.MY_SPACES && (
                     <MySpacesTab
                       spaces={filteredMySpaces}
                       searchQuery={searchQuery}
@@ -187,7 +200,7 @@ export function BrowseSpacesDrawer({
                     />
                   )}
 
-                  {activeTab === 'all' && (
+                  {activeTab === BrowseSpacesTab.ALL_SPACES && (
                     <AllSpacesTab
                       spaces={filteredAllSpaces}
                       searchQuery={searchQuery}
