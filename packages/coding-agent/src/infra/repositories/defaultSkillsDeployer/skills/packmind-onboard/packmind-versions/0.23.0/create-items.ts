@@ -58,16 +58,22 @@ Description of next step...
 
 The CLI accepts markdown files directly — no JSON conversion needed.
 
+**IMPORTANT:** The CLI derives the artifact name and slug from the filename. Strip the \`.draft\` suffix before adding by copying to a temporary file without \`.draft\`:
+
 **For each standard draft:**
 
 \`\`\`bash
-packmind-cli playbook add --space $SPACE_SLUG .packmind/standards/_drafts/<slug>.draft.md
+cp .packmind/standards/_drafts/<slug>.draft.md .packmind/standards/_drafts/<slug>.md
+packmind-cli playbook add --space $SPACE_SLUG .packmind/standards/_drafts/<slug>.md
+rm .packmind/standards/_drafts/<slug>.md
 \`\`\`
 
 **For each command draft:**
 
 \`\`\`bash
-packmind-cli playbook add --space $SPACE_SLUG .packmind/commands/_drafts/<slug>.draft.md
+cp .packmind/commands/_drafts/<slug>.draft.md .packmind/commands/_drafts/<slug>.md
+packmind-cli playbook add --space $SPACE_SLUG .packmind/commands/_drafts/<slug>.md
+rm .packmind/commands/_drafts/<slug>.md
 \`\`\`
 
 **After adding all items, submit:**

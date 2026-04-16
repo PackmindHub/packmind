@@ -27,6 +27,8 @@ import { CREATE_ITEMS_0230 } from './skills/packmind-onboard/packmind-versions/0
 import { CREATE_PACKAGE_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/create-package';
 import { LIST_PACKAGES_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/list-packages';
 import { SELECT_PACKAGE_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/select-package';
+import { COMPLETION_SUMMARY_0160 } from './skills/packmind-onboard/packmind-versions/0.16.0/completion-summary';
+import { COMPLETION_SUMMARY_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/completion-summary';
 import {
   AbstractDefaultSkillDeployer,
   SemVer,
@@ -50,6 +52,11 @@ const createPackageByVersion: Record<SemVer, string> = {
 const selectPackageByVersion: Record<SemVer, string> = {
   '0.16.0': SELECT_PACKAGE_0160,
   '0.23.0': SELECT_PACKAGE_0230,
+};
+
+const completionSummaryByVersion: Record<SemVer, string> = {
+  '0.16.0': COMPLETION_SUMMARY_0160,
+  '0.23.0': COMPLETION_SUMMARY_0230,
 };
 
 export class OnboardDeployer
@@ -166,6 +173,10 @@ export class OnboardDeployer
         path: `${basePath}/packmind-versions/${version}/select-package.md`,
         content: selectPackageByVersion[version],
       })),
+      ...skillMd.versions.map((version) => ({
+        path: `${basePath}/packmind-versions/${version}/completion-summary.md`,
+        content: completionSummaryByVersion[version],
+      })),
     ];
 
     const deleteItems = [];
@@ -187,6 +198,10 @@ export class OnboardDeployer
       createOrUpdate.push({
         path: `${basePath}/packmind-versions/next/select-package.md`,
         content: selectPackageByVersion[latestVersion],
+      });
+      createOrUpdate.push({
+        path: `${basePath}/packmind-versions/next/completion-summary.md`,
+        content: completionSummaryByVersion[latestVersion],
       });
     } else {
       deleteItems.push({
