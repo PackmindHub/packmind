@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import type { RefObject } from 'react';
 import { PMBox, pmToaster } from '@packmind/ui';
 import { useNavigate } from 'react-router';
-import { Space, SpaceId } from '@packmind/types';
+import { SpaceId, UserSpaceWithRole } from '@packmind/types';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { BrowseSpacesDrawer } from './BrowseSpacesDrawer';
 import { CreateSpaceDialog } from './CreateSpaceDialog';
 import {
   useBrowseSpacesQuery,
   useJoinSpaceMutation,
+  usePinSpaceMutation,
+  useUnpinSpaceMutation,
 } from '../api/queries/SpacesManagementQueries';
+import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 
 interface BrowseSpacesProps {
@@ -23,10 +26,13 @@ export function BrowseSpaces({
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { organization } = useAuthContext();
-  const { data, isLoading, isError } = useBrowseSpacesQuery();
+  const { data: browseData, isLoading, isError } = useBrowseSpacesQuery();
+  const { data: mySpaces } = useGetSpacesQuery();
   const joinMutation = useJoinSpaceMutation();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
-  const handleSpaceClick = (space: Space) => {
+  const handleSpaceClick = (space: UserSpaceWithRole) => {
     if (organization?.slug) {
       navigate(routes.space.toDashboard(organization.slug, space.slug));
     }
@@ -68,12 +74,14 @@ export function BrowseSpaces({
         Browse
       </PMBox>
       <BrowseSpacesDrawer
-        mySpaces={data?.mySpaces ?? []}
-        allSpaces={data?.allSpaces ?? []}
+        mySpaces={mySpaces ?? []}
+        allSpaces={browseData?.allSpaces ?? []}
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onSpaceClick={handleSpaceClick}
         onJoinSpace={handleJoinSpace}
+        onPinSpace={(spaceId) => pinMutation.mutate({ spaceId })}
+        onUnpinSpace={(spaceId) => unpinMutation.mutate({ spaceId })}
         isLoading={isLoading}
         isError={isError}
         isJoining={joinMutation.isPending}

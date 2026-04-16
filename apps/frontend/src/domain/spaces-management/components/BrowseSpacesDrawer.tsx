@@ -13,19 +13,25 @@ import {
   PMStatus,
   PMText,
 } from '@packmind/ui';
-import { LuPlus, LuUserPlus } from 'react-icons/lu';
-import type { Space, SpaceId, BrowsableSpace } from '@packmind/types';
+import { LuPlus, LuStar, LuUserPlus } from 'react-icons/lu';
+import type {
+  SpaceId,
+  BrowsableSpace,
+  UserSpaceWithRole,
+} from '@packmind/types';
 import { getSpaceColorPalette } from '../../organizations/components/sidebar/SpaceNavBlock';
 import { SpaceVisibilityIcon } from '../../organizations/components/sidebar/SpaceVisibilityIcon';
 import { sortSpacesByName } from '../utils/sortSpacesByName';
 
 interface BrowseSpacesDrawerProps {
-  mySpaces: Space[];
+  mySpaces: UserSpaceWithRole[];
   allSpaces: BrowsableSpace[];
   open: boolean;
   onClose: () => void;
-  onSpaceClick: (space: Space) => void;
+  onSpaceClick: (space: UserSpaceWithRole) => void;
   onJoinSpace: (spaceId: SpaceId, spaceName: string) => void;
+  onPinSpace?: (spaceId: SpaceId) => void;
+  onUnpinSpace?: (spaceId: SpaceId) => void;
   onCreateSpace?: () => void;
   containerRef?: RefObject<HTMLElement | null>;
   isLoading?: boolean;
@@ -40,6 +46,8 @@ export function BrowseSpacesDrawer({
   onClose,
   onSpaceClick,
   onJoinSpace,
+  onPinSpace,
+  onUnpinSpace,
   onCreateSpace,
   containerRef,
   isLoading,
@@ -66,7 +74,12 @@ export function BrowseSpacesDrawer({
     : mySpaces;
   const filteredMySpaces = [
     ...searchedMySpaces.filter((s) => s.isDefaultSpace),
-    ...sortSpacesByName(searchedMySpaces.filter((s) => !s.isDefaultSpace)),
+    ...sortSpacesByName(
+      searchedMySpaces.filter((s) => !s.isDefaultSpace && s.pinned),
+    ),
+    ...sortSpacesByName(
+      searchedMySpaces.filter((s) => !s.isDefaultSpace && !s.pinned),
+    ),
   ];
 
   const filteredAllSpaces = sortSpacesByName(
@@ -169,6 +182,8 @@ export function BrowseSpacesDrawer({
                       spaces={filteredMySpaces}
                       searchQuery={searchQuery}
                       onSpaceClick={onSpaceClick}
+                      onPinSpace={onPinSpace}
+                      onUnpinSpace={onUnpinSpace}
                     />
                   )}
 
@@ -227,10 +242,14 @@ function MySpacesTab({
   spaces,
   searchQuery,
   onSpaceClick,
+  onPinSpace,
+  onUnpinSpace,
 }: Readonly<{
-  spaces: Space[];
+  spaces: UserSpaceWithRole[];
   searchQuery: string;
-  onSpaceClick: (space: Space) => void;
+  onSpaceClick: (space: UserSpaceWithRole) => void;
+  onPinSpace?: (spaceId: SpaceId) => void;
+  onUnpinSpace?: (spaceId: SpaceId) => void;
 }>) {
   if (spaces.length === 0) {
     return (
@@ -285,6 +304,28 @@ function MySpacesTab({
             </PMText>
             <SpaceVisibilityIcon type={space.type} />
           </PMBox>
+          {!space.isDefaultSpace && onPinSpace && onUnpinSpace && (
+            <PMBox
+              as="button"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                if (space.pinned) {
+                  onUnpinSpace(space.id);
+                } else {
+                  onPinSpace(space.id);
+                }
+              }}
+              title={space.pinned ? 'Unpin space' : 'Pin space'}
+              flexShrink={0}
+              color={space.pinned ? 'yellow.400' : 'text.faded'}
+              _hover={{ color: 'yellow.400' }}
+              display="flex"
+              alignItems="center"
+              data-testid={`browse-spaces-pin-${space.id}`}
+            >
+              <LuStar size={12} fill={space.pinned ? 'currentColor' : 'none'} />
+            </PMBox>
+          )}
         </PMBox>
       ))}
     </>
