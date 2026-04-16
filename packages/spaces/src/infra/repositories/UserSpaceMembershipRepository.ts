@@ -172,6 +172,41 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     }
   }
 
+  async updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean> {
+    this.logger.info('Updating membership pinned status', {
+      userId,
+      spaceId,
+      pinned,
+    });
+
+    try {
+      const updateResult = await this.repository.update(
+        { userId, spaceId },
+        { pinned },
+      );
+
+      const updated = (updateResult.affected ?? 0) > 0;
+      this.logger.info('Membership pinned status update attempted', {
+        userId,
+        spaceId,
+        pinned,
+        updated,
+      });
+      return updated;
+    } catch (error) {
+      this.logger.error('Failed to update membership pinned status', {
+        userId,
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async removeByUserAndOrganization(
     userId: UserId,
     organizationId: OrganizationId,

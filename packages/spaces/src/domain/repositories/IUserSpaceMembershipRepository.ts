@@ -24,6 +24,11 @@ export interface IUserSpaceMembershipRepository {
     spaceId: SpaceId,
     role: UserSpaceRole,
   ): Promise<boolean>;
+  updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean>;
   removeByUserAndOrganization(
     userId: UserId,
     organizationId: OrganizationId,

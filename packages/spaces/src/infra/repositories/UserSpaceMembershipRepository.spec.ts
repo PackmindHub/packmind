@@ -93,6 +93,7 @@ describe('UserSpaceMembershipRepository', () => {
       userId,
       spaceId: space.id,
       role: UserSpaceRole.MEMBER,
+      pinned: false,
       createdBy: userId,
       updatedBy: userId,
       ...overrides,
@@ -111,6 +112,7 @@ describe('UserSpaceMembershipRepository', () => {
           userId,
           spaceId: space.id,
           role: UserSpaceRole.MEMBER,
+          pinned: false,
           createdBy: userId,
           updatedBy: userId,
         });
@@ -287,6 +289,58 @@ describe('UserSpaceMembershipRepository', () => {
           organization.id,
         );
         expect(memberships).toEqual([]);
+      });
+    });
+  });
+
+  describe('.updateMembershipPinned', () => {
+    describe('when membership exists', () => {
+      let userId: UserId;
+
+      beforeEach(async () => {
+        const membership = await createMembership({ pinned: false });
+        userId = membership.userId;
+      });
+
+      it('returns true', async () => {
+        const result = await repository.updateMembershipPinned(
+          userId,
+          space.id,
+          true,
+        );
+        expect(result).toBe(true);
+      });
+
+      it('persists the pinned status', async () => {
+        await repository.updateMembershipPinned(userId, space.id, true);
+        const found = await repository.findMembership(userId, space.id);
+        expect(found?.pinned).toBe(true);
+      });
+    });
+
+    describe('when unpinning a previously pinned membership', () => {
+      let userId: UserId;
+
+      beforeEach(async () => {
+        const membership = await createMembership({ pinned: true });
+        userId = membership.userId;
+      });
+
+      it('persists the unpinned status', async () => {
+        await repository.updateMembershipPinned(userId, space.id, false);
+        const found = await repository.findMembership(userId, space.id);
+        expect(found?.pinned).toBe(false);
+      });
+    });
+
+    describe('when membership does not exist', () => {
+      it('returns false', async () => {
+        const result = await repository.updateMembershipPinned(
+          createUserId(uuidv4()),
+          space.id,
+          true,
+        );
+        expect(result).toBe(false);
       });
     });
   });
