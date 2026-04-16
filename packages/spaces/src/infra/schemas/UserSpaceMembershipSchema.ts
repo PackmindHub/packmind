@@ -1,9 +1,13 @@
 import { EntitySchema } from 'typeorm';
-import { UserSpaceMembership } from '@packmind/types';
-import { WithTimestamps, timestampsSchemas } from '@packmind/node-utils';
+import { UserSpaceMembership, WithSoftDelete } from '@packmind/types';
+import {
+  WithTimestamps,
+  timestampsSchemas,
+  softDeleteSchemas,
+} from '@packmind/node-utils';
 
 export const UserSpaceMembershipSchema = new EntitySchema<
-  WithTimestamps<UserSpaceMembership>
+  WithSoftDelete<WithTimestamps<UserSpaceMembership>>
 >({
   name: 'UserSpaceMembership',
   tableName: 'user_space_memberships',
@@ -34,6 +38,7 @@ export const UserSpaceMembershipSchema = new EntitySchema<
       nullable: false,
     },
     ...timestampsSchemas,
+    ...softDeleteSchemas,
   },
   relations: {
     user: {

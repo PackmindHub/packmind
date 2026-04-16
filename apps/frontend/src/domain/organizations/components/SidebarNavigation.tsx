@@ -398,7 +398,7 @@ export const SidebarNavigation: React.FunctionComponent<
                 >
                   Spaces
                 </PMText>
-                <BrowseSpaces />
+                <BrowseSpaces containerRef={contentAreaRef} />
               </PMBox>
             )}
 

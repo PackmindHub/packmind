@@ -23,6 +23,10 @@ import {
   LeaveSpaceCommand,
   LeaveSpaceResponse,
 } from '../contracts/ILeaveSpaceUseCase';
+import {
+  DeleteSpaceCommand,
+  DeleteSpaceResponse,
+} from '../contracts/IDeleteSpaceUseCase';
 
 /**
  * Port interface for cross-domain access to Spaces Management functionality
@@ -32,7 +36,7 @@ export const ISpacesManagementPortName = 'ISpacesManagementPort' as const;
 
 export interface ISpacesManagementPort {
   /**
-   * Create a private space and add the creator as admin member.
+   * Create a space and add the creator as admin member.
    */
   createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse>;
 
@@ -67,4 +71,9 @@ export interface ISpacesManagementPort {
    * Leave a space (user-initiated self-removal).
    */
   leaveSpace(command: LeaveSpaceCommand): Promise<LeaveSpaceResponse>;
+
+  /**
+   * Delete a space and all its memberships.
+   */
+  deleteSpace(command: DeleteSpaceCommand): Promise<DeleteSpaceResponse>;
 }

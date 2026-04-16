@@ -208,6 +208,19 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return spaceService.updateSpace(spaceId, fields);
   }
 
+  async deleteSpace(spaceId: SpaceId, deletedBy: UserId): Promise<void> {
+    const spaceService = this.hexa.getSpaceService();
+    return spaceService.deleteSpace(spaceId, deletedBy as string);
+  }
+
+  async softDeleteMembershipsBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: UserId,
+  ): Promise<number> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.softDeleteMembershipsBySpaceId(spaceId, deletedBy);
+  }
+
   async updateMemberRole(
     command: UpdateMemberRoleCommand,
   ): Promise<UpdateMemberRoleResponse> {
