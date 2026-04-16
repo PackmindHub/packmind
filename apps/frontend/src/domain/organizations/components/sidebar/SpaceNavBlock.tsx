@@ -219,6 +219,7 @@ function ExpandedSpaceNavBlock({
                 }}
                 title={space.pinned ? 'Unpin space' : 'Pin space'}
                 flexShrink={0}
+                cursor="pointer"
                 color={space.pinned ? 'yellow.400' : 'text.faded'}
                 _hover={{ color: 'yellow.400' }}
                 display="flex"
@@ -227,7 +228,7 @@ function ExpandedSpaceNavBlock({
                 data-testid={`space-pin-toggle-${space.id}`}
               >
                 <LuStar
-                  size={12}
+                  size={14}
                   fill={space.pinned ? 'currentColor' : 'none'}
                 />
               </PMBox>
@@ -314,7 +315,7 @@ function CollapsedSpaceNavBlock({
         {!isActive && !space.isDefaultSpace && (
           <PMBox
             as="button"
-            className="space-settings-btn"
+            {...(!space.pinned && { className: 'space-settings-btn' })}
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               if (space.pinned) {
@@ -325,6 +326,7 @@ function CollapsedSpaceNavBlock({
             }}
             title={space.pinned ? 'Unpin space' : 'Pin space'}
             flexShrink={0}
+            cursor="pointer"
             transition="opacity 0.15s"
             color={space.pinned ? 'yellow.400' : 'text.faded'}
             _hover={{ color: 'yellow.400' }}
@@ -332,7 +334,7 @@ function CollapsedSpaceNavBlock({
             alignItems="center"
             data-testid={`space-pin-toggle-${space.id}`}
           >
-            <LuStar size={12} fill={space.pinned ? 'currentColor' : 'none'} />
+            <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
           </PMBox>
         )}
 
@@ -431,7 +433,7 @@ function SpaceNameRow({
       {!space.isDefaultSpace && (
         <PMBox
           as="button"
-          className="space-settings-btn"
+          {...(!space.pinned && { className: 'space-settings-btn' })}
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             if (space.pinned) {
@@ -442,6 +444,7 @@ function SpaceNameRow({
           }}
           title={space.pinned ? 'Unpin space' : 'Pin space'}
           flexShrink={0}
+          cursor="pointer"
           transition="opacity 0.15s"
           color={space.pinned ? 'yellow.400' : 'text.faded'}
           _hover={{ color: 'yellow.400' }}
@@ -449,7 +452,7 @@ function SpaceNameRow({
           alignItems="center"
           data-testid={`space-pin-toggle-${space.id}`}
         >
-          <LuStar size={12} fill={space.pinned ? 'currentColor' : 'none'} />
+          <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
         </PMBox>
       )}
       <PMIconButton

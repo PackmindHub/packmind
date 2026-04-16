@@ -11,6 +11,7 @@ import {
   SpaceId,
   SpaceType,
 } from '@packmind/types';
+import { pmToaster } from '@packmind/ui';
 import { spacesManagementGateway } from '../gateways';
 import { spacesManagementQueryKeys } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -302,6 +303,7 @@ export const usePinSpaceMutation = () => {
       return spacesManagementGateway.pinSpace(organization.id, spaceId);
     },
     onSuccess: async () => {
+      pmToaster.success({ title: 'Space pinned' });
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: [...spacesManagementQueryKeys.all],
@@ -310,6 +312,12 @@ export const usePinSpaceMutation = () => {
           queryKey: [...spacesQueryKeys.all],
         }),
       ]);
+    },
+    onError: () => {
+      pmToaster.error({
+        title: 'Failed to pin space',
+        description: 'Something went wrong. Please try again.',
+      });
     },
   });
 };
@@ -329,6 +337,7 @@ export const useUnpinSpaceMutation = () => {
       return spacesManagementGateway.unpinSpace(organization.id, spaceId);
     },
     onSuccess: async () => {
+      pmToaster.success({ title: 'Space unpinned' });
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: [...spacesManagementQueryKeys.all],
@@ -337,6 +346,12 @@ export const useUnpinSpaceMutation = () => {
           queryKey: [...spacesQueryKeys.all],
         }),
       ]);
+    },
+    onError: () => {
+      pmToaster.error({
+        title: 'Failed to unpin space',
+        description: 'Something went wrong. Please try again.',
+      });
     },
   });
 };

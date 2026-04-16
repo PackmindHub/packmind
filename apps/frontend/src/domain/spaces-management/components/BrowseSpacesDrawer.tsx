@@ -317,13 +317,14 @@ function MySpacesTab({
               }}
               title={space.pinned ? 'Unpin space' : 'Pin space'}
               flexShrink={0}
+              cursor="pointer"
               color={space.pinned ? 'yellow.400' : 'text.faded'}
               _hover={{ color: 'yellow.400' }}
               display="flex"
               alignItems="center"
               data-testid={`browse-spaces-pin-${space.id}`}
             >
-              <LuStar size={12} fill={space.pinned ? 'currentColor' : 'none'} />
+              <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
             </PMBox>
           )}
         </PMBox>
