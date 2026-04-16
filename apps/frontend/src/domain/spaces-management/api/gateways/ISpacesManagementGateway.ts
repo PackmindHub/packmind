@@ -30,4 +30,6 @@ export interface ISpacesManagementGateway {
     fields: { name?: string; type?: SpaceType },
   ): Promise<Space>;
   deleteSpace(orgId: string, spaceId: string): Promise<void>;
+  pinSpace(orgId: string, spaceId: SpaceId): Promise<void>;
+  unpinSpace(orgId: string, spaceId: SpaceId): Promise<void>;
 }

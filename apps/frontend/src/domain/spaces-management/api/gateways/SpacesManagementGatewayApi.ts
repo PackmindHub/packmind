@@ -109,4 +109,23 @@ export class SpacesManagementGatewayApi
       `${this._endpoint}/${orgId}/spaces-management/${spaceId}`,
     );
   }
+
+  async pinSpace(orgId: string, spaceId: SpaceId): Promise<void> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to pin a space');
+    }
+    return this._api.post(
+      `${this._endpoint}/${orgId}/spaces-management/${spaceId}/pin`,
+      {},
+    );
+  }
+
+  async unpinSpace(orgId: string, spaceId: SpaceId): Promise<void> {
+    if (!orgId) {
+      throw new Error('Organization ID is required to unpin a space');
+    }
+    return this._api.delete(
+      `${this._endpoint}/${orgId}/spaces-management/${spaceId}/pin`,
+    );
+  }
 }

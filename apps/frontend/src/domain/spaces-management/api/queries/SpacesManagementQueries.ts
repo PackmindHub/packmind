@@ -286,3 +286,57 @@ export const useUpdateSpaceMutation = () => {
     },
   });
 };
+
+const PIN_SPACE_MUTATION_KEY = 'pinSpace';
+
+export const usePinSpaceMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [PIN_SPACE_MUTATION_KEY],
+    mutationFn: async ({ spaceId }: { spaceId: SpaceId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization context required');
+      }
+      return spacesManagementGateway.pinSpace(organization.id, spaceId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...spacesManagementQueryKeys.all],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...spacesQueryKeys.all],
+        }),
+      ]);
+    },
+  });
+};
+
+const UNPIN_SPACE_MUTATION_KEY = 'unpinSpace';
+
+export const useUnpinSpaceMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [UNPIN_SPACE_MUTATION_KEY],
+    mutationFn: async ({ spaceId }: { spaceId: SpaceId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization context required');
+      }
+      return spacesManagementGateway.unpinSpace(organization.id, spaceId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...spacesManagementQueryKeys.all],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...spacesQueryKeys.all],
+        }),
+      ]);
+    },
+  });
+};
