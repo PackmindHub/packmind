@@ -71,10 +71,6 @@ export function useNavigation() {
       if (!currentOrgSlug) return;
       navigate(`/org/${currentOrgSlug}/setup/cli`);
     },
-    toSetupMCP: () => {
-      if (!currentOrgSlug) return;
-      navigate(`/org/${currentOrgSlug}/setup/mcp`);
-    },
     toSetupSkills: () => {
       if (!currentOrgSlug) return;
       navigate(`/org/${currentOrgSlug}/setup/skills`);
