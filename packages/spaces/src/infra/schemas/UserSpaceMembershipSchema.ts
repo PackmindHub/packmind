@@ -27,6 +27,11 @@ export const UserSpaceMembershipSchema = new EntitySchema<
       length: 64,
       nullable: false,
     },
+    pinned: {
+      type: 'boolean',
+      default: false,
+      nullable: false,
+    },
     createdBy: {
       name: 'created_by',
       type: 'uuid',

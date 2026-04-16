@@ -149,6 +149,15 @@ export interface ISpacesPort {
   ): Promise<UpdateMemberRoleResponse>;
 
   /**
+   * Update the pinned status of a user's membership in a space.
+   */
+  updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean>;
+
+  /**
    * Remove all space memberships for a user within an organization.
    * Used when a user is removed from the organization.
    */

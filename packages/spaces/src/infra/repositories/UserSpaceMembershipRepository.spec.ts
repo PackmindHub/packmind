@@ -96,6 +96,7 @@ describe('UserSpaceMembershipRepository', () => {
       userId,
       spaceId: space.id,
       role: UserSpaceRole.MEMBER,
+      pinned: false,
       createdBy: userId,
       updatedBy: userId,
       ...overrides,
@@ -114,6 +115,7 @@ describe('UserSpaceMembershipRepository', () => {
           userId,
           spaceId: space.id,
           role: UserSpaceRole.MEMBER,
+          pinned: false,
           createdBy: userId,
           updatedBy: userId,
         });

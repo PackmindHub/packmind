@@ -124,6 +124,15 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return membershipService.addSpaceMembership(membership);
   }
 
+  async updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.updateMembershipPinned(userId, spaceId, pinned);
+  }
+
   async removeUserFromOrganizationSpaces(
     userId: UserId,
     organizationId: OrganizationId,

@@ -47,6 +47,7 @@ export class UserSpaceMembershipService {
       userId,
       spaceId: defaultSpace.id,
       role,
+      pinned: false,
       createdBy,
       updatedBy: createdBy,
     });
@@ -68,6 +69,7 @@ export class UserSpaceMembershipService {
   }): Promise<UserSpaceMembership> {
     return this.userSpaceMembershipRepository.addMembership({
       ...membership,
+      pinned: false,
       updatedBy: membership.createdBy,
     });
   }
@@ -102,6 +104,18 @@ export class UserSpaceMembershipService {
       userId,
       spaceId,
       role,
+    );
+  }
+
+  async updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean> {
+    return this.userSpaceMembershipRepository.updateMembershipPinned(
+      userId,
+      spaceId,
+      pinned,
     );
   }
 
