@@ -1,4 +1,4 @@
-import { DeleteItemType, FileUpdates } from '@packmind/types';
+import { DeleteItem, DeleteItemType, FileUpdates } from '@packmind/types';
 import { ISkillDeployer, SkillDeployOptions } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
 import { skillMd } from './skills/packmind-onboard/skill.md';
@@ -179,7 +179,7 @@ export class OnboardDeployer
       })),
     ];
 
-    const deleteItems = [];
+    const deleteItems: DeleteItem[] = [];
 
     if (includeNext) {
       const latestVersion = skillMd.versions[skillMd.versions.length - 1];
