@@ -76,6 +76,8 @@ const handler = installHandler;
 describe('installCommand', () => {
   let processExitSpy: jest.SpyInstance;
   let mockInstall: jest.Mock;
+  let mockTryGetGitRepositoryRoot: jest.Mock;
+  let mockInstallDefaultSkills: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -84,8 +86,22 @@ describe('installCommand', () => {
       .mockImplementation(() => undefined as never);
 
     mockInstall = jest.fn().mockResolvedValue(makeResult());
+    mockTryGetGitRepositoryRoot = jest.fn().mockResolvedValue(null);
+    mockInstallDefaultSkills = jest.fn().mockResolvedValue({
+      filesCreated: 0,
+      filesUpdated: 0,
+      errors: [],
+      skippedSkillsCount: 0,
+      skippedIncompatibleSkillNames: [],
+      incompatibleInstalledSkills: [],
+    });
     MockPackmindCliHexa.mockImplementation(
-      () => ({ install: mockInstall }) as unknown as PackmindCliHexa,
+      () =>
+        ({
+          install: mockInstall,
+          tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
+          installDefaultSkills: mockInstallDefaultSkills,
+        }) as unknown as PackmindCliHexa,
     );
   });
 
@@ -500,6 +516,113 @@ describe('installCommand', () => {
         expect(mockConsoleLogger.logConsole).toHaveBeenCalledWith(
           expect.stringContaining('2 standards'),
         );
+      });
+    });
+  });
+
+  describe('default skills auto-install', () => {
+    const gitRoot = process.cwd();
+
+    beforeEach(() => {
+      mockFs.existsSync.mockReturnValue(false);
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    describe('when cwd is the git root', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('calls installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: gitRoot }),
+        );
+      });
+    });
+
+    describe('when cwd is not the git root', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue('/some/other/root');
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when not in a git repository', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(null);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when installDefaultSkills returns new files', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockResolvedValue({
+          filesCreated: 3,
+          filesUpdated: 1,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('logs the file counts', () => {
+        expect(mockConsoleLogger.logConsole).toHaveBeenCalledWith(
+          expect.stringContaining('added 3 files'),
+        );
+      });
+    });
+
+    describe('when installDefaultSkills throws', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockRejectedValue(new Error('skills failed'));
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not exit with error', () => {
+        expect(processExitSpy).not.toHaveBeenCalled();
       });
     });
   });

@@ -77,12 +77,15 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
               file.content,
               command.cliVersion,
             ) ||
-              incompatibleSkillDirs.has(path.dirname(file.path)));
+              this.isUnderIncompatibleSkillDir(
+                file.path,
+                incompatibleSkillDirs,
+              ));
 
           if (isIncompatible) {
             const skillName =
               this.getSkillName(file.content) ??
-              incompatibleSkillDirs.get(path.dirname(file.path)) ??
+              this.getSkillNameForPath(file.path, incompatibleSkillDirs) ??
               path.basename(file.path);
             const fullPath = path.join(baseDirectory, file.path);
             const fileAlreadyInstalled = await this.fileExists(fullPath);
@@ -165,6 +168,37 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Returns true if the given file path is inside one of the incompatible skill
+   * directories, including nested subdirectories (e.g. `scripts/`).
+   */
+  private isUnderIncompatibleSkillDir(
+    filePath: string,
+    incompatibleSkillDirs: Map<string, string>,
+  ): boolean {
+    return this.getSkillNameForPath(filePath, incompatibleSkillDirs) !== null;
+  }
+
+  /**
+   * Returns the skill name for the given file path by finding the incompatible
+   * skill directory that contains it (including nested subdirectories).
+   */
+  private getSkillNameForPath(
+    filePath: string,
+    incompatibleSkillDirs: Map<string, string>,
+  ): string | null {
+    for (const [dir, skillName] of incompatibleSkillDirs.entries()) {
+      if (
+        filePath === dir ||
+        filePath.startsWith(dir + '/') ||
+        filePath.startsWith(dir + path.sep)
+      ) {
+        return skillName;
+      }
+    }
+    return null;
   }
 
   /**

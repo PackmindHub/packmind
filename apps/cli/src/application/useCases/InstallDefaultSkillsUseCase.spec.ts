@@ -318,6 +318,73 @@ describe('InstallDefaultSkillsUseCase', () => {
     });
   });
 
+  describe('when a folder-based skill has files in subdirectories (e.g. scripts/)', () => {
+    const skillMdPath = '.claude/skills/old-skill/SKILL.md';
+    const scriptPath = '.claude/skills/old-skill/scripts/init_skill.py';
+    const skillContent = makeSkillContent('old-skill', {
+      versionConstraint: '< 0.24.0',
+    });
+
+    beforeEach(() => {
+      mockGetDefaults.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            { path: skillMdPath, content: skillContent },
+            { path: scriptPath, content: '# script' },
+          ],
+          delete: [],
+        },
+        skippedSkillsCount: 0,
+      });
+    });
+
+    describe('when the skill is NOT yet installed', () => {
+      beforeEach(() => {
+        mockFs.access.mockRejectedValue(new Error('ENOENT'));
+      });
+
+      it('does not create any file', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+
+      it('adds the skill name once to skippedIncompatibleSkillNames', async () => {
+        const result = await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(result.skippedIncompatibleSkillNames).toEqual(['old-skill']);
+      });
+    });
+
+    describe('when the skill IS already installed', () => {
+      beforeEach(() => {
+        mockFs.access.mockResolvedValue(undefined);
+      });
+
+      it('does not create or update any file', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+
+      it('includes the subdirectory file in incompatibleInstalledSkills', async () => {
+        const result = await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+        expect(result.incompatibleInstalledSkills[0].filePaths).toEqual(
+          expect.arrayContaining([skillMdPath, scriptPath]),
+        );
+      });
+    });
+  });
+
   describe('when a skill version constraint is satisfied by the CLI version', () => {
     beforeEach(() => {
       mockGetDefaults.mockResolvedValue({

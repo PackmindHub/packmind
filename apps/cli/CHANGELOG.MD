@@ -6,6 +6,9 @@
 
 ## Fixed
 
+- when skipping deprecated default skills, some files were still rendered in sub-folders
+- when running `packmind-cli install` at the root of the repo, the default skills are installed.
+
 ## Removed
 
 # [0.26.0] - 2026-04-14
