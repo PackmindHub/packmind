@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { PMVStack, PMHeading, PMText, PMCard, PMAlert } from '@packmind/ui';
+import {
+  PMVStack,
+  PMHStack,
+  PMBox,
+  PMText,
+  PMAlert,
+  PMSeparator,
+} from '@packmind/ui';
 import { useCliLoginCode } from './LocalEnvironmentSetup/hooks/useCliLoginCode';
 import {
   CopiableTextField,
@@ -19,6 +26,43 @@ import {
 import type { OsType } from './LocalEnvironmentSetup/types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
+function StepHeader({
+  number,
+  title,
+  description,
+}: Readonly<{
+  number: number;
+  title: string;
+  description?: string;
+}>) {
+  return (
+    <PMHStack gap={3} align="start">
+      <PMText
+        fontSize="xs"
+        fontWeight="bold"
+        bg="background.tertiary"
+        borderRadius="full"
+        minWidth="24px"
+        height="24px"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        flexShrink={0}
+      >
+        {number}
+      </PMText>
+      <PMVStack gap={0} align="start">
+        <PMText fontWeight="semibold">{title}</PMText>
+        {description && (
+          <PMText color="secondary" fontSize="xs">
+            {description}
+          </PMText>
+        )}
+      </PMVStack>
+    </PMHStack>
+  );
+}
+
 export function OnboardingBuildCliSection() {
   const { loginCode } = useCliLoginCode();
   const curlCommand = buildCurlInstallCommand(loginCode ?? '');
@@ -27,111 +71,76 @@ export function OnboardingBuildCliSection() {
   const [selectedOs, setSelectedOs] = useState<OsType>(detectUserOs);
 
   return (
-    <PMCard.Root
+    <PMVStack
+      gap={6}
+      align="stretch"
       flex={1}
-      borderWidth="1px"
-      borderColor="border.secondary"
-      data-testid="OnboardingBuild.CLICard"
+      data-testid="OnboardingBuild.CLISection"
     >
-      <PMCard.Body padding={6}>
-        <PMVStack gap={6} align="stretch">
-          <PMVStack gap={2} align="start">
-            <PMHeading level="h3">With CLI</PMHeading>
-            <PMText color="secondary" fontSize="sm">
-              For humans and AI agents alike
-            </PMText>
-          </PMVStack>
+      {/* Step 1: Install */}
+      <PMVStack gap={4} align="stretch">
+        <StepHeader number={1} title="Install the CLI" />
+        <PMVStack gap={4} align="stretch" paddingStart={9}>
+          <OsRadioSelector value={selectedOs} onChange={setSelectedOs} />
 
-          {/* Install section */}
-          <PMVStack gap={4} align="stretch">
-            <PMText fontWeight="semibold">Install</PMText>
-            <OsRadioSelector value={selectedOs} onChange={setSelectedOs} />
-
-            {selectedOs === 'macos-linux' ? (
-              <>
-                <SectionCard
-                  title="Guided install"
-                  description="One-line install script (installs the CLI and logs you in automatically)."
-                  variant="primary"
-                >
-                  <CopiableTextarea
-                    value={curlCommand}
-                    readOnly
-                    rows={3}
-                    data-testid="OnboardingBuild.InstallScriptContent"
-                    onCopy={() =>
-                      analytics.track('post_signup_onboarding_field_copied', {
-                        field: 'installSh',
-                      })
-                    }
-                  />
-                </SectionCard>
-
-                <SectionCard
-                  title="Alternative"
-                  description="Other installation methods."
-                >
-                  <PMText
-                    variant="small"
-                    color="primary"
-                    as="p"
-                    style={{
-                      fontWeight: 'medium',
-                      marginBottom: '4px',
-                      display: 'inline-block',
-                    }}
-                  >
-                    Terminal (Homebrew)
-                  </PMText>
-                  <CopiableTextarea
-                    value={`${HOMEBREW_INSTALL_COMMAND}\n${loginCommand}`}
-                    readOnly
-                    rows={3}
-                    data-testid="OnboardingBuild.InstallHomebrewContent"
-                    onCopy={() =>
-                      analytics.track('post_signup_onboarding_field_copied', {
-                        field: 'installHomebrew',
-                      })
-                    }
-                  />
-                  <PMText
-                    variant="small"
-                    color="primary"
-                    as="p"
-                    style={{
-                      fontWeight: 'medium',
-                      marginBottom: '4px',
-                      marginTop: '12px',
-                      display: 'inline-block',
-                    }}
-                  >
-                    Terminal (NPM)
-                  </PMText>
-                  <CopiableTextarea
-                    value={`${NPM_INSTALL_COMMAND}\n${loginCommand}`}
-                    readOnly
-                    rows={2}
-                    onCopy={() =>
-                      analytics.track('post_signup_onboarding_field_copied', {
-                        field: 'installNpm',
-                      })
-                    }
-                  />
-                  <PMAlert.Root status="info">
-                    <PMAlert.Indicator />
-                    <PMAlert.Content>
-                      <PMAlert.Description>
-                        Requires Node.js 22 or higher.
-                      </PMAlert.Description>
-                    </PMAlert.Content>
-                  </PMAlert.Root>
-                </SectionCard>
-              </>
-            ) : (
-              <SectionCard title="Recommended: NPM" variant="primary">
-                <CopiableTextField
-                  value={NPM_INSTALL_COMMAND}
+          {selectedOs === 'macos-linux' ? (
+            <>
+              <SectionCard
+                title="Guided install"
+                description="One-line install script (installs the CLI and logs you in automatically)."
+                variant="primary"
+              >
+                <CopiableTextarea
+                  value={curlCommand}
                   readOnly
+                  rows={3}
+                  data-testid="OnboardingBuild.InstallScriptContent"
+                  onCopy={() =>
+                    analytics.track('post_signup_onboarding_field_copied', {
+                      field: 'installSh',
+                    })
+                  }
+                />
+              </SectionCard>
+
+              <SectionCard
+                title="Alternative"
+                description="Other installation methods."
+              >
+                <PMText
+                  variant="small"
+                  color="primary"
+                  as="p"
+                  fontWeight="medium"
+                  marginBottom={1}
+                >
+                  Terminal (Homebrew)
+                </PMText>
+                <CopiableTextarea
+                  value={`${HOMEBREW_INSTALL_COMMAND}\n${loginCommand}`}
+                  readOnly
+                  rows={3}
+                  data-testid="OnboardingBuild.InstallHomebrewContent"
+                  onCopy={() =>
+                    analytics.track('post_signup_onboarding_field_copied', {
+                      field: 'installHomebrew',
+                    })
+                  }
+                />
+                <PMText
+                  variant="small"
+                  color="primary"
+                  as="p"
+                  fontWeight="medium"
+                  marginBottom={1}
+                  marginTop={3}
+                >
+                  Terminal (NPM)
+                </PMText>
+                <CopiableTextarea
+                  value={`${NPM_INSTALL_COMMAND}\n${loginCommand}`}
+                  readOnly
+                  rows={2}
                   onCopy={() =>
                     analytics.track('post_signup_onboarding_field_copied', {
                       field: 'installNpm',
@@ -146,53 +155,78 @@ export function OnboardingBuildCliSection() {
                     </PMAlert.Description>
                   </PMAlert.Content>
                 </PMAlert.Root>
-                <CopiableTextField value={loginCommand} readOnly />
               </SectionCard>
-            )}
-          </PMVStack>
-
-          {/* Initialize section */}
-          <PMVStack gap={2} align="stretch">
-            <PMVStack gap={0} align="start">
-              <PMText fontWeight="semibold">Initialize</PMText>
-              <PMText color="secondary" fontSize="xs">
-                Add Packmind base artifacts to your codebase for artifacts
-                creation
-              </PMText>
-            </PMVStack>
-            <CopiableTextField
-              value="packmind-cli init"
-              readOnly
-              data-testid="OnboardingBuild.InitializeContent"
-              onCopy={() =>
-                analytics.track('post_signup_onboarding_field_copied', {
-                  field: 'cliInit',
-                })
-              }
-            />
-          </PMVStack>
-
-          {/* Start analysis section */}
-          <PMVStack gap={2} align="stretch">
-            <PMVStack gap={0} align="start">
-              <PMText fontWeight="semibold">Start analysis</PMText>
-              <PMText color="secondary" fontSize="xs">
-                Run the onboarding command with your agent
-              </PMText>
-            </PMVStack>
-            <CopiableTextField
-              value="/packmind-onboard"
-              readOnly
-              data-testid="OnboardingBuild.StartAnalysisContent"
-              onCopy={() =>
-                analytics.track('post_signup_onboarding_field_copied', {
-                  field: 'cliStartAnalysis',
-                })
-              }
-            />
-          </PMVStack>
+            </>
+          ) : (
+            <SectionCard title="Recommended: NPM" variant="primary">
+              <CopiableTextarea
+                value={`${NPM_INSTALL_COMMAND}\n${loginCommand}`}
+                readOnly
+                rows={2}
+                onCopy={() =>
+                  analytics.track('post_signup_onboarding_field_copied', {
+                    field: 'installNpm',
+                  })
+                }
+              />
+              <PMAlert.Root status="info">
+                <PMAlert.Indicator />
+                <PMAlert.Content>
+                  <PMAlert.Description>
+                    Requires Node.js 22 or higher.
+                  </PMAlert.Description>
+                </PMAlert.Content>
+              </PMAlert.Root>
+            </SectionCard>
+          )}
         </PMVStack>
-      </PMCard.Body>
-    </PMCard.Root>
+      </PMVStack>
+
+      <PMSeparator />
+
+      {/* Step 2: Initialize */}
+      <PMVStack gap={4} align="stretch">
+        <StepHeader
+          number={2}
+          title="Initialize your project"
+          description="Add Packmind base artifacts to your codebase"
+        />
+        <PMBox paddingStart={9}>
+          <CopiableTextField
+            value="packmind-cli init"
+            readOnly
+            data-testid="OnboardingBuild.InitializeContent"
+            onCopy={() =>
+              analytics.track('post_signup_onboarding_field_copied', {
+                field: 'cliInit',
+              })
+            }
+          />
+        </PMBox>
+      </PMVStack>
+
+      <PMSeparator />
+
+      {/* Step 3: Start analysis */}
+      <PMVStack gap={4} align="stretch">
+        <StepHeader
+          number={3}
+          title="Start analysis"
+          description="Run the onboarding command with your AI agent"
+        />
+        <PMBox paddingStart={9}>
+          <CopiableTextField
+            value="/packmind-onboard"
+            readOnly
+            data-testid="OnboardingBuild.StartAnalysisContent"
+            onCopy={() =>
+              analytics.track('post_signup_onboarding_field_copied', {
+                field: 'cliStartAnalysis',
+              })
+            }
+          />
+        </PMBox>
+      </PMVStack>
+    </PMVStack>
   );
 }

@@ -14,14 +14,6 @@ jest.mock('./LocalEnvironmentSetup/hooks/useCliLoginCode', () => ({
   }),
 }));
 
-jest.mock('./LocalEnvironmentSetup/hooks/useMcpConnection', () => ({
-  useMcpConnection: () => ({
-    url: 'https://mcp.test.com',
-    token: 'test-token',
-    isLoading: false,
-  }),
-}));
-
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
