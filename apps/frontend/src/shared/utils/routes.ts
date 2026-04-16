@@ -24,7 +24,6 @@ export const routes = {
     toAccountSettings: (orgSlug: string) => `/org/${orgSlug}/account-settings`,
     toSetup: (orgSlug: string) => `/org/${orgSlug}/setup`,
     toSetupCLI: (orgSlug: string) => `/org/${orgSlug}/setup/cli`,
-    toSetupMCP: (orgSlug: string) => `/org/${orgSlug}/setup/mcp`,
     toSetupSkills: (orgSlug: string) => `/org/${orgSlug}/setup/skills`,
     toSetupUseCases: (orgSlug: string) => `/org/${orgSlug}/setup/use-cases`,
   },
