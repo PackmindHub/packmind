@@ -3,10 +3,10 @@ import { organizationGateway, userGateway, authGateway } from '../gateways';
 import {
   GET_USER_ORGANIZATIONS_KEY,
   GET_USER_STATUSES_KEY,
-  GET_USERS_IN_MY_ORGANIZATION_KEY,
   GET_ONBOARDING_STATUS_KEY,
   GET_ME_KEY,
 } from '../queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
 import { useAuthContext } from '../../hooks/useAuthContext';
 import { spacesQueryKeys } from '../../../spaces/api/queryKeys';
@@ -183,10 +183,7 @@ export const useUpdateProfileMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: GET_ME_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_USERS_IN_MY_ORGANIZATION_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE],
       });
     },
   });

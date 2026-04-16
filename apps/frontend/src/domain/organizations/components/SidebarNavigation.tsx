@@ -268,7 +268,9 @@ export const SidebarNavigation: React.FunctionComponent<
                         backgroundColor="background.secondary"
                         color="text.primary"
                       >
-                        <PMAvatar.Fallback name={user?.email} />
+                        <PMAvatar.Fallback
+                          name={user?.displayName ?? user?.email}
+                        />
                       </PMAvatar.Root>
                     </PMBox>
                   </PMMenu.Trigger>

@@ -45,31 +45,40 @@ export const UserProfileSection: React.FC = () => {
   const hasChanged =
     (displayName.trim() || null) !== (user?.displayName ?? null);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (hasChanged && !updateProfile.isPending) {
+      handleSave();
+    }
+  };
+
   return (
-    <PMVStack align="flex-start" gap={4} width="100%" maxWidth="400px">
-      <PMText fontWeight="semibold">Profile</PMText>
-      <PMField.Root>
-        <PMField.Label>Display name</PMField.Label>
-        <PMInput
-          placeholder={user?.email?.split('@')[0]}
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-        />
-        <PMField.HelperText>
-          This name is visible to other members of your organization.
-        </PMField.HelperText>
-      </PMField.Root>
-      <PMHStack>
-        <PMButton
-          variant="primary"
-          size="sm"
-          disabled={!hasChanged || updateProfile.isPending}
-          loading={updateProfile.isPending}
-          onClick={handleSave}
-        >
-          Save
-        </PMButton>
-      </PMHStack>
-    </PMVStack>
+    <form onSubmit={handleSubmit}>
+      <PMVStack align="flex-start" gap={4} width="100%" maxWidth="400px">
+        <PMText fontWeight="semibold">Profile</PMText>
+        <PMField.Root>
+          <PMField.Label>Display name</PMField.Label>
+          <PMInput
+            placeholder={user?.email?.split('@')[0]}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+          <PMField.HelperText>
+            This name is visible to other members of your organization.
+          </PMField.HelperText>
+        </PMField.Root>
+        <PMHStack>
+          <PMButton
+            type="submit"
+            variant="primary"
+            size="sm"
+            disabled={!hasChanged || updateProfile.isPending}
+            loading={updateProfile.isPending}
+          >
+            Save
+          </PMButton>
+        </PMHStack>
+      </PMVStack>
+    </form>
   );
 };
