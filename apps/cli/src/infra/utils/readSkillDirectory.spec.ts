@@ -761,6 +761,59 @@ describe('readSkillDirectory', () => {
       });
     });
 
+    describe('when node_modules directory exists', () => {
+      it('excludes files inside node_modules', async () => {
+        await fs.mkdir(path.join(tempDir, 'node_modules', 'some-pkg'), {
+          recursive: true,
+        });
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(
+          path.join(tempDir, 'node_modules', 'some-pkg', 'index.js'),
+          'module.exports = {}',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(
+          files.find((f) => f.relativePath.includes('node_modules')),
+        ).toBeUndefined();
+      });
+
+      it('returns only non-blacklisted files', async () => {
+        await fs.mkdir(path.join(tempDir, 'node_modules', 'some-pkg'), {
+          recursive: true,
+        });
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(
+          path.join(tempDir, 'node_modules', 'some-pkg', 'index.js'),
+          'module.exports = {}',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(files).toHaveLength(1);
+      });
+    });
+
+    describe('when node_modules exists in a nested directory', () => {
+      it('excludes nested node_modules files', async () => {
+        await fs.mkdir(path.join(tempDir, 'subdir', 'node_modules', 'dep'), {
+          recursive: true,
+        });
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', 'node_modules', 'dep', 'index.js'),
+          'module.exports = {}',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(
+          files.find((f) => f.relativePath.includes('node_modules')),
+        ).toBeUndefined();
+      });
+    });
+
     describe('when no blacklisted files exist', () => {
       it('returns all files', async () => {
         await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
