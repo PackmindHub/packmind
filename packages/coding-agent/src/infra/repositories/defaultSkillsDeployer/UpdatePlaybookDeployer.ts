@@ -12,6 +12,9 @@ import { ANALYZE_COMMANDS } from './skills/packmind-update-playbook/steps/analyz
 import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-skills';
 import { APPLY_CHANGES_0210 } from './skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes';
 import { APPLY_CHANGES_0230 } from './skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes';
+import { CREATE_STANDARD_PROCEDURE } from './skills/packmind-update-playbook/references/create-standard-procedure';
+import { CREATE_COMMAND_PROCEDURE } from './skills/packmind-update-playbook/references/create-command-procedure';
+import { CREATE_SKILL_PROCEDURE } from './skills/packmind-update-playbook/references/create-skill-procedure';
 
 const applyChangesByVersion: Record<SemVer, string> = {
   '0.21.0': APPLY_CHANGES_0210,
@@ -59,6 +62,18 @@ export class UpdatePlaybookDeployer
       {
         path: `${basePath}/references/agent-skills-specification.md`,
         content: AGENT_SKILLS_SPECIFICATION,
+      },
+      {
+        path: `${basePath}/references/create-standard-procedure.md`,
+        content: CREATE_STANDARD_PROCEDURE,
+      },
+      {
+        path: `${basePath}/references/create-command-procedure.md`,
+        content: CREATE_COMMAND_PROCEDURE,
+      },
+      {
+        path: `${basePath}/references/create-skill-procedure.md`,
+        content: CREATE_SKILL_PROCEDURE,
       },
     ];
 
