@@ -11,6 +11,7 @@ export type UserSpaceMembership = {
   userId: UserId;
   spaceId: SpaceId;
   role: UserSpaceRole;
+  pinned: boolean;
   createdBy: UserId;
   updatedBy: UserId;
   user?: User;
