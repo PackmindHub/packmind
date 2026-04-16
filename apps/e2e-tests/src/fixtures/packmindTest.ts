@@ -7,13 +7,15 @@ import { IDashboardPage, IPageFactory } from '../domain/pages';
 import { PageFactory } from '../infra/PageFactory';
 
 export const testWithUserData = base.extend<{
-  userData: SignUpWithOrganizationCommand;
+  underFeatureFlag: boolean;
+  userData: SignUpWithOrganizationCommand & { password: string };
 }>({
-  // eslint-disable-next-line no-empty-pattern
-  userData: ({}, use) => {
-    use({
-      email: `someone-${uuidv4()}@example.com`,
+  underFeatureFlag: [false, { option: true }],
+  userData: async ({ underFeatureFlag }, use) => {
+    await use({
+      email: `someone-${uuidv4()}@${underFeatureFlag ? 'packmind' : 'example'}.com`,
       password: `${uuidv4()}!!`,
+      method: 'password',
     });
   },
 });
