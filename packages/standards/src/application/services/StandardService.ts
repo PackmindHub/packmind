@@ -340,10 +340,10 @@ export class StandardService {
         versions.map((v, i) => [v.id, newVersions[i].id]),
       );
 
-      const rulesPerVersion = await Promise.all(
-        versions.map((v) => this.ruleRepository.findByStandardVersionId(v.id)),
-      );
-      const allOriginalRules = rulesPerVersion.flat();
+      const allOriginalRules =
+        await this.ruleRepository.findByStandardVersionIds(
+          versions.map((v) => v.id),
+        );
 
       const ruleMappings: Array<{ oldRuleId: RuleId; newRuleId: RuleId }> = [];
       const newRules = allOriginalRules.map((rule) => {
@@ -364,12 +364,10 @@ export class StandardService {
         allOriginalRules.map((r, i) => [r.id, newRules[i].id]),
       );
 
-      const examplesPerRule = await Promise.all(
-        allOriginalRules.map((r) =>
-          this.ruleExampleRepository.findByRuleId(r.id),
-        ),
-      );
-      const allOriginalExamples = examplesPerRule.flat();
+      const allOriginalExamples =
+        await this.ruleExampleRepository.findByRuleIds(
+          allOriginalRules.map((r) => r.id),
+        );
 
       const newExamples = allOriginalExamples.map((example) => ({
         id: createRuleExampleId(uuidv4()),

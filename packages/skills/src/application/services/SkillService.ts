@@ -312,12 +312,10 @@ export class SkillService {
         versions.map((v, i) => [v.id, newVersions[i].id]),
       );
 
-      const filesPerVersion = await Promise.all(
-        versions.map((v) =>
-          this.skillFileRepository.findBySkillVersionId(v.id),
-        ),
-      );
-      const allOriginalFiles = filesPerVersion.flat();
+      const allOriginalFiles =
+        await this.skillFileRepository.findBySkillVersionIds(
+          versions.map((v) => v.id),
+        );
 
       if (allOriginalFiles.length > 0) {
         const newFiles = allOriginalFiles.map((file) => ({
