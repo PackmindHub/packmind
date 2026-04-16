@@ -16,6 +16,9 @@ import {
 } from './installPackagesHandler';
 import { PackmindLockFile } from '@packmind/types';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../../../package.json');
+
 function findSubDirectoriesWithPackmindJson(
   dirPath: string,
   recursive: boolean,
@@ -169,6 +172,45 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
   }
 }
 
+async function installDefaultSkillsIfAtGitRoot(params: {
+  packmindCliHexa: PackmindCliHexa;
+  cwd: string;
+}): Promise<void> {
+  const { packmindCliHexa, cwd } = params;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+
+  if (!gitRoot || cwd !== gitRoot) {
+    return;
+  }
+
+  try {
+    logConsole('\nInstalling default skills...');
+    const skillsResult = await packmindCliHexa.installDefaultSkills({
+      cliVersion: CLI_VERSION,
+      baseDirectory: cwd,
+    });
+
+    if (skillsResult.errors.length > 0) {
+      skillsResult.errors.forEach((err) => {
+        logWarningConsole(`Warning: ${err}`);
+      });
+    }
+
+    const totalSkillFiles =
+      skillsResult.filesCreated + skillsResult.filesUpdated;
+    if (totalSkillFiles > 0) {
+      logConsole(
+        `Default skills: added ${skillsResult.filesCreated} files, changed ${skillsResult.filesUpdated} files`,
+      );
+    } else if (skillsResult.errors.length === 0) {
+      logConsole('Default skills are already up to date');
+    }
+  } catch {
+    // Silently ignore default skills installation errors as it's a secondary operation
+  }
+}
+
 export async function installHandler({
   installPath,
   packages,
@@ -292,6 +334,8 @@ export async function installHandler({
   }
 
   logConsole(buildInstallSummary(combined));
+
+  await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd });
 
   const allErrors = [...combined.errors, ...thrownErrors];
 
