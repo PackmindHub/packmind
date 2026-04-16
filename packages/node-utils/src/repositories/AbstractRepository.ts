@@ -57,6 +57,30 @@ export abstract class AbstractRepository<
     }
   }
 
+  async addMany(entities: Entity[]): Promise<Entity[]> {
+    if (entities.length === 0) {
+      return [];
+    }
+
+    this.logger.info(
+      `Adding ${entities.length} ${this.entityName}(s) to database`,
+    );
+
+    try {
+      const savedEntities = await this.repository.save(entities);
+      this.logger.info(
+        `Saved ${savedEntities.length} ${this.entityName}(s) to database successfully`,
+      );
+      return savedEntities;
+    } catch (error) {
+      this.logger.error(`Failed to save ${this.entityName}(s) to database`, {
+        count: entities.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findById(id: Entity['id'], opts?: QueryOption): Promise<Entity | null> {
     this.logger.info(`Finding ${this.entityName} by ID`, { id });
 
