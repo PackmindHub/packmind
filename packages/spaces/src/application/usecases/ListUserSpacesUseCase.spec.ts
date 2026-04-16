@@ -43,12 +43,14 @@ describe('ListUserSpacesUseCase', () => {
           userId,
           spaceId: space1.id,
           role: UserSpaceRole.MEMBER,
+          pinned: false,
           space: space1,
         },
         {
           userId,
           spaceId: space2.id,
           role: UserSpaceRole.ADMIN,
+          pinned: true,
           space: space2,
         },
       ];
@@ -59,13 +61,13 @@ describe('ListUserSpacesUseCase', () => {
         );
       });
 
-      it('returns spaces with roles from memberships', async () => {
+      it('returns spaces with roles and pinned status from memberships', async () => {
         const result = await useCase.execute(buildCommand());
 
         expect(result).toEqual({
           spaces: [
-            { ...space1, role: UserSpaceRole.MEMBER },
-            { ...space2, role: UserSpaceRole.ADMIN },
+            { ...space1, role: UserSpaceRole.MEMBER, pinned: false },
+            { ...space2, role: UserSpaceRole.ADMIN, pinned: true },
           ],
         });
       });
@@ -100,12 +102,14 @@ describe('ListUserSpacesUseCase', () => {
           userId,
           spaceId: space1.id,
           role: UserSpaceRole.MEMBER,
+          pinned: false,
           space: space1,
         },
         {
           userId,
           spaceId: space1.id,
           role: UserSpaceRole.MEMBER,
+          pinned: false,
           space: undefined,
         },
       ];
@@ -120,7 +124,7 @@ describe('ListUserSpacesUseCase', () => {
         const result = await useCase.execute(buildCommand());
 
         expect(result).toEqual({
-          spaces: [{ ...space1, role: UserSpaceRole.MEMBER }],
+          spaces: [{ ...space1, role: UserSpaceRole.MEMBER, pinned: false }],
         });
       });
     });

@@ -27,7 +27,7 @@ export class ListUserSpacesUseCase implements IListUserSpaces {
 
     const spaces = memberships
       .filter((m): m is MembershipWithSpace => m.space !== undefined)
-      .map((m) => ({ ...m.space, role: m.role }));
+      .map((m) => ({ ...m.space, role: m.role, pinned: m.pinned }));
 
     return { spaces };
   }
