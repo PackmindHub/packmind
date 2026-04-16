@@ -12,6 +12,10 @@ import {
   LeaveSpaceResponse,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
+  PinSpaceCommand,
+  PinSpaceResponse,
+  UnpinSpaceCommand,
+  UnpinSpaceResponse,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
 } from '@packmind/types';
@@ -67,6 +71,20 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _command: DeleteSpaceCommand,
   ): Promise<DeleteSpaceResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  async pinSpace(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: PinSpaceCommand,
+  ): Promise<PinSpaceResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  async unpinSpace(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: UnpinSpaceCommand,
+  ): Promise<UnpinSpaceResponse> {
     throw new Error('Method not implemented.');
   }
 }
