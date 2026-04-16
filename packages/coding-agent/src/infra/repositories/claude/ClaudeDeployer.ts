@@ -15,7 +15,10 @@ import {
   Target,
   camelToKebab,
 } from '@packmind/types';
-import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
+import {
+  DeployDefaultSkillsOptions,
+  ICodingAgentDeployer,
+} from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
 import { formatAdditionalPropertyYaml } from '../utils/YamlFrontmatterUtils';
@@ -40,10 +43,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  async deployDefaultSkills(options?: {
-    cliVersion?: string;
-    includeBeta?: boolean;
-  }) {
+  async deployDefaultSkills(options: DeployDefaultSkillsOptions) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Claude',
       ClaudeDeployer.ARTEFACT_PATHS.skill,

@@ -8,6 +8,12 @@ import {
 } from '@packmind/types';
 import { DefaultSkillsDeployResult } from '../../infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer';
 
+export type DeployDefaultSkillsOptions = {
+  cliVersion?: string;
+  includeBeta?: boolean;
+  excludeDeprecated?: boolean;
+};
+
 export interface ICodingAgentDeployer {
   deployRecipes(
     recipeVersions: RecipeVersion[],
@@ -55,10 +61,9 @@ export interface ICodingAgentDeployer {
     standardVersions: StandardVersion[],
     skillVersions?: SkillVersion[],
   ): Promise<FileUpdates>;
-  deployDefaultSkills?(options?: {
-    cliVersion?: string;
-    includeBeta?: boolean;
-  }): Promise<DefaultSkillsDeployResult> | DefaultSkillsDeployResult;
+  deployDefaultSkills?(
+    options?: DeployDefaultSkillsOptions,
+  ): Promise<DefaultSkillsDeployResult> | DefaultSkillsDeployResult;
   /**
    * Returns the base path for skills folder for this deployer.
    * Returns undefined if skills are not supported by this agent.

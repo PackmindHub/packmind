@@ -17,7 +17,10 @@ import {
   filterAdditionalProperties,
   sortAdditionalPropertiesKeys,
 } from '@packmind/types';
-import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
+import {
+  DeployDefaultSkillsOptions,
+  ICodingAgentDeployer,
+} from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { formatAdditionalPropertyYaml } from '../utils/YamlFrontmatterUtils';
@@ -37,10 +40,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  async deployDefaultSkills(options?: {
-    cliVersion?: string;
-    includeBeta?: boolean;
-  }) {
+  async deployDefaultSkills(options?: DeployDefaultSkillsOptions) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'CoPilot',
       CopilotDeployer.ARTEFACT_PATHS.skill,

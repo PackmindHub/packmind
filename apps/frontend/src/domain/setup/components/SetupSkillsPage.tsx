@@ -17,38 +17,10 @@ interface DefaultSkill {
 
 const defaultSkills: DefaultSkill[] = [
   {
-    name: 'Create Skill',
-    description:
-      'Create new skills to extend your agent capabilities with specialized knowledge and workflows.',
-    slug: 'packmind-create-skill',
-    minimumVersion: '1.0.0',
-  },
-  {
-    name: 'Create Standard',
-    description:
-      'Create coding standards to enforce team conventions and best practices.',
-    slug: 'packmind-create-standard',
-    minimumVersion: '1.0.0',
-  },
-  {
     name: 'Onboard',
     description:
       'Automated onboarding that analyzes your codebase and generates initial standards and commands.',
     slug: 'packmind-onboard',
-    minimumVersion: '1.0.0',
-  },
-  {
-    name: 'Create Command',
-    description:
-      'Create reusable commands for multi-step workflows and task automation.',
-    slug: 'packmind-create-command',
-    minimumVersion: '1.0.0',
-  },
-  {
-    name: 'Create Package',
-    description:
-      'Create packages to organize and distribute standards, commands, and skills.',
-    slug: 'packmind-create-package',
     minimumVersion: '1.0.0',
   },
   {
