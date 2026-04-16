@@ -1,10 +1,10 @@
 # Create Skill Procedure
 
-Write a new skill directory locally in an agent skills directory. Do NOT call any CLI commands — Phase 4 handles submission via `packmind-cli diff add`.
+Write a new skill directory locally in an agent skills directory.
 
 ## Write Path Selection
 
-The `diff add` command recognizes skill paths in these agent directories:
+Skills are stored in agent-specific directories:
 - `.claude/skills/` (agent: claude)
 - `.cursor/skills/` (agent: cursor)
 - `.github/skills/` (agent: copilot)
@@ -65,7 +65,7 @@ Body content with instructions, examples, and edge cases.
 - **`name`**: 1-64 chars, lowercase + hyphens only, no leading/trailing/consecutive hyphens
 - **`description`**: 1-1024 chars, include specific keywords that help agents identify when to activate
 - **Keep SKILL.md under 500 lines** — use `references/` for detailed content overflow
-- **`diff add` accepts either** the directory path or the `SKILL.md` path (the handler normalizes to the directory)
+- **Both the directory path and the `SKILL.md` path** are valid references to a skill (they resolve to the same directory)
 
 ### Description Writing Guidelines
 

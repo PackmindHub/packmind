@@ -5,6 +5,13 @@ license: 'Complete terms in LICENSE.txt'
 ---
 
 # packmind-onboard
+Run "packmind-cli --version" to get the current cli installation.
+    
+Find the highest version at or below the cli version in this list:
+- 0.16.0
+- 0.23.0
+Remember this value as $PACKMIND_CLI_VERSION for the rest of the skill.
+
 
 Action skill. Provides **complete automated onboarding** for Packmind:
 1. Creates or selects a package
@@ -39,6 +46,7 @@ Print exactly:
 I'll start the Packmind onboarding process. I'll create your first standards and commands and send them to your Packmind organization. This usually takes ~3 minutes.
 ```
 
+
 ---
 
 ## Step 1 — Get Repository Name
@@ -53,6 +61,7 @@ Remember this as the repository name for package creation in Step 2.
 
 Also run `packmind-cli whoami` and extract the `Host:` value from the output. Remember this URL for the completion summary.
 
+
 ---
 
 ## Step 2 — Package Handling
@@ -61,21 +70,15 @@ Handle package creation or selection.
 
 ### Check existing packages
 
-List available packages:
+List available packages by following [`packmind-versions/$PACKMIND_CLI_VERSION/list-packages.md`](packmind-versions/$PACKMIND_CLI_VERSION/list-packages.md).
 
-```bash
-packmind-cli install --list
-```
-
-Parse the output to get package names.
+Parse the output to get package names and slugs.
 
 ### No packages exist
 
-Auto-create package using repository name:
+Auto-create a package using the repository name. Follow [`packmind-versions/$PACKMIND_CLI_VERSION/create-package.md`](packmind-versions/$PACKMIND_CLI_VERSION/create-package.md) using `${REPO_NAME}-standards` as the package name.
 
-```bash
-packmind-cli packages create "${REPO_NAME}-standards"
-```
+The create-package step will determine the space. Capture the chosen space slug as `$SPACE_SLUG` and the new package slug as `$PACKAGE_SLUG`.
 
 Print:
 ```
@@ -97,9 +100,17 @@ Ask via AskUserQuestion:
 ### If "Create new package" is selected
 
 - Ask for package name (suggest `${REPO_NAME}-standards` as default)
-- Run: `packmind-cli packages create <name>`
+- Follow [`packmind-versions/$PACKMIND_CLI_VERSION/create-package.md`](packmind-versions/$PACKMIND_CLI_VERSION/create-package.md) using the chosen name.
+- The create-package step will determine the space. Capture the chosen space slug as `$SPACE_SLUG` and the new package slug as `$PACKAGE_SLUG`.
 
-Remember the selected/created package name for later reference.
+### If an existing package is selected
+
+Follow [`packmind-versions/$PACKMIND_CLI_VERSION/select-package.md`](packmind-versions/$PACKMIND_CLI_VERSION/select-package.md).
+
+### After this step
+
+Remember `$PACKAGE_SLUG` (the slug of the selected/created package) and `$SPACE_SLUG` for later reference — they will be used together in Step 9 to ensure items are added to the correct package in the correct space (as `@$SPACE_SLUG/$PACKAGE_SLUG`).
+
 
 ---
 
@@ -111,6 +122,7 @@ Print exactly:
 packmind-onboard: analyzing codebase (read-only)
 Target package: [package-name]
 ```
+
 
 ---
 
@@ -146,6 +158,7 @@ Existing Packmind/agent docs detected:
 
 No overwrites. New files (if you Export) will be added next to the existing ones.
 
+
 ---
 
 ## Step 5 — Detect Project Stack (Minimal, Evidence-Based)
@@ -177,6 +190,7 @@ Stack detected (heuristic):
     Architecture markers: [..|none]
 ```
 
+
 ---
 
 ## Step 6 — Run Analyses
@@ -204,85 +218,22 @@ where_it_doesnt_apply:
 - path[:line-line]
 ```
 
+
 ---
 
 ## Step 7 — Generate All Drafts
 
-Generate all draft files in one batch, using the formats defined above.
+Generate all draft files in one batch, using the format defined for your CLI version.
 
-### Standard Draft Format
+Read the **Draft Format** section in [`packmind-versions/$PACKMIND_CLI_VERSION/create-items.md`](packmind-versions/$PACKMIND_CLI_VERSION/create-items.md) and create draft files accordingly.
 
-For each Standard insight, create a Markdown file at `.packmind/standards/_drafts/<slug>.draft.md`:
-
-```markdown
-# Standard Name
-
-What the standard covers and why.
-
-## Scope
-
-Where this standard applies (e.g., 'TypeScript files', 'React components').
-
-## Rules
-
-### Rule starting with action verb
-
-Another rule can follow...
-
-## Examples
-
-### Good
-
-```typescript
-// Valid code example
-```
-
-### Bad
-
-```typescript
-// Invalid code example
-```
-```
-
-### Command Draft Format
-
-For each Command insight, create a Markdown file at `.packmind/commands/_drafts/<slug>.draft.md`:
-
-```markdown
-# Command Name
-
-What the command does, why it's useful, and when it's relevant.
-
-## When to Use
-
-- Scenario when this command applies
-- Another scenario...
-
-## Checkpoints
-
-- Question to validate before proceeding?
-
-## Steps
-
-### 1. Step Name
-
-What this step does and how to implement it.
-
-```typescript
-// Optional code example
-```
-
-### 2. Another Step
-
-Description of next step...
-```
-
-### Generation Rules
+### Generation Rules (all versions)
 
 - Generate drafts **only from discovered insights** (no invention)
 - Use evidence from analysis to populate rules/steps
 - Cap output: max **5 Standards** + **5 Commands**
 - Never overwrite existing files; append `-2`, `-3`, etc. if slug exists
+
 
 ---
 
@@ -319,188 +270,20 @@ Then ask via AskUserQuestion with three options:
 - **Let me review drafts first** — Pause to allow editing, re-run skill when ready
 - **Cancel** — Exit without creating anything
 
+
 ---
 
 ## Step 9 — Create Items
 
-### If user selected "Create all now"
+Follow [`packmind-versions/$PACKMIND_CLI_VERSION/create-items.md`](packmind-versions/$PACKMIND_CLI_VERSION/create-items.md).
 
-**IMPORTANT:** The CLI only accepts JSON playbook files, not markdown. Before calling the CLI, convert each `.draft.md` file to a `.json` file.
-
-#### Standard JSON Schema
-
-Convert the markdown draft to this JSON format:
-
-```json
-{
-  "name": "Standard name (from # heading)",
-  "description": "What the standard covers (from intro paragraph)",
-  "scope": "Where it applies (from ## Scope section)",
-  "rules": [
-    {
-      "content": "Rule starting with action verb (from ### Rule headings under ## Rules)",
-      "examples": {
-        "positive": "Valid code example (from ### Good section)",
-        "negative": "Invalid code example (from ### Bad section)",
-        "language": "TYPESCRIPT"
-      }
-    }
-  ]
-}
-```
-
-#### Command JSON Schema
-
-Convert the markdown draft to this JSON format:
-
-```json
-{
-  "name": "Command name (from # heading)",
-  "summary": "What it does and when (from intro paragraph)",
-  "whenToUse": ["Scenario 1", "Scenario 2 (from ## When to Use bullets)"],
-  "contextValidationCheckpoints": ["Question 1? (from ## Checkpoints bullets)"],
-  "steps": [
-    {
-      "name": "Step name (from ### N. Step Name)",
-      "description": "Step description (from step content)",
-      "codeSnippet": "Optional code fence content"
-    }
-  ]
-}
-```
-
-#### Conversion and Creation Process
-
-**For each standard draft:**
-
-1. Read the `.draft.md` file
-2. Convert to JSON matching the schema above
-3. Write the JSON to `.packmind/standards/_drafts/<slug>.json`
-4. Run CLI command to create:
-```bash
-packmind-cli standards create .packmind/standards/_drafts/<slug>.json
-```
-5. If creation succeeded, add to package:
-```bash
-packmind-cli packages add --to <package-slug> --standard <slug>
-```
-6. Track result (success/failure)
-
-**For each command draft:**
-
-1. Read the `.draft.md` file
-2. Convert to JSON matching the schema above
-3. Write the JSON to `.packmind/commands/_drafts/<slug>.json`
-4. Run CLI command to create:
-```bash
-packmind-cli commands create .packmind/commands/_drafts/<slug>.json
-```
-5. If creation succeeded, add to package:
-```bash
-packmind-cli packages add --to <package-slug> --command <slug>
-```
-6. Track result (success/failure)
-
-**Show progress:**
-```
-Sending standards and commands to your Packmind organization...
-✓ error-handling-pattern
-✓ naming-conventions
-✗ test-factory-patterns (error: duplicate name exists)
-✓ run-full-test-suite
-
-Done: 3 created, 1 failed
-```
-
-### If user selected "Let me review drafts first"
-
-Print:
-```
-Draft files ready for review at:
-  - .packmind/standards/_drafts/
-  - .packmind/commands/_drafts/
-
-Edit them as needed, then re-run this skill to continue.
-```
-
-Exit the skill.
-
-### If user selected "Cancel"
-
-Print:
-```
-Onboarding cancelled.
-Draft files remain at .packmind/*/_drafts/ if you want to review them later.
-```
-
-Exit the skill.
 
 ---
 
 ## Step 10 — Completion Summary
 
-### All items created successfully
+Follow [`packmind-versions/$PACKMIND_CLI_VERSION/completion-summary.md`](packmind-versions/$PACKMIND_CLI_VERSION/completion-summary.md).
 
-```
-============================================================
-  ✅ ONBOARDING COMPLETE
-============================================================
-
-Package: [package-name]
-Created: [N] standards, [M] commands
-
-Your standards and commands have been created and deployed locally.
-
-Next steps:
-  - Reload your AI coding assistant to start using them
-  - Visit [host from packmind-cli whoami] to manage your standards and commands
-  - Run `packmind-cli install [package-slug]` in other repos to distribute them
-============================================================
-```
-
-Clean up successful draft files after creation.
-
-### Partial success (some items failed)
-
-```
-============================================================
-  ⚠️ ONBOARDING COMPLETED WITH ERRORS
-============================================================
-
-Package: [package-name]
-Created: [N] standards, [M] commands
-Failed: [X] items
-
-Failed items:
-  • [item-name]: [error message]
-
-Failed drafts remain in .packmind/*/_drafts/ for review.
-You can fix and re-run, or create manually with:
-  packmind-cli standards create <file>
-  packmind-cli packages add --to <package-slug> --standard <slug>
-  packmind-cli commands create <file>
-  packmind-cli packages add --to <package-slug> --command <slug>
-============================================================
-```
-
-Keep failed draft files for user to fix and retry.
-
-### No patterns discovered
-
-If analysis found no patterns:
-
-```
-============================================================
-  ℹ️ NO PATTERNS DISCOVERED
-============================================================
-
-The analysis didn't find enough recurring patterns to generate standards or commands.
-
-This can happen with smaller codebases or projects with very diverse coding styles.
-You can try again later as the codebase grows, or create standards manually with:
-  packmind-cli standards create <file>
-============================================================
-```
 
 ---
 
@@ -538,63 +321,8 @@ Then re-run this skill.
 
 ### No packages available
 
-If `packmind-cli install --list` returns no packages:
+If the package listing command returns no packages:
 
 Auto-create a package using the repository name.
 
----
-
-### 9.1 Deploy Locally (after successful creation)
-
-Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally using the package selected/created in Step 2:
-
-```bash
-packmind-cli install <package-slug>
-```
-
-This deploys to agent-specific folders:
-
-| Agent | Standards | Commands |
-|-------|-----------|----------|
-| Claude | `.claude/rules/packmind/standard-[slug].md` | `.claude/commands/packmind/[slug].md` |
-| Cursor | `.cursor/rules/packmind/standard-[slug].mdc` | `.cursor/commands/packmind/[slug].mdc` |
-| Copilot | `.github/instructions/packmind-standard-[slug].instructions.md` | `.github/prompts/packmind-[slug].prompt.md` |
-
-### 9.2 Cleanup and Summary
-
-Delete the draft files, then print final summary:
-
-```
-============================================================
-  PUBLISHED & DEPLOYED
-============================================================
-
-Standards and commands have been sent to your Packmind organization
-and deployed to your AI coding assistant's configuration files.
-
-Standards: [N]
-  - [Name] (slug: [slug])
-    → .packmind/standards/[slug].md
-    → [agent-specific path]
-
-Commands: [M]
-  - [Name] (slug: [slug])
-    → .packmind/commands/[slug].md
-    → [agent-specific path]
-
-Draft files cleaned up.
-============================================================
-```
-
-**If user declines (N):**
-
-Print:
-
-```
-Draft files ready for review at:
-  - .packmind/standards/_drafts/
-  - .packmind/commands/_drafts/
-
-Edit them as needed, then re-run this skill to create them.
-```
 

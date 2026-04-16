@@ -1,6 +1,6 @@
 # Create Command Procedure
 
-Write a new command file locally at `.packmind/commands/<slug>.md`. Do NOT call any CLI commands — Phase 4 handles submission via `packmind-cli diff add`.
+Write a new command file locally at `.packmind/commands/<slug>.md`.
 
 ## Slug Derivation
 
@@ -45,17 +45,17 @@ Opening paragraph describing what this command does and its scope.
 
 Explanatory text describing what this step does and why.
 
-```language
+\`\`\`language
 // code example showing exactly what to do
-```
+\`\`\`
 
 ### Step 2: Create core implementation
 
 Explanatory text describing what this step does and why.
 
-```language
+\`\`\`language
 // code example showing exactly what to do
-```
+\`\`\`
 ```
 
 ### Critical Format Constraints

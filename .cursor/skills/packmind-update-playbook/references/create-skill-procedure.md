@@ -1,10 +1,10 @@
 # Create Skill Procedure
 
-Write a new skill directory locally in an agent skills directory. Do NOT call any CLI commands — Phase 4 handles submission via `packmind-cli diff add`.
+Write a new skill directory locally in an agent skills directory.
 
 ## Write Path Selection
 
-The `diff add` command recognizes skill paths in these agent directories (defined in `CODING_AGENT_ARTEFACT_PATHS`):
+Skills are stored in agent-specific directories:
 - `.claude/skills/` (agent: claude)
 - `.cursor/skills/` (agent: cursor)
 - `.github/skills/` (agent: copilot)
@@ -41,6 +41,11 @@ Derive the skill name from the title: lowercase, replace spaces with hyphens, re
 └── assets/           # Optional — templates, images, data files
 ```
 
+**When to use each resource type:**
+- **scripts/**: Executable code for tasks requiring deterministic reliability or repeatedly rewritten code (e.g. `scripts/rotate_pdf.py`). Token-efficient — may be executed without loading into context.
+- **references/**: Documentation loaded into context as needed (schemas, API docs, domain knowledge). Keeps SKILL.md lean — avoid duplicating content between SKILL.md and references.
+- **assets/**: Files used in output (templates, images, boilerplate) — not loaded into context, copied or modified by Claude during execution.
+
 ## SKILL.md Format
 
 ```markdown
@@ -60,12 +65,12 @@ Body content with instructions, examples, and edge cases.
 - **`name`**: 1-64 chars, lowercase + hyphens only, no leading/trailing/consecutive hyphens
 - **`description`**: 1-1024 chars, include specific keywords that help agents identify when to activate
 - **Keep SKILL.md under 500 lines** — use `references/` for detailed content overflow
-- **`diff add` accepts either** the directory path or the `SKILL.md` path (the handler normalizes to the directory)
+- **Both the directory path and the `SKILL.md` path** are valid references to a skill (they resolve to the same directory)
 
 ### Description Writing Guidelines
 
 The description determines when the skill auto-loads. Write it to:
-- Describe what the skill does in third-person form
+- Describe what the skill does in **third-person form** (e.g. "This skill should be used when..." not "Use this skill when...")
 - Include trigger phrases the user might say (e.g. "extract text from PDF", "fill PDF forms")
 - Mention relevant keywords for discoverability
 
@@ -73,11 +78,19 @@ The description determines when the skill auto-loads. Write it to:
 
 **Poor**: `'Helps with PDFs.'`
 
+### Writing Style
+
+- Use **imperative/infinitive form** (verb-first instructions), not second person (e.g. "To accomplish X, do Y" not "You should do X")
+- Write for another Claude instance — focus on non-obvious procedural knowledge, not general capabilities
+- **File placement rule**: create files directly in their target subdirectory (`references/`, `scripts/`, `assets/`), never at skill root then move
+
 ### Body Content Guidelines
 
 - Provide step-by-step instructions for the main workflow
 - Include examples of inputs and outputs
 - Document common edge cases
-- Structure content for progressive disclosure — keep the main flow in SKILL.md, move detailed references to `references/`
+- **Progressive disclosure**: metadata (~100 words, always in context) → SKILL.md body (<5k words, loaded on trigger) → bundled resources (loaded as needed). Structure content accordingly.
+- **No duplication**: information should live in either SKILL.md or references, not both. Keep SKILL.md lean with essential workflow guidance; move detailed schemas, specs, and examples to `references/`.
+- **Large references**: if reference files exceed ~10k words, include grep search patterns in SKILL.md so Claude can locate relevant sections without loading the entire file
 
 For the complete format specification, see [agent-skills-specification.md](agent-skills-specification.md).
