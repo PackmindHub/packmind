@@ -75,7 +75,7 @@ export class DefaultSkillsDeployer {
     }
 
     if (excludeDeprecated) {
-      return this.skillDeployers.filter((deployer) => deployer.isDeprecated());
+      return this.skillDeployers.filter((deployer) => !deployer.isDeprecated());
     }
 
     return this.skillDeployers.filter((deployer) =>

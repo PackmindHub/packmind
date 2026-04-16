@@ -1,6 +1,5 @@
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -13,11 +12,6 @@ jest.mock('./LocalEnvironmentSetup/hooks/useCliLoginCode', () => ({
     isGenerating: false,
     regenerate: jest.fn(),
   }),
-}));
-
-const mockUseMcpConnection = jest.fn();
-jest.mock('./LocalEnvironmentSetup/hooks/useMcpConnection', () => ({
-  useMcpConnection: () => mockUseMcpConnection(),
 }));
 
 const mockIsLocalhost = jest.fn();
@@ -47,14 +41,6 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('OnboardingBuild', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseMcpConnection.mockReturnValue({
-      url: 'https://mcp.test.packmind.ai/mcp',
-      token: 'test-mcp-token',
-      isLoading: false,
-      isReady: true,
-      isError: false,
-      errorMessage: null,
-    });
     mockIsLocalhost.mockReturnValue(false);
   });
 
@@ -68,15 +54,7 @@ describe('OnboardingBuild', () => {
     it('renders the subtitle', () => {
       renderWithProviders(<OnboardingBuild />);
 
-      expect(
-        screen.getByText(/Analyze your local repository/),
-      ).toBeInTheDocument();
-    });
-
-    it('renders the MCP card', () => {
-      renderWithProviders(<OnboardingBuild />);
-
-      expect(screen.getByTestId('OnboardingBuild.MCPCard')).toBeInTheDocument();
+      expect(screen.getByText(/Install the Packmind CLI/)).toBeInTheDocument();
     });
   });
 
@@ -88,136 +66,24 @@ describe('OnboardingBuild', () => {
       expect(screen.getByText('Alternative')).toBeInTheDocument();
     });
 
-    it('renders the Initialize section', () => {
+    it('renders the Initialize step', () => {
       renderWithProviders(<OnboardingBuild />);
 
-      expect(screen.getByText('Initialize')).toBeInTheDocument();
+      expect(screen.getByText('Initialize your project')).toBeInTheDocument();
     });
 
-    it('renders the Start analysis section', () => {
+    it('renders the Start analysis step', () => {
       renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByText('Start analysis')).toBeInTheDocument();
     });
-  });
 
-  describe('MCP section', () => {
-    it('renders the coding assistant options', () => {
+    it('renders the step numbers', () => {
       renderWithProviders(<OnboardingBuild />);
 
-      expect(
-        screen.getByTestId('OnboardingBuild.Assistant-claude'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByTestId('OnboardingBuild.Assistant-cursor'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByTestId('OnboardingBuild.Assistant-github-copilot-vscode'),
-      ).toBeInTheDocument();
-    });
-
-    it('renders the Instructions section', () => {
-      renderWithProviders(<OnboardingBuild />);
-
-      expect(screen.getByText('Instructions')).toBeInTheDocument();
-    });
-
-    describe('when MCP connection is loading', () => {
-      it('renders a loading spinner', () => {
-        mockUseMcpConnection.mockReturnValue({
-          url: undefined,
-          token: undefined,
-          isLoading: true,
-          isReady: false,
-          isError: false,
-          errorMessage: null,
-        });
-
-        renderWithProviders(<OnboardingBuild />);
-
-        expect(
-          screen.getByTestId('OnboardingBuild.McpLoading'),
-        ).toBeInTheDocument();
-      });
-    });
-
-    describe('when user clicks on an agent', () => {
-      it('hides the placeholder text', async () => {
-        const user = userEvent.setup();
-        renderWithProviders(<OnboardingBuild />);
-
-        await user.click(
-          screen.getByTestId('OnboardingBuild.Assistant-claude'),
-        );
-
-        expect(
-          screen.queryByText(
-            'Select a coding assistant above to see setup instructions.',
-          ),
-        ).not.toBeInTheDocument();
-      });
-
-      it('shows method content for the selected agent', async () => {
-        const user = userEvent.setup();
-        renderWithProviders(<OnboardingBuild />);
-
-        await user.click(
-          screen.getByTestId('OnboardingBuild.Assistant-claude'),
-        );
-
-        expect(
-          screen.getByTestId('OnboardingBuild.InstructionsContent').textContent,
-        ).not.toBe('');
-      });
-
-      it('shows the Start analysis section header', async () => {
-        const user = userEvent.setup();
-        renderWithProviders(<OnboardingBuild />);
-
-        await user.click(
-          screen.getByTestId('OnboardingBuild.Assistant-claude'),
-        );
-
-        const mcpCard = screen.getByTestId('OnboardingBuild.MCPCard');
-        expect(within(mcpCard).getByText('Start analysis')).toBeInTheDocument();
-      });
-
-      it('shows the onboarding prompt textarea', async () => {
-        const user = userEvent.setup();
-        renderWithProviders(<OnboardingBuild />);
-
-        await user.click(
-          screen.getByTestId('OnboardingBuild.Assistant-claude'),
-        );
-
-        expect(
-          screen.getByTestId('OnboardingBuild.OnboardingPrompt'),
-        ).toBeInTheDocument();
-      });
-
-      it('contains the correct onboarding prompt text', async () => {
-        const user = userEvent.setup();
-        renderWithProviders(<OnboardingBuild />);
-
-        await user.click(
-          screen.getByTestId('OnboardingBuild.Assistant-claude'),
-        );
-
-        const promptTextarea = screen.getByTestId(
-          'OnboardingBuild.OnboardingPrompt',
-        );
-        expect(promptTextarea).toHaveValue('Start the Packmind onboarding');
-      });
-    });
-
-    describe('when no agent is selected', () => {
-      it('does not show the onboarding prompt textarea', () => {
-        renderWithProviders(<OnboardingBuild />);
-
-        expect(
-          screen.queryByTestId('OnboardingBuild.OnboardingPrompt'),
-        ).not.toBeInTheDocument();
-      });
+      expect(screen.getByText('Install the CLI')).toBeInTheDocument();
+      expect(screen.getByText('Initialize your project')).toBeInTheDocument();
+      expect(screen.getByText('Start analysis')).toBeInTheDocument();
     });
   });
 });

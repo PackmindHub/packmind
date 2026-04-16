@@ -11,32 +11,32 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-15T09:56:02.243Z",
+  "installedAt": "2026-04-16T13:26:47.507Z",
   "artifacts": {
-    "standard:frontend-navigation-with-react-router": {
-      "name": "Frontend Navigation with React Router",
+    "standard:frontend-data-flow": {
+      "name": "Frontend Data Flow",
       "type": "standard",
-      "id": "1ada3096-d94b-4f11-bbda-9b9b80938262",
-      "version": 2,
+      "id": "fd08d95a-9a38-4187-95d1-b2b93b828819",
+      "version": 4,
       "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
       "packageIds": [
         "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
       ],
       "files": [
         {
-          "path": ".packmind/standards/frontend-navigation-with-react-router.md",
+          "path": ".packmind/standards/frontend-data-flow.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/instructions/packmind-frontend-navigation-with-react-router.instructions.md",
+          "path": ".github/instructions/packmind-frontend-data-flow.instructions.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/rules/packmind/standard-frontend-navigation-with-react-router.md",
+          "path": ".claude/rules/packmind/standard-frontend-data-flow.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/rules/packmind/standard-frontend-navigation-with-react-router.mdc",
+          "path": ".cursor/rules/packmind/standard-frontend-data-flow.mdc",
           "agent": "cursor"
         }
       ]
@@ -69,6 +69,34 @@
         }
       ]
     },
+    "standard:frontend-navigation-with-react-router": {
+      "name": "Frontend Navigation with React Router",
+      "type": "standard",
+      "id": "1ada3096-d94b-4f11-bbda-9b9b80938262",
+      "version": 2,
+      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "packageIds": [
+        "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
+      ],
+      "files": [
+        {
+          "path": ".packmind/standards/frontend-navigation-with-react-router.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-frontend-navigation-with-react-router.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-frontend-navigation-with-react-router.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-frontend-navigation-with-react-router.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
     "standard:tanstack-query-key-management": {
       "name": "TanStack Query Key Management",
       "type": "standard",
@@ -93,34 +121,6 @@
         },
         {
           "path": ".cursor/rules/packmind/standard-tanstack-query-key-management.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "standard:frontend-data-flow": {
-      "name": "Frontend Data Flow",
-      "type": "standard",
-      "id": "fd08d95a-9a38-4187-95d1-b2b93b828819",
-      "version": 4,
-      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
-      "packageIds": [
-        "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
-      ],
-      "files": [
-        {
-          "path": ".packmind/standards/frontend-data-flow.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-frontend-data-flow.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-frontend-data-flow.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-frontend-data-flow.mdc",
           "agent": "cursor"
         }
       ]

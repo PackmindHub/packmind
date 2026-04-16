@@ -86,12 +86,6 @@ export default function SetupIndexRouteModule() {
                 label="CLI"
                 exact
               />,
-              <SidebarNavigationLink
-                key="mcp"
-                url={orgSlug ? routes.org.toSetupMCP(orgSlug) : '#'}
-                label="MCP Servers"
-                exact
-              />,
             ]}
           />
 

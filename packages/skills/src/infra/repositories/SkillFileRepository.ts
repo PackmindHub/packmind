@@ -52,23 +52,4 @@ export class SkillFileRepository
       throw error;
     }
   }
-
-  async addMany(files: SkillFile[]): Promise<SkillFile[]> {
-    this.logger.info('Adding multiple skill files', { count: files.length });
-
-    try {
-      const savedFiles = await this.repository.save(files);
-
-      this.logger.info('Successfully added multiple skill files', {
-        count: savedFiles.length,
-      });
-      return savedFiles;
-    } catch (error) {
-      this.logger.error('Failed to add multiple skill files', {
-        count: files.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
 }
