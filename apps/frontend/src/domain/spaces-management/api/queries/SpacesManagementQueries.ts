@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router';
 import {
   ArtifactReference,
   BrowseSpacesResponse,
+  SpaceColor,
   SpaceId,
   SpaceType,
 } from '@packmind/types';
@@ -264,7 +265,7 @@ export const useUpdateSpaceMutation = () => {
       fields,
     }: {
       spaceId: SpaceId;
-      fields: { name?: string; type?: SpaceType };
+      fields: { name?: string; type?: SpaceType; color?: SpaceColor };
     }) => {
       if (!organization?.id) {
         throw new Error('Organization context required');

@@ -2,6 +2,7 @@ import {
   ArtifactReference,
   BrowseSpacesResponse,
   Space,
+  SpaceColor,
   SpaceId,
   SpaceType,
 } from '@packmind/types';
@@ -27,7 +28,7 @@ export interface ISpacesManagementGateway {
   updateSpace(
     orgId: string,
     spaceId: SpaceId,
-    fields: { name?: string; type?: SpaceType },
+    fields: { name?: string; type?: SpaceType; color?: SpaceColor },
   ): Promise<Space>;
   deleteSpace(orgId: string, spaceId: string): Promise<void>;
   pinSpace(orgId: string, spaceId: SpaceId): Promise<void>;
