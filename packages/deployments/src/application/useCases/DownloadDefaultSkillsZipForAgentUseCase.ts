@@ -87,7 +87,9 @@ export class DownloadDefaultSkillsZipForAgentUseCase implements IDownloadDefault
       };
     }
 
-    const { fileUpdates } = await deployer.deployDefaultSkills();
+    const { fileUpdates } = await deployer.deployDefaultSkills({
+      excludeDeprecated: true,
+    });
     const filesWithContent = fileUpdates.createOrUpdate.filter(hasContent);
 
     const readmeFile: FileWithContent = {

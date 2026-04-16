@@ -7,11 +7,7 @@ import { CreateStandardDeployer } from './CreateStandardDeployer';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
 import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
-
-export type DeployDefaultSkillsOptions = {
-  cliVersion?: string;
-  includeBeta?: boolean;
-};
+import { DeployDefaultSkillsOptions } from '../../../domain/repository/ICodingAgentDeployer';
 
 export type DefaultSkillsDeployResult = {
   fileUpdates: FileUpdates;
@@ -72,10 +68,14 @@ export class DefaultSkillsDeployer {
   private filterDeployers(
     options: DeployDefaultSkillsOptions,
   ): ISkillDeployer[] {
-    const { cliVersion, includeBeta } = options;
+    const { cliVersion, includeBeta, excludeDeprecated } = options;
 
     if (includeBeta) {
       return this.skillDeployers;
+    }
+
+    if (excludeDeprecated) {
+      return this.skillDeployers.filter((deployer) => deployer.isDeprecated());
     }
 
     return this.skillDeployers.filter((deployer) =>

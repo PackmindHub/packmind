@@ -33,6 +33,10 @@ ${this.injectVersionsPrompt(skill.versions)}${skill.getPrompt(agentName)}
     return this.minimumVersion === 'unreleased';
   }
 
+  isDeprecated(): boolean {
+    return this.unsupportedFromVersion !== null;
+  }
+
   isSupportedByCliVersion(cliVersion: string | undefined): boolean {
     if (this.minimumVersion === 'unreleased') return false;
 

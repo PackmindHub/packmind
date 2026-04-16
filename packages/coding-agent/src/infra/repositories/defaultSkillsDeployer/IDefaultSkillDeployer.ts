@@ -9,6 +9,8 @@ export interface ISkillDeployer {
 
   isBetaSkill(): boolean;
 
+  isDeprecated(): boolean;
+
   isSupportedByCliVersion(cliVersion: string | undefined): boolean;
 
   deploy(

@@ -1,6 +1,6 @@
 ---
-name: datadog-analysis
-description: Analyze Datadog error logs for Packmind production services (API, MCP server, Frontend), group them into patterns, perform root cause analysis against the codebase, and produce a structured bug report. This skill should be used when investigating production errors, triaging bugs, auditing service health, or performing periodic error reviews. Also triggers when the user mentions Datadog, production logs, error analysis, prod issues, service health, or asks about what errors are happening in prod. Also triggers on references to specific Datadog service names like api-proprietary, mcp-proprietary, or frontend-proprietary.
+name: 'datadog-analysis'
+description: 'Analyze Datadog error logs for Packmind production services (API, MCP server, Frontend), group them into patterns, perform root cause analysis against the codebase, and produce a structured bug report. This skill should be used when investigating production errors, triaging bugs, auditing service health, or performing periodic error reviews. Also triggers when the user mentions Datadog, production logs, error analysis, prod issues, service health, or asks about what errors are happening in prod. Also triggers on references to specific Datadog service names like api-proprietary, mcp-proprietary, or frontend-proprietary.'
 ---
 
 # Datadog Analysis
