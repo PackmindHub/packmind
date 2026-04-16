@@ -6,8 +6,8 @@ import {
   PMVStack,
   PMHStack,
   PMText,
+  pmToaster,
 } from '@packmind/ui';
-import { pmToaster } from '@packmind/ui';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useUpdateProfileMutation } from '../api/queries/AccountsQueries';
 
@@ -54,8 +54,13 @@ export const UserProfileSection: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <PMVStack align="flex-start" gap={4} width="100%" maxWidth="400px">
-        <PMText fontWeight="semibold">Profile</PMText>
+      <PMVStack align="flex-start" gap={5} maxWidth="400px">
+        <PMField.Root>
+          <PMField.Label>Email</PMField.Label>
+          <PMText color="secondary" fontSize="sm">
+            {user?.email}
+          </PMText>
+        </PMField.Root>
         <PMField.Root>
           <PMField.Label>Display name</PMField.Label>
           <PMInput
@@ -64,7 +69,7 @@ export const UserProfileSection: React.FC = () => {
             onChange={(e) => setDisplayName(e.target.value)}
           />
           <PMField.HelperText>
-            This name is visible to other members of your organization.
+            How your name appears to other members of your organization.
           </PMField.HelperText>
         </PMField.Root>
         <PMHStack>
