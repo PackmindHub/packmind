@@ -11,8 +11,36 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-15T09:56:01.779Z",
+  "installedAt": "2026-04-16T13:26:47.715Z",
   "artifacts": {
+    "standard:cli-command-structure": {
+      "name": "CLI Command Structure",
+      "type": "standard",
+      "id": "c2e51769-e829-49cd-98cc-543462db6fe7",
+      "version": 1,
+      "spaceId": "44d5cfee-46a6-495f-802e-bfd12dcdc953",
+      "packageIds": [
+        "3b20fba1-2669-415f-8433-f3b2bd86c70b"
+      ],
+      "files": [
+        {
+          "path": ".packmind/standards/cli-command-structure.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-cli-command-structure.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-cli-command-structure.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-cli-command-structure.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
     "standard:cli-packmindgateway-method-implementation": {
       "name": "CLI Gateway Implementation",
       "type": "standard",
@@ -65,34 +93,6 @@
         },
         {
           "path": ".cursor/rules/packmind/standard-cli-use-case-structure.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "standard:cli-command-structure": {
-      "name": "CLI Command Structure",
-      "type": "standard",
-      "id": "c2e51769-e829-49cd-98cc-543462db6fe7",
-      "version": 1,
-      "spaceId": "44d5cfee-46a6-495f-802e-bfd12dcdc953",
-      "packageIds": [
-        "3b20fba1-2669-415f-8433-f3b2bd86c70b"
-      ],
-      "files": [
-        {
-          "path": ".packmind/standards/cli-command-structure.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-cli-command-structure.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-cli-command-structure.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-cli-command-structure.mdc",
           "agent": "cursor"
         }
       ]
