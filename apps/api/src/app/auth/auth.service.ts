@@ -15,6 +15,8 @@ import {
   SocialProvider,
   SOCIAL_PROVIDER_DISPLAY_NAMES,
   SignInSocialUserResponse,
+  UpdateUserDisplayNameCommand,
+  UpdateUserDisplayNameResponse,
 } from '@packmind/types';
 import {
   SignInUserCommand,
@@ -66,6 +68,7 @@ export interface GetMeResponse {
   user: {
     id: UserId;
     email: string;
+    displayName: string | null;
   };
   organization?: {
     id: OrganizationId;
@@ -336,6 +339,7 @@ export class AuthService {
           user: {
             id: user.id,
             email: user.email,
+            displayName: user.displayName,
           },
           organizations: organizationsWithDetails,
           message: 'User is authenticated but has not selected an organization',
@@ -399,6 +403,7 @@ export class AuthService {
         user: {
           id: user.id,
           email: user.email,
+          displayName: user.displayName,
         },
         organization: {
           id: createOrganizationId(organizationMembership.organizationId),
@@ -971,6 +976,37 @@ export class AuthService {
       this.logger.error('Failed to fetch onboarding status', {
         userId,
         organizationId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async updateUserDisplayName(
+    req: AuthenticatedRequest,
+    displayName: string | null,
+  ): Promise<UpdateUserDisplayNameResponse> {
+    this.logger.log('Updating user display name', {
+      userId: req.user.userId,
+    });
+
+    try {
+      const command: UpdateUserDisplayNameCommand = {
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+        displayName,
+      };
+
+      const result = await this.accountsAdapter.updateUserDisplayName(command);
+
+      this.logger.log('User display name updated successfully', {
+        userId: req.user.userId,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update user display name', {
+        userId: req.user.userId,
         error: getErrorMessage(error),
       });
       throw error;

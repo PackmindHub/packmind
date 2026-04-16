@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Logger,
   HttpCode,
@@ -384,6 +385,39 @@ export class AuthController {
         message: 'Failed to get user info',
         authenticated: false,
       } as GetMeResponse;
+    }
+  }
+
+  @Patch('profile')
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: { displayName?: string | null },
+  ): Promise<{ displayName: string | null }> {
+    this.logger.log('PATCH /auth/profile - Updating user profile', {
+      userId: request.user.userId,
+    });
+
+    try {
+      const result = await this.authService.updateUserDisplayName(
+        request,
+        body.displayName ?? null,
+      );
+
+      this.logger.log(
+        'PATCH /auth/profile - User profile updated successfully',
+        {
+          userId: request.user.userId,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error('PATCH /auth/profile - Failed to update user profile', {
+        userId: request.user.userId,
+        error: getErrorMessage(error),
+      });
+      throw error;
     }
   }
 
