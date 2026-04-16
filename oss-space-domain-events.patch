@@ -1,0 +1,1514 @@
+From 3c807b46e65f9ba80038283a701d0b8a017cf762 Mon Sep 17 00:00:00 2001
+From: Quentin Le Bourles <quentin.lebourles@promyze.com>
+Date: Wed, 8 Apr 2026 16:32:30 +0200
+Subject: [PATCH 1/5] =?UTF-8?q?=E2=9C=A8=20feat(spaces):=20add=20visibilit?=
+ =?UTF-8?q?y=20field=20to=20SpaceCreatedEvent?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ .../amplitude/src/application/AmplitudeEventListener.spec.ts   | 3 +++
+ packages/amplitude/src/application/AmplitudeEventListener.ts   | 1 +
+ .../spaces/src/application/usecases/CreateSpaceUseCase.spec.ts | 3 ++-
+ packages/spaces/src/application/usecases/CreateSpaceUseCase.ts | 1 +
+ packages/types/src/spaces/events/SpaceCreatedEvent.ts          | 2 ++
+ 5 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+index 5aa009a05..66aa76458 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+@@ -18,6 +18,7 @@ import {
+   ChangeProposalAcceptedEvent,
+   ChangeProposalRejectedEvent,
+   SpaceCreatedEvent,
++  SpaceType,
+   PlaybookArtefactMovedEvent,
+   createUserId,
+   createOrganizationId,
+@@ -529,6 +530,7 @@ describe('AmplitudeEventListener', () => {
+         organizationId: createOrganizationId('org-456'),
+         spaceName: 'My Space',
+         spaceSlug: 'my-space',
++        visibility: SpaceType.open,
+         source: 'ui',
+       });
+ 
+@@ -543,6 +545,7 @@ describe('AmplitudeEventListener', () => {
+         {
+           spaceName: 'My Space',
+           spaceSlug: 'my-space',
++          visibility: 'open',
+           source: 'ui',
+         },
+       );
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.ts b/packages/amplitude/src/application/AmplitudeEventListener.ts
+index cebc612a3..2371dcac7 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.ts
+@@ -353,6 +353,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     return this.emitAmplitudeEvent(event, 'space_created', (payload) => ({
+       spaceName: payload.spaceName,
+       spaceSlug: payload.spaceSlug,
++      visibility: payload.visibility,
+     }));
+   };
+ 
+diff --git a/packages/spaces/src/application/usecases/CreateSpaceUseCase.spec.ts b/packages/spaces/src/application/usecases/CreateSpaceUseCase.spec.ts
+index 5f0acf7e0..a5e4e7444 100644
+--- a/packages/spaces/src/application/usecases/CreateSpaceUseCase.spec.ts
++++ b/packages/spaces/src/application/usecases/CreateSpaceUseCase.spec.ts
+@@ -95,7 +95,7 @@ describe('CreateSpaceUseCase', () => {
+         );
+       });
+ 
+-      it('emits a SpaceCreatedEvent with space name and slug', async () => {
++      it('emits a SpaceCreatedEvent with space name, slug, and visibility', async () => {
+         await useCase.execute(buildCommand());
+ 
+         expect(eventEmitterService.emit).toHaveBeenCalledWith(
+@@ -106,6 +106,7 @@ describe('CreateSpaceUseCase', () => {
+               source: 'ui',
+               spaceName: createdSpace.name,
+               spaceSlug: createdSpace.slug,
++              visibility: createdSpace.type,
+             }),
+           }),
+         );
+diff --git a/packages/spaces/src/application/usecases/CreateSpaceUseCase.ts b/packages/spaces/src/application/usecases/CreateSpaceUseCase.ts
+index 95eb95d1d..530ad64e3 100644
+--- a/packages/spaces/src/application/usecases/CreateSpaceUseCase.ts
++++ b/packages/spaces/src/application/usecases/CreateSpaceUseCase.ts
+@@ -49,6 +49,7 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
+         source: command.source ?? 'ui',
+         spaceName: space.name,
+         spaceSlug: space.slug,
++        visibility: space.type,
+       }),
+     );
+ 
+diff --git a/packages/types/src/spaces/events/SpaceCreatedEvent.ts b/packages/types/src/spaces/events/SpaceCreatedEvent.ts
+index 0fb3b2304..9e22efe39 100644
+--- a/packages/types/src/spaces/events/SpaceCreatedEvent.ts
++++ b/packages/types/src/spaces/events/SpaceCreatedEvent.ts
+@@ -1,8 +1,10 @@
+ import { UserEvent } from '../../events';
++import { SpaceType } from '../Space';
+ 
+ export interface SpaceCreatedPayload {
+   spaceName: string;
+   spaceSlug: string;
++  visibility: SpaceType;
+ }
+ 
+ export class SpaceCreatedEvent extends UserEvent<SpaceCreatedPayload> {
+-- 
+2.50.1 (Apple Git-155)
+
+
+From b37dbc293a9db79afb3535b00604c28f252df43b Mon Sep 17 00:00:00 2001
+From: Quentin Le Bourles <quentin.lebourles@promyze.com>
+Date: Wed, 8 Apr 2026 16:39:27 +0200
+Subject: [PATCH 2/5] =?UTF-8?q?=E2=9C=A8=20feat(spaces):=20emit=20SpaceVis?=
+ =?UTF-8?q?ibilityUpdatedEvent=20on=20space=20type=20change?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add SpaceVisibilityUpdatedEvent domain event and emit it from
+UpdateSpaceUseCase when the space type (visibility) is changed.
+Wire up Amplitude tracking for the new event.
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ .../AmplitudeEventListener.spec.ts            |  28 +++
+ .../src/application/AmplitudeEventListener.ts |  15 ++
+ .../adapters/SpacesManagementAdapter.ts       |   6 +-
+ .../usecases/UpdateSpaceUseCase.spec.ts       | 174 ++++++++++++++++++
+ .../usecases/UpdateSpaceUseCase.ts            |  25 ++-
+ .../events/SpaceVisibilityUpdatedEvent.ts     |  12 ++
+ packages/types/src/spaces/events/index.ts     |   1 +
+ 7 files changed, 258 insertions(+), 3 deletions(-)
+ create mode 100644 packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts
+ create mode 100644 packages/types/src/spaces/events/SpaceVisibilityUpdatedEvent.ts
+
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+index 66aa76458..14ff205e6 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+@@ -18,6 +18,7 @@ import {
+   ChangeProposalAcceptedEvent,
+   ChangeProposalRejectedEvent,
+   SpaceCreatedEvent,
++  SpaceVisibilityUpdatedEvent,
+   SpaceType,
+   PlaybookArtefactMovedEvent,
+   createUserId,
+@@ -552,6 +553,33 @@ describe('AmplitudeEventListener', () => {
+     });
+   });
+ 
++  describe('SpaceVisibilityUpdatedEvent', () => {
++    it('tracks space_visibility_updated event with correct payload', async () => {
++      const event = new SpaceVisibilityUpdatedEvent({
++        userId: createUserId('user-123'),
++        organizationId: createOrganizationId('org-456'),
++        spaceId: createSpaceId('space-789'),
++        newVisibility: SpaceType.private,
++        source: 'ui',
++      });
++
++      eventEmitterService.emit(event);
++
++      await flushPromises();
++
++      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
++        'user-123',
++        'org-456',
++        'space_visibility_updated',
++        {
++          spaceId: 'space-789',
++          newVisibility: 'private',
++          source: 'ui',
++        },
++      );
++    });
++  });
++
+   describe('PlaybookArtefactMovedEvent', () => {
+     it('tracks playbook_artefact_moved event with correct payload', async () => {
+       const event = new PlaybookArtefactMovedEvent({
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.ts b/packages/amplitude/src/application/AmplitudeEventListener.ts
+index 2371dcac7..4ce4104e8 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.ts
+@@ -26,6 +26,7 @@ import {
+   ChangeProposalAcceptedEvent,
+   ChangeProposalRejectedEvent,
+   SpaceCreatedEvent,
++  SpaceVisibilityUpdatedEvent,
+   PlaybookArtefactMovedEvent,
+ } from '@packmind/types';
+ import { EventTrackingAdapter } from './EventTrackingAdapter';
+@@ -73,6 +74,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     this.subscribe(ChangeProposalAcceptedEvent, this.onChangeProposalAccepted);
+     this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
+     this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
++    this.subscribe(SpaceVisibilityUpdatedEvent, this.onSpaceVisibilityUpdated);
+     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
+   }
+ 
+@@ -349,6 +351,19 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     );
+   };
+ 
++  private onSpaceVisibilityUpdated = async (
++    event: SpaceVisibilityUpdatedEvent,
++  ): Promise<void> => {
++    return this.emitAmplitudeEvent(
++      event,
++      'space_visibility_updated',
++      (payload) => ({
++        spaceId: payload.spaceId,
++        newVisibility: payload.newVisibility,
++      }),
++    );
++  };
++
+   private onSpaceCreated = async (event: SpaceCreatedEvent): Promise<void> => {
+     return this.emitAmplitudeEvent(event, 'space_created', (payload) => ({
+       spaceName: payload.spaceName,
+diff --git a/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts b/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts
+index 817b6f601..01955ef96 100644
+--- a/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts
++++ b/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts
+@@ -77,7 +77,11 @@ export class SpacesManagementAdapter
+   }
+ 
+   async updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse> {
+-    const useCase = new UpdateSpaceUseCase(this.accountsPort, this.spacesPort);
++    const useCase = new UpdateSpaceUseCase(
++      this.accountsPort,
++      this.spacesPort,
++      this.eventEmitterService,
++    );
+     return useCase.execute(command);
+   }
+ 
+diff --git a/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts b/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts
+new file mode 100644
+index 000000000..d5396da9d
+--- /dev/null
++++ b/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts
+@@ -0,0 +1,174 @@
++import {
++  createOrganizationId,
++  createSpaceId,
++  createUserId,
++  IAccountsPort,
++  ISpacesPort,
++  SpaceType,
++  UpdateSpaceCommand,
++} from '@packmind/types';
++import { PackmindEventEmitterService } from '@packmind/node-utils';
++import { userFactory } from '@packmind/accounts/test/userFactory';
++import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
++import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
++import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
++import { UpdateSpaceUseCase } from './UpdateSpaceUseCase';
++
++describe('UpdateSpaceUseCase', () => {
++  const organizationId = createOrganizationId('org-1');
++  const userId = createUserId('user-1');
++  const spaceId = createSpaceId('space-1');
++
++  const organization = organizationFactory({ id: organizationId });
++  const user = userFactory({
++    id: userId,
++    memberships: [{ userId, organizationId, role: 'member' }],
++  });
++
++  let useCase: UpdateSpaceUseCase;
++  let accountsPort: jest.Mocked<IAccountsPort>;
++  let spacesPort: jest.Mocked<
++    Pick<ISpacesPort, 'getSpaceById' | 'updateSpace'>
++  >;
++  let eventEmitterService: jest.Mocked<
++    Pick<PackmindEventEmitterService, 'emit'>
++  >;
++
++  const buildCommand = (
++    overrides?: Partial<UpdateSpaceCommand>,
++  ): UpdateSpaceCommand => ({
++    userId: userId as unknown as string,
++    organizationId: organizationId as unknown as string,
++    spaceId: spaceId as unknown as string,
++    ...overrides,
++  });
++
++  beforeEach(() => {
++    accountsPort = {
++      getUserById: jest.fn().mockResolvedValue(user),
++      getOrganizationById: jest.fn().mockResolvedValue(organization),
++    } as unknown as jest.Mocked<IAccountsPort>;
++
++    spacesPort = {
++      getSpaceById: jest.fn(),
++      updateSpace: jest.fn(),
++    };
++
++    eventEmitterService = {
++      emit: jest.fn().mockReturnValue(true),
++    };
++
++    useCase = new UpdateSpaceUseCase(
++      accountsPort,
++      spacesPort as unknown as ISpacesPort,
++      eventEmitterService as unknown as PackmindEventEmitterService,
++    );
++  });
++
++  afterEach(() => jest.clearAllMocks());
++
++  describe('when updating space type', () => {
++    const existingSpace = spaceFactory({
++      id: spaceId,
++      organizationId,
++      type: SpaceType.open,
++    });
++    const updatedSpace = spaceFactory({
++      id: spaceId,
++      organizationId,
++      type: SpaceType.private,
++    });
++
++    beforeEach(() => {
++      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
++      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
++    });
++
++    it('returns the updated space', async () => {
++      const result = await useCase.execute(
++        buildCommand({ type: SpaceType.private }),
++      );
++
++      expect(result).toEqual(updatedSpace);
++    });
++
++    it('emits SpaceVisibilityUpdatedEvent', async () => {
++      await useCase.execute(buildCommand({ type: SpaceType.private }));
++
++      expect(eventEmitterService.emit).toHaveBeenCalledWith(
++        expect.objectContaining({
++          payload: expect.objectContaining({
++            spaceId,
++            newVisibility: SpaceType.private,
++          }),
++        }),
++      );
++    });
++  });
++
++  describe('when updating only the name', () => {
++    const existingSpace = spaceFactory({
++      id: spaceId,
++      organizationId,
++      type: SpaceType.open,
++    });
++    const updatedSpace = spaceFactory({
++      ...existingSpace,
++      name: 'New Name',
++    });
++
++    beforeEach(() => {
++      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
++      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
++    });
++
++    it('does not emit SpaceVisibilityUpdatedEvent', async () => {
++      await useCase.execute(buildCommand({ name: 'New Name' }));
++
++      expect(eventEmitterService.emit).not.toHaveBeenCalled();
++    });
++  });
++
++  describe('when no fields are provided', () => {
++    const existingSpace = spaceFactory({
++      id: spaceId,
++      organizationId,
++    });
++
++    beforeEach(() => {
++      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
++    });
++
++    it('returns the existing space without updating', async () => {
++      const result = await useCase.execute(buildCommand());
++
++      expect(result).toEqual(existingSpace);
++    });
++
++    it('does not emit any event', async () => {
++      await useCase.execute(buildCommand());
++
++      expect(eventEmitterService.emit).not.toHaveBeenCalled();
++    });
++  });
++
++  describe('when space is not found', () => {
++    beforeEach(() => {
++      spacesPort.getSpaceById.mockResolvedValue(null);
++    });
++
++    it('throws SpaceNotFoundError', async () => {
++      await expect(
++        useCase.execute(buildCommand({ type: SpaceType.private })),
++      ).rejects.toThrow(SpaceNotFoundError);
++    });
++
++    it('does not emit any event', async () => {
++      await useCase
++        .execute(buildCommand({ type: SpaceType.private }))
++        .catch(() => undefined);
++
++      expect(eventEmitterService.emit).not.toHaveBeenCalled();
++    });
++  });
++});
+diff --git a/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.ts b/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.ts
+index 31cf83759..565be566f 100644
+--- a/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.ts
++++ b/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.ts
+@@ -1,10 +1,16 @@
+-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
++import {
++  AbstractMemberUseCase,
++  MemberContext,
++  PackmindEventEmitterService,
++} from '@packmind/node-utils';
+ import {
+   createOrganizationId,
+   createSpaceId,
++  createUserId,
+   IAccountsPort,
+   ISpacesPort,
+   SpaceType,
++  SpaceVisibilityUpdatedEvent,
+   UpdateSpaceCommand,
+   UpdateSpaceResponse,
+ } from '@packmind/types';
+@@ -17,6 +23,7 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
+   constructor(
+     accountsPort: IAccountsPort,
+     private readonly spacesPort: ISpacesPort,
++    private readonly eventEmitterService: PackmindEventEmitterService,
+   ) {
+     super(accountsPort);
+   }
+@@ -47,6 +54,20 @@ export class UpdateSpaceUseCase extends AbstractMemberUseCase<
+       return space;
+     }
+ 
+-    return this.spacesPort.updateSpace(spaceId, fields);
++    const updatedSpace = await this.spacesPort.updateSpace(spaceId, fields);
++
++    if (command.type !== undefined) {
++      this.eventEmitterService.emit(
++        new SpaceVisibilityUpdatedEvent({
++          userId: createUserId(command.userId),
++          organizationId,
++          source: command.source ?? 'ui',
++          spaceId,
++          newVisibility: command.type,
++        }),
++      );
++    }
++
++    return updatedSpace;
+   }
+ }
+diff --git a/packages/types/src/spaces/events/SpaceVisibilityUpdatedEvent.ts b/packages/types/src/spaces/events/SpaceVisibilityUpdatedEvent.ts
+new file mode 100644
+index 000000000..e9e0b9bd2
+--- /dev/null
++++ b/packages/types/src/spaces/events/SpaceVisibilityUpdatedEvent.ts
+@@ -0,0 +1,12 @@
++import { UserEvent } from '../../events';
++import { SpaceId } from '../SpaceId';
++import { SpaceType } from '../Space';
++
++export interface SpaceVisibilityUpdatedPayload {
++  spaceId: SpaceId;
++  newVisibility: SpaceType;
++}
++
++export class SpaceVisibilityUpdatedEvent extends UserEvent<SpaceVisibilityUpdatedPayload> {
++  static override readonly eventName = 'spaces.space.visibility-updated';
++}
+diff --git a/packages/types/src/spaces/events/index.ts b/packages/types/src/spaces/events/index.ts
+index 51b88638d..7617f074e 100644
+--- a/packages/types/src/spaces/events/index.ts
++++ b/packages/types/src/spaces/events/index.ts
+@@ -1 +1,2 @@
+ export * from './SpaceCreatedEvent';
++export * from './SpaceVisibilityUpdatedEvent';
+-- 
+2.50.1 (Apple Git-155)
+
+
+From 764bc316a80eb5c717121adcdcd56b6a08de6aaf Mon Sep 17 00:00:00 2001
+From: Quentin Le Bourles <quentin.lebourles@promyze.com>
+Date: Wed, 8 Apr 2026 16:47:38 +0200
+Subject: [PATCH 3/5] =?UTF-8?q?=E2=9C=A8=20feat(spaces):=20emit=20SpaceMem?=
+ =?UTF-8?q?bersAddedEvent=20from=20AddMembers=20and=20JoinSpace=20use=20ca?=
+ =?UTF-8?q?ses?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Create SpaceMembersAddedEvent domain event and emit it when members are
+added to a space (admin flow) and when a user self-joins a space, with
+Amplitude tracking for the new event.
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ .../AmplitudeEventListener.spec.ts            | 28 +++++++++++++++++
+ .../src/application/AmplitudeEventListener.ts | 11 +++++++
+ .../adapters/SpacesManagementAdapter.ts       |  6 +++-
+ .../usecases/JoinSpaceUseCase.spec.ts         | 29 +++++++++++++++++
+ .../application/usecases/JoinSpaceUseCase.ts  | 18 ++++++++++-
+ .../src/application/adapters/SpacesAdapter.ts |  1 +
+ .../usecases/AddMembersToSpaceUseCase.spec.ts | 31 +++++++++++++++++++
+ .../usecases/AddMembersToSpaceUseCase.ts      | 16 ++++++++++
+ .../spaces/events/SpaceMembersAddedEvent.ts   | 12 +++++++
+ packages/types/src/spaces/events/index.ts     |  1 +
+ 10 files changed, 151 insertions(+), 2 deletions(-)
+ create mode 100644 packages/types/src/spaces/events/SpaceMembersAddedEvent.ts
+
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+index 14ff205e6..21b940f0d 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+@@ -18,6 +18,7 @@ import {
+   ChangeProposalAcceptedEvent,
+   ChangeProposalRejectedEvent,
+   SpaceCreatedEvent,
++  SpaceMembersAddedEvent,
+   SpaceVisibilityUpdatedEvent,
+   SpaceType,
+   PlaybookArtefactMovedEvent,
+@@ -553,6 +554,33 @@ describe('AmplitudeEventListener', () => {
+     });
+   });
+ 
++  describe('SpaceMembersAddedEvent', () => {
++    it('tracks space_members_added event with correct payload', async () => {
++      const event = new SpaceMembersAddedEvent({
++        userId: createUserId('user-123'),
++        organizationId: createOrganizationId('org-456'),
++        spaceId: createSpaceId('space-789'),
++        memberUserIds: [createUserId('member-1'), createUserId('member-2')],
++        source: 'ui',
++      });
++
++      eventEmitterService.emit(event);
++
++      await flushPromises();
++
++      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
++        'user-123',
++        'org-456',
++        'space_members_added',
++        {
++          spaceId: 'space-789',
++          memberCount: 2,
++          source: 'ui',
++        },
++      );
++    });
++  });
++
+   describe('SpaceVisibilityUpdatedEvent', () => {
+     it('tracks space_visibility_updated event with correct payload', async () => {
+       const event = new SpaceVisibilityUpdatedEvent({
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.ts b/packages/amplitude/src/application/AmplitudeEventListener.ts
+index 4ce4104e8..5e8779774 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.ts
+@@ -26,6 +26,7 @@ import {
+   ChangeProposalAcceptedEvent,
+   ChangeProposalRejectedEvent,
+   SpaceCreatedEvent,
++  SpaceMembersAddedEvent,
+   SpaceVisibilityUpdatedEvent,
+   PlaybookArtefactMovedEvent,
+ } from '@packmind/types';
+@@ -74,6 +75,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     this.subscribe(ChangeProposalAcceptedEvent, this.onChangeProposalAccepted);
+     this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
+     this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
++    this.subscribe(SpaceMembersAddedEvent, this.onSpaceMembersAdded);
+     this.subscribe(SpaceVisibilityUpdatedEvent, this.onSpaceVisibilityUpdated);
+     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
+   }
+@@ -372,6 +374,15 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     }));
+   };
+ 
++  private onSpaceMembersAdded = async (
++    event: SpaceMembersAddedEvent,
++  ): Promise<void> => {
++    return this.emitAmplitudeEvent(event, 'space_members_added', (payload) => ({
++      spaceId: payload.spaceId,
++      memberCount: payload.memberUserIds.length,
++    }));
++  };
++
+   private onPlaybookArtefactMoved = async (
+     event: PlaybookArtefactMovedEvent,
+   ): Promise<void> => {
+diff --git a/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts b/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts
+index 01955ef96..28f59c16c 100644
+--- a/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts
++++ b/packages/spaces-management/src/application/adapters/SpacesManagementAdapter.ts
+@@ -72,7 +72,11 @@ export class SpacesManagementAdapter
+   }
+ 
+   async joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
+-    const useCase = new JoinSpaceUseCase(this.accountsPort, this.spacesPort);
++    const useCase = new JoinSpaceUseCase(
++      this.accountsPort,
++      this.spacesPort,
++      this.eventEmitterService,
++    );
+     return useCase.execute(command);
+   }
+ 
+diff --git a/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.spec.ts b/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.spec.ts
+index 5dcf62600..3d04ab0e8 100644
+--- a/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.spec.ts
++++ b/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.spec.ts
+@@ -1,3 +1,4 @@
++import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import {
+   createOrganizationId,
+   createSpaceId,
+@@ -31,6 +32,9 @@ describe('JoinSpaceUseCase', () => {
+   let spacesPort: jest.Mocked<
+     Pick<ISpacesPort, 'getSpaceById' | 'findMembership' | 'addSpaceMembership'>
+   >;
++  let eventEmitterService: jest.Mocked<
++    Pick<PackmindEventEmitterService, 'emit'>
++  >;
+ 
+   const buildCommand = (
+     overrides?: Partial<JoinSpaceCommand>,
+@@ -52,9 +56,15 @@ describe('JoinSpaceUseCase', () => {
+       findMembership: jest.fn(),
+       addSpaceMembership: jest.fn(),
+     };
++
++    eventEmitterService = {
++      emit: jest.fn().mockReturnValue(true),
++    };
++
+     useCase = new JoinSpaceUseCase(
+       accountsPort,
+       spacesPort as unknown as ISpacesPort,
++      eventEmitterService as unknown as PackmindEventEmitterService,
+     );
+   });
+ 
+@@ -89,6 +99,19 @@ describe('JoinSpaceUseCase', () => {
+         createdBy: userId,
+       });
+     });
++
++    it('emits SpaceMembersAddedEvent with the joining user', async () => {
++      await useCase.execute(buildCommand());
++
++      expect(eventEmitterService.emit).toHaveBeenCalledWith(
++        expect.objectContaining({
++          payload: expect.objectContaining({
++            spaceId,
++            memberUserIds: [userId],
++          }),
++        }),
++      );
++    });
+   });
+ 
+   describe('when the space does not exist', () => {
+@@ -187,6 +210,12 @@ describe('JoinSpaceUseCase', () => {
+       await useCase.execute(buildCommand());
+       expect(spacesPort.addSpaceMembership).not.toHaveBeenCalled();
+     });
++
++    it('does not emit SpaceMembersAddedEvent', async () => {
++      await useCase.execute(buildCommand());
++
++      expect(eventEmitterService.emit).not.toHaveBeenCalled();
++    });
+   });
+ 
+   describe('when the user is an organization admin', () => {
+diff --git a/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.ts b/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.ts
+index e7788ca6b..36aa5a79c 100644
+--- a/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.ts
++++ b/packages/spaces-management/src/application/usecases/JoinSpaceUseCase.ts
+@@ -1,4 +1,8 @@
+-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
++import {
++  AbstractMemberUseCase,
++  MemberContext,
++  PackmindEventEmitterService,
++} from '@packmind/node-utils';
+ import {
+   createOrganizationId,
+   createSpaceId,
+@@ -7,6 +11,7 @@ import {
+   ISpacesPort,
+   JoinSpaceCommand,
+   JoinSpaceResponse,
++  SpaceMembersAddedEvent,
+   SpaceType,
+   UserSpaceRole,
+ } from '@packmind/types';
+@@ -20,6 +25,7 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
+   constructor(
+     accountsPort: IAccountsPort,
+     private readonly spacesPort: ISpacesPort,
++    private readonly eventEmitterService: PackmindEventEmitterService,
+   ) {
+     super(accountsPort);
+   }
+@@ -64,6 +70,16 @@ export class JoinSpaceUseCase extends AbstractMemberUseCase<
+       createdBy: userId,
+     });
+ 
++    this.eventEmitterService.emit(
++      new SpaceMembersAddedEvent({
++        userId,
++        organizationId,
++        source: command.source ?? 'ui',
++        spaceId,
++        memberUserIds: [userId],
++      }),
++    );
++
+     return {} as JoinSpaceResponse;
+   }
+ }
+diff --git a/packages/spaces/src/application/adapters/SpacesAdapter.ts b/packages/spaces/src/application/adapters/SpacesAdapter.ts
+index 48034da5a..c4fc21ed7 100644
+--- a/packages/spaces/src/application/adapters/SpacesAdapter.ts
++++ b/packages/spaces/src/application/adapters/SpacesAdapter.ts
+@@ -162,6 +162,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
+     const useCase = new AddMembersToSpaceUseCase(
+       membershipService,
+       this.accountsPort,
++      this.eventEmitterService,
+     );
+     return useCase.execute(command);
+   }
+diff --git a/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.spec.ts b/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.spec.ts
+index 33fe3176b..284651b49 100644
+--- a/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.spec.ts
++++ b/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.spec.ts
+@@ -1,3 +1,4 @@
++import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import {
+   AddMembersToSpaceCommand,
+   IAccountsPort,
+@@ -28,6 +29,9 @@ describe('AddMembersToSpaceUseCase', () => {
+   let useCase: AddMembersToSpaceUseCase;
+   let membershipService: jest.Mocked<UserSpaceMembershipService>;
+   let accountsPort: jest.Mocked<IAccountsPort>;
++  let eventEmitterService: jest.Mocked<
++    Pick<PackmindEventEmitterService, 'emit'>
++  >;
+ 
+   const buildCommand = (
+     overrides?: Partial<AddMembersToSpaceCommand>,
+@@ -53,9 +57,14 @@ describe('AddMembersToSpaceUseCase', () => {
+       getOrganizationById: jest.fn().mockResolvedValue(organization),
+     } as unknown as jest.Mocked<IAccountsPort>;
+ 
++    eventEmitterService = {
++      emit: jest.fn().mockReturnValue(true),
++    };
++
+     useCase = new AddMembersToSpaceUseCase(
+       membershipService,
+       accountsPort,
++      eventEmitterService as unknown as PackmindEventEmitterService,
+       stubLogger(),
+     );
+   });
+@@ -99,6 +108,22 @@ describe('AddMembersToSpaceUseCase', () => {
+ 
+         expect(membershipService.addSpaceMembership).toHaveBeenCalledTimes(2);
+       });
++
++      it('emits SpaceMembersAddedEvent with added member IDs', async () => {
++        await useCase.execute(buildCommand());
++
++        expect(eventEmitterService.emit).toHaveBeenCalledWith(
++          expect.objectContaining({
++            payload: expect.objectContaining({
++              spaceId,
++              memberUserIds: [
++                createUserId('member-1'),
++                createUserId('member-2'),
++              ],
++            }),
++          }),
++        );
++      });
+     });
+ 
+     describe('when one member fails to be added', () => {
+@@ -147,6 +172,12 @@ describe('AddMembersToSpaceUseCase', () => {
+ 
+         expect(result).toEqual([]);
+       });
++
++      it('does not emit SpaceMembersAddedEvent', async () => {
++        await useCase.execute(buildCommand());
++
++        expect(eventEmitterService.emit).not.toHaveBeenCalled();
++      });
+     });
+ 
+     describe('when members array is empty', () => {
+diff --git a/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts b/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts
+index a5ee55ae7..32949395b 100644
+--- a/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts
++++ b/packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts
+@@ -1,9 +1,12 @@
+ import { PackmindLogger } from '@packmind/logger';
++import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import {
+   AddMembersToSpaceCommand,
+   AddMembersToSpaceResponse,
++  createOrganizationId,
+   createUserId,
+   IAccountsPort,
++  SpaceMembersAddedEvent,
+   UserSpaceMembership,
+ } from '@packmind/types';
+ import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
+@@ -21,6 +24,7 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
+   constructor(
+     membershipService: UserSpaceMembershipService,
+     accountsPort: IAccountsPort,
++    private readonly eventEmitterService: PackmindEventEmitterService,
+     logger: PackmindLogger = new PackmindLogger(origin),
+   ) {
+     super(membershipService, accountsPort, logger);
+@@ -48,6 +52,18 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
+       }
+     }
+ 
++    if (createdMemberships.length > 0) {
++      this.eventEmitterService.emit(
++        new SpaceMembersAddedEvent({
++          userId: createUserId(command.userId),
++          organizationId: createOrganizationId(command.organizationId),
++          source: command.source ?? 'ui',
++          spaceId: command.spaceId,
++          memberUserIds: createdMemberships.map((m) => m.userId),
++        }),
++      );
++    }
++
+     return createdMemberships;
+   }
+ }
+diff --git a/packages/types/src/spaces/events/SpaceMembersAddedEvent.ts b/packages/types/src/spaces/events/SpaceMembersAddedEvent.ts
+new file mode 100644
+index 000000000..232d86025
+--- /dev/null
++++ b/packages/types/src/spaces/events/SpaceMembersAddedEvent.ts
+@@ -0,0 +1,12 @@
++import { UserEvent } from '../../events';
++import { SpaceId } from '../SpaceId';
++import { UserId } from '../../accounts/User';
++
++export interface SpaceMembersAddedPayload {
++  spaceId: SpaceId;
++  memberUserIds: UserId[];
++}
++
++export class SpaceMembersAddedEvent extends UserEvent<SpaceMembersAddedPayload> {
++  static override readonly eventName = 'spaces.space.members-added';
++}
+diff --git a/packages/types/src/spaces/events/index.ts b/packages/types/src/spaces/events/index.ts
+index 7617f074e..002ab3b1e 100644
+--- a/packages/types/src/spaces/events/index.ts
++++ b/packages/types/src/spaces/events/index.ts
+@@ -1,2 +1,3 @@
+ export * from './SpaceCreatedEvent';
++export * from './SpaceMembersAddedEvent';
+ export * from './SpaceVisibilityUpdatedEvent';
+-- 
+2.50.1 (Apple Git-155)
+
+
+From 70fa9bc1e96fabf785cb8bf81b881ee6d471dddc Mon Sep 17 00:00:00 2001
+From: Quentin Le Bourles <quentin.lebourles@promyze.com>
+Date: Wed, 8 Apr 2026 16:53:43 +0200
+Subject: [PATCH 4/5] =?UTF-8?q?=E2=9C=A8=20feat(spaces):=20emit=20SpaceMem?=
+ =?UTF-8?q?bersRemovedEvent=20from=20RemoveMemberFromSpace=20use=20case?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ .../AmplitudeEventListener.spec.ts            | 28 +++++++++++++++++++
+ .../src/application/AmplitudeEventListener.ts | 15 ++++++++++
+ .../src/application/adapters/SpacesAdapter.ts |  1 +
+ .../RemoveMemberFromSpaceUseCase.spec.ts      | 28 +++++++++++++++++++
+ .../usecases/RemoveMemberFromSpaceUseCase.ts  | 17 +++++++++++
+ .../spaces/events/SpaceMembersRemovedEvent.ts | 12 ++++++++
+ packages/types/src/spaces/events/index.ts     |  1 +
+ 7 files changed, 102 insertions(+)
+ create mode 100644 packages/types/src/spaces/events/SpaceMembersRemovedEvent.ts
+
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+index 21b940f0d..dee6bc9ba 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+@@ -19,6 +19,7 @@ import {
+   ChangeProposalRejectedEvent,
+   SpaceCreatedEvent,
+   SpaceMembersAddedEvent,
++  SpaceMembersRemovedEvent,
+   SpaceVisibilityUpdatedEvent,
+   SpaceType,
+   PlaybookArtefactMovedEvent,
+@@ -581,6 +582,33 @@ describe('AmplitudeEventListener', () => {
+     });
+   });
+ 
++  describe('SpaceMembersRemovedEvent', () => {
++    it('tracks space_members_removed event with correct payload', async () => {
++      const event = new SpaceMembersRemovedEvent({
++        userId: createUserId('user-123'),
++        organizationId: createOrganizationId('org-456'),
++        spaceId: createSpaceId('space-789'),
++        memberUserIds: [createUserId('member-1')],
++        source: 'ui',
++      });
++
++      eventEmitterService.emit(event);
++
++      await flushPromises();
++
++      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
++        'user-123',
++        'org-456',
++        'space_members_removed',
++        {
++          spaceId: 'space-789',
++          memberCount: 1,
++          source: 'ui',
++        },
++      );
++    });
++  });
++
+   describe('SpaceVisibilityUpdatedEvent', () => {
+     it('tracks space_visibility_updated event with correct payload', async () => {
+       const event = new SpaceVisibilityUpdatedEvent({
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.ts b/packages/amplitude/src/application/AmplitudeEventListener.ts
+index 5e8779774..78b3cd8f6 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.ts
+@@ -27,6 +27,7 @@ import {
+   ChangeProposalRejectedEvent,
+   SpaceCreatedEvent,
+   SpaceMembersAddedEvent,
++  SpaceMembersRemovedEvent,
+   SpaceVisibilityUpdatedEvent,
+   PlaybookArtefactMovedEvent,
+ } from '@packmind/types';
+@@ -76,6 +77,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     this.subscribe(ChangeProposalRejectedEvent, this.onChangeProposalRejected);
+     this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
+     this.subscribe(SpaceMembersAddedEvent, this.onSpaceMembersAdded);
++    this.subscribe(SpaceMembersRemovedEvent, this.onSpaceMembersRemoved);
+     this.subscribe(SpaceVisibilityUpdatedEvent, this.onSpaceVisibilityUpdated);
+     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
+   }
+@@ -383,6 +385,19 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     }));
+   };
+ 
++  private onSpaceMembersRemoved = async (
++    event: SpaceMembersRemovedEvent,
++  ): Promise<void> => {
++    return this.emitAmplitudeEvent(
++      event,
++      'space_members_removed',
++      (payload) => ({
++        spaceId: payload.spaceId,
++        memberCount: payload.memberUserIds.length,
++      }),
++    );
++  };
++
+   private onPlaybookArtefactMoved = async (
+     event: PlaybookArtefactMovedEvent,
+   ): Promise<void> => {
+diff --git a/packages/spaces/src/application/adapters/SpacesAdapter.ts b/packages/spaces/src/application/adapters/SpacesAdapter.ts
+index c4fc21ed7..aa116047d 100644
+--- a/packages/spaces/src/application/adapters/SpacesAdapter.ts
++++ b/packages/spaces/src/application/adapters/SpacesAdapter.ts
+@@ -174,6 +174,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
+     const useCase = new RemoveMemberFromSpaceUseCase(
+       membershipService,
+       this.accountsPort,
++      this.eventEmitterService,
+     );
+     return useCase.execute(command);
+   }
+diff --git a/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.spec.ts b/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.spec.ts
+index 7246f7728..2b6b0c9b5 100644
+--- a/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.spec.ts
++++ b/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.spec.ts
+@@ -6,6 +6,7 @@ import {
+   createUserId,
+   UserSpaceRole,
+ } from '@packmind/types';
++import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import { stubLogger } from '@packmind/test-utils';
+ import { userFactory } from '@packmind/accounts/test/userFactory';
+ import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
+@@ -32,6 +33,9 @@ describe('RemoveMemberFromSpaceUseCase', () => {
+   let useCase: RemoveMemberFromSpaceUseCase;
+   let membershipService: jest.Mocked<UserSpaceMembershipService>;
+   let accountsPort: jest.Mocked<IAccountsPort>;
++  let eventEmitterService: jest.Mocked<
++    Pick<PackmindEventEmitterService, 'emit'>
++  >;
+ 
+   const buildCommand = (
+     overrides?: Partial<RemoveMemberFromSpaceCommand>,
+@@ -55,9 +59,14 @@ describe('RemoveMemberFromSpaceUseCase', () => {
+       getOrganizationById: jest.fn().mockResolvedValue(organization),
+     } as unknown as jest.Mocked<IAccountsPort>;
+ 
++    eventEmitterService = {
++      emit: jest.fn().mockReturnValue(true),
++    };
++
+     useCase = new RemoveMemberFromSpaceUseCase(
+       membershipService,
+       accountsPort,
++      eventEmitterService as unknown as PackmindEventEmitterService,
+       stubLogger(),
+     );
+   });
+@@ -94,6 +103,19 @@ describe('RemoveMemberFromSpaceUseCase', () => {
+           spaceId,
+         );
+       });
++
++      it('emits SpaceMembersRemovedEvent', async () => {
++        await useCase.execute(buildCommand());
++
++        expect(eventEmitterService.emit).toHaveBeenCalledWith(
++          expect.objectContaining({
++            payload: expect.objectContaining({
++              spaceId,
++              memberUserIds: [targetUserId],
++            }),
++          }),
++        );
++      });
+     });
+ 
+     describe('when the caller is not a space admin', () => {
+@@ -120,6 +142,12 @@ describe('RemoveMemberFromSpaceUseCase', () => {
+ 
+         expect(membershipService.removeSpaceMembership).not.toHaveBeenCalled();
+       });
++
++      it('does not emit SpaceMembersRemovedEvent', async () => {
++        await useCase.execute(buildCommand()).catch(() => undefined);
++
++        expect(eventEmitterService.emit).not.toHaveBeenCalled();
++      });
+     });
+ 
+     describe('when the caller has no space membership', () => {
+diff --git a/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts b/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts
+index adf97d1bc..3be6c1d27 100644
+--- a/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts
++++ b/packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts
+@@ -1,8 +1,12 @@
+ import { PackmindLogger } from '@packmind/logger';
++import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import {
++  createOrganizationId,
++  createUserId,
+   IAccountsPort,
+   RemoveMemberFromSpaceCommand,
+   RemoveMemberFromSpaceResponse,
++  SpaceMembersRemovedEvent,
+ } from '@packmind/types';
+ import { CannotRemoveFromDefaultSpaceError } from '../../domain/errors/CannotRemoveFromDefaultSpaceError';
+ import { CannotRemoveSelfError } from '../../domain/errors/CannotRemoveSelfError';
+@@ -21,6 +25,7 @@ export class RemoveMemberFromSpaceUseCase extends AbstractSpaceAdminUseCase<
+   constructor(
+     membershipService: UserSpaceMembershipService,
+     accountsPort: IAccountsPort,
++    private readonly eventEmitterService: PackmindEventEmitterService,
+     logger: PackmindLogger = new PackmindLogger(origin),
+   ) {
+     super(membershipService, accountsPort, logger);
+@@ -44,6 +49,18 @@ export class RemoveMemberFromSpaceUseCase extends AbstractSpaceAdminUseCase<
+       command.spaceId,
+     );
+ 
++    if (removed) {
++      this.eventEmitterService.emit(
++        new SpaceMembersRemovedEvent({
++          userId: createUserId(command.userId),
++          organizationId: createOrganizationId(command.organizationId),
++          source: command.source ?? 'ui',
++          spaceId: command.spaceId,
++          memberUserIds: [command.targetUserId],
++        }),
++      );
++    }
++
+     return { removed };
+   }
+ }
+diff --git a/packages/types/src/spaces/events/SpaceMembersRemovedEvent.ts b/packages/types/src/spaces/events/SpaceMembersRemovedEvent.ts
+new file mode 100644
+index 000000000..1cd516e2b
+--- /dev/null
++++ b/packages/types/src/spaces/events/SpaceMembersRemovedEvent.ts
+@@ -0,0 +1,12 @@
++import { UserEvent } from '../../events';
++import { SpaceId } from '../SpaceId';
++import { UserId } from '../../accounts/User';
++
++export interface SpaceMembersRemovedPayload {
++  spaceId: SpaceId;
++  memberUserIds: UserId[];
++}
++
++export class SpaceMembersRemovedEvent extends UserEvent<SpaceMembersRemovedPayload> {
++  static override readonly eventName = 'spaces.space.members-removed';
++}
+diff --git a/packages/types/src/spaces/events/index.ts b/packages/types/src/spaces/events/index.ts
+index 002ab3b1e..5360e19c1 100644
+--- a/packages/types/src/spaces/events/index.ts
++++ b/packages/types/src/spaces/events/index.ts
+@@ -1,3 +1,4 @@
+ export * from './SpaceCreatedEvent';
+ export * from './SpaceMembersAddedEvent';
++export * from './SpaceMembersRemovedEvent';
+ export * from './SpaceVisibilityUpdatedEvent';
+-- 
+2.50.1 (Apple Git-155)
+
+
+From 4f3cd779fdaf37855a339b74414bf6c37e1412cf Mon Sep 17 00:00:00 2001
+From: Quentin Le Bourles <quentin.lebourles@promyze.com>
+Date: Wed, 8 Apr 2026 16:59:11 +0200
+Subject: [PATCH 5/5] =?UTF-8?q?=E2=9C=A8=20feat(spaces):=20emit=20SpaceMem?=
+ =?UTF-8?q?bersRoleUpdatedEvent=20from=20UpdateMemberRole=20use=20case?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add domain event for member role changes: create SpaceMembersRoleUpdatedEvent,
+emit it from UpdateMemberRoleUseCase when role update succeeds, wire Amplitude
+tracking, and add comprehensive tests.
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ .../AmplitudeEventListener.spec.ts            | 31 +++++++++++
+ .../src/application/AmplitudeEventListener.ts | 19 +++++++
+ .../usecases/UpdateSpaceUseCase.spec.ts       | 54 +++++++++++++++++++
+ .../src/application/adapters/SpacesAdapter.ts |  1 +
+ .../usecases/UpdateMemberRoleUseCase.spec.ts  | 31 +++++++++++
+ .../usecases/UpdateMemberRoleUseCase.ts       | 18 +++++++
+ .../events/SpaceMembersRoleUpdatedEvent.ts    | 14 +++++
+ packages/types/src/spaces/events/index.ts     |  1 +
+ 8 files changed, 169 insertions(+)
+ create mode 100644 packages/types/src/spaces/events/SpaceMembersRoleUpdatedEvent.ts
+
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+index dee6bc9ba..cea984109 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.spec.ts
+@@ -20,8 +20,10 @@ import {
+   SpaceCreatedEvent,
+   SpaceMembersAddedEvent,
+   SpaceMembersRemovedEvent,
++  SpaceMembersRoleUpdatedEvent,
+   SpaceVisibilityUpdatedEvent,
+   SpaceType,
++  UserSpaceRole,
+   PlaybookArtefactMovedEvent,
+   createUserId,
+   createOrganizationId,
+@@ -609,6 +611,35 @@ describe('AmplitudeEventListener', () => {
+     });
+   });
+ 
++  describe('SpaceMembersRoleUpdatedEvent', () => {
++    it('tracks space_members_role_updated event with correct payload', async () => {
++      const event = new SpaceMembersRoleUpdatedEvent({
++        userId: createUserId('user-123'),
++        organizationId: createOrganizationId('org-456'),
++        spaceId: createSpaceId('space-789'),
++        memberUserIds: [createUserId('member-1')],
++        newRole: UserSpaceRole.ADMIN,
++        source: 'ui',
++      });
++
++      eventEmitterService.emit(event);
++
++      await flushPromises();
++
++      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
++        'user-123',
++        'org-456',
++        'space_members_role_updated',
++        {
++          spaceId: 'space-789',
++          memberCount: 1,
++          newRole: 'admin',
++          source: 'ui',
++        },
++      );
++    });
++  });
++
+   describe('SpaceVisibilityUpdatedEvent', () => {
+     it('tracks space_visibility_updated event with correct payload', async () => {
+       const event = new SpaceVisibilityUpdatedEvent({
+diff --git a/packages/amplitude/src/application/AmplitudeEventListener.ts b/packages/amplitude/src/application/AmplitudeEventListener.ts
+index 78b3cd8f6..1cbd2472a 100644
+--- a/packages/amplitude/src/application/AmplitudeEventListener.ts
++++ b/packages/amplitude/src/application/AmplitudeEventListener.ts
+@@ -28,6 +28,7 @@ import {
+   SpaceCreatedEvent,
+   SpaceMembersAddedEvent,
+   SpaceMembersRemovedEvent,
++  SpaceMembersRoleUpdatedEvent,
+   SpaceVisibilityUpdatedEvent,
+   PlaybookArtefactMovedEvent,
+ } from '@packmind/types';
+@@ -78,6 +79,10 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     this.subscribe(SpaceCreatedEvent, this.onSpaceCreated);
+     this.subscribe(SpaceMembersAddedEvent, this.onSpaceMembersAdded);
+     this.subscribe(SpaceMembersRemovedEvent, this.onSpaceMembersRemoved);
++    this.subscribe(
++      SpaceMembersRoleUpdatedEvent,
++      this.onSpaceMembersRoleUpdated,
++    );
+     this.subscribe(SpaceVisibilityUpdatedEvent, this.onSpaceVisibilityUpdated);
+     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
+   }
+@@ -398,6 +403,20 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
+     );
+   };
+ 
++  private onSpaceMembersRoleUpdated = async (
++    event: SpaceMembersRoleUpdatedEvent,
++  ): Promise<void> => {
++    return this.emitAmplitudeEvent(
++      event,
++      'space_members_role_updated',
++      (payload) => ({
++        spaceId: payload.spaceId,
++        memberCount: payload.memberUserIds.length,
++        newRole: payload.newRole,
++      }),
++    );
++  };
++
+   private onPlaybookArtefactMoved = async (
+     event: PlaybookArtefactMovedEvent,
+   ): Promise<void> => {
+diff --git a/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts b/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts
+index d5396da9d..a5f9bcf41 100644
+--- a/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts
++++ b/packages/spaces-management/src/application/usecases/UpdateSpaceUseCase.spec.ts
+@@ -11,6 +11,7 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import { userFactory } from '@packmind/accounts/test/userFactory';
+ import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
+ import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
++import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
+ import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+ import { UpdateSpaceUseCase } from './UpdateSpaceUseCase';
+ 
+@@ -152,6 +153,59 @@ describe('UpdateSpaceUseCase', () => {
+     });
+   });
+ 
++  describe('when space is the default space', () => {
++    const defaultSpace = spaceFactory({
++      id: spaceId,
++      organizationId,
++      isDefaultSpace: true,
++      type: SpaceType.open,
++    });
++
++    beforeEach(() => {
++      spacesPort.getSpaceById.mockResolvedValue(defaultSpace);
++    });
++
++    describe('when updating type', () => {
++      it('throws CannotUpdateDefaultSpaceVisibilityError', async () => {
++        await expect(
++          useCase.execute(buildCommand({ type: SpaceType.private })),
++        ).rejects.toThrow(CannotUpdateDefaultSpaceVisibilityError);
++      });
++
++      it('does not call updateSpace', async () => {
++        await useCase
++          .execute(buildCommand({ type: SpaceType.private }))
++          .catch(() => undefined);
++
++        expect(spacesPort.updateSpace).not.toHaveBeenCalled();
++      });
++
++      it('does not emit any event', async () => {
++        await useCase
++          .execute(buildCommand({ type: SpaceType.private }))
++          .catch(() => undefined);
++
++        expect(eventEmitterService.emit).not.toHaveBeenCalled();
++      });
++    });
++
++    describe('when updating name', () => {
++      it('allows updating the name', async () => {
++        const updatedSpace = spaceFactory({
++          ...defaultSpace,
++          name: 'New Name',
++        });
++        spacesPort.updateSpace.mockResolvedValue(updatedSpace);
++
++        const result = await useCase.execute(
++          buildCommand({ name: 'New Name' }),
++        );
++
++        expect(result).toEqual(updatedSpace);
++      });
++    });
++  });
++
+   describe('when space is not found', () => {
+     beforeEach(() => {
+       spacesPort.getSpaceById.mockResolvedValue(null);
+diff --git a/packages/spaces/src/application/adapters/SpacesAdapter.ts b/packages/spaces/src/application/adapters/SpacesAdapter.ts
+index aa116047d..eb05e237a 100644
+--- a/packages/spaces/src/application/adapters/SpacesAdapter.ts
++++ b/packages/spaces/src/application/adapters/SpacesAdapter.ts
+@@ -194,6 +194,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
+     const useCase = new UpdateMemberRoleUseCase(
+       membershipService,
+       this.accountsPort,
++      this.eventEmitterService,
+     );
+     return useCase.execute(command);
+   }
+diff --git a/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.spec.ts b/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.spec.ts
+index cb89a11e9..a0cebf7d0 100644
+--- a/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.spec.ts
++++ b/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.spec.ts
+@@ -1,3 +1,4 @@
++import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import {
+   UpdateMemberRoleCommand,
+   IAccountsPort,
+@@ -31,6 +32,9 @@ describe('UpdateMemberRoleUseCase', () => {
+   let useCase: UpdateMemberRoleUseCase;
+   let membershipService: jest.Mocked<UserSpaceMembershipService>;
+   let accountsPort: jest.Mocked<IAccountsPort>;
++  let eventEmitterService: jest.Mocked<
++    Pick<PackmindEventEmitterService, 'emit'>
++  >;
+ 
+   const buildCommand = (
+     overrides?: Partial<UpdateMemberRoleCommand>,
+@@ -54,9 +58,14 @@ describe('UpdateMemberRoleUseCase', () => {
+       getOrganizationById: jest.fn().mockResolvedValue(organization),
+     } as unknown as jest.Mocked<IAccountsPort>;
+ 
++    eventEmitterService = {
++      emit: jest.fn().mockReturnValue(true),
++    };
++
+     useCase = new UpdateMemberRoleUseCase(
+       membershipService,
+       accountsPort,
++      eventEmitterService as unknown as PackmindEventEmitterService,
+       stubLogger(),
+     );
+   });
+@@ -91,6 +100,20 @@ describe('UpdateMemberRoleUseCase', () => {
+           UserSpaceRole.MEMBER,
+         );
+       });
++
++      it('emits SpaceMembersRoleUpdatedEvent', async () => {
++        await useCase.execute(buildCommand({ role: UserSpaceRole.MEMBER }));
++
++        expect(eventEmitterService.emit).toHaveBeenCalledWith(
++          expect.objectContaining({
++            payload: expect.objectContaining({
++              spaceId,
++              memberUserIds: [targetUserId],
++              newRole: UserSpaceRole.MEMBER,
++            }),
++          }),
++        );
++      });
+     });
+ 
+     describe('when the caller is not a space admin', () => {
+@@ -179,6 +202,14 @@ describe('UpdateMemberRoleUseCase', () => {
+ 
+         expect(membershipService.updateMembershipRole).not.toHaveBeenCalled();
+       });
++
++      it('does not emit SpaceMembersRoleUpdatedEvent', async () => {
++        await useCase
++          .execute(buildCommand({ targetUserId: userId }))
++          .catch(() => undefined);
++
++        expect(eventEmitterService.emit).not.toHaveBeenCalled();
++      });
+     });
+ 
+     describe('when the user is not a member of the organization', () => {
+diff --git a/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts b/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts
+index ef5095462..3db99a032 100644
+--- a/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts
++++ b/packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts
+@@ -1,6 +1,10 @@
+ import { PackmindLogger } from '@packmind/logger';
++import { PackmindEventEmitterService } from '@packmind/node-utils';
+ import {
++  createOrganizationId,
++  createUserId,
+   IAccountsPort,
++  SpaceMembersRoleUpdatedEvent,
+   UpdateMemberRoleCommand,
+   UpdateMemberRoleResponse,
+ } from '@packmind/types';
+@@ -21,6 +25,7 @@ export class UpdateMemberRoleUseCase extends AbstractSpaceAdminUseCase<
+   constructor(
+     membershipService: UserSpaceMembershipService,
+     accountsPort: IAccountsPort,
++    private readonly eventEmitterService: PackmindEventEmitterService,
+     logger: PackmindLogger = new PackmindLogger(origin),
+   ) {
+     super(membershipService, accountsPort, logger);
+@@ -47,6 +52,19 @@ export class UpdateMemberRoleUseCase extends AbstractSpaceAdminUseCase<
+       command.role,
+     );
+ 
++    if (updated) {
++      this.eventEmitterService.emit(
++        new SpaceMembersRoleUpdatedEvent({
++          userId: createUserId(command.userId),
++          organizationId: createOrganizationId(command.organizationId),
++          source: command.source ?? 'ui',
++          spaceId: command.spaceId,
++          memberUserIds: [command.targetUserId],
++          newRole: command.role,
++        }),
++      );
++    }
++
+     return { updated };
+   }
+ }
+diff --git a/packages/types/src/spaces/events/SpaceMembersRoleUpdatedEvent.ts b/packages/types/src/spaces/events/SpaceMembersRoleUpdatedEvent.ts
+new file mode 100644
+index 000000000..e2d2018fa
+--- /dev/null
++++ b/packages/types/src/spaces/events/SpaceMembersRoleUpdatedEvent.ts
+@@ -0,0 +1,14 @@
++import { UserEvent } from '../../events';
++import { SpaceId } from '../SpaceId';
++import { UserId } from '../../accounts/User';
++import { UserSpaceRole } from '../UserSpaceMembership';
++
++export interface SpaceMembersRoleUpdatedPayload {
++  spaceId: SpaceId;
++  memberUserIds: UserId[];
++  newRole: UserSpaceRole;
++}
++
++export class SpaceMembersRoleUpdatedEvent extends UserEvent<SpaceMembersRoleUpdatedPayload> {
++  static override readonly eventName = 'spaces.space.members-role-updated';
++}
+diff --git a/packages/types/src/spaces/events/index.ts b/packages/types/src/spaces/events/index.ts
+index 5360e19c1..3f7a1e91e 100644
+--- a/packages/types/src/spaces/events/index.ts
++++ b/packages/types/src/spaces/events/index.ts
+@@ -1,4 +1,5 @@
+ export * from './SpaceCreatedEvent';
+ export * from './SpaceMembersAddedEvent';
+ export * from './SpaceMembersRemovedEvent';
++export * from './SpaceMembersRoleUpdatedEvent';
+ export * from './SpaceVisibilityUpdatedEvent';
+-- 
+2.50.1 (Apple Git-155)
+

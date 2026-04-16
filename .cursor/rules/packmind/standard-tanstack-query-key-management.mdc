@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+## Standard: TanStack Query Key Management
+
+Establish structured query key management in TanStack Query by defining domain-specific constants and operation enums in a dedicated queryKeys.ts file to ensure efficient cache invalidation and type safety across global scopes in your API. :
+* Cross-domain imports must only include query key constants and enums
+* Define base query key arrays as const to enable precise invalidation patterns
+* Domain query scope must be defined as separate const outside enum
+* Query invalidation must use prefix matching from key start in order
+* Query keys must be defined in queryKeys.ts file in domain's api folder
+* Query keys must follow hierarchical structure: organization scope, domain scope, operation, identifiers
+
+Full standard is available here for further request: [TanStack Query Key Management](../../../.packmind/standards/tanstack-query-key-management.md)

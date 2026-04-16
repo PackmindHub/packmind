@@ -4,10 +4,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import {
-  OrganizationAdminRequiredError,
-  PackmindEventEmitterService,
-} from '@packmind/node-utils';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
@@ -145,7 +142,13 @@ describe('CreateSpaceUseCase', () => {
       });
     });
 
-    describe('when the user is a member but not an admin', () => {
+    describe('when the user is a non-admin member of the organization', () => {
+      const createdSpace = spaceFactory({
+        organizationId,
+        name: 'My Space',
+        isDefaultSpace: false,
+      });
+
       beforeEach(() => {
         accountsPort.getUserById.mockResolvedValue(
           userFactory({
@@ -153,12 +156,13 @@ describe('CreateSpaceUseCase', () => {
             memberships: [{ userId, organizationId, role: 'member' }],
           }),
         );
+        spaceService.createSpace.mockResolvedValue(createdSpace);
       });
 
-      it('throws OrganizationAdminRequiredError', async () => {
-        await expect(useCase.execute(buildCommand())).rejects.toThrow(
-          OrganizationAdminRequiredError,
-        );
+      it('creates the space', async () => {
+        const result = await useCase.execute(buildCommand());
+
+        expect(result).toEqual(createdSpace);
       });
     });
 

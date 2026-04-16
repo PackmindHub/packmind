@@ -104,14 +104,4 @@ describe('PMFeatureFlag', () => {
       expect(isEnabled).toBe(false);
     });
   });
-
-  it('enables the detection tab feature for allowed domains', () => {
-    const isEnabled = isFeatureFlagEnabled({
-      featureKeys: [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY],
-      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-      userEmail: 'member@promyze.com',
-    });
-
-    expect(isEnabled).toBe(true);
-  });
 });

@@ -137,4 +137,14 @@ export class UserSpaceMembershipService {
   async getSpaceById(spaceId: SpaceId): Promise<Space | null> {
     return this.spaceRepository.findById(spaceId);
   }
+
+  async softDeleteMembershipsBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: UserId,
+  ): Promise<number> {
+    return this.userSpaceMembershipRepository.softDeleteBySpaceId(
+      spaceId,
+      deletedBy as string,
+    );
+  }
 }
