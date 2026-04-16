@@ -15,6 +15,7 @@ import {
   createSkillId,
   ArtifactReference,
   MoveArtifactsToSpaceResponse,
+  SpaceColor,
   SpaceType,
 } from '@packmind/types';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
@@ -22,6 +23,9 @@ import { SpaceSlugConflictError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
+import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
+import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpacesManagementController } from './spaces-management.controller';
@@ -44,6 +48,7 @@ describe('SpacesManagementController', () => {
     logger = stubLogger();
     service = {
       createSpace: jest.fn(),
+      updateSpace: jest.fn(),
       moveArtifactsToSpace: jest.fn(),
       browseSpaces: jest.fn(),
       joinSpace: jest.fn(),
@@ -298,6 +303,92 @@ describe('SpacesManagementController', () => {
         await expect(
           controller.joinSpace(organizationId, spaceId, mockRequest),
         ).rejects.toThrow(ForbiddenException);
+      });
+    });
+  });
+
+  describe('updateSpace', () => {
+    const spaceId = createSpaceId('space-1');
+    const mockUpdatedSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      name: 'Updated',
+      color: 'purple',
+    });
+
+    describe('when the body includes a color', () => {
+      beforeEach(() => {
+        service.updateSpace.mockResolvedValue(mockUpdatedSpace);
+      });
+
+      it('forwards color to the service', async () => {
+        await controller.updateSpace(
+          organizationId,
+          spaceId,
+          { color: 'purple' as SpaceColor },
+          mockRequest,
+        );
+
+        expect(service.updateSpace).toHaveBeenCalledWith(
+          expect.objectContaining({ color: 'purple' }),
+        );
+      });
+    });
+
+    describe('when the service throws CannotRenameDefaultSpaceError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new CannotRenameDefaultSpaceError(spaceId),
+        );
+      });
+
+      it('responds with 422', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { name: 'x' },
+            mockRequest,
+          ),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('when the service throws SpaceIdentityUpdateForbiddenError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new SpaceIdentityUpdateForbiddenError('user-123', spaceId),
+        );
+      });
+
+      it('responds with 403', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { name: 'x' },
+            mockRequest,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the service throws InvalidSpaceColorError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new InvalidSpaceColorError('chartreuse'),
+        );
+      });
+
+      it('responds with 400', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { color: 'chartreuse' as unknown as SpaceColor },
+            mockRequest,
+          ),
+        ).rejects.toThrow(BadRequestException);
       });
     });
   });

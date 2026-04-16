@@ -26,6 +26,7 @@ import {
   PackmindCommandBody,
   MoveArtifactsToSpaceCommand,
   Space,
+  SpaceColor,
   SpaceType,
   BrowseSpacesResponse,
   SpaceId,
@@ -40,6 +41,9 @@ import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefault
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { SpaceMembershipNotFoundError } from '../../domain/errors/SpaceMembershipNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
+import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
+import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpacesManagementService } from './spaces-management.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
@@ -258,7 +262,7 @@ export class SpacesManagementController {
   async updateSpace(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
-    @Body() body: { name?: string; type?: SpaceType },
+    @Body() body: { name?: string; type?: SpaceType; color?: SpaceColor },
     @Req() request: AuthenticatedRequest,
   ): Promise<Space> {
     const userId = request.user.userId;
@@ -275,6 +279,7 @@ export class SpacesManagementController {
         spaceId,
         name: body.name?.trim() || undefined,
         type: body.type,
+        color: body.color,
       });
     } catch (error) {
       if (error instanceof SpaceNotFoundError) {
@@ -282,6 +287,15 @@ export class SpacesManagementController {
       }
       if (error instanceof SpaceSlugConflictError) {
         throw new ConflictException(error.message);
+      }
+      if (error instanceof CannotRenameDefaultSpaceError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof SpaceIdentityUpdateForbiddenError) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof InvalidSpaceColorError) {
+        throw new BadRequestException(error.message);
       }
       throw error;
     }
