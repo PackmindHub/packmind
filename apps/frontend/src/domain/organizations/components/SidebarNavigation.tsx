@@ -30,6 +30,7 @@ import {
   LuLogOut,
   LuPanelLeftClose,
   LuPanelLeftOpen,
+  LuSearch,
   LuSettings,
   LuWrench,
 } from 'react-icons/lu';
@@ -45,6 +46,7 @@ import { useSidebarCollapse } from './SidebarCollapseContext';
 import { SpaceNavBlock } from './sidebar/SpaceNavBlock';
 import { SpaceNavPanel } from './sidebar/SpaceNavPanel';
 import { BrowseSpaces } from '@packmind/proprietary/frontend/domain/spaces-management/components/BrowseSpaces';
+import { BrowseSpacesTab } from '@packmind/proprietary/frontend/domain/spaces-management/components/BrowseSpacesDrawer';
 import { CustomSpacesNavBlock } from '@packmind/proprietary/frontend/domain/spaces-management/components/CustomSpacesNavBlock';
 
 const SIDEBAR_WIDTH_EXPANDED = '220px';
@@ -161,6 +163,16 @@ export const SidebarNavigation: React.FunctionComponent<
   const { isCollapsed } = useSidebarCollapse();
   const { user } = useAuthContext();
   const [activeSpacePanel, setActiveSpacePanel] = useState<string | null>(null);
+  const [browseDrawerOpen, setBrowseDrawerOpen] = useState(false);
+  const [browseDrawerTab, setBrowseDrawerTab] = useState<BrowseSpacesTab>(
+    BrowseSpacesTab.MY_SPACES,
+  );
+
+  const openBrowseDrawer = (tab: BrowseSpacesTab) => {
+    setBrowseDrawerTab(tab);
+    setBrowseDrawerOpen(true);
+  };
+
   const location = useLocation();
   const navigate = useNavigate();
   const signOutMutation = useSignOutMutation();
@@ -398,7 +410,21 @@ export const SidebarNavigation: React.FunctionComponent<
                 >
                   Spaces
                 </PMText>
-                <BrowseSpaces containerRef={contentAreaRef} />
+                <PMBox
+                  as="button"
+                  color="text.faded"
+                  cursor="pointer"
+                  _hover={{ color: 'text.primary' }}
+                  transition="color 0.15s"
+                  onClick={() => openBrowseDrawer(BrowseSpacesTab.ALL_SPACES)}
+                  data-testid="browse-spaces-trigger"
+                  display="flex"
+                  alignItems="center"
+                >
+                  <PMIcon fontSize="xs">
+                    <LuSearch />
+                  </PMIcon>
+                </PMBox>
               </PMBox>
             )}
 
@@ -432,12 +458,22 @@ export const SidebarNavigation: React.FunctionComponent<
                       setActiveSpacePanel(space.id);
                     }
                   }}
+                  onBrowseMySpaces={() =>
+                    openBrowseDrawer(BrowseSpacesTab.MY_SPACES)
+                  }
                 />
               )}
             </PMVStack>
           </PMBox>
         </PMBox>
       </PMVerticalNav>
+
+      <BrowseSpaces
+        open={browseDrawerOpen}
+        onClose={() => setBrowseDrawerOpen(false)}
+        initialTab={browseDrawerTab}
+        containerRef={contentAreaRef}
+      />
 
       {/* SpaceNavPanel drawer */}
       {panelSpace && (

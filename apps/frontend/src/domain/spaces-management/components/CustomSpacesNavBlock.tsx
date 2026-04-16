@@ -11,6 +11,7 @@ interface CustomSpacesNavBlockProps {
   currentSpaceSlug: string | undefined;
   selectedSpaceId: string | null;
   onSpaceClick: (space: UserSpaceWithRole) => void;
+  onBrowseMySpaces?: () => void;
 }
 
 export function CustomSpacesNavBlock({
@@ -19,6 +20,7 @@ export function CustomSpacesNavBlock({
   currentSpaceSlug,
   selectedSpaceId,
   onSpaceClick,
+  onBrowseMySpaces,
 }: Readonly<CustomSpacesNavBlockProps>): React.ReactElement {
   const customSpaces = spaces.filter((space) => !space.isDefaultSpace);
   const pinnedSpaces = sortSpacesByName(
@@ -49,10 +51,31 @@ export function CustomSpacesNavBlock({
           ))}
         </>
       )}
-      <PMBox px={3} pt={3} pb={1}>
+      <PMBox
+        px={3}
+        pt={3}
+        pb={1}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
         <PMText fontSize="2xs" fontWeight="semibold" color="faded">
           My spaces
         </PMText>
+        {onBrowseMySpaces && (
+          <PMBox
+            as="button"
+            fontSize="10px"
+            color="text.faded"
+            cursor="pointer"
+            _hover={{ color: 'text.primary' }}
+            transition="color 0.15s"
+            onClick={onBrowseMySpaces}
+            data-testid="browse-my-spaces-trigger"
+          >
+            Browse
+          </PMBox>
+        )}
       </PMBox>
       {unpinnedSpaces.map((space) => (
         <SpaceNavBlock
