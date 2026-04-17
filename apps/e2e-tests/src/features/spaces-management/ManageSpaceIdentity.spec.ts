@@ -1,73 +1,84 @@
+import { v4 as uuidv4 } from 'uuid';
 import { expect } from '@playwright/test';
 import { testWithApi } from '../../fixtures/packmindTest';
 
-testWithApi.describe('Manage space identity', () => {
-  testWithApi(
-    'space admin updates name and color, sees it reflected in the sidebar',
-    async ({ dashboardPage }) => {
-      // Create a new space
-      const spaceDashboard = await dashboardPage.createSpace('oddity');
+const test = testWithApi.extend<{
+  userData: { email: string; password: string };
+}>({
+  // eslint-disable-next-line no-empty-pattern
+  userData: ({}, use) => {
+    use({
+      email: `e2e-${uuidv4()}@packmind.com`,
+      password: `${uuidv4()}!!`,
+    });
+  },
+});
 
-      // Open space settings
-      const spaceSettingsPage = await spaceDashboard.openSpaceSettings();
+test.describe('Manage space identity', () => {
+  test('space admin updates name and color, sees it reflected in the sidebar', async ({
+    dashboardPage,
+  }) => {
+    // Create a new space and navigate into it
+    await dashboardPage.createSpace('oddity');
+    const dashboard = await dashboardPage.navigateToDashboard();
+    const oddityDashboard = await dashboard.navigateToSpace('oddity');
 
-      // Update the name
-      await spaceSettingsPage.setSpaceName('security');
+    // Open space settings
+    const spaceSettingsPage = await oddityDashboard.openSpaceSettings();
 
-      // Select a new color
-      await spaceSettingsPage.selectColor('purple');
+    // Update the name
+    await spaceSettingsPage.setSpaceName('security');
 
-      // Save changes
-      await spaceSettingsPage.clickSaveIdentity();
-      await spaceSettingsPage.waitForIdentityUpdateSuccess();
+    // Select a new color
+    await spaceSettingsPage.selectColor('purple');
 
-      // Navigate to dashboard and verify the sidebar shows the new name
-      const updatedDashboard = await spaceSettingsPage.navigateToDashboard();
-      await updatedDashboard.navigateToSpace('security');
-    },
-  );
+    // Save changes
+    await spaceSettingsPage.clickSaveIdentity();
+    await spaceSettingsPage.waitForIdentityUpdateSuccess();
 
-  testWithApi(
-    'space admin cannot rename to a slug-colliding name',
-    async ({ dashboardPage }) => {
-      // Create two spaces
-      await dashboardPage.createSpace('security');
-      const dashboard = await dashboardPage.navigateToDashboard();
-      const spaceDashboard = await dashboard.createSpace(
-        'security-connections',
-      );
+    // Navigate to dashboard and verify the sidebar shows the new name
+    await spaceSettingsPage.navigateToDashboard();
+  });
 
-      // Open space settings for the second space
-      const spaceSettingsPage = await spaceDashboard.openSpaceSettings();
+  test('space admin cannot rename to a slug-colliding name', async ({
+    dashboardPage,
+  }) => {
+    // Create two spaces
+    await dashboardPage.createSpace('security');
+    let dashboard = await dashboardPage.navigateToDashboard();
+    await dashboard.createSpace('security-connections');
+    dashboard = await dashboard.navigateToDashboard();
+    const scDashboard = await dashboard.navigateToSpace('security-connections');
 
-      // Try to rename to a name whose slug collides with the first space
-      await spaceSettingsPage.setSpaceName('Security');
+    // Open space settings for the second space
+    const spaceSettingsPage = await scDashboard.openSpaceSettings();
 
-      // Save changes
-      await spaceSettingsPage.clickSaveIdentity();
+    // Try to rename to a name whose slug collides with the first space
+    await spaceSettingsPage.setSpaceName('Security');
 
-      // Expect error
-      const errorText = await spaceSettingsPage.waitForIdentityUpdateError();
-      expect(errorText).toContain('similar name already exists');
-    },
-  );
+    // Save changes
+    await spaceSettingsPage.clickSaveIdentity();
 
-  testWithApi(
-    'default space name input is disabled but color can be changed',
-    async ({ dashboardPage }) => {
-      // Navigate to default space settings
-      const spaceSettingsPage = await dashboardPage.openSpaceSettings();
+    // Expect error
+    const errorText = await spaceSettingsPage.waitForIdentityUpdateError();
+    expect(errorText).toContain('similar name already exists');
+  });
 
-      // Verify name input is disabled
-      const isNameDisabled = await spaceSettingsPage.isSpaceNameDisabled();
-      expect(isNameDisabled).toBe(true);
+  test('default space name input is disabled but color can be changed', async ({
+    dashboardPage,
+  }) => {
+    // Navigate to default space settings
+    const spaceSettingsPage = await dashboardPage.openSpaceSettings();
 
-      // Select a new color
-      await spaceSettingsPage.selectColor('purple');
+    // Verify name input is disabled
+    const isNameDisabled = await spaceSettingsPage.isSpaceNameDisabled();
+    expect(isNameDisabled).toBe(true);
 
-      // Save changes (only color)
-      await spaceSettingsPage.clickSaveIdentity();
-      await spaceSettingsPage.waitForIdentityUpdateSuccess();
-    },
-  );
+    // Select a new color
+    await spaceSettingsPage.selectColor('purple');
+
+    // Save changes (only color)
+    await spaceSettingsPage.clickSaveIdentity();
+    await spaceSettingsPage.waitForIdentityUpdateSuccess();
+  });
 });

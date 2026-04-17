@@ -14,7 +14,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { useUpdateSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
-import { AxiosError } from 'axios';
+import { isPackmindError } from '../../../services/api/errors/PackmindError';
 
 interface SpaceIdentitySectionProps {
   space: Space;
@@ -60,7 +60,7 @@ export function SpaceIdentitySection({
         title: 'Space updated',
       });
     } catch (err) {
-      const status = (err as AxiosError)?.response?.status;
+      const status = isPackmindError(err) ? err.serverError.status : undefined;
       const messageByStatus: Record<number, string> = {
         400: 'Invalid color selected.',
         403: "You don't have permission to update this space.",

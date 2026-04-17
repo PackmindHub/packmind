@@ -68,7 +68,10 @@ export class SpaceSettingsPage
   }
 
   async clickSaveIdentity(): Promise<void> {
-    await this.page.getByRole('button', { name: /Save changes/i }).click();
+    await this.page
+      .getByRole('button', { name: /Save changes/i })
+      .first()
+      .click();
   }
 
   async waitForIdentityUpdateSuccess(): Promise<void> {

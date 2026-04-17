@@ -1,24 +1,15 @@
 import { PMPage, PMTabs, PMVStack } from '@packmind/ui';
 
-import { useCurrentSpace } from '../hooks/useCurrentSpace';
 import { SpaceGeneralSettings } from './SpaceGeneralSettings';
 import { SpaceMembersList } from './SpaceMembersList';
 
 export function SpaceSettingsPage() {
-  const { space } = useCurrentSpace();
-
-  const showGeneralTab = !space?.isDefaultSpace;
-
   const tabs = [
-    ...(showGeneralTab
-      ? [
-          {
-            value: 'general',
-            triggerLabel: 'General',
-            content: <SpaceGeneralSettings />,
-          },
-        ]
-      : []),
+    {
+      value: 'general',
+      triggerLabel: 'General',
+      content: <SpaceGeneralSettings />,
+    },
     {
       value: 'members',
       triggerLabel: 'Members',
