@@ -26,9 +26,23 @@ export function CustomSpacesNavBlock({
   const pinnedSpaces = sortSpacesByName(
     customSpaces.filter((space) => space.pinned),
   );
-  const unpinnedSpaces = sortSpacesByName(
+  const sortedUnpinned = sortSpacesByName(
     customSpaces.filter((space) => !space.pinned),
-  ).slice(0, MAX_UNPINNED_SIDEBAR_SPACES);
+  );
+  const visibleUnpinned = sortedUnpinned.slice(0, MAX_UNPINNED_SIDEBAR_SPACES);
+
+  // Ensure the currently active space is always visible in the sidebar
+  const activeSpaceHidden =
+    currentSpaceSlug &&
+    !pinnedSpaces.some((s) => s.slug === currentSpaceSlug) &&
+    !visibleUnpinned.some((s) => s.slug === currentSpaceSlug);
+  const hiddenActiveSpace = activeSpaceHidden
+    ? sortedUnpinned.find((s) => s.slug === currentSpaceSlug)
+    : undefined;
+
+  const unpinnedSpaces = hiddenActiveSpace
+    ? [...visibleUnpinned, hiddenActiveSpace]
+    : visibleUnpinned;
 
   return (
     <>
