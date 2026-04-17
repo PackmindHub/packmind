@@ -4,8 +4,6 @@ import { ChangeProposalGateway } from './ChangeProposalGateway';
 import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 import { LinterGateway } from './LinterGateway';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
-import { McpGateway } from './McpGateway';
-import { IMcpGateway } from '../../domain/repositories/IMcpGateway';
 import { SpacesGateway } from './SpacesGateway';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { SkillsGateway } from './SkillsGateway';
@@ -25,7 +23,6 @@ export class PackmindGateway implements IPackmindGateway {
   private readonly httpClient: PackmindHttpClient;
   readonly changeProposals: IChangeProposalGateway;
   readonly linter: ILinterGateway;
-  readonly mcp: IMcpGateway;
   readonly spaces: ISpacesGateway;
   readonly skills: ISkillsGateway;
   readonly commands: ICommandsGateway;
@@ -39,7 +36,6 @@ export class PackmindGateway implements IPackmindGateway {
 
     this.changeProposals = new ChangeProposalGateway(this.httpClient);
     this.linter = new LinterGateway(this.httpClient);
-    this.mcp = new McpGateway(this.httpClient);
     this.spaces = new SpacesGateway(this.httpClient);
     this.skills = new SkillsGateway(this.httpClient);
     this.commands = new CommandsGateway(this.httpClient);

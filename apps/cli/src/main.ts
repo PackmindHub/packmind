@@ -10,7 +10,6 @@ import { uninstallCommand } from './infra/commands/UninstallCommand';
 import { loginCommand } from './infra/commands/LoginCommand';
 import { logoutCommand } from './infra/commands/LogoutCommand';
 import { whoamiCommand } from './infra/commands/WhoamiCommand';
-import { setupMcpCommand } from './infra/commands/SetupMcpCommand';
 import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
@@ -105,7 +104,6 @@ const app = subcommands({
     logout: logoutCommand,
     packages: packagesCommand,
     playbook: playbookCommand,
-    'setup-mcp': setupMcpCommand,
     skills: skillsCommand,
     spaces: spacesCommand,
     standards: standardsCommand,
