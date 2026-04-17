@@ -1,6 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractRepository, localDataSource } from '@packmind/node-utils';
-import { OrganizationId, Space, SpaceId, SpaceType } from '@packmind/types';
+import {
+  OrganizationId,
+  Space,
+  SpaceColor,
+  SpaceId,
+  SpaceType,
+} from '@packmind/types';
 import { Repository } from 'typeorm';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
@@ -84,7 +90,12 @@ export class SpaceRepository
 
   async updateFields(
     id: SpaceId,
-    fields: { name?: string; slug?: string; type?: SpaceType },
+    fields: {
+      name?: string;
+      slug?: string;
+      type?: SpaceType;
+      color?: SpaceColor;
+    },
   ): Promise<Space> {
     this.logger.info('Updating space fields', { id, fields });
 
@@ -97,6 +108,7 @@ export class SpaceRepository
       if (fields.name !== undefined) space.name = fields.name;
       if (fields.slug !== undefined) space.slug = fields.slug;
       if (fields.type !== undefined) space.type = fields.type;
+      if (fields.color !== undefined) space.color = fields.color;
 
       const updated = await this.repository.save(space);
       this.logger.info('Space updated successfully', { id });
