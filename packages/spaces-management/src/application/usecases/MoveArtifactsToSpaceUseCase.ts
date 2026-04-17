@@ -3,6 +3,7 @@ import {
   AbstractMemberUseCase,
   MemberContext,
   PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import {
   ArtifactReference,
@@ -26,6 +27,7 @@ import {
   UserId,
 } from '@packmind/types';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
@@ -100,8 +102,28 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       );
     }
 
-    await this.validateNoNameConflicts(
+    const sourceMembership = await this.spacesPort.findMembership(
+      userId,
+      command.sourceSpaceId,
+    );
+    if (!sourceMembership) {
+      throw new SpaceMembershipRequiredError(userId, command.sourceSpaceId);
+    }
+
+    const destMembership = await this.spacesPort.findMembership(
+      userId,
+      command.destinationSpaceId,
+    );
+    if (!destMembership) {
+      throw new SpaceMembershipRequiredError(
+        userId,
+        command.destinationSpaceId,
+      );
+    }
+
+    await this.validateAndResolveArtifacts(
       command.artifacts,
+      command.sourceSpaceId,
       command.destinationSpaceId,
       destinationSpace.name,
       organizationId,
@@ -204,8 +226,9 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     );
   }
 
-  private async validateNoNameConflicts(
+  private async validateAndResolveArtifacts(
     artifacts: ArtifactReference[],
+    sourceSpaceId: SpaceId,
     destinationSpaceId: SpaceId,
     destinationSpaceName: string,
     organizationId: OrganizationId,
@@ -215,6 +238,58 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
     const skillArtifacts = artifacts.filter((a) => a.type === 'skill');
     const commandArtifacts = artifacts.filter((a) => a.type === 'command');
 
+    // Phase 1: Fetch all artifacts and validate they belong to the source space
+    const resolvedStandards = await Promise.all(
+      standardArtifacts.map((a) =>
+        this.standardsPort.getStandard((a as ArtifactReference<'standard'>).id),
+      ),
+    );
+    for (let i = 0; i < resolvedStandards.length; i++) {
+      const standard = resolvedStandards[i];
+      if (!standard || standard.spaceId !== sourceSpaceId) {
+        throw new ArtifactNotInSourceSpaceError(
+          'standard',
+          (standardArtifacts[i] as ArtifactReference<'standard'>).id,
+          sourceSpaceId,
+        );
+      }
+    }
+
+    const resolvedSkills = await Promise.all(
+      skillArtifacts.map((a) =>
+        this.skillsPort.getSkill((a as ArtifactReference<'skill'>).id),
+      ),
+    );
+    for (let i = 0; i < resolvedSkills.length; i++) {
+      const skill = resolvedSkills[i];
+      if (!skill || skill.spaceId !== sourceSpaceId) {
+        throw new ArtifactNotInSourceSpaceError(
+          'skill',
+          (skillArtifacts[i] as ArtifactReference<'skill'>).id,
+          sourceSpaceId,
+        );
+      }
+    }
+
+    const resolvedRecipes = await Promise.all(
+      commandArtifacts.map((a) =>
+        this.recipesPort.getRecipeByIdInternal(
+          (a as ArtifactReference<'command'>).id,
+        ),
+      ),
+    );
+    for (let i = 0; i < resolvedRecipes.length; i++) {
+      const recipe = resolvedRecipes[i];
+      if (!recipe || recipe.spaceId !== sourceSpaceId) {
+        throw new ArtifactNotInSourceSpaceError(
+          'command',
+          (commandArtifacts[i] as ArtifactReference<'command'>).id,
+          sourceSpaceId,
+        );
+      }
+    }
+
+    // Phase 2: Check name/slug conflicts against destination
     if (standardArtifacts.length > 0) {
       const destStandards = await this.standardsPort.listStandardsBySpace(
         destinationSpaceId,
@@ -224,12 +299,8 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       const destSlugs = new Set(destStandards.map((s) => s.slug));
       const destNames = new Set(destStandards.map((s) => s.name));
 
-      for (const artifact of standardArtifacts) {
-        const standard = await this.standardsPort.getStandard(
-          (artifact as ArtifactReference<'standard'>).id,
-        );
+      for (const standard of resolvedStandards) {
         if (!standard) continue;
-
         if (destSlugs.has(standard.slug)) {
           throw new ArtifactSlugConflictError(
             'standard',
@@ -256,12 +327,8 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       const destSlugs = new Set(destSkills.map((s) => s.slug));
       const destNames = new Set(destSkills.map((s) => s.name));
 
-      for (const artifact of skillArtifacts) {
-        const skill = await this.skillsPort.getSkill(
-          (artifact as ArtifactReference<'skill'>).id,
-        );
+      for (const skill of resolvedSkills) {
         if (!skill) continue;
-
         if (destSlugs.has(skill.slug)) {
           throw new ArtifactSlugConflictError(
             'skill',
@@ -288,12 +355,8 @@ export class MoveArtifactsToSpaceUseCase extends AbstractMemberUseCase<
       const destSlugs = new Set(destRecipes.map((r) => r.slug));
       const destNames = new Set(destRecipes.map((r) => r.name));
 
-      for (const artifact of commandArtifacts) {
-        const recipe = await this.recipesPort.getRecipeByIdInternal(
-          (artifact as ArtifactReference<'command'>).id,
-        );
+      for (const recipe of resolvedRecipes) {
         if (!recipe) continue;
-
         if (destSlugs.has(recipe.slug)) {
           throw new ArtifactSlugConflictError(
             'command',
