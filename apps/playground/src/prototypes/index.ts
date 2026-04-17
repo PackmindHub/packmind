@@ -5,6 +5,7 @@ import ReviewChangesDrillDownViewPrototype from './review-changes-drill-down-vie
 import ArtifactRemovedPrototype from './artifact-removed/ArtifactRemovedPrototype';
 import SidebarWithSpacesPrototype from './sidebar-with-spaces/SidebarWithSpacesPrototype';
 import StandardDetailRedesignPrototype from './standard-detail-redesign/StandardDetailRedesignPrototype';
+import PersonalHomePagePrototype from './personal-home-page/PersonalHomePagePrototype';
 
 export interface Prototype {
   name: string;
@@ -37,5 +38,11 @@ export const prototypes: Prototype[] = [
     description:
       'Content-first standard page with tabs and rule drawer instead of sidebar',
     component: StandardDetailRedesignPrototype,
+  },
+  {
+    name: 'Personal home page',
+    description:
+      'Cross-space personal hub with pending review triage and tips discovery',
+    component: PersonalHomePagePrototype,
   },
 ];
