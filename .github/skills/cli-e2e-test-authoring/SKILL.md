@@ -166,6 +166,22 @@ describeWithUserSignedUp('diff command', (getContext) => {
 });
 ```
 
+## Feature Flags
+
+Before writing the test, ask the user: **"Is the feature under test gated by a feature flag?"**
+
+If yes, the test must create a user whose email is at `@packmind.com` so the flag is enabled. This is controlled by the `underFeatureFlag` fixture option. Add `.use({ underFeatureFlag: true })` immediately after the test wrapper import, before any `describe` or `it` blocks:
+
+```typescript
+// When using testWithApi:
+testWithApi.use({ underFeatureFlag: true });
+
+// When using testWithUserSignedUp:
+testWithUserSignedUp.use({ underFeatureFlag: true });
+```
+
+Without this option, the fixture creates a user at `@example.com`, which does not have feature flags enabled, and the feature under test would not be accessible.
+
 ## Adding a New Gateway
 
 When the CLI command under test requires seeding a new type of API resource:

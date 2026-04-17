@@ -4,6 +4,7 @@
     "@backend/generic": "*",
     "@frontend/playground": "*",
     "@testing/cli-e2e": "*",
-    "@frontend/generic": "*"
+    "@frontend/generic": "*",
+    "@cli/generic": "*"
   }
 }

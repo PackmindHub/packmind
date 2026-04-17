@@ -79,6 +79,18 @@ Write **one short sentence** in the functional voice — describe what the user 
 
 If you cannot form a confident one-liner after reading the usage sites, write a shorter description prefixed with `(uncertain)` so the user knows to double-check.
 
+### Step 3b — Check E2E test coverage
+
+For each flag, search `apps/e2e-tests/src/` for spec files that call `.use({ underFeatureFlag: true })`. These tests explicitly target a feature-flagged flow and represent intentional E2E coverage of the flag.
+
+```
+grep -r "underFeatureFlag: true" apps/e2e-tests/src/
+```
+
+Record which flags have associated E2E test coverage. A flag with no E2E coverage is not an orphan (orphan is determined by frontend usage, not tests), but the information is worth surfacing so the user knows which flagged features are tested end-to-end.
+
+Add an **E2E tested** column to the output table (Step 5) with either `Yes` or `No`.
+
 ### Step 4 — Detect orphans
 
 A flag is **orphan** if, after the two-pass search, no usage is found outside the canonical file and its test. Orphans are candidates for removal and worth surfacing — they often accumulate when a feature ships and nobody remembers to delete the gate.
@@ -92,7 +104,7 @@ For orphans:
 
 Output a single markdown table. Use these columns, in this order, with these exact headers:
 
-| Key | Audience | Functional description | Status | Usage files |
+| Key | Audience | Functional description | Status | E2E tested | Usage files |
 
 **Column rules:**
 
@@ -100,6 +112,7 @@ Output a single markdown table. Use these columns, in this order, with these exa
 - **Audience** — the allowed entries, comma-separated, in the same form as in the map (domains keep their `@` prefix). If the list is empty, write `(none)`.
 - **Functional description** — one short sentence, functional voice. See Step 3.
 - **Status** — either `Active` or `Orphan`.
+- **E2E tested** — `Yes` if at least one spec file in `apps/e2e-tests/src/` uses `.use({ underFeatureFlag: true })`, otherwise `No`.
 - **Usage files** — comma-separated list of repo-relative paths. Truncate to the **5 most representative** ones and append `(… +N more)` if there are more. "Most representative" is a ranked preference, in this order:
   1. Files containing a `<PMFeatureFlag featureKeys={[FLAG]}>...</PMFeatureFlag>` JSX gate — these are the literal "what appears when the flag is on".
   2. Files calling `isFeatureFlagEnabled({ featureKeys: [FLAG] })` in a branch that guards an action, route, or tab.
@@ -116,11 +129,11 @@ After the table, add a short **Summary** section with:
 ```markdown
 # Feature Flags Inventory
 
-| Key | Audience | Functional description | Status | Usage files |
-| --- | --- | --- | --- | --- |
-| space-identity | @packmind.com, @promyze.com | Reveals the space identity settings panel and related configuration affordances. | Active | apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx, apps/frontend/src/domain/spaces/components/SpaceIdentityForm.tsx |
-| change-proposals | @packmind.com, @promyze.com, @monpetitplacement.fr, @ninaa.io | Enables the change proposal review flow end-to-end (navigation entry points and review detail pages). | Active | apps/frontend/src/domain/change-proposals/components/StandardReviewDetail/StandardReviewDetail.tsx, apps/frontend/src/domain/change-proposals/components/SkillReviewDetail/SkillReviewDetail.tsx, apps/frontend/src/domain/change-proposals/components/CommandReviewDetail/CommandReviewDetail.tsx (… +2 more) |
-| some-old-flag | @packmind.com | (no usage found — candidate for removal) | Orphan | — |
+| Key | Audience | Functional description | Status | E2E tested | Usage files |
+| --- | --- | --- | --- | --- | --- |
+| space-identity | @packmind.com, @promyze.com | Reveals the space identity settings panel and related configuration affordances. | Active | No | apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx, apps/frontend/src/domain/spaces/components/SpaceIdentityForm.tsx |
+| change-proposals | @packmind.com, @promyze.com, @monpetitplacement.fr, @ninaa.io | Enables the change proposal review flow end-to-end (navigation entry points and review detail pages). | Active | Yes | apps/frontend/src/domain/change-proposals/components/StandardReviewDetail/StandardReviewDetail.tsx, apps/frontend/src/domain/change-proposals/components/SkillReviewDetail/SkillReviewDetail.tsx, apps/frontend/src/domain/change-proposals/components/CommandReviewDetail/CommandReviewDetail.tsx (… +2 more) |
+| some-old-flag | @packmind.com | (no usage found — candidate for removal) | Orphan | No | — |
 
 **Summary:** 7 flags — 6 active, 1 orphan. `change-proposals` is opened to `@monpetitplacement.fr` and `@ninaa.io` (external pilots, worth monitoring).
 ```
