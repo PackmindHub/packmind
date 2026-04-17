@@ -208,4 +208,13 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
       `${this._endpoint}/social/providers`,
     );
   }
+
+  async updateProfile(body: {
+    displayName?: string | null;
+  }): Promise<{ displayName: string | null }> {
+    return this._api.patch<{ displayName: string | null }>(
+      `${this._endpoint}/profile`,
+      body,
+    );
+  }
 }

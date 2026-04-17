@@ -13,6 +13,7 @@ import { MeResponse } from '../api/gateways/IAuthGateway';
 export interface AuthContextUser {
   id: UserId;
   email: string;
+  displayName: string | null;
   memberships: UserOrganizationMembership[];
 }
 

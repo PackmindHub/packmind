@@ -33,3 +33,4 @@ export * from './IActivateTrialAccountUseCase';
 export * from './IRenameOrganizationUseCase';
 export * from './IGetUserOnboardingStatusUseCase';
 export * from './ICompleteUserOnboardingUseCase';
+export * from './IUpdateUserDisplayNameUseCase';

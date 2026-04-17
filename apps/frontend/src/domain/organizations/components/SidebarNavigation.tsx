@@ -27,6 +27,7 @@ import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
 import {
   LuCircleHelp,
+  LuCircleUser,
   LuLogOut,
   LuPanelLeftClose,
   LuPanelLeftOpen,
@@ -267,13 +268,27 @@ export const SidebarNavigation: React.FunctionComponent<
                         backgroundColor="background.secondary"
                         color="text.primary"
                       >
-                        <PMAvatar.Fallback name={user?.email} />
+                        <PMAvatar.Fallback
+                          name={user?.displayName ?? user?.email}
+                        />
                       </PMAvatar.Root>
                     </PMBox>
                   </PMMenu.Trigger>
                   <PMPortal>
                     <PMMenu.Positioner>
                       <PMMenu.Content>
+                        <PMMenu.Item
+                          value="profile"
+                          onClick={() =>
+                            navigate(routes.org.toProfile(orgSlug))
+                          }
+                          cursor="pointer"
+                        >
+                          <PMIcon marginRight={2}>
+                            <LuCircleUser />
+                          </PMIcon>
+                          Profile
+                        </PMMenu.Item>
                         <PMMenu.Item
                           value="integrations"
                           onClick={() => navigate(routes.org.toSetup(orgSlug))}
@@ -333,6 +348,12 @@ export const SidebarNavigation: React.FunctionComponent<
                 </PMBox>
                 <PMVerticalNavSection
                   navEntries={[
+                    <SidebarNavigationLink
+                      key="profile"
+                      url={routes.org.toProfile(orgSlug)}
+                      label="Profile"
+                      icon={<LuCircleUser />}
+                    />,
                     <SidebarNavigationLink
                       key="setup"
                       url={routes.org.toSetup(orgSlug)}
