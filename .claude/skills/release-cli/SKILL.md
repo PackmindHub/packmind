@@ -1,4 +1,5 @@
 ---
+name: 'release-cli'
 description: 'Automate a CLI release by verifying a clean git state, optionally promoting unreleased default skills, updating package.json and CHANGELOG with a dated version, tagging and pushing, then bumping to a -next version to ensure consistent, traceable releases whenever publishing a new CLI version.'
 ---
 
