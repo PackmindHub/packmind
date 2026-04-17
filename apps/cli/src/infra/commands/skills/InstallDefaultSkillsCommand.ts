@@ -45,14 +45,6 @@ export const installDefaultSkillsCommand = command({
         );
       }
 
-      if (result.skippedIncompatibleSkillNames.length > 0) {
-        for (const skillName of result.skippedIncompatibleSkillNames) {
-          logWarningConsole(
-            `Skill "${skillName}" was not installed because it is not compatible with this version of packmind-cli.`,
-          );
-        }
-      }
-
       if (result.incompatibleInstalledSkills.length > 0) {
         await handleIncompatibleInstalledSkillsWithPrompt(
           result.incompatibleInstalledSkills,
