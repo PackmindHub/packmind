@@ -6,10 +6,14 @@
 
 ## Fixed
 
+## Removed
+
+# [0.26.1] - 2026-04-17
+
+## Fixed
+
 - when skipping deprecated default skills, some files were still rendered in sub-folders
 - when running `packmind-cli install` at the root of the repo, the default skills are installed.
-
-## Removed
 
 # [0.26.0] - 2026-04-14
 
@@ -322,7 +326,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.1...HEAD
+[0.26.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.0...release-cli/0.26.1
 [0.26.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.25.0...release-cli/0.26.0
 [0.25.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.24.0...release-cli/0.25.0
 [0.24.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.23.0...release-cli/0.24.0
