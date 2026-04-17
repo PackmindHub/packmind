@@ -1,8 +1,7 @@
 ---
-description: 'Write TypeORM migrations in the Packmind monorepo to manage and version database schema changes with consistent logging, reversible rollbacks, and shared helpers so you can safely create or modify tables, columns, and foreign-key relationships whenever schema changes need to be tracked and reversible.'
+name: 'typeorm-migration'
+description: 'Write TypeORM migrations manage database schema changes with consistent logging, reversible rollbacks, and shared helpers. Use when creating new tables, adding or modifying columns, setting up foreign key relationships, or making any version-controlled schema change that requires PackmindLogger instrumentation, shared migration column helpers (uuidMigrationColumn, timestampsMigrationColumns), and a corresponding down() method.'
 ---
-
-Write TypeORM migrations in the Packmind monorepo to manage database schema changes effectively while ensuring proper logging and rollback capabilities.
 
 ## When to Use
 
@@ -22,10 +21,18 @@ Write TypeORM migrations in the Packmind monorepo to manage database schema chan
 
 ### Step 1: Create Migration File Using TypeORM CLI
 
-IMPORTANT: Always create migration files using the TypeORM CLI command. Never create migration files manually. The CLI automatically generates a timestamp prefix and sets up the basic structure.
+IMPORTANT: Always create migration files using the TypeORM CLI command so the filename prefix is a real `Date.now()` millisecond timestamp. Never create the file manually (e.g., with `touch`, `Write`, or by copying another migration) and never invent or round the timestamp yourself.
+
+Why this matters: TypeORM runs migrations in lexicographic filename order, which must match real chronological order. Made-up or rounded prefixes like `1775000000000` / `1775100000000` collide with future real timestamps and break ordering against migrations generated later on other branches.
+
+Rules:
+- The prefix MUST come from `npx typeorm migration:create` (which uses `Date.now()`).
+- Do NOT pad with zeros, round to the nearest day, or copy another file's timestamp and increment it.
+- If you need to rename the file afterwards, keep the original numeric prefix untouched — only change the descriptive suffix.
+- After creation, verify the new filename's prefix is strictly greater than every existing migration's prefix in `packages/migrations/src/migrations/`.
 
 ```bash
-# Create new migration file (TypeORM will automatically add timestamp)
+# Create new migration file (TypeORM will automatically add a real Date.now() timestamp)
 npx typeorm migration:create packages/migrations/src/migrations/DescriptiveName
 ```
 
