@@ -7,10 +7,12 @@ import {
   UpdateUserDisplayNameResponse,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
-import { InvalidDisplayNameError } from '../../../domain/errors';
+import {
+  InvalidDisplayNameError,
+  MAX_DISPLAY_NAME_LENGTH,
+} from '../../../domain/errors';
 
 const origin = 'UpdateUserDisplayNameUseCase';
-const MAX_DISPLAY_NAME_LENGTH = 255;
 
 export class UpdateUserDisplayNameUseCase
   extends AbstractMemberUseCase<

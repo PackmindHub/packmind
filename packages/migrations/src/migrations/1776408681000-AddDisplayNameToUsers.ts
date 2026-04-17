@@ -1,9 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
-const origin = 'AddDisplayNameToUsers1775200000000';
+const origin = 'AddDisplayNameToUsers1776408681000';
 
-export class AddDisplayNameToUsers1775200000000 implements MigrationInterface {
+export class AddDisplayNameToUsers1776408681000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

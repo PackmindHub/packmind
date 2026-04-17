@@ -1,4 +1,4 @@
-const MAX_DISPLAY_NAME_LENGTH = 255;
+export const MAX_DISPLAY_NAME_LENGTH = 255;
 
 export class InvalidDisplayNameError extends Error {
   constructor(reason: string) {

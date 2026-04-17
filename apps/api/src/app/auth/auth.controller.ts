@@ -44,6 +44,7 @@ import {
   CliLoginCodeNotFoundError,
   InvalidTrialActivationTokenError,
   EmailAlreadyExistsError,
+  InvalidDisplayNameError,
 } from '@packmind/accounts';
 import {
   ActivateTrialAccountResult,
@@ -417,6 +418,9 @@ export class AuthController {
         userId: request.user.userId,
         error: getErrorMessage(error),
       });
+      if (error instanceof InvalidDisplayNameError) {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
       throw error;
     }
   }

@@ -23,23 +23,27 @@ export const UserProfileSection: React.FC = () => {
 
   const handleSave = async () => {
     const trimmed = displayName.trim();
-    await updateProfile.mutateAsync(
-      { displayName: trimmed || null },
-      {
-        onSuccess: () => {
-          pmToaster.create({
-            title: 'Profile updated',
-            type: 'success',
-          });
+    try {
+      await updateProfile.mutateAsync(
+        { displayName: trimmed || null },
+        {
+          onSuccess: () => {
+            pmToaster.create({
+              title: 'Profile updated',
+              type: 'success',
+            });
+          },
+          onError: () => {
+            pmToaster.create({
+              title: 'Failed to update profile',
+              type: 'error',
+            });
+          },
         },
-        onError: () => {
-          pmToaster.create({
-            title: 'Failed to update profile',
-            type: 'error',
-          });
-        },
-      },
-    );
+      );
+    } catch {
+      // Error already handled by onError callback above
+    }
   };
 
   const hasChanged =
