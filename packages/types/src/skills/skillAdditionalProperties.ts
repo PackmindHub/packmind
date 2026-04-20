@@ -53,13 +53,16 @@ export function camelToKebab(str: string): string {
  */
 export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
   'argument-hint': 'argumentHint',
+  when_to_use: 'whenToUse',
   'disable-model-invocation': 'disableModelInvocation',
   'user-invocable': 'userInvocable',
   model: 'model',
+  effort: 'effort',
   context: 'context',
   agent: 'agent',
-  effort: 'effort',
   hooks: 'hooks',
+  paths: 'paths',
+  shell: 'shell',
 };
 
 /**
@@ -68,13 +71,16 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
  */
 export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'argumentHint',
+  'whenToUse',
   'disableModelInvocation',
   'userInvocable',
   'model',
+  'effort',
   'context',
   'agent',
-  'effort',
   'hooks',
+  'paths',
+  'shell',
 ];
 
 /**
