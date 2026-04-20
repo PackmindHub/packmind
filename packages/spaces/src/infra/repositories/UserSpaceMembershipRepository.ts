@@ -4,6 +4,7 @@ import {
   UserId,
   SpaceId,
   UserSpaceRole,
+  WithSoftDelete,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { IUserSpaceMembershipRepository } from '../../domain/repositories/IUserSpaceMembershipRepository';
@@ -13,7 +14,7 @@ import { WithTimestamps, localDataSource } from '@packmind/node-utils';
 
 const origin = 'UserSpaceMembershipRepository';
 
-type MembershipEntity = WithTimestamps<UserSpaceMembership>;
+type MembershipEntity = WithSoftDelete<WithTimestamps<UserSpaceMembership>>;
 
 export class UserSpaceMembershipRepository implements IUserSpaceMembershipRepository {
   constructor(
@@ -223,6 +224,7 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
         .where('membership.userId = :userId', { userId })
         .andWhere('space.organizationId = :organizationId', { organizationId })
         .andWhere('space.deletedAt IS NULL')
+        .andWhere('membership.deletedAt IS NULL')
         .getMany();
 
       if (memberships.length === 0) {
@@ -277,6 +279,7 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
         .where('membership.userId = :userId', { userId })
         .andWhere('space.organizationId = :organizationId', { organizationId })
         .andWhere('space.deletedAt IS NULL')
+        .andWhere('membership.deletedAt IS NULL')
         .getMany();
 
       this.logger.info('Memberships found by user and organization', {
@@ -289,6 +292,36 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       this.logger.error('Failed to find memberships by user and organization', {
         userId,
         organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async softDeleteBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: string,
+  ): Promise<number> {
+    this.logger.info('Soft-deleting memberships by spaceId', { spaceId });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .update()
+        .set({ deletedAt: new Date(), deletedBy })
+        .where('space_id = :spaceId', { spaceId })
+        .andWhere('deleted_at IS NULL')
+        .execute();
+
+      const affected = result.affected ?? 0;
+      this.logger.info('Memberships soft-deleted by spaceId', {
+        spaceId,
+        affected,
+      });
+      return affected;
+    } catch (error) {
+      this.logger.error('Failed to soft-delete memberships by spaceId', {
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractAdminUseCase,
-  AdminContext,
+  AbstractMemberUseCase,
+  MemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -17,7 +17,7 @@ import { SpaceService } from '../services/SpaceService';
 
 const origin = 'CreateSpaceUseCase';
 
-export class CreateSpaceUseCase extends AbstractAdminUseCase<
+export class CreateSpaceUseCase extends AbstractMemberUseCase<
   CreateSpaceCommand,
   CreateSpaceResponse
 > {
@@ -30,8 +30,8 @@ export class CreateSpaceUseCase extends AbstractAdminUseCase<
     super(accountsPort, logger);
   }
 
-  protected async executeForAdmins(
-    command: CreateSpaceCommand & AdminContext,
+  protected async executeForMembers(
+    command: CreateSpaceCommand & MemberContext,
   ): Promise<CreateSpaceResponse> {
     const spaceName = new SpaceName(command.name);
 

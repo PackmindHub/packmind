@@ -14,9 +14,14 @@ import {
   LuHouse,
   LuPackage,
   LuSlidersHorizontal,
+  LuStar,
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import {
+  usePinSpaceMutation,
+  useUnpinSpaceMutation,
+} from '../../../spaces-management/api/queries/SpacesManagementQueries';
 import { SpaceVisibilityIcon } from './SpaceVisibilityIcon';
 import { useNavigate } from 'react-router';
 import type { UserSpaceWithRole } from '@packmind/types';
@@ -149,6 +154,8 @@ function ExpandedSpaceNavBlock({
   onSpaceClick,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox>
@@ -206,10 +213,39 @@ function ExpandedSpaceNavBlock({
               onClick={() =>
                 navigate(routes.space.toSettings(orgSlug, space.slug))
               }
+              mr={1}
               data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
             >
               <LuSlidersHorizontal />
             </PMIconButton>
+            {!space.isDefaultSpace && (
+              <PMBox
+                as="button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  if (space.pinned) {
+                    unpinMutation.mutate({ spaceId: space.id });
+                  } else {
+                    pinMutation.mutate({ spaceId: space.id });
+                  }
+                }}
+                title={
+                  space.pinned ? 'Remove from favorites' : 'Add to favorites'
+                }
+                flexShrink={0}
+                cursor="pointer"
+                color={space.pinned ? 'yellow.400' : 'text.faded'}
+                _hover={{ color: 'yellow.400' }}
+                display="flex"
+                alignItems="center"
+                data-testid={`space-pin-toggle-${space.id}`}
+              >
+                <LuStar
+                  size={14}
+                  fill={space.pinned ? 'currentColor' : 'none'}
+                />
+              </PMBox>
+            )}
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
@@ -226,6 +262,8 @@ function CollapsedSpaceNavBlock({
 }: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox
@@ -291,6 +329,32 @@ function CollapsedSpaceNavBlock({
             <LuSlidersHorizontal />
           </PMIconButton>
         )}
+
+        {!isActive && !space.isDefaultSpace && (
+          <PMBox
+            as="button"
+            {...(!space.pinned && { className: 'space-settings-btn' })}
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              if (space.pinned) {
+                unpinMutation.mutate({ spaceId: space.id });
+              } else {
+                pinMutation.mutate({ spaceId: space.id });
+              }
+            }}
+            title={space.pinned ? 'Remove from favorites' : 'Add to favorites'}
+            flexShrink={0}
+            cursor="pointer"
+            transition="opacity 0.15s"
+            color={space.pinned ? 'yellow.400' : 'text.faded'}
+            _hover={{ color: 'yellow.400' }}
+            display="flex"
+            alignItems="center"
+            data-testid={`space-pin-toggle-${space.id}`}
+          >
+            <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
+          </PMBox>
+        )}
       </PMBox>
 
       {isActive && (
@@ -322,6 +386,8 @@ function SpaceNameRow({
   onSpaceClick: () => void;
 }>): React.ReactElement {
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox
@@ -379,6 +445,31 @@ function SpaceNameRow({
       >
         <LuSlidersHorizontal />
       </PMIconButton>
+      {!space.isDefaultSpace && (
+        <PMBox
+          as="button"
+          {...(!space.pinned && { className: 'space-settings-btn' })}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (space.pinned) {
+              unpinMutation.mutate({ spaceId: space.id });
+            } else {
+              pinMutation.mutate({ spaceId: space.id });
+            }
+          }}
+          title={space.pinned ? 'Remove from favorites' : 'Add to favorites'}
+          flexShrink={0}
+          cursor="pointer"
+          transition="opacity 0.15s"
+          color={space.pinned ? 'yellow.400' : 'text.faded'}
+          _hover={{ color: 'yellow.400' }}
+          display="flex"
+          alignItems="center"
+          data-testid={`space-pin-toggle-${space.id}`}
+        >
+          <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
+        </PMBox>
+      )}
     </PMBox>
   );
 }

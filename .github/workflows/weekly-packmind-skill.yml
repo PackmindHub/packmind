@@ -1,0 +1,103 @@
+name: Weekly Packmind Skill
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 08:00 CET (06:00 UTC)
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Claude model to use'
+        required: false
+        default: 'claude-opus-4-6'
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  playbook-cli-audit:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install Packmind CLI
+        run: npm i -g @packmind/cli
+
+      - name: Run Playbook CLI Audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/playbook-cli-audit"
+          settings: |
+            {
+              "permissions": {
+                "allow": [
+                  "Bash(echo *)",
+                  "Bash(git remote *)",
+                  "Bash(mkdir *)",
+                  "Bash(packmind-cli *)",
+                  "Agent",
+                  "Read",
+                  "Write",
+                  "Glob",
+                  "Grep"
+                ]
+              }
+            }
+          claude_args: "--model ${{ inputs.model || 'claude-opus-4-6' }} --max-turns 50"
+
+      - name: Display report
+        if: always()
+        run: |
+          if [ -f "playbook-cli-audit-report.md" ]; then
+            echo "=== Playbook CLI Audit Report ==="
+            cat "playbook-cli-audit-report.md"
+            echo "## Playbook CLI Audit Report" >> "$GITHUB_STEP_SUMMARY"
+            cat "playbook-cli-audit-report.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No report file found."
+            echo "No report file found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Prepare Slack payload
+        if: always() && hashFiles('playbook-cli-audit-report.md') != ''
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MAX_LENGTH=3800
+          REPORT=$(cat playbook-cli-audit-report.md)
+          if [ ${#REPORT} -gt $MAX_LENGTH ]; then
+            REPORT="${REPORT:0:$MAX_LENGTH}..."$'\n\n'"Full report: $RUN_URL"
+          else
+            REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
+          fi
+          PAYLOAD=$(jq -n \
+            --arg channel "${{ secrets.SLACK_CHANNEL_PACKMIND_SKILL_ID }}" \
+            --arg text "$REPORT" \
+            '{channel: $channel, text: $text}')
+          EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
+          echo "SLACK_PAYLOAD<<${EOF_DELIMITER}" >> "$GITHUB_ENV"
+          echo "$PAYLOAD" >> "$GITHUB_ENV"
+          echo "${EOF_DELIMITER}" >> "$GITHUB_ENV"
+
+      - name: Send report to Slack
+        if: always() && hashFiles('playbook-cli-audit-report.md') != ''
+        uses: slackapi/slack-github-action@v2
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          payload: ${{ env.SLACK_PAYLOAD }}
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playbook-cli-audit-report
+          path: playbook-cli-audit-report.md
+          if-no-files-found: warn
+          retention-days: 30
