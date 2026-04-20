@@ -12,6 +12,7 @@ import {
 import { SpaceType } from '@packmind/types';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
 import { useUpdateSpaceMutation } from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 const ACCESS_STATUS_OPTIONS = [
   {
@@ -31,6 +32,8 @@ const ACCESS_STATUS_OPTIONS = [
 
 export function SpaceAccessSection() {
   const { space, spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+  const isAdmin = organization?.role === 'admin';
   const updateMutation = useUpdateSpaceMutation();
   const [accessStatus, setAccessStatus] = useState<SpaceType | undefined>(
     undefined,
@@ -73,7 +76,7 @@ export function SpaceAccessSection() {
       }
     >
       <PMVStack align="stretch" gap={5} pt={4} w="lg">
-        <PMField.Root>
+        <PMField.Root disabled={!isAdmin}>
           <PMField.Label>Access status</PMField.Label>
           <PMNativeSelect
             items={ACCESS_STATUS_OPTIONS}
@@ -81,7 +84,9 @@ export function SpaceAccessSection() {
             onChange={(e) => setAccessStatus(e.target.value as SpaceType)}
           />
           <PMField.HelperText>
-            Controls who can see and join this space.
+            {isAdmin
+              ? 'Controls who can see and join this space.'
+              : 'Only organization administrators can change space visibility.'}
           </PMField.HelperText>
         </PMField.Root>
 
@@ -89,7 +94,7 @@ export function SpaceAccessSection() {
           <PMButton
             variant="secondary"
             onClick={handleSave}
-            disabled={!hasChanges || updateMutation.isPending}
+            disabled={!isAdmin || !hasChanges || updateMutation.isPending}
             loading={updateMutation.isPending}
           >
             Save changes
