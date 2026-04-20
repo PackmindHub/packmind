@@ -10,6 +10,7 @@ const test = testWithApi.extend<{
     use({
       email: `e2e-${uuidv4()}@packmind.com`,
       password: `${uuidv4()}!!`,
+      method: 'password',
     });
   },
 });
@@ -18,12 +19,10 @@ test.describe('Manage space identity', () => {
   test('space admin updates name and color, sees it reflected in the sidebar', async ({
     dashboardPage,
   }) => {
-    // Create a new space and navigate into it
-    await dashboardPage.createSpace('oddity');
-    const dashboard = await dashboardPage.navigateToDashboard();
-    const oddityDashboard = await dashboard.navigateToSpace('oddity');
+    // Create a new space — this navigates into it, making it the active space
+    const oddityDashboard = await dashboardPage.createSpace('oddity');
 
-    // Open space settings
+    // Open space settings for the active (newly created) space
     const spaceSettingsPage = await oddityDashboard.openSpaceSettings();
 
     // Update the name
@@ -35,22 +34,16 @@ test.describe('Manage space identity', () => {
     // Save changes
     await spaceSettingsPage.clickSaveIdentity();
     await spaceSettingsPage.waitForIdentityUpdateSuccess();
-
-    // Navigate to dashboard and verify the sidebar shows the new name
-    await spaceSettingsPage.navigateToDashboard();
   });
 
   test('space admin cannot rename to a slug-colliding name', async ({
     dashboardPage,
   }) => {
-    // Create two spaces
+    // Create two spaces — each createSpace navigates into the new space
     await dashboardPage.createSpace('security');
-    let dashboard = await dashboardPage.navigateToDashboard();
-    await dashboard.createSpace('security-connections');
-    dashboard = await dashboard.navigateToDashboard();
-    const scDashboard = await dashboard.navigateToSpace('security-connections');
+    const scDashboard = await dashboardPage.createSpace('security-connections');
 
-    // Open space settings for the second space
+    // Open space settings for the active (second) space
     const spaceSettingsPage = await scDashboard.openSpaceSettings();
 
     // Try to rename to a name whose slug collides with the first space
