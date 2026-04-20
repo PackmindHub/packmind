@@ -8,6 +8,8 @@
 
 ## Removed
 
+- drop `setup-mcp` command.
+
 # [0.26.1] - 2026-04-17
 
 ## Fixed

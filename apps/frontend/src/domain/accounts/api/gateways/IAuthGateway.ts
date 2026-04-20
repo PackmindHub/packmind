@@ -44,6 +44,7 @@ export type MeResponse =
       user: {
         id: UserId;
         email: string;
+        displayName: string | null;
         memberships: UserOrganizationMembership[];
       };
       organization?: {
@@ -120,4 +121,7 @@ export interface IAuthGateway {
   getOnboardingStatus(): Promise<GetUserOnboardingStatusResponse>;
   completeOnboarding(): Promise<CompleteUserOnboardingResponse>;
   getSocialProviders(): Promise<{ providers: string[] }>;
+  updateProfile(body: {
+    displayName?: string | null;
+  }): Promise<{ displayName: string | null }>;
 }
