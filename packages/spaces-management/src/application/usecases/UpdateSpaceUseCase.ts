@@ -1,5 +1,6 @@
 import {
   AbstractSpaceAdminUseCase,
+  OrganizationAdminRequiredError,
   PackmindEventEmitterService,
   SpaceAdminContext,
 } from '@packmind/node-utils';
@@ -41,6 +42,17 @@ export class UpdateSpaceUseCase extends AbstractSpaceAdminUseCase<
 
     if (command.type !== undefined && space.isDefaultSpace) {
       throw new CannotUpdateDefaultSpaceVisibilityError(command.spaceId);
+    }
+
+    if (
+      command.type !== undefined &&
+      command.type !== SpaceType.private &&
+      command.membership.role !== 'admin'
+    ) {
+      throw new OrganizationAdminRequiredError({
+        userId: command.userId,
+        organizationId: command.organizationId,
+      });
     }
 
     const fields: { name?: string; type?: SpaceType } = {};

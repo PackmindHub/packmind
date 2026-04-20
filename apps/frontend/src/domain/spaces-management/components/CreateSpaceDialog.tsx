@@ -46,8 +46,9 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
 }) => {
   const navigate = useNavigate();
   const { organization } = useAuthContext();
+  const isAdmin = organization?.role === 'admin';
   const [spaceName, setSpaceName] = useState('');
-  const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.open);
+  const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.private);
   const [spaceNameError, setSpaceNameError] = useState<string | undefined>();
   const createSpaceMutation = useCreateSpaceMutation();
 
@@ -72,7 +73,7 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
       });
 
       setSpaceName('');
-      setSpaceType(SpaceType.open);
+      setSpaceType(SpaceType.private);
       setSpaceNameError(undefined);
       setOpen(false);
 
@@ -100,7 +101,7 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
           setOpen(details.open);
           if (!details.open) {
             setSpaceName('');
-            setSpaceType(SpaceType.open);
+            setSpaceType(SpaceType.private);
             setSpaceNameError(undefined);
           }
         }
@@ -143,16 +144,23 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
                   />
                   <PMField.ErrorText>{spaceNameError}</PMField.ErrorText>
                 </PMField.Root>
-                <PMField.Root>
+                <PMField.Root
+                  disabled={!isAdmin || createSpaceMutation.isPending}
+                >
                   <PMField.Label>Access status</PMField.Label>
                   <PMNativeSelect
                     items={SPACE_TYPE_OPTIONS}
                     value={spaceType}
                     onChange={(e) => setSpaceType(e.target.value as SpaceType)}
-                    disabled={createSpaceMutation.isPending}
                     data-testid="create-space-type-select"
                     size="sm"
                   />
+                  {!isAdmin && (
+                    <PMField.HelperText>
+                      Only organization administrators can change space
+                      visibility
+                    </PMField.HelperText>
+                  )}
                 </PMField.Root>
               </PMVStack>
             </PMDialog.Body>

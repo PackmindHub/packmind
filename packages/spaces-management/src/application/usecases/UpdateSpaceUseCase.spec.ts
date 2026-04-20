@@ -9,6 +9,7 @@ import {
   UserSpaceRole,
 } from '@packmind/types';
 import {
+  OrganizationAdminRequiredError,
   PackmindEventEmitterService,
   SpaceAdminRequiredError,
 } from '@packmind/node-utils';
@@ -234,6 +235,73 @@ describe('UpdateSpaceUseCase', () => {
         .catch(() => undefined);
 
       expect(eventEmitterService.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when changing visibility to open or restricted', () => {
+    const existingSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      type: SpaceType.private,
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
+    });
+
+    it('throws OrganizationAdminRequiredError when org member changes type to open', async () => {
+      await expect(
+        useCase.execute(buildCommand({ type: SpaceType.open })),
+      ).rejects.toThrow(OrganizationAdminRequiredError);
+    });
+
+    it('throws OrganizationAdminRequiredError when org member changes type to restricted', async () => {
+      await expect(
+        useCase.execute(buildCommand({ type: SpaceType.restricted })),
+      ).rejects.toThrow(OrganizationAdminRequiredError);
+    });
+
+    it('allows org admin to change type to open', async () => {
+      const orgAdmin = userFactory({
+        id: userId,
+        memberships: [{ userId, organizationId, role: 'admin' }],
+      });
+      accountsPort.getUserById.mockResolvedValue(orgAdmin);
+
+      const updatedSpace = spaceFactory({
+        id: spaceId,
+        organizationId,
+        type: SpaceType.open,
+      });
+      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
+
+      const result = await useCase.execute(
+        buildCommand({ type: SpaceType.open }),
+      );
+
+      expect(result).toEqual(updatedSpace);
+    });
+
+    it('allows org member to change type to private', async () => {
+      const openSpace = spaceFactory({
+        id: spaceId,
+        organizationId,
+        type: SpaceType.open,
+      });
+      spacesPort.getSpaceById.mockResolvedValue(openSpace);
+
+      const updatedSpace = spaceFactory({
+        id: spaceId,
+        organizationId,
+        type: SpaceType.private,
+      });
+      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
+
+      const result = await useCase.execute(
+        buildCommand({ type: SpaceType.private }),
+      );
+
+      expect(result).toEqual(updatedSpace);
     });
   });
 

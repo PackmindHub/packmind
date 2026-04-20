@@ -61,7 +61,7 @@ export class SpacesManagementAdapter
   private eventEmitterService!: PackmindEventEmitterService;
 
   async createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
-    const useCase = new CreateSpaceUseCase(this.spacesPort);
+    const useCase = new CreateSpaceUseCase(this.spacesPort, this.accountsPort);
     return useCase.execute(command);
   }
 

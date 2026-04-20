@@ -27,7 +27,7 @@ export class SpaceService {
     name: string,
     organizationId: OrganizationId,
     isDefaultSpace = true,
-    type: SpaceType = SpaceType.open,
+    type: SpaceType = SpaceType.private,
   ): Promise<Space> {
     this.logger.info('Creating space', { name, organizationId });
 
@@ -74,7 +74,12 @@ export class SpaceService {
       organizationId,
     });
 
-    return this.createSpace(DEFAULT_SPACE_NAME, organizationId);
+    return this.createSpace(
+      DEFAULT_SPACE_NAME,
+      organizationId,
+      true,
+      SpaceType.open,
+    );
   }
 
   async getSpaceById(id: SpaceId): Promise<Space | null> {

@@ -1,10 +1,14 @@
 import {
   CreateSpaceCommand,
   IAccountsPort,
+  SpaceType,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  OrganizationAdminRequiredError,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
@@ -81,14 +85,14 @@ describe('CreateSpaceUseCase', () => {
         expect(result).toEqual(createdSpace);
       });
 
-      it('creates the space with isDefaultSpace set to false', async () => {
+      it('creates the space with isDefaultSpace set to false and private type', async () => {
         await useCase.execute(buildCommand());
 
         expect(spaceService.createSpace).toHaveBeenCalledWith(
           'My Space',
           organizationId,
           false,
-          undefined,
+          SpaceType.private,
         );
       });
 
@@ -159,8 +163,41 @@ describe('CreateSpaceUseCase', () => {
         spaceService.createSpace.mockResolvedValue(createdSpace);
       });
 
-      it('creates the space', async () => {
+      it('creates a private space by default', async () => {
         const result = await useCase.execute(buildCommand());
+
+        expect(result).toEqual(createdSpace);
+      });
+
+      it('throws OrganizationAdminRequiredError when requesting open type', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.open })),
+        ).rejects.toThrow(OrganizationAdminRequiredError);
+      });
+
+      it('throws OrganizationAdminRequiredError when requesting restricted type', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.restricted })),
+        ).rejects.toThrow(OrganizationAdminRequiredError);
+      });
+    });
+
+    describe('when the user is an admin of the organization', () => {
+      const createdSpace = spaceFactory({
+        organizationId,
+        name: 'My Space',
+        isDefaultSpace: false,
+        type: SpaceType.open,
+      });
+
+      beforeEach(() => {
+        spaceService.createSpace.mockResolvedValue(createdSpace);
+      });
+
+      it('creates an open space', async () => {
+        const result = await useCase.execute(
+          buildCommand({ type: SpaceType.open }),
+        );
 
         expect(result).toEqual(createdSpace);
       });
@@ -192,7 +229,7 @@ describe('CreateSpaceUseCase', () => {
           'My Space',
           organizationId,
           false,
-          undefined,
+          SpaceType.private,
         );
       });
     });
