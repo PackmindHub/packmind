@@ -14,9 +14,9 @@ import {
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { LeaveSpaceUseCase } from './LeaveSpaceUseCase';
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 
 describe('LeaveSpaceUseCase', () => {
   const organizationId = createOrganizationId('org-1');

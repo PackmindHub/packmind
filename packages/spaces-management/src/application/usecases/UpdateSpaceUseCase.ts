@@ -17,10 +17,10 @@ import {
   UpdateSpaceResponse,
   UserSpaceRole,
 } from '@packmind/types';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 
 export class UpdateSpaceUseCase extends AbstractMemberUseCase<
   UpdateSpaceCommand,

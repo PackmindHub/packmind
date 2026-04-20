@@ -10,6 +10,7 @@ import {
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { PinSpaceUseCase } from './PinSpaceUseCase';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
@@ -194,8 +195,6 @@ describe('PinSpaceUseCase', () => {
     });
 
     it('throws SpaceNotFoundError', async () => {
-      const { SpaceNotFoundError } =
-        await import('../../domain/errors/SpaceNotFoundError');
       await expect(useCase.execute(buildCommand())).rejects.toThrow(
         SpaceNotFoundError,
       );

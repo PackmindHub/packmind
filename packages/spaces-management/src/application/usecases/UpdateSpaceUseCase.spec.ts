@@ -14,11 +14,11 @@ import {
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { UpdateSpaceUseCase } from './UpdateSpaceUseCase';
 
 describe('UpdateSpaceUseCase', () => {

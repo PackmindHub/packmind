@@ -31,7 +31,7 @@ import {
   BrowseSpacesResponse,
   SpaceId,
 } from '@packmind/types';
-import { SpaceSlugConflictError } from '@packmind/spaces';
+import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
@@ -44,7 +44,6 @@ import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpacesManagementService } from './spaces-management.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 

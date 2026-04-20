@@ -19,14 +19,13 @@ import {
   SpaceType,
 } from '@packmind/types';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { SpaceSlugConflictError } from '@packmind/spaces';
+import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpacesManagementController } from './spaces-management.controller';
 import { SpacesManagementService } from './spaces-management.service';

@@ -25,9 +25,9 @@ import {
   StandardDeletedEvent,
   UserId,
 } from '@packmind/types';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 
 const origin = 'MoveArtifactsToSpaceUseCase';

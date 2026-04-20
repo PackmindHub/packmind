@@ -12,8 +12,8 @@ import {
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { JoinSpaceUseCase } from './JoinSpaceUseCase';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 
 describe('JoinSpaceUseCase', () => {

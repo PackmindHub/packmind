@@ -8,6 +8,7 @@ import {
   SpaceType,
 } from '@packmind/types';
 import { Repository } from 'typeorm';
+import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
 
@@ -102,7 +103,7 @@ export class SpaceRepository
     try {
       const space = await this.repository.findOne({ where: { id } });
       if (!space) {
-        throw new Error(`Space ${id} not found`);
+        throw new SpaceNotFoundError(id);
       }
 
       if (fields.name !== undefined) space.name = fields.name;
