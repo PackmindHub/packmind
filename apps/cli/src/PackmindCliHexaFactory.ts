@@ -35,9 +35,6 @@ import { IWhoamiUseCase } from './domain/useCases/IWhoamiUseCase';
 import { WhoamiUseCase } from './application/useCases/WhoamiUseCase';
 import { ICheckCliVersionUseCase } from './domain/useCases/ICheckCliVersionUseCase';
 import { CheckCliVersionUseCase } from './application/useCases/CheckCliVersionUseCase';
-import { ISetupMcpUseCase } from './domain/useCases/ISetupMcpUseCase';
-import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
-import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { LockFileRepository } from './infra/repositories/LockFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
@@ -78,7 +75,6 @@ export class PackmindCliHexaFactory {
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
     checkCliVersion: ICheckCliVersionUseCase;
-    setupMcp: ISetupMcpUseCase;
     listStandards: IListStandardsUseCase;
     listCommands: IListCommandsUseCase;
     listSkills: IListSkillsUseCase;
@@ -146,10 +142,6 @@ export class PackmindCliHexaFactory {
       logout: new LogoutUseCase(),
       whoami: new WhoamiUseCase(),
       checkCliVersion: new CheckCliVersionUseCase(),
-      setupMcp: new SetupMcpUseCase({
-        gateway: this.repositories.packmindGateway,
-        mcpConfigService: new McpConfigService(),
-      }),
       listStandards: new ListStandardsUseCase(
         this.repositories.packmindGateway,
         this.services.spaceService,

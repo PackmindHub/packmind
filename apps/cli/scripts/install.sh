@@ -328,7 +328,7 @@ configure_path() {
             warn "Unknown shell: $shell_name. Please add this to your shell configuration manually:"
             echo "  $export_line"
             PATH_UNKNOWN_SHELL=1
-            # Still export PATH for this script's subshell (used by auto_login and setup_mcp)
+            # Still export PATH for this script's subshell (used by auto_login)
             export PATH="$INSTALL_DIR:$PATH"
             return 0
             ;;
@@ -347,7 +347,7 @@ configure_path() {
         PATH_NEEDS_RELOAD=1
     fi
 
-    # Export PATH for this script's subshell (used by auto_login and setup_mcp)
+    # Export PATH for this script's subshell (used by auto_login)
     export PATH="$INSTALL_DIR:$PATH"
 }
 

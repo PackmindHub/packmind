@@ -54,10 +54,6 @@ import {
   ICheckCliVersionResult,
 } from './domain/useCases/ICheckCliVersionUseCase';
 import {
-  ISetupMcpCommand,
-  ISetupMcpResult,
-} from './domain/useCases/ISetupMcpUseCase';
-import {
   ListStandardsCommand,
   ListStandardsResult,
 } from './domain/useCases/IListStandardsUseCase';
@@ -352,10 +348,6 @@ export class PackmindCliHexa {
     command: ICheckCliVersionCommand,
   ): Promise<ICheckCliVersionResult | null> {
     return this.hexa.useCases.checkCliVersion.execute(command);
-  }
-
-  public async setupMcp(command: ISetupMcpCommand): Promise<ISetupMcpResult> {
-    return this.hexa.useCases.setupMcp.execute(command);
   }
 
   public getCurrentBranch(repoPath: string): string {
