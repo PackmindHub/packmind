@@ -50,7 +50,7 @@ export function CustomSpacesNavBlock({
         <>
           <PMBox px={3} pt={3} pb={1}>
             <PMText fontSize="2xs" fontWeight="semibold" color="faded">
-              Pinned
+              Favorites
             </PMText>
           </PMBox>
           {pinnedSpaces.map((space) => (

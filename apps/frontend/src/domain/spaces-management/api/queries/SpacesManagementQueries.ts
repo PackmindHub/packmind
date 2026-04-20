@@ -303,7 +303,7 @@ export const usePinSpaceMutation = () => {
       return spacesManagementGateway.pinSpace(organization.id, spaceId);
     },
     onSuccess: async () => {
-      pmToaster.success({ title: 'Space pinned' });
+      pmToaster.success({ title: 'Added to favorites' });
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: [...spacesManagementQueryKeys.all],
@@ -315,7 +315,7 @@ export const usePinSpaceMutation = () => {
     },
     onError: () => {
       pmToaster.error({
-        title: 'Failed to pin space',
+        title: 'Unable to add to favorites',
         description: 'Something went wrong. Please try again.',
       });
     },
@@ -337,7 +337,7 @@ export const useUnpinSpaceMutation = () => {
       return spacesManagementGateway.unpinSpace(organization.id, spaceId);
     },
     onSuccess: async () => {
-      pmToaster.success({ title: 'Space unpinned' });
+      pmToaster.success({ title: 'Removed from favorites' });
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: [...spacesManagementQueryKeys.all],
@@ -349,7 +349,7 @@ export const useUnpinSpaceMutation = () => {
     },
     onError: () => {
       pmToaster.error({
-        title: 'Failed to unpin space',
+        title: 'Unable to remove from favorites',
         description: 'Something went wrong. Please try again.',
       });
     },

@@ -229,7 +229,9 @@ function ExpandedSpaceNavBlock({
                     pinMutation.mutate({ spaceId: space.id });
                   }
                 }}
-                title={space.pinned ? 'Unpin space' : 'Pin space'}
+                title={
+                  space.pinned ? 'Remove from favorites' : 'Add to favorites'
+                }
                 flexShrink={0}
                 cursor="pointer"
                 color={space.pinned ? 'yellow.400' : 'text.faded'}
@@ -340,7 +342,7 @@ function CollapsedSpaceNavBlock({
                 pinMutation.mutate({ spaceId: space.id });
               }
             }}
-            title={space.pinned ? 'Unpin space' : 'Pin space'}
+            title={space.pinned ? 'Remove from favorites' : 'Add to favorites'}
             flexShrink={0}
             cursor="pointer"
             transition="opacity 0.15s"
@@ -455,7 +457,7 @@ function SpaceNameRow({
               pinMutation.mutate({ spaceId: space.id });
             }
           }}
-          title={space.pinned ? 'Unpin space' : 'Pin space'}
+          title={space.pinned ? 'Remove from favorites' : 'Add to favorites'}
           flexShrink={0}
           cursor="pointer"
           transition="opacity 0.15s"
