@@ -6,6 +6,7 @@ import ArtifactRemovedPrototype from './artifact-removed/ArtifactRemovedPrototyp
 import SidebarWithSpacesPrototype from './sidebar-with-spaces/SidebarWithSpacesPrototype';
 import StandardDetailRedesignPrototype from './standard-detail-redesign/StandardDetailRedesignPrototype';
 import PersonalHomePagePrototype from './personal-home-page/PersonalHomePagePrototype';
+import SpacesManagementPrototype from './spaces-management/SpacesManagementPrototype';
 
 export interface Prototype {
   name: string;
@@ -44,5 +45,11 @@ export const prototypes: Prototype[] = [
     description:
       'Cross-space personal hub with pending review triage and tips discovery',
     component: PersonalHomePagePrototype,
+  },
+  {
+    name: 'Spaces management',
+    description:
+      'Org-settings surface for managing all spaces \u2014 dense table with a side drawer for per-space General/Members/Danger edits',
+    component: SpacesManagementPrototype,
   },
 ];
