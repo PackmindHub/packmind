@@ -28,6 +28,16 @@ const AGENT_OPTIONS: AgentOption[] = [
   { value: 'cursor', label: 'Cursor', icon: CursorIcon },
 ];
 
+function parseFilenameFromContentDisposition(
+  header: string | null,
+): string | null {
+  if (!header) return null;
+  const match = header.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+  if (!match) return null;
+  const value = match[1].trim();
+  return value.length > 0 ? value : null;
+}
+
 interface DownloadAsAgentButtonProps {
   getPreviewCommand: () => Omit<PreviewArtifactRenderingCommand, 'codingAgent'>;
   size?: 'xs' | 'sm';
@@ -64,10 +74,15 @@ export function DownloadAsAgentButton({
       }
 
       const blob = await response.blob();
+      const fileName =
+        parseFilenameFromContentDisposition(
+          response.headers.get('Content-Disposition'),
+        ) ?? `packmind-${agent}-preview.zip`;
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `packmind-${agent}-preview.zip`;
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
