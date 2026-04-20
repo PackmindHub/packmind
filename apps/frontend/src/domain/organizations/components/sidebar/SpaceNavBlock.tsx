@@ -182,6 +182,18 @@ function ExpandedSpaceNavBlock({
               </PMText>
               <SpaceVisibilityIcon type={space.type} />
             </PMBox>
+            <PMIconButton
+              aria-label="Space settings"
+              size="2xs"
+              variant="ghost"
+              onClick={() =>
+                navigate(routes.space.toSettings(orgSlug, space.slug))
+              }
+              mr={1}
+              data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+            >
+              <LuSlidersHorizontal />
+            </PMIconButton>
             {!space.isDefaultSpace && (
               <PMBox
                 as="button"
@@ -200,7 +212,6 @@ function ExpandedSpaceNavBlock({
                 _hover={{ color: 'yellow.400' }}
                 display="flex"
                 alignItems="center"
-                mr={1}
                 data-testid={`space-pin-toggle-${space.id}`}
               >
                 <LuStar
@@ -209,17 +220,6 @@ function ExpandedSpaceNavBlock({
                 />
               </PMBox>
             )}
-            <PMIconButton
-              aria-label="Space settings"
-              size="2xs"
-              variant="ghost"
-              onClick={() =>
-                navigate(routes.space.toSettings(orgSlug, space.slug))
-              }
-              data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
-            >
-              <LuSlidersHorizontal />
-            </PMIconButton>
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
@@ -288,6 +288,22 @@ function CollapsedSpaceNavBlock({
           </PMBox>
         </PMTooltip>
 
+        {!isActive && (
+          <PMIconButton
+            className="space-settings-btn"
+            aria-label="Space settings"
+            size="2xs"
+            variant="ghost"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              navigate(routes.space.toSettings(orgSlug, space.slug));
+            }}
+            data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+          >
+            <LuSlidersHorizontal />
+          </PMIconButton>
+        )}
+
         {!isActive && !space.isDefaultSpace && (
           <PMBox
             as="button"
@@ -312,22 +328,6 @@ function CollapsedSpaceNavBlock({
           >
             <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
           </PMBox>
-        )}
-
-        {!isActive && (
-          <PMIconButton
-            className="space-settings-btn"
-            aria-label="Space settings"
-            size="2xs"
-            variant="ghost"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              navigate(routes.space.toSettings(orgSlug, space.slug));
-            }}
-            data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
-          >
-            <LuSlidersHorizontal />
-          </PMIconButton>
         )}
       </PMBox>
 
@@ -402,6 +402,19 @@ function SpaceNameRow({
         </PMText>
         <SpaceVisibilityIcon type={space.type} />
       </PMBox>
+      <PMIconButton
+        className="space-settings-btn"
+        aria-label="Space settings"
+        size="2xs"
+        variant="ghost"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          navigate(routes.space.toSettings(orgSlug, space.slug));
+        }}
+        data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+      >
+        <LuSlidersHorizontal />
+      </PMIconButton>
       {!space.isDefaultSpace && (
         <PMBox
           as="button"
@@ -427,19 +440,6 @@ function SpaceNameRow({
           <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
         </PMBox>
       )}
-      <PMIconButton
-        className="space-settings-btn"
-        aria-label="Space settings"
-        size="2xs"
-        variant="ghost"
-        onClick={(e: React.MouseEvent) => {
-          e.stopPropagation();
-          navigate(routes.space.toSettings(orgSlug, space.slug));
-        }}
-        data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
-      >
-        <LuSlidersHorizontal />
-      </PMIconButton>
     </PMBox>
   );
 }

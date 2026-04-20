@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  AuthenticatedRequest,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -21,12 +24,16 @@ import {
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
+import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
+import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { SpacesManagementController } from './spaces-management.controller';
 import { SpacesManagementService } from './spaces-management.service';
 
@@ -221,6 +228,131 @@ describe('SpacesManagementController', () => {
             artifacts: [],
           }),
         ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when an artifact has an invalid type', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [
+              { id: createStandardId('std-1'), type: 'invalid' as never },
+            ],
+          }),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when the space is not found', () => {
+      it('throws NotFoundException', async () => {
+        service.moveArtifactsToSpace.mockRejectedValue(
+          new SpaceNotFoundError('space-id'),
+        );
+
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [{ id: createStandardId('std-1'), type: 'standard' }],
+          }),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+
+    describe('when the space belongs to a different organization', () => {
+      it('throws ForbiddenException', async () => {
+        service.moveArtifactsToSpace.mockRejectedValue(
+          new SpaceOwnershipMismatchError(
+            createSpaceId('source-space'),
+            organizationId,
+          ),
+        );
+
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [{ id: createStandardId('std-1'), type: 'standard' }],
+          }),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the user is not a member of the space', () => {
+      it('throws ForbiddenException', async () => {
+        service.moveArtifactsToSpace.mockRejectedValue(
+          new SpaceMembershipRequiredError('user-123', 'source-space'),
+        );
+
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [{ id: createStandardId('std-1'), type: 'standard' }],
+          }),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when an artifact does not belong to the source space', () => {
+      it('throws UnprocessableEntityException', async () => {
+        service.moveArtifactsToSpace.mockRejectedValue(
+          new ArtifactNotInSourceSpaceError(
+            'standard',
+            'std-1',
+            createSpaceId('source-space'),
+          ),
+        );
+
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [{ id: createStandardId('std-1'), type: 'standard' }],
+          }),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('when an artifact name conflicts in the destination space', () => {
+      it('throws ConflictException', async () => {
+        service.moveArtifactsToSpace.mockRejectedValue(
+          new ArtifactNameConflictError(
+            'standard',
+            'My Standard',
+            'Dest Space',
+          ),
+        );
+
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [{ id: createStandardId('std-1'), type: 'standard' }],
+          }),
+        ).rejects.toThrow(ConflictException);
+      });
+    });
+
+    describe('when an artifact slug conflicts in the destination space', () => {
+      it('throws ConflictException', async () => {
+        service.moveArtifactsToSpace.mockRejectedValue(
+          new ArtifactSlugConflictError(
+            'standard',
+            'my-standard',
+            'Dest Space',
+          ),
+        );
+
+        await expect(
+          controller.moveArtifactsToSpace(organizationId, mockRequest, {
+            sourceSpaceId: createSpaceId('source-space'),
+            destinationSpaceId: createSpaceId('dest-space'),
+            artifacts: [{ id: createStandardId('std-1'), type: 'standard' }],
+          }),
+        ).rejects.toThrow(ConflictException);
       });
     });
   });

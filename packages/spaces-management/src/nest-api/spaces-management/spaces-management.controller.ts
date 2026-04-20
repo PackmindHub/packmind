@@ -21,6 +21,7 @@ import {
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import {
+  ArtifactType,
   MoveArtifactsToSpaceResponse,
   OrganizationId,
   PackmindCommandBody,
@@ -34,6 +35,7 @@ import {
 import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
@@ -44,6 +46,7 @@ import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
+import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { SpacesManagementService } from './spaces-management.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 
@@ -363,6 +366,16 @@ export class SpacesManagementController {
       throw new BadRequestException('artifacts must not be empty');
     }
 
+    const validTypes: ArtifactType[] = ['standard', 'skill', 'command'];
+    const invalidArtifact = body.artifacts.find(
+      (a) => !validTypes.includes(a.type),
+    );
+    if (invalidArtifact) {
+      throw new BadRequestException(
+        `Invalid artifact type: ${invalidArtifact.type}`,
+      );
+    }
+
     this.logger.info(
       'POST /organizations/:orgId/spaces-management/move - Moving artifacts',
       {
@@ -380,6 +393,18 @@ export class SpacesManagementController {
         ...body,
       });
     } catch (error) {
+      if (error instanceof SpaceNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (
+        error instanceof SpaceOwnershipMismatchError ||
+        error instanceof SpaceMembershipRequiredError
+      ) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof ArtifactNotInSourceSpaceError) {
+        throw new UnprocessableEntityException(error.message);
+      }
       if (
         error instanceof ArtifactNameConflictError ||
         error instanceof ArtifactSlugConflictError

@@ -13,7 +13,10 @@ import {
   MoveArtifactsToSpaceCommand,
   StandardDeletedEvent,
 } from '@packmind/types';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
@@ -23,6 +26,7 @@ import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { stubLogger } from '@packmind/test-utils';
 import { SpaceNotFoundError } from '@packmind/spaces';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
+import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { MoveArtifactsToSpaceUseCase } from './MoveArtifactsToSpaceUseCase';
@@ -83,6 +87,9 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         if (id === destinationSpaceId) return Promise.resolve(destinationSpace);
         return Promise.resolve(null);
       }),
+      findMembership: jest
+        .fn()
+        .mockResolvedValue({ userId, spaceId: sourceSpaceId, role: 'member' }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     standardsPort = {
@@ -91,7 +98,11 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         standard: { id: createStandardId('new-standard-id') },
         ruleMappings: [],
       }),
-      getStandard: jest.fn().mockResolvedValue(null),
+      getStandard: jest
+        .fn()
+        .mockImplementation((id) =>
+          Promise.resolve(standardFactory({ id, spaceId: sourceSpaceId })),
+        ),
       listStandardsBySpace: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
@@ -100,7 +111,11 @@ describe('MoveArtifactsToSpaceUseCase', () => {
       duplicateSkillToSpace: jest
         .fn()
         .mockResolvedValue({ id: createSkillId('new-skill-id') }),
-      getSkill: jest.fn().mockResolvedValue(null),
+      getSkill: jest
+        .fn()
+        .mockImplementation((id) =>
+          Promise.resolve(skillFactory({ id, spaceId: sourceSpaceId })),
+        ),
       listSkillsBySpace: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
@@ -109,7 +124,11 @@ describe('MoveArtifactsToSpaceUseCase', () => {
       duplicateRecipeToSpace: jest
         .fn()
         .mockResolvedValue({ id: createRecipeId('new-recipe-id') }),
-      getRecipeByIdInternal: jest.fn().mockResolvedValue(null),
+      getRecipeByIdInternal: jest
+        .fn()
+        .mockImplementation((id) =>
+          Promise.resolve(recipeFactory({ id, spaceId: sourceSpaceId })),
+        ),
       listRecipesBySpace: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IRecipesPort>;
 
@@ -934,6 +953,209 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         );
 
         expect(result).toEqual({ movedCount: 1 });
+      });
+    });
+
+    describe('when the user is not a member of the source space', () => {
+      beforeEach(() => {
+        spacesPort.findMembership.mockImplementation((_userId, spaceId) => {
+          if (spaceId === sourceSpaceId) return Promise.resolve(null);
+          return Promise.resolve({
+            userId,
+            spaceId: destinationSpaceId,
+            role: 'member',
+          } as never);
+        });
+      });
+
+      it('throws SpaceMembershipRequiredError', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
+      });
+    });
+
+    describe('when the user is not a member of the destination space', () => {
+      beforeEach(() => {
+        spacesPort.findMembership.mockImplementation((_userId, spaceId) => {
+          if (spaceId === destinationSpaceId) return Promise.resolve(null);
+          return Promise.resolve({
+            userId,
+            spaceId: sourceSpaceId,
+            role: 'member',
+          } as never);
+        });
+      });
+
+      it('throws SpaceMembershipRequiredError', async () => {
+        await expect(useCase.execute(buildCommand())).rejects.toThrow(
+          SpaceMembershipRequiredError,
+        );
+      });
+    });
+
+    describe('when a standard does not belong to the source space', () => {
+      const standardId = createStandardId('standard-wrong-space');
+
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue(
+          standardFactory({
+            id: standardId,
+            spaceId: createSpaceId('other-space'),
+          }),
+        );
+      });
+
+      it('throws ArtifactNotInSourceSpaceError', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({
+              artifacts: [{ id: standardId, type: 'standard' }],
+            }),
+          ),
+        ).rejects.toThrow(ArtifactNotInSourceSpaceError);
+      });
+
+      it('does not duplicate or mark as moved', async () => {
+        await useCase
+          .execute(
+            buildCommand({
+              artifacts: [{ id: standardId, type: 'standard' }],
+            }),
+          )
+          .catch(() => {
+            /* expected */
+          });
+
+        expect(standardsPort.duplicateStandardToSpace).not.toHaveBeenCalled();
+        expect(standardsPort.markStandardAsMoved).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a skill does not belong to the source space', () => {
+      const skillId = createSkillId('skill-wrong-space');
+
+      beforeEach(() => {
+        skillsPort.getSkill.mockResolvedValue(
+          skillFactory({
+            id: skillId,
+            spaceId: createSpaceId('other-space'),
+          }),
+        );
+      });
+
+      it('throws ArtifactNotInSourceSpaceError', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({
+              artifacts: [{ id: skillId, type: 'skill' }],
+            }),
+          ),
+        ).rejects.toThrow(ArtifactNotInSourceSpaceError);
+      });
+
+      it('does not duplicate or mark as moved', async () => {
+        await useCase
+          .execute(
+            buildCommand({
+              artifacts: [{ id: skillId, type: 'skill' }],
+            }),
+          )
+          .catch(() => {
+            /* expected */
+          });
+
+        expect(skillsPort.duplicateSkillToSpace).not.toHaveBeenCalled();
+        expect(skillsPort.markSkillAsMoved).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a command does not belong to the source space', () => {
+      const recipeId = createRecipeId('recipe-wrong-space');
+
+      beforeEach(() => {
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(
+          recipeFactory({
+            id: recipeId,
+            spaceId: createSpaceId('other-space'),
+          }),
+        );
+      });
+
+      it('throws ArtifactNotInSourceSpaceError', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({
+              artifacts: [{ id: recipeId, type: 'command' }],
+            }),
+          ),
+        ).rejects.toThrow(ArtifactNotInSourceSpaceError);
+      });
+
+      it('does not duplicate or mark as moved', async () => {
+        await useCase
+          .execute(
+            buildCommand({
+              artifacts: [{ id: recipeId, type: 'command' }],
+            }),
+          )
+          .catch(() => {
+            /* expected */
+          });
+
+        expect(recipesPort.duplicateRecipeToSpace).not.toHaveBeenCalled();
+        expect(recipesPort.markRecipeAsMoved).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when one artifact out of many does not belong to the source space', () => {
+      const validStandardId = createStandardId('valid-standard');
+      const invalidStandardId = createStandardId('invalid-standard');
+
+      beforeEach(() => {
+        standardsPort.getStandard.mockImplementation((id) => {
+          if (id === validStandardId) {
+            return Promise.resolve(
+              standardFactory({ id: validStandardId, spaceId: sourceSpaceId }),
+            );
+          }
+          return Promise.resolve(
+            standardFactory({
+              id: invalidStandardId,
+              spaceId: createSpaceId('other-space'),
+            }),
+          );
+        });
+      });
+
+      it('throws ArtifactNotInSourceSpaceError before any move starts', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({
+              artifacts: [
+                { id: validStandardId, type: 'standard' },
+                { id: invalidStandardId, type: 'standard' },
+              ],
+            }),
+          ),
+        ).rejects.toThrow(ArtifactNotInSourceSpaceError);
+      });
+
+      it('does not duplicate any artifact (not even the valid one)', async () => {
+        await useCase
+          .execute(
+            buildCommand({
+              artifacts: [
+                { id: validStandardId, type: 'standard' },
+                { id: invalidStandardId, type: 'standard' },
+              ],
+            }),
+          )
+          .catch(() => {
+            /* expected */
+          });
+
+        expect(standardsPort.duplicateStandardToSpace).not.toHaveBeenCalled();
       });
     });
   });
