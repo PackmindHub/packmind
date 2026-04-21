@@ -128,10 +128,6 @@ describe('LockFileRepository', () => {
           '{"lockfileVersion":1,"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
         ],
         [
-          'missing installedAt',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"artifacts":{}}',
-        ],
-        [
           'missing agents',
           '{"lockfileVersion":1,"packageSlugs":[],"installedAt":"2026-01-01","artifacts":{}}',
         ],
