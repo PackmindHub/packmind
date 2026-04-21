@@ -10,6 +10,7 @@ import {
 const NAME_MAX_LENGTH = 64;
 const DESCRIPTION_MAX_LENGTH = 1024;
 const COMPATIBILITY_MAX_LENGTH = 500;
+const ALLOWED_SHELL_VALUES = ['bash', 'powershell'] as const;
 
 /**
  * Regular expression for valid skill names:
@@ -38,6 +39,7 @@ export class SkillValidator {
     this.validateNameFormat(metadata, errors);
     this.validateDescriptionFormat(metadata, errors);
     this.validateCompatibilityFormat(metadata, errors);
+    this.validateAdditionalProperties(metadata, errors);
     this.validateUnexpectedFields(metadata, errors);
 
     return errors;
@@ -156,6 +158,30 @@ export class SkillValidator {
         field: 'compatibility',
         message: `compatibility must not exceed ${COMPATIBILITY_MAX_LENGTH} characters`,
       });
+    }
+  }
+
+  private validateAdditionalProperties(
+    metadata: Partial<SkillProperties>,
+    errors: SkillValidationErrorDetail[],
+  ): void {
+    const additional = metadata.additionalProperties;
+    if (!additional) {
+      return;
+    }
+
+    if ('shell' in additional) {
+      const shell = additional['shell'];
+      if (
+        !ALLOWED_SHELL_VALUES.includes(
+          shell as (typeof ALLOWED_SHELL_VALUES)[number],
+        )
+      ) {
+        errors.push({
+          field: 'shell',
+          message: `shell must be one of: ${ALLOWED_SHELL_VALUES.join(', ')}`,
+        });
+      }
     }
   }
 
