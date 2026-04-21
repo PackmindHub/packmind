@@ -1,11 +1,10 @@
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceMemberUseCase,
   PackmindEventEmitterService,
+  SpaceMemberContext,
 } from '@packmind/node-utils';
 import {
   createOrganizationId,
-  createSpaceId,
   createUserId,
   IAccountsPort,
   ISpacesPort,
@@ -14,32 +13,26 @@ import {
   SpacePinnedEvent,
 } from '@packmind/types';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
-import { SpaceMembershipNotFoundError } from '../../domain/errors/SpaceMembershipNotFoundError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 
-export class PinSpaceUseCase extends AbstractMemberUseCase<
+export class PinSpaceUseCase extends AbstractSpaceMemberUseCase<
   PinSpaceCommand,
   PinSpaceResponse
 > {
   constructor(
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
-    super(accountsPort);
+    super(spacesPort, accountsPort);
   }
 
-  protected async executeForMembers(
-    command: PinSpaceCommand & MemberContext,
+  protected async executeForSpaceMembers(
+    command: PinSpaceCommand & SpaceMemberContext,
   ): Promise<PinSpaceResponse> {
-    const spaceId = createSpaceId(command.spaceId);
+    const { spaceId } = command;
     const userId = createUserId(command.userId);
     const organizationId = createOrganizationId(command.organizationId);
-
-    const membership = await this.spacesPort.findMembership(userId, spaceId);
-    if (!membership) {
-      throw new SpaceMembershipNotFoundError(userId, spaceId);
-    }
 
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space) {

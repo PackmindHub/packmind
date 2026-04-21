@@ -1,8 +1,6 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, SpaceMemberCommand } from '../../UseCase';
 
-export type PinSpaceCommand = PackmindCommand & {
-  spaceId: string;
-};
+export type PinSpaceCommand = SpaceMemberCommand;
 
 export type PinSpaceResponse = Record<string, never>;
 

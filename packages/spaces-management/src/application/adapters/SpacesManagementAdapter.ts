@@ -143,8 +143,8 @@ export class SpacesManagementAdapter
 
   async pinSpace(command: PinSpaceCommand): Promise<PinSpaceResponse> {
     const useCase = new PinSpaceUseCase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.eventEmitterService,
     );
     return useCase.execute(command);
@@ -152,8 +152,8 @@ export class SpacesManagementAdapter
 
   async unpinSpace(command: UnpinSpaceCommand): Promise<UnpinSpaceResponse> {
     const useCase = new UnpinSpaceUseCase(
-      this.accountsPort,
       this.spacesPort,
+      this.accountsPort,
       this.eventEmitterService,
     );
     return useCase.execute(command);

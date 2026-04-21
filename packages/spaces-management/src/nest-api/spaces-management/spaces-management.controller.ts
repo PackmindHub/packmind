@@ -40,7 +40,6 @@ import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDef
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
-import { SpaceMembershipNotFoundError } from '../../domain/errors/SpaceMembershipNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
@@ -441,7 +440,7 @@ export class SpacesManagementController {
       if (error instanceof CannotPinDefaultSpaceError) {
         throw new UnprocessableEntityException(error.message);
       }
-      if (error instanceof SpaceMembershipNotFoundError) {
+      if (error instanceof SpaceMembershipRequiredError) {
         throw new NotFoundException(error.message);
       }
       throw error;
@@ -476,7 +475,7 @@ export class SpacesManagementController {
       if (error instanceof CannotPinDefaultSpaceError) {
         throw new UnprocessableEntityException(error.message);
       }
-      if (error instanceof SpaceMembershipNotFoundError) {
+      if (error instanceof SpaceMembershipRequiredError) {
         throw new NotFoundException(error.message);
       }
       throw error;
