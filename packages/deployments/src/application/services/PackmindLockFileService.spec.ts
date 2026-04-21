@@ -125,10 +125,6 @@ describe('PackmindLockFileService', () => {
         expect(result.targetId).toBe('target-1');
       });
 
-      it('returns installedAt as the current date', () => {
-        expect(result.installedAt).toBe(FIXED_DATE);
-      });
-
       it('includes recipe artifact with correct metadata', () => {
         expect(result.artifacts['command:my-recipe']).toEqual({
           name: 'My Recipe',
@@ -444,7 +440,6 @@ describe('PackmindLockFileService', () => {
       lockfileVersion: 1,
       packageSlugs: ['@team-a/pkg-a'],
       agents: ['claude'],
-      installedAt: FIXED_DATE,
       targetId: 'target-1',
       artifacts: {
         'standard:accessible-standard': {
@@ -477,7 +472,6 @@ describe('PackmindLockFileService', () => {
           lockfileVersion: 1,
           packageSlugs: ['@team-a/pkg-a'],
           agents: ['claude'],
-          installedAt: '2024-01-01T00:00:00.000Z',
           targetId: 'target-1',
           artifacts: {
             'standard:accessible-standard': {
@@ -514,7 +508,6 @@ describe('PackmindLockFileService', () => {
         lockfileVersion: 1,
         packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
         agents: ['claude'],
-        installedAt: '2024-01-01T00:00:00.000Z',
         targetId: 'target-1',
         artifacts: {
           'standard:accessible-standard': {
@@ -583,7 +576,6 @@ describe('PackmindLockFileService', () => {
         lockfileVersion: 1,
         packageSlugs: ['@team-a/pkg-a'],
         agents: ['claude'],
-        installedAt: FIXED_DATE,
         targetId: 'target-1',
         artifacts: {
           'command:moved-recipe': {
@@ -607,7 +599,6 @@ describe('PackmindLockFileService', () => {
         lockfileVersion: 1,
         packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
         agents: ['claude'],
-        installedAt: '2024-01-01T00:00:00.000Z',
         targetId: 'target-1',
         artifacts: {
           'command:moved-recipe': {
@@ -656,7 +647,6 @@ describe('PackmindLockFileService', () => {
           lockfileVersion: 1,
           packageSlugs: ['@team-a/pkg-a'],
           agents: ['claude'],
-          installedAt: '2024-01-01T00:00:00.000Z',
           targetId: 'target-1',
           artifacts: {
             'command:removed-recipe': {
@@ -692,7 +682,6 @@ describe('PackmindLockFileService', () => {
           lockfileVersion: 1,
           packageSlugs: ['@team-a/pkg-a', '@team-b/pkg-b'],
           agents: ['claude'],
-          installedAt: '2024-01-01T00:00:00.000Z',
           targetId: 'target-1',
           artifacts: {},
         };
@@ -714,7 +703,6 @@ describe('PackmindLockFileService', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['claude'],
-        installedAt: FIXED_DATE,
         targetId: 'target-1',
         artifacts: {},
       };
@@ -729,7 +717,6 @@ describe('PackmindLockFileService', () => {
         lockfileVersion: 1,
         packageSlugs: ['pkg-a'],
         agents: ['claude'],
-        installedAt: FIXED_DATE,
         targetId: 'target-1',
         artifacts: {},
       };
@@ -744,7 +731,6 @@ describe('PackmindLockFileService', () => {
         lockfileVersion: 1,
         packageSlugs: ['pkg-a', 'pkg-b'],
         agents: ['claude', 'cursor'],
-        installedAt: FIXED_DATE,
         targetId: 'target-1',
         artifacts: {
           'command:my-recipe': {

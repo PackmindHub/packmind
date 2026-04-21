@@ -198,7 +198,6 @@ describe('PullContentUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: [],
         agents: [],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       }),
       createLockFileModification: jest.fn().mockReturnValue({

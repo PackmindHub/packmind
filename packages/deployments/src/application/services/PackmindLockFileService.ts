@@ -122,7 +122,6 @@ export class PackmindLockFileService {
       lockfileVersion: 1,
       packageSlugs: [...params.packageSlugs].sort((a, b) => a.localeCompare(b)),
       agents: [...params.codingAgents].sort((a, b) => a.localeCompare(b)),
-      installedAt: new Date().toISOString(),
       targetId: params.targetId,
       artifacts,
     };

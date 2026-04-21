@@ -134,7 +134,6 @@ describe('InstallPackagesUseCase', () => {
       lockfileVersion: 1,
       packageSlugs: [],
       agents: [],
-      installedAt: new Date().toISOString(),
       artifacts: {},
     };
 
@@ -190,7 +189,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: [],
         agents: [],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       }),
       createLockFileModification: jest.fn().mockReturnValue({
@@ -331,7 +329,6 @@ describe('InstallPackagesUseCase', () => {
           lockfileVersion: 1,
           packageSlugs: ['@public/my-package', '@private/my-secret-package'],
           agents: [],
-          installedAt: new Date().toISOString(),
           artifacts: {
             'command:private-command': privateArtifactEntry,
             'command:public-command': publicArtifactEntry,
@@ -361,7 +358,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['@public/my-package', '@private/my-secret-package'],
         agents: [CodingAgents.packmind],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       };
       lockFileService.buildLockFile.mockReturnValue(builtLockFile);
@@ -380,7 +376,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['@public/my-package', '@private/my-secret-package'],
         agents: [CodingAgents.packmind],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       };
       lockFileService.buildLockFile.mockReturnValue(builtLockFile);
@@ -432,7 +427,6 @@ describe('InstallPackagesUseCase', () => {
           lockfileVersion: 1,
           packageSlugs: ['@private/my-secret-package'],
           agents: [],
-          installedAt: new Date().toISOString(),
           artifacts: {
             'command:private-command': {
               name: 'Private Command',
@@ -467,7 +461,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['@private/my-secret-package'],
         agents: [CodingAgents.packmind],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       };
       lockFileService.buildLockFile.mockReturnValue(builtLockFile);
@@ -506,7 +499,6 @@ describe('InstallPackagesUseCase', () => {
           lockfileVersion: 1,
           packageSlugs: ['@public/my-package', '@public/removed-package'],
           agents: [],
-          installedAt: new Date().toISOString(),
           artifacts: {
             'standard:removed-standard': removedArtifactEntry,
           },
@@ -554,7 +546,6 @@ describe('InstallPackagesUseCase', () => {
             lockfileVersion: 1,
             packageSlugs: ['@public/my-package', '@private/removed-package'],
             agents: [],
-            installedAt: new Date().toISOString(),
             artifacts: {
               'standard:inaccessible-removed-standard':
                 inaccessibleRemovedArtifact,
