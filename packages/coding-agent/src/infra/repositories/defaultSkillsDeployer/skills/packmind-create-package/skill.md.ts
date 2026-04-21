@@ -102,7 +102,7 @@ You can install it with: packmind-cli packages install <slug>
 
 After creating a package, content can be added via:
 
-1. **MCP tools**: Use \`packageSlugs\` parameter when creating standards/commands
+1. **CLI**: Use \`packmind-cli packages add --to package-slug --standard standard-slug\` parameter when creating standards (use \`--command\` or \`--skill\` parameter depending on the artefact type)  
 2. **Web interface**: Navigate to the package URL and add items manually
 `;
   },
