@@ -1,0 +1,20 @@
+---
+name: 'TanStack Query Key Management'
+paths:
+  - "apps/frontend/**/*.tsx"
+alwaysApply: false
+description: 'Standardize TanStack Query query key definitions in per-domain api/queryKeys.ts files using const base key arrays, separate scope constants, and operation enums with hierarchical organization→domain→operation→identifiers ordering to enable type-safe prefix-based cache invalidation without circular dependencies and to ensure mutations invalidate all affected sibling scopes.'
+---
+
+# Standard: TanStack Query Key Management
+
+Standardize TanStack Query query key definitions in per-domain api/queryKeys.ts files using const base key arrays, separate scope constants, and operation enums with hierarchical organization→domain→operation→identifiers ordering to enable type-safe prefix-based cache invalidation without circular dependencies and to ensure mutations invalidate all affected sibling scopes. :
+* Define base query key arrays as const to enable precise invalidation patterns and avoid duplication
+* Define domain query scope as a separate const outside enum to maintain clear separation between scope and operations
+* Define query keys in a dedicated queryKeys.ts file in the domain's api folder for centralized management
+* Follow hierarchical query key structure: organization scope, domain scope, operation, then identifiers for consistent invalidation patterns
+* In mutation onSuccess, invalidate every affected sibling query-key scope; prefix matching cannot bridge siblings
+* Limit cross-domain imports to only query key constants and enums to prevent runtime coupling and circular dependencies
+* Use query invalidation with prefix matching from key start in correct hierarchical order
+
+Full standard is available here for further request: [TanStack Query Key Management](../../../.packmind/standards/tanstack-query-key-management.md)
