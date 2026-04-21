@@ -13,4 +13,5 @@ export interface ISpaceRepository {
     id: SpaceId,
     fields: { name?: string; slug?: string; type?: SpaceType },
   ): Promise<Space>;
+  deleteById(id: SpaceId, deletedBy?: string): Promise<void>;
 }

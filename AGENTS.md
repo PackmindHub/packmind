@@ -97,6 +97,13 @@ Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeO
 
 Full standard is available here for further request: [Typescript good practices](.packmind/standards/typescript-good-practices.md)
 
+# Standard: Packmind Proprietary
+
+Prohibit imports from '@packmind/editions' in proprietary codebases to prevent unintended use of open-source–only modules and ensure proper licensing boundaries. :
+* Never import something from '@packmind/editions', this is for OSS only
+
+Full standard is available here for further request: [Packmind Proprietary](.packmind/standards/packmind-proprietary.md)
+
 # Standard: Compliance - Logging Personal Information
 
 Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries. :
