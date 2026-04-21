@@ -24,6 +24,7 @@ const lockFileFactory = (
   lockfileVersion: 1,
   packageSlugs: [],
   agents: [],
+  installedAt: new Date().toISOString(),
   artifacts: {},
   ...overrides,
 });

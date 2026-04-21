@@ -25,6 +25,7 @@ const LOCK_FILE_WITH_COMMAND = {
   lockfileVersion: 1,
   packageSlugs: ['my-package'],
   agents: ['claude' as const],
+  installedAt: '2026-03-17T00:00:00.000Z',
   targetId: 'target-456',
   artifacts: {
     'my-command': {

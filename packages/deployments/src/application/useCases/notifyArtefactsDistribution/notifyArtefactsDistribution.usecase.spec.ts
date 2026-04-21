@@ -113,6 +113,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     lockfileVersion: 1,
     packageSlugs: ['@my-space/my-package'],
     agents: ['cursor'],
+    installedAt: new Date().toISOString(),
     targetId: String(targetId),
     artifacts: {
       [`standard:test-standard`]: {
