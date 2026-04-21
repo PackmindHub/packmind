@@ -2,6 +2,8 @@
 
 ## Added
 
+- Parse and preserve the new Claude Code skill frontmatter fields (`when_to_use`, `paths`, `shell`) when syncing SKILL.md files
+
 ## Changed
 
 ## Fixed

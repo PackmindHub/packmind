@@ -183,6 +183,73 @@ Body.`;
       });
     });
 
+    describe('when when_to_use is provided', () => {
+      it('extracts the underscore field into whenToUse', () => {
+        const contentWithWhenToUse = `---
+name: 'My Skill'
+description: 'A helpful skill'
+when_to_use: 'Use when debugging TypeScript errors'
+---
+
+Body.`;
+        const result = parseSkillMd(contentWithWhenToUse);
+
+        expect(result?.additionalProperties['whenToUse']).toBe(
+          '"Use when debugging TypeScript errors"',
+        );
+      });
+    });
+
+    describe('when paths is provided', () => {
+      it('preserves paths provided as a YAML list', () => {
+        const contentWithPaths = `---
+name: 'My Skill'
+description: 'A helpful skill'
+paths:
+  - src/**/*.ts
+  - test/**/*.spec.ts
+---
+
+Body.`;
+        const result = parseSkillMd(contentWithPaths);
+
+        expect(JSON.parse(result!.additionalProperties['paths'])).toEqual([
+          'src/**/*.ts',
+          'test/**/*.spec.ts',
+        ]);
+      });
+
+      it('preserves paths provided as a comma-separated string', () => {
+        const contentWithPaths = `---
+name: 'My Skill'
+description: 'A helpful skill'
+paths: 'src/**/*.ts, test/**/*.spec.ts'
+---
+
+Body.`;
+        const result = parseSkillMd(contentWithPaths);
+
+        expect(result?.additionalProperties['paths']).toBe(
+          '"src/**/*.ts, test/**/*.spec.ts"',
+        );
+      });
+    });
+
+    describe('when shell is provided', () => {
+      it('extracts the shell field', () => {
+        const contentWithShell = `---
+name: 'My Skill'
+description: 'A helpful skill'
+shell: powershell
+---
+
+Body.`;
+        const result = parseSkillMd(contentWithShell);
+
+        expect(result?.additionalProperties['shell']).toBe('"powershell"');
+      });
+    });
+
     describe('when unknown frontmatter fields are present', () => {
       it('ignores fields not in CLAUDE_CODE_ADDITIONAL_FIELDS', () => {
         const contentWithUnknown = `---

@@ -71,6 +71,74 @@ model: opus
 
       expect(errors).toEqual([]);
     });
+
+    it('accepts when_to_use, paths, and shell as valid additional properties', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+when_to_use: Use when debugging TypeScript errors.
+paths:
+  - src/**/*.ts
+shell: bash
+---
+
+# My Skill
+`;
+      const { metadata } = parser.parse(content);
+
+      const errors = validator.validate(metadata);
+
+      expect(errors).toEqual([]);
+    });
+
+    describe('when shell is provided', () => {
+      it('accepts bash', () => {
+        const content = `---
+name: my-skill
+description: A sample skill.
+shell: bash
+---
+
+# My Skill
+`;
+        const { metadata } = parser.parse(content);
+
+        expect(validator.validate(metadata)).toEqual([]);
+      });
+
+      it('accepts powershell', () => {
+        const content = `---
+name: my-skill
+description: A sample skill.
+shell: powershell
+---
+
+# My Skill
+`;
+        const { metadata } = parser.parse(content);
+
+        expect(validator.validate(metadata)).toEqual([]);
+      });
+
+      it('rejects an unsupported shell value', () => {
+        const content = `---
+name: my-skill
+description: A sample skill.
+shell: zsh
+---
+
+# My Skill
+`;
+        const { metadata } = parser.parse(content);
+
+        expect(validator.validate(metadata)).toEqual([
+          {
+            field: 'shell',
+            message: 'shell must be one of: bash, powershell',
+          },
+        ]);
+      });
+    });
   });
 
   describe('with missing name field', () => {
