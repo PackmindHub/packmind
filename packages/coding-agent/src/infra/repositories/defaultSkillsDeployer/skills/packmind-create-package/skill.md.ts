@@ -39,7 +39,7 @@ packmind-cli login
 List existing packages to identify naming conventions:
 
 \`\`\`bash
-packmind-cli install --list
+packmind-cli packages list
 \`\`\`
 
 Review the output to:
@@ -81,7 +81,7 @@ On success:
 \`\`\`
 Created: <slug>
 You can see it at: https://<host>/packages/<slug>
-You can install it with: packmind-cli packages install <slug>
+You can install it with: packmind-cli install <slug>
 \`\`\`
 
 ## Naming Guidelines
