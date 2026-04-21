@@ -33,4 +33,5 @@ export interface IUserSpaceMembershipRepository {
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<number>;
+  softDeleteBySpaceId(spaceId: SpaceId, deletedBy: string): Promise<number>;
 }
