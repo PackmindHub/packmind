@@ -1,4 +1,4 @@
-name: Weekly Datadog Error Analysis
+name: Weekly Agent Skill Frontmatter Audit
 
 on:
   schedule:
@@ -16,39 +16,17 @@ permissions:
   id-token: write
 
 jobs:
-  datadog-analysis:
+  agent-skill-frontmatter-audit:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create MCP config for Datadog
-        run: |
-          export DD_MCP_ENDPOINT DD_API_KEY DD_APPLICATION_KEY
-          envsubst '$DD_MCP_ENDPOINT $DD_API_KEY $DD_APPLICATION_KEY' > /tmp/datadog-mcp-config.json <<'MCPEOF'
-          {
-            "mcpServers": {
-              "datadog-mcp": {
-                "type": "http",
-                "url": "${DD_MCP_ENDPOINT}",
-                "headers": {
-                  "DD_API_KEY": "${DD_API_KEY}",
-                  "DD_APPLICATION_KEY": "${DD_APPLICATION_KEY}"
-                }
-              }
-            }
-          }
-          MCPEOF
-        env:
-          DD_MCP_ENDPOINT: ${{ secrets.DD_MCP_ENDPOINT }}
-          DD_API_KEY: ${{ secrets.DD_API_KEY }}
-          DD_APPLICATION_KEY: ${{ secrets.DD_APPLICATION_KEY }}
-
-      - name: Run Datadog Error Analysis
+      - name: Run Agent Skill Frontmatter Audit
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: "/datadog-analysis"
+          prompt: "/agent-skill-frontmatter-audit"
           settings: |
             {
               "permissions": {
@@ -61,21 +39,20 @@ jobs:
                   "Write",
                   "Glob",
                   "Grep",
-                  "mcp__datadog-mcp__search_datadog_logs",
-                  "mcp__datadog-mcp__analyze_datadog_logs"
+                  "WebFetch(domain:*)"
                 ]
               }
             }
-          claude_args: "--model ${{ inputs.model || 'claude-opus-4-6' }} --max-turns 50 --mcp-config /tmp/datadog-mcp-config.json"
+          claude_args: "--model ${{ inputs.model || 'claude-opus-4-6' }} --max-turns 50"
 
       - name: Display report
         if: always()
         run: |
-          REPORT_FILE=$(ls datadog_*.md 2>/dev/null | head -1)
+          REPORT_FILE=$(ls skills_properties_*.md 2>/dev/null | head -1)
           if [ -n "$REPORT_FILE" ]; then
-            echo "=== Datadog Error Analysis Report ==="
+            echo "=== Agent Skill Frontmatter Audit Report ==="
             cat "$REPORT_FILE"
-            echo "## Datadog Error Analysis Report" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Agent Skill Frontmatter Audit Report" >> "$GITHUB_STEP_SUMMARY"
             cat "$REPORT_FILE" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "No report file found."
@@ -85,7 +62,7 @@ jobs:
       - name: Prepare Slack payload
         if: always()
         run: |
-          REPORT_FILE=$(ls datadog_*.md 2>/dev/null | head -1)
+          REPORT_FILE=$(ls skills_properties_*.md 2>/dev/null | head -1)
           if [ -z "$REPORT_FILE" ]; then
             echo "SKIP_SLACK=true" >> "$GITHUB_ENV"
             exit 0
@@ -99,7 +76,7 @@ jobs:
             REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
           fi
           PAYLOAD=$(jq -n \
-            --arg channel "${{ secrets.SLACK_CHANNEL_DATADOG_ID }}" \
+            --arg channel "${{ secrets.SLACK_CHANNEL_PACKMIND_SKILL_ID }}" \
             --arg text "$REPORT" \
             '{channel: $channel, text: $text}')
           EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
@@ -119,7 +96,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: datadog-analysis-report
-          path: datadog_*.md
+          name: agent-skill-frontmatter-audit-report
+          path: skills_properties_*.md
           if-no-files-found: warn
           retention-days: 30
