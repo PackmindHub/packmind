@@ -11,36 +11,8 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-16T16:00:07.572Z",
+  "installedAt": "2026-04-21T09:26:12.578Z",
   "artifacts": {
-    "command:how-to-write-typeorm-migrations-in-packmind": {
-      "name": "How to Write TypeORM Migrations in Packmind",
-      "type": "command",
-      "id": "52933de0-1479-44ba-82f0-ec203c97bdb9",
-      "version": 2,
-      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
-      "packageIds": [
-        "8932d029-67bc-4a1e-a5ce-0accd052ffa5"
-      ],
-      "files": [
-        {
-          "path": ".packmind/commands/how-to-write-typeorm-migrations-in-packmind.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/how-to-write-typeorm-migrations-in-packmind.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/how-to-write-typeorm-migrations-in-packmind.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/how-to-write-typeorm-migrations-in-packmind.md",
-          "agent": "cursor"
-        }
-      ]
-    },
     "command:create-or-update-model-and-typeorm-schemas": {
       "name": "Create or update model and TypeORM schemas",
       "type": "command",

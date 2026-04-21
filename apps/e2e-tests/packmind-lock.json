@@ -11,7 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-16T16:00:06.716Z",
+  "installedAt": "2026-04-21T09:26:11.754Z",
   "artifacts": {
     "standard:e2e-page-object": {
       "name": "[E2E] Page object",
@@ -45,7 +45,7 @@
       "name": "[E2E] Writing E2E tests",
       "type": "standard",
       "id": "85e36b83-e56b-49ba-a8b8-f4dc7523b0f1",
-      "version": 2,
+      "version": 3,
       "spaceId": "87658623-3c00-4018-9240-a713cf50d70f",
       "packageIds": [
         "05033877-0641-4cc3-a87c-0926ef8f5283"
