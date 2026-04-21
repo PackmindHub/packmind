@@ -2342,7 +2342,6 @@ describe('DiffArtefactsUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['test-package'],
         agents: ['packmind'],
-        installedAt: '2026-01-01T00:00:00.000Z',
         artifacts: lockFileArtifacts,
       });
     });
@@ -2439,7 +2438,6 @@ describe('DiffArtefactsUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['test-package'],
         agents: ['packmind'],
-        installedAt: '2026-01-01T00:00:00.000Z',
         targetId: 'my-target-id',
         artifacts: lockFileArtifacts,
       });

@@ -4067,7 +4067,6 @@ describe('PublishArtifactsUseCase', () => {
       lockfileVersion: 1,
       packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
       agents: ['claude'],
-      installedAt: '2024-01-01T00:00:00.000Z',
       targetId: 'target-1',
       artifacts: {
         'command:private-recipe': {

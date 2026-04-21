@@ -11,7 +11,6 @@ describe('lockFileToArtifactVersionEntries', () => {
       lockfileVersion: 1,
       packageSlugs: [],
       agents: [],
-      installedAt: '2026-01-01',
       artifacts: {
         'art-1': {
           name: 'My Standard',
@@ -57,7 +56,6 @@ describe('fetchDeployedFiles', () => {
         lockfileVersion: 1,
         packageSlugs: [],
         agents: ['claude'],
-        installedAt: '2026-01-01',
         artifacts: {
           'art-1': {
             name: 'X',
@@ -103,7 +101,6 @@ describe('fetchDeployedFiles', () => {
       lockfileVersion: 1,
       packageSlugs: [],
       agents: [],
-      installedAt: '2026-01-01',
       artifacts: {},
     };
 
