@@ -22,6 +22,8 @@ import {
   SpaceMembersAddedEvent,
   SpaceMembersRemovedEvent,
   SpaceMembersRoleUpdatedEvent,
+  SpacePinnedEvent,
+  SpaceUnpinnedEvent,
   SpaceVisibilityUpdatedEvent,
   SpaceType,
   UserSpaceRole,
@@ -689,6 +691,56 @@ describe('AmplitudeEventListener', () => {
         {
           spaceId: 'space-789',
           newVisibility: 'private',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('SpacePinnedEvent', () => {
+    it('tracks space_pinned event with correct payload', async () => {
+      const event = new SpacePinnedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        spaceId: createSpaceId('space-789'),
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'space_pinned',
+        {
+          spaceId: 'space-789',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('SpaceUnpinnedEvent', () => {
+    it('tracks space_unpinned event with correct payload', async () => {
+      const event = new SpaceUnpinnedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        spaceId: createSpaceId('space-789'),
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'space_unpinned',
+        {
+          spaceId: 'space-789',
           source: 'ui',
         },
       );
