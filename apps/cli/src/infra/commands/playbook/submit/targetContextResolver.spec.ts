@@ -48,6 +48,7 @@ describe('createTargetContextResolver', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
         targetId: 'target-456',
         artifacts: {},
       }),
@@ -201,6 +202,7 @@ describe('createTargetContextResolver', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['packmind'],
+        installedAt: '2026-03-17T00:00:00.000Z',
         targetId: 'target-456',
         artifacts: {
           'my-standard': {

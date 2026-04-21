@@ -68,6 +68,7 @@ export class InstallUseCase implements IInstallUseCase {
       lockfileVersion: 1,
       packageSlugs: [],
       agents: [],
+      installedAt: new Date().toISOString(),
       artifacts: {},
     };
 

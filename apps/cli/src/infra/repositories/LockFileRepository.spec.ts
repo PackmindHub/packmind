@@ -25,6 +25,7 @@ describe('LockFileRepository', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['claude', 'packmind'],
+        installedAt: '2026-01-01T00:00:00.000Z',
         artifacts: {
           'standard:my-standard': {
             name: 'My Standard',
@@ -112,23 +113,27 @@ describe('LockFileRepository', () => {
       it.each([
         [
           'missing artifacts',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[]}',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01"}',
         ],
         [
           'artifacts is an array',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"artifacts":[]}',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":[]}',
         ],
         [
           'artifacts is a string',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"artifacts":"bad"}',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":"bad"}',
         ],
         [
           'missing packageSlugs',
-          '{"lockfileVersion":1,"agents":[],"artifacts":{}}',
+          '{"lockfileVersion":1,"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+        ],
+        [
+          'missing installedAt',
+          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"artifacts":{}}',
         ],
         [
           'missing agents',
-          '{"lockfileVersion":1,"packageSlugs":[],"artifacts":{}}',
+          '{"lockfileVersion":1,"packageSlugs":[],"installedAt":"2026-01-01","artifacts":{}}',
         ],
         ['completely wrong shape', '{}'],
       ])('returns null when %s', async (_label, content) => {
@@ -145,7 +150,7 @@ describe('LockFileRepository', () => {
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"targetId":123,"artifacts":{}}',
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":123,"artifacts":{}}',
           );
 
           result = await repository.read('/project');
@@ -165,7 +170,7 @@ describe('LockFileRepository', () => {
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"targetId":"target-abc","artifacts":{}}',
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":"target-abc","artifacts":{}}',
           );
 
           result = await repository.read('/project');

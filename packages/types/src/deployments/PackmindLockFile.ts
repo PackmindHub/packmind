@@ -22,6 +22,7 @@ export type PackmindLockFile = {
   lockfileVersion: number;
   packageSlugs: string[];
   agents: CodingAgent[];
+  installedAt: string;
   targetId?: string;
   artifacts: Record<string, PackmindLockFileEntry>;
 };
