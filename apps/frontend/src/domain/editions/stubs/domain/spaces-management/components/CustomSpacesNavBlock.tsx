@@ -6,6 +6,7 @@ interface CustomSpacesNavBlockProps {
   currentSpaceSlug: string | undefined;
   selectedSpaceId: string | null;
   onSpaceClick: (space: Space) => void;
+  onBrowseMySpaces?: () => void;
 }
 
 export function CustomSpacesNavBlock(

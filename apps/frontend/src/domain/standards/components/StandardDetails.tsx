@@ -72,7 +72,7 @@ export const StandardDetails = ({
   );
   const pendingCount =
     changeProposals?.changeProposals?.filter(
-      (p: { status: string }) => p.status === ChangeProposalStatus.pending,
+      (p) => p.status === ChangeProposalStatus.pending,
     ).length ?? 0;
 
   const { ruleLanguages } = useStandardEditionFeatures(standard.id);

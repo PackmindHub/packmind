@@ -1,0 +1,92 @@
+name: Weekly Feature Flags Audit
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 08:00 CET (06:00 UTC)
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Claude model to use'
+        required: false
+        default: 'claude-opus-4-6'
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  feature-flags-audit:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Feature Flags Audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/feature-flags-audit\n\nWrite the report to `feature-flags-audit-report.md` at the project root."
+          settings: |
+            {
+              "permissions": {
+                "allow": [
+                  "Agent",
+                  "Read",
+                  "Write",
+                  "Glob",
+                  "Grep"
+                ]
+              }
+            }
+          claude_args: "--model ${{ inputs.model || 'claude-opus-4-6' }} --max-turns 50"
+
+      - name: Display report
+        if: always()
+        run: |
+          if [ -f "feature-flags-audit-report.md" ]; then
+            echo "=== Feature Flags Audit Report ==="
+            cat "feature-flags-audit-report.md"
+            echo "## Feature Flags Audit Report" >> "$GITHUB_STEP_SUMMARY"
+            cat "feature-flags-audit-report.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No report file found."
+            echo "No report file found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Prepare Slack payload
+        if: always() && hashFiles('feature-flags-audit-report.md') != ''
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MAX_LENGTH=3800
+          REPORT=$(cat feature-flags-audit-report.md)
+          if [ ${#REPORT} -gt $MAX_LENGTH ]; then
+            REPORT="${REPORT:0:$MAX_LENGTH}..."$'\n\n'"Full report: $RUN_URL"
+          else
+            REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
+          fi
+          PAYLOAD=$(jq -n \
+            --arg channel "${{ secrets.SLACK_CHANNEL_PACKMIND_SKILL_ID }}" \
+            --arg text "$REPORT" \
+            '{channel: $channel, text: $text}')
+          EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
+          echo "SLACK_PAYLOAD<<${EOF_DELIMITER}" >> "$GITHUB_ENV"
+          echo "$PAYLOAD" >> "$GITHUB_ENV"
+          echo "${EOF_DELIMITER}" >> "$GITHUB_ENV"
+
+      - name: Send report to Slack
+        if: always() && hashFiles('feature-flags-audit-report.md') != ''
+        uses: slackapi/slack-github-action@v2
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          payload: ${{ env.SLACK_PAYLOAD }}
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feature-flags-audit-report
+          path: feature-flags-audit-report.md
+          if-no-files-found: warn
+          retention-days: 30

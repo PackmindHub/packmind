@@ -4,7 +4,7 @@ import { useOutletContext } from 'react-router';
 import { StandardDetailsOutletContext } from '../../src/domain/standards/components/StandardDetails';
 import { RuleSummaryTable } from '@packmind/proprietary/frontend/domain/standards/components/RuleSummaryTable';
 import { ArtifactResultFilePreview } from '../../src/domain/artifacts/components/ArtifactResultFilePreview';
-import { serializeStandardToMarkdown } from '@packmind/proprietary/frontend/domain/change-proposals/utils/serializeArtifactToMarkdown';
+import { serializeStandardToMarkdown } from '../../src/domain/change-proposals/utils/serializeArtifactToMarkdown';
 
 export default function StandardDetailSummaryRouteModule() {
   const { standard, rules, rulesLoading, rulesError } =

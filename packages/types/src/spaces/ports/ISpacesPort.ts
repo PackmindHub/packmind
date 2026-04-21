@@ -47,7 +47,7 @@ export interface ISpacesPort {
 
   /**
    * Create a space for an organization (user-initiated).
-   * Requires admin privileges.
+   * Requires organization membership.
    */
   createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse>;
 
@@ -149,6 +149,15 @@ export interface ISpacesPort {
   ): Promise<UpdateMemberRoleResponse>;
 
   /**
+   * Update the pinned status of a user's membership in a space.
+   */
+  updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean>;
+
+  /**
    * Remove all space memberships for a user within an organization.
    * Used when a user is removed from the organization.
    */
@@ -173,15 +182,6 @@ export interface ISpacesPort {
   removeSpaceMembership(userId: UserId, spaceId: SpaceId): Promise<boolean>;
 
   /**
-   * Update the pinned status of a user's space membership.
-   */
-  updateMembershipPinned(
-    userId: UserId,
-    spaceId: SpaceId,
-    pinned: boolean,
-  ): Promise<boolean>;
-
-  /**
    * Update a space's mutable fields (name, type).
    * Slug is regenerated automatically when name changes.
    * Returns the updated space.
@@ -190,4 +190,18 @@ export interface ISpacesPort {
     spaceId: SpaceId,
     fields: { name?: string; type?: SpaceType },
   ): Promise<Space>;
+
+  /**
+   * Soft-delete a space.
+   */
+  deleteSpace(spaceId: SpaceId, deletedBy: UserId): Promise<void>;
+
+  /**
+   * Soft-delete all memberships for a space.
+   * Returns the number of memberships soft-deleted.
+   */
+  softDeleteMembershipsBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: UserId,
+  ): Promise<number>;
 }
