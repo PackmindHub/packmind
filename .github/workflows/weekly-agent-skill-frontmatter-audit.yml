@@ -39,7 +39,7 @@ jobs:
                   "Write",
                   "Glob",
                   "Grep",
-                  "WebFetch(domain:*)"
+                  "WebFetch"
                 ]
               }
             }
