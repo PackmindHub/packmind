@@ -449,9 +449,9 @@ export class SpacesManagementController {
 
   /**
    * Unpin a space for the current user
-   * DELETE /organizations/:orgId/spaces-management/:spaceId/pin
+   * POST /organizations/:orgId/spaces-management/:spaceId/unpin
    */
-  @Delete(':spaceId/pin')
+  @Post(':spaceId/unpin')
   @HttpCode(204)
   async unpinSpace(
     @Param('orgId') organizationId: OrganizationId,
@@ -461,7 +461,7 @@ export class SpacesManagementController {
     const userId = request.user.userId;
 
     this.logger.info(
-      'DELETE /organizations/:orgId/spaces-management/:spaceId/pin - Unpinning space',
+      'POST /organizations/:orgId/spaces-management/:spaceId/unpin - Unpinning space',
       { organizationId, userId, spaceId },
     );
 
