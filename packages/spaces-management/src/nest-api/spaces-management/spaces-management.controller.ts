@@ -443,6 +443,9 @@ export class SpacesManagementController {
       if (error instanceof SpaceMembershipRequiredError) {
         throw new NotFoundException(error.message);
       }
+      if (error instanceof SpaceNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
       throw error;
     }
   }
@@ -476,6 +479,9 @@ export class SpacesManagementController {
         throw new UnprocessableEntityException(error.message);
       }
       if (error instanceof SpaceMembershipRequiredError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof SpaceNotFoundError) {
         throw new NotFoundException(error.message);
       }
       throw error;
