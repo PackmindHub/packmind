@@ -97,7 +97,7 @@ export const MOCK_SPACES: SpaceListItem[] = [
   {
     id: 'space-8',
     name: 'Growth',
-    colorToken: 'beige',
+    colorToken: 'pink',
     isOrgWide: false,
     admins: [{ id: 'u-ct', displayName: 'cedric.teyton' }],
     membersCount: 5,
@@ -106,7 +106,7 @@ export const MOCK_SPACES: SpaceListItem[] = [
   },
   ...Array.from({ length: 24 }, (_, i): SpaceListItem => {
     const palettes: SpaceListItem['colorToken'][] = [
-      'beige',
+      'pink',
       'blue',
       'orange',
       'red',

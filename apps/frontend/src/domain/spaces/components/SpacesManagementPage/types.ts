@@ -1,10 +1,13 @@
 export type SpaceColorToken =
-  | 'beige'
-  | 'blue'
-  | 'orange'
   | 'red'
+  | 'orange'
+  | 'yellow'
   | 'green'
-  | 'purple';
+  | 'teal'
+  | 'blue'
+  | 'cyan'
+  | 'purple'
+  | 'pink';
 
 export type SpaceAdminAvatar = {
   id: string;
