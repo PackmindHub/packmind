@@ -2,6 +2,7 @@
   "lockfileVersion": 1,
   "packageSlugs": [
     "@backend/generic",
+    "@cli/generic",
     "@frontend/generic",
     "@frontend/playground",
     "@global/generic",
@@ -16,7 +17,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-16T13:57:35.711Z",
+  "installedAt": "2026-04-22T16:34:33.843Z",
   "artifacts": {
     "command:creating-end-user-documentation-for-packmind": {
       "name": "Creating End-User Documentation for Packmind",
@@ -862,7 +863,7 @@
       "name": "feature-flags-audit",
       "type": "skill",
       "id": "dd6d38fe-3685-4256-855b-9467c5cf1c67",
-      "version": 1,
+      "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
@@ -1262,7 +1263,7 @@
       "name": "cli-e2e-test-authoring",
       "type": "skill",
       "id": "32da0e0f-5d0d-474e-9ae9-315378ef0463",
-      "version": 2,
+      "version": 3,
       "spaceId": "87658623-3c00-4018-9240-a713cf50d70f",
       "packageIds": [
         "55cfbdf0-0ce1-403b-8bd5-96344836f315"
@@ -1285,6 +1286,38 @@
         },
         {
           "path": ".gitlab/duo/skills/cli-e2e-test-authoring/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "skill:release-cli": {
+      "name": "release-cli",
+      "type": "skill",
+      "id": "20e7ef2b-d978-4065-b0be-bc3293e8a81b",
+      "version": 1,
+      "spaceId": "44d5cfee-46a6-495f-802e-bfd12dcdc953",
+      "packageIds": [
+        "7404d3b4-4ef5-4d7f-b32f-b3b40787a381"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/release-cli/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/release-cli/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/release-cli/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/release-cli/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
         }

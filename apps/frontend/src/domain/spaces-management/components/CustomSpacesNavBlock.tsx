@@ -1,6 +1,7 @@
 import type { UserSpaceWithRole } from '@packmind/types';
-import { PMBox, PMText } from '@packmind/ui';
+import { PMBox, PMSeparator, PMText } from '@packmind/ui';
 import { SpaceNavBlock } from '../../organizations/components/sidebar/SpaceNavBlock';
+import { useSidebarCollapse } from '../../organizations/components/SidebarCollapseContext';
 import { sortSpacesByName } from '../utils/sortSpacesByName';
 
 const MAX_UNPINNED_SIDEBAR_SPACES = 3;
@@ -22,6 +23,7 @@ export function CustomSpacesNavBlock({
   onSpaceClick,
   onBrowseMySpaces,
 }: Readonly<CustomSpacesNavBlockProps>): React.ReactElement {
+  const { isCollapsed } = useSidebarCollapse();
   const customSpaces = spaces.filter((space) => !space.isDefaultSpace);
   const pinnedSpaces = sortSpacesByName(
     customSpaces.filter((space) => space.pinned),
@@ -48,11 +50,13 @@ export function CustomSpacesNavBlock({
     <>
       {pinnedSpaces.length > 0 && (
         <>
-          <PMBox px={3} pt={3} pb={1}>
-            <PMText fontSize="2xs" fontWeight="semibold" color="faded">
-              Pinned
-            </PMText>
-          </PMBox>
+          {!isCollapsed && (
+            <PMBox px={3} pt={3} pb={1}>
+              <PMText fontSize="2xs" fontWeight="semibold" color="faded">
+                Favorites
+              </PMText>
+            </PMBox>
+          )}
           {pinnedSpaces.map((space) => (
             <SpaceNavBlock
               key={space.id}
@@ -65,32 +69,39 @@ export function CustomSpacesNavBlock({
           ))}
         </>
       )}
-      <PMBox
-        px={3}
-        pt={3}
-        pb={1}
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <PMText fontSize="2xs" fontWeight="semibold" color="faded">
-          My spaces
-        </PMText>
-        {onBrowseMySpaces && (
-          <PMBox
-            as="button"
-            fontSize="10px"
-            color="text.faded"
-            cursor="pointer"
-            _hover={{ color: 'text.primary' }}
-            transition="color 0.15s"
-            onClick={onBrowseMySpaces}
-            data-testid="browse-my-spaces-trigger"
-          >
-            Browse
-          </PMBox>
-        )}
-      </PMBox>
+      {isCollapsed ? (
+        pinnedSpaces.length > 0 &&
+        unpinnedSpaces.length > 0 && (
+          <PMSeparator borderColor="border.primary" my={2} mx={2} />
+        )
+      ) : (
+        <PMBox
+          px={3}
+          pt={3}
+          pb={1}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <PMText fontSize="2xs" fontWeight="semibold" color="faded">
+            My spaces
+          </PMText>
+          {onBrowseMySpaces && (
+            <PMBox
+              as="button"
+              fontSize="10px"
+              color="text.faded"
+              cursor="pointer"
+              _hover={{ color: 'text.primary' }}
+              transition="color 0.15s"
+              onClick={onBrowseMySpaces}
+              data-testid="browse-my-spaces-trigger"
+            >
+              Browse
+            </PMBox>
+          )}
+        </PMBox>
+      )}
       {unpinnedSpaces.map((space) => (
         <SpaceNavBlock
           key={space.id}

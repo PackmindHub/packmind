@@ -10,6 +10,12 @@ const renderWithProvider = (component: React.ReactElement) => {
 
 describe('UserAvatarWithInitials', () => {
   describe('when displaying avatar with display name', () => {
+    it('displays initials extracted from space-separated display name', () => {
+      renderWithProvider(<UserAvatarWithInitials displayName="Joan Racenet" />);
+
+      expect(screen.getByText('JR')).toBeInTheDocument();
+    });
+
     it('displays initials extracted from dotted display name', () => {
       renderWithProvider(<UserAvatarWithInitials displayName="john.doe" />);
 

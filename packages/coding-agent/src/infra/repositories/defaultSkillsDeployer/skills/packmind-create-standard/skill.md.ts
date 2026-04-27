@@ -72,7 +72,7 @@ The \`# Title\` heading is the **display name** shown in indexes and dashboards.
 - ❌ \`"good-practices"\` (slug format and too vague)
 - ❌ \`"Standards for Code"\` (describes meta-concept, not the actual domain)
 
-**Note**: The \`summary\` field is used in other workflows (like MCP) but not yet supported by the CLI.
+**Note**: The \`summary\` field is used in other workflows but not yet supported by the CLI.
 
 #### Understanding \`scope\` vs \`summary\`
 

@@ -2,6 +2,8 @@
 
 ## Added
 
+- Support new Claude Code skill frontmatter fields: `when_to_use`, `paths`, and `shell` (validated to `bash` or `powershell`)
+
 ## Changed
 
 ## Fixed

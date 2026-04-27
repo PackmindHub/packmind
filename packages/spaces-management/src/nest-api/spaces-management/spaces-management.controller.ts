@@ -41,7 +41,6 @@ import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDef
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
-import { SpaceMembershipNotFoundError } from '../../domain/errors/SpaceMembershipNotFoundError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
@@ -454,7 +453,10 @@ export class SpacesManagementController {
       if (error instanceof CannotPinDefaultSpaceError) {
         throw new UnprocessableEntityException(error.message);
       }
-      if (error instanceof SpaceMembershipNotFoundError) {
+      if (error instanceof SpaceMembershipRequiredError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof SpaceNotFoundError) {
         throw new NotFoundException(error.message);
       }
       throw error;
@@ -463,9 +465,9 @@ export class SpacesManagementController {
 
   /**
    * Unpin a space for the current user
-   * DELETE /organizations/:orgId/spaces-management/:spaceId/pin
+   * POST /organizations/:orgId/spaces-management/:spaceId/unpin
    */
-  @Delete(':spaceId/pin')
+  @Post(':spaceId/unpin')
   @HttpCode(204)
   async unpinSpace(
     @Param('orgId') organizationId: OrganizationId,
@@ -475,7 +477,7 @@ export class SpacesManagementController {
     const userId = request.user.userId;
 
     this.logger.info(
-      'DELETE /organizations/:orgId/spaces-management/:spaceId/pin - Unpinning space',
+      'POST /organizations/:orgId/spaces-management/:spaceId/unpin - Unpinning space',
       { organizationId, userId, spaceId },
     );
 
@@ -489,7 +491,10 @@ export class SpacesManagementController {
       if (error instanceof CannotPinDefaultSpaceError) {
         throw new UnprocessableEntityException(error.message);
       }
-      if (error instanceof SpaceMembershipNotFoundError) {
+      if (error instanceof SpaceMembershipRequiredError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof SpaceNotFoundError) {
         throw new NotFoundException(error.message);
       }
       throw error;

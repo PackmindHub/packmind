@@ -11,14 +11,19 @@ import {
   UpdateSpaceCommand,
   UserSpaceRole,
 } from '@packmind/types';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  OrganizationAdminRequiredError,
+  PackmindEventEmitterService,
+  SpaceAdminRequiredError,
+} from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { SpaceNotFoundError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { userSpaceMembershipFactory } from '@packmind/spaces/test/userSpaceMembershipFactory';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
-import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
 import { UpdateSpaceUseCase } from './UpdateSpaceUseCase';
 
 describe('UpdateSpaceUseCase', () => {
@@ -26,23 +31,25 @@ describe('UpdateSpaceUseCase', () => {
   const userId = createUserId('user-1');
   const spaceId = createSpaceId('space-1');
 
+  const organization = organizationFactory({ id: organizationId });
+  const user = userFactory({
+    id: userId,
+    memberships: [{ userId, organizationId, role: 'member' }],
+  });
+  const adminMembership = userSpaceMembershipFactory({
+    userId,
+    spaceId,
+    role: UserSpaceRole.ADMIN,
+  });
+
   let useCase: UpdateSpaceUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<
-    Pick<ISpacesPort, 'getSpaceById' | 'findMembership' | 'updateSpace'>
+    Pick<ISpacesPort, 'getSpaceById' | 'updateSpace' | 'findMembership'>
   >;
   let eventEmitterService: jest.Mocked<
     Pick<PackmindEventEmitterService, 'emit'>
   >;
-
-  const existingSpace = spaceFactory({
-    id: spaceId,
-    organizationId,
-    isDefaultSpace: false,
-    name: 'oddity',
-    slug: 'oddity',
-    color: 'blue',
-  });
 
   const buildCommand = (
     overrides?: Partial<UpdateSpaceCommand>,
@@ -54,39 +61,79 @@ describe('UpdateSpaceUseCase', () => {
   });
 
   beforeEach(() => {
-    spacesPort = {
-      getSpaceById: jest.fn().mockResolvedValue(existingSpace),
-      findMembership: jest.fn(),
-      updateSpace: jest.fn().mockImplementation(async (_id, fields) => ({
-        ...existingSpace,
-        ...fields,
-      })),
-    };
-    eventEmitterService = { emit: jest.fn().mockReturnValue(true) };
-  });
-
-  afterEach(() => jest.clearAllMocks());
-
-  const buildUseCase = (userRole: 'admin' | 'member') => {
-    const user = userFactory({
-      id: userId,
-      memberships: [{ userId, organizationId, role: userRole }],
-    });
-    const organization = organizationFactory({ id: organizationId });
     accountsPort = {
       getUserById: jest.fn().mockResolvedValue(user),
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
-    return new UpdateSpaceUseCase(
+
+    spacesPort = {
+      getSpaceById: jest.fn(),
+      updateSpace: jest.fn(),
+      findMembership: jest.fn().mockResolvedValue(adminMembership),
+    };
+
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    };
+
+    useCase = new UpdateSpaceUseCase(
       spacesPort as unknown as ISpacesPort,
       accountsPort,
       eventEmitterService as unknown as PackmindEventEmitterService,
     );
-  };
+  });
 
-  describe('when the caller is an organization admin', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  describe('when updating space type', () => {
+    const existingSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      type: SpaceType.open,
+    });
+    const updatedSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      type: SpaceType.private,
+    });
+
     beforeEach(() => {
-      useCase = buildUseCase('admin');
+      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
+      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
+    });
+
+    it('returns the updated space', async () => {
+      const result = await useCase.execute(
+        buildCommand({ type: SpaceType.private }),
+      );
+
+      expect(result).toEqual(updatedSpace);
+    });
+
+    it('emits SpaceVisibilityUpdatedEvent', async () => {
+      await useCase.execute(buildCommand({ type: SpaceType.private }));
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.any(SpaceVisibilityUpdatedEvent),
+      );
+    });
+  });
+
+  describe('when updating only the name', () => {
+    const existingSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      name: 'oddity',
+      type: SpaceType.open,
+    });
+    const updatedSpace = spaceFactory({
+      ...existingSpace,
+      name: 'security',
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
+      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
     });
 
     it('updates the name', async () => {
@@ -98,20 +145,44 @@ describe('UpdateSpaceUseCase', () => {
       );
     });
 
+    it('emits SpaceRenamedEvent when the name changes', async () => {
+      await useCase.execute(buildCommand({ name: 'security' }));
+
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.any(SpaceRenamedEvent),
+      );
+    });
+
+    it('does not emit SpaceVisibilityUpdatedEvent', async () => {
+      await useCase.execute(buildCommand({ name: 'security' }));
+
+      expect(eventEmitterService.emit).not.toHaveBeenCalledWith(
+        expect.any(SpaceVisibilityUpdatedEvent),
+      );
+    });
+  });
+
+  describe('when updating the color', () => {
+    const existingSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      color: 'blue',
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
+      spacesPort.updateSpace.mockImplementation(async (_id, fields) => ({
+        ...existingSpace,
+        ...fields,
+      }));
+    });
+
     it('updates the color', async () => {
       await useCase.execute(buildCommand({ color: 'purple' as SpaceColor }));
 
       expect(spacesPort.updateSpace).toHaveBeenCalledWith(
         spaceId,
         expect.objectContaining({ color: 'purple' }),
-      );
-    });
-
-    it('emits SpaceRenamedEvent when the name changes', async () => {
-      await useCase.execute(buildCommand({ name: 'new-name' }));
-
-      expect(eventEmitterService.emit).toHaveBeenCalledWith(
-        expect.any(SpaceRenamedEvent),
       );
     });
 
@@ -123,79 +194,7 @@ describe('UpdateSpaceUseCase', () => {
       );
     });
 
-    it('does not check space membership', async () => {
-      await useCase.execute(buildCommand({ name: 'security' }));
-
-      expect(spacesPort.findMembership).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when the caller is a space admin (not org admin)', () => {
-    beforeEach(() => {
-      useCase = buildUseCase('member');
-      spacesPort.findMembership.mockResolvedValue({
-        userId,
-        spaceId,
-        role: UserSpaceRole.ADMIN,
-      });
-    });
-
-    it('updates the space', async () => {
-      await useCase.execute(buildCommand({ name: 'security' }));
-
-      expect(spacesPort.updateSpace).toHaveBeenCalled();
-    });
-  });
-
-  describe('when the caller is neither org admin nor space admin', () => {
-    beforeEach(() => {
-      useCase = buildUseCase('member');
-      spacesPort.findMembership.mockResolvedValue({
-        userId,
-        spaceId,
-        role: UserSpaceRole.MEMBER,
-      });
-    });
-
-    it('throws SpaceIdentityUpdateForbiddenError', async () => {
-      await expect(
-        useCase.execute(buildCommand({ name: 'security' })),
-      ).rejects.toBeInstanceOf(SpaceIdentityUpdateForbiddenError);
-    });
-  });
-
-  describe('when updating the default space name', () => {
-    beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue({
-        ...existingSpace,
-        isDefaultSpace: true,
-        name: 'Global',
-      });
-      useCase = buildUseCase('admin');
-    });
-
-    it('throws CannotRenameDefaultSpaceError', async () => {
-      await expect(
-        useCase.execute(buildCommand({ name: 'Not Global' })),
-      ).rejects.toBeInstanceOf(CannotRenameDefaultSpaceError);
-    });
-
-    it('allows updating the color', async () => {
-      await useCase.execute(buildCommand({ color: 'purple' as SpaceColor }));
-
-      expect(spacesPort.updateSpace).toHaveBeenCalledWith(
-        spaceId,
-        expect.objectContaining({ color: 'purple' }),
-      );
-    });
-  });
-
-  describe('when the color is invalid', () => {
-    beforeEach(() => {
-      useCase = buildUseCase('admin');
-    });
-
-    it('throws InvalidSpaceColorError', async () => {
+    it('throws InvalidSpaceColorError when color is invalid', async () => {
       await expect(
         useCase.execute(
           buildCommand({ color: 'chartreuse' as unknown as SpaceColor }),
@@ -204,36 +203,14 @@ describe('UpdateSpaceUseCase', () => {
     });
   });
 
-  describe('when the space does not exist', () => {
-    beforeEach(() => {
-      spacesPort.getSpaceById.mockResolvedValue(null);
-      useCase = buildUseCase('admin');
-    });
-
-    it('throws SpaceNotFoundError', async () => {
-      await expect(
-        useCase.execute(buildCommand({ name: 'x' })),
-      ).rejects.toBeInstanceOf(SpaceNotFoundError);
-    });
-  });
-
-  describe('when the space type changes', () => {
-    beforeEach(() => {
-      useCase = buildUseCase('admin');
-    });
-
-    it('emits SpaceVisibilityUpdatedEvent', async () => {
-      await useCase.execute(buildCommand({ type: SpaceType.restricted }));
-
-      expect(eventEmitterService.emit).toHaveBeenCalledWith(
-        expect.any(SpaceVisibilityUpdatedEvent),
-      );
-    });
-  });
-
   describe('when no fields are provided', () => {
+    const existingSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+    });
+
     beforeEach(() => {
-      useCase = buildUseCase('admin');
+      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
     });
 
     it('returns the existing space without updating', async () => {
@@ -246,6 +223,173 @@ describe('UpdateSpaceUseCase', () => {
       await useCase.execute(buildCommand());
 
       expect(eventEmitterService.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when space is the default space', () => {
+    const defaultSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      isDefaultSpace: true,
+      name: 'Global',
+      type: SpaceType.open,
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(defaultSpace);
+    });
+
+    describe('when updating type', () => {
+      it('throws CannotUpdateDefaultSpaceVisibilityError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.private })),
+        ).rejects.toThrow(CannotUpdateDefaultSpaceVisibilityError);
+      });
+
+      it('does not call updateSpace', async () => {
+        await useCase
+          .execute(buildCommand({ type: SpaceType.private }))
+          .catch(() => undefined);
+
+        expect(spacesPort.updateSpace).not.toHaveBeenCalled();
+      });
+
+      it('does not emit any event', async () => {
+        await useCase
+          .execute(buildCommand({ type: SpaceType.private }))
+          .catch(() => undefined);
+
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when renaming', () => {
+      it('throws CannotRenameDefaultSpaceError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ name: 'Not Global' })),
+        ).rejects.toBeInstanceOf(CannotRenameDefaultSpaceError);
+      });
+    });
+
+    describe('when updating color', () => {
+      it('allows updating the color', async () => {
+        spacesPort.updateSpace.mockImplementation(async (_id, fields) => ({
+          ...defaultSpace,
+          ...fields,
+        }));
+
+        await useCase.execute(buildCommand({ color: 'purple' as SpaceColor }));
+
+        expect(spacesPort.updateSpace).toHaveBeenCalledWith(
+          spaceId,
+          expect.objectContaining({ color: 'purple' }),
+        );
+      });
+    });
+  });
+
+  describe('when space is not found', () => {
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(null);
+    });
+
+    it('throws SpaceNotFoundError', async () => {
+      await expect(
+        useCase.execute(buildCommand({ type: SpaceType.private })),
+      ).rejects.toThrow(SpaceNotFoundError);
+    });
+
+    it('does not emit any event', async () => {
+      await useCase
+        .execute(buildCommand({ type: SpaceType.private }))
+        .catch(() => undefined);
+
+      expect(eventEmitterService.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when changing visibility to open or restricted', () => {
+    const existingSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      type: SpaceType.private,
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
+    });
+
+    it('throws OrganizationAdminRequiredError when org member changes type to open', async () => {
+      await expect(
+        useCase.execute(buildCommand({ type: SpaceType.open })),
+      ).rejects.toThrow(OrganizationAdminRequiredError);
+    });
+
+    it('throws OrganizationAdminRequiredError when org member changes type to restricted', async () => {
+      await expect(
+        useCase.execute(buildCommand({ type: SpaceType.restricted })),
+      ).rejects.toThrow(OrganizationAdminRequiredError);
+    });
+
+    it('allows org admin to change type to open', async () => {
+      const orgAdmin = userFactory({
+        id: userId,
+        memberships: [{ userId, organizationId, role: 'admin' }],
+      });
+      accountsPort.getUserById.mockResolvedValue(orgAdmin);
+
+      const updatedSpace = spaceFactory({
+        id: spaceId,
+        organizationId,
+        type: SpaceType.open,
+      });
+      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
+
+      const result = await useCase.execute(
+        buildCommand({ type: SpaceType.open }),
+      );
+
+      expect(result).toEqual(updatedSpace);
+    });
+
+    it('allows org member to change type to private', async () => {
+      const openSpace = spaceFactory({
+        id: spaceId,
+        organizationId,
+        type: SpaceType.open,
+      });
+      spacesPort.getSpaceById.mockResolvedValue(openSpace);
+
+      const updatedSpace = spaceFactory({
+        id: spaceId,
+        organizationId,
+        type: SpaceType.private,
+      });
+      spacesPort.updateSpace.mockResolvedValue(updatedSpace);
+
+      const result = await useCase.execute(
+        buildCommand({ type: SpaceType.private }),
+      );
+
+      expect(result).toEqual(updatedSpace);
+    });
+  });
+
+  describe('when user is not a space admin', () => {
+    beforeEach(() => {
+      spacesPort.findMembership.mockResolvedValue(
+        userSpaceMembershipFactory({
+          userId,
+          spaceId,
+          role: UserSpaceRole.MEMBER,
+        }),
+      );
+    });
+
+    it('throws SpaceAdminRequiredError', async () => {
+      await expect(
+        useCase.execute(buildCommand({ type: SpaceType.private })),
+      ).rejects.toThrow(SpaceAdminRequiredError);
     });
   });
 });

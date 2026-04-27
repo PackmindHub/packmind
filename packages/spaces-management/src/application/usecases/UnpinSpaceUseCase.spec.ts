@@ -1,4 +1,7 @@
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  PackmindEventEmitterService,
+  SpaceMembershipRequiredError,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -14,7 +17,6 @@ import { SpaceNotFoundError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { UnpinSpaceUseCase } from './UnpinSpaceUseCase';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
-import { SpaceMembershipNotFoundError } from '../../domain/errors/SpaceMembershipNotFoundError';
 
 describe('UnpinSpaceUseCase', () => {
   const organizationId = createOrganizationId('org-1');
@@ -44,7 +46,7 @@ describe('UnpinSpaceUseCase', () => {
   ): UnpinSpaceCommand => ({
     userId: userId as unknown as string,
     organizationId: organizationId as unknown as string,
-    spaceId: spaceId as unknown as string,
+    spaceId,
     ...overrides,
   });
 
@@ -65,8 +67,8 @@ describe('UnpinSpaceUseCase', () => {
     };
 
     useCase = new UnpinSpaceUseCase(
-      accountsPort,
       spacesPort as unknown as ISpacesPort,
+      accountsPort,
       eventEmitterService as unknown as PackmindEventEmitterService,
     );
   });
@@ -151,21 +153,13 @@ describe('UnpinSpaceUseCase', () => {
   });
 
   describe('when membership does not exist', () => {
-    const space = spaceFactory({
-      id: spaceId,
-      name: 'Test Space',
-      organizationId,
-      isDefaultSpace: false,
-    });
-
     beforeEach(() => {
       spacesPort.findMembership.mockResolvedValue(null);
-      spacesPort.getSpaceById.mockResolvedValue(space);
     });
 
-    it('throws SpaceMembershipNotFoundError', async () => {
-      await expect(useCase.execute(buildCommand())).rejects.toThrow(
-        SpaceMembershipNotFoundError,
+    it('throws SpaceMembershipRequiredError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+        SpaceMembershipRequiredError,
       );
     });
 

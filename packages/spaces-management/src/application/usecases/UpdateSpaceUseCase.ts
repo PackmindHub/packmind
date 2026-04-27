@@ -1,72 +1,71 @@
 import {
-  AbstractMemberUseCase,
-  MemberContext,
+  AbstractSpaceAdminUseCase,
+  OrganizationAdminRequiredError,
   PackmindEventEmitterService,
+  SpaceAdminContext,
 } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
-  createSpaceId,
   createUserId,
   IAccountsPort,
   ISpacesPort,
   isSpaceColor,
   SpaceRenamedEvent,
+  SpaceType,
   SpaceVisibilityUpdatedEvent,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
-  UserSpaceRole,
 } from '@packmind/types';
 import { SpaceNotFoundError } from '@packmind/spaces';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
-import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
 
-export class UpdateSpaceUseCase extends AbstractMemberUseCase<
+export class UpdateSpaceUseCase extends AbstractSpaceAdminUseCase<
   UpdateSpaceCommand,
   UpdateSpaceResponse
 > {
   constructor(
-    private readonly spacesPort: ISpacesPort,
+    spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    protected override readonly logger: PackmindLogger = new PackmindLogger(
-      'UpdateSpaceUseCase',
-    ),
+    logger: PackmindLogger = new PackmindLogger('UpdateSpaceUseCase'),
   ) {
-    super(accountsPort);
+    super(spacesPort, accountsPort, logger);
   }
 
-  protected async executeForMembers(
-    command: UpdateSpaceCommand & MemberContext,
+  protected async executeForSpaceAdmins(
+    command: UpdateSpaceCommand & SpaceAdminContext,
   ): Promise<UpdateSpaceResponse> {
-    const spaceId = createSpaceId(command.spaceId);
     const organizationId = createOrganizationId(command.organizationId);
     const userId = createUserId(command.userId);
+    const { spaceId } = command;
 
     const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space || space.organizationId !== organizationId) {
-      throw new SpaceNotFoundError(command.spaceId);
-    }
-
-    const isOrgAdmin = command.membership.role === 'admin';
-    if (!isOrgAdmin) {
-      const spaceMembership = await this.spacesPort.findMembership(
-        userId,
-        spaceId,
-      );
-      if (spaceMembership?.role !== UserSpaceRole.ADMIN) {
-        throw new SpaceIdentityUpdateForbiddenError(
-          command.userId,
-          command.spaceId,
-        );
-      }
+      throw new SpaceNotFoundError(spaceId);
     }
 
     const isRenaming =
       command.name !== undefined && command.name !== space.name;
     if (isRenaming && space.isDefaultSpace) {
-      throw new CannotRenameDefaultSpaceError(command.spaceId);
+      throw new CannotRenameDefaultSpaceError(spaceId);
+    }
+
+    if (command.type !== undefined && space.isDefaultSpace) {
+      throw new CannotUpdateDefaultSpaceVisibilityError(spaceId);
+    }
+
+    if (
+      command.type !== undefined &&
+      command.type !== SpaceType.private &&
+      command.membership.role !== 'admin'
+    ) {
+      throw new OrganizationAdminRequiredError({
+        userId: command.userId,
+        organizationId: command.organizationId,
+      });
     }
 
     if (command.color !== undefined && !isSpaceColor(command.color)) {

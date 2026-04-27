@@ -31,6 +31,8 @@ import {
   SpaceMembersRemovedEvent,
   SpaceMembersRoleUpdatedEvent,
   SpaceRenamedEvent,
+  SpacePinnedEvent,
+  SpaceUnpinnedEvent,
   SpaceVisibilityUpdatedEvent,
   PlaybookArtefactMovedEvent,
 } from '@packmind/types';
@@ -88,6 +90,8 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     );
     this.subscribe(SpaceRenamedEvent, this.onSpaceRenamed);
     this.subscribe(SpaceVisibilityUpdatedEvent, this.onSpaceVisibilityUpdated);
+    this.subscribe(SpacePinnedEvent, this.onSpacePinned);
+    this.subscribe(SpaceUnpinnedEvent, this.onSpaceUnpinned);
     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
   }
 
@@ -434,6 +438,20 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
         newRole: payload.newRole,
       }),
     );
+  };
+
+  private onSpacePinned = async (event: SpacePinnedEvent): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'space_pinned', (payload) => ({
+      spaceId: payload.spaceId,
+    }));
+  };
+
+  private onSpaceUnpinned = async (
+    event: SpaceUnpinnedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'space_unpinned', (payload) => ({
+      spaceId: payload.spaceId,
+    }));
   };
 
   private onPlaybookArtefactMoved = async (

@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { organizationGateway, userGateway } from '../gateways';
+import { organizationGateway, userGateway, authGateway } from '../gateways';
 import {
   GET_USER_ORGANIZATIONS_KEY,
   GET_USER_STATUSES_KEY,
   GET_ONBOARDING_STATUS_KEY,
   GET_ME_KEY,
 } from '../queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
 import { useAuthContext } from '../../hooks/useAuthContext';
 import { spacesQueryKeys } from '../../../spaces/api/queryKeys';
@@ -168,6 +169,24 @@ export const getOnboardingStatusQueryOptions = (orgId: string) => ({
 
 export const useGetOnboardingStatusQuery = (orgId: string) => {
   return useQuery(getOnboardingStatusQueryOptions(orgId));
+};
+
+const UPDATE_PROFILE_MUTATION_KEY = 'updateProfile';
+
+export const useUpdateProfileMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [UPDATE_PROFILE_MUTATION_KEY],
+    mutationFn: async (params: { displayName: string | null }) => {
+      return authGateway.updateProfile(params);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE],
+      });
+    },
+  });
 };
 
 // Re-export user queries
