@@ -6,3 +6,4 @@ export * from './ILeaveSpaceUseCase';
 export * from './IDeleteSpaceUseCase';
 export * from './IPinSpaceUseCase';
 export * from './IUnpinSpaceUseCase';
+export * from './IListOrganizationSpacesForManagementUseCase';
