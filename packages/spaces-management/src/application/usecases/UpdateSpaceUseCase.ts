@@ -1,5 +1,6 @@
 import {
   AbstractSpaceAdminUseCase,
+  MemberContext,
   OrganizationAdminRequiredError,
   PackmindEventEmitterService,
   SpaceAdminContext,
@@ -33,6 +34,15 @@ export class UpdateSpaceUseCase extends AbstractSpaceAdminUseCase<
     logger: PackmindLogger = new PackmindLogger('UpdateSpaceUseCase'),
   ) {
     super(spacesPort, accountsPort, logger);
+  }
+
+  protected override async executeForMembers(
+    command: UpdateSpaceCommand & MemberContext,
+  ): Promise<UpdateSpaceResponse> {
+    if (command.membership.role === 'admin') {
+      return this.executeForSpaceAdmins(command);
+    }
+    return super.executeForMembers(command);
   }
 
   protected async executeForSpaceAdmins(

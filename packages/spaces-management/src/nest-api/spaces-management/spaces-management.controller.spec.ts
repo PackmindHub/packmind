@@ -9,6 +9,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   AuthenticatedRequest,
+  SpaceAdminRequiredError,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import {
@@ -30,8 +31,8 @@ import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConfl
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
-import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { SpacesManagementController } from './spaces-management.controller';
@@ -485,10 +486,10 @@ describe('SpacesManagementController', () => {
       });
     });
 
-    describe('when the service throws SpaceIdentityUpdateForbiddenError', () => {
+    describe('when the service throws SpaceAdminRequiredError', () => {
       beforeEach(() => {
         service.updateSpace.mockRejectedValue(
-          new SpaceIdentityUpdateForbiddenError('user-123', spaceId),
+          new SpaceAdminRequiredError('user-123', spaceId),
         );
       });
 
@@ -501,6 +502,47 @@ describe('SpacesManagementController', () => {
             mockRequest,
           ),
         ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the service throws OrganizationAdminRequiredError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new OrganizationAdminRequiredError({
+            userId: 'user-123',
+            organizationId,
+          }),
+        );
+      });
+
+      it('responds with 403', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { type: SpaceType.open },
+            mockRequest,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the service throws CannotUpdateDefaultSpaceVisibilityError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new CannotUpdateDefaultSpaceVisibilityError(spaceId),
+        );
+      });
+
+      it('responds with 422', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { type: SpaceType.private },
+            mockRequest,
+          ),
+        ).rejects.toThrow(UnprocessableEntityException);
       });
     });
 

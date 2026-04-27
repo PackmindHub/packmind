@@ -18,6 +18,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   AuthenticatedRequest,
+  SpaceAdminRequiredError,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import {
@@ -43,8 +44,8 @@ import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefault
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
-import { SpaceIdentityUpdateForbiddenError } from '../../domain/errors/SpaceIdentityUpdateForbiddenError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { SpacesManagementService } from './spaces-management.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
@@ -292,7 +293,13 @@ export class SpacesManagementController {
       if (error instanceof CannotRenameDefaultSpaceError) {
         throw new UnprocessableEntityException(error.message);
       }
-      if (error instanceof SpaceIdentityUpdateForbiddenError) {
+      if (error instanceof CannotUpdateDefaultSpaceVisibilityError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof SpaceAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof OrganizationAdminRequiredError) {
         throw new ForbiddenException(error.message);
       }
       if (error instanceof InvalidSpaceColorError) {

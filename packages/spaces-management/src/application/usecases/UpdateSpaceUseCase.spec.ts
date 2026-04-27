@@ -392,4 +392,35 @@ describe('UpdateSpaceUseCase', () => {
       ).rejects.toThrow(SpaceAdminRequiredError);
     });
   });
+
+  describe('when caller is an org admin without space admin role', () => {
+    const existingSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      name: 'oddity',
+    });
+
+    beforeEach(() => {
+      const orgAdmin = userFactory({
+        id: userId,
+        memberships: [{ userId, organizationId, role: 'admin' }],
+      });
+      accountsPort.getUserById.mockResolvedValue(orgAdmin);
+      spacesPort.getSpaceById.mockResolvedValue(existingSpace);
+      spacesPort.updateSpace.mockImplementation(async (_id, fields) => ({
+        ...existingSpace,
+        ...fields,
+      }));
+    });
+
+    it('updates the space without checking space membership', async () => {
+      await useCase.execute(buildCommand({ name: 'security' }));
+
+      expect(spacesPort.findMembership).not.toHaveBeenCalled();
+      expect(spacesPort.updateSpace).toHaveBeenCalledWith(
+        spaceId,
+        expect.objectContaining({ name: 'security' }),
+      );
+    });
+  });
 });
