@@ -8,10 +8,19 @@ import * as fs from 'fs';
 function buildDispatcher(): Agent {
   const cas: (string | Buffer)[] = [...tls.rootCertificates];
 
+  const programFiles = process.env['ProgramFiles'] ?? 'C:\\Program Files';
+  const programFilesX86 =
+    process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)';
+
   const systemCertFiles = [
     '/etc/ssl/certs/ca-certificates.crt', // Debian/Ubuntu
     '/etc/ssl/cert.pem', // macOS / Alpine
     '/etc/ssl/certs/ca-bundle.crt', // RHEL / CentOS
+    // Git for Windows bundles (most common CA source on Windows)
+    `${programFiles}\\Git\\usr\\ssl\\certs\\ca-bundle.crt`,
+    `${programFiles}\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt`,
+    `${programFilesX86}\\Git\\usr\\ssl\\certs\\ca-bundle.crt`,
+    `${programFilesX86}\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt`,
     process.env.NODE_EXTRA_CA_CERTS, // user-defined extra CAs
   ].filter(Boolean) as string[];
 
