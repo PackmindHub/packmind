@@ -22,6 +22,8 @@ export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
 
 export const SPACE_IDENTITY_FEATURE_KEY = 'space-identity';
 
+export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
+
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
@@ -37,6 +39,7 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
     '@promyze.com',
   ],
   [SPACE_IDENTITY_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const isEmailEntry = (entry: string): boolean => {
