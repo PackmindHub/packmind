@@ -7,6 +7,6 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "diff": "^8.0.3",
-    "uuid": "^11.1.0"
+    "uuid": "^14.0.0"
   }
 }
