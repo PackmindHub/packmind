@@ -4,6 +4,7 @@ import { SpaceListItem } from './types';
 import { SpaceNameCell } from './SpaceNameCell';
 import { SpaceAdminsCell } from './SpaceAdminsCell';
 import { SpaceRowActions } from './SpaceRowActions';
+import { formatCount, formatCreatedAt } from './formatters';
 
 interface SpacesTableProps {
   spaces: SpaceListItem[];
@@ -30,15 +31,6 @@ const COLUMNS: PMTableColumn[] = [
   { key: 'actions', header: '', width: '60px', align: 'right' },
 ];
 
-const formatCreatedAt = (iso: string): string => {
-  const date = new Date(iso);
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
 export const SpacesTable: React.FC<SpacesTableProps> = ({
   spaces,
   selectedRows,
@@ -56,8 +48,8 @@ export const SpacesTable: React.FC<SpacesTableProps> = ({
           />
         ),
         admins: <SpaceAdminsCell admins={space.admins} />,
-        membersCount: space.membersCount,
-        artifactsCount: space.artifactsCount,
+        membersCount: formatCount(space.membersCount),
+        artifactsCount: formatCount(space.artifactsCount),
         createdAt: formatCreatedAt(space.createdAt),
         actions: <SpaceRowActions spaceId={space.id} />,
       })),
