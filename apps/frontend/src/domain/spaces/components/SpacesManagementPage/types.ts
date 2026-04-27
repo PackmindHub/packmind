@@ -1,3 +1,5 @@
+import type { Space } from '@packmind/types';
+
 export type SpaceColorToken =
   | 'red'
   | 'orange'
@@ -14,13 +16,11 @@ export type SpaceAdminAvatar = {
   displayName: string;
 };
 
-export type SpaceListItem = {
-  id: string;
-  name: string;
+export type SpaceListItem = Space & {
   colorToken: SpaceColorToken;
   isOrgWide: boolean;
   admins: SpaceAdminAvatar[];
-  membersCount: number;
-  artifactsCount: number;
-  createdAt: string;
+  membersCount: number | null;
+  artifactsCount: number | null;
+  createdAt: string | null;
 };
