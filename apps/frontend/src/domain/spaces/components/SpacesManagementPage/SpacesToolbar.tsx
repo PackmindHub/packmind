@@ -1,5 +1,5 @@
 import React from 'react';
-import { LuPlus, LuSearch } from 'react-icons/lu';
+import { LuPlus } from 'react-icons/lu';
 import {
   PMButton,
   PMHStack,
@@ -22,18 +22,14 @@ const MEMBER_FILTER_ITEMS = [
 
 export const SpacesToolbar: React.FC = () => {
   return (
-    <PMHStack gap={3} flexWrap="wrap" justify="flex-end">
-      <PMHStack gap={2} maxWidth="280px" flex={1} minWidth="200px">
-        <PMIcon color="text.faded">
-          <LuSearch />
-        </PMIcon>
-        <PMInput
-          type="search"
-          placeholder="Search spaces..."
-          aria-label="Search spaces"
-          size="sm"
-        />
-      </PMHStack>
+    <PMHStack gap={2} align="center" flexWrap="nowrap">
+      <PMInput
+        type="search"
+        placeholder="Search spaces..."
+        aria-label="Search spaces"
+        size="sm"
+        width="220px"
+      />
       <PMNativeSelect
         items={ADMIN_FILTER_ITEMS}
         defaultValue="any"
