@@ -6,6 +6,7 @@ import {
 } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SpacesManagementPage } from '../../src/domain/spaces/components/SpacesManagementPage';
+import { SpacesToolbar } from '../../src/domain/spaces/components/SpacesManagementPage/SpacesToolbar';
 
 export default function SettingsSpacesRouteModule() {
   const { user, organization } = useAuthContext();
@@ -23,6 +24,7 @@ export default function SettingsSpacesRouteModule() {
       <PMPage
         title="Spaces"
         subtitle="Manage every space in your organization · 32 spaces"
+        actions={<SpacesToolbar />}
       >
         <SpacesManagementPage />
       </PMPage>

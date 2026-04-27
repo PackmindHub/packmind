@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { PMVStack } from '@packmind/ui';
 import { MOCK_SPACES } from './mockSpaces';
-import { SpacesToolbar } from './SpacesToolbar';
 import { SpacesBulkActionBar } from './SpacesBulkActionBar';
 import { SpacesTable } from './SpacesTable';
 import { SpacesPagination } from './SpacesPagination';
@@ -16,7 +15,6 @@ export const SpacesManagementPage: React.FC = () => {
 
   return (
     <PMVStack alignItems="stretch" gap={4} width="full">
-      <SpacesToolbar />
       <SpacesBulkActionBar
         selectedCount={selectedRows.size}
         onClear={() => setSelectedRows(new Set())}

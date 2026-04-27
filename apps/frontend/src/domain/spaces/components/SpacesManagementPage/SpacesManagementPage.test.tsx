@@ -96,13 +96,6 @@ const renderPage = () =>
   );
 
 describe('SpacesManagementPage', () => {
-  it('renders the toolbar with the New space button', () => {
-    renderPage();
-    expect(
-      screen.getByRole('button', { name: /new space/i }),
-    ).toBeInTheDocument();
-  });
-
   it('renders the first 8 mock spaces from the screenshot', () => {
     renderPage();
     expect(screen.getByText('Global')).toBeInTheDocument();
