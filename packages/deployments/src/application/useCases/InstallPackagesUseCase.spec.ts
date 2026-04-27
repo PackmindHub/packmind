@@ -299,6 +299,38 @@ describe('InstallPackagesUseCase', () => {
 
       expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
     });
+
+    describe('when the incoming lock file has installedAt', () => {
+      it('includes installedAt in the produced lock file', async () => {
+        command.packmindLockFile = {
+          ...emptyLockFile,
+          installedAt: new Date().toISOString(),
+        };
+
+        await useCase.execute(command);
+
+        const builtLockFile =
+          lockFileService.buildLockFile.mock.results[0].value;
+        expect('installedAt' in builtLockFile).toBe(true);
+      });
+    });
+
+    describe('when the incoming lock file does not have installedAt', () => {
+      it('omits installedAt from the produced lock file', async () => {
+        command.packmindLockFile = {
+          lockfileVersion: emptyLockFile.lockfileVersion,
+          packageSlugs: emptyLockFile.packageSlugs,
+          agents: emptyLockFile.agents,
+          artifacts: emptyLockFile.artifacts,
+        };
+
+        await useCase.execute(command);
+
+        const lockFileModificationCall =
+          lockFileService.createLockFileModification.mock.calls[0][0];
+        expect('installedAt' in lockFileModificationCall).toBe(false);
+      });
+    });
   });
 
   describe('when user has no access to some packages', () => {

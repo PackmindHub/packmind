@@ -286,6 +286,10 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       artifactPackageIds,
     });
 
+    if (!('installedAt' in command.packmindLockFile)) {
+      delete lockFile.installedAt;
+    }
+
     // Preserve inaccessible artifacts from the previous lock file
     for (const [key, entry] of Object.entries(
       command.packmindLockFile.artifacts,
