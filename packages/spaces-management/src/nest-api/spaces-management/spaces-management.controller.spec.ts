@@ -18,6 +18,7 @@ import {
   createStandardId,
   createSkillId,
   ArtifactReference,
+  ListOrganizationSpacesForManagementResponse,
   MoveArtifactsToSpaceResponse,
   SpaceColor,
   SpaceType,
@@ -29,6 +30,7 @@ import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConfl
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
+import { InvalidPageError } from '../../domain/errors/InvalidPageError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
@@ -60,6 +62,7 @@ describe('SpacesManagementController', () => {
       browseSpaces: jest.fn(),
       joinSpace: jest.fn(),
       deleteSpace: jest.fn(),
+      listOrganizationSpacesForManagement: jest.fn(),
     } as unknown as jest.Mocked<SpacesManagementService>;
     controller = new SpacesManagementController(service, logger);
   });
@@ -638,6 +641,120 @@ describe('SpacesManagementController', () => {
         await expect(
           controller.deleteSpace(organizationId, spaceId, mockRequest),
         ).rejects.toThrow(ForbiddenException);
+      });
+    });
+  });
+
+  describe('listOrganizationSpacesForManagement', () => {
+    const expectedResponse: ListOrganizationSpacesForManagementResponse = {
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 8,
+    };
+
+    describe('when listing spaces successfully with an explicit page', () => {
+      let result: ListOrganizationSpacesForManagementResponse;
+
+      beforeEach(async () => {
+        service.listOrganizationSpacesForManagement.mockResolvedValue(
+          expectedResponse,
+        );
+        result = await controller.listOrganizationSpacesForManagement(
+          organizationId,
+          '1',
+          mockRequest,
+        );
+      });
+
+      it('returns the listing response', () => {
+        expect(result).toEqual(expectedResponse);
+      });
+
+      it('calls service with the parsed page', () => {
+        expect(
+          service.listOrganizationSpacesForManagement,
+        ).toHaveBeenCalledWith({
+          userId: 'user-123',
+          organizationId,
+          page: 1,
+        });
+      });
+    });
+
+    describe('when page query param is not provided', () => {
+      beforeEach(async () => {
+        service.listOrganizationSpacesForManagement.mockResolvedValue(
+          expectedResponse,
+        );
+        await controller.listOrganizationSpacesForManagement(
+          organizationId,
+          undefined,
+          mockRequest,
+        );
+      });
+
+      it('defaults page to 1', () => {
+        expect(
+          service.listOrganizationSpacesForManagement,
+        ).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }));
+      });
+    });
+
+    describe('when the page value is not a positive integer', () => {
+      beforeEach(() => {
+        service.listOrganizationSpacesForManagement.mockRejectedValue(
+          new InvalidPageError('abc'),
+        );
+      });
+
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.listOrganizationSpacesForManagement(
+            organizationId,
+            'abc',
+            mockRequest,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when the caller is not an organization admin', () => {
+      beforeEach(() => {
+        service.listOrganizationSpacesForManagement.mockRejectedValue(
+          new OrganizationAdminRequiredError({
+            userId: 'user-123',
+            organizationId,
+          }),
+        );
+      });
+
+      it('throws ForbiddenException', async () => {
+        await expect(
+          controller.listOrganizationSpacesForManagement(
+            organizationId,
+            '1',
+            mockRequest,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the service throws an unknown error', () => {
+      beforeEach(() => {
+        service.listOrganizationSpacesForManagement.mockRejectedValue(
+          new Error('unexpected'),
+        );
+      });
+
+      it('re-throws the error', async () => {
+        await expect(
+          controller.listOrganizationSpacesForManagement(
+            organizationId,
+            '1',
+            mockRequest,
+          ),
+        ).rejects.toThrow('unexpected');
       });
     });
   });

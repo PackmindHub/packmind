@@ -11,6 +11,7 @@ import {
   Patch,
   Post,
   Param,
+  Query,
   Req,
   UnprocessableEntityException,
   UseGuards,
@@ -23,6 +24,7 @@ import {
 } from '@packmind/node-utils';
 import {
   ArtifactType,
+  ListOrganizationSpacesForManagementResponse,
   MoveArtifactsToSpaceResponse,
   OrganizationId,
   PackmindCommandBody,
@@ -41,6 +43,7 @@ import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConfl
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
+import { InvalidPageError } from '../../domain/errors/InvalidPageError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
@@ -122,6 +125,43 @@ export class SpacesManagementController {
           error: errorMessage,
         },
       );
+      throw error;
+    }
+  }
+
+  /**
+   * List the organization's spaces for the admin management page.
+   * GET /organizations/:orgId/spaces-management/listing?page=N
+   */
+  @Get('listing')
+  async listOrganizationSpacesForManagement(
+    @Param('orgId') organizationId: OrganizationId,
+    @Query('page') pageParam: string | undefined,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListOrganizationSpacesForManagementResponse> {
+    const userId = request.user.userId;
+    const page = pageParam === undefined ? 1 : Number(pageParam);
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces-management/listing - Listing spaces for management',
+      { organizationId, userId, page },
+    );
+
+    try {
+      return await this.spacesManagementService.listOrganizationSpacesForManagement(
+        {
+          userId,
+          organizationId,
+          page,
+        },
+      );
+    } catch (error) {
+      if (error instanceof InvalidPageError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof OrganizationAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
       throw error;
     }
   }
