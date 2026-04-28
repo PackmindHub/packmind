@@ -139,4 +139,42 @@ export class SpaceRepository
       throw error;
     }
   }
+
+  async findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }> {
+    this.logger.info('Finding org spaces page paginated', {
+      organizationId,
+      page,
+      pageSize,
+    });
+
+    try {
+      const skip = (page - 1) * pageSize;
+      const [items, totalCount] = await this.repository.findAndCount({
+        where: { organizationId },
+        order: { isDefaultSpace: 'DESC', createdAt: 'ASC' },
+        skip,
+        take: pageSize,
+      });
+      this.logger.info('Org spaces page found', {
+        organizationId,
+        page,
+        pageSize,
+        returned: items.length,
+        totalCount,
+      });
+      return { items, totalCount };
+    } catch (error) {
+      this.logger.error('Failed to find org spaces page paginated', {
+        organizationId,
+        page,
+        pageSize,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

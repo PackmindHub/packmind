@@ -8,6 +8,11 @@ export interface ISpaceRepository {
     organizationId: OrganizationId,
   ): Promise<Space | null>;
   findByOrganizationId(organizationId: OrganizationId): Promise<Space[]>;
+  findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }>;
   list(): Promise<Space[]>;
   updateFields(
     id: SpaceId,

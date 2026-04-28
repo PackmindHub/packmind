@@ -71,6 +71,15 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return spaceService.listSpacesByOrganization(organizationId);
   }
 
+  async findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }> {
+    const spaceService = this.hexa.getSpaceService();
+    return spaceService.findOrgPagePaginated(organizationId, page, pageSize);
+  }
+
   async getSpaceBySlug(
     slug: string,
     organizationId: OrganizationId,

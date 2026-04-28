@@ -58,6 +58,17 @@ export interface ISpacesPort {
   listSpacesByOrganization(organizationId: OrganizationId): Promise<Space[]>;
 
   /**
+   * Return a paginated page of spaces for an organization, used by the
+   * organization spaces management listing. Spaces are ordered with the
+   * default space first, then by creation time ascending.
+   */
+  findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }>;
+
+  /**
    * Get a space by its slug within an organization
    * Returns null if the space doesn't exist
    */

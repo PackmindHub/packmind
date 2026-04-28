@@ -159,6 +159,18 @@ export class SpaceService {
     }
   }
 
+  async findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }> {
+    return this.spaceRepository.findOrgPagePaginated(
+      organizationId,
+      page,
+      pageSize,
+    );
+  }
+
   async updateSpace(
     spaceId: SpaceId,
     fields: { name?: string; type?: SpaceType; color?: SpaceColor },
