@@ -1,19 +1,12 @@
-export const STEP_5_DETECT_PROJECT_STACK = `## Step 5 — Detect Project Stack (Minimal, Evidence-Based)
+export const STEP_5_DETECT_PROJECT_STACK = `## Step 5 — Detect Project Stack
 
-### Language markers (check presence)
-- JS/TS: \`package.json\`, \`pnpm-lock.yaml\`, \`yarn.lock\`, \`tsconfig.json\`
-- Python: \`pyproject.toml\`, \`requirements.txt\`, \`setup.py\`
-- Go: \`go.mod\`
-- Rust: \`Cargo.toml\`
-- Ruby: \`Gemfile\`
-- JVM: \`pom.xml\`, \`build.gradle\`, \`build.gradle.kts\`
-- .NET: \`*.csproj\`, \`*.sln\`
-- PHP: \`composer.json\`
+Run a single Glob for language markers:
+\`{package.json,pnpm-lock.yaml,yarn.lock,tsconfig.json,pyproject.toml,requirements.txt,setup.py,go.mod,Cargo.toml,Gemfile,pom.xml,build.gradle,build.gradle.kts,*.csproj,*.sln,composer.json}\`
 
-### Architecture markers (check directories)
-- Hexagonal/DDD: \`src/application/\`, \`src/domain/\`, \`src/infra/\`
-- Layered/MVC: \`src/controllers/\`, \`src/services/\`
-- Monorepo: \`packages/\`, \`apps/\`
+Run a second Glob for architecture markers:
+\`{src/application,src/domain,src/infra,src/controllers,src/services,packages,apps}\`
+
+Map matches → languages (JS/TS, Python, Go, Rust, Ruby, JVM, .NET, PHP), repo shape (\`monorepo\` if \`packages/\` or \`apps/\`, else \`single\`), and architecture markers (Hexagonal/DDD, Layered/MVC, Monorepo).
 
 Print exactly:
 
