@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Space, SPACE_COLOR_PALETTES, SpaceColor } from '@packmind/types';
 import {
+  PMAlert,
   PMButton,
   PMColorSwatch,
   PMField,
@@ -73,6 +74,15 @@ export function SpaceIdentitySection({
       }
     >
       <PMVStack align="stretch" gap={5} pt={4} w="lg">
+        {!canEdit && (
+          <PMAlert.Root status="info" size="sm">
+            <PMAlert.Indicator />
+            <PMAlert.Title>Read-only access</PMAlert.Title>
+            <PMAlert.Description>
+              Only space admins and organization admins can edit these settings.
+            </PMAlert.Description>
+          </PMAlert.Root>
+        )}
         <PMField.Root disabled={nameDisabled}>
           <PMField.Label>Name</PMField.Label>
           <PMInput
