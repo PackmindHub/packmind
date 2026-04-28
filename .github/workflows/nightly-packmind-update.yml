@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   update-artifacts:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: 15
     steps:
       - name: Checkout main
