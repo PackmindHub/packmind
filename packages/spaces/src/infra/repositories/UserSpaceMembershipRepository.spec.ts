@@ -17,6 +17,7 @@ import {
   UserId,
   UserSpaceMembership,
   UserSpaceRole,
+  WithSoftDelete,
   WithTimestamps,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -33,7 +34,9 @@ describe('UserSpaceMembershipRepository', () => {
   ]);
 
   let repository: UserSpaceMembershipRepository;
-  let ormRepository: Repository<WithTimestamps<UserSpaceMembership>>;
+  let ormRepository: Repository<
+    WithSoftDelete<WithTimestamps<UserSpaceMembership>>
+  >;
   let organization: Organization;
   let space: Space;
   let logger: jest.Mocked<PackmindLogger>;
@@ -252,6 +255,96 @@ describe('UserSpaceMembershipRepository', () => {
           createSpaceId(uuidv4()),
         );
         expect(memberships).toEqual([]);
+      });
+    });
+  });
+
+  describe('.softDeleteBySpaceId', () => {
+    const deletedBy = 'test-actor-id';
+
+    describe('when the space has active memberships', () => {
+      let affectedCount: number;
+
+      beforeEach(async () => {
+        await createMembership();
+        await createMembership();
+        affectedCount = await repository.softDeleteBySpaceId(
+          space.id,
+          deletedBy,
+        );
+      });
+
+      it('returns the count of affected memberships', () => {
+        expect(affectedCount).toBe(2);
+      });
+
+      it('sets deletedAt on the soft-deleted memberships', async () => {
+        const memberships = await ormRepository.find({
+          where: { spaceId: space.id },
+          withDeleted: true,
+        });
+        expect(memberships.every((m) => m.deletedAt !== null)).toBe(true);
+      });
+
+      it('sets deletedBy on the soft-deleted memberships', async () => {
+        const memberships = await ormRepository.find({
+          where: { spaceId: space.id },
+          withDeleted: true,
+        });
+        expect(memberships.every((m) => m.deletedBy === deletedBy)).toBe(true);
+      });
+
+      it('excludes soft-deleted memberships from findBySpaceId', async () => {
+        const memberships = await repository.findBySpaceId(space.id);
+        expect(memberships).toEqual([]);
+      });
+    });
+
+    describe('when the space has no memberships', () => {
+      it('returns zero', async () => {
+        const affectedCount = await repository.softDeleteBySpaceId(
+          space.id,
+          deletedBy,
+        );
+        expect(affectedCount).toBe(0);
+      });
+    });
+
+    describe('when memberships belong to another space', () => {
+      let otherSpaceMembershipCount: number;
+
+      beforeEach(async () => {
+        const otherSpace = await fixture.datasource
+          .getRepository(SpaceSchema)
+          .save(
+            spaceFactory({
+              organizationId: organization.id,
+              slug: 'other-space',
+              name: 'Other Space',
+            }),
+          );
+
+        await createMembership({ spaceId: otherSpace.id });
+        await repository.softDeleteBySpaceId(space.id, deletedBy);
+        const remaining = await repository.findBySpaceId(otherSpace.id);
+        otherSpaceMembershipCount = remaining.length;
+      });
+
+      it('does not affect them', () => {
+        expect(otherSpaceMembershipCount).toBe(1);
+      });
+    });
+
+    describe('when called again on already soft-deleted memberships', () => {
+      it('returns zero without error', async () => {
+        await createMembership();
+        await repository.softDeleteBySpaceId(space.id, deletedBy);
+
+        const secondCallCount = await repository.softDeleteBySpaceId(
+          space.id,
+          deletedBy,
+        );
+        expect(secondCallCount).toBe(0);
       });
     });
   });

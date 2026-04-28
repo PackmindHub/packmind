@@ -1,0 +1,13 @@
+{
+  "name": "@packmind/plugins",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@packmind/crisp": "*",
+    "@packmind/node-utils": "*",
+    "typeorm": "^0.3.20"
+  }
+}
