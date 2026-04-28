@@ -1,6 +1,4 @@
-import type { SpaceColorToken } from './types';
-
-export const SPACE_COLOR_PALETTE: readonly SpaceColorToken[] = [
+export const SPACE_COLOR_PALETTE = [
   'red',
   'orange',
   'yellow',
@@ -11,6 +9,8 @@ export const SPACE_COLOR_PALETTE: readonly SpaceColorToken[] = [
   'purple',
   'pink',
 ] as const;
+
+export type SpaceColorToken = (typeof SPACE_COLOR_PALETTE)[number];
 
 const DEFAULT_SPACE_COLOR: SpaceColorToken = 'blue';
 
