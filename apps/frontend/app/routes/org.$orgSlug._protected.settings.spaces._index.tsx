@@ -46,7 +46,12 @@ export default function SettingsSpacesRouteModule() {
       featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
       userEmail={user?.email}
     >
-      <PMPage title="Spaces" subtitle={subtitle} actions={<SpacesToolbar />}>
+      <PMPage
+        title="Spaces"
+        subtitle={subtitle}
+        actions={<SpacesToolbar />}
+        isFullWidth
+      >
         <SpacesManagementPage />
       </PMPage>
     </PMFeatureFlag>

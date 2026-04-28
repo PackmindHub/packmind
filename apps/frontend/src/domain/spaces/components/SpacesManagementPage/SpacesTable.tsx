@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { PMTable, PMTableColumn, PMTableRow } from '@packmind/ui';
+import { PMBox, PMTable, PMTableColumn, PMTableRow } from '@packmind/ui';
 import { SpaceListItem } from './types';
 import { SpaceNameCell } from './SpaceNameCell';
 import { SpaceAdminsCell } from './SpaceAdminsCell';
@@ -10,22 +10,35 @@ interface SpacesTableProps {
   spaces: SpaceListItem[];
 }
 
+const headerLabel = (text: string) => (
+  <PMBox
+    as="span"
+    textTransform="uppercase"
+    letterSpacing="wider"
+    fontSize="10px"
+    fontWeight="semibold"
+    color="text.faded"
+  >
+    {text}
+  </PMBox>
+);
+
 const COLUMNS: PMTableColumn[] = [
-  { key: 'name', header: 'Name', grow: true },
-  { key: 'admins', header: 'Admins', width: '320px' },
+  { key: 'name', header: headerLabel('Name'), grow: true },
+  { key: 'admins', header: headerLabel('Admins'), width: '320px' },
   {
     key: 'membersCount',
-    header: 'Members',
+    header: headerLabel('Members'),
     width: '110px',
     align: 'right',
   },
   // {
   //   key: 'artifactsCount',
-  //   header: 'Artifacts',
+  //   header: headerLabel('Artifacts'),
   //   width: '110px',
   //   align: 'right',
   // },
-  { key: 'createdAt', header: 'Created', width: '140px' },
+  { key: 'createdAt', header: headerLabel('Created'), width: '140px' },
   { key: 'actions', header: '', width: '60px', align: 'right' },
 ];
 
@@ -37,7 +50,7 @@ export const SpacesTable: React.FC<SpacesTableProps> = ({ spaces }) => {
         name: (
           <SpaceNameCell
             name={space.name}
-            colorToken={space.colorToken}
+            color={space.color}
             isOrgWide={space.isOrgWide}
           />
         ),
@@ -50,5 +63,31 @@ export const SpacesTable: React.FC<SpacesTableProps> = ({ spaces }) => {
     [spaces],
   );
 
-  return <PMTable columns={COLUMNS} data={rows} striped={false} hoverable />;
+  return (
+    <PMTable
+      columns={COLUMNS}
+      data={rows}
+      striped={false}
+      hoverable
+      tableProps={{
+        my: 0,
+        css: {
+          '& thead th': {
+            backgroundColor: 'var(--pm-colors-background-secondary)',
+            borderBottomColor: 'var(--pm-colors-border-tertiary)',
+          },
+          '& tbody td': {
+            backgroundColor: 'var(--pm-colors-background-primary)',
+            borderBottomColor: 'var(--pm-colors-border-tertiary)',
+          },
+          '& tbody tr': {
+            transition: 'background-color 120ms ease',
+          },
+          '& tbody tr:hover td': {
+            backgroundColor: 'var(--pm-colors-background-secondary)',
+          },
+        },
+      }}
+    />
+  );
 };

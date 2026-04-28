@@ -39,7 +39,14 @@ export const SpacesManagementPage: React.FC = () => {
 
   return (
     <PMVStack alignItems="stretch" gap={4} width="full">
-      <SpacesTable spaces={rows} />
+      <PMBox
+        borderWidth="1px"
+        borderColor="border.tertiary"
+        borderRadius="md"
+        overflow="hidden"
+      >
+        <SpacesTable spaces={rows} />
+      </PMBox>
       {/* <SpacesPagination
         page={data.page}
         pageSize={data.pageSize}

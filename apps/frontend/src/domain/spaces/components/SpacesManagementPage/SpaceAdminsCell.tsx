@@ -25,7 +25,7 @@ export const SpaceAdminsCell: React.FC<SpaceAdminsCellProps> = ({ admins }) => {
           <UserAvatarWithInitials
             key={admin.id}
             displayName={admin.displayName}
-            size="sm"
+            size="xs"
           />
         ))}
       </PMHStack>

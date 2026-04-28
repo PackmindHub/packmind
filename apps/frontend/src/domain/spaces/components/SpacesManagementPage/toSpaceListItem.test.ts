@@ -5,7 +5,6 @@ import {
   SpaceManagementListItem,
   SpaceType,
 } from '@packmind/types';
-import { SPACE_COLOR_PALETTE } from '../spaceColor';
 import { toSpaceListItem } from './toSpaceListItem';
 
 const buildDto = (
@@ -20,6 +19,7 @@ const buildDto = (
       '11111111-1111-1111-1111-111111111111',
     ),
     isDefaultSpace: false,
+    color: 'green',
     admins: [
       {
         id: createUserId('22222222-2222-2222-2222-222222222222'),
@@ -33,12 +33,17 @@ const buildDto = (
   }) as SpaceManagementListItem;
 
 describe('toSpaceListItem', () => {
-  it('decorates with colorToken and isOrgWide and preserves aggregated fields', () => {
+  it('preserves the backend-provided color', () => {
+    const dto = buildDto({ color: 'pink' });
+    const row = toSpaceListItem(dto);
+
+    expect(row.color).toBe('pink');
+  });
+
+  it('flags non-default spaces as not org-wide and forwards aggregated fields', () => {
     const dto = buildDto();
     const row = toSpaceListItem(dto);
 
-    expect(row.colorToken).toBeDefined();
-    expect(SPACE_COLOR_PALETTE).toContain(row.colorToken);
     expect(row.isOrgWide).toBe(false);
     expect(row.admins).toEqual([
       { id: '22222222-2222-2222-2222-222222222222', displayName: 'Alice' },
@@ -48,12 +53,11 @@ describe('toSpaceListItem', () => {
     expect(row.createdAt).toBe('2025-01-12T10:00:00.000Z');
   });
 
-  it('marks the default space as org-wide and assigns the blue color token', () => {
+  it('marks the default space as org-wide', () => {
     const dto = buildDto({ isDefaultSpace: true, name: 'Global' });
     const row = toSpaceListItem(dto);
 
     expect(row.isOrgWide).toBe(true);
-    expect(row.colorToken).toBe('blue');
   });
 
   it('keeps isOrgWide tied solely to isDefaultSpace, regardless of space type', () => {
@@ -75,6 +79,7 @@ describe('toSpaceListItem', () => {
         '44444444-4444-4444-4444-444444444444',
       ),
       isDefaultSpace: false,
+      color: 'cyan',
     });
     const row = toSpaceListItem(dto);
 
@@ -85,6 +90,7 @@ describe('toSpaceListItem', () => {
       type: dto.type,
       organizationId: dto.organizationId,
       isDefaultSpace: dto.isDefaultSpace,
+      color: dto.color,
     });
   });
 });

@@ -5,18 +5,6 @@ import { PMButton, PMHStack, PMIcon } from '@packmind/ui';
 import { CreateSpaceDialog } from '../../../spaces-management/components/CreateSpaceDialog';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
-// const ADMIN_FILTER_ITEMS = [
-//   { label: 'Admin: any', value: 'any' },
-//   { label: 'Org admins', value: 'org-admins' },
-//   { label: 'Individual users', value: 'individual' },
-// ];
-
-// const MEMBER_FILTER_ITEMS = [
-//   { label: 'Member: any', value: 'any' },
-//   { label: 'Org members', value: 'org-members' },
-//   { label: 'Individual users', value: 'individual' },
-// ];
-
 export const SpacesToolbar: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -41,18 +29,18 @@ export const SpacesToolbar: React.FC = () => {
           size="sm"
           width="220px"
         />
-        <PMNativeSelect
-          items={ADMIN_FILTER_ITEMS}
-          defaultValue="any"
-          size="sm"
-          aria-label="Filter by admin"
-        />
-        <PMNativeSelect
-          items={MEMBER_FILTER_ITEMS}
-          defaultValue="any"
-          size="sm"
-          aria-label="Filter by member"
-        /> */}
+        <PMButton variant="secondary" size="sm" aria-label="Filter by admin">
+          Admin: any
+          <PMIcon fontSize="xs">
+            <LuChevronDown />
+          </PMIcon>
+        </PMButton>
+        <PMButton variant="secondary" size="sm" aria-label="Filter by member">
+          Member: any
+          <PMIcon fontSize="xs">
+            <LuChevronDown />
+          </PMIcon>
+        </PMButton> */}
         <PMButton
           variant="primary"
           size="sm"
