@@ -6,10 +6,31 @@ import { UIProvider } from '../../UIProvider';
 import DOMPurify from 'dompurify';
 
 jest.mock('marked', () => {
-  class MockMarked {
-    private renderers: Array<{ link?: (token: unknown) => string }> = [];
+  type MockToken = { text: string };
 
-    use(extension: { renderer?: { link?: (token: unknown) => string } }) {
+  class MockMarked {
+    Parser = {
+      parseInline: (tokens: MockToken[]) => tokens.map((t) => t.text).join(''),
+    };
+    private renderers: Array<{
+      link?: (token: {
+        href: string;
+        title: string | null;
+        text: string;
+        tokens: MockToken[];
+      }) => string;
+    }> = [];
+
+    use(extension: {
+      renderer?: {
+        link?: (token: {
+          href: string;
+          title: string | null;
+          text: string;
+          tokens: MockToken[];
+        }) => string;
+      };
+    }) {
       if (extension.renderer) {
         this.renderers.push(extension.renderer);
       }
@@ -20,17 +41,14 @@ jest.mock('marked', () => {
       const linkRenderer = this.renderers.find((r) => r.link)?.link;
       if (linkRenderer) {
         const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-        const replaced = content.replace(linkRegex, (_, text, href) => {
-          const fakeContext = {
-            parser: { parseInline: () => text as string },
-          };
-          return linkRenderer.call(fakeContext, {
+        const replaced = content.replace(linkRegex, (_, text, href) =>
+          linkRenderer({
             href: href as string,
             title: null,
             text: text as string,
-            tokens: [],
-          });
-        });
+            tokens: [{ text: text as string }],
+          }),
+        );
         return `<p>${replaced}</p>`;
       }
       return `<p>${content}</p>`;
