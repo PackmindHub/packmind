@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import slug from 'slug';
+import { useState } from 'react';
 import { Space, SPACE_COLOR_PALETTES, SpaceColor } from '@packmind/types';
 import {
   PMButton,
@@ -9,7 +8,6 @@ import {
   PMHStack,
   PMInput,
   PMPageSection,
-  PMText,
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
@@ -32,17 +30,6 @@ export function SpaceIdentitySection({
   const isDefaultSpace = space.isDefaultSpace;
   const nameDisabled = !canEdit || isDefaultSpace;
   const colorDisabled = !canEdit;
-
-  const slugMismatchWarning = useMemo(() => {
-    if (!name) return null;
-    const candidate = slug(name);
-    return candidate !== space.slug ? (
-      <PMText color="warning" fontSize="xs">
-        The space URL will remain <code>/spaces/{space.slug}</code>, which no
-        longer matches the name.
-      </PMText>
-    ) : null;
-  }, [name, space.slug]);
 
   const hasChanges =
     (name !== space.name && !isDefaultSpace) || selectedColor !== space.color;
@@ -95,12 +82,16 @@ export function SpaceIdentitySection({
             disabled={nameDisabled}
             aria-label="Name"
           />
-          {isDefaultSpace && (
+          {isDefaultSpace ? (
             <PMField.HelperText>
               The default space cannot be renamed.
             </PMField.HelperText>
+          ) : (
+            <PMField.HelperText>
+              Renaming doesn't change the space URL — links and bookmarks keep
+              working.
+            </PMField.HelperText>
           )}
-          {slugMismatchWarning}
         </PMField.Root>
 
         <PMField.Root disabled={colorDisabled}>
