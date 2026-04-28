@@ -1,15 +1,15 @@
-import type { Space } from '@packmind/types';
-import { getColorTokenForSpace } from './spaceColor';
+import type { SpaceManagementListItem } from '@packmind/types';
+import { getColorTokenForSpace } from '../spaceColor';
 import type { SpaceListItem } from './types';
 
-export function toSpaceListItem(space: Space): SpaceListItem {
+export function toSpaceListItem(item: SpaceManagementListItem): SpaceListItem {
   return {
-    ...space,
-    colorToken: getColorTokenForSpace(space),
-    isOrgWide: space.isDefaultSpace,
-    admins: [],
-    membersCount: null,
-    artifactsCount: null,
-    createdAt: null,
-  };
+    ...item,
+    colorToken: getColorTokenForSpace(item),
+    isOrgWide: item.isDefaultSpace,
+    admins: item.admins.map((admin) => ({
+      id: admin.id as string,
+      displayName: admin.displayName,
+    })),
+  } as SpaceListItem;
 }
