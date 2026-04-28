@@ -1,21 +1,33 @@
 import { Box } from '@chakra-ui/react';
 import DOMPurify from 'dompurify';
-import { marked } from 'marked';
-import { ComponentPropsWithoutRef, useMemo } from 'react';
+import { Marked } from 'marked';
+import { ComponentPropsWithoutRef, MouseEvent, useMemo } from 'react';
 
 export type PMMarkdownViewerProps = {
   content?: string;
   htmlContent?: string;
   sanitize?: boolean;
+  transformLinkUri?: (href: string) => string;
+  onLinkClick?: (href: string, event: MouseEvent<HTMLAnchorElement>) => void;
 } & Omit<
   ComponentPropsWithoutRef<'div'>,
   'children' | 'dangerouslySetInnerHTML'
 >;
 
+const escapeHtmlAttr = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
 export function PMMarkdownViewer({
   content,
   htmlContent,
   sanitize = true,
+  transformLinkUri,
+  onLinkClick,
+  onClick,
   ...rest
 }: PMMarkdownViewerProps) {
   const rendered = useMemo(() => {
@@ -23,14 +35,38 @@ export function PMMarkdownViewer({
       return sanitize ? DOMPurify.sanitize(htmlContent) : htmlContent;
     }
 
-    marked.setOptions({
-      breaks: true,
-      gfm: true,
-    });
+    const instance = new Marked({ breaks: true, gfm: true });
 
-    const html = marked(content ?? '') as string;
+    if (transformLinkUri) {
+      instance.use({
+        renderer: {
+          link(token) {
+            const transformed = transformLinkUri(token.href);
+            const titleAttr = token.title
+              ? ` title="${escapeHtmlAttr(token.title)}"`
+              : '';
+            const text = this.parser.parseInline(token.tokens);
+            return `<a href="${escapeHtmlAttr(transformed)}"${titleAttr}>${text}</a>`;
+          },
+        },
+      });
+    }
+
+    const html = instance.parse(content ?? '') as string;
     return sanitize ? DOMPurify.sanitize(html) : html;
-  }, [content, htmlContent, sanitize]);
+  }, [content, htmlContent, sanitize, transformLinkUri]);
+
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    onClick?.(event);
+    if (!onLinkClick || event.defaultPrevented) return;
+    if (event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
+    const anchor = (event.target as HTMLElement | null)?.closest('a');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href') ?? '';
+    onLinkClick(href, event as unknown as MouseEvent<HTMLAnchorElement>);
+  };
 
   const defaultStyles: React.CSSProperties = {
     lineHeight: '1.6',
@@ -155,6 +191,7 @@ export function PMMarkdownViewer({
         className="pm-markdown-viewer"
         dangerouslySetInnerHTML={{ __html: rendered }}
         style={defaultStyles}
+        onClick={handleClick}
         {...rest}
       />
     </>
