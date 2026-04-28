@@ -45,7 +45,7 @@ export const SpacesTable: React.FC<SpacesTableProps> = ({ spaces }) => {
         membersCount: formatCount(space.membersCount),
         artifactsCount: formatCount(space.artifactsCount),
         createdAt: formatCreatedAt(space.createdAt),
-        actions: <SpaceRowActions spaceId={space.id} />,
+        actions: <SpaceRowActions space={space} />,
       })),
     [spaces],
   );

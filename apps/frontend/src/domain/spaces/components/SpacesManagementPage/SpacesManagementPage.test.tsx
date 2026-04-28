@@ -2,10 +2,24 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import { SpacesManagementPage } from './SpacesManagementPage';
 import * as queries from '../../api/queries/SpacesQueries';
+
+jest.mock(
+  '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
+  () => ({
+    ...jest.requireActual(
+      '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
+    ),
+    useDeleteSpaceMutation: jest.fn(() => ({
+      mutate: jest.fn(),
+      isPending: false,
+    })),
+  }),
+);
 
 jest.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({
@@ -71,7 +85,9 @@ const renderWithQuery = (ui: React.ReactNode) => {
   });
   return render(
     <UIProvider>
-      <QueryClientProvider client={client}>{ui}</QueryClientProvider>
+      <QueryClientProvider client={client}>
+        <MemoryRouter>{ui}</MemoryRouter>
+      </QueryClientProvider>
     </UIProvider>,
   );
 };

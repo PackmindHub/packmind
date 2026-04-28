@@ -1,6 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import {
   createOrganizationId,
@@ -9,6 +11,26 @@ import {
 } from '@packmind/types';
 import { SpacesTable } from './SpacesTable';
 import type { SpaceListItem } from './types';
+
+jest.mock(
+  '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
+  () => ({
+    ...jest.requireActual(
+      '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
+    ),
+    useDeleteSpaceMutation: jest.fn(() => ({
+      mutate: jest.fn(),
+      isPending: false,
+    })),
+  }),
+);
+
+jest.mock('../../../accounts/hooks/useAuthContext', () => ({
+  ...jest.requireActual('../../../accounts/hooks/useAuthContext'),
+  useAuthContext: () => ({
+    organization: { id: 'org-1', slug: 'test-org' },
+  }),
+}));
 
 const pmTableSpy = jest.fn();
 
@@ -65,8 +87,18 @@ const buildRow = (overrides: Partial<SpaceListItem> = {}): SpaceListItem => ({
   ...overrides,
 });
 
-const renderWithProvider = (ui: React.ReactElement) =>
-  render(<UIProvider>{ui}</UIProvider>);
+const renderWithProvider = (ui: React.ReactElement) => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <UIProvider>
+      <QueryClientProvider client={client}>
+        <MemoryRouter>{ui}</MemoryRouter>
+      </QueryClientProvider>
+    </UIProvider>,
+  );
+};
 
 describe('SpacesTable', () => {
   beforeEach(() => {
