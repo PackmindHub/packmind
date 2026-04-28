@@ -161,4 +161,22 @@ export class UserSpaceMembershipService {
       deletedBy as string,
     );
   }
+
+  async findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  > {
+    return this.userSpaceMembershipRepository.findAdminsForSpaceIds(spaceIds);
+  }
+
+  async countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>> {
+    return this.userSpaceMembershipRepository.countByRoleForSpaceIds(
+      spaceIds,
+      role,
+    );
+  }
 }

@@ -216,4 +216,24 @@ export interface ISpacesPort {
     spaceId: SpaceId,
     deletedBy: UserId,
   ): Promise<number>;
+
+  /**
+   * Find admin memberships for the given space IDs joined with the User
+   * entity. Returns a flat array (one row per admin per space) with the
+   * user's id and presentation displayName.
+   */
+  findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  >;
+
+  /**
+   * Count active memberships grouped by space for a given role.
+   * Spaces with zero matching memberships are absent from the returned Map.
+   */
+  countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>>;
 }

@@ -298,6 +298,84 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     }
   }
 
+  async findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  > {
+    if (spaceIds.length === 0) {
+      return [];
+    }
+
+    this.logger.info('Finding admins for space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .innerJoin('users', 'u', 'u.id = m.user_id AND u.deleted_at IS NULL')
+        .select('m.space_id', 'spaceId')
+        .addSelect('u.id', 'userId')
+        .addSelect('u.display_name', 'displayName')
+        .addSelect('u.email', 'email')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .andWhere('m.role = :role', { role: UserSpaceRole.ADMIN })
+        .getRawMany<{
+          spaceId: SpaceId;
+          userId: UserId;
+          displayName: string | null;
+          email: string;
+        }>();
+
+      return rows.map((row) => ({
+        spaceId: row.spaceId,
+        user: {
+          id: row.userId,
+          displayName: row.displayName ?? row.email.split('@')[0],
+        },
+      }));
+    } catch (error) {
+      this.logger.error('Failed to find admins for space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Counting memberships by role for space IDs', {
+      spaceCount: spaceIds.length,
+      role,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .select('m.space_id', 'spaceId')
+        .addSelect('COUNT(*)', 'count')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .andWhere('m.role = :role', { role })
+        .groupBy('m.space_id')
+        .getRawMany<{ spaceId: SpaceId; count: string }>();
+
+      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
+    } catch (error) {
+      this.logger.error('Failed to count memberships by role for space IDs', {
+        role,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async softDeleteBySpaceId(
     spaceId: SpaceId,
     deletedBy: string,

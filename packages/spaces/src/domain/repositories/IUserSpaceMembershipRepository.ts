@@ -34,4 +34,13 @@ export interface IUserSpaceMembershipRepository {
     organizationId: OrganizationId,
   ): Promise<number>;
   softDeleteBySpaceId(spaceId: SpaceId, deletedBy: string): Promise<number>;
+  findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  >;
+  countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>>;
 }

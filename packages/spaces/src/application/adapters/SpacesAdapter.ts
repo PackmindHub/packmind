@@ -240,6 +240,23 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return membershipService.softDeleteMembershipsBySpaceId(spaceId, deletedBy);
   }
 
+  async findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  > {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.findAdminsForSpaceIds(spaceIds);
+  }
+
+  async countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.countByRoleForSpaceIds(spaceIds, role);
+  }
+
   async updateMemberRole(
     command: UpdateMemberRoleCommand,
   ): Promise<UpdateMemberRoleResponse> {
