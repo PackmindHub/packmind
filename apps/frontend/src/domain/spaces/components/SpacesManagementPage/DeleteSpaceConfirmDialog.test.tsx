@@ -93,6 +93,69 @@ describe('DeleteSpaceConfirmDialog', () => {
       expect(dialog).toHaveTextContent(/Engineering/);
       expect(dialog).toHaveTextContent(/This action is irreversible\./);
     });
+
+    it('renders the type-to-confirm input', async () => {
+      renderWithProviders(
+        <DeleteSpaceConfirmDialog
+          isOpen
+          onClose={jest.fn()}
+          space={baseSpace}
+        />,
+      );
+
+      expect(
+        await screen.findByPlaceholderText('Enter space name'),
+      ).toBeInTheDocument();
+    });
+
+    it('renders the Delete button as disabled by default', async () => {
+      renderWithProviders(
+        <DeleteSpaceConfirmDialog
+          isOpen
+          onClose={jest.fn()}
+          space={baseSpace}
+        />,
+      );
+
+      const deleteButton = await screen.findByRole('button', {
+        name: 'Delete',
+      });
+      expect(deleteButton).toBeDisabled();
+    });
+  });
+
+  describe('when the user types a non-matching space name', () => {
+    it('keeps the Delete button disabled', async () => {
+      renderWithProviders(
+        <DeleteSpaceConfirmDialog
+          isOpen
+          onClose={jest.fn()}
+          space={baseSpace}
+        />,
+      );
+
+      const input = await screen.findByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Wrong Name' } });
+
+      expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
+    });
+  });
+
+  describe('when the user types the matching space name', () => {
+    it('enables the Delete button', async () => {
+      renderWithProviders(
+        <DeleteSpaceConfirmDialog
+          isOpen
+          onClose={jest.fn()}
+          space={baseSpace}
+        />,
+      );
+
+      const input = await screen.findByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Engineering' } });
+
+      expect(screen.getByRole('button', { name: 'Delete' })).not.toBeDisabled();
+    });
   });
 
   describe('when the user clicks Cancel', () => {
@@ -134,8 +197,11 @@ describe('DeleteSpaceConfirmDialog', () => {
         <DeleteSpaceConfirmDialog isOpen onClose={onClose} space={baseSpace} />,
       );
 
+      const input = await screen.findByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Engineering' } });
+
       const deleteButton = await screen.findByRole('button', {
-        name: /^delete$/i,
+        name: 'Delete',
       });
       await act(async () => {
         fireEvent.click(deleteButton);
@@ -174,8 +240,11 @@ describe('DeleteSpaceConfirmDialog', () => {
         <DeleteSpaceConfirmDialog isOpen onClose={onClose} space={baseSpace} />,
       );
 
+      const input = await screen.findByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Engineering' } });
+
       const deleteButton = await screen.findByRole('button', {
-        name: /^delete$/i,
+        name: 'Delete',
       });
       await act(async () => {
         fireEvent.click(deleteButton);
