@@ -8,6 +8,7 @@ import { FILE_TEMPLATE_CONSISTENCY } from './skills/packmind-onboard/references/
 import { CI_LOCAL_WORKFLOW_PARITY } from './skills/packmind-onboard/references/ci-local-workflow-parity';
 import { ROLE_TAXONOMY_DRIFT } from './skills/packmind-onboard/references/role-taxonomy-drift';
 import { SCOPE } from './skills/packmind-onboard/references/scope';
+import { PACKAGE_HANDLING } from './skills/packmind-onboard/references/package-handling';
 import { CREATE_ITEMS_0160 } from './skills/packmind-onboard/packmind-versions/0.16.0/create-items';
 import { CREATE_PACKAGE_0160 } from './skills/packmind-onboard/packmind-versions/0.16.0/create-package';
 import { LIST_PACKAGES_0160 } from './skills/packmind-onboard/packmind-versions/0.16.0/list-packages';
@@ -98,6 +99,10 @@ export class OnboardDeployer
       {
         path: `${referencesPath}/scope.md`,
         content: SCOPE,
+      },
+      {
+        path: `${referencesPath}/package-handling.md`,
+        content: PACKAGE_HANDLING,
       },
       // Versioned files
       ...skillMd.versions.map((version) => ({
