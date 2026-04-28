@@ -35,6 +35,10 @@ import {
   UnpinSpaceCommand,
   UnpinSpaceResponse,
 } from '../contracts/IUnpinSpaceUseCase';
+import {
+  ListOrganizationSpacesForManagementCommand,
+  ListOrganizationSpacesForManagementResponse,
+} from '../contracts/IListOrganizationSpacesForManagementUseCase';
 
 /**
  * Port interface for cross-domain access to Spaces Management functionality
@@ -94,4 +98,12 @@ export interface ISpacesManagementPort {
    * Unpin a space for the current user.
    */
   unpinSpace(command: UnpinSpaceCommand): Promise<UnpinSpaceResponse>;
+
+  /**
+   * List paginated organization spaces enriched with admins, member counts,
+   * and artifact counts for the management view.
+   */
+  listOrganizationSpacesForManagement(
+    command: ListOrganizationSpacesForManagementCommand,
+  ): Promise<ListOrganizationSpacesForManagementResponse>;
 }

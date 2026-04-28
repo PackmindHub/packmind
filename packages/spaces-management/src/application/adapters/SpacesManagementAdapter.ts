@@ -33,6 +33,8 @@ import {
   PinSpaceResponse,
   UnpinSpaceCommand,
   UnpinSpaceResponse,
+  ListOrganizationSpacesForManagementCommand,
+  ListOrganizationSpacesForManagementResponse,
   createOrganizationId,
 } from '@packmind/types';
 import { SpaceNotFoundError } from '@packmind/spaces';
@@ -45,6 +47,7 @@ import { UpdateSpaceUseCase } from '../usecases/UpdateSpaceUseCase';
 import { DeleteSpaceUseCase } from '../usecases/DeleteSpaceUseCase';
 import { PinSpaceUseCase } from '../usecases/PinSpaceUseCase';
 import { UnpinSpaceUseCase } from '../usecases/UnpinSpaceUseCase';
+import { ListOrganizationSpacesForManagementUseCase } from '../usecases/ListOrganizationSpacesForManagementUseCase';
 
 /**
  * SpacesManagementAdapter - Implements the ISpacesManagementPort interface for cross-domain access
@@ -155,6 +158,19 @@ export class SpacesManagementAdapter
       this.spacesPort,
       this.accountsPort,
       this.eventEmitterService,
+    );
+    return useCase.execute(command);
+  }
+
+  async listOrganizationSpacesForManagement(
+    command: ListOrganizationSpacesForManagementCommand,
+  ): Promise<ListOrganizationSpacesForManagementResponse> {
+    const useCase = new ListOrganizationSpacesForManagementUseCase(
+      this.accountsPort,
+      this.spacesPort,
+      this.standardsPort,
+      this.recipesPort,
+      this.skillsPort,
     );
     return useCase.execute(command);
   }
