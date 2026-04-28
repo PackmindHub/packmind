@@ -46,5 +46,3 @@ apps/mcp-server/key.pem
 # GitLab Duo skills (managed locally)
 .gitlab/
 
-# Packmind lock file
-packmind-lock.json
