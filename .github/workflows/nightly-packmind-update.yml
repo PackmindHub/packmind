@@ -1,0 +1,79 @@
+name: Nightly Packmind Artifacts Update
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Every night at 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node 22.17
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.0'
+          cache: 'npm'
+
+      - name: Install @packmind/cli globally
+        run: npm install -g @packmind/cli
+
+      - name: Switch to packmind-cli-update branch (create or reuse)
+        run: |
+          git config user.name "packmind-bot"
+          git config user.email "packmind-bot@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin packmind-cli-update; then
+            git fetch origin packmind-cli-update
+            git checkout packmind-cli-update
+            git merge --no-edit origin/main || true
+          else
+            git checkout -b packmind-cli-update
+          fi
+
+      - name: Run packmind-cli install
+        env:
+          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+        run: packmind-cli install
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No artifact changes — skipping commit/PR."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push changes
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git add -A
+          git commit -m "chore(packmind): nightly artifacts update"
+          git push origin packmind-cli-update
+
+      - name: Open PR if none exists
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh pr view packmind-cli-update --json number --jq .number 2>/dev/null; then
+            gh pr create \
+              --base main \
+              --head packmind-cli-update \
+              --title "chore(packmind): nightly artifacts update" \
+              --body "Automated nightly update of Packmind artifacts via \`packmind-cli install\`. Review the diff under \`.packmind/\` and \`packmind-lock.json\`."
+          else
+            echo "PR already exists; new commit will be appended."
+          fi
