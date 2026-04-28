@@ -107,7 +107,6 @@ export function SpaceIdentitySection({
                   selectedColor === color ? `${color}.solid` : undefined
                 }
                 outlineOffset="2px"
-                transition="outline 0.15s"
                 _hover={colorDisabled ? undefined : { opacity: 0.8 }}
                 aria-label={`Select ${color} color`}
                 aria-disabled={colorDisabled}
