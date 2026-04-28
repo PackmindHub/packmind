@@ -20,6 +20,7 @@ import {
   RemoveMemberFromSpaceCommand,
   RemoveMemberFromSpaceResponse,
   Space,
+  SpaceColor,
   UpdateMemberRoleCommand,
   UpdateMemberRoleResponse,
   SpaceId,
@@ -211,7 +212,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
 
   async updateSpace(
     spaceId: SpaceId,
-    fields: { name?: string; type?: SpaceType },
+    fields: { name?: string; type?: SpaceType; color?: SpaceColor },
   ): Promise<Space> {
     const spaceService = this.hexa.getSpaceService();
     return spaceService.updateSpace(spaceId, fields);
