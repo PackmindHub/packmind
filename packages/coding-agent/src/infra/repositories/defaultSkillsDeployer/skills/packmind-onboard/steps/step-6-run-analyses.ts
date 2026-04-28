@@ -1,6 +1,6 @@
 export const STEP_6_RUN_ANALYSES = `## Step 6 — Run Analyses
 
-Read each reference file for detailed search patterns, thresholds, and insight templates.
+When you start a given analysis, read its reference file only at that moment. Do not read all four upfront.
 
 | Analysis | Reference File | Output focus |
 |----------|----------------|--------------|
