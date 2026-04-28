@@ -8,7 +8,7 @@ import {
 } from '@packmind/ui';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
-import { getSpacesQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
+import { getOrganizationSpacesForManagementQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SpacesManagementPage } from '../../src/domain/spaces/components/SpacesManagementPage';
 import { SpacesToolbar } from '../../src/domain/spaces/components/SpacesManagementPage/SpacesToolbar';
@@ -16,28 +16,28 @@ import { SpacesToolbar } from '../../src/domain/spaces/components/SpacesManageme
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const me = await ensureOrgContext(params.orgSlug!);
   try {
-    const spaces = await queryClient.ensureQueryData(
-      getSpacesQueryOptions(me.organization.id),
+    const data = await queryClient.ensureQueryData(
+      getOrganizationSpacesForManagementQueryOptions(me.organization.id, 1),
     );
-    return { spaceCount: spaces.length };
+    return { totalCount: data.totalCount };
   } catch {
-    return { spaceCount: null };
+    return { totalCount: null };
   }
 }
 
 export default function SettingsSpacesRouteModule() {
   const { user, organization } = useAuthContext();
-  const { spaceCount } = useLoaderData<typeof clientLoader>();
+  const { totalCount } = useLoaderData<typeof clientLoader>();
 
   if (!organization) {
     return null;
   }
 
   const subtitle =
-    spaceCount === null
+    totalCount === null
       ? 'Manage every space in your organization'
-      : `Manage every space in your organization · ${spaceCount} ${
-          spaceCount === 1 ? 'space' : 'spaces'
+      : `Manage every space in your organization · ${totalCount} ${
+          totalCount === 1 ? 'space' : 'spaces'
         }`;
 
   return (
