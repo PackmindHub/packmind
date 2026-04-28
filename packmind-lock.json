@@ -16,6 +16,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "installedAt": "2026-04-28T14:57:45.915Z",
   "artifacts": {
     "command:creating-end-user-documentation-for-packmind": {
       "name": "Creating End-User Documentation for Packmind",
@@ -77,7 +78,7 @@
       "name": "Create handoff",
       "type": "command",
       "id": "f7907029-f0c1-4c32-b488-bfac6fbaab1c",
-      "version": 1,
+      "version": 2,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
