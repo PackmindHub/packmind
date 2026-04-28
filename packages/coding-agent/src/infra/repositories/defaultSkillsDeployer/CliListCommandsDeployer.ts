@@ -2,7 +2,6 @@ import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { LICENSE_TXT } from './license';
 import { skillMd } from './skills/packmind-cli-list-commands/skill.md';
-import { README } from './skills/packmind-cli-list-commands/readme';
 import { AbstractDefaultSkillDeployer } from './AbstractDefaultSkillDeployer';
 
 export class CliListCommandsDeployer
@@ -21,10 +20,6 @@ export class CliListCommandsDeployer
         {
           path: `${basePath}/SKILL.md`,
           content: this.getSkillMd(agentName, skillMd),
-        },
-        {
-          path: `${basePath}/README.md`,
-          content: README,
         },
         {
           path: `${basePath}/LICENSE.txt`,
