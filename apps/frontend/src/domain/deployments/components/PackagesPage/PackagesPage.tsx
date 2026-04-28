@@ -55,6 +55,9 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     providersResponse?.providers?.some((p) => p.hasToken) ?? false;
 
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
+  const [filteredPackageIds, setFilteredPackageIds] = React.useState<
+    PackageId[]
+  >([]);
   const [selectedPackageIds, setSelectedPackageIds] = React.useState<
     PackageId[]
   >([]);
@@ -75,7 +78,8 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   const packages = packagesResponse?.packages ?? [];
   const isSomeSelected = selectedPackageIds.length > 0;
   const isAllSelected =
-    packages.length > 0 && selectedPackageIds.length === packages.length;
+    filteredPackageIds.length > 0 &&
+    filteredPackageIds.every((id) => selectedPackageIds.includes(id));
 
   const selectedPackages = packages.filter((pkg) =>
     selectedPackageIds.includes(pkg.id),
@@ -92,8 +96,8 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   };
 
   const handleSelectAll = (isChecked: boolean) => {
-    if (isChecked && packages) {
-      setSelectedPackageIds(packages.map((p) => p.id));
+    if (isChecked) {
+      setSelectedPackageIds(filteredPackageIds);
     } else {
       setSelectedPackageIds([]);
     }
@@ -136,6 +140,8 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     const filteredPackages = packagesResponse.packages.filter((pkg) =>
       pkg.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
+
+    setFilteredPackageIds(filteredPackages.map((p) => p.id));
 
     const sortedPackages = [...filteredPackages].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;

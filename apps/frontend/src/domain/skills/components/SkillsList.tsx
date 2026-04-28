@@ -67,6 +67,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   );
 
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
+  const [filteredSkillIds, setFilteredSkillIds] = React.useState<SkillId[]>([]);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedSkillIds, setSelectedSkillIds] = React.useState<SkillId[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
@@ -84,8 +85,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   };
 
   const selectAll = () => {
-    if (!skills) return;
-    setSelectedSkillIds(skills.map((skill) => skill.id));
+    setSelectedSkillIds(filteredSkillIds);
   };
 
   const clearAll = () => setSelectedSkillIds([]);
@@ -123,6 +123,8 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     const filteredSkills = skills.filter((skill) =>
       skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
+
+    setFilteredSkillIds(filteredSkills.map((s) => s.id));
 
     const packageNamesById =
       sortKey === 'packages'
@@ -266,7 +268,8 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   ]);
 
   const isAllSelected =
-    skills?.length && selectedSkillIds.length === skills.length;
+    filteredSkillIds.length > 0 &&
+    filteredSkillIds.every((id) => selectedSkillIds.includes(id));
   const isSomeSelected = selectedSkillIds.length > 0;
 
   const columns: PMTableColumn[] = [

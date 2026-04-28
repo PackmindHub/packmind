@@ -40,19 +40,20 @@ Keeping everything in sync is impossible.
 👉 **Packmind centralizes your playbook once — and distributes it everywhere**,
 generating the exact instruction files each AI tool needs, optimized for context.
 
---- 
+---
 
 ## 🆚 Why Packmind over a plain Claude Code marketplace or a plain centralized Git repository?
+
 A marketplace distributes skills and commands from a Git repo. Packmind does more:
 
-* **Controlled editing:** context files go through a clear ownership and approval workflow. No PR discipline or CODEOWNERS conventions to enforce.
-* **Simplified updates:** update proposals are submitted from the project codebase, no separate repo to clone or PR.
-* **Multi-agent:** one source, rendered for Claude Code, Copilot, Cursor and more. No parallel CLAUDE.md or .cursor/rules to maintain.
-* **Adoption tracking:** see which context files are used, in which repo, at which version.
+- **Controlled editing:** context files go through a clear ownership and approval workflow. No PR discipline or CODEOWNERS conventions to enforce.
+- **Simplified updates:** update proposals are submitted from the project codebase, no separate repo to clone or PR.
+- **Multi-agent:** one source, rendered for Claude Code, Copilot, Cursor and more. No parallel CLAUDE.md or .cursor/rules to maintain.
+- **Adoption tracking:** see which context files are used, in which repo, at which version.
 
 A marketplace ships content. Packmind governs it.
 
---- 
+---
 
 # Get started
 

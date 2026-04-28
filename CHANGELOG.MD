@@ -3,6 +3,7 @@
 ## Added
 
 - Support new Claude Code skill frontmatter fields: `when_to_use`, `paths`, and `shell` (validated to `bash` or `powershell`)
+- Added `--skip-installed-at` flag on `install` command to avoid merge issues when working with multiple branches.
 
 ## Changed
 
