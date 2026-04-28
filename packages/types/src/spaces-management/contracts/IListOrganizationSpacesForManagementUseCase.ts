@@ -2,7 +2,7 @@ import { IUseCase, PackmindCommand } from '../../UseCase';
 import { Space } from '../../spaces/Space';
 import { UserId } from '../../accounts/User';
 
-export const ORGA_SPACE_MANAGEMENT_PAGE_SIZE = 8;
+export const ORGA_SPACE_MANAGEMENT_PAGE_SIZE = 1000;
 
 export type SpaceManagementListItemAdmin = {
   id: UserId;

@@ -19,12 +19,12 @@ const COLUMNS: PMTableColumn[] = [
     width: '110px',
     align: 'right',
   },
-  {
-    key: 'artifactsCount',
-    header: 'Artifacts',
-    width: '110px',
-    align: 'right',
-  },
+  // {
+  //   key: 'artifactsCount',
+  //   header: 'Artifacts',
+  //   width: '110px',
+  //   align: 'right',
+  // },
   { key: 'createdAt', header: 'Created', width: '140px' },
   { key: 'actions', header: '', width: '60px', align: 'right' },
 ];

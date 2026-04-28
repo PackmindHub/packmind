@@ -92,12 +92,12 @@ describe('SpacesManagementAdapter', () => {
         items: [],
         totalCount: 0,
         page: 1,
-        pageSize: 8,
+        pageSize: 1000,
       });
       expect(spacesPort.findOrgPagePaginated).toHaveBeenCalledWith(
         organizationId,
         1,
-        8,
+        1000,
       );
     });
   });

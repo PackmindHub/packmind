@@ -9,7 +9,7 @@ import {
 
 describe('IListOrganizationSpacesForManagementUseCase contract', () => {
   it('exposes the page-size constant required by the spec', () => {
-    expect(ORGA_SPACE_MANAGEMENT_PAGE_SIZE).toBe(8);
+    expect(ORGA_SPACE_MANAGEMENT_PAGE_SIZE).toBe(1000);
   });
 
   it('shapes the Command type with userId, organizationId, and page', () => {

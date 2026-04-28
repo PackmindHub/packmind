@@ -111,7 +111,7 @@ describe('SpacesTable', () => {
     expect(screen.getByText('Name')).toBeInTheDocument();
     expect(screen.getByText('Admins')).toBeInTheDocument();
     expect(screen.getByText('Members')).toBeInTheDocument();
-    expect(screen.getByText('Artifacts')).toBeInTheDocument();
+    // expect(screen.getByText('Artifacts')).toBeInTheDocument();
     expect(screen.getByText('Created')).toBeInTheDocument();
   });
 
