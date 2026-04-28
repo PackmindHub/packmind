@@ -36,6 +36,8 @@ const SPACE_TYPE_OPTIONS = [
 interface CreateSpaceDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  redirectAfterCreate?: boolean;
+  onCreated?: () => void | Promise<void>;
 }
 
 const SPACE_NAME_MAX_LENGTH = 64;
@@ -43,6 +45,8 @@ const SPACE_NAME_MAX_LENGTH = 64;
 export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
   open,
   setOpen,
+  redirectAfterCreate = true,
+  onCreated,
 }) => {
   const navigate = useNavigate();
   const { organization } = useAuthContext();
@@ -75,9 +79,15 @@ export const CreateSpaceDialog: React.FC<CreateSpaceDialogProps> = ({
       setSpaceName('');
       setSpaceType(SpaceType.private);
       setSpaceNameError(undefined);
+
+      if (onCreated) {
+        await onCreated();
+        return;
+      }
+
       setOpen(false);
 
-      if (organization) {
+      if (redirectAfterCreate && organization) {
         navigate(routes.space.toDashboard(organization.slug, space.slug));
       }
     } catch (error) {
