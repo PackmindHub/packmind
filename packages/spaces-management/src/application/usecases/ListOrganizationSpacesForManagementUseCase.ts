@@ -1,6 +1,7 @@
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  createOrganizationId,
   IAccountsPort,
   IRecipesPort,
   ISkillsPort,
@@ -42,9 +43,10 @@ export class ListOrganizationSpacesForManagementUseCase extends AbstractAdminUse
       throw new InvalidPageError(page);
     }
 
+    const brandedOrganizationId = createOrganizationId(organizationId);
     const { items: spaces, totalCount } =
       await this.spacesPort.findOrgPagePaginated(
-        organizationId,
+        brandedOrganizationId,
         page,
         ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
       );

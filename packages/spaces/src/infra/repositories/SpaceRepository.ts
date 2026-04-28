@@ -153,12 +153,14 @@ export class SpaceRepository
 
     try {
       const skip = (page - 1) * pageSize;
-      const [items, totalCount] = await this.repository.findAndCount({
-        where: { organizationId },
-        order: { isDefaultSpace: 'DESC', createdAt: 'ASC' },
-        skip,
-        take: pageSize,
-      });
+      const [items, totalCount] = await this.repository
+        .createQueryBuilder('space')
+        .where('space.organization_id = :organizationId', { organizationId })
+        .orderBy('space.is_default_space', 'DESC')
+        .addOrderBy('space.created_at', 'ASC')
+        .skip(skip)
+        .take(pageSize)
+        .getManyAndCount();
       this.logger.info('Org spaces page found', {
         organizationId,
         page,
