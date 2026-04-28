@@ -40,12 +40,12 @@ export function PMMarkdownViewer({
     if (transformLinkUri) {
       instance.use({
         renderer: {
-          link(token) {
+          link: (token) => {
             const transformed = transformLinkUri(token.href);
             const titleAttr = token.title
               ? ` title="${escapeHtmlAttr(token.title)}"`
               : '';
-            const text = this.parser.parseInline(token.tokens);
+            const text = instance.Parser.parseInline(token.tokens);
             return `<a href="${escapeHtmlAttr(transformed)}"${titleAttr}>${text}</a>`;
           },
         },
