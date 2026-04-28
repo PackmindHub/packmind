@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
-import {
-  PMAlert,
-  PMBox,
-  PMEmptyState,
-  PMSpinner,
-  PMVStack,
-} from '@packmind/ui';
-import { useGetSpacesQuery } from '../../api/queries';
-import { SpacesBulkActionBar } from './SpacesBulkActionBar';
+import { PMAlert, PMBox, PMSpinner, PMVStack } from '@packmind/ui';
+import { useGetOrganizationSpacesForManagementQuery } from '../../api/queries/SpacesQueries';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { SpacesTable } from './SpacesTable';
 import { SpacesPagination } from './SpacesPagination';
 import { toSpaceListItem } from './toSpaceListItem';
 
-const PAGE_SIZE = 8;
-
 export const SpacesManagementPage: React.FC = () => {
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const { data, isLoading, isError } = useGetSpacesQuery();
+  const { organization } = useAuthContext();
+  const [page, setPage] = useState(1);
+  const orgId = organization?.id ?? '';
+  const { data, isLoading, isError } =
+    useGetOrganizationSpacesForManagementQuery(orgId, page);
 
   if (isError) {
     return (
@@ -40,43 +35,17 @@ export const SpacesManagementPage: React.FC = () => {
     );
   }
 
-  const spaces = data;
-
-  if (spaces.length === 0) {
-    return (
-      <PMBox data-testid="spaces-empty" py={8}>
-        <PMEmptyState
-          title="No spaces yet"
-          description="You don't belong to any space in this organization."
-        />
-      </PMBox>
-    );
-  }
-
-  const items = spaces.map(toSpaceListItem);
-  const visibleSpaces = items.slice(0, PAGE_SIZE);
-  const totalCount = items.length;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const rows = data.items.map(toSpaceListItem);
 
   return (
     <PMVStack alignItems="stretch" gap={4} width="full">
-      <SpacesBulkActionBar
-        selectedCount={selectedRows.size}
-        onClear={() => setSelectedRows(new Set())}
+      <SpacesTable spaces={rows} />
+      <SpacesPagination
+        page={data.page}
+        pageSize={data.pageSize}
+        totalCount={data.totalCount}
+        onPageChange={setPage}
       />
-      <SpacesTable
-        spaces={visibleSpaces}
-        selectedRows={selectedRows}
-        onSelectionChange={setSelectedRows}
-      />
-      {totalCount > PAGE_SIZE && (
-        <SpacesPagination
-          totalCount={totalCount}
-          pageSize={PAGE_SIZE}
-          currentPage={1}
-          totalPages={totalPages}
-        />
-      )}
     </PMVStack>
   );
 };

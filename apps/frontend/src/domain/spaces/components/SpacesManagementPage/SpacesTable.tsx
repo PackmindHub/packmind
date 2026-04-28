@@ -8,8 +8,8 @@ import { formatCount, formatCreatedAt } from './formatters';
 
 interface SpacesTableProps {
   spaces: SpaceListItem[];
-  selectedRows: Set<string>;
-  onSelectionChange: (rows: Set<string>) => void;
+  selectedRows?: Set<string>;
+  onSelectionChange?: (rows: Set<string>) => void;
 }
 
 const COLUMNS: PMTableColumn[] = [
