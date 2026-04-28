@@ -8,8 +8,6 @@ import { formatCount, formatCreatedAt } from './formatters';
 
 interface SpacesTableProps {
   spaces: SpaceListItem[];
-  selectedRows?: Set<string>;
-  onSelectionChange?: (rows: Set<string>) => void;
 }
 
 const COLUMNS: PMTableColumn[] = [
@@ -31,11 +29,7 @@ const COLUMNS: PMTableColumn[] = [
   { key: 'actions', header: '', width: '60px', align: 'right' },
 ];
 
-export const SpacesTable: React.FC<SpacesTableProps> = ({
-  spaces,
-  selectedRows,
-  onSelectionChange,
-}) => {
+export const SpacesTable: React.FC<SpacesTableProps> = ({ spaces }) => {
   const rows = useMemo<PMTableRow[]>(
     () =>
       spaces.map((space) => ({
@@ -56,16 +50,5 @@ export const SpacesTable: React.FC<SpacesTableProps> = ({
     [spaces],
   );
 
-  return (
-    <PMTable
-      columns={COLUMNS}
-      data={rows}
-      selectable
-      getRowId={(row) => (row as { id: string }).id}
-      selectedRows={selectedRows}
-      onSelectionChange={onSelectionChange}
-      striped={false}
-      hoverable
-    />
-  );
+  return <PMTable columns={COLUMNS} data={rows} striped={false} hoverable />;
 };
