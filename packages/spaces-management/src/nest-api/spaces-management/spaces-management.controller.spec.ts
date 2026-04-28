@@ -9,6 +9,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   AuthenticatedRequest,
+  SpaceAdminRequiredError,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import {
@@ -18,17 +19,20 @@ import {
   createSkillId,
   ArtifactReference,
   MoveArtifactsToSpaceResponse,
+  SpaceColor,
   SpaceType,
 } from '@packmind/types';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { SpaceSlugConflictError } from '@packmind/spaces';
+import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
+import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { SpacesManagementController } from './spaces-management.controller';
@@ -51,6 +55,7 @@ describe('SpacesManagementController', () => {
     logger = stubLogger();
     service = {
       createSpace: jest.fn(),
+      updateSpace: jest.fn(),
       moveArtifactsToSpace: jest.fn(),
       browseSpaces: jest.fn(),
       joinSpace: jest.fn(),
@@ -430,6 +435,133 @@ describe('SpacesManagementController', () => {
         await expect(
           controller.joinSpace(organizationId, spaceId, mockRequest),
         ).rejects.toThrow(ForbiddenException);
+      });
+    });
+  });
+
+  describe('updateSpace', () => {
+    const spaceId = createSpaceId('space-1');
+    const mockUpdatedSpace = spaceFactory({
+      id: spaceId,
+      organizationId,
+      name: 'Updated',
+      color: 'purple',
+    });
+
+    describe('when the body includes a color', () => {
+      beforeEach(() => {
+        service.updateSpace.mockResolvedValue(mockUpdatedSpace);
+      });
+
+      it('forwards color to the service', async () => {
+        await controller.updateSpace(
+          organizationId,
+          spaceId,
+          { color: 'purple' as SpaceColor },
+          mockRequest,
+        );
+
+        expect(service.updateSpace).toHaveBeenCalledWith(
+          expect.objectContaining({ color: 'purple' }),
+        );
+      });
+    });
+
+    describe('when the service throws CannotRenameDefaultSpaceError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new CannotRenameDefaultSpaceError(spaceId),
+        );
+      });
+
+      it('responds with 422', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { name: 'x' },
+            mockRequest,
+          ),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('when the service throws SpaceAdminRequiredError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new SpaceAdminRequiredError('user-123', spaceId),
+        );
+      });
+
+      it('responds with 403', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { name: 'x' },
+            mockRequest,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the service throws OrganizationAdminRequiredError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new OrganizationAdminRequiredError({
+            userId: 'user-123',
+            organizationId,
+          }),
+        );
+      });
+
+      it('responds with 403', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { type: SpaceType.open },
+            mockRequest,
+          ),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when the service throws CannotUpdateDefaultSpaceVisibilityError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new CannotUpdateDefaultSpaceVisibilityError(spaceId),
+        );
+      });
+
+      it('responds with 422', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { type: SpaceType.private },
+            mockRequest,
+          ),
+        ).rejects.toThrow(UnprocessableEntityException);
+      });
+    });
+
+    describe('when the service throws InvalidSpaceColorError', () => {
+      beforeEach(() => {
+        service.updateSpace.mockRejectedValue(
+          new InvalidSpaceColorError('chartreuse'),
+        );
+      });
+
+      it('responds with 400', async () => {
+        await expect(
+          controller.updateSpace(
+            organizationId,
+            spaceId,
+            { color: 'chartreuse' as unknown as SpaceColor },
+            mockRequest,
+          ),
+        ).rejects.toThrow(BadRequestException);
       });
     });
   });

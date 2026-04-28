@@ -18,6 +18,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   AuthenticatedRequest,
+  SpaceAdminRequiredError,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import {
@@ -27,11 +28,12 @@ import {
   PackmindCommandBody,
   MoveArtifactsToSpaceCommand,
   Space,
+  SpaceColor,
   SpaceType,
   BrowseSpacesResponse,
   SpaceId,
 } from '@packmind/types';
-import { SpaceSlugConflictError } from '@packmind/spaces';
+import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
@@ -41,7 +43,9 @@ import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteD
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
+import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
+import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { SpacesManagementService } from './spaces-management.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
@@ -260,7 +264,7 @@ export class SpacesManagementController {
   async updateSpace(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
-    @Body() body: { name?: string; type?: SpaceType },
+    @Body() body: { name?: string; type?: SpaceType; color?: SpaceColor },
     @Req() request: AuthenticatedRequest,
   ): Promise<Space> {
     const userId = request.user.userId;
@@ -277,6 +281,7 @@ export class SpacesManagementController {
         spaceId,
         name: body.name?.trim() || undefined,
         type: body.type,
+        color: body.color,
       });
     } catch (error) {
       if (error instanceof SpaceNotFoundError) {
@@ -284,6 +289,21 @@ export class SpacesManagementController {
       }
       if (error instanceof SpaceSlugConflictError) {
         throw new ConflictException(error.message);
+      }
+      if (error instanceof CannotRenameDefaultSpaceError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof CannotUpdateDefaultSpaceVisibilityError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof SpaceAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof OrganizationAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
+      if (error instanceof InvalidSpaceColorError) {
+        throw new BadRequestException(error.message);
       }
       throw error;
     }

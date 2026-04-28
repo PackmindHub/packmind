@@ -15,9 +15,9 @@ import {
   SpaceDeletedEvent,
   UserSpaceRole,
 } from '@packmind/types';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 
 export class DeleteSpaceUseCase extends AbstractMemberUseCase<
   DeleteSpaceCommand,

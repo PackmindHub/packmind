@@ -6,3 +6,4 @@ export * from './SpacePinnedEvent';
 export * from './SpaceUnpinnedEvent';
 export * from './SpaceVisibilityUpdatedEvent';
 export * from './SpaceDeletedEvent';
+export * from './SpaceRenamedEvent';

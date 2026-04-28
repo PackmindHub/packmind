@@ -19,7 +19,6 @@ import type {
   BrowsableSpace,
   UserSpaceWithRole,
 } from '@packmind/types';
-import { getSpaceColorPalette } from '../../organizations/components/sidebar/SpaceNavBlock';
 import { SpaceVisibilityIcon } from '../../organizations/components/sidebar/SpaceVisibilityIcon';
 import { sortSpacesByName } from '../utils/sortSpacesByName';
 
@@ -297,11 +296,7 @@ function MySpacesTab({
           textAlign="left"
           data-testid={`browse-spaces-my-${space.id}`}
         >
-          <PMStatus.Root
-            colorPalette={getSpaceColorPalette(space.name)}
-            as="span"
-            flexShrink={0}
-          >
+          <PMStatus.Root colorPalette={space.color} as="span" flexShrink={0}>
             <PMStatus.Indicator />
           </PMStatus.Root>
           <PMBox display="flex" alignItems="center" flex={1} minW={0}>
@@ -385,11 +380,7 @@ function AllSpacesTab({
           _hover={{ backgroundColor: 'blue.900' }}
           data-testid={`browse-spaces-all-${space.id}`}
         >
-          <PMStatus.Root
-            colorPalette={getSpaceColorPalette(space.name)}
-            as="span"
-            flexShrink={0}
-          >
+          <PMStatus.Root colorPalette={space.color} as="span" flexShrink={0}>
             <PMStatus.Indicator />
           </PMStatus.Root>
           <PMText

@@ -20,17 +20,18 @@ export function SpaceGeneralSettings() {
   const currentUserMember = data?.members?.find((m) => m.userId === user?.id);
   const isSpaceAdmin = currentUserMember?.role === 'admin';
   const isOrgAdmin = organization?.role === 'admin';
+  const canEditIdentity = isSpaceAdmin || isOrgAdmin;
   const canDeleteSpace = isSpaceAdmin || isOrgAdmin;
 
   return (
     <PMVStack align="stretch" gap={6} pt={4}>
-      {isSpaceAdmin && (
+      {space && (
         <PMFeatureFlag
           featureKeys={[SPACE_IDENTITY_FEATURE_KEY]}
           featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
           userEmail={user?.email}
         >
-          <SpaceIdentitySection />
+          <SpaceIdentitySection space={space} canEdit={canEditIdentity} />
         </PMFeatureFlag>
       )}
       {isSpaceAdmin && !space?.isDefaultSpace && <SpaceAccessSection />}

@@ -35,7 +35,7 @@ import {
   UnpinSpaceResponse,
   createOrganizationId,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { MoveArtifactsToSpaceUseCase } from '../usecases/MoveArtifactsToSpaceUseCase';
 import { BrowseSpacesUseCase } from '../usecases/BrowseSpacesUseCase';

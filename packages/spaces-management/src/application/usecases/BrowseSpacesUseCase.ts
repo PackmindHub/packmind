@@ -45,6 +45,7 @@ export class BrowseSpacesUseCase extends AbstractMemberUseCase<
         name: space.name,
         slug: space.slug,
         type: space.type,
+        color: space.color,
       }));
 
     return {

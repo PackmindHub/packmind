@@ -15,7 +15,7 @@ import {
   SpaceType,
   UserSpaceRole,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { SpaceNotJoinableError } from '../../domain/errors/SpaceNotJoinableError';
 
 export class JoinSpaceUseCase extends AbstractMemberUseCase<

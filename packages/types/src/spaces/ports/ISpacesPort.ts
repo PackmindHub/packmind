@@ -1,6 +1,7 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
 import { Space, SpaceType } from '../Space';
+import { SpaceColor } from '../SpaceColor';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
 import {
@@ -182,13 +183,13 @@ export interface ISpacesPort {
   removeSpaceMembership(userId: UserId, spaceId: SpaceId): Promise<boolean>;
 
   /**
-   * Update a space's mutable fields (name, type).
-   * Slug is regenerated automatically when name changes.
+   * Update a space's mutable fields (name, type, color).
+   * Slug remains stable — collision is checked but slug is not regenerated.
    * Returns the updated space.
    */
   updateSpace(
     spaceId: SpaceId,
-    fields: { name?: string; type?: SpaceType },
+    fields: { name?: string; type?: SpaceType; color?: SpaceColor },
   ): Promise<Space>;
 
   /**

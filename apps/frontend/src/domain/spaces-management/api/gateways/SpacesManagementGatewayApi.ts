@@ -1,6 +1,7 @@
 import {
   BrowseSpacesResponse,
   Space,
+  SpaceColor,
   SpaceId,
   SpaceType,
 } from '@packmind/types';
@@ -90,7 +91,7 @@ export class SpacesManagementGatewayApi
   async updateSpace(
     orgId: string,
     spaceId: SpaceId,
-    fields: { name?: string; type?: SpaceType },
+    fields: { name?: string; type?: SpaceType; color?: SpaceColor },
   ): Promise<Space> {
     if (!orgId) {
       throw new Error('Organization ID is required to update a space');

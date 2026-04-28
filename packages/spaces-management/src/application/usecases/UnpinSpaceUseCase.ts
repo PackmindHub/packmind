@@ -12,8 +12,8 @@ import {
   UnpinSpaceResponse,
   SpaceUnpinnedEvent,
 } from '@packmind/types';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 
 export class UnpinSpaceUseCase extends AbstractSpaceMemberUseCase<
   UnpinSpaceCommand,

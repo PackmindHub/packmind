@@ -22,6 +22,7 @@ import {
   SpaceMembersAddedEvent,
   SpaceMembersRemovedEvent,
   SpaceMembersRoleUpdatedEvent,
+  SpaceRenamedEvent,
   SpacePinnedEvent,
   SpaceUnpinnedEvent,
   SpaceVisibilityUpdatedEvent,
@@ -664,6 +665,37 @@ describe('AmplitudeEventListener', () => {
           spaceId: 'space-789',
           memberCount: 1,
           newRole: 'admin',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('SpaceRenamedEvent', () => {
+    it('tracks space_renamed event with correct payload', async () => {
+      const event = new SpaceRenamedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        spaceId: createSpaceId('space-789'),
+        spaceSlug: 'my-space',
+        oldName: 'Old Space',
+        newName: 'New Space',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'space_renamed',
+        {
+          spaceId: 'space-789',
+          spaceSlug: 'my-space',
+          oldName: 'Old Space',
+          newName: 'New Space',
           source: 'ui',
         },
       );

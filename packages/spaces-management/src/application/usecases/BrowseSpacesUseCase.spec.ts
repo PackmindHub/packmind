@@ -120,12 +120,14 @@ describe('BrowseSpacesUseCase', () => {
           name: openSpace.name,
           slug: openSpace.slug,
           type: SpaceType.open,
+          color: openSpace.color,
         },
         {
           id: restrictedSpace.id,
           name: restrictedSpace.name,
           slug: restrictedSpace.slug,
           type: SpaceType.restricted,
+          color: restrictedSpace.color,
         },
       ]);
     });
@@ -246,6 +248,7 @@ describe('BrowseSpacesUseCase', () => {
           name: privateSpace.name,
           slug: privateSpace.slug,
           type: SpaceType.private,
+          color: privateSpace.color,
         },
       ]);
     });

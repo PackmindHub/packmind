@@ -12,7 +12,7 @@ import {
   LeaveSpaceResponse,
   SpaceMembersRemovedEvent,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { CannotLeaveDefaultSpaceError } from '../../domain/errors/CannotLeaveDefaultSpaceError';
 
 export class LeaveSpaceUseCase extends AbstractSpaceMemberUseCase<

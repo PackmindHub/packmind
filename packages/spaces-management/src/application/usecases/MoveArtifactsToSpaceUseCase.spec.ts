@@ -24,10 +24,10 @@ import { standardFactory } from '@packmind/standards/test/standardFactory';
 import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { stubLogger } from '@packmind/test-utils';
+import { SpaceNotFoundError } from '@packmind/spaces';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../domain/errors/SpaceOwnershipMismatchError';
 import { MoveArtifactsToSpaceUseCase } from './MoveArtifactsToSpaceUseCase';
 

@@ -1,21 +1,27 @@
 import {
   AbstractSpaceAdminUseCase,
+  MemberContext,
   OrganizationAdminRequiredError,
   PackmindEventEmitterService,
   SpaceAdminContext,
 } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
   createUserId,
   IAccountsPort,
   ISpacesPort,
+  isSpaceColor,
+  SpaceRenamedEvent,
   SpaceType,
   SpaceVisibilityUpdatedEvent,
   UpdateSpaceCommand,
   UpdateSpaceResponse,
 } from '@packmind/types';
+import { SpaceNotFoundError } from '@packmind/spaces';
+import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
-import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
+import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';
 
 export class UpdateSpaceUseCase extends AbstractSpaceAdminUseCase<
   UpdateSpaceCommand,
@@ -25,23 +31,40 @@ export class UpdateSpaceUseCase extends AbstractSpaceAdminUseCase<
     spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    logger: PackmindLogger = new PackmindLogger('UpdateSpaceUseCase'),
   ) {
-    super(spacesPort, accountsPort);
+    super(spacesPort, accountsPort, logger);
+  }
+
+  protected override async executeForMembers(
+    command: UpdateSpaceCommand & MemberContext,
+  ): Promise<UpdateSpaceResponse> {
+    if (command.membership.role === 'admin') {
+      return this.executeForSpaceAdmins(command);
+    }
+    return super.executeForMembers(command);
   }
 
   protected async executeForSpaceAdmins(
     command: UpdateSpaceCommand & SpaceAdminContext,
   ): Promise<UpdateSpaceResponse> {
     const organizationId = createOrganizationId(command.organizationId);
+    const userId = createUserId(command.userId);
+    const { spaceId } = command;
 
-    const space = await this.spacesPort.getSpaceById(command.spaceId);
-
+    const space = await this.spacesPort.getSpaceById(spaceId);
     if (!space || space.organizationId !== organizationId) {
-      throw new SpaceNotFoundError(command.spaceId);
+      throw new SpaceNotFoundError(spaceId);
+    }
+
+    const isRenaming =
+      command.name !== undefined && command.name !== space.name;
+    if (isRenaming && space.isDefaultSpace) {
+      throw new CannotRenameDefaultSpaceError(spaceId);
     }
 
     if (command.type !== undefined && space.isDefaultSpace) {
-      throw new CannotUpdateDefaultSpaceVisibilityError(command.spaceId);
+      throw new CannotUpdateDefaultSpaceVisibilityError(spaceId);
     }
 
     if (
@@ -55,32 +78,46 @@ export class UpdateSpaceUseCase extends AbstractSpaceAdminUseCase<
       });
     }
 
-    const fields: { name?: string; type?: SpaceType } = {};
-
-    if (command.name !== undefined) {
-      fields.name = command.name;
+    if (command.color !== undefined && !isSpaceColor(command.color)) {
+      throw new InvalidSpaceColorError(command.color as string);
     }
 
-    if (command.type !== undefined) {
-      fields.type = command.type;
-    }
+    const hasChanges =
+      command.name !== undefined ||
+      command.type !== undefined ||
+      command.color !== undefined;
 
-    if (Object.keys(fields).length === 0) {
+    if (!hasChanges) {
       return space;
     }
 
-    const updatedSpace = await this.spacesPort.updateSpace(
-      command.spaceId,
-      fields,
-    );
+    const updatedSpace = await this.spacesPort.updateSpace(spaceId, {
+      name: command.name,
+      type: command.type,
+      color: command.color,
+    });
 
-    if (command.type !== undefined) {
+    if (isRenaming) {
       this.eventEmitterService.emit(
-        new SpaceVisibilityUpdatedEvent({
-          userId: createUserId(command.userId),
+        new SpaceRenamedEvent({
+          userId,
           organizationId,
           source: command.source ?? 'ui',
-          spaceId: command.spaceId,
+          spaceId,
+          spaceSlug: updatedSpace.slug,
+          oldName: space.name,
+          newName: updatedSpace.name,
+        }),
+      );
+    }
+
+    if (command.type !== undefined && command.type !== space.type) {
+      this.eventEmitterService.emit(
+        new SpaceVisibilityUpdatedEvent({
+          userId,
+          organizationId,
+          source: command.source ?? 'ui',
+          spaceId,
           newVisibility: command.type,
         }),
       );
