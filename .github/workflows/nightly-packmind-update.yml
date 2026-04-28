@@ -2,7 +2,7 @@ name: Nightly Packmind Artifacts Update
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Every night at 02:00 UTC
+    - cron: '0 2 * * 1-5' # Every weeknight at 02:00 UTC (Mon–Fri)
   workflow_dispatch:
 
 permissions:
