@@ -32,13 +32,17 @@ export function SpaceIdentitySection({
   const nameDisabled = !canEdit || isDefaultSpace;
   const colorDisabled = !canEdit;
 
-  const hasChanges =
-    (name !== space.name && !isDefaultSpace) || selectedColor !== space.color;
+  const trimmedName = name.trim();
+  const isNameValid = trimmedName.length > 0;
+  const isNameDirty = trimmedName !== space.name && !isDefaultSpace;
+  const isColorDirty = selectedColor !== space.color;
+  const hasChanges = isNameDirty || isColorDirty;
+  const showNameRequiredError = !nameDisabled && !isNameValid;
 
   const handleSave = async () => {
     const fields: { name?: string; color?: SpaceColor } = {};
-    if (name !== space.name && !isDefaultSpace) fields.name = name;
-    if (selectedColor !== space.color) fields.color = selectedColor;
+    if (isNameDirty) fields.name = trimmedName;
+    if (isColorDirty) fields.color = selectedColor;
     if (Object.keys(fields).length === 0) return;
 
     try {
@@ -83,7 +87,7 @@ export function SpaceIdentitySection({
             </PMAlert.Description>
           </PMAlert.Root>
         )}
-        <PMField.Root disabled={nameDisabled}>
+        <PMField.Root disabled={nameDisabled} invalid={showNameRequiredError}>
           <PMField.Label>Name</PMField.Label>
           <PMInput
             value={name}
@@ -92,7 +96,9 @@ export function SpaceIdentitySection({
             disabled={nameDisabled}
             aria-label="Name"
           />
-          {isDefaultSpace ? (
+          {showNameRequiredError ? (
+            <PMField.ErrorText>Name is required.</PMField.ErrorText>
+          ) : isDefaultSpace ? (
             <PMField.HelperText>
               The default space cannot be renamed.
             </PMField.HelperText>
@@ -133,7 +139,12 @@ export function SpaceIdentitySection({
           <PMButton
             variant="secondary"
             onClick={handleSave}
-            disabled={!canEdit || !hasChanges || updateSpaceMutation.isPending}
+            disabled={
+              !canEdit ||
+              !hasChanges ||
+              !isNameValid ||
+              updateSpaceMutation.isPending
+            }
             loading={updateSpaceMutation.isPending}
           >
             Save changes
