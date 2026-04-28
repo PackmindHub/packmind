@@ -4,6 +4,8 @@ import {
   CreateSpaceCommand,
   CreateSpaceResponse,
   ISpacesManagementPort,
+  ListOrganizationSpacesForManagementCommand,
+  ListOrganizationSpacesForManagementResponse,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
   BrowseSpacesCommand,
@@ -60,6 +62,18 @@ export class SpacesManagementService {
       organizationId: command.organizationId,
     });
     return this.spacesManagementAdapter.browseSpaces(command);
+  }
+
+  async listOrganizationSpacesForManagement(
+    command: ListOrganizationSpacesForManagementCommand,
+  ): Promise<ListOrganizationSpacesForManagementResponse> {
+    this.logger.info('Listing organization spaces for management', {
+      organizationId: command.organizationId,
+      page: command.page,
+    });
+    return this.spacesManagementAdapter.listOrganizationSpacesForManagement(
+      command,
+    );
   }
 
   async joinSpace(command: JoinSpaceCommand): Promise<JoinSpaceResponse> {
