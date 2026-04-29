@@ -5,7 +5,12 @@ import {
   HexaRegistry,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { IEventTrackingPort, IEventTrackingPortName } from '@packmind/types';
+import {
+  IAccountsPort,
+  IAccountsPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AmplitudeEventListener } from './application/AmplitudeEventListener';
 import { EventTrackingAdapter } from './application/EventTrackingAdapter';
@@ -57,6 +62,20 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
       PackmindEventEmitterService,
     );
     this.listener.initialize(eventEmitterService);
+
+    try {
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      this.listener.setAccountsAdapter(accountsPort);
+      this.logger.info('AccountsPort wired into AmplitudeEventListener');
+    } catch (error) {
+      this.logger.warn(
+        'AccountsPort not available; test-user filtering disabled',
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
 
     this.logger.info('AmplitudeHexa initialized successfully');
   }

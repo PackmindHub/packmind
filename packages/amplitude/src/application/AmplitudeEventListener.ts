@@ -1,4 +1,5 @@
 import { PackmindListener } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
 import {
   StandardCreatedEvent,
   StandardUpdatedEvent,
@@ -18,8 +19,10 @@ import {
   SkillUpdatedEvent,
   RuleUpdatedEvent,
   UserEvent,
+  UserId,
   UserSignedUpEvent,
   UserSignedInEvent,
+  IAccountsPort,
   OrganizationCreatedEvent,
   StandardSampleSelectedEvent,
   ChangeProposalSubmittedEvent,
@@ -39,6 +42,8 @@ import {
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
 
+const TEST_USER_EMAIL_PREFIX = 'test-';
+
 /**
  * Listens to domain events and forwards them to Amplitude for tracking.
  *
@@ -46,6 +51,39 @@ import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
  * PackmindEventEmitterService and translates them into Amplitude tracking calls.
  */
 export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapter> {
+  private readonly logger = new PackmindLogger('AmplitudeEventListener');
+  private accountsAdapter?: IAccountsPort;
+  private readonly testUserCache = new Map<string, boolean>();
+
+  setAccountsAdapter(adapter: IAccountsPort): void {
+    this.accountsAdapter = adapter;
+  }
+
+  private async isTestUser(userId: UserId): Promise<boolean> {
+    const cached = this.testUserCache.get(userId);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    if (!this.accountsAdapter) {
+      return false;
+    }
+
+    try {
+      const user = await this.accountsAdapter.getUserById(userId);
+      const isTest =
+        !!user && user.email.toLowerCase().startsWith(TEST_USER_EMAIL_PREFIX);
+      this.testUserCache.set(userId, isTest);
+      return isTest;
+    } catch (error) {
+      this.logger.debug('Failed to resolve user for test-user filter', {
+        userId: userId.substring(0, 6) + '*',
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return false;
+    }
+  }
+
   protected registerHandlers(): void {
     this.subscribe(StandardCreatedEvent, this.onStandardCreated);
     this.subscribe(StandardUpdatedEvent, this.onStandardUpdated);
@@ -101,6 +139,14 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     transformer: (payload: T['payload']) => AmplitudeMetadata,
   ) {
     const { userId, organizationId } = event.payload;
+
+    if (await this.isTestUser(userId)) {
+      this.logger.debug('Skipping Amplitude event for test user', {
+        eventName,
+        userId: userId.substring(0, 6) + '*',
+      });
+      return;
+    }
 
     await this.adapter.trackEvent(userId, organizationId, eventName, {
       ...transformer(event.payload),
@@ -306,7 +352,18 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
   private onOrganizationCreatedEvent = async (
     event: OrganizationCreatedEvent,
   ): Promise<void> => {
-    const { organizationId, name } = event.payload;
+    const { userId, organizationId, name } = event.payload;
+
+    if (await this.isTestUser(userId)) {
+      this.logger.debug(
+        'Skipping Amplitude organization identify for test user',
+        {
+          eventName: 'new_organization_created',
+          userId: userId.substring(0, 6) + '*',
+        },
+      );
+      return;
+    }
 
     // Set the organization group name in Amplitude
     await this.adapter.identifyOrganizationGroup(organizationId, name);

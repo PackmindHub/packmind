@@ -2,6 +2,7 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   ArtifactsPulledEvent,
   DeploymentCompletedEvent,
+  IAccountsPort,
   IEventTrackingPort,
   CommandCreatedEvent,
   CommandUpdatedEvent,
@@ -13,6 +14,7 @@ import {
   LinterRuleSeverityUpdatedEvent,
   SkillCreatedEvent,
   OrganizationCreatedEvent,
+  User,
   UserSignedInEvent,
   ChangeProposalSubmittedEvent,
   ChangeProposalAcceptedEvent,
@@ -42,6 +44,19 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AmplitudeEventListener } from './AmplitudeEventListener';
+
+function buildUser(overrides: Partial<User> = {}): User {
+  return {
+    id: createUserId('user-123'),
+    email: 'real-user@example.com',
+    displayName: null,
+    passwordHash: null,
+    active: true,
+    memberships: [],
+    trial: false,
+    ...overrides,
+  };
+}
 
 describe('AmplitudeEventListener', () => {
   let listener: AmplitudeEventListener;
@@ -855,6 +870,119 @@ describe('AmplitudeEventListener', () => {
           source: 'api',
         },
       );
+    });
+  });
+
+  describe('test-user filtering', () => {
+    let mockAccountsPort: jest.Mocked<Pick<IAccountsPort, 'getUserById'>>;
+
+    const buildEvent = (userIdValue: string) =>
+      new StandardCreatedEvent({
+        userId: createUserId(userIdValue),
+        organizationId: createOrganizationId('org-456'),
+        standardId: createStandardId('std-789'),
+        spaceId: createSpaceId('space-abc'),
+        source: 'ui',
+      });
+
+    beforeEach(() => {
+      mockAccountsPort = {
+        getUserById: jest.fn(),
+      };
+      listener.setAccountsAdapter(mockAccountsPort as unknown as IAccountsPort);
+    });
+
+    it('skips trackEvent when user email starts with test-', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(
+        buildUser({
+          id: createUserId('user-test'),
+          email: 'test-abc@example.com',
+        }),
+      );
+
+      eventEmitterService.emit(buildEvent('user-test'));
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
+    });
+
+    it('matches test- prefix case-insensitively', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(
+        buildUser({
+          id: createUserId('user-test-upper'),
+          email: 'TEST-foo@example.com',
+        }),
+      );
+
+      eventEmitterService.emit(buildEvent('user-test-upper'));
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
+    });
+
+    it('still tracks events for users without test- prefix', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(
+        buildUser({
+          id: createUserId('user-real'),
+          email: 'someone@packmind.com',
+        }),
+      );
+
+      eventEmitterService.emit(buildEvent('user-real'));
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it('caches the lookup so getUserById is called once per user', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(
+        buildUser({
+          id: createUserId('user-test'),
+          email: 'test-abc@example.com',
+        }),
+      );
+
+      eventEmitterService.emit(buildEvent('user-test'));
+      await flushPromises();
+      eventEmitterService.emit(buildEvent('user-test'));
+      await flushPromises();
+      eventEmitterService.emit(buildEvent('user-test'));
+      await flushPromises();
+
+      expect(mockAccountsPort.getUserById).toHaveBeenCalledTimes(1);
+      expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
+    });
+
+    it('falls through (tracks) when getUserById throws', async () => {
+      mockAccountsPort.getUserById.mockRejectedValue(new Error('db down'));
+
+      eventEmitterService.emit(buildEvent('user-unknown'));
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips identifyOrganizationGroup for test users on OrganizationCreatedEvent', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(
+        buildUser({
+          id: createUserId('user-test'),
+          email: 'test-abc@example.com',
+        }),
+      );
+
+      const event = new OrganizationCreatedEvent({
+        userId: createUserId('user-test'),
+        organizationId: createOrganizationId('org-test'),
+        name: 'test-org',
+        method: 'trial',
+        source: 'api',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.identifyOrganizationGroup).not.toHaveBeenCalled();
+      expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
     });
   });
 });
