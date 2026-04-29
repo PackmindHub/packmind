@@ -11,13 +11,12 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { Package, SpaceType } from '@packmind/types';
+import { Package, Space, SpaceType } from '@packmind/types';
 
 import {
   useLeaveSpaceMutation,
   useDeleteSpaceMutation,
 } from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
-import { useCurrentSpace } from '../hooks/useCurrentSpace';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -81,11 +80,13 @@ function DeleteSpaceConfirmationDialog({
   spaceName,
   packages,
   isPending,
+  isDisabled,
   onConfirm,
 }: Readonly<{
   spaceName: string;
   packages: Package[];
   isPending: boolean;
+  isDisabled: boolean;
   onConfirm: (onSettled: () => void) => void;
 }>) {
   const [open, setOpen] = useState(false);
@@ -96,7 +97,12 @@ function DeleteSpaceConfirmationDialog({
 
   return (
     <>
-      <PMButton variant="danger" minW="180px" onClick={() => setOpen(true)}>
+      <PMButton
+        variant="danger"
+        minW="180px"
+        onClick={() => setOpen(true)}
+        disabled={isDisabled}
+      >
         <PMIcon>
           <LuTrash2 />
         </PMIcon>
@@ -138,20 +144,27 @@ function DeleteSpaceConfirmationDialog({
   );
 }
 
+interface SpaceDangerZoneSectionProps {
+  space: Space;
+  canDelete: boolean;
+  onDeleted?: () => void;
+}
+
 export function SpaceDangerZoneSection({
-  canDeleteSpace,
-}: Readonly<{ canDeleteSpace: boolean }>) {
-  const { space } = useCurrentSpace();
+  space,
+  canDelete,
+  onDeleted,
+}: Readonly<SpaceDangerZoneSectionProps>) {
   const leaveSpaceMutation = useLeaveSpaceMutation();
   const { organization } = useAuthContext();
   const deleteSpaceMutation = useDeleteSpaceMutation();
   const nav = useNavigation();
   const { data: packagesData } = useListPackagesBySpaceQuery(
-    space?.id,
+    space.id,
     organization?.id,
   );
 
-  if (!space || space.isDefaultSpace) {
+  if (space.isDefaultSpace) {
     return null;
   }
 
@@ -208,46 +221,47 @@ export function SpaceDangerZoneSection({
           />
         </PMHStack>
 
-        {canDeleteSpace && (
-          <>
-            <PMSeparator />
+        <PMSeparator />
 
-            <PMHStack justify="space-between" align="center">
-              <PMVStack gap={1} align="flex-start">
-                <PMText fontWeight="medium">Delete this space</PMText>
-                <PMText variant="body" color="secondary" fontSize="sm">
-                  Permanently remove this space and all its content. This action
-                  cannot be undone.
-                </PMText>
-              </PMVStack>
-              <DeleteSpaceConfirmationDialog
-                spaceName={space.name}
-                packages={packagesData?.packages ?? []}
-                isPending={deleteSpaceMutation.isPending}
-                onConfirm={(onSettled) => {
-                  deleteSpaceMutation.mutate(
-                    { spaceId: space.id },
-                    {
-                      onSuccess: () => {
-                        onSettled();
-                        nav.org.toDashboard();
-                      },
-                      onError: () => {
-                        onSettled();
-                        pmToaster.create({
-                          type: 'error',
-                          title: 'Failed to delete space',
-                          description:
-                            'An error occurred while deleting the space. Please try again.',
-                        });
-                      },
-                    },
-                  );
-                }}
-              />
-            </PMHStack>
-          </>
-        )}
+        <PMHStack justify="space-between" align="center">
+          <PMVStack gap={1} align="flex-start">
+            <PMText fontWeight="medium">Delete this space</PMText>
+            <PMText variant="body" color="secondary" fontSize="sm">
+              Permanently remove this space and all its content. This action
+              cannot be undone.
+            </PMText>
+          </PMVStack>
+          <DeleteSpaceConfirmationDialog
+            spaceName={space.name}
+            packages={packagesData?.packages ?? []}
+            isPending={deleteSpaceMutation.isPending}
+            isDisabled={!canDelete}
+            onConfirm={(onSettled) => {
+              deleteSpaceMutation.mutate(
+                { spaceId: space.id },
+                {
+                  onSuccess: () => {
+                    onSettled();
+                    if (onDeleted) {
+                      onDeleted();
+                    } else {
+                      nav.org.toDashboard();
+                    }
+                  },
+                  onError: () => {
+                    onSettled();
+                    pmToaster.create({
+                      type: 'error',
+                      title: 'Failed to delete space',
+                      description:
+                        'An error occurred while deleting the space. Please try again.',
+                    });
+                  },
+                },
+              );
+            }}
+          />
+        </PMHStack>
       </PMVStack>
     </PMPageSection>
   );
