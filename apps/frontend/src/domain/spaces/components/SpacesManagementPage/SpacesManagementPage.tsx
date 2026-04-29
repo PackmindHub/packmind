@@ -5,6 +5,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { SpacesTable } from './SpacesTable';
 // import { SpacesPagination } from './SpacesPagination';
 import { toSpaceListItem } from './toSpaceListItem';
+import { sortSpacesByName } from '../../../spaces-management/utils/sortSpacesByName';
 
 export const SpacesManagementPage: React.FC = () => {
   const { organization } = useAuthContext();
@@ -35,7 +36,7 @@ export const SpacesManagementPage: React.FC = () => {
     );
   }
 
-  const rows = data.items.map(toSpaceListItem);
+  const rows = sortSpacesByName(data.items.map(toSpaceListItem));
 
   return (
     <PMVStack alignItems="stretch" gap={4} width="full">
