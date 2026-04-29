@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PMAlert, PMBox, PMSpinner, PMVStack } from '@packmind/ui';
 import type { SpaceManagementListItem } from '@packmind/types';
-import { useGetOrganizationSpacesForManagementQuery } from '../../api/queries/SpacesQueries';
+import {
+  useGetOrganizationSpacesForManagementQuery,
+  useGetSpacesQuery,
+} from '../../api/queries/SpacesQueries';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { SpacesTable } from './SpacesTable';
 // import { SpacesPagination } from './SpacesPagination';
@@ -17,6 +20,11 @@ export const SpacesManagementPage: React.FC = () => {
   const orgId = organization?.id ?? '';
   const { data, isLoading, isError } =
     useGetOrganizationSpacesForManagementQuery(orgId, page);
+  const { data: mySpaces } = useGetSpacesQuery();
+  const memberSpaceIds = useMemo(
+    () => new Set((mySpaces ?? []).map((s) => s.id)),
+    [mySpaces],
+  );
 
   if (isError) {
     return (
@@ -40,7 +48,9 @@ export const SpacesManagementPage: React.FC = () => {
     );
   }
 
-  const rows = sortSpacesByName(data.items.map(toSpaceListItem));
+  const rows = sortSpacesByName(data.items.map(toSpaceListItem)).sort((a, b) =>
+    a.isDefaultSpace === b.isDefaultSpace ? 0 : a.isDefaultSpace ? -1 : 1,
+  );
 
   const handleSelectSpace = (selected: { id: string }) => {
     const raw = data.items.find((item) => item.id === selected.id);
@@ -57,7 +67,11 @@ export const SpacesManagementPage: React.FC = () => {
         borderRadius="md"
         overflow="hidden"
       >
-        <SpacesTable spaces={rows} onSelectSpace={handleSelectSpace} />
+        <SpacesTable
+          spaces={rows}
+          memberSpaceIds={memberSpaceIds}
+          onSelectSpace={handleSelectSpace}
+        />
       </PMBox>
       {/* <SpacesPagination
         page={data.page}

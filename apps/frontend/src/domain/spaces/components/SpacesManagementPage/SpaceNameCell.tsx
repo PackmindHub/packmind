@@ -5,13 +5,13 @@ import type { SpaceColor } from '@packmind/types';
 interface SpaceNameCellProps {
   name: string;
   color: SpaceColor;
-  isOrgWide: boolean;
+  isDefaultSpace: boolean;
 }
 
 export const SpaceNameCell: React.FC<SpaceNameCellProps> = ({
   name,
   color,
-  isOrgWide,
+  isDefaultSpace,
 }) => {
   return (
     <PMHStack gap={2} align="center">
@@ -19,7 +19,7 @@ export const SpaceNameCell: React.FC<SpaceNameCellProps> = ({
         <PMStatus.Indicator />
       </PMStatus.Root>
       <PMText fontWeight="semibold">{name}</PMText>
-      {isOrgWide && (
+      {isDefaultSpace && (
         <PMBadge size="xs" colorPalette="purple">
           org-wide
         </PMBadge>

@@ -81,7 +81,7 @@ const buildRow = (overrides: Partial<SpaceListItem> = {}): SpaceListItem => ({
   type: SpaceType.open,
   createdAt: '2025-01-12T00:00:00.000Z',
   color: 'blue',
-  isOrgWide: false,
+  isDefaultSpace: false,
   admins: [],
   membersCount: 0,
   artifactsCount: 0,

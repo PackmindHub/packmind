@@ -6,7 +6,6 @@ export type SpaceAdminAvatar = {
 };
 
 export type SpaceListItem = Space & {
-  isOrgWide: boolean;
   admins: SpaceAdminAvatar[];
   membersCount: number;
   artifactsCount: number;

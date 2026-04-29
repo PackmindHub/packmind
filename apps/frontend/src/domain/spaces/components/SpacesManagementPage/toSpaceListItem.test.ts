@@ -40,11 +40,11 @@ describe('toSpaceListItem', () => {
     expect(row.color).toBe('pink');
   });
 
-  it('flags non-default spaces as not org-wide and forwards aggregated fields', () => {
+  it('flags non-default spaces correctly and forwards aggregated fields', () => {
     const dto = buildDto();
     const row = toSpaceListItem(dto);
 
-    expect(row.isOrgWide).toBe(false);
+    expect(row.isDefaultSpace).toBe(false);
     expect(row.admins).toEqual([
       { id: '22222222-2222-2222-2222-222222222222', displayName: 'Alice' },
     ]);
@@ -53,20 +53,20 @@ describe('toSpaceListItem', () => {
     expect(row.createdAt).toBe('2025-01-12T10:00:00.000Z');
   });
 
-  it('marks the default space as org-wide', () => {
+  it('marks the default space correctly', () => {
     const dto = buildDto({ isDefaultSpace: true, name: 'Global' });
     const row = toSpaceListItem(dto);
 
-    expect(row.isOrgWide).toBe(true);
+    expect(row.isDefaultSpace).toBe(true);
   });
 
-  it('keeps isOrgWide tied solely to isDefaultSpace, regardless of space type', () => {
+  it('isDefaultSpace is independent of space type', () => {
     const restrictedDefault = buildDto({
       isDefaultSpace: true,
       type: SpaceType.restricted,
     });
 
-    expect(toSpaceListItem(restrictedDefault).isOrgWide).toBe(true);
+    expect(toSpaceListItem(restrictedDefault).isDefaultSpace).toBe(true);
   });
 
   it('preserves every field from the source space management item', () => {
