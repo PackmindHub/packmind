@@ -259,5 +259,43 @@ describe('AddMembersToSpaceUseCase', () => {
         );
       });
     });
+
+    describe('when caller is an org admin without space admin role', () => {
+      const targetUserId = createUserId('member-1');
+
+      beforeEach(() => {
+        const orgAdmin = userFactory({
+          id: userId,
+          memberships: [{ userId, organizationId, role: 'admin' }],
+        });
+        accountsPort.getUserById.mockResolvedValue(orgAdmin);
+        membershipService.addSpaceMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId: targetUserId,
+            spaceId,
+            role: UserSpaceRole.MEMBER,
+          }),
+        );
+      });
+
+      it('adds members without checking space-admin membership', async () => {
+        const result = await useCase.execute(
+          buildCommand({
+            members: [{ userId: targetUserId, role: UserSpaceRole.MEMBER }],
+          }),
+        );
+
+        expect(result).toHaveLength(1);
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [targetUserId],
+            }),
+          }),
+        );
+        expect(membershipService.findMembership).not.toHaveBeenCalled();
+      });
+    });
   });
 });
