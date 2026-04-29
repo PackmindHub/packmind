@@ -35,8 +35,8 @@ export function SpaceGeneralSettings() {
         </PMFeatureFlag>
       )}
       {isSpaceAdmin && !space?.isDefaultSpace && <SpaceAccessSection />}
-      {!space?.isDefaultSpace && (
-        <SpaceDangerZoneSection canDeleteSpace={canDeleteSpace} />
+      {!space?.isDefaultSpace && space && (
+        <SpaceDangerZoneSection space={space} canDelete={canDeleteSpace} />
       )}
     </PMVStack>
   );
