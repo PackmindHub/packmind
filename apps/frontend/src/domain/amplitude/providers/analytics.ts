@@ -11,7 +11,6 @@ import { amplitudeGateway } from '../api/gateways';
 class AnalyticsService {
   private initialized = false;
   private enabled = true;
-  private currentUserId: string | undefined;
   private queue: Array<() => void> = [];
 
   async init(options?: AnalyticsOptions) {
@@ -42,24 +41,42 @@ class AnalyticsService {
       },
     });
 
+    // Respect consent immediately
+    try {
+      if (!this.enabled) {
+        amplitude.setOptOut(true);
+      }
+    } catch {
+      // ignore
+    }
+
     this.initialized = true;
-    // Start opted-out: gate is closed unless consent AND a userId are set.
-    this.applyOptOut();
     this.flushQueue();
   }
 
   enable() {
     this.enabled = true;
-    this.applyOptOut();
+    if (this.initialized) {
+      try {
+        amplitude.setOptOut(false);
+      } catch {
+        // ignore errors setting opt-out
+      }
+    }
   }
 
   disable() {
     this.enabled = false;
-    this.applyOptOut();
+    if (this.initialized) {
+      try {
+        amplitude.setOptOut(true);
+      } catch {
+        // ignore errors setting opt-out
+      }
+    }
   }
 
   reset() {
-    this.currentUserId = undefined;
     this.runOrQueue(() => {
       try {
         amplitude.reset();
@@ -67,13 +84,10 @@ class AnalyticsService {
         // ignore
       }
     });
-    this.applyOptOut();
   }
 
   setUserId(userId?: string) {
-    this.currentUserId = userId;
     this.runOrQueue(() => amplitude.setUserId(userId));
-    this.applyOptOut();
   }
 
   setUserProperties(props: UserProperties) {
@@ -147,16 +161,6 @@ class AnalyticsService {
     this.runOrQueue(() =>
       amplitude.track(event, payload as Record<string, unknown>),
     );
-  }
-
-  private applyOptOut() {
-    if (!this.initialized) return;
-    const shouldOptOut = !this.enabled || !this.currentUserId;
-    try {
-      amplitude.setOptOut(shouldOptOut);
-    } catch {
-      // ignore
-    }
   }
 
   private async getConfig(
