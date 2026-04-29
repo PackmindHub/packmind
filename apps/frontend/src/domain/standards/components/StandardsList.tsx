@@ -1,20 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
-import {
-  PMBox,
-  PMHStack,
-  PMLink,
-  PMButton,
-  PMTable,
-  PMTableColumn,
-  PMTableRow,
-  PMAlert,
-  PMAlertDialog,
-  PMCheckbox,
-  PMInput,
-  PMBadge,
-  useTableSort,
-} from '@packmind/ui';
+import { PMLink, PMButton, PMAlertDialog, PMBadge } from '@packmind/ui';
 
 import {
   useGetStandardsQuery,
@@ -38,7 +24,7 @@ import { formatPackageNames } from '../../deployments/components/PackageCountBad
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
 import {
-  makeItemsListing,
+  ItemsListing,
   ItemsListingProps,
 } from '../../../shared/components/ItemsListing';
 
@@ -72,51 +58,25 @@ export const StandardsList = ({
     }
     return map;
   }, [groupedProposals]);
-  const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
-  const [filteredStandardIds, setFilteredStandardIds] = React.useState<
-    StandardId[]
-  >([]);
-  const [selectedStandardIds, setSelectedStandardIds] = React.useState<
-    StandardId[]
-  >([]);
 
-  // Alert state management for batch deployment (plus utilisé)
+  // Alert state management for batch deployment
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
   const [isSamplesModalOpen, setIsSamplesModalOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
 
-  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
-    {
-      defaultSortKey: 'name',
-      defaultSortDirection: 'asc',
-    },
-  );
-
-  const checkStandard = (standardId: StandardId) => {
-    setSelectedStandardIds((prev) => [...prev, standardId]);
-  };
-
-  const uncheckStandard = (standardId: StandardId) => {
-    setSelectedStandardIds((prev) => prev.filter((id) => id !== standardId));
-  };
-
-  const selectAll = () => {
-    setSelectedStandardIds(filteredStandardIds);
-  };
-
-  const clearAll = () => setSelectedStandardIds([]);
-
-  const handleBatchDelete = async () => {
+  const handleBatchDelete = async (
+    selectedStandardIds: StandardId[],
+    unselectAll: () => void,
+  ) => {
     if (selectedStandardIds.length === 0) return;
 
     try {
       const count = selectedStandardIds.length;
       await deleteBatchMutation.mutateAsync(selectedStandardIds);
-      setSelectedStandardIds([]);
+      unselectAll();
       setDeleteAlert({
         type: 'success',
         message:
@@ -147,253 +107,6 @@ export const StandardsList = ({
       onEmptyStateChange(!hasStandards);
     }
   }, [hasStandards, onEmptyStateChange]);
-
-  React.useEffect(() => {
-    if (!listStandardsResponse) return;
-
-    const filteredStandards = listStandardsResponse.standards.filter(
-      (standard) =>
-        standard.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
-    setFilteredStandardIds(filteredStandards.map((s) => s.id));
-
-    const packageNamesById =
-      sortKey === 'packages'
-        ? new Map(
-            filteredStandards.map((s) => [
-              s.id,
-              formatPackageNames(
-                getArtifactPackages(
-                  packagesResponse?.packages,
-                  s.id,
-                  'standard',
-                ),
-              ),
-            ]),
-          )
-        : null;
-
-    const sortedStandards = [...filteredStandards].sort((a, b) => {
-      const direction = sortDirection === 'asc' ? 1 : -1;
-      switch (sortKey) {
-        case 'name':
-          return direction * a.name.localeCompare(b.name);
-        case 'updatedAt': {
-          const dateA = new Date(a.updatedAt || 0).getTime();
-          const dateB = new Date(b.updatedAt || 0).getTime();
-          return direction * (dateA - dateB);
-        }
-        case 'createdBy': {
-          const nameA = a.createdBy?.displayName ?? '';
-          const nameB = b.createdBy?.displayName ?? '';
-          return direction * nameA.localeCompare(nameB);
-        }
-        case 'version':
-          return direction * ((a.version ?? 0) - (b.version ?? 0));
-        case 'pendingReviews':
-          return (
-            direction *
-            ((pendingReviewCountByStandardId.get(a.id) ?? 0) -
-              (pendingReviewCountByStandardId.get(b.id) ?? 0))
-          );
-        case 'packages':
-          return (
-            direction *
-            (packageNamesById?.get(a.id) ?? '').localeCompare(
-              packageNamesById?.get(b.id) ?? '',
-            )
-          );
-        default:
-          return 0;
-      }
-    });
-
-    setTableData(
-      sortedStandards.map((standard) => ({
-        key: standard.id,
-        select: (
-          <PMCheckbox
-            checked={selectedStandardIds.includes(standard.id)}
-            onCheckedChange={(event) => {
-              const checked = event.checked === true;
-              if (checked) {
-                checkStandard(standard.id);
-              } else {
-                uncheckStandard(standard.id);
-              }
-            }}
-          />
-        ),
-        name: (
-          <PMLink asChild>
-            <Link
-              to={
-                orgSlug && spaceSlug
-                  ? routes.space.toStandard(orgSlug, spaceSlug, standard.id)
-                  : `#`
-              }
-            >
-              {standard.name}
-            </Link>
-          </PMLink>
-        ),
-        createdBy: standard.createdBy ? (
-          <UserAvatarWithInitials
-            displayName={standard.createdBy.displayName}
-            size="xs"
-          />
-        ) : (
-          <span>-</span>
-        ),
-        updatedAt: (
-          <>
-            {formatDistanceToNowStrict(standard.updatedAt || new Date(), {
-              addSuffix: true,
-            })}
-          </>
-        ),
-        version: standard.version,
-        ...(groupedProposals
-          ? {
-              pendingReviews: (() => {
-                const count =
-                  pendingReviewCountByStandardId.get(standard.id) ?? 0;
-                if (count > 0 && orgSlug && spaceSlug) {
-                  return (
-                    <PMLink asChild>
-                      <Link
-                        to={routes.space.toReviewChangesArtefact(
-                          orgSlug,
-                          spaceSlug,
-                          'standards',
-                          standard.id,
-                        )}
-                      >
-                        <PMBadge
-                          colorPalette="yellow"
-                          variant="solid"
-                          size="sm"
-                        >
-                          {count}
-                        </PMBadge>
-                      </Link>
-                    </PMLink>
-                  );
-                }
-                return (
-                  <PMBadge colorPalette="green" variant="solid" size="sm">
-                    0
-                  </PMBadge>
-                );
-              })(),
-              pendingReviewsCount:
-                pendingReviewCountByStandardId.get(standard.id) ?? 0,
-            }
-          : {}),
-        packages: (
-          <PackageCountBadge
-            artifactId={standard.id}
-            artifactType="standard"
-            orgSlug={orgSlug}
-            spaceSlug={spaceSlug}
-            spaceId={spaceId}
-            organizationId={organization?.id}
-          />
-        ),
-      })),
-    );
-  }, [
-    listStandardsResponse,
-    selectedStandardIds,
-    spaceSlug,
-    spaceId,
-    orgSlug,
-    organization?.id,
-    sortKey,
-    sortDirection,
-    searchQuery,
-    packagesResponse,
-    pendingReviewCountByStandardId,
-    groupedProposals,
-  ]);
-
-  const isAllSelected =
-    filteredStandardIds.length > 0 &&
-    filteredStandardIds.every((id) => selectedStandardIds.includes(id));
-  const isSomeSelected = selectedStandardIds.length > 0;
-
-  const columns: PMTableColumn[] = [
-    {
-      key: 'select',
-      header: (
-        <PMCheckbox
-          checked={isAllSelected || false}
-          onCheckedChange={() => {
-            if (isAllSelected) {
-              clearAll();
-            } else {
-              selectAll();
-            }
-          }}
-          controlProps={{ borderColor: 'border.checkbox' }}
-        />
-      ),
-      width: '50px',
-      align: 'center',
-    },
-    {
-      key: 'name',
-      header: 'Name',
-      grow: true,
-      sortable: true,
-      sortDirection: getSortDirection('name'),
-    },
-    {
-      key: 'createdBy',
-      header: 'Created by',
-      width: '200px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('createdBy'),
-    },
-    {
-      key: 'updatedAt',
-      header: 'Last Updated',
-      width: '250px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('updatedAt'),
-    },
-    {
-      key: 'version',
-      header: 'Version',
-      width: '100px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('version'),
-    },
-    ...(groupedProposals
-      ? [
-          {
-            key: 'pendingReviews',
-            header: 'Pending reviews',
-            width: '150px',
-            align: 'center' as const,
-            sortable: true,
-            sortDirection: getSortDirection('pendingReviews'),
-          },
-        ]
-      : []),
-    {
-      key: 'packages',
-      header: 'Packages',
-      width: '220px',
-      align: 'left',
-      sortable: true,
-      sortDirection: getSortDirection('packages'),
-    },
-  ];
 
   const listingProps: Omit<ItemsListingProps<Standard>, 'items'> = {
     sortItems: (items, sortKey, sortDirection) => {
@@ -498,7 +211,45 @@ export const StandardsList = ({
         sortKey: 'packages',
       },
     ],
-    batchActions: [],
+    batchActions: [
+      ({ selectedIds, unselectAll }) => {
+        return (
+          <PMAlertDialog
+            trigger={
+              <PMButton
+                variant="secondary"
+                loading={deleteBatchMutation.isPending}
+                size={'sm'}
+                disabled={selectedIds.length === 0}
+              >
+                {`Delete (${selectedIds.length})`}
+              </PMButton>
+            }
+            title="Delete Standards"
+            message={STANDARD_MESSAGES.confirmation.deleteBatchStandards(
+              selectedIds.length,
+            )}
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmColorScheme="red"
+            onConfirm={() => handleBatchDelete(selectedIds, unselectAll)}
+            open={deleteModalOpen}
+            onOpenChange={(details) => setDeleteModalOpen(details.open)}
+            isLoading={deleteBatchMutation.isPending}
+          />
+        );
+      },
+      ({ selectedIds, unselectAll }) => {
+        return (
+          <SpacesManagementActions
+            artifactType="standard"
+            selectedIds={selectedIds}
+            isSomeSelected={selectedIds.length > 0}
+            onSuccess={unselectAll}
+          />
+        );
+      },
+    ],
     makeTableData: (standard) => ({
       name: (
         <PMLink asChild>
@@ -576,121 +327,29 @@ export const StandardsList = ({
   };
 
   return (
-    <>
-      <div className={'standards-list'}>
-        {isLoading && <p>Loading...</p>}
-        {isError && <p>Error loading standards.</p>}
-        {listStandardsResponse?.standards?.length ? (
-          makeItemsListing({
-            items: listStandardsResponse.standards,
-            ...listingProps,
-          })
-        ) : (
-          <>
-            {spaceSlug && (
-              <StandardsBlankState
-                orgSlug={orgSlug || ''}
-                spaceSlug={spaceSlug}
-                onBrowseTemplatesClick={() => setIsSamplesModalOpen(true)}
-              />
-            )}
-            <StandardSamplesModal
-              open={isSamplesModalOpen}
-              onOpenChange={setIsSamplesModalOpen}
+    <div className={'standards-list'}>
+      {isLoading && <p>Loading...</p>}
+      {isError && <p>Error loading standards.</p>}
+      {listStandardsResponse?.standards?.length ? (
+        <ItemsListing
+          items={listStandardsResponse.standards}
+          {...listingProps}
+        />
+      ) : (
+        <>
+          {spaceSlug && (
+            <StandardsBlankState
+              orgSlug={orgSlug || ''}
+              spaceSlug={spaceSlug}
+              onBrowseTemplatesClick={() => setIsSamplesModalOpen(true)}
             />
-          </>
-        )}
-      </div>
-      <hr />
-      <div className={'standards-list'}>
-        {/* Delete Success/Error Alert */}
-        {deleteAlert && (
-          <PMBox mb={4}>
-            <PMAlert.Root status={deleteAlert.type}>
-              <PMAlert.Indicator />
-              <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
-            </PMAlert.Root>
-          </PMBox>
-        )}
-
-        {isLoading && <p>Loading...</p>}
-        {isError && <p>Error loading standards.</p>}
-        {(listStandardsResponse?.standards ?? []).length ? (
-          <PMBox>
-            <PMBox mb={4}>
-              <PMInput
-                placeholder="Search by name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </PMBox>
-            <PMBox mb={2}>
-              <PMHStack gap={2}>
-                <PMAlertDialog
-                  trigger={
-                    <PMButton
-                      variant="secondary"
-                      loading={deleteBatchMutation.isPending}
-                      size={'sm'}
-                      disabled={!isSomeSelected}
-                    >
-                      {`Delete (${selectedStandardIds.length})`}
-                    </PMButton>
-                  }
-                  title="Delete Standards"
-                  message={STANDARD_MESSAGES.confirmation.deleteBatchStandards(
-                    selectedStandardIds.length,
-                  )}
-                  confirmText="Delete"
-                  cancelText="Cancel"
-                  confirmColorScheme="red"
-                  onConfirm={handleBatchDelete}
-                  open={deleteModalOpen}
-                  onOpenChange={(details) => setDeleteModalOpen(details.open)}
-                  isLoading={deleteBatchMutation.isPending}
-                />
-                <SpacesManagementActions
-                  artifactType="standard"
-                  selectedIds={selectedStandardIds}
-                  isSomeSelected={isSomeSelected}
-                  onSuccess={() => setSelectedStandardIds([])}
-                />
-                <PMButton
-                  variant="secondary"
-                  onClick={() => setSelectedStandardIds([])}
-                  size={'sm'}
-                  disabled={!isSomeSelected}
-                >
-                  Clear Selection
-                </PMButton>
-              </PMHStack>
-            </PMBox>
-            <PMTable
-              columns={columns}
-              data={tableData}
-              striped={true}
-              hoverable={true}
-              size="md"
-              variant="line"
-              onSort={handleSort}
-            />
-          </PMBox>
-        ) : (
-          <>
-            {spaceSlug && (
-              <StandardsBlankState
-                orgSlug={orgSlug || ''}
-                spaceSlug={spaceSlug}
-                onBrowseTemplatesClick={() => setIsSamplesModalOpen(true)}
-              />
-            )}
-            <StandardSamplesModal
-              open={isSamplesModalOpen}
-              onOpenChange={setIsSamplesModalOpen}
-            />
-          </>
-        )}
-      </div>
-    </>
+          )}
+          <StandardSamplesModal
+            open={isSamplesModalOpen}
+            onOpenChange={setIsSamplesModalOpen}
+          />
+        </>
+      )}
+    </div>
   );
 };

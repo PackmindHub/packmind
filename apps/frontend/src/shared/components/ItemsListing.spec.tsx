@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { PMTableRow, UIProvider } from '@packmind/ui';
-import { makeItemsListing, Item } from './ItemsListing';
+import { ItemsListing, Item, ItemsListingProps } from './ItemsListing';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 describe('ItemsListing', () => {
@@ -21,27 +21,27 @@ describe('ItemsListing', () => {
       },
     });
 
+    const props: ItemsListingProps<Item> = {
+      items,
+      batchActions: [],
+      columns: [{ key: 'name', header: 'Name' }],
+      makeTableData: function (item): PMTableRow {
+        return {
+          name: <p>{item.name}</p>,
+        };
+      },
+      sortItems: function (items) {
+        return items;
+      },
+      matchQuery: function (searchQuery, item): boolean {
+        return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      },
+    };
+
     return render(
       <UIProvider>
         <QueryClientProvider client={queryClient}>
-          {makeItemsListing<Item>({
-            items,
-            batchActions: [],
-            columns: [{ key: 'name', header: 'Name' }],
-            makeTableData: function (item): PMTableRow {
-              return {
-                name: <p>{item.name}</p>,
-              };
-            },
-            sortItems: function (items) {
-              return items;
-            },
-            matchQuery: function (searchQuery, item): boolean {
-              return item.name
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase());
-            },
-          })}
+          <ItemsListing {...props} />
         </QueryClientProvider>
       </UIProvider>,
     );
