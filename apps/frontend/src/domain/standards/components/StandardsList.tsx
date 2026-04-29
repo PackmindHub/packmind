@@ -1,6 +1,13 @@
 import * as React from 'react';
 import { Link } from 'react-router';
-import { PMLink, PMButton, PMAlertDialog, PMBadge } from '@packmind/ui';
+import {
+  PMLink,
+  PMButton,
+  PMAlertDialog,
+  PMBadge,
+  PMBox,
+  PMAlert,
+} from '@packmind/ui';
 
 import {
   useGetStandardsQuery,
@@ -328,6 +335,15 @@ export const StandardsList = ({
 
   return (
     <div className={'standards-list'}>
+      {deleteAlert && (
+        <PMBox mb={4}>
+          <PMAlert.Root status={deleteAlert.type}>
+            <PMAlert.Indicator />
+            <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
+          </PMAlert.Root>
+        </PMBox>
+      )}
+
       {isLoading && <p>Loading...</p>}
       {isError && <p>Error loading standards.</p>}
       {listStandardsResponse?.standards?.length ? (
