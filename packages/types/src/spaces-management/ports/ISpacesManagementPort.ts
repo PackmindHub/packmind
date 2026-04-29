@@ -71,7 +71,7 @@ export interface ISpacesManagementPort {
   joinSpaceBySlug(command: JoinSpaceBySlugCommand): Promise<JoinSpaceResponse>;
 
   /**
-   * Update a space's settings (name, type).
+   * Update a space's settings (name, type, color).
    */
   updateSpace(command: UpdateSpaceCommand): Promise<UpdateSpaceResponse>;
 
