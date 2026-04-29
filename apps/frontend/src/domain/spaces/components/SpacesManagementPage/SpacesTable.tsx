@@ -28,8 +28,8 @@ const COLUMNS: PMTableColumn[] = [
   { key: 'admins', header: headerLabel('Admins'), width: '320px' },
   {
     key: 'membersCount',
-    header: headerLabel('Members'),
-    width: '110px',
+    header: headerLabel('Collaborators'),
+    width: '130px',
     align: 'right',
   },
   // {
