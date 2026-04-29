@@ -10,6 +10,8 @@ import {
   JoinSpaceResponse,
   LeaveSpaceCommand,
   LeaveSpaceResponse,
+  ListOrganizationSpacesForManagementCommand,
+  ListOrganizationSpacesForManagementResponse,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
   PinSpaceCommand,
@@ -85,6 +87,13 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _command: UnpinSpaceCommand,
   ): Promise<UnpinSpaceResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  async listOrganizationSpacesForManagement(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _command: ListOrganizationSpacesForManagementCommand,
+  ): Promise<ListOrganizationSpacesForManagementResponse> {
     throw new Error('Method not implemented.');
   }
 }
