@@ -63,13 +63,14 @@ Body content with instructions, examples, and edge cases.
 
 - **Directory name must match `name` field** — e.g. directory `pdf-processing/` requires `name: pdf-processing`
 - **`name`**: 1-64 chars, lowercase + hyphens only, no leading/trailing/consecutive hyphens
-- **`description`**: 1-1024 chars, include specific keywords that help agents identify when to activate
+- **`description`**: 1-800 chars (Packmind cap, tighter than the 1024 spec maximum), include specific keywords that help agents identify when to activate
 - **Keep SKILL.md under 500 lines** — use `references/` for detailed content overflow
 - **Both the directory path and the `SKILL.md` path** are valid references to a skill (they resolve to the same directory)
 
 ### Description Writing Guidelines
 
 The description determines when the skill auto-loads. Write it to:
+- **Stay within 800 characters.** This is a Packmind cap (the upstream spec allows 1024). The description is always loaded into agent context, so keep it lean. If you need more room to explain the skill, move detail into the SKILL.md body or a `references/` file.
 - Describe what the skill does in **third-person form** (e.g. "This skill should be used when..." not "Use this skill when...")
 - Include trigger phrases the user might say (e.g. "extract text from PDF", "fill PDF forms")
 - Mention relevant keywords for discoverability
