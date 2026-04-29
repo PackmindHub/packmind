@@ -1,5 +1,11 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
@@ -8,17 +14,31 @@ import { createSpaceId } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 
 import * as AuthContextModule from '../../accounts/hooks/useAuthContext';
-import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
+import {
+  useGetSpaceMembersQuery,
+  useRemoveMemberFromSpaceMutation,
+  useUpdateMemberRoleMutation,
+} from '../api/queries/SpacesQueries';
 import { SpaceMembersList } from './SpaceMembersList';
 
 jest.mock('../api/queries/SpacesQueries', () => ({
   ...jest.requireActual('../api/queries/SpacesQueries'),
   useGetSpaceMembersQuery: jest.fn(),
+  useRemoveMemberFromSpaceMutation: jest.fn(),
+  useUpdateMemberRoleMutation: jest.fn(),
 }));
 
 const mockUseGetSpaceMembersQuery =
   useGetSpaceMembersQuery as jest.MockedFunction<
     typeof useGetSpaceMembersQuery
+  >;
+const mockUseRemoveMemberFromSpaceMutation =
+  useRemoveMemberFromSpaceMutation as jest.MockedFunction<
+    typeof useRemoveMemberFromSpaceMutation
+  >;
+const mockUseUpdateMemberRoleMutation =
+  useUpdateMemberRoleMutation as jest.MockedFunction<
+    typeof useUpdateMemberRoleMutation
   >;
 
 jest.mock('@packmind/ui', () => {
@@ -61,13 +81,15 @@ const renderWithProviders = (component: React.ReactElement) => {
     },
   });
 
-  return render(
+  const utils = render(
     <UIProvider>
       <QueryClientProvider client={queryClient}>
         {component}
       </QueryClientProvider>
     </UIProvider>,
   );
+
+  return { ...utils, queryClient };
 };
 
 describe('SpaceMembersList', () => {
@@ -89,6 +111,9 @@ describe('SpaceMembersList', () => {
     isDefaultSpace: false,
   });
 
+  let removeMutateMock: jest.Mock;
+  let updateRoleMutateMock: jest.Mock;
+
   beforeEach(() => {
     jest.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
       user: mockUser,
@@ -99,6 +124,30 @@ describe('SpaceMembersList', () => {
       getUserOrganizations: jest.fn(),
       validateAndSwitchIfNeeded: jest.fn(),
     } as unknown as ReturnType<typeof AuthContextModule.useAuthContext>);
+
+    removeMutateMock = jest.fn(
+      (
+        _vars: unknown,
+        opts?: { onSuccess?: () => void; onSettled?: () => void },
+      ) => {
+        opts?.onSuccess?.();
+        opts?.onSettled?.();
+      },
+    );
+    updateRoleMutateMock = jest.fn(
+      (_vars: unknown, opts?: { onSuccess?: () => void }) => {
+        opts?.onSuccess?.();
+      },
+    );
+
+    mockUseRemoveMemberFromSpaceMutation.mockReturnValue({
+      mutate: removeMutateMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useRemoveMemberFromSpaceMutation>);
+    mockUseUpdateMemberRoleMutation.mockReturnValue({
+      mutate: updateRoleMutateMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof useUpdateMemberRoleMutation>);
 
     mockUseGetSpaceMembersQuery.mockReturnValue({
       data: {
@@ -170,5 +219,64 @@ describe('SpaceMembersList', () => {
     });
 
     expect(screen.queryByRole('button', { name: /remove/i })).toBeNull();
+  });
+
+  it('invalidates the management listing key when a member role is updated', async () => {
+    const { queryClient } = renderWithProviders(
+      <SpaceMembersList space={space} isSpaceAdmin={true} />,
+    );
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+
+    const roleSelects = screen.getAllByRole('combobox') as HTMLSelectElement[];
+    const targetSelect = roleSelects.find((s) => !s.disabled);
+    expect(targetSelect).toBeDefined();
+
+    await act(async () => {
+      fireEvent.change(targetSelect as HTMLSelectElement, {
+        target: { value: 'member' },
+      });
+    });
+
+    expect(updateRoleMutateMock).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['organizations', 'org-id', 'spaces', 'management'],
+      });
+    });
+  });
+
+  it('invalidates the management listing key when a member is removed', async () => {
+    const { queryClient } = renderWithProviders(
+      <SpaceMembersList space={space} isSpaceAdmin={true} />,
+    );
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+
+    const rowRemoveButtons = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>('table button'),
+    );
+    expect(rowRemoveButtons.length).toBeGreaterThan(0);
+
+    await act(async () => {
+      fireEvent.click(rowRemoveButtons[0]);
+    });
+
+    const confirmButton = await waitFor(() => {
+      const buttons = Array.from(
+        document.body.querySelectorAll<HTMLButtonElement>('button'),
+      ).filter((btn) => btn.textContent?.trim() === 'Remove');
+      expect(buttons.length).toBeGreaterThan(0);
+      return buttons[buttons.length - 1];
+    });
+
+    await act(async () => {
+      fireEvent.click(confirmButton);
+    });
+
+    expect(removeMutateMock).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['organizations', 'org-id', 'spaces', 'management'],
+      });
+    });
   });
 });

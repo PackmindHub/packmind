@@ -94,6 +94,7 @@ interface AddSpaceMembersDialogProps {
   setOpen: (open: boolean) => void;
   spaceId: string;
   existingMembers: SpaceMember[];
+  onSuccess?: () => void;
 }
 
 export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
@@ -101,6 +102,7 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
   setOpen,
   spaceId,
   existingMembers,
+  onSuccess,
 }) => {
   const [selectedMembers, setSelectedMembers] = useState<SpaceMemberEntry[]>(
     [],
@@ -156,6 +158,7 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
         title: 'Members added',
         description: `${selectedMembers.length} member(s) added to the space.`,
       });
+      onSuccess?.();
     } catch (error) {
       pmToaster.create({
         type: 'error',

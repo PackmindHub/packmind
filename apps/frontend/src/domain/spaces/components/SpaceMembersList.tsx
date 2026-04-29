@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   PMButton,
@@ -32,8 +33,9 @@ export function SpaceMembersList({
   space,
   isSpaceAdmin,
 }: Readonly<SpaceMembersListProps>) {
-  const { user } = useAuthContext();
+  const { user, organization } = useAuthContext();
   const currentUserId = user?.id;
+  const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<SpaceMember | null>(
     null,
@@ -42,6 +44,14 @@ export function SpaceMembersList({
   const { data, isLoading } = useGetSpaceMembersQuery(space.id);
   const removeMutation = useRemoveMemberFromSpaceMutation(space.id);
   const updateRoleMutation = useUpdateMemberRoleMutation(space.id);
+
+  const invalidateManagementListing = () => {
+    if (organization?.id) {
+      queryClient.invalidateQueries({
+        queryKey: ['organizations', organization.id, 'spaces', 'management'],
+      });
+    }
+  };
 
   const members = useMemo<SpaceMember[]>(
     () =>
@@ -63,6 +73,7 @@ export function SpaceMembersList({
             description: 'Member role has been updated.',
             type: 'success',
           });
+          invalidateManagementListing();
         },
         onError: () => {
           pmToaster.create({
@@ -91,6 +102,7 @@ export function SpaceMembersList({
             description: `${memberToRemove.displayName} has been removed from the space.`,
             type: 'success',
           });
+          invalidateManagementListing();
         },
         onError: () => {
           pmToaster.create({
@@ -146,6 +158,7 @@ export function SpaceMembersList({
           setOpen={setAddDialogOpen}
           spaceId={space.id}
           existingMembers={members}
+          onSuccess={invalidateManagementListing}
         />
         <PMConfirmationModal
           trigger={<span />}
