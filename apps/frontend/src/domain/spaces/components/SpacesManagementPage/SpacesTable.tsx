@@ -8,6 +8,7 @@ import { formatCount, formatCreatedAt } from './formatters';
 
 interface SpacesTableProps {
   spaces: SpaceListItem[];
+  memberSpaceIds?: Set<string>;
   onSelectSpace?: (space: SpaceListItem) => void;
 }
 
@@ -59,6 +60,7 @@ const COLUMNS: PMTableColumn[] = [
 
 export const SpacesTable: React.FC<SpacesTableProps> = ({
   spaces,
+  memberSpaceIds,
   onSelectSpace,
 }) => {
   const wrapClickable = useCallback(
@@ -87,16 +89,22 @@ export const SpacesTable: React.FC<SpacesTableProps> = ({
           <SpaceNameCell
             name={space.name}
             color={space.color}
-            isOrgWide={space.isOrgWide}
+            isDefaultSpace={space.isDefaultSpace}
           />,
         ),
         admins: wrapClickable(space, <SpaceAdminsCell admins={space.admins} />),
         membersCount: wrapClickable(space, formatCount(space.membersCount)),
         artifactsCount: wrapClickable(space, formatCount(space.artifactsCount)),
         createdAt: wrapClickable(space, formatCreatedAt(space.createdAt)),
-        actions: <SpaceRowActions space={space} />,
+        actions: (
+          <SpaceRowActions
+            space={space}
+            isMember={memberSpaceIds?.has(space.id) ?? false}
+            onEdit={onSelectSpace ? () => onSelectSpace(space) : undefined}
+          />
+        ),
       })),
-    [spaces, wrapClickable],
+    [spaces, memberSpaceIds, wrapClickable, onSelectSpace],
   );
 
   return (

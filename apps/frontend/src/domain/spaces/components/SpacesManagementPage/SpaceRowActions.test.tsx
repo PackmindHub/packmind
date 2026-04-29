@@ -32,6 +32,10 @@ jest.mock(
       mutate: jest.fn(),
       isPending: false,
     })),
+    useJoinSpaceMutation: jest.fn(() => ({
+      mutate: jest.fn(),
+      isPending: false,
+    })),
   }),
 );
 
@@ -91,10 +95,56 @@ describe('SpaceRowActions', () => {
     jest.clearAllMocks();
   });
 
+  describe('Edit menu item', () => {
+    it('renders the Edit item in the menu when onEdit is provided', async () => {
+      const onEdit = jest.fn();
+      renderWithProviders(
+        <SpaceRowActions
+          space={buildSpace()}
+          isMember={false}
+          onEdit={onEdit}
+        />,
+      );
+      await openMenu();
+      expect(
+        screen.getByRole('menuitem', { name: /edit/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('calls onEdit when the Edit menu item is clicked', async () => {
+      const onEdit = jest.fn();
+      renderWithProviders(
+        <SpaceRowActions
+          space={buildSpace()}
+          isMember={false}
+          onEdit={onEdit}
+        />,
+      );
+      await openMenu();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('menuitem', { name: /edit/i }));
+      });
+      expect(onEdit).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not render the Edit item when onEdit is not provided', async () => {
+      renderWithProviders(
+        <SpaceRowActions space={buildSpace()} isMember={false} />,
+      );
+      await openMenu();
+      expect(
+        screen.queryByRole('menuitem', { name: /edit/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe('when the space is the default org-wide space', () => {
     it('does not render the Delete action', async () => {
       renderWithProviders(
-        <SpaceRowActions space={buildSpace({ isDefaultSpace: true })} />,
+        <SpaceRowActions
+          space={buildSpace({ isDefaultSpace: true })}
+          isMember={true}
+        />,
       );
 
       await openMenu();
@@ -108,7 +158,10 @@ describe('SpaceRowActions', () => {
   describe('when the space is not the default space', () => {
     it('renders the Delete action and opens the confirmation dialog when clicked', async () => {
       renderWithProviders(
-        <SpaceRowActions space={buildSpace({ isDefaultSpace: false })} />,
+        <SpaceRowActions
+          space={buildSpace({ isDefaultSpace: false })}
+          isMember={false}
+        />,
       );
 
       await openMenu();
@@ -126,9 +179,41 @@ describe('SpaceRowActions', () => {
     });
   });
 
-  describe('when the space slug is missing', () => {
-    it('does not render the View action', async () => {
-      renderWithProviders(<SpaceRowActions space={buildSpace({ slug: '' })} />);
+  describe('View vs Join based on membership', () => {
+    it('renders View when the user is a member and has a slug', async () => {
+      renderWithProviders(
+        <SpaceRowActions space={buildSpace()} isMember={true} />,
+      );
+
+      await openMenu();
+
+      expect(
+        screen.getByRole('menuitem', { name: /view/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('menuitem', { name: /join/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders Join when the user is not a member', async () => {
+      renderWithProviders(
+        <SpaceRowActions space={buildSpace()} isMember={false} />,
+      );
+
+      await openMenu();
+
+      expect(
+        screen.getByRole('menuitem', { name: /join/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('menuitem', { name: /view/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not render View when the slug is missing even if member', async () => {
+      renderWithProviders(
+        <SpaceRowActions space={buildSpace({ slug: '' })} isMember={true} />,
+      );
 
       await openMenu();
 
@@ -138,21 +223,11 @@ describe('SpaceRowActions', () => {
     });
   });
 
-  describe('when the menu is opened', () => {
-    it('does not render an Edit action', async () => {
-      renderWithProviders(<SpaceRowActions space={buildSpace()} />);
-
-      await openMenu();
-
-      expect(
-        screen.queryByRole('menuitem', { name: /edit/i }),
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('when the user clicks View on a non-default space with a slug', () => {
+  describe('when the user clicks View', () => {
     it('navigates to the space dashboard route', async () => {
-      renderWithProviders(<SpaceRowActions space={buildSpace()} />);
+      renderWithProviders(
+        <SpaceRowActions space={buildSpace()} isMember={true} />,
+      );
 
       await openMenu();
 
