@@ -22,7 +22,7 @@ export type ExtraUserOptions = {
 
 function getDefaultOptions(): ExtraUserOptions {
   return {
-    email: `user-${uuidv4()}@example.com`,
+    email: `test-${uuidv4()}@example.com`,
     role: 'member',
   };
 }
