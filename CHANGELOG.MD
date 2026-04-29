@@ -9,6 +9,8 @@
 
 ## Fixed
 
+- Make the skill files tree scrollable on skill details page
+
 ## Removed
 
 # [1.13.1] - 2026-04-15
