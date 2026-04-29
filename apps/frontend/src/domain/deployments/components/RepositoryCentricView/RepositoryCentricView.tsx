@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { PMBox, PMHeading, PMVStack, PMEmptyState } from '@packmind/ui';
+import { PMHeading, PMVStack, PMEmptyState } from '@packmind/ui';
 import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
 import {
   RepositoryStandardDeploymentStatus,
@@ -8,6 +8,7 @@ import {
 import { GitRepo } from '@packmind/types';
 import {
   DeployedRecipeInfo,
+  Package,
   RepositoryDeploymentStatus,
   TargetDeploymentStatus,
   TargetStandardDeploymentStatus,
@@ -16,6 +17,7 @@ import {
   TargetId,
 } from '@packmind/types';
 import { RepositoryTargetTable } from '../RepositoryTargetTable/RepositoryTargetTable';
+import { groupTargetByPackage } from '../../utils/groupTargetByPackage';
 
 interface CombinedRepositoryDeploymentStatus {
   gitRepo: GitRepo;
@@ -42,6 +44,8 @@ interface RepositoryCentricViewProps {
   selectedTargetNames?: string[];
   orgSlug?: string;
   selectedRepoIds?: string[];
+  packages?: ReadonlyArray<Package>;
+  packagesLoading?: boolean;
 }
 
 type ArtifactStatusFilter = 'all' | 'outdated' | 'up-to-date';
@@ -468,6 +472,8 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   selectedTargetNames = [],
   orgSlug,
   selectedRepoIds = [],
+  packages = [],
+  packagesLoading = false,
 }) => {
   const shouldUseTargetData =
     recipeTargets.length > 0 ||
@@ -657,26 +663,28 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
             </PMHeading>
 
             <PMVStack align="stretch" width="full">
-              {hasTargets && (
-                // Target-based rendering via shared RepositoryTargetTable
-                <>
-                  {getSortedTargetEntries(
-                    repository,
-                    selectedTargetNames,
-                    artifactStatusFilter,
-                  ).map((t) => (
-                    <RepositoryTargetTable
-                      key={`target-${t.id}`}
-                      orgSlug={orgSlug}
-                      target={{ id: t.id, name: t.name }}
-                      recipes={t.recipes}
-                      standards={t.standards}
-                      skills={t.skills}
-                      mode={artifactStatusFilter}
-                    />
-                  ))}
-                </>
-              )}
+              {hasTargets &&
+                !packagesLoading &&
+                getSortedTargetEntries(
+                  repository,
+                  selectedTargetNames,
+                  artifactStatusFilter,
+                ).map((t) => (
+                  <RepositoryTargetTable
+                    key={`target-${t.id}`}
+                    orgSlug={orgSlug}
+                    target={{ id: t.id, name: t.name }}
+                    packageGroups={groupTargetByPackage(
+                      {
+                        recipes: t.recipes,
+                        standards: t.standards,
+                        skills: t.skills,
+                      },
+                      packages,
+                    )}
+                    mode={artifactStatusFilter}
+                  />
+                ))}
             </PMVStack>
           </PMVStack>
         );

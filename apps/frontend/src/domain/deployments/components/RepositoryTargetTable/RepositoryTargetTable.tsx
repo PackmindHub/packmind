@@ -4,330 +4,51 @@ import {
   PMBox,
   PMHStack,
   PMIcon,
-  PMLink,
-  PMTable,
-  PMTableColumn,
-  PMTableRow,
   PMText,
-  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import { Link } from 'react-router';
 import { LuCircleCheckBig } from 'react-icons/lu';
-import {
-  TargetId,
-  DeployedRecipeTargetInfo,
-  DeployedStandardTargetInfo,
-  DeployedSkillTargetInfo,
-} from '@packmind/types';
-import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
-import { routes } from '../../../../shared/utils/routes';
+import { TargetId } from '@packmind/types';
+import { PackageArtifactsTable } from '../PackageArtifactsTable';
+import { PackageGroup } from '../../utils/groupTargetByPackage';
+
+type Mode = 'all' | 'outdated' | 'up-to-date';
 
 export type RepositoryTargetTableProps = {
   orgSlug?: string;
   target: { id: TargetId; name: string; path?: string };
-  recipes: ReadonlyArray<DeployedRecipeTargetInfo>;
-  standards: ReadonlyArray<DeployedStandardTargetInfo>;
-  skills: ReadonlyArray<DeployedSkillTargetInfo>;
-  mode?: 'all' | 'outdated' | 'up-to-date';
+  packageGroups: ReadonlyArray<PackageGroup>;
+  mode?: Mode;
 };
 
-const TABLE_COLUMNS: PMTableColumn[] = [
-  { key: 'name', header: 'Name', grow: true },
-  {
-    key: 'version',
-    header: 'Version (distributed → latest)',
-    align: 'center',
-    grow: true,
-  },
-  { key: 'status', header: 'Status', align: 'center' },
-];
-
-const getGapPalette = (gap: number): 'blue' | 'orange' | 'red' => {
-  if (gap >= 10) return 'red';
-  if (gap >= 5) return 'orange';
-  return 'blue';
+const groupHasVisibleRows = (group: PackageGroup, mode: Mode): boolean => {
+  const matches = <T extends { isUpToDate: boolean; isDeleted?: boolean }>(
+    item: T,
+  ) => {
+    if (mode === 'outdated') return !item.isUpToDate || !!item.isDeleted;
+    if (mode === 'up-to-date') return item.isUpToDate && !item.isDeleted;
+    return true;
+  };
+  return (
+    group.recipes.some(matches) ||
+    group.standards.some(matches) ||
+    group.skills.some(matches)
+  );
 };
 
 export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
   orgSlug,
   target,
-  recipes,
-  standards,
-  skills,
+  packageGroups,
   mode = 'all',
 }) => {
-  const { spaceSlug } = useCurrentSpace();
-
-  const filterItems = <T extends { isUpToDate: boolean; isDeleted?: boolean }>(
-    items: T[],
-  ) => {
-    if (mode === 'outdated')
-      return items.filter((i) => !i.isUpToDate || i.isDeleted);
-    if (mode === 'up-to-date')
-      return items.filter((i) => i.isUpToDate && !i.isDeleted);
-    return items;
-  };
-
-  const recipeRows: PMTableRow[] = filterItems([...recipes])
-    .sort((a, b) => a.recipe.name.localeCompare(b.recipe.name))
-    .map((d) => {
-      // compute cells
-      const versionNode =
-        mode !== 'outdated' && d.isUpToDate ? (
-          <PMBadge colorPalette="gray" size="sm">
-            {d.deployedVersion.version}
-          </PMBadge>
-        ) : (
-          <PMHStack gap={2} justify="center" align="center">
-            <PMBadge colorPalette="gray" size="sm">
-              {d.deployedVersion.version}
-            </PMBadge>
-            <PMText variant="small" color="faded">
-              →
-            </PMText>
-            {(() => {
-              const gap = d.latestVersion.version - d.deployedVersion.version;
-              const palette = getGapPalette(gap);
-              return (
-                <PMBadge colorPalette={palette} size="sm">
-                  {d.latestVersion.version}
-                </PMBadge>
-              );
-            })()}
-          </PMHStack>
-        );
-
-      let statusNode: React.ReactNode;
-      if (d.isDeleted) {
-        statusNode = (
-          <PMTooltip
-            label="The command deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
-            placement="top"
-          >
-            <PMBadge colorPalette="red" size="sm">
-              Needs removal
-            </PMBadge>
-          </PMTooltip>
-        );
-      } else if (mode === 'outdated') {
-        statusNode = (
-          <PMBadge colorPalette="red" size="sm">
-            Outdated
-          </PMBadge>
-        );
-      } else {
-        statusNode = d.isUpToDate ? (
-          <PMBadge colorPalette="green" size="sm">
-            Up-to-date
-          </PMBadge>
-        ) : (
-          <PMBadge colorPalette="red" size="sm">
-            Outdated
-          </PMBadge>
-        );
-      }
-
-      return {
-        name: (
-          <PMVStack align="start" gap={0}>
-            <PMText variant="small" color="tertiary">
-              Command
-            </PMText>
-            {orgSlug && spaceSlug ? (
-              <PMLink asChild>
-                <Link
-                  to={routes.space.toCommand(orgSlug, spaceSlug, d.recipe.id)}
-                >
-                  {d.recipe.name}
-                </Link>
-              </PMLink>
-            ) : (
-              <PMText variant="body-important">{d.recipe.name}</PMText>
-            )}
-          </PMVStack>
-        ),
-        version: versionNode,
-        status: statusNode,
-      };
-    });
-
-  const standardRows: PMTableRow[] = filterItems([...standards])
-    .sort((a, b) => a.standard.name.localeCompare(b.standard.name))
-    .map((d) => {
-      const versionNode =
-        mode !== 'outdated' && d.isUpToDate ? (
-          <PMBadge colorPalette="gray" size="sm">
-            {d.deployedVersion.version}
-          </PMBadge>
-        ) : (
-          <PMHStack gap={2} justify="center" align="center">
-            <PMBadge colorPalette="gray" size="sm">
-              {d.deployedVersion.version}
-            </PMBadge>
-            <PMText variant="small" color="faded">
-              →
-            </PMText>
-            {(() => {
-              const gap = d.latestVersion.version - d.deployedVersion.version;
-              const palette = getGapPalette(gap);
-              return (
-                <PMBadge colorPalette={palette} size="sm">
-                  {d.latestVersion.version}
-                </PMBadge>
-              );
-            })()}
-          </PMHStack>
-        );
-
-      let statusNode: React.ReactNode;
-      if (d.isDeleted) {
-        statusNode = (
-          <PMTooltip
-            label="The standard deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
-            placement="top"
-          >
-            <PMBadge colorPalette="red" size="sm">
-              Needs removal
-            </PMBadge>
-          </PMTooltip>
-        );
-      } else if (mode === 'outdated') {
-        statusNode = (
-          <PMBadge colorPalette="red" size="sm">
-            Outdated
-          </PMBadge>
-        );
-      } else {
-        statusNode = d.isUpToDate ? (
-          <PMBadge colorPalette="green" size="sm">
-            Up-to-date
-          </PMBadge>
-        ) : (
-          <PMBadge colorPalette="red" size="sm">
-            Outdated
-          </PMBadge>
-        );
-      }
-
-      return {
-        name: (
-          <PMVStack align="start" gap={0}>
-            <PMText variant="small" color="tertiary">
-              Standard
-            </PMText>
-            {orgSlug && spaceSlug ? (
-              <PMLink asChild>
-                <Link
-                  to={routes.space.toStandard(
-                    orgSlug,
-                    spaceSlug,
-                    d.standard.id,
-                  )}
-                >
-                  {d.standard.name}
-                </Link>
-              </PMLink>
-            ) : (
-              <PMText variant="body-important">{d.standard.name}</PMText>
-            )}
-          </PMVStack>
-        ),
-        version: versionNode,
-        status: statusNode,
-      };
-    });
-
-  const skillRows: PMTableRow[] = filterItems([...skills])
-    .sort((a, b) => a.skill.name.localeCompare(b.skill.name))
-    .map((d) => {
-      const versionNode =
-        mode !== 'outdated' && d.isUpToDate ? (
-          <PMBadge colorPalette="gray" size="sm">
-            {d.deployedVersion.version}
-          </PMBadge>
-        ) : (
-          <PMHStack gap={2} justify="center" align="center">
-            <PMBadge colorPalette="gray" size="sm">
-              {d.deployedVersion.version}
-            </PMBadge>
-            <PMText variant="small" color="faded">
-              →
-            </PMText>
-            {(() => {
-              const gap = d.latestVersion.version - d.deployedVersion.version;
-              const palette = getGapPalette(gap);
-              return (
-                <PMBadge colorPalette={palette} size="sm">
-                  {d.latestVersion.version}
-                </PMBadge>
-              );
-            })()}
-          </PMHStack>
-        );
-
-      let statusNode: React.ReactNode;
-      if (d.isDeleted) {
-        statusNode = (
-          <PMTooltip
-            label="The skill deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
-            placement="top"
-          >
-            <PMBadge colorPalette="red" size="sm">
-              Needs removal
-            </PMBadge>
-          </PMTooltip>
-        );
-      } else if (mode === 'outdated') {
-        statusNode = (
-          <PMBadge colorPalette="red" size="sm">
-            Outdated
-          </PMBadge>
-        );
-      } else {
-        statusNode = d.isUpToDate ? (
-          <PMBadge colorPalette="green" size="sm">
-            Up-to-date
-          </PMBadge>
-        ) : (
-          <PMBadge colorPalette="red" size="sm">
-            Outdated
-          </PMBadge>
-        );
-      }
-
-      return {
-        name: (
-          <PMVStack align="start" gap={0}>
-            <PMText variant="small" color="tertiary">
-              Skill
-            </PMText>
-            {orgSlug && spaceSlug ? (
-              <PMLink asChild>
-                <Link
-                  to={routes.space.toSkill(orgSlug, spaceSlug, d.skill.slug)}
-                >
-                  {d.skill.name}
-                </Link>
-              </PMLink>
-            ) : (
-              <PMText variant="body-important">{d.skill.name}</PMText>
-            )}
-          </PMVStack>
-        ),
-        version: versionNode,
-        status: statusNode,
-      };
-    });
-
-  const rows = [...standardRows, ...recipeRows, ...skillRows];
-  const hasRows = rows.length > 0;
+  const anyVisible = packageGroups.some((g) => groupHasVisibleRows(g, mode));
 
   return (
     <PMVStack
       align="stretch"
       width="full"
-      gap={0}
+      gap={4}
       border={'solid 1px'}
       borderColor={'border.primary'}
       padding={2}
@@ -338,8 +59,18 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         </PMBadge>
         <PMText variant="body-important">{target.name}</PMText>
       </PMBox>
-      {hasRows ? (
-        <PMTable columns={TABLE_COLUMNS} data={rows} size="sm" />
+      {anyVisible ? (
+        packageGroups.map((group) => (
+          <PackageArtifactsTable
+            key={`pkg-${group.pkg.id}`}
+            orgSlug={orgSlug}
+            packageName={group.pkg.name}
+            recipes={group.recipes}
+            standards={group.standards}
+            skills={group.skills}
+            mode={mode}
+          />
+        ))
       ) : (
         <PMHStack gap={2} align="center" mt={4}>
           <PMIcon color={'green.500'}>

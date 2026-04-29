@@ -9,7 +9,10 @@ import {
   createRepositoryDeploymentStatus,
   createTargetDeploymentStatus,
   createTargetStandardDeploymentStatus,
+  createDeployedRecipeTargetInfo,
+  createDeployedStandardTargetInfo,
   createDeployedRecipeInfo,
+  packageFactory,
   targetFactory,
 } from '@packmind/deployments/test';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
@@ -56,14 +59,24 @@ describe('RepositoryCentricView', () => {
 
   it('renders a table for a recipe target', () => {
     const target = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
+    const recipeInfo = createDeployedRecipeTargetInfo();
     const recipeTargets = [
-      createTargetDeploymentStatus({ target, gitRepo: gitRepoFactory() }),
+      createTargetDeploymentStatus({
+        target,
+        gitRepo: gitRepoFactory(),
+        deployedRecipes: [recipeInfo],
+      }),
     ];
+    const pkg = packageFactory({
+      name: 'pkg-recipe',
+      recipes: [recipeInfo.recipe.id],
+    });
 
     renderWithProvider(
       <RepositoryCentricView
         recipeRepositories={[]}
         recipeTargets={recipeTargets}
+        packages={[pkg]}
       />,
     );
 
@@ -72,17 +85,24 @@ describe('RepositoryCentricView', () => {
 
   it('renders a table for a standard target', () => {
     const target = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
+    const standardInfo = createDeployedStandardTargetInfo();
     const standardTargets = [
       createTargetStandardDeploymentStatus({
         target,
         gitRepo: gitRepoFactory(),
+        deployedStandards: [standardInfo],
       }),
     ];
+    const pkg = packageFactory({
+      name: 'pkg-standard',
+      standards: [standardInfo.standard.id],
+    });
 
     renderWithProvider(
       <RepositoryCentricView
         recipeRepositories={[]}
         standardTargets={standardTargets}
+        packages={[pkg]}
       />,
     );
 
@@ -96,19 +116,35 @@ describe('RepositoryCentricView', () => {
     });
     const t1 = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
     const t2 = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
+    const recipeInfo = createDeployedRecipeTargetInfo();
+    const standardInfo = createDeployedStandardTargetInfo();
 
     const recipeTargets = [
-      createTargetDeploymentStatus({ target: t1, gitRepo: sharedRepo }),
+      createTargetDeploymentStatus({
+        target: t1,
+        gitRepo: sharedRepo,
+        deployedRecipes: [recipeInfo],
+      }),
     ];
     const standardTargets = [
-      createTargetStandardDeploymentStatus({ target: t2, gitRepo: sharedRepo }),
+      createTargetStandardDeploymentStatus({
+        target: t2,
+        gitRepo: sharedRepo,
+        deployedStandards: [standardInfo],
+      }),
     ];
+    const pkg = packageFactory({
+      name: 'pkg-mixed',
+      recipes: [recipeInfo.recipe.id],
+      standards: [standardInfo.standard.id],
+    });
 
     renderWithProvider(
       <RepositoryCentricView
         recipeRepositories={[]}
         recipeTargets={recipeTargets}
         standardTargets={standardTargets}
+        packages={[pkg]}
       />,
     );
 
@@ -868,6 +904,116 @@ describe('RepositoryCentricView', () => {
       expect(
         screen.queryByText('out-owner/out-repo:main'),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('per-package rendering', () => {
+    it('renders one sub-table per package and shows each package name', () => {
+      const target = targetFactory({
+        id: createTargetId('target-pkg'),
+        name: 'Prod',
+      });
+      const sharedRepo = gitRepoFactory({
+        owner: 'pkg-owner',
+        repo: 'pkg-repo',
+      });
+      const recipeInfo = createDeployedRecipeTargetInfo();
+      const standardInfo = createDeployedStandardTargetInfo();
+
+      const recipeTargets = [
+        createTargetDeploymentStatus({
+          target,
+          gitRepo: sharedRepo,
+          deployedRecipes: [recipeInfo],
+        }),
+      ];
+      const standardTargets = [
+        createTargetStandardDeploymentStatus({
+          target,
+          gitRepo: sharedRepo,
+          deployedStandards: [standardInfo],
+        }),
+      ];
+
+      const alpha = packageFactory({
+        name: 'alpha',
+        standards: [standardInfo.standard.id],
+      });
+      const beta = packageFactory({
+        name: 'beta',
+        recipes: [recipeInfo.recipe.id],
+      });
+
+      renderWithProvider(
+        <RepositoryCentricView
+          recipeRepositories={[]}
+          recipeTargets={recipeTargets}
+          standardTargets={standardTargets}
+          packages={[alpha, beta]}
+        />,
+      );
+
+      expect(screen.getAllByTestId('pm-table')).toHaveLength(2);
+      expect(screen.getByText('alpha')).toBeInTheDocument();
+      expect(screen.getByText('beta')).toBeInTheDocument();
+    });
+
+    it('does not render any target table while packages are loading', () => {
+      const target = targetFactory({
+        id: createTargetId('target-pkg'),
+        name: 'Prod',
+      });
+      const recipeInfo = createDeployedRecipeTargetInfo();
+      const recipeTargets = [
+        createTargetDeploymentStatus({
+          target,
+          gitRepo: gitRepoFactory({ owner: 'pkg-owner', repo: 'pkg-repo' }),
+          deployedRecipes: [recipeInfo],
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          recipeRepositories={[]}
+          recipeTargets={recipeTargets}
+          packages={[]}
+          packagesLoading={true}
+        />,
+      );
+
+      expect(screen.queryByTestId('pm-table')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('No artifacts distributed here'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('pkg-owner/pkg-repo:main')).toBeInTheDocument();
+    });
+
+    it('shows the per-target empty state when packages are loaded but none match', () => {
+      const target = targetFactory({
+        id: createTargetId('target-pkg'),
+        name: 'Prod',
+      });
+      const recipeInfo = createDeployedRecipeTargetInfo();
+      const recipeTargets = [
+        createTargetDeploymentStatus({
+          target,
+          gitRepo: gitRepoFactory({ owner: 'pkg-owner', repo: 'pkg-repo' }),
+          deployedRecipes: [recipeInfo],
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          recipeRepositories={[]}
+          recipeTargets={recipeTargets}
+          packages={[]}
+        />,
+      );
+
+      expect(
+        screen.getByText('No artifacts distributed here'),
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId('pm-table')).not.toBeInTheDocument();
     });
   });
 });

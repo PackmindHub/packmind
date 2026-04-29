@@ -84,6 +84,11 @@ jest.mock('../../api/queries/DeploymentsQueries', () => ({
   useGetRecipesDeploymentOverviewQuery: jest.fn(),
   useGetStandardsDeploymentOverviewQuery: jest.fn(),
   useGetSkillsDeploymentOverviewQuery: jest.fn(),
+  useListPackagesBySpaceQuery: jest.fn(() => ({
+    data: { packages: [] },
+    isLoading: false,
+    isError: false,
+  })),
 }));
 
 // Mock useCurrentSpace hook
@@ -92,6 +97,8 @@ jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
     spaceId: 'space-id-1',
     spaceSlug: 'test-space',
     spaceName: 'Test Space',
+    space: { organizationId: 'org-id-1' },
+    isLoading: false,
   }),
 }));
 
@@ -147,7 +154,7 @@ describe('DeploymentsPage', () => {
     > as UseQueryResult<StandardDeploymentOverview, Error>);
 
     mockUseGetSkillsDeploymentOverview.mockReturnValue({
-      data: { repositories: [], skills: [] },
+      data: { repositories: [], skills: [], targets: [] },
       isLoading: false,
       error: null,
       isError: false,

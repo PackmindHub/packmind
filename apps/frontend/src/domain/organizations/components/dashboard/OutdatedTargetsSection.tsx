@@ -10,7 +10,10 @@ import {
   PMBox,
   PMIcon,
 } from '@packmind/ui';
-import { useGetDashboardOutdatedQuery } from '../../../deployments/api/queries/DeploymentsQueries';
+import {
+  useGetDashboardOutdatedQuery,
+  useListPackagesBySpaceQuery,
+} from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   TargetId,
@@ -20,6 +23,7 @@ import {
 } from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
+import { groupTargetByPackage } from '../../../deployments/utils/groupTargetByPackage';
 
 // ---- Types & constants
 type RepoResult = {
@@ -35,13 +39,17 @@ type RepoResult = {
 
 export const OutdatedTargetsSection: React.FC = () => {
   const { orgSlug } = useParams() as { orgSlug?: string };
-  const { spaceId } = useCurrentSpace();
+  const { spaceId, space } = useCurrentSpace();
+  const organizationId = space?.organizationId;
   const {
     data: outdatedData,
     isLoading,
     isError,
     error,
   } = useGetDashboardOutdatedQuery(spaceId ?? '');
+  const { data: packagesResponse, isLoading: isPackagesLoading } =
+    useListPackagesBySpaceQuery(spaceId, organizationId);
+  const packages = packagesResponse?.packages ?? [];
 
   const reposWithTargets = useMemo(() => {
     if (!outdatedData?.targets) return [];
@@ -140,17 +148,23 @@ export const OutdatedTargetsSection: React.FC = () => {
                   <PMHeading level="h6">{repo.title}</PMHeading>
                 </PMBox>
                 <PMVStack align="stretch" width="full" padding={2}>
-                  {repo.targets.map((t) => (
-                    <RepositoryTargetTable
-                      key={String(t.id)}
-                      orgSlug={orgSlug}
-                      target={{ id: t.id, name: t.title }}
-                      recipes={t.recipes}
-                      standards={t.standards}
-                      skills={[]}
-                      mode="outdated"
-                    />
-                  ))}
+                  {!isPackagesLoading &&
+                    repo.targets.map((t) => (
+                      <RepositoryTargetTable
+                        key={String(t.id)}
+                        orgSlug={orgSlug}
+                        target={{ id: t.id, name: t.title }}
+                        packageGroups={groupTargetByPackage(
+                          {
+                            recipes: t.recipes,
+                            standards: t.standards,
+                            skills: [],
+                          },
+                          packages,
+                        )}
+                        mode="outdated"
+                      />
+                    ))}
                 </PMVStack>
               </PMVStack>
             );
