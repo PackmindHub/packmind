@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -150,5 +151,34 @@ describe('SpacesTable', () => {
 
     expect(screen.getByText('Engineering')).toBeInTheDocument();
     expect(screen.getByText('Product')).toBeInTheDocument();
+  });
+
+  it('calls onSelectSpace with the space when the row body is clicked', async () => {
+    const user = userEvent.setup();
+    const onSelectSpace = jest.fn();
+    const space = buildRow({ name: 'Engineering' });
+
+    renderWithProvider(
+      <SpacesTable spaces={[space]} onSelectSpace={onSelectSpace} />,
+    );
+
+    await user.click(screen.getByText('Engineering'));
+
+    expect(onSelectSpace).toHaveBeenCalledTimes(1);
+    expect(onSelectSpace).toHaveBeenCalledWith(space);
+  });
+
+  it('does not call onSelectSpace when the kebab action button is clicked', async () => {
+    const user = userEvent.setup();
+    const onSelectSpace = jest.fn();
+    const space = buildRow({ name: 'Engineering' });
+
+    renderWithProvider(
+      <SpacesTable spaces={[space]} onSelectSpace={onSelectSpace} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /actions/i }));
+
+    expect(onSelectSpace).not.toHaveBeenCalled();
   });
 });
