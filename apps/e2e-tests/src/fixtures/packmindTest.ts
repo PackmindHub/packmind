@@ -13,7 +13,7 @@ export const testWithUserData = base.extend<{
   underFeatureFlag: [false, { option: true }],
   userData: async ({ underFeatureFlag }, use) => {
     await use({
-      email: `someone-${uuidv4()}@${underFeatureFlag ? 'packmind' : 'example'}.com`,
+      email: `test-${uuidv4()}@${underFeatureFlag ? 'packmind' : 'example'}.com`,
       password: `${uuidv4()}!!`,
       method: 'password',
     });
