@@ -18,6 +18,7 @@ import {
 } from '@packmind/types';
 import { RepositoryTargetTable } from '../RepositoryTargetTable/RepositoryTargetTable';
 import { groupTargetByPackage } from '../../utils/groupTargetByPackage';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 
 interface CombinedRepositoryDeploymentStatus {
   gitRepo: GitRepo;
@@ -475,6 +476,16 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   packages = [],
   packagesLoading = false,
 }) => {
+  const { data: gitProvidersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+  const providersWithToken = useMemo(() => {
+    const set = new Set<string>();
+    gitProvidersResponse?.providers
+      .filter((provider) => provider.hasToken)
+      .forEach((provider) => set.add(provider.id));
+    return set;
+  }, [gitProvidersResponse]);
+
   const shouldUseTargetData =
     recipeTargets.length > 0 ||
     standardTargets.length > 0 ||
@@ -683,6 +694,11 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
                       packages,
                     )}
                     mode={artifactStatusFilter}
+                    canDistributeFromApp={
+                      !isProvidersLoading &&
+                      providersWithToken.has(repository.gitRepo.providerId)
+                    }
+                    isDistributeReadinessLoading={isProvidersLoading}
                   />
                 ))}
             </PMVStack>

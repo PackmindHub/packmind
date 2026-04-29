@@ -15,9 +15,12 @@ import {
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
   DeployedSkillTargetInfo,
+  PackageId,
+  TargetId,
 } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../../shared/utils/routes';
+import { DistributePackageToTargetButton } from './DistributePackageToTargetButton';
 
 type Mode = 'all' | 'outdated' | 'up-to-date';
 type ArtifactKind = 'Command' | 'Standard' | 'Skill';
@@ -25,10 +28,14 @@ type ArtifactKind = 'Command' | 'Standard' | 'Skill';
 export type PackageArtifactsTableProps = {
   orgSlug?: string;
   packageName: string;
+  packageId: PackageId;
+  targetId: TargetId;
   recipes: ReadonlyArray<DeployedRecipeTargetInfo>;
   standards: ReadonlyArray<DeployedStandardTargetInfo>;
   skills: ReadonlyArray<DeployedSkillTargetInfo>;
   mode?: Mode;
+  canDistributeFromApp: boolean;
+  isDistributeReadinessLoading: boolean;
 };
 
 type NormalizedArtifact = {
@@ -154,10 +161,14 @@ const sortByName = (items: NormalizedArtifact[]): NormalizedArtifact[] =>
 export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
   orgSlug,
   packageName,
+  packageId,
+  targetId,
   recipes,
   standards,
   skills,
   mode = 'all',
+  canDistributeFromApp,
+  isDistributeReadinessLoading,
 }) => {
   const { spaceSlug } = useCurrentSpace();
 
@@ -220,11 +231,20 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
       borderColor={'border.secondary'}
       borderRadius={4}
     >
-      <PMHStack gap={2} align="center">
-        <PMBadge colorPalette="gray" size="xs">
-          Package
-        </PMBadge>
-        <PMText variant="body-important">{packageName}</PMText>
+      <PMHStack gap={2} align="center" justify="space-between">
+        <PMHStack gap={2} align="center">
+          <PMBadge colorPalette="gray" size="xs">
+            Package
+          </PMBadge>
+          <PMText variant="body-important">{packageName}</PMText>
+        </PMHStack>
+        <DistributePackageToTargetButton
+          packageId={packageId}
+          packageName={packageName}
+          targetId={targetId}
+          canDistributeFromApp={canDistributeFromApp}
+          isDistributeReadinessLoading={isDistributeReadinessLoading}
+        />
       </PMHStack>
       <PMTable columns={TABLE_COLUMNS} data={rows} size="sm" />
     </PMVStack>

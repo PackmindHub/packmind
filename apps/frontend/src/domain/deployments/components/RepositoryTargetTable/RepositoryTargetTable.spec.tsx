@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../../../../providers/AuthProvider';
 import { RepositoryTargetTable } from './RepositoryTargetTable';
 import {
   createDeployedRecipeTargetInfo,
@@ -12,11 +14,24 @@ import {
 import { createTargetId } from '@packmind/types';
 import { PackageGroup } from '../../utils/groupTargetByPackage';
 
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
 const renderWithProvider = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
   return render(
-    <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
-      <UIProvider>{ui}</UIProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
+          <UIProvider>{ui}</UIProvider>
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
   );
 };
 
@@ -63,7 +78,12 @@ describe('RepositoryTargetTable', () => {
       ];
 
       renderWithProvider(
-        <RepositoryTargetTable target={target} packageGroups={groups} />,
+        <RepositoryTargetTable
+          target={target}
+          packageGroups={groups}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+        />,
       );
 
       expect(screen.getAllByTestId('pm-table')).toHaveLength(2);
@@ -92,7 +112,12 @@ describe('RepositoryTargetTable', () => {
       ];
 
       renderWithProvider(
-        <RepositoryTargetTable target={target} packageGroups={groups} />,
+        <RepositoryTargetTable
+          target={target}
+          packageGroups={groups}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+        />,
       );
 
       expect(screen.getByText('alpha')).toBeInTheDocument();
@@ -135,6 +160,8 @@ describe('RepositoryTargetTable', () => {
           target={target}
           packageGroups={groups}
           mode="outdated"
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
         />,
       );
 
@@ -165,6 +192,8 @@ describe('RepositoryTargetTable', () => {
           target={target}
           packageGroups={groups}
           mode="outdated"
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
         />,
       );
 
@@ -196,7 +225,12 @@ describe('RepositoryTargetTable', () => {
       ];
 
       renderWithProvider(
-        <RepositoryTargetTable target={target} packageGroups={groups} />,
+        <RepositoryTargetTable
+          target={target}
+          packageGroups={groups}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+        />,
       );
 
       const renderedNames = screen
@@ -209,7 +243,12 @@ describe('RepositoryTargetTable', () => {
   describe('when called with no package groups', () => {
     it('shows the empty state', () => {
       renderWithProvider(
-        <RepositoryTargetTable target={target} packageGroups={[]} />,
+        <RepositoryTargetTable
+          target={target}
+          packageGroups={[]}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+        />,
       );
 
       expect(

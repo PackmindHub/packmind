@@ -18,17 +18,20 @@ import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   TargetId,
   GitRepo,
+  GitProviderId,
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
 } from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
 import { groupTargetByPackage } from '../../../deployments/utils/groupTargetByPackage';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 
 // ---- Types & constants
 type RepoResult = {
   repoKey: string;
   title: string;
+  providerId: GitProviderId;
   targets: Array<{
     id: TargetId;
     title: string;
@@ -50,20 +53,39 @@ export const OutdatedTargetsSection: React.FC = () => {
   const { data: packagesResponse, isLoading: isPackagesLoading } =
     useListPackagesBySpaceQuery(spaceId, organizationId);
   const packages = packagesResponse?.packages ?? [];
+  const { data: gitProvidersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+  const providersWithToken = useMemo(() => {
+    const set = new Set<GitProviderId>();
+    gitProvidersResponse?.providers
+      .filter((provider) => provider.hasToken)
+      .forEach((provider) => set.add(provider.id));
+    return set;
+  }, [gitProvidersResponse]);
 
   const reposWithTargets = useMemo(() => {
     if (!outdatedData?.targets) return [];
     type TargetValue = RepoResult['targets'][number];
     const repoMap = new Map<
       string,
-      { repoKey: string; title: string; targets: Map<TargetId, TargetValue> }
+      {
+        repoKey: string;
+        title: string;
+        providerId: GitProviderId;
+        targets: Map<TargetId, TargetValue>;
+      }
     >();
 
     for (const t of outdatedData.targets) {
       const { key, title } = getRepoIdentity(t.gitRepo);
       let repo = repoMap.get(key);
       if (!repo) {
-        repo = { repoKey: key, title, targets: new Map() };
+        repo = {
+          repoKey: key,
+          title,
+          providerId: t.gitRepo.providerId,
+          targets: new Map(),
+        };
         repoMap.set(key, repo);
       }
       repo.targets.set(t.target.id, {
@@ -78,6 +100,7 @@ export const OutdatedTargetsSection: React.FC = () => {
       .map((r) => ({
         repoKey: r.repoKey,
         title: r.title,
+        providerId: r.providerId,
         targets: Array.from(r.targets.values()).sort((a, b) =>
           a.title.localeCompare(b.title),
         ),
@@ -163,6 +186,11 @@ export const OutdatedTargetsSection: React.FC = () => {
                           packages,
                         )}
                         mode="outdated"
+                        canDistributeFromApp={
+                          !isProvidersLoading &&
+                          providersWithToken.has(repo.providerId)
+                        }
+                        isDistributeReadinessLoading={isProvidersLoading}
                       />
                     ))}
                 </PMVStack>

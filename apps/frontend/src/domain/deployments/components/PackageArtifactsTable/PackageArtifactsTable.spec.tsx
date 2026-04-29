@@ -3,21 +3,44 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../../../../providers/AuthProvider';
 import { PackageArtifactsTable } from './PackageArtifactsTable';
 import {
   createDeployedRecipeTargetInfo,
   createDeployedStandardTargetInfo,
 } from '@packmind/deployments/test';
 import { skillFactory, skillVersionFactory } from '@packmind/skills/test';
-import { DeployedSkillTargetInfo, Skill } from '@packmind/types';
+import {
+  createPackageId,
+  createTargetId,
+  DeployedSkillTargetInfo,
+  Skill,
+} from '@packmind/types';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
 
 const renderWithProvider = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
   return render(
-    <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
-      <UIProvider>{ui}</UIProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
+          <UIProvider>{ui}</UIProvider>
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
   );
 };
+
+const TEST_PACKAGE_ID = createPackageId('pkg-1');
+const TEST_TARGET_ID = createTargetId('target-1');
 
 const buildDeployedSkillTargetInfo = (
   overrides?: Partial<DeployedSkillTargetInfo> & { skill?: Skill },
@@ -69,6 +92,10 @@ describe('PackageArtifactsTable', () => {
       <PackageArtifactsTable
         orgSlug="test-org"
         packageName="my-pkg"
+        packageId={TEST_PACKAGE_ID}
+        targetId={TEST_TARGET_ID}
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
         recipes={[recipe]}
         standards={[]}
         skills={[]}
@@ -85,6 +112,10 @@ describe('PackageArtifactsTable', () => {
       <PackageArtifactsTable
         orgSlug="test-org"
         packageName="my-pkg"
+        packageId={TEST_PACKAGE_ID}
+        targetId={TEST_TARGET_ID}
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
         recipes={[recipe]}
         standards={[]}
         skills={[]}
@@ -103,6 +134,10 @@ describe('PackageArtifactsTable', () => {
       <PackageArtifactsTable
         orgSlug="test-org"
         packageName="my-pkg"
+        packageId={TEST_PACKAGE_ID}
+        targetId={TEST_TARGET_ID}
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
         recipes={[recipe]}
         standards={[standard]}
         skills={[skill]}
@@ -132,6 +167,10 @@ describe('PackageArtifactsTable', () => {
         <PackageArtifactsTable
           orgSlug="test-org"
           packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
           recipes={[outdatedRecipe, upToDateRecipe]}
           standards={[outdatedStandard, upToDateStandard]}
           skills={[]}
@@ -153,6 +192,10 @@ describe('PackageArtifactsTable', () => {
         <PackageArtifactsTable
           orgSlug="test-org"
           packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
           recipes={[upToDateRecipe]}
           standards={[]}
           skills={[]}
@@ -172,6 +215,10 @@ describe('PackageArtifactsTable', () => {
         <PackageArtifactsTable
           orgSlug="test-org"
           packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
           recipes={[upToDateRecipe]}
           standards={[]}
           skills={[]}

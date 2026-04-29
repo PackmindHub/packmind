@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../../../../providers/AuthProvider';
 import { RepositoryCentricView } from './RepositoryCentricView';
 import {
   createRepositoryStandardDeploymentStatus,
@@ -18,11 +20,24 @@ import {
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
 import { RepositoryDeploymentStatus, createTargetId } from '@packmind/types';
 
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
 const renderWithProvider = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
   return render(
-    <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
-      <UIProvider>{ui}</UIProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
+          <UIProvider>{ui}</UIProvider>
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
   );
 };
 
@@ -32,6 +47,13 @@ jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
     spaceId: 'space-id-1',
     spaceSlug: 'test-space',
     spaceName: 'Test Space',
+  }),
+}));
+
+jest.mock('../../../git/api/queries/GitProviderQueries', () => ({
+  useGetGitProvidersQuery: () => ({
+    data: { providers: [] },
+    isLoading: false,
   }),
 }));
 

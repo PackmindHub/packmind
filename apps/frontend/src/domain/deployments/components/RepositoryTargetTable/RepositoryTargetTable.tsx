@@ -19,6 +19,8 @@ export type RepositoryTargetTableProps = {
   target: { id: TargetId; name: string; path?: string };
   packageGroups: ReadonlyArray<PackageGroup>;
   mode?: Mode;
+  canDistributeFromApp: boolean;
+  isDistributeReadinessLoading: boolean;
 };
 
 const groupHasVisibleRows = (group: PackageGroup, mode: Mode): boolean => {
@@ -41,6 +43,8 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
   target,
   packageGroups,
   mode = 'all',
+  canDistributeFromApp,
+  isDistributeReadinessLoading,
 }) => {
   const anyVisible = packageGroups.some((g) => groupHasVisibleRows(g, mode));
 
@@ -65,10 +69,14 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             key={`pkg-${group.pkg.id}`}
             orgSlug={orgSlug}
             packageName={group.pkg.name}
+            packageId={group.pkg.id}
+            targetId={target.id}
             recipes={group.recipes}
             standards={group.standards}
             skills={group.skills}
             mode={mode}
+            canDistributeFromApp={canDistributeFromApp}
+            isDistributeReadinessLoading={isDistributeReadinessLoading}
           />
         ))
       ) : (
