@@ -1,12 +1,16 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-// import userEvent from '@testing-library/user-event';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import { SpacesManagementPage } from './SpacesManagementPage';
 import * as queries from '../../api/queries/SpacesQueries';
+import * as SpacesManagementQueriesModule from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
+import * as DeploymentsQueriesModule from '../../../deployments/api/queries/DeploymentsQueries';
+import * as UseNavigationModule from '../../../../shared/hooks/useNavigation';
+import * as UserQueriesModule from '../../../accounts/api/queries/UserQueries';
 
 jest.mock(
   '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
@@ -23,6 +27,7 @@ jest.mock(
 
 jest.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({
+    user: { id: 'current-user-id' },
     organization: {
       id: 'org-1',
       name: 'Test Organization',
@@ -53,7 +58,7 @@ jest.mock('@packmind/ui', () => {
         </thead>
         <tbody>
           {data.map((row, index) => (
-            <tr key={index}>
+            <tr key={index} role="row">
               {columns.map((col) => (
                 <td key={col.key}>{row[col.key]}</td>
               ))}
@@ -70,6 +75,7 @@ const buildItem = (overrides: Record<string, unknown> = {}) => ({
   name: 'Engineering',
   slug: 'engineering',
   type: 'open',
+  color: 'blue',
   organizationId: 'org-1',
   isDefaultSpace: false,
   admins: [],
@@ -78,6 +84,63 @@ const buildItem = (overrides: Record<string, unknown> = {}) => ({
   createdAt: '2025-01-12T00:00:00.000Z',
   ...overrides,
 });
+
+const mockDrawerDependencies = () => {
+  jest.spyOn(queries, 'useGetSpaceMembersQuery').mockReturnValue({
+    data: { members: [] },
+    isLoading: false,
+  } as unknown as ReturnType<typeof queries.useGetSpaceMembersQuery>);
+
+  jest.spyOn(queries, 'useRemoveMemberFromSpaceMutation').mockReturnValue({
+    mutate: jest.fn(),
+    isPending: false,
+  } as unknown as ReturnType<typeof queries.useRemoveMemberFromSpaceMutation>);
+
+  jest.spyOn(queries, 'useUpdateMemberRoleMutation').mockReturnValue({
+    mutate: jest.fn(),
+    isPending: false,
+  } as unknown as ReturnType<typeof queries.useUpdateMemberRoleMutation>);
+
+  jest
+    .spyOn(SpacesManagementQueriesModule, 'useUpdateSpaceMutation')
+    .mockReturnValue({
+      mutate: jest.fn(),
+      mutateAsync: jest.fn(),
+      isPending: false,
+    } as unknown as ReturnType<
+      typeof SpacesManagementQueriesModule.useUpdateSpaceMutation
+    >);
+
+  jest
+    .spyOn(SpacesManagementQueriesModule, 'useLeaveSpaceMutation')
+    .mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
+    } as unknown as ReturnType<
+      typeof SpacesManagementQueriesModule.useLeaveSpaceMutation
+    >);
+
+  jest
+    .spyOn(DeploymentsQueriesModule, 'useListPackagesBySpaceQuery')
+    .mockReturnValue({
+      data: { packages: [] },
+    } as unknown as ReturnType<
+      typeof DeploymentsQueriesModule.useListPackagesBySpaceQuery
+    >);
+
+  jest.spyOn(UseNavigationModule, 'useNavigation').mockReturnValue({
+    org: { toDashboard: jest.fn() },
+  } as unknown as ReturnType<typeof UseNavigationModule.useNavigation>);
+
+  jest
+    .spyOn(UserQueriesModule, 'useGetUsersInMyOrganizationQuery')
+    .mockReturnValue({
+      data: { users: [] },
+      isLoading: false,
+    } as unknown as ReturnType<
+      typeof UserQueriesModule.useGetUsersInMyOrganizationQuery
+    >);
+};
 
 const renderWithQuery = (ui: React.ReactNode) => {
   const client = new QueryClient({
@@ -135,21 +198,61 @@ describe('SpacesManagementPage', () => {
     expect(screen.queryByRole('checkbox', { name: /select/i })).toBeNull();
   });
 
-  // it('triggers a refetch with the new page when SpacesPagination calls onPageChange', async () => {
-  //   const useQueryMock = jest
-  //     .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
-  //     .mockReturnValue({
-  //       data: { items: [], totalCount: 32, page: 1, pageSize: 8 },
-  //       isLoading: false,
-  //       isError: false,
-  //     } as unknown as ReturnType<
-  //       typeof queries.useGetOrganizationSpacesForManagementQuery
-  //     >);
-  //
-  //   renderWithQuery(<SpacesManagementPage />);
-  //
-  //   await userEvent.click(screen.getByRole('button', { name: /next/i }));
-  //
-  //   expect(useQueryMock).toHaveBeenLastCalledWith(expect.any(String), 2);
-  // });
+  it('opens the drawer when a row is clicked', async () => {
+    mockDrawerDependencies();
+    jest
+      .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
+      .mockReturnValue({
+        data: {
+          items: [buildItem({ name: 'Frontend' })],
+          totalCount: 1,
+          page: 1,
+          pageSize: 8,
+        },
+        isLoading: false,
+        isError: false,
+      } as unknown as ReturnType<
+        typeof queries.useGetOrganizationSpacesForManagementQuery
+      >);
+
+    renderWithQuery(<SpacesManagementPage />);
+
+    const user = userEvent.setup();
+    await user.click(screen.getByText('Frontend'));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Frontend' }),
+    ).toBeInTheDocument();
+  });
+
+  it('closes the drawer when the close button is clicked', async () => {
+    mockDrawerDependencies();
+    jest
+      .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
+      .mockReturnValue({
+        data: {
+          items: [buildItem({ name: 'Frontend' })],
+          totalCount: 1,
+          page: 1,
+          pageSize: 8,
+        },
+        isLoading: false,
+        isError: false,
+      } as unknown as ReturnType<
+        typeof queries.useGetOrganizationSpacesForManagementQuery
+      >);
+
+    renderWithQuery(<SpacesManagementPage />);
+
+    const user = userEvent.setup();
+    await user.click(screen.getByText('Frontend'));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Frontend' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /close/i }));
+
+    expect(screen.queryByRole('heading', { name: 'Frontend' })).toBeNull();
+  });
 });

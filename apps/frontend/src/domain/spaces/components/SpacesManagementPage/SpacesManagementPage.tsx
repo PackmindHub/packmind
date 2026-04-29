@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { PMAlert, PMBox, PMSpinner, PMVStack } from '@packmind/ui';
+import type { SpaceManagementListItem } from '@packmind/types';
 import { useGetOrganizationSpacesForManagementQuery } from '../../api/queries/SpacesQueries';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { SpacesTable } from './SpacesTable';
 // import { SpacesPagination } from './SpacesPagination';
 import { toSpaceListItem } from './toSpaceListItem';
 import { sortSpacesByName } from '../../../spaces-management/utils/sortSpacesByName';
+import { SpaceManagementDrawer } from './SpaceManagementDrawer';
 
 export const SpacesManagementPage: React.FC = () => {
   const { organization } = useAuthContext();
   const [page] = useState(1);
+  const [selectedSpace, setSelectedSpace] =
+    useState<SpaceManagementListItem | null>(null);
   const orgId = organization?.id ?? '';
   const { data, isLoading, isError } =
     useGetOrganizationSpacesForManagementQuery(orgId, page);
@@ -38,6 +42,13 @@ export const SpacesManagementPage: React.FC = () => {
 
   const rows = sortSpacesByName(data.items.map(toSpaceListItem));
 
+  const handleSelectSpace = (selected: { id: string }) => {
+    const raw = data.items.find((item) => item.id === selected.id);
+    if (raw) {
+      setSelectedSpace(raw);
+    }
+  };
+
   return (
     <PMVStack alignItems="stretch" gap={4} width="full">
       <PMBox
@@ -46,7 +57,7 @@ export const SpacesManagementPage: React.FC = () => {
         borderRadius="md"
         overflow="hidden"
       >
-        <SpacesTable spaces={rows} />
+        <SpacesTable spaces={rows} onSelectSpace={handleSelectSpace} />
       </PMBox>
       {/* <SpacesPagination
         page={data.page}
@@ -54,6 +65,10 @@ export const SpacesManagementPage: React.FC = () => {
         totalCount={data.totalCount}
         onPageChange={setPage}
       /> */}
+      <SpaceManagementDrawer
+        space={selectedSpace}
+        onClose={() => setSelectedSpace(null)}
+      />
     </PMVStack>
   );
 };
