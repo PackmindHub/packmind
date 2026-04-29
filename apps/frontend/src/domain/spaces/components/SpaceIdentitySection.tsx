@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Space, SPACE_COLOR_PALETTES, SpaceColor } from '@packmind/types';
 import {
   PMAlert,
@@ -13,6 +14,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { useUpdateSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
 
 interface SpaceIdentitySectionProps {
@@ -27,6 +29,8 @@ export function SpaceIdentitySection({
   const [name, setName] = useState(space.name);
   const [selectedColor, setSelectedColor] = useState<SpaceColor>(space.color);
   const updateSpaceMutation = useUpdateSpaceMutation();
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   const isDefaultSpace = space.isDefaultSpace;
   const nameDisabled = !canEdit || isDefaultSpace;
@@ -51,6 +55,11 @@ export function SpaceIdentitySection({
         type: 'success',
         title: 'Space updated',
       });
+      if (organization?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ['organizations', organization.id, 'spaces', 'management'],
+        });
+      }
     } catch (err) {
       const status = isPackmindError(err) ? err.serverError.status : undefined;
       const messageByStatus: Record<number, string> = {
