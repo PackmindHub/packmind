@@ -63,17 +63,18 @@ jobs:
           git commit -m "chore(packmind): nightly artifacts update"
           git push origin packmind-cli-update
 
-      - name: Open PR if none exists
+      - name: Open PR if no open one exists
         if: steps.diff.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if ! gh pr view packmind-cli-update --json number --jq .number 2>/dev/null; then
+          open_pr_count=$(gh pr list --head packmind-cli-update --state open --json number --jq 'length')
+          if [ "$open_pr_count" -eq 0 ]; then
             gh pr create \
               --base main \
               --head packmind-cli-update \
               --title "chore(packmind): nightly artifacts update" \
               --body "Automated nightly update of Packmind artifacts via \`packmind-cli install\`. Review the diff under \`.packmind/\` and \`packmind-lock.json\`."
           else
-            echo "PR already exists; new commit will be appended."
+            echo "An open PR already exists for packmind-cli-update; new commit was appended to it."
           fi
