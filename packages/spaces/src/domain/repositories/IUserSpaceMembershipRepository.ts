@@ -43,4 +43,5 @@ export interface IUserSpaceMembershipRepository {
     spaceIds: SpaceId[],
     role: UserSpaceRole,
   ): Promise<Map<SpaceId, number>>;
+  countUsersForSpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
 }

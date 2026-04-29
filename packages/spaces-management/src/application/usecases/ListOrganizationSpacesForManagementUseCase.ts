@@ -13,7 +13,6 @@ import {
   SpaceId,
   SpaceManagementListItem,
   SpaceManagementListItemAdmin,
-  UserSpaceRole,
 } from '@packmind/types';
 import { InvalidPageError } from '../../domain/errors/InvalidPageError';
 
@@ -70,7 +69,7 @@ export class ListOrganizationSpacesForManagementUseCase extends AbstractAdminUse
       skillsCounts,
     ] = await Promise.all([
       this.spacesPort.findAdminsForSpaceIds(spaceIds),
-      this.spacesPort.countByRoleForSpaceIds(spaceIds, UserSpaceRole.MEMBER),
+      this.spacesPort.countUsersForSpaceIds(spaceIds),
       this.standardsPort.countBySpaceIds(spaceIds),
       this.recipesPort.countBySpaceIds(spaceIds),
       this.skillsPort.countBySpaceIds(spaceIds),

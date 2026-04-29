@@ -9,7 +9,6 @@ import {
   IStandardsPort,
   ListOrganizationSpacesForManagementCommand,
   ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
-  UserSpaceRole,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
@@ -36,9 +35,7 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
   let spacesPort: jest.Mocked<
     Pick<
       ISpacesPort,
-      | 'findOrgPagePaginated'
-      | 'findAdminsForSpaceIds'
-      | 'countByRoleForSpaceIds'
+      'findOrgPagePaginated' | 'findAdminsForSpaceIds' | 'countUsersForSpaceIds'
     >
   >;
   let standardsPort: jest.Mocked<Pick<IStandardsPort, 'countBySpaceIds'>>;
@@ -74,7 +71,7 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
         .fn()
         .mockResolvedValue({ items: [], totalCount: 0 }),
       findAdminsForSpaceIds: jest.fn().mockResolvedValue([]),
-      countByRoleForSpaceIds: jest.fn().mockResolvedValue(new Map()),
+      countUsersForSpaceIds: jest.fn().mockResolvedValue(new Map()),
     };
 
     standardsPort = {
@@ -166,7 +163,7 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
       await useCase.execute(buildCommand());
 
       expect(spacesPort.findAdminsForSpaceIds).not.toHaveBeenCalled();
-      expect(spacesPort.countByRoleForSpaceIds).not.toHaveBeenCalled();
+      expect(spacesPort.countUsersForSpaceIds).not.toHaveBeenCalled();
       expect(standardsPort.countBySpaceIds).not.toHaveBeenCalled();
       expect(recipesPort.countBySpaceIds).not.toHaveBeenCalled();
       expect(skillsPort.countBySpaceIds).not.toHaveBeenCalled();
@@ -195,7 +192,7 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
       });
     });
 
-    it('stitches admins, member counts, and artifact counts per space; defaults missing entries to 0', async () => {
+    it('stitches admins, total user counts, and artifact counts per space; defaults missing entries to 0', async () => {
       spacesPort.findAdminsForSpaceIds.mockResolvedValue([
         {
           spaceId: space1.id,
@@ -210,7 +207,7 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
           user: { id: createUserId('u3'), displayName: 'Carol' },
         },
       ]);
-      spacesPort.countByRoleForSpaceIds.mockResolvedValue(
+      spacesPort.countUsersForSpaceIds.mockResolvedValue(
         new Map([[space2.id, 7]]),
       );
       standardsPort.countBySpaceIds.mockResolvedValue(
@@ -278,10 +275,9 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
       expect(spacesPort.findAdminsForSpaceIds).toHaveBeenCalledWith([
         single.id,
       ]);
-      expect(spacesPort.countByRoleForSpaceIds).toHaveBeenCalledWith(
-        [single.id],
-        UserSpaceRole.MEMBER,
-      );
+      expect(spacesPort.countUsersForSpaceIds).toHaveBeenCalledWith([
+        single.id,
+      ]);
       expect(standardsPort.countBySpaceIds).toHaveBeenCalledWith([single.id]);
       expect(recipesPort.countBySpaceIds).toHaveBeenCalledWith([single.id]);
       expect(skillsPort.countBySpaceIds).toHaveBeenCalledWith([single.id]);

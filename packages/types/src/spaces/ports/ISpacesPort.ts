@@ -236,4 +236,10 @@ export interface ISpacesPort {
     spaceIds: SpaceId[],
     role: UserSpaceRole,
   ): Promise<Map<SpaceId, number>>;
+
+  /**
+   * Count active memberships grouped by space across all roles.
+   * Spaces with zero memberships are absent from the returned Map.
+   */
+  countUsersForSpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
 }

@@ -376,6 +376,35 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     }
   }
 
+  async countUsersForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, number>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Counting users for space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .select('m.space_id', 'spaceId')
+        .addSelect('COUNT(*)', 'count')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .groupBy('m.space_id')
+        .getRawMany<{ spaceId: SpaceId; count: string }>();
+
+      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
+    } catch (error) {
+      this.logger.error('Failed to count users for space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async softDeleteBySpaceId(
     spaceId: SpaceId,
     deletedBy: string,

@@ -179,4 +179,10 @@ export class UserSpaceMembershipService {
       role,
     );
   }
+
+  async countUsersForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, number>> {
+    return this.userSpaceMembershipRepository.countUsersForSpaceIds(spaceIds);
+  }
 }

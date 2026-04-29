@@ -583,6 +583,49 @@ describe('UserSpaceMembershipRepository', () => {
     });
   });
 
+  describe('.countUsersForSpaceIds', () => {
+    let spaceB: Space;
+
+    beforeEach(async () => {
+      spaceB = await fixture.datasource.getRepository(SpaceSchema).save(
+        spaceFactory({
+          organizationId: organization.id,
+          slug: 'space-b-users',
+          name: 'Space B Users',
+        }),
+      );
+    });
+
+    it('returns a Map of spaceId -> total user count across all roles; spaces with zero are absent', async () => {
+      await createMembership({ role: UserSpaceRole.ADMIN });
+      await createMembership({ role: UserSpaceRole.MEMBER });
+      await createMembership({ role: UserSpaceRole.MEMBER });
+
+      const counts = await repository.countUsersForSpaceIds([
+        space.id,
+        spaceB.id,
+      ]);
+
+      expect(counts.get(space.id)).toBe(3);
+      expect(counts.has(spaceB.id)).toBe(false);
+    });
+
+    it('returns an empty Map for empty input', async () => {
+      const counts = await repository.countUsersForSpaceIds([]);
+      expect(counts.size).toBe(0);
+    });
+
+    it('excludes soft-deleted memberships from the count', async () => {
+      await createMembership({ role: UserSpaceRole.ADMIN });
+      await createMembership({ role: UserSpaceRole.MEMBER });
+      await repository.softDeleteBySpaceId(space.id, 'tester');
+
+      const counts = await repository.countUsersForSpaceIds([space.id]);
+
+      expect(counts.has(space.id)).toBe(false);
+    });
+  });
+
   describe('.updateMembershipPinned', () => {
     describe('when membership exists', () => {
       let userId: UserId;

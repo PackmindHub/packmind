@@ -46,7 +46,7 @@ describe('SpacesManagementAdapter', () => {
         .fn()
         .mockResolvedValue({ items: [], totalCount: 0 }),
       findAdminsForSpaceIds: jest.fn().mockResolvedValue([]),
-      countByRoleForSpaceIds: jest.fn().mockResolvedValue(new Map()),
+      countUsersForSpaceIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     standardsPort = {
