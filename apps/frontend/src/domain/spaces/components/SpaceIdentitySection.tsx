@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Space, SPACE_COLOR_PALETTES, SpaceColor } from '@packmind/types';
 import {
+  PMAlert,
   PMButton,
   PMColorSwatch,
   PMField,
@@ -8,32 +10,63 @@ import {
   PMInput,
   PMPageSection,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
+import { useUpdateSpaceMutation } from '../../spaces-management/api/queries/SpacesManagementQueries';
+import { isPackmindError } from '../../../services/api/errors/PackmindError';
 
-const SPACE_COLOR_PALETTES = [
-  'red',
-  'orange',
-  'yellow',
-  'green',
-  'teal',
-  'blue',
-  'cyan',
-  'purple',
-  'pink',
-] as const;
+interface SpaceIdentitySectionProps {
+  space: Space;
+  canEdit: boolean;
+}
 
-type SpaceColor = (typeof SPACE_COLOR_PALETTES)[number];
+export function SpaceIdentitySection({
+  space,
+  canEdit,
+}: Readonly<SpaceIdentitySectionProps>) {
+  const [name, setName] = useState(space.name);
+  const [selectedColor, setSelectedColor] = useState<SpaceColor>(space.color);
+  const updateSpaceMutation = useUpdateSpaceMutation();
 
-const MOCK_SPACE = {
-  name: 'My Space',
-  color: 'blue' as SpaceColor,
-};
+  const isDefaultSpace = space.isDefaultSpace;
+  const nameDisabled = !canEdit || isDefaultSpace;
+  const colorDisabled = !canEdit;
 
-export function SpaceIdentitySection() {
-  const [name, setName] = useState(MOCK_SPACE.name);
-  const [selectedColor, setSelectedColor] = useState<SpaceColor>(
-    MOCK_SPACE.color,
-  );
+  const trimmedName = name.trim();
+  const isNameValid = trimmedName.length > 0;
+  const isNameDirty = trimmedName !== space.name && !isDefaultSpace;
+  const isColorDirty = selectedColor !== space.color;
+  const hasChanges = isNameDirty || isColorDirty;
+  const showNameRequiredError = !nameDisabled && !isNameValid;
+
+  const handleSave = async () => {
+    const fields: { name?: string; color?: SpaceColor } = {};
+    if (isNameDirty) fields.name = trimmedName;
+    if (isColorDirty) fields.color = selectedColor;
+    if (Object.keys(fields).length === 0) return;
+
+    try {
+      await updateSpaceMutation.mutateAsync({ spaceId: space.id, fields });
+      pmToaster.create({
+        type: 'success',
+        title: 'Space updated',
+      });
+    } catch (err) {
+      const status = isPackmindError(err) ? err.serverError.status : undefined;
+      const messageByStatus: Record<number, string> = {
+        400: 'Invalid color selected.',
+        403: "You don't have permission to update this space.",
+        409: 'Another space with a similar name already exists.',
+        422: 'The default space cannot be renamed.',
+      };
+      pmToaster.create({
+        type: 'error',
+        title:
+          (status !== undefined && messageByStatus[status]) ||
+          'Failed to update the space.',
+      });
+    }
+  };
 
   return (
     <PMPageSection
@@ -45,32 +78,55 @@ export function SpaceIdentitySection() {
       }
     >
       <PMVStack align="stretch" gap={5} pt={4} w="lg">
-        <PMField.Root>
+        {!canEdit && (
+          <PMAlert.Root status="info" size="sm">
+            <PMAlert.Indicator />
+            <PMAlert.Title>Read-only access</PMAlert.Title>
+            <PMAlert.Description>
+              Only space admins and organization admins can edit these settings.
+            </PMAlert.Description>
+          </PMAlert.Root>
+        )}
+        <PMField.Root disabled={nameDisabled} invalid={showNameRequiredError}>
           <PMField.Label>Name</PMField.Label>
           <PMInput
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Space name"
+            disabled={nameDisabled}
+            aria-label="Name"
           />
+          {showNameRequiredError ? (
+            <PMField.ErrorText>Name is required.</PMField.ErrorText>
+          ) : isDefaultSpace ? (
+            <PMField.HelperText>
+              The default space cannot be renamed.
+            </PMField.HelperText>
+          ) : (
+            <PMField.HelperText>
+              Renaming doesn't change the space URL — links and bookmarks keep
+              working.
+            </PMField.HelperText>
+          )}
         </PMField.Root>
 
-        <PMField.Root>
+        <PMField.Root disabled={colorDisabled}>
           <PMField.Label>Color</PMField.Label>
           <PMHStack gap={3} flexWrap="wrap">
             {SPACE_COLOR_PALETTES.map((color) => (
               <PMColorSwatch
                 key={color}
                 value={`{colors.${color}.solid}`}
-                cursor="pointer"
+                cursor={colorDisabled ? 'not-allowed' : 'pointer'}
                 outline={selectedColor === color ? '2px solid' : 'none'}
                 outlineColor={
                   selectedColor === color ? `${color}.solid` : undefined
                 }
                 outlineOffset="2px"
-                transition="outline 0.15s"
-                _hover={{ opacity: 0.8 }}
+                _hover={colorDisabled ? undefined : { opacity: 0.8 }}
                 aria-label={`Select ${color} color`}
-                onClick={() => setSelectedColor(color)}
+                aria-disabled={colorDisabled}
+                onClick={() => !colorDisabled && setSelectedColor(color)}
               />
             ))}
           </PMHStack>
@@ -82,9 +138,14 @@ export function SpaceIdentitySection() {
         <PMHStack justify="flex-end">
           <PMButton
             variant="secondary"
-            onClick={() => {
-              /* TODO: wire to API */
-            }}
+            onClick={handleSave}
+            disabled={
+              !canEdit ||
+              !hasChanges ||
+              !isNameValid ||
+              updateSpaceMutation.isPending
+            }
+            loading={updateSpaceMutation.isPending}
           >
             Save changes
           </PMButton>

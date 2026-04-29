@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   queryOptions,
   useMutation,
   useQuery,
@@ -29,6 +30,32 @@ export const useGetSpacesQuery = () => {
   const orgId = organization?.id;
   return useQuery(getSpacesQueryOptions(orgId || ''));
 };
+
+export const getOrganizationSpacesForManagementQueryOptions = (
+  organizationId: string,
+  page: number,
+) =>
+  queryOptions({
+    queryKey: [
+      'organizations',
+      organizationId,
+      'spaces',
+      'management',
+      page,
+    ] as const,
+    queryFn: () =>
+      spacesGateway.listOrganizationSpacesForManagement(organizationId, page),
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  });
+
+export const useGetOrganizationSpacesForManagementQuery = (
+  organizationId: string,
+  page: number,
+) =>
+  useQuery(
+    getOrganizationSpacesForManagementQueryOptions(organizationId, page),
+  );
 
 export const getSpaceBySlugQueryOptions = (slug: string, orgId: string) =>
   queryOptions({

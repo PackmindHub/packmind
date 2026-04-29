@@ -220,6 +220,69 @@ describe('StandardRepository', () => {
     });
   });
 
+  describe('countBySpaceIds', () => {
+    it('returns a Map of spaceId -> count, omitting spaces with zero standards', async () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+      const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+      const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+      await spaceRepo.save([spaceA, spaceB, spaceC]);
+
+      await standardRepository.add(
+        standardFactory({ spaceId: spaceA.id, slug: 'std-a-1' }),
+      );
+      await standardRepository.add(
+        standardFactory({ spaceId: spaceA.id, slug: 'std-a-2' }),
+      );
+      await standardRepository.add(
+        standardFactory({ spaceId: spaceB.id, slug: 'std-b-1' }),
+      );
+
+      const counts = await standardRepository.countBySpaceIds([
+        spaceA.id,
+        spaceB.id,
+        spaceC.id,
+      ]);
+
+      expect(counts.get(spaceA.id)).toBe(2);
+      expect(counts.get(spaceB.id)).toBe(1);
+      expect(counts.has(spaceC.id)).toBe(false);
+    });
+
+    it('returns an empty Map for empty input', async () => {
+      const counts = await standardRepository.countBySpaceIds([]);
+      expect(counts.size).toBe(0);
+    });
+
+    it('excludes soft-deleted standards from the count', async () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const space = spaceFactory({ organizationId, slug: 'space-soft-delete' });
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+      await spaceRepo.save(space);
+
+      await standardRepository.add(
+        standardFactory({ spaceId: space.id, slug: 'alive-std' }),
+      );
+      const deletedStandard = await standardRepository.add(
+        standardFactory({ spaceId: space.id, slug: 'deleted-std' }),
+      );
+      await standardRepository.deleteById(deletedStandard.id);
+
+      const counts = await standardRepository.countBySpaceIds([space.id]);
+
+      expect(counts.get(space.id)).toBe(1);
+    });
+
+    it('omits unknown space IDs from the result Map', async () => {
+      const unknownSpaceId = createSpaceId(uuidv4());
+
+      const counts = await standardRepository.countBySpaceIds([unknownSpaceId]);
+
+      expect(counts.has(unknownSpaceId)).toBe(false);
+    });
+  });
+
   itHandlesSoftDelete<Standard>({
     entityFactory: standardFactory,
     getRepository: () => standardRepository,

@@ -1,4 +1,3 @@
-import { Dialog, Portal } from '@chakra-ui/react';
 import { useState } from 'react';
 import { LuLogOut, LuTrash2 } from 'react-icons/lu';
 import {
@@ -6,7 +5,6 @@ import {
   PMHeading,
   PMHStack,
   PMIcon,
-  PMInput,
   PMPageSection,
   PMSeparator,
   PMText,
@@ -23,6 +21,7 @@ import { useCurrentSpace } from '../hooks/useCurrentSpace';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { TypeToConfirmDialog } from '../../../shared/components/TypeToConfirmDialog';
 
 function LeaveSpaceConfirmationDialog({
   spaceName,
@@ -36,17 +35,9 @@ function LeaveSpaceConfirmationDialog({
   onConfirm: (onSettled: () => void) => void;
 }>) {
   const [open, setOpen] = useState(false);
-  const [confirmationInput, setConfirmationInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isBusy = isPending || isSubmitting;
-  const isConfirmEnabled = confirmationInput === spaceName && !isBusy;
-
-  const handleOpenChange = (details: { open: boolean }) => {
-    if (!isBusy) {
-      setOpen(details.open);
-    }
-  };
 
   const handleConfirm = () => {
     setIsSubmitting(true);
@@ -56,85 +47,33 @@ function LeaveSpaceConfirmationDialog({
     });
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!isConfirmEnabled) {
-      return;
-    }
-    handleConfirm();
-  };
-
   return (
-    <Dialog.Root
-      open={open}
-      onOpenChange={handleOpenChange}
-      placement="center"
-      onExitComplete={() => setConfirmationInput('')}
-    >
-      <Dialog.Trigger asChild>
-        <PMButton variant="secondary" minW="180px">
-          <PMIcon>
-            <LuLogOut />
-          </PMIcon>
-          Leave this space
-        </PMButton>
-      </Dialog.Trigger>
-
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <form onSubmit={handleSubmit}>
-              <Dialog.Header>
-                <Dialog.Title>Leave space</Dialog.Title>
-              </Dialog.Header>
-
-              <Dialog.Body>
-                <PMVStack gap={4} align="stretch">
-                  <PMText>
-                    You are about to leave <strong>{spaceName}</strong>. You
-                    will lose access to its standards, commands, skills, and
-                    other content.{' '}
-                    {spaceType === SpaceType.open
-                      ? 'You can rejoin whenever you want.'
-                      : "You'll have to ask an administrator to rejoin."}
-                  </PMText>
-                  <PMVStack gap={2} align="stretch">
-                    <PMText variant="body" fontSize="sm">
-                      Type <strong>{spaceName}</strong> to confirm:
-                    </PMText>
-                    <PMInput
-                      placeholder="Enter space name"
-                      value={confirmationInput}
-                      onChange={(e) => setConfirmationInput(e.target.value)}
-                    />
-                  </PMVStack>
-                </PMVStack>
-              </Dialog.Body>
-
-              <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
-                  <PMButton type="button" variant="tertiary" disabled={isBusy}>
-                    Cancel
-                  </PMButton>
-                </Dialog.ActionTrigger>
-                <PMButton
-                  type="submit"
-                  colorScheme="red"
-                  disabled={!isConfirmEnabled}
-                  loading={isBusy}
-                  ml={3}
-                >
-                  Leave
-                </PMButton>
-              </Dialog.Footer>
-            </form>
-
-            <Dialog.CloseTrigger />
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+    <>
+      <PMButton variant="secondary" minW="180px" onClick={() => setOpen(true)}>
+        <PMIcon>
+          <LuLogOut />
+        </PMIcon>
+        Leave this space
+      </PMButton>
+      <TypeToConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Leave space"
+        expectedValue={spaceName}
+        inputPlaceholder="Enter space name"
+        confirmLabel="Leave"
+        isPending={isBusy}
+        onConfirm={handleConfirm}
+      >
+        <PMText>
+          You are about to leave <strong>{spaceName}</strong>. You will lose
+          access to its standards, commands, skills, and other content.{' '}
+          {spaceType === SpaceType.open
+            ? 'You can rejoin whenever you want.'
+            : "You'll have to ask an administrator to rejoin."}
+        </PMText>
+      </TypeToConfirmDialog>
+    </>
   );
 }
 
@@ -150,118 +89,52 @@ function DeleteSpaceConfirmationDialog({
   onConfirm: (onSettled: () => void) => void;
 }>) {
   const [open, setOpen] = useState(false);
-  const [confirmationInput, setConfirmationInput] = useState('');
-
-  const isConfirmEnabled = confirmationInput === spaceName && !isPending;
-
-  const handleOpenChange = (details: { open: boolean }) => {
-    if (!isPending) {
-      setOpen(details.open);
-    }
-  };
 
   const handleConfirm = () => {
     onConfirm(() => setOpen(false));
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!isConfirmEnabled) {
-      return;
-    }
-    handleConfirm();
-  };
-
   return (
-    <Dialog.Root
-      open={open}
-      onOpenChange={handleOpenChange}
-      placement="center"
-      onExitComplete={() => setConfirmationInput('')}
-    >
-      <Dialog.Trigger asChild>
-        <PMButton variant="danger" minW="180px">
-          <PMIcon>
-            <LuTrash2 />
-          </PMIcon>
-          Delete this space
-        </PMButton>
-      </Dialog.Trigger>
-
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <form onSubmit={handleSubmit}>
-              <Dialog.Header>
-                <Dialog.Title>Delete space</Dialog.Title>
-              </Dialog.Header>
-
-              <Dialog.Body>
-                <PMVStack gap={4} align="stretch">
-                  <PMText>
-                    This will permanently delete <strong>{spaceName}</strong>{' '}
-                    and all its standards, commands, and skills. This action
-                    cannot be undone.
-                  </PMText>
-                  {packages.length > 0 && (
-                    <PMVStack gap={2} align="stretch">
-                      <PMText variant="body" fontSize="sm">
-                        The following packages will be affected:
-                      </PMText>
-                      <PMVStack gap={1} align="stretch" pl={4}>
-                        {packages.map((pkg) => (
-                          <PMText key={pkg.id} variant="body" fontSize="sm">
-                            - {pkg.name}
-                          </PMText>
-                        ))}
-                      </PMVStack>
-                      <PMText variant="body" fontSize="sm">
-                        All deployments using these packages will stop receiving
-                        updates.
-                      </PMText>
-                    </PMVStack>
-                  )}
-                  <PMVStack gap={2} align="stretch">
-                    <PMText variant="body" fontSize="sm">
-                      Type <strong>{spaceName}</strong> to confirm:
-                    </PMText>
-                    <PMInput
-                      placeholder="Enter space name"
-                      value={confirmationInput}
-                      onChange={(e) => setConfirmationInput(e.target.value)}
-                    />
-                  </PMVStack>
-                </PMVStack>
-              </Dialog.Body>
-
-              <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
-                  <PMButton
-                    type="button"
-                    variant="tertiary"
-                    disabled={isPending}
-                  >
-                    Cancel
-                  </PMButton>
-                </Dialog.ActionTrigger>
-                <PMButton
-                  type="submit"
-                  colorScheme="red"
-                  disabled={!isConfirmEnabled}
-                  loading={isPending}
-                  ml={3}
-                >
-                  Delete
-                </PMButton>
-              </Dialog.Footer>
-            </form>
-
-            <Dialog.CloseTrigger />
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+    <>
+      <PMButton variant="danger" minW="180px" onClick={() => setOpen(true)}>
+        <PMIcon>
+          <LuTrash2 />
+        </PMIcon>
+        Delete this space
+      </PMButton>
+      <TypeToConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Delete space"
+        expectedValue={spaceName}
+        inputPlaceholder="Enter space name"
+        confirmLabel="Delete"
+        isPending={isPending}
+        onConfirm={handleConfirm}
+      >
+        <PMText>
+          This will permanently delete <strong>{spaceName}</strong> and all its
+          standards, commands, and skills. This action cannot be undone.
+        </PMText>
+        {packages.length > 0 && (
+          <PMVStack gap={2} align="stretch">
+            <PMText variant="body" fontSize="sm">
+              The following packages will be affected:
+            </PMText>
+            <PMVStack gap={1} align="stretch" pl={4}>
+              {packages.map((pkg) => (
+                <PMText key={pkg.id} variant="body" fontSize="sm">
+                  - {pkg.name}
+                </PMText>
+              ))}
+            </PMVStack>
+            <PMText variant="body" fontSize="sm">
+              All deployments using these packages will stop receiving updates.
+            </PMText>
+          </PMVStack>
+        )}
+      </TypeToConfirmDialog>
+    </>
   );
 }
 
