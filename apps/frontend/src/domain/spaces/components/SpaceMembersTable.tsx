@@ -3,6 +3,7 @@ import { LuX } from 'react-icons/lu';
 
 import {
   PMBadge,
+  PMBox,
   PMButton,
   PMHStack,
   PMIcon,
@@ -11,6 +12,7 @@ import {
   PMTableColumn,
   PMTableRow,
   PMText,
+  PMTooltip,
 } from '@packmind/ui';
 
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
@@ -33,22 +35,72 @@ interface SpaceMembersTableProps {
   currentUserId?: string;
   isDefaultSpace?: boolean;
   isSpaceAdmin?: boolean;
+  isUpdatingRole?: boolean;
+  isRemovingMember?: boolean;
   onRemoveMember?: (memberId: string) => void;
   onUpdateMemberRole?: (memberId: string, role: SpaceMemberRole) => void;
 }
+
+const LAST_ADMIN_REASON = 'This is the last admin of the space.';
+const SELF_REASON = "You can't change your own role.";
 
 export function SpaceMembersTable({
   members,
   currentUserId,
   isDefaultSpace,
   isSpaceAdmin,
+  isUpdatingRole = false,
+  isRemovingMember = false,
   onRemoveMember,
   onUpdateMemberRole,
 }: Readonly<SpaceMembersTableProps>) {
+  const adminCount = useMemo(
+    () => members.filter((m) => m.role === 'admin').length,
+    [members],
+  );
+
   const data = useMemo<PMTableRow[]>(
     () =>
       members.map((member) => {
         const isCurrentUser = member.id === currentUserId;
+        const isLastAdmin = member.role === 'admin' && adminCount === 1;
+
+        const roleDisabledReason = isCurrentUser
+          ? SELF_REASON
+          : isLastAdmin
+            ? LAST_ADMIN_REASON
+            : undefined;
+        const roleDisabled =
+          !isSpaceAdmin ||
+          isCurrentUser ||
+          isLastAdmin ||
+          isUpdatingRole ||
+          isRemovingMember;
+
+        const roleSelect = (
+          <PMNativeSelect
+            size="sm"
+            value={member.role}
+            disabled={roleDisabled}
+            onChange={(e) =>
+              onUpdateMemberRole?.(
+                member.id,
+                e.currentTarget.value as SpaceMemberRole,
+              )
+            }
+            items={[
+              { value: 'admin', label: 'Admin' },
+              { value: 'member', label: 'Member' },
+            ]}
+          />
+        );
+
+        const removeHidden = isCurrentUser || isDefaultSpace || !isSpaceAdmin;
+        const removeDisabledReason = isLastAdmin
+          ? LAST_ADMIN_REASON
+          : undefined;
+        const removeDisabled =
+          isLastAdmin || isUpdatingRole || isRemovingMember;
 
         return {
           id: member.id,
@@ -68,43 +120,55 @@ export function SpaceMembersTable({
               )}
             </PMHStack>
           ),
-          role: (
-            <PMNativeSelect
-              size="sm"
-              value={member.role}
-              disabled={isCurrentUser || !isSpaceAdmin}
-              onChange={(e) =>
-                onUpdateMemberRole?.(
-                  member.id,
-                  e.currentTarget.value as SpaceMemberRole,
-                )
-              }
-              items={[
-                { value: 'admin', label: 'Admin' },
-                { value: 'member', label: 'Member' },
-              ]}
-            />
+          role: roleDisabledReason ? (
+            <PMTooltip label={roleDisabledReason}>
+              <PMBox display="inline-block" width="full">
+                {roleSelect}
+              </PMBox>
+            </PMTooltip>
+          ) : (
+            roleSelect
           ),
-          actions:
-            isCurrentUser || isDefaultSpace || !isSpaceAdmin ? null : (
-              <PMButton
-                size="xs"
-                variant="ghost"
-                colorPalette="red"
-                onClick={() => onRemoveMember?.(member.id)}
-              >
-                <PMIcon>
-                  <LuX />
-                </PMIcon>
-              </PMButton>
-            ),
+          actions: removeHidden ? null : removeDisabledReason ? (
+            <PMTooltip label={removeDisabledReason}>
+              <PMBox display="inline-block">
+                <PMButton
+                  size="xs"
+                  variant="ghost"
+                  colorPalette="red"
+                  disabled
+                  aria-label="Remove member"
+                >
+                  <PMIcon>
+                    <LuX />
+                  </PMIcon>
+                </PMButton>
+              </PMBox>
+            </PMTooltip>
+          ) : (
+            <PMButton
+              size="xs"
+              variant="ghost"
+              colorPalette="red"
+              disabled={removeDisabled}
+              aria-label="Remove member"
+              onClick={() => onRemoveMember?.(member.id)}
+            >
+              <PMIcon>
+                <LuX />
+              </PMIcon>
+            </PMButton>
+          ),
         };
       }),
     [
       members,
+      adminCount,
       currentUserId,
       isDefaultSpace,
       isSpaceAdmin,
+      isUpdatingRole,
+      isRemovingMember,
       onRemoveMember,
       onUpdateMemberRole,
     ],

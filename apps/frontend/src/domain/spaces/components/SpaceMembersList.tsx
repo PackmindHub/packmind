@@ -3,12 +3,14 @@ import { LuPlus } from 'react-icons/lu';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
+  PMAlert,
   PMButton,
   PMConfirmationModal,
   PMHeading,
   PMIcon,
   PMPageSection,
   PMSpinner,
+  PMText,
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
@@ -41,7 +43,9 @@ export function SpaceMembersList({
     null,
   );
 
-  const { data, isLoading } = useGetSpaceMembersQuery(space.id);
+  const { data, isLoading, isError, refetch } = useGetSpaceMembersQuery(
+    space.id,
+  );
   const removeMutation = useRemoveMemberFromSpaceMutation(space.id);
   const updateRoleMutation = useUpdateMemberRoleMutation(space.id);
 
@@ -145,14 +149,52 @@ export function SpaceMembersList({
       }
     >
       <PMVStack align="stretch" pt={4} w="full">
-        <SpaceMembersTable
-          members={members}
-          currentUserId={currentUserId}
-          isDefaultSpace={space.isDefaultSpace}
-          isSpaceAdmin={isSpaceAdmin}
-          onRemoveMember={handleRemoveMember}
-          onUpdateMemberRole={handleUpdateMemberRole}
-        />
+        {isError ? (
+          <PMAlert.Root status="error" size="sm">
+            <PMAlert.Indicator />
+            <PMVStack align="stretch" gap={2} flex={1}>
+              <PMAlert.Title>Failed to load members</PMAlert.Title>
+              <PMAlert.Description>
+                Something went wrong while loading the member list.
+              </PMAlert.Description>
+              <PMButton
+                size="xs"
+                variant="secondary"
+                alignSelf="flex-start"
+                onClick={() => refetch()}
+              >
+                Retry
+              </PMButton>
+            </PMVStack>
+          </PMAlert.Root>
+        ) : members.length === 0 ? (
+          <PMVStack
+            align="center"
+            justify="center"
+            py={8}
+            gap={1}
+            border="solid 1px {colors.border.tertiary}"
+            borderRadius="md"
+          >
+            <PMText fontWeight="medium">No members yet</PMText>
+            <PMText variant="body" color="secondary" fontSize="sm">
+              {isSpaceAdmin
+                ? 'Add members to give them access to this space.'
+                : 'No one has been added to this space.'}
+            </PMText>
+          </PMVStack>
+        ) : (
+          <SpaceMembersTable
+            members={members}
+            currentUserId={currentUserId}
+            isDefaultSpace={space.isDefaultSpace}
+            isSpaceAdmin={isSpaceAdmin}
+            isUpdatingRole={updateRoleMutation.isPending}
+            isRemovingMember={removeMutation.isPending}
+            onRemoveMember={handleRemoveMember}
+            onUpdateMemberRole={handleUpdateMemberRole}
+          />
+        )}
         <AddSpaceMembersDialog
           open={addDialogOpen}
           setOpen={setAddDialogOpen}
