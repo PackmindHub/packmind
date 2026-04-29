@@ -16,7 +16,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-28T15:11:26.488Z",
+  "installedAt": "2026-04-29T03:09:39.462Z",
   "artifacts": {
     "command:creating-end-user-documentation-for-packmind": {
       "name": "Creating End-User Documentation for Packmind",
@@ -857,6 +857,38 @@
         },
         {
           "path": ".gitlab/duo/skills/feature-flags-audit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "skill:playbook-cli-audit": {
+      "name": "playbook-cli-audit",
+      "type": "skill",
+      "id": "dcfa9fec-ec46-40ea-b03a-e2f316cc0088",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/playbook-cli-audit/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/playbook-cli-audit/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/playbook-cli-audit/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/playbook-cli-audit/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
         }
