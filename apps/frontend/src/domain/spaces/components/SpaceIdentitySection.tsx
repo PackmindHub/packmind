@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Space, SPACE_COLOR_PALETTES, SpaceColor } from '@packmind/types';
 import {
@@ -20,11 +20,13 @@ import { isPackmindError } from '../../../services/api/errors/PackmindError';
 interface SpaceIdentitySectionProps {
   space: Space;
   canEdit: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function SpaceIdentitySection({
   space,
   canEdit,
+  onDirtyChange,
 }: Readonly<SpaceIdentitySectionProps>) {
   const [name, setName] = useState(space.name);
   const [selectedColor, setSelectedColor] = useState<SpaceColor>(space.color);
@@ -42,6 +44,16 @@ export function SpaceIdentitySection({
   const isColorDirty = selectedColor !== space.color;
   const hasChanges = isNameDirty || isColorDirty;
   const showNameRequiredError = !nameDisabled && !isNameValid;
+
+  useEffect(() => {
+    onDirtyChange?.(hasChanges);
+  }, [hasChanges, onDirtyChange]);
+
+  useEffect(() => {
+    return () => {
+      onDirtyChange?.(false);
+    };
+  }, [onDirtyChange]);
 
   const handleSave = async () => {
     const fields: { name?: string; color?: SpaceColor } = {};
@@ -86,7 +98,7 @@ export function SpaceIdentitySection({
         </PMHeading>
       }
     >
-      <PMVStack align="stretch" gap={5} pt={4} w="lg">
+      <PMVStack align="stretch" gap={5} pt={4}>
         {!canEdit && (
           <PMAlert.Root status="info" size="sm">
             <PMAlert.Indicator />

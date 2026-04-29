@@ -147,13 +147,17 @@ function DeleteSpaceConfirmationDialog({
 interface SpaceDangerZoneSectionProps {
   space: Space;
   canDelete: boolean;
+  isMember?: boolean;
   onDeleted?: () => void;
+  onLeft?: () => void;
 }
 
 export function SpaceDangerZoneSection({
   space,
   canDelete,
+  isMember = true,
   onDeleted,
+  onLeft,
 }: Readonly<SpaceDangerZoneSectionProps>) {
   const leaveSpaceMutation = useLeaveSpaceMutation();
   const { organization } = useAuthContext();
@@ -178,50 +182,59 @@ export function SpaceDangerZoneSection({
         </PMHeading>
       }
     >
-      <PMVStack align="stretch" gap={5} pt={4} w="lg">
-        <PMHStack justify="space-between" align="center">
-          <PMVStack gap={1} align="flex-start">
-            <PMText fontWeight="medium">Leave this space</PMText>
-            <PMText variant="body" color="secondary" fontSize="sm">
-              You will lose access to all standards, commands, skills, and other
-              content.{' '}
-              {space.type === SpaceType.open
-                ? 'You can rejoin whenever you want.'
-                : "You'll have to ask an administrator to rejoin."}
-            </PMText>
-          </PMVStack>
-          <LeaveSpaceConfirmationDialog
-            spaceName={space.name}
-            spaceType={space.type}
-            isPending={leaveSpaceMutation.isPending}
-            onConfirm={(onSettled) => {
-              leaveSpaceMutation.mutate(
-                { spaceId: space.id },
-                {
-                  onSuccess: () => {
-                    onSettled();
-                    pmToaster.create({
-                      type: 'success',
-                      title: 'Left space',
-                      description: `You've left ${space.name}.`,
-                    });
-                  },
-                  onError: () => {
-                    onSettled();
-                    pmToaster.create({
-                      type: 'error',
-                      title: 'Failed to leave space',
-                      description:
-                        'An error occurred while leaving the space. Please try again.',
-                    });
-                  },
-                },
-              );
-            }}
-          />
-        </PMHStack>
+      <PMVStack align="stretch" gap={5} pt={4}>
+        {isMember && (
+          <>
+            <PMHStack justify="space-between" align="center">
+              <PMVStack gap={1} align="flex-start">
+                <PMText fontWeight="medium">Leave this space</PMText>
+                <PMText variant="body" color="secondary" fontSize="sm">
+                  You will lose access to all standards, commands, skills, and
+                  other content.{' '}
+                  {space.type === SpaceType.open
+                    ? 'You can rejoin whenever you want.'
+                    : "You'll have to ask an administrator to rejoin."}
+                </PMText>
+              </PMVStack>
+              <LeaveSpaceConfirmationDialog
+                spaceName={space.name}
+                spaceType={space.type}
+                isPending={leaveSpaceMutation.isPending}
+                onConfirm={(onSettled) => {
+                  leaveSpaceMutation.mutate(
+                    { spaceId: space.id },
+                    {
+                      onSuccess: () => {
+                        onSettled();
+                        pmToaster.create({
+                          type: 'success',
+                          title: 'Left space',
+                          description: `You've left ${space.name}.`,
+                        });
+                        if (onLeft) {
+                          onLeft();
+                        } else {
+                          nav.org.toDashboard();
+                        }
+                      },
+                      onError: () => {
+                        onSettled();
+                        pmToaster.create({
+                          type: 'error',
+                          title: 'Failed to leave space',
+                          description:
+                            'An error occurred while leaving the space. Please try again.',
+                        });
+                      },
+                    },
+                  );
+                }}
+              />
+            </PMHStack>
 
-        <PMSeparator />
+            <PMSeparator />
+          </>
+        )}
 
         <PMHStack justify="space-between" align="center">
           <PMVStack gap={1} align="flex-start">
