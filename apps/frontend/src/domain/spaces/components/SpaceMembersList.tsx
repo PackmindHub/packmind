@@ -11,6 +11,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
+import { Space } from '@packmind/types';
 
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import {
@@ -19,22 +20,28 @@ import {
   useUpdateMemberRoleMutation,
 } from '../api/queries/SpacesQueries';
 import { SpaceMemberRole } from '../types';
-import { useCurrentSpace } from '../hooks/useCurrentSpace';
 import { SpaceMember, SpaceMembersTable } from './SpaceMembersTable';
 import { AddSpaceMembersDialog } from './AddSpaceMembersDialog';
 
-export function SpaceMembersList() {
+interface SpaceMembersListProps {
+  space: Space;
+  isSpaceAdmin: boolean;
+}
+
+export function SpaceMembersList({
+  space,
+  isSpaceAdmin,
+}: Readonly<SpaceMembersListProps>) {
   const { user } = useAuthContext();
-  const { spaceId, space } = useCurrentSpace();
   const currentUserId = user?.id;
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<SpaceMember | null>(
     null,
   );
 
-  const { data, isLoading } = useGetSpaceMembersQuery(spaceId ?? '');
-  const removeMutation = useRemoveMemberFromSpaceMutation(spaceId ?? '');
-  const updateRoleMutation = useUpdateMemberRoleMutation(spaceId ?? '');
+  const { data, isLoading } = useGetSpaceMembersQuery(space.id);
+  const removeMutation = useRemoveMemberFromSpaceMutation(space.id);
+  const updateRoleMutation = useUpdateMemberRoleMutation(space.id);
 
   const members = useMemo<SpaceMember[]>(
     () =>
@@ -45,11 +52,6 @@ export function SpaceMembersList() {
       })),
     [data],
   );
-
-  const currentUserMember = data?.members?.find(
-    (m) => m.userId === currentUserId,
-  );
-  const isSpaceAdmin = currentUserMember?.role === 'admin';
 
   const handleUpdateMemberRole = (memberId: string, role: SpaceMemberRole) => {
     updateRoleMutation.mutate(
@@ -134,7 +136,7 @@ export function SpaceMembersList() {
         <SpaceMembersTable
           members={members}
           currentUserId={currentUserId}
-          isDefaultSpace={space?.isDefaultSpace}
+          isDefaultSpace={space.isDefaultSpace}
           isSpaceAdmin={isSpaceAdmin}
           onRemoveMember={handleRemoveMember}
           onUpdateMemberRole={handleUpdateMemberRole}
@@ -142,7 +144,7 @@ export function SpaceMembersList() {
         <AddSpaceMembersDialog
           open={addDialogOpen}
           setOpen={setAddDialogOpen}
-          spaceId={spaceId ?? ''}
+          spaceId={space.id}
           existingMembers={members}
         />
         <PMConfirmationModal

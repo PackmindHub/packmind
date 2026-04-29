@@ -4,20 +4,16 @@ import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import type { UserId, UserOrganizationRole } from '@packmind/types';
+import { createSpaceId } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 
 import * as AuthContextModule from '../../accounts/hooks/useAuthContext';
 import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
-import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
 import { SpaceMembersList } from './SpaceMembersList';
 
 jest.mock('../api/queries/SpacesQueries', () => ({
   ...jest.requireActual('../api/queries/SpacesQueries'),
   useGetSpaceMembersQuery: jest.fn(),
-}));
-
-jest.mock('../hooks/useCurrentSpace', () => ({
-  ...jest.requireActual('../hooks/useCurrentSpace'),
-  useCurrentSpace: jest.fn(),
 }));
 
 const mockUseGetSpaceMembersQuery =
@@ -88,17 +84,12 @@ describe('SpaceMembersList', () => {
     role: 'admin' as UserOrganizationRole,
   };
 
-  beforeEach(() => {
-    jest.spyOn(UseCurrentSpaceModule, 'useCurrentSpace').mockReturnValue({
-      spaceId: 'space-1',
-      spaceSlug: 'test-space',
-      spaceName: 'Test Space',
-      space: undefined,
-      isLoading: false,
-      error: null,
-      isReady: true,
-    } as unknown as ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>);
+  const space = spaceFactory({
+    id: createSpaceId('space-1'),
+    isDefaultSpace: false,
+  });
 
+  beforeEach(() => {
     jest.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
       user: mockUser,
       organization: mockOrganization,
@@ -147,13 +138,13 @@ describe('SpaceMembersList', () => {
   });
 
   it('renders the current user in the members list', () => {
-    renderWithProviders(<SpaceMembersList />);
+    renderWithProviders(<SpaceMembersList space={space} isSpaceAdmin={true} />);
 
     expect(screen.getByText('current.user@test.com')).toBeInTheDocument();
   });
 
   it('renders mock members alongside the current user', () => {
-    renderWithProviders(<SpaceMembersList />);
+    renderWithProviders(<SpaceMembersList space={space} isSpaceAdmin={true} />);
 
     expect(screen.getByText('john.doe')).toBeInTheDocument();
     expect(screen.getByText('jane.smith')).toBeInTheDocument();
@@ -161,8 +152,23 @@ describe('SpaceMembersList', () => {
   });
 
   it('marks the current user with "You" badge', () => {
-    renderWithProviders(<SpaceMembersList />);
+    renderWithProviders(<SpaceMembersList space={space} isSpaceAdmin={true} />);
 
     expect(screen.getByText('You')).toBeInTheDocument();
+  });
+
+  it('when isSpaceAdmin is false, hides the Add button and disables remove/role controls', () => {
+    renderWithProviders(
+      <SpaceMembersList space={space} isSpaceAdmin={false} />,
+    );
+
+    expect(screen.queryByRole('button', { name: /add members/i })).toBeNull();
+
+    const roleSelects = screen.getAllByRole('combobox');
+    roleSelects.forEach((select) => {
+      expect(select).toBeDisabled();
+    });
+
+    expect(screen.queryByRole('button', { name: /remove/i })).toBeNull();
   });
 });
