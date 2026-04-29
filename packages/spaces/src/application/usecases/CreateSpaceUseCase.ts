@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  OrganizationAdminRequiredError,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -11,6 +12,7 @@ import {
   CreateSpaceResponse,
   IAccountsPort,
   SpaceCreatedEvent,
+  SpaceType,
 } from '@packmind/types';
 import { SpaceName } from '../../domain/SpaceName';
 import { SpaceService } from '../services/SpaceService';
@@ -34,12 +36,23 @@ export class CreateSpaceUseCase extends AbstractMemberUseCase<
     command: CreateSpaceCommand & MemberContext,
   ): Promise<CreateSpaceResponse> {
     const spaceName = new SpaceName(command.name);
+    const requestedType = command.type ?? SpaceType.private;
+
+    if (
+      requestedType !== SpaceType.private &&
+      command.membership.role !== 'admin'
+    ) {
+      throw new OrganizationAdminRequiredError({
+        userId: command.userId,
+        organizationId: command.organizationId,
+      });
+    }
 
     const space = await this.spaceService.createSpace(
       spaceName.value,
       createOrganizationId(command.organizationId),
       false,
-      command.type,
+      requestedType,
     );
 
     this.eventEmitterService.emit(

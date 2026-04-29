@@ -15,6 +15,8 @@ import {
   SocialProvider,
   SOCIAL_PROVIDER_DISPLAY_NAMES,
   SignInSocialUserResponse,
+  UpdateUserDisplayNameCommand,
+  UpdateUserDisplayNameResponse,
 } from '@packmind/types';
 import {
   SignInUserCommand,
@@ -66,6 +68,7 @@ export interface GetMeResponse {
   user: {
     id: UserId;
     email: string;
+    displayName: string | null;
   };
   organization?: {
     id: OrganizationId;
@@ -336,6 +339,7 @@ export class AuthService {
           user: {
             id: user.id,
             email: user.email,
+            displayName: user.displayName,
           },
           organizations: organizationsWithDetails,
           message: 'User is authenticated but has not selected an organization',
@@ -399,6 +403,7 @@ export class AuthService {
         user: {
           id: user.id,
           email: user.email,
+          displayName: user.displayName,
         },
         organization: {
           id: createOrganizationId(organizationMembership.organizationId),
@@ -616,8 +621,6 @@ export class AuthService {
       // Verify and decode the current JWT
       const payload: JwtPayload = this.jwtService.verify(accessToken);
 
-      // Get organization details from the user's memberships
-      // We need to fetch the organization details since memberships only have id and role
       const getUserResponse = await this.accountsAdapter.getUserById({
         userId: payload.user.userId,
       });
@@ -634,11 +637,9 @@ export class AuthService {
         throw new Error('Organization membership not found');
       }
 
-      // Get the organization details
-      const organizationResponse =
-        await this.accountsAdapter.getOrganizationById({
-          organizationId: command.organizationId,
-        });
+      // UserRepository.findById joins memberships.organization, so the org is
+      // already loaded — no extra round-trip needed.
+      const organizationResponse = userMembership.organization;
 
       if (!organizationResponse) {
         throw new Error('Organization not found');
@@ -971,6 +972,37 @@ export class AuthService {
       this.logger.error('Failed to fetch onboarding status', {
         userId,
         organizationId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async updateUserDisplayName(
+    req: AuthenticatedRequest,
+    displayName: string | null,
+  ): Promise<UpdateUserDisplayNameResponse> {
+    this.logger.log('Updating user display name', {
+      userId: req.user.userId,
+    });
+
+    try {
+      const command: UpdateUserDisplayNameCommand = {
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+        displayName,
+      };
+
+      const result = await this.accountsAdapter.updateUserDisplayName(command);
+
+      this.logger.log('User display name updated successfully', {
+        userId: req.user.userId,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to update user display name', {
+        userId: req.user.userId,
         error: getErrorMessage(error),
       });
       throw error;

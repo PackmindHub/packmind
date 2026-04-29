@@ -79,13 +79,16 @@ describe('CAMEL_TO_YAML_KEY', () => {
   it('contains exactly the expected key mappings', () => {
     expect(CAMEL_TO_YAML_KEY).toEqual({
       argumentHint: 'argument-hint',
+      whenToUse: 'when_to_use',
       disableModelInvocation: 'disable-model-invocation',
       userInvocable: 'user-invocable',
       model: 'model',
+      effort: 'effort',
       context: 'context',
       agent: 'agent',
-      effort: 'effort',
       hooks: 'hooks',
+      paths: 'paths',
+      shell: 'shell',
     });
   });
 });
@@ -109,6 +112,22 @@ describe('sortAdditionalPropertiesKeys', () => {
     ).toEqual([
       ['model', 'opus'],
       ['hooks', { pre: 'echo' }],
+    ]);
+  });
+
+  it('sorts whenToUse, paths, and shell in their canonical positions', () => {
+    const props = {
+      shell: 'bash',
+      argumentHint: '[file]',
+      paths: ['src/**/*.ts'],
+      whenToUse: 'when editing TypeScript files',
+    };
+    const result = sortAdditionalPropertiesKeys(props);
+    expect(result.map(([k]) => k)).toEqual([
+      'argumentHint',
+      'whenToUse',
+      'paths',
+      'shell',
     ]);
   });
 });

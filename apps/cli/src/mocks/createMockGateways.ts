@@ -1,7 +1,6 @@
 import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
 import { IChangeProposalGateway } from '../domain/repositories/IChangeProposalGateway';
 import { ILinterGateway } from '../domain/repositories/ILinterGateway';
-import { IMcpGateway } from '../domain/repositories/IMcpGateway';
 import { ISpacesGateway } from '../domain/repositories/ISpacesGateway';
 import { ISkillsGateway } from '../domain/repositories/ISkillsGateway';
 import { ICommandsGateway } from '../domain/repositories/ICommandsGateway';
@@ -13,7 +12,6 @@ import { IOrganizationGateway } from '../domain/repositories/IOrganizationGatewa
 export type MockPackmindGatewayOverrides = {
   changeProposals?: jest.Mocked<IChangeProposalGateway>;
   linter?: jest.Mocked<ILinterGateway>;
-  mcp?: jest.Mocked<IMcpGateway>;
   spaces?: jest.Mocked<ISpacesGateway>;
   skills?: jest.Mocked<ISkillsGateway>;
   commands?: jest.Mocked<ICommandsGateway>;
@@ -29,7 +27,6 @@ export function createMockPackmindGateway(
   return {
     changeProposals: createMockChangeProposalGateway(),
     linter: createMockLinterGateway(),
-    mcp: createMockMcpGateway(),
     spaces: createMockSpacesGateway(),
     skills: createMockSkillsGateway(),
     commands: createMockCommandsGateway(),
@@ -52,21 +49,13 @@ export function createMockChangeProposalGateway(
   };
 }
 
-export function createMockMcpGateway(
-  overrides?: Partial<jest.Mocked<IMcpGateway>>,
-): jest.Mocked<IMcpGateway> {
-  return {
-    getToken: jest.fn(),
-    getUrl: jest.fn(),
-    ...overrides,
-  };
-}
-
 export function createMockSpacesGateway(
   overrides?: Partial<jest.Mocked<ISpacesGateway>>,
 ): jest.Mocked<ISpacesGateway> {
   return {
     getUserSpaces: jest.fn(),
+    getSpaceBySlug: jest.fn(),
+    getApiContext: jest.fn(),
     ...overrides,
   };
 }
@@ -137,6 +126,7 @@ export function createMockDeploymentGateway(
     getDeployed: jest.fn(),
     getContentByVersions: jest.fn(),
     notifyDistribution: jest.fn(),
+    notifyArtefactsDistribution: jest.fn(),
     getRenderModeConfiguration: jest.fn(),
     getLatestVersion: jest.fn().mockResolvedValue({ version: 1 }),
     ...overrides,

@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Logger,
   HttpCode,
@@ -43,6 +44,7 @@ import {
   CliLoginCodeNotFoundError,
   InvalidTrialActivationTokenError,
   EmailAlreadyExistsError,
+  InvalidDisplayNameError,
 } from '@packmind/accounts';
 import {
   ActivateTrialAccountResult,
@@ -174,32 +176,6 @@ export class AuthController {
         path: '/',
       });
 
-      // Set onboarding completion status cookie if user has an organization
-      if (result.organization) {
-        try {
-          const onboardingStatus = await this.authService.getOnboardingStatus(
-            result.user.id,
-            result.organization.id,
-          );
-          response.cookie(
-            'onboarding_completed',
-            String(onboardingStatus.hasDeployed),
-            {
-              httpOnly: true,
-              secure: isSecure,
-              sameSite: 'strict',
-              maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-              path: '/',
-            },
-          );
-        } catch (error) {
-          this.logger.warn('Failed to fetch onboarding status during sign-in', {
-            userId: result.user.id,
-            error: getErrorMessage(error),
-          });
-        }
-      }
-
       this.logger.log(`POST /auth/signin - User signed in successfully`, {
         userId: result.user.id,
         email: maskEmail(result.user.email),
@@ -252,12 +228,6 @@ export class AuthController {
       sameSite: 'strict',
       expires: new Date(0), // Expire the cookie immediately
     });
-    response.cookie('onboarding_completed', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      expires: new Date(0), // Expire the cookie immediately
-    });
     return { message: 'Sign out successful' };
   }
 
@@ -297,34 +267,6 @@ export class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
         path: '/',
       });
-
-      // Update onboarding completion status cookie for the new organization
-      try {
-        const payload = this.authService.verifyToken(accessToken);
-        const onboardingStatus = await this.authService.getOnboardingStatus(
-          payload.user.userId,
-          request.organizationId,
-        );
-        response.cookie(
-          'onboarding_completed',
-          String(onboardingStatus.hasDeployed),
-          {
-            httpOnly: true,
-            secure: isSecure,
-            sameSite: 'strict',
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-            path: '/',
-          },
-        );
-      } catch (error) {
-        this.logger.warn(
-          'Failed to fetch onboarding status during organization selection',
-          {
-            organizationId: request.organizationId,
-            error: getErrorMessage(error),
-          },
-        );
-      }
 
       this.logger.log(
         'POST /auth/selectOrganization - Organization selected successfully',
@@ -384,6 +326,42 @@ export class AuthController {
         message: 'Failed to get user info',
         authenticated: false,
       } as GetMeResponse;
+    }
+  }
+
+  @Patch('profile')
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: { displayName?: string | null },
+  ): Promise<{ displayName: string | null }> {
+    this.logger.log('PATCH /auth/profile - Updating user profile', {
+      userId: request.user.userId,
+    });
+
+    try {
+      const result = await this.authService.updateUserDisplayName(
+        request,
+        body.displayName ?? null,
+      );
+
+      this.logger.log(
+        'PATCH /auth/profile - User profile updated successfully',
+        {
+          userId: request.user.userId,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error('PATCH /auth/profile - Failed to update user profile', {
+        userId: request.user.userId,
+        error: getErrorMessage(error),
+      });
+      if (error instanceof InvalidDisplayNameError) {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+      throw error;
     }
   }
 
@@ -529,15 +507,6 @@ export class AuthController {
           secure: isSecure,
           sameSite: 'strict',
           maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-          path: '/',
-        });
-
-        // Set onboarding completion status cookie (always false for new accounts)
-        response.cookie('onboarding_completed', 'false', {
-          httpOnly: true,
-          secure: isSecure,
-          sameSite: 'strict',
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
           path: '/',
         });
       }

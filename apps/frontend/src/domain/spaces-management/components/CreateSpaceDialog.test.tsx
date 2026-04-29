@@ -8,15 +8,28 @@ import { SpaceType } from '@packmind/types';
 import { CreateSpaceDialog } from './CreateSpaceDialog';
 import { useCreateSpaceMutation } from '../api/queries/SpacesManagementQueries';
 
+const mockUseAuthContext = jest.fn();
 jest.mock('../../accounts/hooks/useAuthContext', () => ({
-  useAuthContext: () => ({
-    organization: {
-      id: 'org-1',
-      name: 'Test Organization',
-      slug: 'test-org',
-    },
-  }),
+  useAuthContext: () => mockUseAuthContext(),
 }));
+
+const authContextAsAdmin = () => ({
+  organization: {
+    id: 'org-1',
+    name: 'Test Organization',
+    slug: 'test-org',
+    role: 'admin',
+  },
+});
+
+const authContextAsMember = () => ({
+  organization: {
+    id: 'org-1',
+    name: 'Test Organization',
+    slug: 'test-org',
+    role: 'member',
+  },
+});
 
 jest.mock('../api/queries/SpacesManagementQueries', () => ({
   ...jest.requireActual('../api/queries/SpacesManagementQueries'),
@@ -64,6 +77,7 @@ describe('CreateSpaceDialog', () => {
   };
 
   beforeEach(() => {
+    mockUseAuthContext.mockReturnValue(authContextAsAdmin());
     mockUseCreateSpaceMutation.mockReturnValue(createMockMutation());
   });
 
@@ -86,17 +100,17 @@ describe('CreateSpaceDialog', () => {
       ]);
     });
 
-    it('selects open as default access status', () => {
+    it('selects private as default access status', () => {
       renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
 
       const wrapper = screen.getByTestId('create-space-type-select');
       const select = wrapper.querySelector('select')!;
-      expect(select).toHaveValue(SpaceType.open);
+      expect(select).toHaveValue(SpaceType.private);
     });
   });
 
   describe('when submitting with the default type', () => {
-    it('sends open type to the mutation', async () => {
+    it('sends private type to the mutation', async () => {
       const mockMutateAsync = jest
         .fn()
         .mockResolvedValue({ name: 'My Space', slug: 'my-space' });
@@ -115,9 +129,33 @@ describe('CreateSpaceDialog', () => {
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith({
           name: 'My Space',
-          type: SpaceType.open,
+          type: SpaceType.private,
         });
       });
+    });
+  });
+
+  describe('when the user is not an admin', () => {
+    beforeEach(() => {
+      mockUseAuthContext.mockReturnValue(authContextAsMember());
+    });
+
+    it('disables the access status selector', () => {
+      renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
+
+      const wrapper = screen.getByTestId('create-space-type-select');
+      const select = wrapper.querySelector('select')!;
+      expect(select).toBeDisabled();
+    });
+
+    it('shows a helper text explaining the restriction', () => {
+      renderWithProviders(<CreateSpaceDialog {...defaultProps} />);
+
+      expect(
+        screen.getByText(
+          'Only organization administrators can change space visibility',
+        ),
+      ).toBeInTheDocument();
     });
   });
 

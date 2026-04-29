@@ -181,12 +181,16 @@ export abstract class AbstractRepository<
         .getRepository('User')
         .findOne({
           where: { id: userId },
-          select: ['id', 'email'],
-        })) as { id: string; email: string } | null;
+          select: ['id', 'email', 'displayName'],
+        })) as {
+        id: string;
+        email: string;
+        displayName: string | null;
+      } | null;
 
       if (user) {
-        // Extract displayName from email (part before @)
-        const displayName = user.email.split('@')[0] ?? 'Unknown';
+        const displayName =
+          user.displayName ?? user.email.split('@')[0] ?? 'Unknown';
         return {
           userId: user.id as UserId,
           displayName,

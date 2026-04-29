@@ -217,12 +217,14 @@ export async function installHandler({
   list,
   show,
   status,
+  skipInstalledAt,
 }: {
   installPath: string;
   packages: string[];
   list: boolean;
   show: string;
   status: boolean;
+  skipInstalledAt: boolean;
 }): Promise<void> {
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -301,6 +303,7 @@ export async function installHandler({
       const result = await packmindCliHexa.install({
         baseDirectory: dir,
         packages: packages.length > 0 ? packages : undefined,
+        skipInstalledAt,
       });
       results.push(result);
 
@@ -381,6 +384,11 @@ export const installCommand = command({
       long: 'show',
       description: '[Deprecated] Show details of a specific package',
       defaultValue: () => '',
+    }),
+    skipInstalledAt: flag({
+      long: 'skip-installed-at',
+      description:
+        'Omit the installedAt timestamp from the packmind-lock.json file',
     }),
   },
   handler: installHandler,

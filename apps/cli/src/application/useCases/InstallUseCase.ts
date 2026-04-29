@@ -68,9 +68,11 @@ export class InstallUseCase implements IInstallUseCase {
       lockfileVersion: 1,
       packageSlugs: [],
       agents: [],
-      installedAt: new Date().toISOString(),
       artifacts: {},
     };
+    if (!command.skipInstalledAt) {
+      effectiveLockFile.installedAt = new Date().toISOString();
+    }
 
     let packagesSlugs: string[];
     let normalizedPackages: string[] = [];
@@ -143,6 +145,23 @@ export class InstallUseCase implements IInstallUseCase {
     }
 
     const uniqueFiles = Array.from(uniqueFilesMap.values());
+
+    if (command.skipInstalledAt) {
+      for (const file of uniqueFiles) {
+        if (file.path === 'packmind-lock.json' && file.content) {
+          try {
+            const lockFileData = JSON.parse(file.content) as Record<
+              string,
+              unknown
+            >;
+            delete lockFileData.installedAt;
+            file.content = JSON.stringify(lockFileData, null, 2) + '\n';
+          } catch {
+            // If parsing fails, keep original content
+          }
+        }
+      }
+    }
 
     // Count artifact types
     for (const file of uniqueFiles) {

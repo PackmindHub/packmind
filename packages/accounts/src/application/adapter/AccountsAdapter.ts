@@ -33,6 +33,7 @@ import {
   IChangeUserRoleUseCase,
   ICheckEmailAvailabilityUseCase,
   ICompleteUserOnboardingUseCase,
+  IUpdateUserDisplayNameUseCase,
   ICreateCliLoginCodeUseCase,
   ICreateInvitationsUseCase,
   ICreateOrganizationUseCase,
@@ -83,6 +84,8 @@ import {
   OrganizationOnboardingStatus,
   RenameOrganizationCommand,
   RenameOrganizationResponse,
+  UpdateUserDisplayNameCommand,
+  UpdateUserDisplayNameResponse,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   ResetPasswordCommand,
@@ -143,6 +146,7 @@ import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/Val
 import { StartTrialUseCase } from '../useCases/startTrial/StartTrialUseCase';
 import { GetUserOnboardingStatusUseCase } from '../useCases/getUserOnboardingStatus/GetUserOnboardingStatusUseCase';
 import { CompleteUserOnboardingUseCase } from '../useCases/completeUserOnboarding/CompleteUserOnboardingUseCase';
+import { UpdateUserDisplayNameUseCase } from '../useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase';
 
 const origin = 'AccountsAdapter';
 
@@ -187,6 +191,7 @@ export class AccountsAdapter
   private _activateTrialAccount!: IActivateTrialAccountUseCase;
   private _getUserOnboardingStatus!: IGetUserOnboardingStatusUseCase;
   private _completeUserOnboarding!: ICompleteUserOnboardingUseCase;
+  private _updateUserDisplayName!: IUpdateUserDisplayNameUseCase;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
@@ -344,6 +349,10 @@ export class AccountsAdapter
     this._completeUserOnboarding = new CompleteUserOnboardingUseCase(
       this,
       this.accountsServices.getUserMetadataService(),
+    );
+    this._updateUserDisplayName = new UpdateUserDisplayNameUseCase(
+      this,
+      this.accountsServices.getUserService(),
     );
 
     // API key use cases are optional since they require additional dependencies
@@ -657,6 +666,13 @@ export class AccountsAdapter
       );
     }
     return this._activateTrialAccount.execute(command);
+  }
+
+  // User profile operations
+  public async updateUserDisplayName(
+    command: UpdateUserDisplayNameCommand,
+  ): Promise<UpdateUserDisplayNameResponse> {
+    return this._updateUserDisplayName.execute(command);
   }
 
   // Social login operations

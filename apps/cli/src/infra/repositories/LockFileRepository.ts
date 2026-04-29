@@ -40,7 +40,6 @@ export class LockFileRepository implements ILockFileRepository {
     const obj = data as Record<string, unknown>;
 
     return (
-      typeof obj.installedAt === 'string' &&
       Array.isArray(obj.packageSlugs) &&
       Array.isArray(obj.agents) &&
       (obj.targetId === undefined || typeof obj.targetId === 'string') &&

@@ -3,6 +3,7 @@ import { IPublicUseCase } from '@packmind/types';
 export type IInstallCommand = {
   baseDirectory?: string;
   packages?: string[];
+  skipInstalledAt?: boolean;
 };
 
 export type IInstallResult = {

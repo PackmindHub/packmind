@@ -125,8 +125,9 @@ export class SpacesManagementGatewayApi
     if (!orgId) {
       throw new Error('Organization ID is required to unpin a space');
     }
-    return this._api.delete(
-      `${this._endpoint}/${orgId}/spaces-management/${spaceId}/pin`,
+    return this._api.post(
+      `${this._endpoint}/${orgId}/spaces-management/${spaceId}/unpin`,
+      {},
     );
   }
 }
