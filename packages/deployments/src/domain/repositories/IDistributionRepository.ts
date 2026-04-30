@@ -203,6 +203,7 @@ export type LatestPackageOperationRow = {
   packageId: PackageId;
   operation: 'add' | 'remove';
   status: DistributionStatus;
+  lastDistributedAt: string;
 };
 
 export type OutdatedDeploymentInfo = {
@@ -220,4 +221,5 @@ export type OutdatedDeploymentsByTarget = {
   gitRepoId: string;
   standards: OutdatedDeploymentInfo[];
   recipes: OutdatedDeploymentInfo[];
+  skills: OutdatedDeploymentInfo[];
 };

@@ -53,8 +53,6 @@ import {
   CodingAgent,
   GetDashboardKpiCommand,
   DashboardKpiResponse,
-  GetDashboardOutdatedCommand,
-  DashboardOutdatedResponse,
   GetDashboardNonLiveCommand,
   DashboardNonLiveResponse,
 } from '@packmind/types';
@@ -931,37 +929,6 @@ export class DeploymentsController {
     }
   }
 
-  @Get('dashboard/outdated')
-  async getDashboardOutdated(
-    @Param('orgId') organizationId: OrganizationId,
-    @Query('spaceId') spaceId: SpaceId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<DashboardOutdatedResponse> {
-    this.logger.info(
-      'GET /organizations/:orgId/deployments/dashboard/outdated',
-      { organizationId },
-    );
-
-    try {
-      const command: GetDashboardOutdatedCommand = {
-        userId: request.user.userId,
-        organizationId,
-        spaceId,
-      };
-
-      return await this.deploymentsService.getDashboardOutdated(command);
-    } catch (error) {
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/dashboard/outdated - Failed',
-        {
-          organizationId,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      );
-      throw error;
-    }
-  }
-
   @Get('dashboard/non-live')
   async getDashboardNonLive(
     @Param('orgId') organizationId: OrganizationId,
@@ -993,14 +960,14 @@ export class DeploymentsController {
     }
   }
 
-  @Get('spaces/:spaceId/distributed-packages')
-  async getActiveDistributedPackagesBySpace(
+  @Get('spaces/:spaceId/overview')
+  async getSpaceOverview(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
   ): Promise<ActiveDistributedPackagesByTarget[]> {
     this.logger.info(
-      'GET /organizations/:orgId/deployments/spaces/:spaceId/distributed-packages - Fetching active distributed packages by space',
+      'GET /organizations/:orgId/deployments/spaces/:spaceId/overview - Fetching space overview',
       { organizationId, spaceId },
     );
 
@@ -1017,7 +984,7 @@ export class DeploymentsController {
         );
 
       this.logger.info(
-        'GET /organizations/:orgId/deployments/spaces/:spaceId/distributed-packages - Active distributed packages fetched successfully',
+        'GET /organizations/:orgId/deployments/spaces/:spaceId/overview - Space overview fetched successfully',
         { organizationId, spaceId, targetCount: result.length },
       );
 
@@ -1026,7 +993,7 @@ export class DeploymentsController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'GET /organizations/:orgId/deployments/spaces/:spaceId/distributed-packages - Failed to fetch active distributed packages',
+        'GET /organizations/:orgId/deployments/spaces/:spaceId/overview - Failed to fetch space overview',
         { organizationId, spaceId, error: errorMessage },
       );
       throw error;

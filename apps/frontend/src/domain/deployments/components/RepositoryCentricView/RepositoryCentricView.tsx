@@ -9,7 +9,6 @@ import { GitRepo } from '@packmind/types';
 import {
   DeployedRecipeInfo,
   Package,
-  PackageId,
   Recipe,
   RecipeId,
   RepositoryDeploymentStatus,
@@ -29,7 +28,7 @@ import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQue
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
-import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
+import { useActivePackageIdsByTarget } from '../../hooks/useActivePackageIdsByTarget';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
 interface CombinedRepositoryDeploymentStatus {
@@ -521,17 +520,7 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   }, [skillsData]);
 
   const { spaceId } = useCurrentSpace();
-  const { data: activeDistributedPackagesData } =
-    useListActiveDistributedPackagesBySpaceQuery(spaceId);
-
-  const activePackageIdsByTarget = useMemo(() => {
-    const map = new Map<TargetId, ReadonlySet<PackageId>>();
-    if (!activeDistributedPackagesData) return map;
-    activeDistributedPackagesData.forEach((entry) => {
-      map.set(entry.targetId, new Set(entry.packageIds));
-    });
-    return map;
-  }, [activeDistributedPackagesData]);
+  const { getActivePackageIds } = useActivePackageIdsByTarget(spaceId);
 
   const shouldUseTargetData =
     recipeTargets.length > 0 ||
@@ -744,8 +733,7 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
                         standardsById,
                         skillsById,
                       },
-                      activePackageIdsByTarget.get(t.id) ??
-                        new Set<PackageId>(),
+                      getActivePackageIds(t.id),
                     )}
                     mode={artifactStatusFilter}
                     canDistributeFromApp={

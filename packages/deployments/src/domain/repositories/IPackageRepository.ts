@@ -1,5 +1,6 @@
 import {
   Package,
+  PackageArtifactCounts,
   PackageId,
   PackageWithArtefacts,
   RecipeId,
@@ -22,6 +23,9 @@ export interface IPackageRepository extends IRepository<Package> {
     slugs: string[],
     spaceId: SpaceId,
   ): Promise<PackageWithArtefacts[]>;
+  countArtifactsForPackages(
+    packageIds: PackageId[],
+  ): Promise<Map<PackageId, PackageArtifactCounts>>;
   addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
   addStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
   updatePackageDetails(

@@ -1,6 +1,7 @@
 import { In, Repository } from 'typeorm';
 import {
   Package,
+  PackageArtifactCounts,
   PackageId,
   PackageWithArtefacts,
   Recipe,
@@ -503,6 +504,72 @@ export class PackageRepository
       standards: standardsByPackage[pkg.id] || [],
       skills: skillsByPackage[pkg.id] || [],
     }));
+  }
+
+  async countArtifactsForPackages(
+    packageIds: PackageId[],
+  ): Promise<Map<PackageId, PackageArtifactCounts>> {
+    const counts = new Map<PackageId, PackageArtifactCounts>();
+    if (packageIds.length === 0) {
+      return counts;
+    }
+
+    this.logger.info('Counting artifacts for packages', {
+      count: packageIds.length,
+    });
+
+    try {
+      type CountRow = { package_id: string; count: string };
+      const aggregate = (rows: CountRow[]): Map<string, number> =>
+        new Map(rows.map((r) => [r.package_id, Number(r.count)]));
+
+      const [recipeRows, standardRows, skillRows] = await Promise.all([
+        this.repository.manager
+          .getRepository(PackageRecipesSchema)
+          .createQueryBuilder('pr')
+          .select('pr.package_id', 'package_id')
+          .addSelect('COUNT(*)', 'count')
+          .where('pr.package_id IN (:...packageIds)', { packageIds })
+          .groupBy('pr.package_id')
+          .getRawMany<CountRow>(),
+        this.repository.manager
+          .getRepository(PackageStandardsSchema)
+          .createQueryBuilder('ps')
+          .select('ps.package_id', 'package_id')
+          .addSelect('COUNT(*)', 'count')
+          .where('ps.package_id IN (:...packageIds)', { packageIds })
+          .groupBy('ps.package_id')
+          .getRawMany<CountRow>(),
+        this.repository.manager
+          .getRepository(PackageSkillsSchema)
+          .createQueryBuilder('psk')
+          .select('psk.package_id', 'package_id')
+          .addSelect('COUNT(*)', 'count')
+          .where('psk.package_id IN (:...packageIds)', { packageIds })
+          .groupBy('psk.package_id')
+          .getRawMany<CountRow>(),
+      ]);
+
+      const recipeCounts = aggregate(recipeRows);
+      const standardCounts = aggregate(standardRows);
+      const skillCounts = aggregate(skillRows);
+
+      for (const id of packageIds) {
+        counts.set(id, {
+          recipes: recipeCounts.get(id) ?? 0,
+          standards: standardCounts.get(id) ?? 0,
+          skills: skillCounts.get(id) ?? 0,
+        });
+      }
+
+      return counts;
+    } catch (error) {
+      this.logger.error('Failed to count artifacts for packages', {
+        count: packageIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   async addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void> {

@@ -52,7 +52,6 @@ import {
   getStandardsDeploymentOverviewKey,
   getSkillsDeploymentOverviewKey,
   getDashboardKpiKey,
-  getDashboardOutdatedKey,
   getDashboardNonLiveKey,
 } from '../queryKeys';
 
@@ -335,26 +334,6 @@ export const useGetDashboardKpiQuery = (spaceId: string) => {
         throw new Error('Organization ID is required to fetch dashboard KPI');
       }
       return deploymentsGateways.getDashboardKpi({
-        organizationId: organization.id,
-        spaceId: createSpaceId(spaceId),
-      });
-    },
-    enabled: !!organization?.id && !!spaceId,
-  });
-};
-
-export const useGetDashboardOutdatedQuery = (spaceId: string) => {
-  const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: getDashboardOutdatedKey(spaceId),
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error(
-          'Organization ID is required to fetch dashboard outdated',
-        );
-      }
-      return deploymentsGateways.getDashboardOutdated({
         organizationId: organization.id,
         spaceId: createSpaceId(spaceId),
       });

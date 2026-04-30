@@ -27,7 +27,6 @@ import {
   IGetTargetsByRepositoryUseCase,
   IRemovePackageFromTargetsUseCase,
   IGetDashboardKpi,
-  IGetDashboardOutdated,
   IGetDashboardNonLive,
   PackageId,
   ListDeploymentsByPackageCommand,
@@ -49,7 +48,6 @@ import {
   UpdateRenderModeConfigurationCommand,
   RemovePackageFromTargetsCommand,
   GetDashboardKpiCommand,
-  GetDashboardOutdatedCommand,
   GetDashboardNonLiveCommand,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
@@ -329,16 +327,6 @@ export class DeploymentsGatewayApi
     );
   };
 
-  getDashboardOutdated: NewGateway<IGetDashboardOutdated> = async ({
-    organizationId,
-    spaceId,
-  }: NewPackmindCommandBody<GetDashboardOutdatedCommand>) => {
-    return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/dashboard/outdated`,
-      { params: { spaceId } },
-    );
-  };
-
   getDashboardNonLive: NewGateway<IGetDashboardNonLive> = async ({
     organizationId,
     spaceId,
@@ -352,7 +340,7 @@ export class DeploymentsGatewayApi
   listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase> =
     async ({ organizationId, spaceId }) => {
       return this._api.get(
-        `/organizations/${organizationId}/deployments/spaces/${spaceId}/distributed-packages`,
+        `/organizations/${organizationId}/deployments/spaces/${spaceId}/overview`,
       );
     };
 }

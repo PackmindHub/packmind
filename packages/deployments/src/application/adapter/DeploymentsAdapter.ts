@@ -15,7 +15,6 @@ import {
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
-  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -34,7 +33,6 @@ import {
   GetContentByVersionsResponse,
   GetDashboardKpiCommand,
   GetDashboardNonLiveCommand,
-  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -141,7 +139,6 @@ import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
 import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
 import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
-import { GetDashboardOutdatedUseCase } from '../useCases/getDashboardOutdated/GetDashboardOutdatedUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
 import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
@@ -200,7 +197,6 @@ export class DeploymentsAdapter
   private _downloadSkillZipForAgentUseCase!: DownloadSkillZipForAgentUseCase;
   private _getContentByVersionsUseCase!: GetContentByVersionsUseCase;
   private _getDashboardKpiUseCase!: GetDashboardKpiUseCase;
-  private _getDashboardOutdatedUseCase!: GetDashboardOutdatedUseCase;
   private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
   private _installPackagesUseCase!: InstallPackagesUseCase;
@@ -454,13 +450,6 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
-    this._getDashboardOutdatedUseCase = new GetDashboardOutdatedUseCase(
-      this.distributionRepository,
-      this.standardsPort,
-      this.recipesPort,
-      this.gitPort,
-    );
-
     this._getDashboardNonLiveUseCase = new GetDashboardNonLiveUseCase(
       this.distributionRepository,
       this.standardsPort,
@@ -479,6 +468,12 @@ export class DeploymentsAdapter
         this.spacesPort,
         this.accountsPort,
         this.distributionRepository,
+        this.deploymentsServices.getRepositories().getPackageRepository(),
+        this.deploymentsServices.getRepositories().getTargetRepository(),
+        this.standardsPort,
+        this.recipesPort,
+        this.skillsPort,
+        this.gitPort,
       );
 
     this._listPackagesUseCase = new ListPackagesUsecase(
@@ -842,12 +837,6 @@ export class DeploymentsAdapter
     command: GetDashboardKpiCommand,
   ): Promise<DashboardKpiResponse> {
     return this._getDashboardKpiUseCase.execute(command);
-  }
-
-  async getDashboardOutdated(
-    command: GetDashboardOutdatedCommand,
-  ): Promise<DashboardOutdatedResponse> {
-    return this._getDashboardOutdatedUseCase.execute(command);
   }
 
   async getDashboardNonLive(

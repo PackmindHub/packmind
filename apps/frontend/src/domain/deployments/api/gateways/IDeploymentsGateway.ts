@@ -25,7 +25,6 @@ import {
   IUpdateRenderModeConfigurationUseCase,
   IRemovePackageFromTargetsUseCase,
   IGetDashboardKpi,
-  IGetDashboardOutdated,
   IGetDashboardNonLive,
 } from '@packmind/types';
 
@@ -54,7 +53,6 @@ export interface IDeploymentsGateway {
   updateRenderModeConfiguration: NewGateway<IUpdateRenderModeConfigurationUseCase>;
   removePackageFromTargets: NewGateway<IRemovePackageFromTargetsUseCase>;
   getDashboardKpi: NewGateway<IGetDashboardKpi>;
-  getDashboardOutdated: NewGateway<IGetDashboardOutdated>;
   getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
   listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase>;
 }

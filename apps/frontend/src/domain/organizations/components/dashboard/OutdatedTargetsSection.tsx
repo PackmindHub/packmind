@@ -11,7 +11,7 @@ import {
   PMIcon,
 } from '@packmind/ui';
 import {
-  useGetDashboardOutdatedQuery,
+  useListActiveDistributedPackagesBySpaceQuery,
   useListPackagesBySpaceQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -21,6 +21,8 @@ import {
   GitProviderId,
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
+  DeployedSkillTargetInfo,
+  PackageId,
 } from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
@@ -35,8 +37,10 @@ type RepoResult = {
   targets: Array<{
     id: TargetId;
     title: string;
+    activePackageIds: ReadonlySet<PackageId>;
     recipes: DeployedRecipeTargetInfo[];
     standards: DeployedStandardTargetInfo[];
+    skills: DeployedSkillTargetInfo[];
   }>;
 };
 
@@ -45,11 +49,11 @@ export const OutdatedTargetsSection: React.FC = () => {
   const { spaceId, space } = useCurrentSpace();
   const organizationId = space?.organizationId;
   const {
-    data: outdatedData,
+    data: overviewData,
     isLoading,
     isError,
     error,
-  } = useGetDashboardOutdatedQuery(spaceId ?? '');
+  } = useListActiveDistributedPackagesBySpaceQuery(spaceId);
   const { data: packagesResponse, isLoading: isPackagesLoading } =
     useListPackagesBySpaceQuery(spaceId, organizationId);
   const packages = packagesResponse?.packages ?? [];
@@ -63,8 +67,8 @@ export const OutdatedTargetsSection: React.FC = () => {
     return set;
   }, [gitProvidersResponse]);
 
-  const reposWithTargets = useMemo(() => {
-    if (!outdatedData?.targets) return [];
+  const reposWithTargets = useMemo<RepoResult[]>(() => {
+    if (!overviewData) return [];
     type TargetValue = RepoResult['targets'][number];
     const repoMap = new Map<
       string,
@@ -76,7 +80,14 @@ export const OutdatedTargetsSection: React.FC = () => {
       }
     >();
 
-    for (const t of outdatedData.targets) {
+    for (const t of overviewData) {
+      if (!t.gitRepo) continue;
+      const hasOutdated =
+        t.outdatedRecipes.length > 0 ||
+        t.outdatedStandards.length > 0 ||
+        t.outdatedSkills.length > 0;
+      if (!hasOutdated) continue;
+
       const { key, title } = getRepoIdentity(t.gitRepo);
       let repo = repoMap.get(key);
       if (!repo) {
@@ -91,8 +102,10 @@ export const OutdatedTargetsSection: React.FC = () => {
       repo.targets.set(t.target.id, {
         id: t.target.id,
         title: t.target.name,
+        activePackageIds: new Set(t.packages.map((p) => p.packageId)),
         recipes: t.outdatedRecipes,
         standards: t.outdatedStandards,
+        skills: t.outdatedSkills,
       });
     }
 
@@ -106,7 +119,7 @@ export const OutdatedTargetsSection: React.FC = () => {
         ),
       }))
       .sort((a, b) => a.title.localeCompare(b.title));
-  }, [outdatedData]);
+  }, [overviewData]);
 
   return (
     <PMPageSection
@@ -181,9 +194,11 @@ export const OutdatedTargetsSection: React.FC = () => {
                           {
                             recipes: t.recipes,
                             standards: t.standards,
-                            skills: [],
+                            skills: t.skills,
                           },
                           packages,
+                          undefined,
+                          t.activePackageIds,
                         )}
                         mode="outdated"
                         canDistributeFromApp={

@@ -7,7 +7,6 @@ import {
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
-  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -25,7 +24,6 @@ import {
   GetContentByVersionsResponse,
   GetDashboardKpiCommand,
   GetDashboardNonLiveCommand,
-  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
@@ -572,10 +570,6 @@ export interface IDeploymentPort {
   getDashboardKpi(
     command: GetDashboardKpiCommand,
   ): Promise<DashboardKpiResponse>;
-
-  getDashboardOutdated(
-    command: GetDashboardOutdatedCommand,
-  ): Promise<DashboardOutdatedResponse>;
 
   getDashboardNonLive(
     command: GetDashboardNonLiveCommand,

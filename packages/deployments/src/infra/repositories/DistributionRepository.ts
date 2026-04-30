@@ -1446,6 +1446,7 @@ export class DistributionRepository implements IDistributionRepository {
           'standardVersion',
         )
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distributedPackage.package', 'package')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
@@ -1471,6 +1472,7 @@ export class DistributionRepository implements IDistributionRepository {
               operation: string;
               standardVersions: StandardVersion[];
               recipeVersions: RecipeVersion[];
+              skillVersions: SkillVersion[];
             }
           >;
         }
@@ -1495,6 +1497,7 @@ export class DistributionRepository implements IDistributionRepository {
               operation: dp.operation ?? 'add',
               standardVersions: dp.standardVersions,
               recipeVersions: dp.recipeVersions,
+              skillVersions: dp.skillVersions,
             });
           }
         }
@@ -1509,6 +1512,10 @@ export class DistributionRepository implements IDistributionRepository {
           { version: number; deploymentDate: string }
         >();
         const recipeMap = new Map<
+          string,
+          { version: number; deploymentDate: string }
+        >();
+        const skillMap = new Map<
           string,
           { version: number; deploymentDate: string }
         >();
@@ -1535,36 +1542,44 @@ export class DistributionRepository implements IDistributionRepository {
               });
             }
           }
+
+          for (const sv of pkgData.skillVersions) {
+            if (!skillMap.has(sv.skillId)) {
+              skillMap.set(sv.skillId, {
+                version: sv.version,
+                deploymentDate: '',
+              });
+            }
+          }
         }
 
-        if (standardMap.size === 0 && recipeMap.size === 0) {
+        if (
+          standardMap.size === 0 &&
+          recipeMap.size === 0 &&
+          skillMap.size === 0
+        ) {
           continue;
         }
+
+        const toRows = (
+          map: Map<string, { version: number; deploymentDate: string }>,
+        ) =>
+          Array.from(map.entries()).map(([artifactId, info]) => ({
+            artifactId,
+            artifactName: '',
+            deployedVersion: info.version,
+            latestVersion: 0,
+            deploymentDate: info.deploymentDate,
+            isDeleted: false,
+          }));
 
         result.push({
           targetId: tId as TargetId,
           targetName: data.targetName,
           gitRepoId: data.gitRepoId,
-          standards: Array.from(standardMap.entries()).map(
-            ([artifactId, info]) => ({
-              artifactId,
-              artifactName: '',
-              deployedVersion: info.version,
-              latestVersion: 0,
-              deploymentDate: info.deploymentDate,
-              isDeleted: false,
-            }),
-          ),
-          recipes: Array.from(recipeMap.entries()).map(
-            ([artifactId, info]) => ({
-              artifactId,
-              artifactName: '',
-              deployedVersion: info.version,
-              latestVersion: 0,
-              deploymentDate: info.deploymentDate,
-              isDeleted: false,
-            }),
-          ),
+          standards: toRows(standardMap),
+          recipes: toRows(recipeMap),
+          skills: toRows(skillMap),
         });
       }
 
@@ -1605,6 +1620,7 @@ export class DistributionRepository implements IDistributionRepository {
         .addSelect('distributedPackage.package_id', 'packageId')
         .addSelect('distributedPackage.operation', 'operation')
         .addSelect('distribution.status', 'status')
+        .addSelect('distribution.createdAt', 'lastDistributedAt')
         .getRawMany<LatestPackageOperationRow>();
       this.logger.info(
         'Latest package operations listed by space ID successfully',

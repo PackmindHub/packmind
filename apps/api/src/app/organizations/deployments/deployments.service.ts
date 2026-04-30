@@ -45,8 +45,6 @@ import {
   AddArtefactsToPackageResponse,
   GetDashboardKpiCommand,
   DashboardKpiResponse,
-  GetDashboardOutdatedCommand,
-  DashboardOutdatedResponse,
   GetDashboardNonLiveCommand,
   DashboardNonLiveResponse,
   IDeploymentPort,
@@ -212,12 +210,6 @@ export class DeploymentsService {
     command: GetDashboardKpiCommand,
   ): Promise<DashboardKpiResponse> {
     return this.deploymentAdapter.getDashboardKpi(command);
-  }
-
-  async getDashboardOutdated(
-    command: GetDashboardOutdatedCommand,
-  ): Promise<DashboardOutdatedResponse> {
-    return this.deploymentAdapter.getDashboardOutdated(command);
   }
 
   async getDashboardNonLive(

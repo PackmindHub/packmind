@@ -1,6 +1,8 @@
 import React from 'react';
 import {
+  PMAccordion,
   PMBadge,
+  PMBox,
   PMHStack,
   PMLink,
   PMSegmentedBar,
@@ -316,55 +318,65 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
   const totalArtifacts = inSyncCount + driftCount + pendingCount;
 
   return (
-    <PMVStack
-      align="stretch"
-      width="full"
-      gap={0}
-      border={'solid 1px'}
-      padding={2}
-      borderColor={'border.secondary'}
+    <PMAccordion.Item
+      value={packageId}
+      border="solid 1px"
+      borderColor="border.secondary"
       borderRadius={4}
+      width="full"
     >
-      <PMHStack gap={2} align="center" justify="space-between">
-        <PMHStack gap={2} align="center">
-          <PMBadge colorPalette="gray" size="xs">
-            Package
-          </PMBadge>
-          <PMText variant="body-important">{packageName}</PMText>
-        </PMHStack>
-        <PMHStack gap={3} align="center">
-          {totalArtifacts > 0 && (
-            <PMSegmentedBar
-              width="160px"
-              segments={[
-                {
-                  value: inSyncCount,
-                  colorPalette: 'green',
-                  label: `${inSyncCount} in sync`,
-                },
-                {
-                  value: driftCount,
-                  colorPalette: 'red',
-                  label: `${driftCount} outdated`,
-                },
-                {
-                  value: pendingCount,
-                  colorPalette: 'orange',
-                  label: `${pendingCount} pending`,
-                },
-              ]}
-            />
-          )}
-          <DistributePackageToTargetButton
-            packageId={packageId}
-            packageName={packageName}
-            targetId={targetId}
-            canDistributeFromApp={canDistributeFromApp}
-            isDistributeReadinessLoading={isDistributeReadinessLoading}
-          />
-        </PMHStack>
+      <PMHStack gap={2} align="center" justify="space-between" pr={2}>
+        <PMAccordion.ItemTrigger
+          flex="1"
+          px={2}
+          py={1}
+          _hover={{ cursor: 'pointer', bg: 'background.tertiary' }}
+        >
+          <PMHStack gap={2} align="center" flex="1">
+            <PMAccordion.ItemIndicator />
+            <PMBadge colorPalette="gray" size="xs">
+              Package
+            </PMBadge>
+            <PMText variant="body-important">{packageName}</PMText>
+            <PMHStack flex="1" justify="flex-end">
+              {totalArtifacts > 0 && (
+                <PMSegmentedBar
+                  width="160px"
+                  segments={[
+                    {
+                      value: inSyncCount,
+                      colorPalette: 'green',
+                      label: `${inSyncCount} in sync`,
+                    },
+                    {
+                      value: driftCount,
+                      colorPalette: 'red',
+                      label: `${driftCount} outdated`,
+                    },
+                    {
+                      value: pendingCount,
+                      colorPalette: 'orange',
+                      label: `${pendingCount} pending`,
+                    },
+                  ]}
+                />
+              )}
+            </PMHStack>
+          </PMHStack>
+        </PMAccordion.ItemTrigger>
+        <DistributePackageToTargetButton
+          packageId={packageId}
+          packageName={packageName}
+          targetId={targetId}
+          canDistributeFromApp={canDistributeFromApp}
+          isDistributeReadinessLoading={isDistributeReadinessLoading}
+        />
       </PMHStack>
-      <PMTable columns={TABLE_COLUMNS} data={rows} size="sm" />
-    </PMVStack>
+      <PMAccordion.ItemContent>
+        <PMBox px={2} pb={2}>
+          <PMTable columns={TABLE_COLUMNS} data={rows} size="sm" />
+        </PMBox>
+      </PMAccordion.ItemContent>
+    </PMAccordion.Item>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { UIProvider } from '@packmind/ui';
+import { PMAccordion, UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../../../../providers/AuthProvider';
@@ -33,7 +33,11 @@ const renderWithProvider = (ui: React.ReactElement) => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
-          <UIProvider>{ui}</UIProvider>
+          <UIProvider>
+            <PMAccordion.Root multiple collapsible defaultValue={['pkg-1']}>
+              {ui}
+            </PMAccordion.Root>
+          </UIProvider>
         </MemoryRouter>
       </AuthProvider>
     </QueryClientProvider>,

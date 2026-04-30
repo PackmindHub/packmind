@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  PMAccordion,
   PMBadge,
   PMBox,
   PMHStack,
@@ -74,24 +75,28 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         <PMText variant="body-important">{target.name}</PMText>
       </PMBox>
       {anyVisible ? (
-        packageGroups.map((group) => (
-          <PackageArtifactsTable
-            key={`pkg-${group.pkg.id}`}
-            orgSlug={orgSlug}
-            packageName={group.pkg.name}
-            packageId={group.pkg.id}
-            targetId={target.id}
-            recipes={group.recipes}
-            standards={group.standards}
-            skills={group.skills}
-            pendingRecipes={group.pendingRecipes}
-            pendingStandards={group.pendingStandards}
-            pendingSkills={group.pendingSkills}
-            mode={mode}
-            canDistributeFromApp={canDistributeFromApp}
-            isDistributeReadinessLoading={isDistributeReadinessLoading}
-          />
-        ))
+        <PMAccordion.Root multiple collapsible>
+          <PMVStack align="stretch" width="full" gap={4}>
+            {packageGroups.map((group) => (
+              <PackageArtifactsTable
+                key={`pkg-${group.pkg.id}`}
+                orgSlug={orgSlug}
+                packageName={group.pkg.name}
+                packageId={group.pkg.id}
+                targetId={target.id}
+                recipes={group.recipes}
+                standards={group.standards}
+                skills={group.skills}
+                pendingRecipes={group.pendingRecipes}
+                pendingStandards={group.pendingStandards}
+                pendingSkills={group.pendingSkills}
+                mode={mode}
+                canDistributeFromApp={canDistributeFromApp}
+                isDistributeReadinessLoading={isDistributeReadinessLoading}
+              />
+            ))}
+          </PMVStack>
+        </PMAccordion.Root>
       ) : (
         <PMHStack gap={2} align="center" mt={4}>
           <PMIcon color={'green.500'}>

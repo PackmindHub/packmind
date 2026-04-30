@@ -21,7 +21,6 @@ export enum DeploymentQueryKeys {
   GET_TARGETS_BY_ORGANIZATION = 'get-targets-by-organization',
   GET_RENDER_MODE_CONFIGURATION = 'get-render-mode-configuration',
   GET_DASHBOARD_KPI = 'get-dashboard-kpi',
-  GET_DASHBOARD_OUTDATED = 'get-dashboard-outdated',
   GET_DASHBOARD_NON_LIVE = 'get-dashboard-non-live',
 }
 
@@ -145,15 +144,6 @@ export const GET_DASHBOARD_KPI_KEY = [
 
 export const getDashboardKpiKey = (spaceId: string) =>
   [...GET_DASHBOARD_KPI_KEY, spaceId] as const;
-
-export const GET_DASHBOARD_OUTDATED_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_DASHBOARD_OUTDATED,
-] as const;
-
-export const getDashboardOutdatedKey = (spaceId: string) =>
-  [...GET_DASHBOARD_OUTDATED_KEY, spaceId] as const;
 
 export const GET_DASHBOARD_NON_LIVE_KEY = [
   ORGANIZATION_QUERY_SCOPE,

@@ -2,16 +2,23 @@ import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  createGitRepoId,
   createOrganizationId,
   createPackageId,
   createSpaceId,
   createTargetId,
   createUserId,
   DistributionStatus,
+  GitRepo,
   IAccountsPort,
+  IGitPort,
+  IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
+  IStandardsPort,
   ListActiveDistributedPackagesBySpaceCommand,
   PackageId,
+  Target,
   TargetId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,6 +26,8 @@ import {
   IDistributionRepository,
   LatestPackageOperationRow,
 } from '../../domain/repositories/IDistributionRepository';
+import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
+import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import {
   ListActiveDistributedPackagesBySpaceUseCase,
   projectActiveDistributedPackagesByTarget,
@@ -29,13 +38,33 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let distributionRepository: jest.Mocked<
-    Pick<IDistributionRepository, 'findLatestPackageOperationsBySpace'>
+    Pick<
+      IDistributionRepository,
+      'findLatestPackageOperationsBySpace' | 'findOutdatedDeploymentsBySpace'
+    >
   >;
+  let packageRepository: jest.Mocked<
+    Pick<IPackageRepository, 'countArtifactsForPackages'>
+  >;
+  let targetRepository: jest.Mocked<
+    Pick<ITargetRepository, 'findByIdsInOrganization'>
+  >;
+  let standardsPort: jest.Mocked<
+    Pick<IStandardsPort, 'listStandardsBySpace' | 'getStandard'>
+  >;
+  let recipesPort: jest.Mocked<
+    Pick<IRecipesPort, 'listRecipesBySpace' | 'getRecipeByIdInternal'>
+  >;
+  let skillsPort: jest.Mocked<
+    Pick<ISkillsPort, 'listSkillsBySpace' | 'getSkill'>
+  >;
+  let gitPort: jest.Mocked<Pick<IGitPort, 'getOrganizationRepositories'>>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
   const spaceId = createSpaceId(uuidv4());
+  const gitRepoId = createGitRepoId(uuidv4());
 
   const buildUser = () => ({
     id: userId,
@@ -63,12 +92,36 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     spaceId,
   };
 
+  const lastDistributedAt = '2026-04-30T10:00:00.000Z';
+
   const row = (
     targetId: TargetId,
     packageId: PackageId,
     operation: 'add' | 'remove',
     status: DistributionStatus,
-  ): LatestPackageOperationRow => ({ targetId, packageId, operation, status });
+  ): LatestPackageOperationRow => ({
+    targetId,
+    packageId,
+    operation,
+    status,
+    lastDistributedAt,
+  });
+
+  const buildTarget = (id: TargetId): Target => ({
+    id,
+    name: `target-${id}`,
+    path: '',
+    gitRepoId,
+  });
+
+  const gitRepo: GitRepo = {
+    id: gitRepoId,
+    owner: 'org',
+    repo: 'repo',
+    branch: 'main',
+    organizationId,
+    providerId: createGitRepoId(uuidv4()) as unknown as never,
+  } as unknown as GitRepo;
 
   beforeEach(() => {
     mockAccountsPort = {
@@ -90,7 +143,37 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     } as unknown as jest.Mocked<ISpacesPort>;
 
     distributionRepository = {
-      findLatestPackageOperationsBySpace: jest.fn(),
+      findLatestPackageOperationsBySpace: jest.fn().mockResolvedValue([]),
+      findOutdatedDeploymentsBySpace: jest.fn().mockResolvedValue([]),
+    };
+
+    packageRepository = {
+      countArtifactsForPackages: jest.fn().mockResolvedValue(new Map()),
+    };
+
+    targetRepository = {
+      findByIdsInOrganization: jest.fn(async (ids: TargetId[]) =>
+        ids.map(buildTarget),
+      ),
+    };
+
+    standardsPort = {
+      listStandardsBySpace: jest.fn().mockResolvedValue([]),
+      getStandard: jest.fn(),
+    };
+
+    recipesPort = {
+      listRecipesBySpace: jest.fn().mockResolvedValue([]),
+      getRecipeByIdInternal: jest.fn(),
+    };
+
+    skillsPort = {
+      listSkillsBySpace: jest.fn().mockResolvedValue([]),
+      getSkill: jest.fn(),
+    };
+
+    gitPort = {
+      getOrganizationRepositories: jest.fn().mockResolvedValue([gitRepo]),
     };
 
     stubbedLogger = stubLogger();
@@ -99,6 +182,12 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       mockSpacesPort,
       mockAccountsPort,
       distributionRepository as unknown as IDistributionRepository,
+      packageRepository as unknown as IPackageRepository,
+      targetRepository as unknown as ITargetRepository,
+      standardsPort as unknown as IStandardsPort,
+      recipesPort as unknown as IRecipesPort,
+      skillsPort as unknown as ISkillsPort,
+      gitPort as unknown as IGitPort,
       stubbedLogger,
     );
   });
@@ -118,7 +207,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       });
     });
 
-    it('returns the package id when the latest operation is a successful add', async () => {
+    it('returns the active package with target and empty outdated lists when latest operation is a successful add', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
 
@@ -128,7 +217,24 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result).toEqual([{ targetId, packageIds: [packageId] }]);
+      expect(result).toEqual([
+        {
+          targetId,
+          target: buildTarget(targetId),
+          gitRepo,
+          packages: [
+            {
+              packageId,
+              lastDistributionStatus: DistributionStatus.success,
+              lastDistributedAt,
+              artifactCounts: { recipes: 0, standards: 0, skills: 0 },
+            },
+          ],
+          outdatedStandards: [],
+          outdatedRecipes: [],
+          outdatedSkills: [],
+        },
+      ]);
     });
 
     it('excludes the package when the latest operation is a successful remove', async () => {
@@ -154,7 +260,15 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result).toEqual([{ targetId, packageIds: [packageId] }]);
+      expect(result).toHaveLength(1);
+      expect(result[0].packages).toEqual([
+        {
+          packageId,
+          lastDistributionStatus: DistributionStatus.failure,
+          lastDistributedAt,
+          artifactCounts: { recipes: 0, standards: 0, skills: 0 },
+        },
+      ]);
     });
 
     it('excludes the package when the latest operation is a failed add', async () => {
@@ -170,6 +284,29 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       expect(result).toEqual([]);
     });
 
+    it('attaches artifact counts from the package repository', async () => {
+      const targetId = createTargetId(uuidv4());
+      const packageId = createPackageId(uuidv4());
+
+      distributionRepository.findLatestPackageOperationsBySpace.mockResolvedValue(
+        [row(targetId, packageId, 'add', DistributionStatus.success)],
+      );
+      packageRepository.countArtifactsForPackages.mockResolvedValue(
+        new Map([[packageId, { recipes: 3, standards: 2, skills: 1 }]]),
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(packageRepository.countArtifactsForPackages).toHaveBeenCalledWith([
+        packageId,
+      ]);
+      expect(result[0].packages[0].artifactCounts).toEqual({
+        recipes: 3,
+        standards: 2,
+        skills: 1,
+      });
+    });
+
     it('queries the repository with the requested space id', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
@@ -178,23 +315,65 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         [row(targetId, packageId, 'add', DistributionStatus.success)],
       );
 
-      const result = await useCase.execute(command);
+      await useCase.execute(command);
 
       expect(
         distributionRepository.findLatestPackageOperationsBySpace,
       ).toHaveBeenCalledWith(spaceId);
-      expect(result).toEqual([{ targetId, packageIds: [packageId] }]);
+      expect(
+        distributionRepository.findOutdatedDeploymentsBySpace,
+      ).toHaveBeenCalledWith(organizationId, spaceId);
+    });
+
+    it('includes a target with no active packages when it has outdated artifacts', async () => {
+      const targetId = createTargetId(uuidv4());
+
+      distributionRepository.findLatestPackageOperationsBySpace.mockResolvedValue(
+        [],
+      );
+      distributionRepository.findOutdatedDeploymentsBySpace.mockResolvedValue([
+        {
+          targetId,
+          targetName: `target-${targetId}`,
+          gitRepoId,
+          standards: [],
+          recipes: [],
+          skills: [],
+        },
+      ]);
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          target: buildTarget(targetId),
+          gitRepo,
+          packages: [],
+          outdatedStandards: [],
+          outdatedRecipes: [],
+          outdatedSkills: [],
+        },
+      ]);
     });
   });
 });
 
 describe('projectActiveDistributedPackagesByTarget', () => {
+  const lastDistributedAt = '2026-04-30T10:00:00.000Z';
+
   const row = (
     targetId: TargetId,
     packageId: PackageId,
     operation: 'add' | 'remove',
     status: DistributionStatus,
-  ): LatestPackageOperationRow => ({ targetId, packageId, operation, status });
+  ): LatestPackageOperationRow => ({
+    targetId,
+    packageId,
+    operation,
+    status,
+    lastDistributedAt,
+  });
 
   it('returns empty array when there are no rows', () => {
     expect(projectActiveDistributedPackagesByTarget([])).toEqual([]);
@@ -215,11 +394,23 @@ describe('projectActiveDistributedPackagesByTarget', () => {
       expect.arrayContaining([
         expect.objectContaining({
           targetId: targetId1,
-          packageIds: [packageId1],
+          packages: [
+            {
+              packageId: packageId1,
+              lastDistributionStatus: DistributionStatus.success,
+              lastDistributedAt,
+            },
+          ],
         }),
         expect.objectContaining({
           targetId: targetId2,
-          packageIds: [packageId2],
+          packages: [
+            {
+              packageId: packageId2,
+              lastDistributionStatus: DistributionStatus.success,
+              lastDistributedAt,
+            },
+          ],
         }),
       ]),
     );
@@ -236,9 +427,9 @@ describe('projectActiveDistributedPackagesByTarget', () => {
     ]);
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      targetId,
-      packageIds: expect.arrayContaining([packageId1, packageId2]),
-    });
+    expect(result[0].targetId).toEqual(targetId);
+    expect(result[0].packages.map((p) => p.packageId)).toEqual(
+      expect.arrayContaining([packageId1, packageId2]),
+    );
   });
 });
