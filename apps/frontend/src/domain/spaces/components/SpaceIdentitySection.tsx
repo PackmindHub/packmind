@@ -29,6 +29,7 @@ export function SpaceIdentitySection({
   onDirtyChange,
 }: Readonly<SpaceIdentitySectionProps>) {
   const [name, setName] = useState(space.name);
+  const [nameConflictError, setNameConflictError] = useState(false);
   const [selectedColor, setSelectedColor] = useState<SpaceColor>(space.color);
   const updateSpaceMutation = useUpdateSpaceMutation();
   const queryClient = useQueryClient();
@@ -74,10 +75,13 @@ export function SpaceIdentitySection({
       }
     } catch (err) {
       const status = isPackmindError(err) ? err.serverError.status : undefined;
+      if (status === 409) {
+        setNameConflictError(true);
+        return;
+      }
       const messageByStatus: Record<number, string> = {
         400: 'Invalid color selected.',
         403: "You don't have permission to update this space.",
-        409: 'Another space with a similar name already exists.',
         422: 'The default space cannot be renamed.',
       };
       pmToaster.create({
@@ -98,7 +102,7 @@ export function SpaceIdentitySection({
         </PMHeading>
       }
     >
-      <PMVStack align="stretch" gap={5} pt={4}>
+      <PMVStack align="stretch" gap={5} pt={4} width="full">
         {!canEdit && (
           <PMAlert.Root status="info" size="sm">
             <PMAlert.Indicator />
@@ -108,17 +112,27 @@ export function SpaceIdentitySection({
             </PMAlert.Description>
           </PMAlert.Root>
         )}
-        <PMField.Root disabled={nameDisabled} invalid={showNameRequiredError}>
+        <PMField.Root
+          disabled={nameDisabled}
+          invalid={showNameRequiredError || nameConflictError}
+        >
           <PMField.Label>Name</PMField.Label>
           <PMInput
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              setNameConflictError(false);
+            }}
             placeholder="Space name"
             disabled={nameDisabled}
             aria-label="Name"
           />
           {showNameRequiredError ? (
             <PMField.ErrorText>Name is required.</PMField.ErrorText>
+          ) : nameConflictError ? (
+            <PMField.ErrorText>
+              A space with this name already exists.
+            </PMField.ErrorText>
           ) : isDefaultSpace ? (
             <PMField.HelperText>
               The default space cannot be renamed.
