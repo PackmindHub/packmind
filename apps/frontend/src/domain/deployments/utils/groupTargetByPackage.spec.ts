@@ -13,8 +13,11 @@ import {
   DeployedSkillTargetInfo,
   Package,
   Recipe,
+  RecipeId,
   Skill,
+  SkillId,
   Standard,
+  StandardId,
 } from '@packmind/types';
 import {
   groupTargetByPackage,
@@ -64,6 +67,9 @@ describe('groupTargetByPackage', () => {
         recipes: [deployedRecipe],
         standards: [],
         skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
       },
     ]);
   });
@@ -192,5 +198,140 @@ describe('groupTargetByPackage', () => {
     );
 
     expect(result.map((g) => g.pkg.name)).toEqual(['alpha', 'mu', 'zeta']);
+  });
+
+  describe('with lookups', () => {
+    it('computes pending arrays from package id lists minus deployed ids', () => {
+      const deployedRecipe: Recipe = recipeFactory();
+      const undeployedRecipe: Recipe = recipeFactory();
+      const deployedStandard: Standard = standardFactory();
+      const undeployedStandard: Standard = standardFactory();
+      const deployedSkill: Skill = skillFactory();
+      const undeployedSkill: Skill = skillFactory();
+
+      const deployedRecipeInfo = createDeployedRecipeTargetInfo({
+        recipe: deployedRecipe,
+      });
+      const deployedStandardInfo = createDeployedStandardTargetInfo({
+        standard: deployedStandard,
+      });
+      const deployedSkillInfo = buildDeployedSkillTargetInfo(deployedSkill);
+
+      const pkg: Package = packageFactory({
+        name: 'alpha',
+        recipes: [deployedRecipe.id, undeployedRecipe.id],
+        standards: [deployedStandard.id, undeployedStandard.id],
+        skills: [deployedSkill.id, undeployedSkill.id],
+      });
+
+      const result = groupTargetByPackage(
+        {
+          recipes: [deployedRecipeInfo],
+          standards: [deployedStandardInfo],
+          skills: [deployedSkillInfo],
+        },
+        [pkg],
+        {
+          recipesById: new Map<RecipeId, Recipe>([
+            [deployedRecipe.id, deployedRecipe],
+            [undeployedRecipe.id, undeployedRecipe],
+          ]),
+          standardsById: new Map<StandardId, Standard>([
+            [deployedStandard.id, deployedStandard],
+            [undeployedStandard.id, undeployedStandard],
+          ]),
+          skillsById: new Map<SkillId, Skill>([
+            [deployedSkill.id, deployedSkill],
+            [undeployedSkill.id, undeployedSkill],
+          ]),
+        },
+      );
+
+      expect(result).toEqual([
+        {
+          pkg,
+          recipes: [deployedRecipeInfo],
+          standards: [deployedStandardInfo],
+          skills: [deployedSkillInfo],
+          pendingRecipes: [
+            {
+              id: undeployedRecipe.id,
+              name: undeployedRecipe.name,
+              slug: undeployedRecipe.slug,
+            },
+          ],
+          pendingStandards: [
+            {
+              id: undeployedStandard.id,
+              name: undeployedStandard.name,
+              slug: undeployedStandard.slug,
+            },
+          ],
+          pendingSkills: [
+            {
+              id: undeployedSkill.id,
+              name: undeployedSkill.name,
+              slug: undeployedSkill.slug,
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('skips ids missing from the lookup map silently', () => {
+      const knownRecipe: Recipe = recipeFactory();
+      const unknownRecipe: Recipe = recipeFactory();
+
+      const pkg: Package = packageFactory({
+        name: 'alpha',
+        recipes: [knownRecipe.id, unknownRecipe.id],
+      });
+
+      const result = groupTargetByPackage(buildEmptyTarget(), [pkg], {
+        recipesById: new Map<RecipeId, Recipe>([[knownRecipe.id, knownRecipe]]),
+        standardsById: new Map<StandardId, Standard>(),
+        skillsById: new Map<SkillId, Skill>(),
+      });
+
+      expect(result[0].pendingRecipes).toEqual([
+        {
+          id: knownRecipe.id,
+          name: knownRecipe.name,
+          slug: knownRecipe.slug,
+        },
+      ]);
+    });
+
+    it('keeps a group whose only content is pending artifacts', () => {
+      const recipe: Recipe = recipeFactory();
+      const pkg: Package = packageFactory({
+        name: 'alpha',
+        recipes: [recipe.id],
+      });
+
+      const result = groupTargetByPackage(buildEmptyTarget(), [pkg], {
+        recipesById: new Map<RecipeId, Recipe>([[recipe.id, recipe]]),
+        standardsById: new Map<StandardId, Standard>(),
+        skillsById: new Map<SkillId, Skill>(),
+      });
+
+      expect(result).toEqual([
+        {
+          pkg,
+          recipes: [],
+          standards: [],
+          skills: [],
+          pendingRecipes: [
+            {
+              id: recipe.id,
+              name: recipe.name,
+              slug: recipe.slug,
+            },
+          ],
+          pendingStandards: [],
+          pendingSkills: [],
+        },
+      ]);
+    });
   });
 });
