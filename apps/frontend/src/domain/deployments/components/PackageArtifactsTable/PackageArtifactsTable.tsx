@@ -16,6 +16,9 @@ import {
   DeployedStandardTargetInfo,
   DeployedSkillTargetInfo,
   PackageId,
+  RecipeId,
+  SkillId,
+  StandardId,
   TargetId,
 } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -33,6 +36,13 @@ export type PackageArtifactsTableProps = {
   recipes: ReadonlyArray<DeployedRecipeTargetInfo>;
   standards: ReadonlyArray<DeployedStandardTargetInfo>;
   skills: ReadonlyArray<DeployedSkillTargetInfo>;
+  pendingRecipes?: ReadonlyArray<{ id: RecipeId; name: string; slug: string }>;
+  pendingStandards?: ReadonlyArray<{
+    id: StandardId;
+    name: string;
+    slug: string;
+  }>;
+  pendingSkills?: ReadonlyArray<{ id: SkillId; name: string; slug: string }>;
   mode?: Mode;
   canDistributeFromApp: boolean;
   isDistributeReadinessLoading: boolean;
@@ -45,6 +55,7 @@ type NormalizedArtifact = {
   latestVersion: number;
   isUpToDate: boolean;
   isDeleted: boolean;
+  isPending: boolean;
   routePath?: string;
 };
 
@@ -72,6 +83,9 @@ const getGapPalette = (gap: number): 'blue' | 'orange' | 'red' => {
 };
 
 const matchesMode = (a: NormalizedArtifact, mode: Mode): boolean => {
+  if (a.isPending) {
+    return mode === 'all' || mode === 'outdated';
+  }
   if (mode === 'outdated') return !a.isUpToDate || a.isDeleted;
   if (mode === 'up-to-date') return a.isUpToDate && !a.isDeleted;
   return true;
@@ -81,6 +95,13 @@ const renderVersionCell = (
   a: NormalizedArtifact,
   mode: Mode,
 ): React.ReactNode => {
+  if (a.isPending) {
+    return (
+      <PMText variant="small" color="faded">
+        —
+      </PMText>
+    );
+  }
   if (mode !== 'outdated' && a.isUpToDate) {
     return (
       <PMBadge colorPalette="gray" size="sm">
@@ -108,6 +129,13 @@ const renderStatusCell = (
   a: NormalizedArtifact,
   mode: Mode,
 ): React.ReactNode => {
+  if (a.isPending) {
+    return (
+      <PMBadge colorPalette="orange" size="sm">
+        Pending distribution
+      </PMBadge>
+    );
+  }
   if (a.isDeleted) {
     return (
       <PMTooltip
@@ -166,6 +194,9 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
   recipes,
   standards,
   skills,
+  pendingRecipes = [],
+  pendingStandards = [],
+  pendingSkills = [],
   mode = 'all',
   canDistributeFromApp,
   isDistributeReadinessLoading,
@@ -179,11 +210,28 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
     latestVersion: d.latestVersion.version,
     isUpToDate: d.isUpToDate,
     isDeleted: !!d.isDeleted,
+    isPending: false,
     routePath:
       orgSlug && spaceSlug
         ? routes.space.toStandard(orgSlug, spaceSlug, d.standard.id)
         : undefined,
   }));
+
+  pendingStandards.forEach((s) => {
+    normalizedStandards.push({
+      kind: 'Standard',
+      name: s.name,
+      deployedVersion: 0,
+      latestVersion: 0,
+      isUpToDate: false,
+      isDeleted: false,
+      isPending: true,
+      routePath:
+        orgSlug && spaceSlug
+          ? routes.space.toStandard(orgSlug, spaceSlug, s.id)
+          : undefined,
+    });
+  });
 
   const normalizedRecipes: NormalizedArtifact[] = recipes.map((d) => ({
     kind: 'Command',
@@ -192,11 +240,28 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
     latestVersion: d.latestVersion.version,
     isUpToDate: d.isUpToDate,
     isDeleted: !!d.isDeleted,
+    isPending: false,
     routePath:
       orgSlug && spaceSlug
         ? routes.space.toCommand(orgSlug, spaceSlug, d.recipe.id)
         : undefined,
   }));
+
+  pendingRecipes.forEach((r) => {
+    normalizedRecipes.push({
+      kind: 'Command',
+      name: r.name,
+      deployedVersion: 0,
+      latestVersion: 0,
+      isUpToDate: false,
+      isDeleted: false,
+      isPending: true,
+      routePath:
+        orgSlug && spaceSlug
+          ? routes.space.toCommand(orgSlug, spaceSlug, r.id)
+          : undefined,
+    });
+  });
 
   const normalizedSkills: NormalizedArtifact[] = skills.map((d) => ({
     kind: 'Skill',
@@ -205,11 +270,28 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
     latestVersion: d.latestVersion.version,
     isUpToDate: d.isUpToDate,
     isDeleted: !!d.isDeleted,
+    isPending: false,
     routePath:
       orgSlug && spaceSlug
         ? routes.space.toSkill(orgSlug, spaceSlug, d.skill.slug)
         : undefined,
   }));
+
+  pendingSkills.forEach((s) => {
+    normalizedSkills.push({
+      kind: 'Skill',
+      name: s.name,
+      deployedVersion: 0,
+      latestVersion: 0,
+      isUpToDate: false,
+      isDeleted: false,
+      isPending: true,
+      routePath:
+        orgSlug && spaceSlug
+          ? routes.space.toSkill(orgSlug, spaceSlug, s.slug)
+          : undefined,
+    });
+  });
 
   const rows: PMTableRow[] = [
     ...sortByName(normalizedStandards.filter((a) => matchesMode(a, mode))),

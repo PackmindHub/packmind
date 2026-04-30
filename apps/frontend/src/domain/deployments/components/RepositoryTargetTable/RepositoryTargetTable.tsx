@@ -31,11 +31,21 @@ const groupHasVisibleRows = (group: PackageGroup, mode: Mode): boolean => {
     if (mode === 'up-to-date') return item.isUpToDate && !item.isDeleted;
     return true;
   };
-  return (
+
+  const hasDeployedVisible =
     group.recipes.some(matches) ||
     group.standards.some(matches) ||
-    group.skills.some(matches)
-  );
+    group.skills.some(matches);
+
+  const pendingCount =
+    group.pendingRecipes.length +
+    group.pendingStandards.length +
+    group.pendingSkills.length;
+
+  // Pending rows render only in 'all' and 'outdated' (never in 'up-to-date').
+  const hasPendingVisible = mode !== 'up-to-date' && pendingCount > 0;
+
+  return hasDeployedVisible || hasPendingVisible;
 };
 
 export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
@@ -74,6 +84,9 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             recipes={group.recipes}
             standards={group.standards}
             skills={group.skills}
+            pendingRecipes={group.pendingRecipes}
+            pendingStandards={group.pendingStandards}
+            pendingSkills={group.pendingSkills}
             mode={mode}
             canDistributeFromApp={canDistributeFromApp}
             isDistributeReadinessLoading={isDistributeReadinessLoading}

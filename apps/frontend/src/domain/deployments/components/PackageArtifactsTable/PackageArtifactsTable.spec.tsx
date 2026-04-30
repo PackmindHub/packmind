@@ -13,6 +13,7 @@ import {
 import { skillFactory, skillVersionFactory } from '@packmind/skills/test';
 import {
   createPackageId,
+  createRecipeId,
   createTargetId,
   DeployedSkillTargetInfo,
   Skill,
@@ -73,9 +74,25 @@ let lastTableRows: unknown[] = [];
 
 jest.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
-  const PMTable = ({ data }: { data: unknown[] }) => {
+  const PMTable = ({ data }: { data: Array<Record<string, unknown>> }) => {
     lastTableRows = data;
-    return <div data-testid="pm-table" data-row-count={data.length} />;
+    return (
+      <div data-testid="pm-table" data-row-count={data.length}>
+        {data.map((row, idx) => (
+          <div key={idx} data-testid="pm-table-row">
+            <div data-testid="pm-table-cell-name">
+              {row.name as React.ReactNode}
+            </div>
+            <div data-testid="pm-table-cell-version">
+              {row.version as React.ReactNode}
+            </div>
+            <div data-testid="pm-table-cell-status">
+              {row.status as React.ReactNode}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
   return { ...actual, PMTable };
 });
@@ -227,6 +244,114 @@ describe('PackageArtifactsTable', () => {
       );
 
       expect(screen.queryByText('Package')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when a pending recipe is provided', () => {
+    const pendingRecipe = {
+      id: createRecipeId('pending-recipe-1'),
+      name: 'My Pending Recipe',
+      slug: 'my-pending-recipe',
+    };
+
+    it('renders the pending recipe name in mode all', () => {
+      renderWithProvider(
+        <PackageArtifactsTable
+          orgSlug="test-org"
+          packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+          recipes={[]}
+          standards={[]}
+          skills={[]}
+          pendingRecipes={[pendingRecipe]}
+          mode="all"
+        />,
+      );
+
+      expect(screen.getByText('My Pending Recipe')).toBeInTheDocument();
+    });
+
+    it('renders the Pending distribution badge in mode all', () => {
+      renderWithProvider(
+        <PackageArtifactsTable
+          orgSlug="test-org"
+          packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+          recipes={[]}
+          standards={[]}
+          skills={[]}
+          pendingRecipes={[pendingRecipe]}
+          mode="all"
+        />,
+      );
+
+      expect(screen.getByText('Pending distribution')).toBeInTheDocument();
+    });
+
+    it('renders the pending recipe name in mode outdated', () => {
+      renderWithProvider(
+        <PackageArtifactsTable
+          orgSlug="test-org"
+          packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+          recipes={[]}
+          standards={[]}
+          skills={[]}
+          pendingRecipes={[pendingRecipe]}
+          mode="outdated"
+        />,
+      );
+
+      expect(screen.getByText('My Pending Recipe')).toBeInTheDocument();
+    });
+
+    it('renders the Pending distribution badge in mode outdated', () => {
+      renderWithProvider(
+        <PackageArtifactsTable
+          orgSlug="test-org"
+          packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+          recipes={[]}
+          standards={[]}
+          skills={[]}
+          pendingRecipes={[pendingRecipe]}
+          mode="outdated"
+        />,
+      );
+
+      expect(screen.getByText('Pending distribution')).toBeInTheDocument();
+    });
+
+    it('hides the pending recipe in mode up-to-date', () => {
+      renderWithProvider(
+        <PackageArtifactsTable
+          orgSlug="test-org"
+          packageName="my-pkg"
+          packageId={TEST_PACKAGE_ID}
+          targetId={TEST_TARGET_ID}
+          canDistributeFromApp={true}
+          isDistributeReadinessLoading={false}
+          recipes={[]}
+          standards={[]}
+          skills={[]}
+          pendingRecipes={[pendingRecipe]}
+          mode="up-to-date"
+        />,
+      );
+
+      expect(screen.queryByText('My Pending Recipe')).not.toBeInTheDocument();
     });
   });
 });

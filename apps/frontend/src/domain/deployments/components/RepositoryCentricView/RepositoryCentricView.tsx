@@ -9,7 +9,13 @@ import { GitRepo } from '@packmind/types';
 import {
   DeployedRecipeInfo,
   Package,
+  Recipe,
+  RecipeId,
   RepositoryDeploymentStatus,
+  Skill,
+  SkillId,
+  Standard,
+  StandardId,
   TargetDeploymentStatus,
   TargetStandardDeploymentStatus,
   TargetSkillDeploymentStatus,
@@ -19,6 +25,9 @@ import {
 import { RepositoryTargetTable } from '../RepositoryTargetTable/RepositoryTargetTable';
 import { groupTargetByPackage } from '../../utils/groupTargetByPackage';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
+import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
+import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
 
 interface CombinedRepositoryDeploymentStatus {
   gitRepo: GitRepo;
@@ -486,6 +495,28 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
     return set;
   }, [gitProvidersResponse]);
 
+  const { data: recipesData } = useGetRecipesQuery();
+  const { data: standardsData } = useGetStandardsQuery();
+  const { data: skillsData } = useGetSkillsQuery();
+
+  const recipesById = useMemo(() => {
+    const map = new Map<RecipeId, Recipe>();
+    (recipesData ?? []).forEach((r) => map.set(r.id, r));
+    return map;
+  }, [recipesData]);
+
+  const standardsById = useMemo(() => {
+    const map = new Map<StandardId, Standard>();
+    (standardsData?.standards ?? []).forEach((s) => map.set(s.id, s));
+    return map;
+  }, [standardsData]);
+
+  const skillsById = useMemo(() => {
+    const map = new Map<SkillId, Skill>();
+    (skillsData ?? []).forEach((s) => map.set(s.id, s));
+    return map;
+  }, [skillsData]);
+
   const shouldUseTargetData =
     recipeTargets.length > 0 ||
     standardTargets.length > 0 ||
@@ -692,6 +723,11 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
                         skills: t.skills,
                       },
                       packages,
+                      {
+                        recipesById,
+                        standardsById,
+                        skillsById,
+                      },
                     )}
                     mode={artifactStatusFilter}
                     canDistributeFromApp={
