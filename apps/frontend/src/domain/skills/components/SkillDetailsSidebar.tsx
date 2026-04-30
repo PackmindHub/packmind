@@ -83,6 +83,7 @@ export const SkillDetailsSidebar = ({
       logo={false}
       showLogoContainer={false}
       width="270px"
+      overrideChildrenStackCss={{ minH: 0 }}
       headerNav={
         <PMBox width="full" padding={3}>
           <PMNativeSelect
@@ -106,6 +107,8 @@ export const SkillDetailsSidebar = ({
           px={2}
           gap={2}
           width="full"
+          flex="1 1 0"
+          minH={0}
           overflow="hidden"
         >
           <SkillFileTree
