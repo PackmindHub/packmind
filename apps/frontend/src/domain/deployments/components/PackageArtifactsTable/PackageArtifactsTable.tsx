@@ -3,6 +3,7 @@ import {
   PMBadge,
   PMHStack,
   PMLink,
+  PMSegmentedBar,
   PMTable,
   PMTableColumn,
   PMTableRow,
@@ -303,6 +304,17 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
     return null;
   }
 
+  const allDeployed = [...recipes, ...standards, ...skills];
+  const inSyncCount = allDeployed.filter(
+    (a) => a.isUpToDate && !a.isDeleted,
+  ).length;
+  const driftCount = allDeployed.filter(
+    (a) => !a.isUpToDate || a.isDeleted,
+  ).length;
+  const pendingCount =
+    pendingRecipes.length + pendingStandards.length + pendingSkills.length;
+  const totalArtifacts = inSyncCount + driftCount + pendingCount;
+
   return (
     <PMVStack
       align="stretch"
@@ -320,13 +332,37 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
           </PMBadge>
           <PMText variant="body-important">{packageName}</PMText>
         </PMHStack>
-        <DistributePackageToTargetButton
-          packageId={packageId}
-          packageName={packageName}
-          targetId={targetId}
-          canDistributeFromApp={canDistributeFromApp}
-          isDistributeReadinessLoading={isDistributeReadinessLoading}
-        />
+        <PMHStack gap={3} align="center">
+          {totalArtifacts > 0 && (
+            <PMSegmentedBar
+              width="160px"
+              segments={[
+                {
+                  value: inSyncCount,
+                  colorPalette: 'green',
+                  label: `${inSyncCount} in sync`,
+                },
+                {
+                  value: driftCount,
+                  colorPalette: 'red',
+                  label: `${driftCount} outdated`,
+                },
+                {
+                  value: pendingCount,
+                  colorPalette: 'orange',
+                  label: `${pendingCount} pending`,
+                },
+              ]}
+            />
+          )}
+          <DistributePackageToTargetButton
+            packageId={packageId}
+            packageName={packageName}
+            targetId={targetId}
+            canDistributeFromApp={canDistributeFromApp}
+            isDistributeReadinessLoading={isDistributeReadinessLoading}
+          />
+        </PMHStack>
       </PMHStack>
       <PMTable columns={TABLE_COLUMNS} data={rows} size="sm" />
     </PMVStack>

@@ -23,3 +23,9 @@ export { PMStatus } from './PMStatus/PMStatus';
 export { PMSkeleton } from './PMSkeleton/PMSkeleton';
 export type { PMSkeletonProps } from './PMSkeleton/PMSkeleton';
 export { PMProgress } from './PMProgress';
+export { PMSegmentedBar } from './PMSegmentedBar';
+export type {
+  PMSegmentedBarProps,
+  PMSegmentedBarSegment,
+  PMSegmentedBarPalette,
+} from './PMSegmentedBar';
