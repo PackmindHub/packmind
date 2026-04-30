@@ -350,13 +350,7 @@ export class DeploymentsGatewayApi
   };
 
   listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase> =
-    async ({
-      organizationId,
-      spaceId,
-    }: {
-      organizationId: OrganizationId;
-      spaceId: SpaceId;
-    }) => {
+    async ({ organizationId, spaceId }) => {
       return this._api.get(
         `/organizations/${organizationId}/deployments/spaces/${spaceId}/distributed-packages`,
       );
