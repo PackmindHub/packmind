@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { LuX } from 'react-icons/lu';
+import { LuChevronDown, LuX } from 'react-icons/lu';
 
 import {
   PMBadge,
@@ -80,6 +80,7 @@ export function SpaceMembersTable({
         const roleSelect = (
           <PMNativeSelect
             size="sm"
+            minWidth="120px"
             value={member.role}
             disabled={roleDisabled}
             onChange={(e) =>
@@ -92,6 +93,7 @@ export function SpaceMembersTable({
               { value: 'admin', label: 'Admin' },
               { value: 'member', label: 'Member' },
             ]}
+            icon={<LuChevronDown />}
           />
         );
 
