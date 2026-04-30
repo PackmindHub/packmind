@@ -59,11 +59,17 @@ export function SpaceMembersList({
 
   const members = useMemo<SpaceMember[]>(
     () =>
-      (data?.members ?? []).map((m) => ({
-        id: m.userId,
-        displayName: m.displayName,
-        role: m.role,
-      })),
+      (data?.members ?? [])
+        .map((m) => ({
+          id: m.userId,
+          displayName: m.displayName,
+          role: m.role,
+        }))
+        .sort((a, b) =>
+          a.displayName.localeCompare(b.displayName, undefined, {
+            sensitivity: 'base',
+          }),
+        ),
     [data],
   );
 
