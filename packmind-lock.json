@@ -16,7 +16,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-29T08:54:37.777Z",
+  "installedAt": "2026-04-30T03:10:07.829Z",
   "artifacts": {
     "command:creating-end-user-documentation-for-packmind": {
       "name": "Creating End-User Documentation for Packmind",
@@ -379,6 +379,38 @@
         {
           "path": ".cursor/rules/packmind/standard-compliance-logging-personal-information.mdc",
           "agent": "cursor"
+        }
+      ]
+    },
+    "skill:release-app": {
+      "name": "release-app",
+      "type": "skill",
+      "id": "0ae1ae43-bbab-4af9-a693-854d61d7cf46",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/release-app/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/release-app/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/release-app/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/release-app/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
         }
       ]
     },
@@ -766,6 +798,70 @@
         }
       ]
     },
+    "skill:playbook-cli-audit": {
+      "name": "playbook-cli-audit",
+      "type": "skill",
+      "id": "dcfa9fec-ec46-40ea-b03a-e2f316cc0088",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/playbook-cli-audit/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/playbook-cli-audit/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/playbook-cli-audit/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/playbook-cli-audit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "skill:feature-flags-audit": {
+      "name": "feature-flags-audit",
+      "type": "skill",
+      "id": "dd6d38fe-3685-4256-855b-9467c5cf1c67",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/feature-flags-audit/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/feature-flags-audit/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/feature-flags-audit/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-flags-audit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
     "skill:ux-microcopy": {
       "name": "ux-microcopy",
       "type": "skill",
@@ -825,134 +921,6 @@
         },
         {
           "path": ".gitlab/duo/skills/git-commit-guidelines/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
-    "skill:release-app": {
-      "name": "release-app",
-      "type": "skill",
-      "id": "0ae1ae43-bbab-4af9-a693-854d61d7cf46",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": [
-        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
-      ],
-      "files": [
-        {
-          "path": ".github/skills/release-app/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/release-app/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/release-app/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/release-app/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
-    "skill:feature-flags-audit": {
-      "name": "feature-flags-audit",
-      "type": "skill",
-      "id": "dd6d38fe-3685-4256-855b-9467c5cf1c67",
-      "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": [
-        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
-      ],
-      "files": [
-        {
-          "path": ".github/skills/feature-flags-audit/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/feature-flags-audit/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/feature-flags-audit/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/feature-flags-audit/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
-    "skill:playbook-cli-audit": {
-      "name": "playbook-cli-audit",
-      "type": "skill",
-      "id": "dcfa9fec-ec46-40ea-b03a-e2f316cc0088",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": [
-        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
-      ],
-      "files": [
-        {
-          "path": ".github/skills/playbook-cli-audit/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/playbook-cli-audit/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/playbook-cli-audit/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/playbook-cli-audit/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
-    "skill:adding-ai-agent-rendering-system": {
-      "name": "adding-ai-agent-rendering-system",
-      "type": "skill",
-      "id": "3fd90109-62dc-47de-803e-b311442808b2",
-      "version": 1,
-      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
-      "packageIds": [
-        "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
-      ],
-      "files": [
-        {
-          "path": ".github/skills/adding-ai-agent-rendering-system/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/adding-ai-agent-rendering-system/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/adding-ai-agent-rendering-system/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
         }
@@ -1198,51 +1166,35 @@
         }
       ]
     },
-    "skill:working-with-playground-app": {
-      "name": "working-with-playground-app",
+    "skill:adding-ai-agent-rendering-system": {
+      "name": "adding-ai-agent-rendering-system",
       "type": "skill",
-      "id": "7e03d40b-9ae6-4a85-92b5-8183b9e8c558",
-      "version": 2,
-      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "id": "3fd90109-62dc-47de-803e-b311442808b2",
+      "version": 1,
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
-        "ba8e2fbe-f00a-4490-9618-57b10d22470c"
+        "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
       "files": [
         {
-          "path": ".github/skills/working-with-playground-app/SKILL.md",
+          "path": ".github/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "copilot",
           "isSkillDefinition": true
         },
         {
-          "path": ".github/skills/working-with-playground-app/references/frontend-domain-structure.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/skills/working-with-playground-app/SKILL.md",
+          "path": ".claude/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "claude",
           "isSkillDefinition": true
         },
         {
-          "path": ".claude/skills/working-with-playground-app/references/frontend-domain-structure.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/skills/working-with-playground-app/SKILL.md",
+          "path": ".cursor/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "cursor",
           "isSkillDefinition": true
         },
         {
-          "path": ".cursor/skills/working-with-playground-app/references/frontend-domain-structure.md",
-          "agent": "cursor"
-        },
-        {
-          "path": ".gitlab/duo/skills/working-with-playground-app/SKILL.md",
+          "path": ".gitlab/duo/skills/adding-ai-agent-rendering-system/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/working-with-playground-app/references/frontend-domain-structure.md",
-          "agent": "gitlab_duo"
         }
       ]
     },
@@ -1290,6 +1242,54 @@
         },
         {
           "path": ".gitlab/duo/skills/working-with-pm-design-kit/references/component-catalog.md",
+          "agent": "gitlab_duo"
+        }
+      ]
+    },
+    "skill:working-with-playground-app": {
+      "name": "working-with-playground-app",
+      "type": "skill",
+      "id": "7e03d40b-9ae6-4a85-92b5-8183b9e8c558",
+      "version": 2,
+      "spaceId": "347c9957-dd09-4c5e-a3d0-21e9785524f1",
+      "packageIds": [
+        "ba8e2fbe-f00a-4490-9618-57b10d22470c"
+      ],
+      "files": [
+        {
+          "path": ".github/skills/working-with-playground-app/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/skills/working-with-playground-app/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/skills/working-with-playground-app/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".gitlab/duo/skills/working-with-playground-app/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/working-with-playground-app/references/frontend-domain-structure.md",
           "agent": "gitlab_duo"
         }
       ]
