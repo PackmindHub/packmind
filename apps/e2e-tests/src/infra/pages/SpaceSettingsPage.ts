@@ -81,9 +81,11 @@ export class SpaceSettingsPage
   }
 
   async waitForIdentityUpdateError(): Promise<string> {
-    const toast = this.page.locator('[data-type="error"]');
-    await toast.waitFor({ state: 'visible', timeout: 10000 });
-    return toast.innerText();
+    const errorText = this.page.getByText(
+      'Another space with a similar name already exists.',
+    );
+    await errorText.waitFor({ state: 'visible', timeout: 10000 });
+    return errorText.innerText();
   }
 
   expectedUrl(): string | RegExp {

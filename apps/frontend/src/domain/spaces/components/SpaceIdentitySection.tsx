@@ -131,7 +131,7 @@ export function SpaceIdentitySection({
             <PMField.ErrorText>Name is required.</PMField.ErrorText>
           ) : nameConflictError ? (
             <PMField.ErrorText>
-              A space with this name already exists.
+              Another space with a similar name already exists.
             </PMField.ErrorText>
           ) : isDefaultSpace ? (
             <PMField.HelperText>
