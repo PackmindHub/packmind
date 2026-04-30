@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { PMAlert, PMBox, PMSpinner, PMVStack } from '@packmind/ui';
-import type { SpaceManagementListItem } from '@packmind/types';
 import {
   useGetOrganizationSpacesForManagementQuery,
   useGetSpacesQuery,
@@ -15,8 +14,7 @@ import { SpaceManagementDrawer } from './SpaceManagementDrawer';
 export const SpacesManagementPage: React.FC = () => {
   const { organization } = useAuthContext();
   const [page] = useState(1);
-  const [selectedSpace, setSelectedSpace] =
-    useState<SpaceManagementListItem | null>(null);
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const orgId = organization?.id ?? '';
   const { data, isLoading, isError } =
     useGetOrganizationSpacesForManagementQuery(orgId, page);
@@ -24,6 +22,11 @@ export const SpacesManagementPage: React.FC = () => {
   const memberSpaceIds = useMemo(
     () => new Set((mySpaces ?? []).map((s) => s.id)),
     [mySpaces],
+  );
+
+  const selectedSpace = useMemo(
+    () => data?.items.find((item) => item.id === selectedSpaceId) ?? null,
+    [selectedSpaceId, data],
   );
 
   if (isError) {
@@ -53,10 +56,7 @@ export const SpacesManagementPage: React.FC = () => {
   );
 
   const handleSelectSpace = (selected: { id: string }) => {
-    const raw = data.items.find((item) => item.id === selected.id);
-    if (raw) {
-      setSelectedSpace(raw);
-    }
+    setSelectedSpaceId(selected.id);
   };
 
   return (
@@ -81,7 +81,7 @@ export const SpacesManagementPage: React.FC = () => {
       /> */}
       <SpaceManagementDrawer
         space={selectedSpace}
-        onClose={() => setSelectedSpace(null)}
+        onClose={() => setSelectedSpaceId(null)}
       />
     </PMVStack>
   );
