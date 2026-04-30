@@ -31,7 +31,11 @@ export function SpaceGeneralSettings() {
           featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
           userEmail={user?.email}
         >
-          <SpaceIdentitySection space={space} canEdit={canEditIdentity} />
+          <SpaceIdentitySection
+            key={space.id}
+            space={space}
+            canEdit={canEditIdentity}
+          />
         </PMFeatureFlag>
       )}
       {isSpaceAdmin && !space?.isDefaultSpace && <SpaceAccessSection />}
