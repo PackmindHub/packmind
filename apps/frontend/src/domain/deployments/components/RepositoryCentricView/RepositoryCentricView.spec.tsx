@@ -57,6 +57,19 @@ jest.mock('../../../git/api/queries/GitProviderQueries', () => ({
   }),
 }));
 
+const mockUseListActiveDistributedPackagesBySpaceQuery = jest.fn();
+jest.mock('../../api/queries/DeploymentsQueries', () => ({
+  ...jest.requireActual('../../api/queries/DeploymentsQueries'),
+  useListActiveDistributedPackagesBySpaceQuery: (...args: unknown[]) =>
+    mockUseListActiveDistributedPackagesBySpaceQuery(...args),
+}));
+
+beforeEach(() => {
+  mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
+    data: undefined,
+  });
+});
+
 // Mock PMTable to avoid internal UI hook/state issues in tests
 jest.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
@@ -93,6 +106,9 @@ describe('RepositoryCentricView', () => {
       name: 'pkg-recipe',
       recipes: [recipeInfo.recipe.id],
     });
+    mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
+      data: [{ targetId: target.id, packageIds: [pkg.id] }],
+    });
 
     renderWithProvider(
       <RepositoryCentricView
@@ -118,6 +134,9 @@ describe('RepositoryCentricView', () => {
     const pkg = packageFactory({
       name: 'pkg-standard',
       standards: [standardInfo.standard.id],
+    });
+    mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
+      data: [{ targetId: target.id, packageIds: [pkg.id] }],
     });
 
     renderWithProvider(
@@ -159,6 +178,12 @@ describe('RepositoryCentricView', () => {
       name: 'pkg-mixed',
       recipes: [recipeInfo.recipe.id],
       standards: [standardInfo.standard.id],
+    });
+    mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
+      data: [
+        { targetId: t1.id, packageIds: [pkg.id] },
+        { targetId: t2.id, packageIds: [pkg.id] },
+      ],
     });
 
     renderWithProvider(
@@ -964,6 +989,9 @@ describe('RepositoryCentricView', () => {
       const beta = packageFactory({
         name: 'beta',
         recipes: [recipeInfo.recipe.id],
+      });
+      mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
+        data: [{ targetId: target.id, packageIds: [alpha.id, beta.id] }],
       });
 
       renderWithProvider(

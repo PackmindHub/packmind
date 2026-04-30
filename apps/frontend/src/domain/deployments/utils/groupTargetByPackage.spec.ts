@@ -59,6 +59,8 @@ describe('groupTargetByPackage', () => {
     const result = groupTargetByPackage(
       { ...buildEmptyTarget(), recipes: [deployedRecipe] },
       [pkg],
+      undefined,
+      new Set([pkg.id]),
     );
 
     expect(result).toEqual([
@@ -89,6 +91,8 @@ describe('groupTargetByPackage', () => {
     const result = groupTargetByPackage(
       { ...buildEmptyTarget(), standards: [deployedStandard] },
       [pkgA, pkgB],
+      undefined,
+      new Set([pkgA.id, pkgB.id]),
     );
 
     expect(result.map((g) => g.pkg.name)).toEqual(['alpha', 'beta']);
@@ -109,6 +113,8 @@ describe('groupTargetByPackage', () => {
     const result = groupTargetByPackage(
       { ...buildEmptyTarget(), standards: [deployedStandard] },
       [pkgA, pkgB],
+      undefined,
+      new Set([pkgA.id, pkgB.id]),
     );
 
     expect(result.flatMap((g) => g.standards)).toEqual([
@@ -133,6 +139,8 @@ describe('groupTargetByPackage', () => {
     const result = groupTargetByPackage(
       { ...buildEmptyTarget(), recipes: [deployedRecipe] },
       [matchingPackage, unrelatedPackage],
+      undefined,
+      new Set([matchingPackage.id, unrelatedPackage.id]),
     );
 
     expect(result.map((g) => g.pkg.name)).toEqual(['alpha']);
@@ -142,7 +150,12 @@ describe('groupTargetByPackage', () => {
     const recipe = recipeFactory();
     const pkg = packageFactory({ name: 'alpha', recipes: [recipe.id] });
 
-    const result = groupTargetByPackage(buildEmptyTarget(), [pkg]);
+    const result = groupTargetByPackage(
+      buildEmptyTarget(),
+      [pkg],
+      undefined,
+      new Set(),
+    );
 
     expect(result).toEqual([]);
   });
@@ -154,6 +167,8 @@ describe('groupTargetByPackage', () => {
     const result = groupTargetByPackage(
       { ...buildEmptyTarget(), recipes: [deployedRecipe] },
       [],
+      undefined,
+      new Set(),
     );
 
     expect(result).toEqual([]);
@@ -195,6 +210,8 @@ describe('groupTargetByPackage', () => {
         skills: [deployedSkill],
       },
       [zetaPackage, middlePackage, alphaPackage],
+      undefined,
+      new Set([zetaPackage.id, middlePackage.id, alphaPackage.id]),
     );
 
     expect(result.map((g) => g.pkg.name)).toEqual(['alpha', 'mu', 'zeta']);
@@ -245,6 +262,7 @@ describe('groupTargetByPackage', () => {
             [undeployedSkill.id, undeployedSkill],
           ]),
         },
+        new Set([pkg.id]),
       );
 
       expect(result).toEqual([
@@ -287,11 +305,18 @@ describe('groupTargetByPackage', () => {
         recipes: [knownRecipe.id, unknownRecipe.id],
       });
 
-      const result = groupTargetByPackage(buildEmptyTarget(), [pkg], {
-        recipesById: new Map<RecipeId, Recipe>([[knownRecipe.id, knownRecipe]]),
-        standardsById: new Map<StandardId, Standard>(),
-        skillsById: new Map<SkillId, Skill>(),
-      });
+      const result = groupTargetByPackage(
+        buildEmptyTarget(),
+        [pkg],
+        {
+          recipesById: new Map<RecipeId, Recipe>([
+            [knownRecipe.id, knownRecipe],
+          ]),
+          standardsById: new Map<StandardId, Standard>(),
+          skillsById: new Map<SkillId, Skill>(),
+        },
+        new Set([pkg.id]),
+      );
 
       expect(result[0].pendingRecipes).toEqual([
         {
@@ -302,36 +327,47 @@ describe('groupTargetByPackage', () => {
       ]);
     });
 
-    it('keeps a group whose only content is pending artifacts', () => {
+    it('drops a group whose package is not in the active set', () => {
       const recipe: Recipe = recipeFactory();
       const pkg: Package = packageFactory({
         name: 'alpha',
         recipes: [recipe.id],
       });
 
-      const result = groupTargetByPackage(buildEmptyTarget(), [pkg], {
-        recipesById: new Map<RecipeId, Recipe>([[recipe.id, recipe]]),
-        standardsById: new Map<StandardId, Standard>(),
-        skillsById: new Map<SkillId, Skill>(),
+      const result = groupTargetByPackage(
+        buildEmptyTarget(),
+        [pkg],
+        {
+          recipesById: new Map<RecipeId, Recipe>([[recipe.id, recipe]]),
+          standardsById: new Map<StandardId, Standard>(),
+          skillsById: new Map<SkillId, Skill>(),
+        },
+        new Set(), // pkg is NOT in the active set
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('drops a group when shared deployed artifacts would otherwise match an inactive package', () => {
+      const recipe: Recipe = recipeFactory();
+      const deployedRecipe = createDeployedRecipeTargetInfo({ recipe });
+      const pkgA: Package = packageFactory({
+        name: 'alpha',
+        recipes: [recipe.id],
+      });
+      const pkgB: Package = packageFactory({
+        name: 'beta',
+        recipes: [recipe.id],
       });
 
-      expect(result).toEqual([
-        {
-          pkg,
-          recipes: [],
-          standards: [],
-          skills: [],
-          pendingRecipes: [
-            {
-              id: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-            },
-          ],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-      ]);
+      const result = groupTargetByPackage(
+        { ...buildEmptyTarget(), recipes: [deployedRecipe] },
+        [pkgA, pkgB],
+        undefined,
+        new Set([pkgA.id]), // only A is active for this target
+      );
+
+      expect(result.map((g) => g.pkg.name)).toEqual(['alpha']);
     });
   });
 });

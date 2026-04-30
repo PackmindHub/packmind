@@ -1,5 +1,6 @@
 import {
   Package,
+  PackageId,
   Recipe,
   RecipeId,
   Skill,
@@ -54,10 +55,13 @@ export type TargetArtifactsForGrouping = {
 export function groupTargetByPackage(
   target: TargetArtifactsForGrouping,
   packages: ReadonlyArray<Package>,
-  lookups?: GroupTargetByPackageLookups,
+  lookups: GroupTargetByPackageLookups | undefined,
+  activePackageIds: ReadonlySet<PackageId>,
 ): PackageGroup[] {
   return packages
-    .map((pkg) => {
+    .map((pkg): PackageGroup | null => {
+      if (!activePackageIds.has(pkg.id)) return null;
+
       const deployedRecipes = target.recipes.filter((r) =>
         pkg.recipes.includes(r.recipe.id),
       );
@@ -110,6 +114,7 @@ export function groupTargetByPackage(
         pendingSkills,
       };
     })
+    .filter((g): g is PackageGroup => g !== null)
     .filter(
       (g) =>
         g.recipes.length +

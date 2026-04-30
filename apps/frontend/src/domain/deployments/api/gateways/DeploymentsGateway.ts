@@ -19,6 +19,7 @@ import {
   IListDistributionsByStandard,
   IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
+  IListActiveDistributedPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
@@ -347,4 +348,17 @@ export class DeploymentsGatewayApi
       { params: { spaceId } },
     );
   };
+
+  listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase> =
+    async ({
+      organizationId,
+      spaceId,
+    }: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+    }) => {
+      return this._api.get(
+        `/organizations/${organizationId}/deployments/spaces/${spaceId}/distributed-packages`,
+      );
+    };
 }

@@ -9,6 +9,7 @@ import {
   IListDistributionsByStandard,
   IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
+  IListActiveDistributedPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
@@ -55,4 +56,5 @@ export interface IDeploymentsGateway {
   getDashboardKpi: NewGateway<IGetDashboardKpi>;
   getDashboardOutdated: NewGateway<IGetDashboardOutdated>;
   getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
+  listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase>;
 }

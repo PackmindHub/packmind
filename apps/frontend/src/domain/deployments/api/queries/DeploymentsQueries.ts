@@ -40,6 +40,7 @@ import {
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_TARGETS_BY_REPOSITORY_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DISTRIBUTIONS_KEY,
@@ -92,6 +93,33 @@ export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
       });
     },
     enabled: !!organization?.id,
+  });
+};
+
+export const useListActiveDistributedPackagesBySpaceQuery = (
+  spaceId: SpaceId | undefined,
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [...LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY, spaceId],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch active distributed packages',
+        );
+      }
+      if (!spaceId) {
+        throw new Error(
+          'Space ID is required to fetch active distributed packages',
+        );
+      }
+      return deploymentsGateways.listActiveDistributedPackagesBySpace({
+        organizationId: organization.id,
+        spaceId,
+      });
+    },
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 
@@ -500,6 +528,9 @@ export const useDeployPackagesMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],

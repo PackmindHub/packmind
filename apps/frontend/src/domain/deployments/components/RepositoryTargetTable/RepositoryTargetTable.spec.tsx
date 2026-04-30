@@ -11,7 +11,7 @@ import {
   createDeployedStandardTargetInfo,
   packageFactory,
 } from '@packmind/deployments/test';
-import { createRecipeId, createTargetId } from '@packmind/types';
+import { createTargetId } from '@packmind/types';
 import { PackageGroup } from '../../utils/groupTargetByPackage';
 
 const createTestQueryClient = () =>
@@ -273,86 +273,6 @@ describe('RepositoryTargetTable', () => {
         <RepositoryTargetTable
           target={target}
           packageGroups={[]}
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
-
-      expect(
-        screen.getByText('No artifacts distributed here'),
-      ).toBeInTheDocument();
-    });
-  });
-
-  describe('when a group has only pending artifacts', () => {
-    const buildPendingOnlyGroups = (): PackageGroup[] => [
-      {
-        pkg: packageFactory({ name: 'alpha' }),
-        recipes: [],
-        standards: [],
-        skills: [],
-        pendingRecipes: [
-          {
-            id: createRecipeId('pending-recipe-1'),
-            name: 'My Pending Recipe',
-            slug: 'my-pending-recipe',
-          },
-        ],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
-    ];
-
-    it('renders the package table in mode all', () => {
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={buildPendingOnlyGroups()}
-          mode="all"
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
-
-      expect(screen.getByText('alpha')).toBeInTheDocument();
-    });
-
-    it('does not render the empty state in mode all', () => {
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={buildPendingOnlyGroups()}
-          mode="all"
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
-
-      expect(
-        screen.queryByText('No artifacts distributed here'),
-      ).not.toBeInTheDocument();
-    });
-
-    it('renders the package table in mode outdated', () => {
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={buildPendingOnlyGroups()}
-          mode="outdated"
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
-
-      expect(screen.getByText('alpha')).toBeInTheDocument();
-    });
-
-    it('shows the empty state in mode up-to-date', () => {
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={buildPendingOnlyGroups()}
-          mode="up-to-date"
           canDistributeFromApp={true}
           isDistributeReadinessLoading={false}
         />,

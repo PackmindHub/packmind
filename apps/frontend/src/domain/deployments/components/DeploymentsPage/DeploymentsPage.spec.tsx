@@ -89,6 +89,11 @@ jest.mock('../../api/queries/DeploymentsQueries', () => ({
     isLoading: false,
     isError: false,
   })),
+  useListActiveDistributedPackagesBySpaceQuery: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+  })),
 }));
 
 // Mock useCurrentSpace hook
