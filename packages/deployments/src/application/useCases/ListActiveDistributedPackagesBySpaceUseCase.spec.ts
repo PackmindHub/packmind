@@ -11,10 +11,14 @@ import {
   IAccountsPort,
   ISpacesPort,
   ListActiveDistributedPackagesBySpaceCommand,
+  PackageId,
+  TargetId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { distributionFactory, targetFactory } from '../../../test';
-import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import {
+  IDistributionRepository,
+  LatestPackageOperationRow,
+} from '../../domain/repositories/IDistributionRepository';
 import {
   ListActiveDistributedPackagesBySpaceUseCase,
   projectActiveDistributedPackagesByTarget,
@@ -25,7 +29,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let distributionRepository: jest.Mocked<
-    Pick<IDistributionRepository, 'findBySpaceId'>
+    Pick<IDistributionRepository, 'findLatestPackageOperationsBySpace'>
   >;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -59,6 +63,13 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     spaceId,
   };
 
+  const row = (
+    targetId: TargetId,
+    packageId: PackageId,
+    operation: 'add' | 'remove',
+    status: DistributionStatus,
+  ): LatestPackageOperationRow => ({ targetId, packageId, operation, status });
+
   beforeEach(() => {
     mockAccountsPort = {
       getUserById: jest.fn().mockResolvedValue(buildUser()),
@@ -79,7 +90,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     } as unknown as jest.Mocked<ISpacesPort>;
 
     distributionRepository = {
-      findBySpaceId: jest.fn(),
+      findLatestPackageOperationsBySpace: jest.fn(),
     };
 
     stubbedLogger = stubLogger();
@@ -107,199 +118,85 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       });
     });
 
-    it('returns the package id when the latest distribution is a successful add', async () => {
+    it('returns the package id when the latest operation is a successful add', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
-      const distribution = distributionFactory({
-        target: targetFactory({ id: targetId }),
-        status: DistributionStatus.success,
-        distributedPackages: [
-          {
-            id: distribution_package_id(),
-            distributionId: distribution_id(),
-            packageId,
-            operation: 'add',
-            standardVersions: [],
-            recipeVersions: [],
-            skillVersions: [],
-          },
-        ],
-        createdAt: new Date('2026-04-29').toISOString(),
-      });
 
-      distributionRepository.findBySpaceId.mockResolvedValue([distribution]);
+      distributionRepository.findLatestPackageOperationsBySpace.mockResolvedValue(
+        [row(targetId, packageId, 'add', DistributionStatus.success)],
+      );
 
       const result = await useCase.execute(command);
 
       expect(result).toEqual([{ targetId, packageIds: [packageId] }]);
     });
 
-    it('excludes the package when the latest distribution is a successful remove', async () => {
+    it('excludes the package when the latest operation is a successful remove', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
 
-      const addDistribution = distributionFactory({
-        target: targetFactory({ id: targetId }),
-        status: DistributionStatus.success,
-        distributedPackages: [
-          {
-            id: distribution_package_id(),
-            distributionId: distribution_id(),
-            packageId,
-            operation: 'add',
-            standardVersions: [],
-            recipeVersions: [],
-            skillVersions: [],
-          },
-        ],
-        createdAt: new Date('2026-04-28').toISOString(),
-      });
-
-      const removeDistribution = distributionFactory({
-        target: targetFactory({ id: targetId }),
-        status: DistributionStatus.success,
-        distributedPackages: [
-          {
-            id: distribution_package_id(),
-            distributionId: distribution_id(),
-            packageId,
-            operation: 'remove',
-            standardVersions: [],
-            recipeVersions: [],
-            skillVersions: [],
-          },
-        ],
-        createdAt: new Date('2026-04-29').toISOString(),
-      });
-
-      distributionRepository.findBySpaceId.mockResolvedValue([
-        removeDistribution,
-        addDistribution,
-      ]);
+      distributionRepository.findLatestPackageOperationsBySpace.mockResolvedValue(
+        [row(targetId, packageId, 'remove', DistributionStatus.success)],
+      );
 
       const result = await useCase.execute(command);
 
       expect(result).toEqual([]);
     });
 
-    it('includes the package when the latest distribution is a failed remove', async () => {
+    it('includes the package when the latest operation is a failed remove', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
 
-      const addDistribution = distributionFactory({
-        target: targetFactory({ id: targetId }),
-        status: DistributionStatus.success,
-        distributedPackages: [
-          {
-            id: distribution_package_id(),
-            distributionId: distribution_id(),
-            packageId,
-            operation: 'add',
-            standardVersions: [],
-            recipeVersions: [],
-            skillVersions: [],
-          },
-        ],
-        createdAt: new Date('2026-04-28').toISOString(),
-      });
-
-      const failedRemoveDistribution = distributionFactory({
-        target: targetFactory({ id: targetId }),
-        status: DistributionStatus.failure,
-        distributedPackages: [
-          {
-            id: distribution_package_id(),
-            distributionId: distribution_id(),
-            packageId,
-            operation: 'remove',
-            standardVersions: [],
-            recipeVersions: [],
-            skillVersions: [],
-          },
-        ],
-        createdAt: new Date('2026-04-29').toISOString(),
-      });
-
-      distributionRepository.findBySpaceId.mockResolvedValue([
-        failedRemoveDistribution,
-        addDistribution,
-      ]);
+      distributionRepository.findLatestPackageOperationsBySpace.mockResolvedValue(
+        [row(targetId, packageId, 'remove', DistributionStatus.failure)],
+      );
 
       const result = await useCase.execute(command);
 
-      expect(result).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ targetId, packageIds: [packageId] }),
-        ]),
-      );
+      expect(result).toEqual([{ targetId, packageIds: [packageId] }]);
     });
 
-    it('excludes the package when the latest distribution is a failed add', async () => {
+    it('excludes the package when the latest operation is a failed add', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
 
-      const failedAddDistribution = distributionFactory({
-        target: targetFactory({ id: targetId }),
-        status: DistributionStatus.failure,
-        distributedPackages: [
-          {
-            id: distribution_package_id(),
-            distributionId: distribution_id(),
-            packageId,
-            operation: 'add',
-            standardVersions: [],
-            recipeVersions: [],
-            skillVersions: [],
-          },
-        ],
-        createdAt: new Date('2026-04-29').toISOString(),
-      });
-
-      distributionRepository.findBySpaceId.mockResolvedValue([
-        failedAddDistribution,
-      ]);
+      distributionRepository.findLatestPackageOperationsBySpace.mockResolvedValue(
+        [row(targetId, packageId, 'add', DistributionStatus.failure)],
+      );
 
       const result = await useCase.execute(command);
 
       expect(result).toEqual([]);
     });
 
-    it('returns only distributions scoped to packages from the queried space', async () => {
+    it('queries the repository with the requested space id', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
 
-      // The repository already filters by spaceId; simulate it returning only in-space distributions
-      const distribution = distributionFactory({
-        target: targetFactory({ id: targetId }),
-        status: DistributionStatus.success,
-        distributedPackages: [
-          {
-            id: distribution_package_id(),
-            distributionId: distribution_id(),
-            packageId,
-            operation: 'add',
-            standardVersions: [],
-            recipeVersions: [],
-            skillVersions: [],
-          },
-        ],
-        createdAt: new Date('2026-04-29').toISOString(),
-      });
-
-      distributionRepository.findBySpaceId.mockResolvedValue([distribution]);
+      distributionRepository.findLatestPackageOperationsBySpace.mockResolvedValue(
+        [row(targetId, packageId, 'add', DistributionStatus.success)],
+      );
 
       const result = await useCase.execute(command);
 
-      expect(distributionRepository.findBySpaceId).toHaveBeenCalledWith(
-        spaceId,
-      );
+      expect(
+        distributionRepository.findLatestPackageOperationsBySpace,
+      ).toHaveBeenCalledWith(spaceId);
       expect(result).toEqual([{ targetId, packageIds: [packageId] }]);
     });
   });
 });
 
 describe('projectActiveDistributedPackagesByTarget', () => {
-  it('returns empty array when there are no distributions', () => {
+  const row = (
+    targetId: TargetId,
+    packageId: PackageId,
+    operation: 'add' | 'remove',
+    status: DistributionStatus,
+  ): LatestPackageOperationRow => ({ targetId, packageId, operation, status });
+
+  it('returns empty array when there are no rows', () => {
     expect(projectActiveDistributedPackagesByTarget([])).toEqual([]);
   });
 
@@ -309,41 +206,10 @@ describe('projectActiveDistributedPackagesByTarget', () => {
     const packageId1 = createPackageId(uuidv4());
     const packageId2 = createPackageId(uuidv4());
 
-    const dist1 = distributionFactory({
-      target: targetFactory({ id: targetId1 }),
-      status: DistributionStatus.success,
-      distributedPackages: [
-        {
-          id: distribution_package_id(),
-          distributionId: distribution_id(),
-          packageId: packageId1,
-          operation: 'add',
-          standardVersions: [],
-          recipeVersions: [],
-          skillVersions: [],
-        },
-      ],
-      createdAt: new Date('2026-04-29').toISOString(),
-    });
-
-    const dist2 = distributionFactory({
-      target: targetFactory({ id: targetId2 }),
-      status: DistributionStatus.success,
-      distributedPackages: [
-        {
-          id: distribution_package_id(),
-          distributionId: distribution_id(),
-          packageId: packageId2,
-          operation: 'add',
-          standardVersions: [],
-          recipeVersions: [],
-          skillVersions: [],
-        },
-      ],
-      createdAt: new Date('2026-04-29').toISOString(),
-    });
-
-    const result = projectActiveDistributedPackagesByTarget([dist1, dist2]);
+    const result = projectActiveDistributedPackagesByTarget([
+      row(targetId1, packageId1, 'add', DistributionStatus.success),
+      row(targetId2, packageId2, 'add', DistributionStatus.success),
+    ]);
 
     expect(result).toEqual(
       expect.arrayContaining([
@@ -358,19 +224,21 @@ describe('projectActiveDistributedPackagesByTarget', () => {
       ]),
     );
   });
+
+  it('aggregates multiple packages under the same target', () => {
+    const targetId = createTargetId(uuidv4());
+    const packageId1 = createPackageId(uuidv4());
+    const packageId2 = createPackageId(uuidv4());
+
+    const result = projectActiveDistributedPackagesByTarget([
+      row(targetId, packageId1, 'add', DistributionStatus.success),
+      row(targetId, packageId2, 'add', DistributionStatus.success),
+    ]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      targetId,
+      packageIds: expect.arrayContaining([packageId1, packageId2]),
+    });
+  });
 });
-
-// Helpers to create unique IDs without importing createDistributedPackageId/createDistributionId
-// in a way that would bloat the test - inline usage is clearer.
-import {
-  createDistributedPackageId,
-  createDistributionId,
-} from '@packmind/types';
-
-function distribution_package_id() {
-  return createDistributedPackageId(uuidv4());
-}
-
-function distribution_id() {
-  return createDistributionId(uuidv4());
-}

@@ -189,13 +189,21 @@ export interface IDistributionRepository {
   ): Promise<OutdatedDeploymentsByTarget[]>;
 
   /**
-   * Get all distributions whose distributed packages belong to the given space.
-   * Joined with distributedPackages and target so the active-distribution rule
-   * (latest per (target, package); include if active add or failed remove)
-   * can be applied in the use case.
+   * For each (target, package) pair within a space, return the operation and
+   * status of the latest distribution by createdAt. Aggregation happens in SQL
+   * (DISTINCT ON), so the use case only applies the active-distribution rule.
    */
-  findBySpaceId(spaceId: SpaceId): Promise<Distribution[]>;
+  findLatestPackageOperationsBySpace(
+    spaceId: SpaceId,
+  ): Promise<LatestPackageOperationRow[]>;
 }
+
+export type LatestPackageOperationRow = {
+  targetId: TargetId;
+  packageId: PackageId;
+  operation: 'add' | 'remove';
+  status: DistributionStatus;
+};
 
 export type OutdatedDeploymentInfo = {
   artifactId: string;

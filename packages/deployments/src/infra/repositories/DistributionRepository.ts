@@ -20,6 +20,7 @@ import {
 import { Repository } from 'typeorm';
 import {
   IDistributionRepository,
+  LatestPackageOperationRow,
   OutdatedDeploymentsByTarget,
 } from '../../domain/repositories/IDistributionRepository';
 import { DistributionSchema } from '../schemas/DistributionSchema';
@@ -1584,35 +1585,34 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
-  async findBySpaceId(spaceId: SpaceId): Promise<Distribution[]> {
-    this.logger.info('Listing distributions by space ID', { spaceId });
+  async findLatestPackageOperationsBySpace(
+    spaceId: SpaceId,
+  ): Promise<LatestPackageOperationRow[]> {
+    this.logger.info('Listing latest package operations by space ID', {
+      spaceId,
+    });
     try {
-      const distributions = await this.repository
+      const rows = await this.repository
         .createQueryBuilder('distribution')
-        .innerJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .innerJoinAndSelect('distributedPackage.package', 'package')
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
-        .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
-        .leftJoinAndSelect('distribution.target', 'target')
-        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
+        .innerJoin('distribution.distributedPackages', 'distributedPackage')
+        .innerJoin('distributedPackage.package', 'package')
         .where('package.spaceId = :spaceId', { spaceId })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
-      this.logger.info('Distributions listed by space ID successfully', {
-        spaceId,
-        count: distributions.length,
-      });
-      return distributions;
+        .distinctOn(['distribution.target_id', 'distributedPackage.package_id'])
+        .orderBy('distribution.target_id')
+        .addOrderBy('distributedPackage.package_id')
+        .addOrderBy('distribution.createdAt', 'DESC')
+        .select('distribution.target_id', 'targetId')
+        .addSelect('distributedPackage.package_id', 'packageId')
+        .addSelect('distributedPackage.operation', 'operation')
+        .addSelect('distribution.status', 'status')
+        .getRawMany<LatestPackageOperationRow>();
+      this.logger.info(
+        'Latest package operations listed by space ID successfully',
+        { spaceId, count: rows.length },
+      );
+      return rows;
     } catch (error) {
-      this.logger.error('Failed to list distributions by space ID', {
+      this.logger.error('Failed to list latest package operations by space', {
         spaceId,
         error: error instanceof Error ? error.message : String(error),
       });

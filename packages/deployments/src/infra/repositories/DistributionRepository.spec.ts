@@ -39,13 +39,19 @@ describe('DistributionRepository', () => {
     SelectQueryBuilder<Distribution>
   > => {
     const qb = {
+      innerJoin: jest.fn().mockReturnThis(),
       innerJoinAndSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       setParameter: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      distinctOn: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
+      getRawMany: jest.fn(),
     } as unknown as jest.Mocked<SelectQueryBuilder<Distribution>>;
     return qb;
   };
@@ -1653,76 +1659,83 @@ describe('DistributionRepository', () => {
     });
   });
 
-  describe('findBySpaceId', () => {
+  describe('findLatestPackageOperationsBySpace', () => {
     const spaceId = createSpaceId('space-findby-1');
 
-    describe('returns distributions whose packages belong to the space', () => {
-      let result: Distribution[];
+    describe('returns lightweight rows for packages in the space', () => {
+      const expectedRow = {
+        targetId,
+        packageId: packageId1,
+        operation: 'add' as const,
+        status: DistributionStatus.success,
+      };
 
-      beforeEach(async () => {
-        const distribution: Distribution = {
-          id: createDistributionId('dist-findby-1'),
-          organizationId,
-          authorId: createUserId('author-1'),
-          status: DistributionStatus.success,
-          target: {
-            id: targetId,
-            name: 'default',
-            path: '/',
-            gitRepoId: createGitRepoId('repo-1'),
-          },
-          distributedPackages: [
-            {
-              id: createDistributedPackageId('dp-findby-1'),
-              distributionId: createDistributionId('dist-findby-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [],
-            },
-          ],
-          createdAt: '2026-04-29T00:00:00Z',
-          renderModes: [],
-          source: 'cli',
-        };
-
-        mockQueryBuilder.getMany.mockResolvedValue([distribution]);
-
-        result = await repository.findBySpaceId(spaceId);
+      beforeEach(() => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          expectedRow,
+        ]);
       });
 
-      it('returns the distributions', () => {
-        expect(result).toHaveLength(1);
+      it('returns the rows produced by the query', async () => {
+        const result =
+          await repository.findLatestPackageOperationsBySpace(spaceId);
+
+        expect(result).toEqual([expectedRow]);
       });
 
-      it('filters by spaceId via parameterized query', () => {
+      it('filters by spaceId via parameterized query', async () => {
+        await repository.findLatestPackageOperationsBySpace(spaceId);
+
         expect(mockQueryBuilder.where).toHaveBeenCalledWith(
           'package.spaceId = :spaceId',
           { spaceId },
         );
       });
 
-      it('joins distributedPackages', () => {
-        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
-          'distribution.distributedPackages',
-          'distributedPackage',
+      it('uses DISTINCT ON (target_id, package_id) to keep one row per pair', async () => {
+        await repository.findLatestPackageOperationsBySpace(spaceId);
+
+        expect(mockQueryBuilder.distinctOn).toHaveBeenCalledWith([
+          'distribution.target_id',
+          'distributedPackage.package_id',
+        ]);
+      });
+
+      it('orders by (target_id, package_id, createdAt DESC) so DISTINCT ON keeps the latest', async () => {
+        await repository.findLatestPackageOperationsBySpace(spaceId);
+
+        expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+          'distribution.target_id',
+        );
+        expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+          'distributedPackage.package_id',
+        );
+        expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+          'distribution.createdAt',
+          'DESC',
         );
       });
 
-      it('joins target', () => {
-        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
-          'distribution.target',
-          'target',
+      it('joins distributedPackages and package without selecting them', async () => {
+        await repository.findLatestPackageOperationsBySpace(spaceId);
+
+        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        );
+        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
         );
       });
     });
 
-    describe('when no distributions match the space', () => {
+    describe('when no rows match the space', () => {
       it('returns an empty array', async () => {
-        mockQueryBuilder.getMany.mockResolvedValue([]);
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
 
-        const result = await repository.findBySpaceId(spaceId);
+        const result =
+          await repository.findLatestPackageOperationsBySpace(spaceId);
 
         expect(result).toEqual([]);
       });
