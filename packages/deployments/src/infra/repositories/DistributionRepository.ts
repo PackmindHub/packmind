@@ -1583,4 +1583,40 @@ export class DistributionRepository implements IDistributionRepository {
       throw error;
     }
   }
+
+  async findBySpaceId(spaceId: SpaceId): Promise<Distribution[]> {
+    this.logger.info('Listing distributions by space ID', { spaceId });
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .innerJoinAndSelect('distributedPackage.package', 'package')
+        .leftJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('distribution.target', 'target')
+        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
+        .where('package.spaceId = :spaceId', { spaceId })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+      this.logger.info('Distributions listed by space ID successfully', {
+        spaceId,
+        count: distributions.length,
+      });
+      return distributions;
+    } catch (error) {
+      this.logger.error('Failed to list distributions by space ID', {
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

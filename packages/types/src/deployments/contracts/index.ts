@@ -41,3 +41,4 @@ export * from './IGetDashboardKpi';
 export * from './IGetDashboardOutdated';
 export * from './IGetDashboardNonLive';
 export * from './IInstallPackagesUseCase';
+export * from './IListActiveDistributedPackagesBySpace';

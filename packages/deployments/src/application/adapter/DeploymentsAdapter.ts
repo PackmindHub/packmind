@@ -70,6 +70,9 @@ import {
   IStandardsPort,
   IStandardsPortName,
   ListDeploymentsByPackageCommand,
+  IListActiveDistributedPackagesBySpaceUseCase,
+  ListActiveDistributedPackagesBySpaceCommand,
+  ListActiveDistributedPackagesBySpaceResponse,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
@@ -123,6 +126,7 @@ import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCa
 import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
+import { ListActiveDistributedPackagesBySpaceUseCase } from '../useCases/ListActiveDistributedPackagesBySpaceUseCase';
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
@@ -200,6 +204,7 @@ export class DeploymentsAdapter
   private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
   private _installPackagesUseCase!: InstallPackagesUseCase;
+  private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -468,6 +473,13 @@ export class DeploymentsAdapter
       this.accountsPort,
       this.deploymentsServices,
     );
+
+    this._listActiveDistributedPackagesBySpaceUseCase =
+      new ListActiveDistributedPackagesBySpaceUseCase(
+        this.spacesPort,
+        this.accountsPort,
+        this.distributionRepository,
+      );
 
     this._listPackagesUseCase = new ListPackagesUsecase(
       this.accountsPort,
@@ -842,5 +854,15 @@ export class DeploymentsAdapter
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse> {
     return this._getDashboardNonLiveUseCase.execute(command);
+  }
+
+  listActiveDistributedPackagesBySpace(
+    command: ListActiveDistributedPackagesBySpaceCommand,
+  ): Promise<ListActiveDistributedPackagesBySpaceResponse> {
+    return this._listActiveDistributedPackagesBySpaceUseCase.execute(command);
+  }
+
+  getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase {
+    return this._listActiveDistributedPackagesBySpaceUseCase;
   }
 }

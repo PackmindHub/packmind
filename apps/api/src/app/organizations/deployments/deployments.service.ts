@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
+  ActiveDistributedPackagesByTarget,
   DeploymentOverview,
   Distribution,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
   GetSkillDeploymentOverviewCommand,
+  ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -222,5 +224,11 @@ export class DeploymentsService {
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse> {
     return this.deploymentAdapter.getDashboardNonLive(command);
+  }
+
+  async listActiveDistributedPackagesBySpace(
+    command: ListActiveDistributedPackagesBySpaceCommand,
+  ): Promise<ActiveDistributedPackagesByTarget[]> {
+    return this.deploymentAdapter.listActiveDistributedPackagesBySpace(command);
   }
 }

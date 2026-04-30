@@ -1652,4 +1652,80 @@ describe('DistributionRepository', () => {
       });
     });
   });
+
+  describe('findBySpaceId', () => {
+    const spaceId = createSpaceId('space-findby-1');
+
+    describe('returns distributions whose packages belong to the space', () => {
+      let result: Distribution[];
+
+      beforeEach(async () => {
+        const distribution: Distribution = {
+          id: createDistributionId('dist-findby-1'),
+          organizationId,
+          authorId: createUserId('author-1'),
+          status: DistributionStatus.success,
+          target: {
+            id: targetId,
+            name: 'default',
+            path: '/',
+            gitRepoId: createGitRepoId('repo-1'),
+          },
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-findby-1'),
+              distributionId: createDistributionId('dist-findby-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+          createdAt: '2026-04-29T00:00:00Z',
+          renderModes: [],
+          source: 'cli',
+        };
+
+        mockQueryBuilder.getMany.mockResolvedValue([distribution]);
+
+        result = await repository.findBySpaceId(spaceId);
+      });
+
+      it('returns the distributions', () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('filters by spaceId via parameterized query', () => {
+        expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+          'package.spaceId = :spaceId',
+          { spaceId },
+        );
+      });
+
+      it('joins distributedPackages', () => {
+        expect(mockQueryBuilder.innerJoinAndSelect).toHaveBeenCalledWith(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        );
+      });
+
+      it('joins target', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'distribution.target',
+          'target',
+        );
+      });
+    });
+
+    describe('when no distributions match the space', () => {
+      it('returns an empty array', async () => {
+        mockQueryBuilder.getMany.mockResolvedValue([]);
+
+        const result = await repository.findBySpaceId(spaceId);
+
+        expect(result).toEqual([]);
+      });
+    });
+  });
 });

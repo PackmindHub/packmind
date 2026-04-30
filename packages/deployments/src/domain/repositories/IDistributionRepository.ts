@@ -187,6 +187,14 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
     spaceId: SpaceId,
   ): Promise<OutdatedDeploymentsByTarget[]>;
+
+  /**
+   * Get all distributions whose distributed packages belong to the given space.
+   * Joined with distributedPackages and target so the active-distribution rule
+   * (latest per (target, package); include if active add or failed remove)
+   * can be applied in the use case.
+   */
+  findBySpaceId(spaceId: SpaceId): Promise<Distribution[]>;
 }
 
 export type OutdatedDeploymentInfo = {

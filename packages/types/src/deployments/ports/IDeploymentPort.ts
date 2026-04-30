@@ -45,6 +45,9 @@ import {
   InstallPackagesCommand,
   InstallPackagesResponse,
   IPullContentResponse,
+  IListActiveDistributedPackagesBySpaceUseCase,
+  ListActiveDistributedPackagesBySpaceCommand,
+  ListActiveDistributedPackagesBySpaceResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -577,4 +580,23 @@ export interface IDeploymentPort {
   getDashboardNonLive(
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse>;
+
+  /**
+   * Lists active distributed packages grouped by target within a space.
+   *
+   * For each target that has at least one actively deployed package, returns the target ID
+   * and the list of package IDs that are currently active (last operation was 'add' with
+   * non-failure status, or 'remove' with failure status).
+   *
+   * @param command - Command containing spaceId and user/organization context
+   * @returns Promise of active distributed packages per target
+   */
+  listActiveDistributedPackagesBySpace(
+    command: ListActiveDistributedPackagesBySpaceCommand,
+  ): Promise<ListActiveDistributedPackagesBySpaceResponse>;
+
+  /**
+   * Exposes the typed use case instance for consumers that need the port-typed reference.
+   */
+  getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase;
 }

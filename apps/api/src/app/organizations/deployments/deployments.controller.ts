@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ActiveDistributedPackagesByTarget,
   DeploymentOverview,
   Distribution,
   PackagesDeployment,
@@ -35,6 +36,7 @@ import {
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
   GetSkillDeploymentOverviewCommand,
+  ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -986,6 +988,46 @@ export class DeploymentsController {
           organizationId,
           error: error instanceof Error ? error.message : String(error),
         },
+      );
+      throw error;
+    }
+  }
+
+  @Get('spaces/:spaceId/distributed-packages')
+  async getActiveDistributedPackagesBySpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ActiveDistributedPackagesByTarget[]> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/spaces/:spaceId/distributed-packages - Fetching active distributed packages by space',
+      { organizationId, spaceId },
+    );
+
+    try {
+      const command: ListActiveDistributedPackagesBySpaceCommand = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+      };
+
+      const result =
+        await this.deploymentsService.listActiveDistributedPackagesBySpace(
+          command,
+        );
+
+      this.logger.info(
+        'GET /organizations/:orgId/deployments/spaces/:spaceId/distributed-packages - Active distributed packages fetched successfully',
+        { organizationId, spaceId, targetCount: result.length },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/spaces/:spaceId/distributed-packages - Failed to fetch active distributed packages',
+        { organizationId, spaceId, error: errorMessage },
       );
       throw error;
     }
