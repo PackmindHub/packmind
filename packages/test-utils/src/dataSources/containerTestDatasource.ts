@@ -25,7 +25,7 @@ async function getSharedContainer(): Promise<StartedPostgreSqlContainer> {
 }
 
 function generateSchemaName(): string {
-  const workerId = process.env.JEST_WORKER_ID ?? '1';
+  const workerId = process.env['JEST_WORKER_ID'] ?? '1';
   const random = Math.random().toString(36).slice(2, 8);
   return `t_w${workerId}_${random}`;
 }

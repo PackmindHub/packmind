@@ -3,7 +3,7 @@ import { EntitySchema } from 'typeorm';
 import { createContainerTestDatasourceFixture } from './containerTestDatasource';
 
 function isDockerAvailable(): boolean {
-  if (process.env.DOCKER_HOST) return true;
+  if (process.env['DOCKER_HOST']) return true;
   if (fs.existsSync('/var/run/docker.sock')) return true;
   return false;
 }
