@@ -1,8 +1,5 @@
 import { DataSource, EntitySchema } from 'typeorm';
-import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql';
+import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 
 const POSTGRES_IMAGE = 'postgres:17-alpine';
 
@@ -13,6 +10,11 @@ async function getSharedContainer(): Promise<StartedPostgreSqlContainer> {
   if (sharedContainer) return sharedContainer;
   if (sharedContainerStart) return sharedContainerStart;
 
+  // Lazy require so that consumers of @packmind/test-utils that never touch
+  // the container fixture (e.g., frontend specs running under jsdom) don't
+  // pay for loading testcontainers + undici, the latter of which depends on
+  // ReadableStream and explodes in jsdom.
+  const { PostgreSqlContainer } = await import('@testcontainers/postgresql');
   sharedContainerStart = new PostgreSqlContainer(POSTGRES_IMAGE)
     .withReuse()
     .start()

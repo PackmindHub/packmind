@@ -2,7 +2,7 @@
 import {
   swcTransformWithDefineFields,
   standardModuleFileExtensions,
-} from '../../jest-utils';
+} from '../../jest-utils.ts';
 
 export default {
   displayName: 'packmind-cli',

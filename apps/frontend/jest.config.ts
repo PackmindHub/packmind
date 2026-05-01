@@ -1,7 +1,10 @@
+import { createRequire } from 'module';
 import { pathsToModuleNameMapper } from 'ts-jest';
 
-// Use require instead of import to avoid TypeScript compilation issues
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// createRequire works whether this config is loaded as CJS or ESM, which lets
+// us pull a JSON file without depending on Node import-attribute syntax (which
+// requires --module nodenext in tsconfig).
+const require = createRequire(import.meta.url);
 const { compilerOptions } = require('../../tsconfig.base.effective.json');
 
 export default {
