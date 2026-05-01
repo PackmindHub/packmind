@@ -20,7 +20,9 @@ export default {
     compilerOptions.paths,
     '<rootDir>/../../',
   ),
-  testTimeout: 30000,
+  // 60s accommodates Testcontainers cold-start when the container backend is
+  // used; the default pg-mem backend remains well under this.
+  testTimeout: 60000,
   // Run integration tests in parallel - each test file uses its own database fixture
   maxWorkers: 4,
 };

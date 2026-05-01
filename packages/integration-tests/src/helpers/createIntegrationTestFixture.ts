@@ -1,7 +1,16 @@
 import { DataSource, EntitySchema } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
+import {
+  createContainerTestDatasourceFixture,
+  makeTestDatasource,
+} from '@packmind/test-utils';
 import { TestApp } from './TestApp';
 import { DataFactory } from './DataFactory';
+
+type DatasourceBackend = 'pg-mem' | 'container';
+
+interface IntegrationTestFixtureOptions {
+  backend?: DatasourceBackend;
+}
 
 /**
  * Integration test fixture for optimized test execution.
@@ -10,32 +19,45 @@ import { DataFactory } from './DataFactory';
  * Uses table truncation for cleanup between tests, which is significantly faster
  * than recreating the schema.
  *
- * Usage:
- * ```typescript
- * describe('MyIntegration', () => {
- *   const fixture = createIntegrationTestFixture([...schemas]);
- *
- *   let testApp: TestApp;
- *   let dataFactory: DataFactory;
- *
- *   beforeAll(() => fixture.initialize());
- *
- *   beforeEach(async () => {
- *     testApp = new TestApp(fixture.datasource);
- *     await testApp.initialize();
- *     dataFactory = new DataFactory(testApp);
- *   });
- *
- *   afterEach(async () => {
- *     jest.clearAllMocks();
- *     await fixture.cleanup();
- *   });
- *
- *   afterAll(() => fixture.destroy());
- * });
- * ```
+ * Backends:
+ * - 'pg-mem' (default): in-memory PostgreSQL emulation, fast but lossy.
+ * - 'container': real PostgreSQL via Testcontainers; opt in for tests that
+ *   exercise JSON ops, full-text search, advisory locks, or anything pg-mem
+ *   does not implement faithfully.
  */
-export function createIntegrationTestFixture(entities: EntitySchema[]) {
+export function createIntegrationTestFixture(
+  entities: EntitySchema[],
+  options: IntegrationTestFixtureOptions = {},
+) {
+  const backend = options.backend ?? 'pg-mem';
+
+  if (backend === 'container') {
+    return wrapWithTestAppHelpers(
+      createContainerTestDatasourceFixture(entities),
+    );
+  }
+
+  return wrapWithTestAppHelpers(createPgMemFixture(entities));
+}
+
+/**
+ * Convenience helper for tests that need real PostgreSQL fidelity.
+ * Equivalent to createIntegrationTestFixture(entities, { backend: 'container' }).
+ */
+export function createContainerIntegrationTestFixture(
+  entities: EntitySchema[],
+) {
+  return createIntegrationTestFixture(entities, { backend: 'container' });
+}
+
+interface BaseDatasourceFixture {
+  readonly datasource: DataSource;
+  initialize(): Promise<DataSource>;
+  cleanup(): Promise<void>;
+  destroy(): Promise<void>;
+}
+
+function createPgMemFixture(entities: EntitySchema[]): BaseDatasourceFixture {
   let datasource: DataSource | null = null;
   let tableNames: string[] = [];
 
@@ -54,7 +76,6 @@ export function createIntegrationTestFixture(entities: EntitySchema[]) {
       await datasource.initialize();
       await datasource.synchronize();
 
-      // Cache table names for fast cleanup
       tableNames = datasource.entityMetadatas.map(
         (metadata) => metadata.tableName,
       );
@@ -62,15 +83,9 @@ export function createIntegrationTestFixture(entities: EntitySchema[]) {
       return datasource;
     },
 
-    /**
-     * Truncates all tables to reset state between tests.
-     * Much faster than dropping and recreating the schema.
-     */
     async cleanup(): Promise<void> {
       if (!datasource?.isInitialized) return;
 
-      // Truncate all tables in a single transaction
-      // Use CASCADE to handle foreign key constraints
       const queryRunner = datasource.createQueryRunner();
       try {
         await queryRunner.startTransaction();
@@ -93,13 +108,25 @@ export function createIntegrationTestFixture(entities: EntitySchema[]) {
       datasource = null;
       tableNames = [];
     },
+  };
+}
+
+function wrapWithTestAppHelpers(base: BaseDatasourceFixture) {
+  return {
+    get datasource(): DataSource {
+      return base.datasource;
+    },
+
+    initialize: () => base.initialize(),
+    cleanup: () => base.cleanup(),
+    destroy: () => base.destroy(),
 
     /**
      * Creates a new TestApp instance bound to the fixture's datasource.
      * Call this in beforeEach to get a fresh TestApp for each test.
      */
     async createTestApp(): Promise<TestApp> {
-      const testApp = new TestApp(this.datasource);
+      const testApp = new TestApp(base.datasource);
       await testApp.initialize();
       return testApp;
     },
