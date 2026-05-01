@@ -9,11 +9,12 @@
     "typeorm": "typeorm-ts-node-commonjs"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
-    "typeorm": "0.3.28",
-    "pg": "^8.16.3",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
-    "tsconfig-paths": "^4.2.0"
+    "@testcontainers/postgresql": "^11.14.0",
+    "pg": "^8.16.3",
+    "tsconfig-paths": "^4.2.0",
+    "tslib": "^2.3.0",
+    "typeorm": "0.3.28"
   }
 }
