@@ -178,7 +178,7 @@
     "fastify": "^5.8.3",
     "fastify-plugin": "~5.1.0",
     "http-proxy-middleware": "^3.0.5",
-    "isbot": "^4.4.0",
+    "isbot": "^5.1.39",
     "jsonwebtoken": "^9.0.3",
     "log-update": "^8.0.0",
     "marked": "^16.2.1",
