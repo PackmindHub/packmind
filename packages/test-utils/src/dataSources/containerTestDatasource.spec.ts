@@ -1,12 +1,6 @@
-import * as fs from 'fs';
 import { EntitySchema } from 'typeorm';
 import { createContainerTestDatasourceFixture } from './containerTestDatasource';
-
-function isDockerAvailable(): boolean {
-  if (process.env['DOCKER_HOST']) return true;
-  if (fs.existsSync('/var/run/docker.sock')) return true;
-  return false;
-}
+import { isDockerAvailable } from './isDockerAvailable';
 
 const describeIfDocker = isDockerAvailable() ? describe : describe.skip;
 

@@ -30,6 +30,27 @@ function generateSchemaName(): string {
   return `t_w${workerId}_${random}`;
 }
 
+async function ensureSchemaExists(
+  container: StartedPostgreSqlContainer,
+  schema: string,
+): Promise<void> {
+  const bootstrap = new DataSource({
+    type: 'postgres',
+    host: container.getHost(),
+    port: container.getMappedPort(5432),
+    username: container.getUsername(),
+    password: container.getPassword(),
+    database: container.getDatabase(),
+  });
+
+  await bootstrap.initialize();
+  try {
+    await bootstrap.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
+  } finally {
+    await bootstrap.destroy();
+  }
+}
+
 export interface ContainerTestDatasourceOptions {
   schema?: string;
   synchronize?: boolean;
@@ -43,6 +64,8 @@ export async function makeContainerTestDatasource(
   const schema = options.schema ?? generateSchemaName();
   const synchronize = options.synchronize ?? true;
 
+  await ensureSchemaExists(container, schema);
+
   const datasource = new DataSource({
     type: 'postgres',
     host: container.getHost(),
@@ -55,7 +78,6 @@ export async function makeContainerTestDatasource(
   });
 
   await datasource.initialize();
-  await datasource.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
 
   if (synchronize) {
     await datasource.synchronize();

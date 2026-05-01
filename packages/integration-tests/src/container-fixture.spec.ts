@@ -1,12 +1,6 @@
-import * as fs from 'fs';
 import { EntitySchema } from 'typeorm';
+import { isDockerAvailable } from '@packmind/test-utils';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
-
-function isDockerAvailable(): boolean {
-  if (process.env['DOCKER_HOST']) return true;
-  if (fs.existsSync('/var/run/docker.sock')) return true;
-  return false;
-}
 
 const describeIfDocker = isDockerAvailable() ? describe : describe.skip;
 

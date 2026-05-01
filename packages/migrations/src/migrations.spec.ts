@@ -1,16 +1,10 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import { DataSource } from 'typeorm';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-
-function isDockerAvailable(): boolean {
-  if (process.env['DOCKER_HOST']) return true;
-  if (fs.existsSync('/var/run/docker.sock')) return true;
-  return false;
-}
+import { isDockerAvailable } from '@packmind/test-utils';
 
 const describeIfDocker = isDockerAvailable() ? describe : describe.skip;
 
@@ -28,7 +22,7 @@ describeIfDocker('migrations against real PostgreSQL', () => {
       username: container.getUsername(),
       password: container.getPassword(),
       database: container.getDatabase(),
-      migrations: [path.join(__dirname, '*.ts')],
+      migrations: [path.join(__dirname, 'migrations', '*.ts')],
       synchronize: false,
     });
 

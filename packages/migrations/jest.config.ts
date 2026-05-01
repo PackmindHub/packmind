@@ -1,5 +1,11 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { swcTransform, standardModuleFileExtensions } from '../../jest-utils';
+import { compilerOptions } from '../../tsconfig.base.effective.json';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import {
+  pathsToModuleNameMapper,
+  swcTransform,
+  standardModuleFileExtensions,
+} from '../../jest-utils';
 
 export default {
   displayName: 'migrations',
@@ -8,4 +14,8 @@ export default {
   transform: swcTransform,
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/migrations',
+  moduleNameMapper: pathsToModuleNameMapper(
+    compilerOptions.paths,
+    '<rootDir>/../../',
+  ),
 };
