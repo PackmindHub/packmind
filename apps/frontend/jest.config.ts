@@ -1,11 +1,14 @@
-import { createRequire } from 'module';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { pathsToModuleNameMapper } from 'ts-jest';
 
-// createRequire works whether this config is loaded as CJS or ESM, which lets
-// us pull a JSON file without depending on Node import-attribute syntax (which
-// requires --module nodenext in tsconfig).
-const require = createRequire(import.meta.url);
-const { compilerOptions } = require('../../tsconfig.base.effective.json');
+// fs.readFileSync + JSON.parse keeps this config portable across the
+// loaders Jest may pick for jest.config.ts: ts-node under module:ESNext
+// (CI), ts-node under module:commonjs, and Node 22's native TS loader.
+// __dirname/import.meta.url and the static JSON import all break in at
+// least one of those.
+const tsconfigPath = resolve(process.cwd(), 'tsconfig.base.effective.json');
+const { compilerOptions } = JSON.parse(readFileSync(tsconfigPath, 'utf8'));
 
 export default {
   preset: '../../jest.preset.ts',
