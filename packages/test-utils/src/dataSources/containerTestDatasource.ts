@@ -77,6 +77,13 @@ export async function makeContainerTestDatasource(
     database: container.getDatabase(),
     schema,
     entities,
+    // Set search_path at the libpq level so that every pooled connection
+    // (not just TypeORM-aware queries) resolves unqualified identifiers
+    // against the fixture's schema. Without this, raw datasource.query()
+    // calls fall back to the default search_path and miss the tables.
+    extra: {
+      options: `-c search_path="${schema}",public`,
+    },
   });
 
   await datasource.initialize();
