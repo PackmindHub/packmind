@@ -69,10 +69,10 @@ export class InstallUseCase implements IInstallUseCase {
       packageSlugs: [],
       agents: [],
       artifacts: {},
+      ...(command.skipInstalledAt
+        ? {}
+        : { installedAt: new Date().toISOString() }),
     };
-    if (!command.skipInstalledAt) {
-      effectiveLockFile.installedAt = new Date().toISOString();
-    }
 
     let packagesSlugs: string[];
     let normalizedPackages: string[] = [];
