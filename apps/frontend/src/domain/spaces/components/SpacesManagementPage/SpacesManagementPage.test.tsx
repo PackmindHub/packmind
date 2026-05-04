@@ -173,6 +173,29 @@ describe('SpacesManagementPage', () => {
     jest.restoreAllMocks();
   });
 
+  it('renders a search input', () => {
+    jest
+      .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
+      .mockReturnValue({
+        data: {
+          items: [buildItem({ name: 'Engineering' })],
+          totalCount: 1,
+          page: 1,
+          pageSize: 8,
+        },
+        isLoading: false,
+        isError: false,
+      } as unknown as ReturnType<
+        typeof queries.useGetOrganizationSpacesForManagementQuery
+      >);
+
+    renderWithQuery(<SpacesManagementPage />);
+
+    expect(
+      screen.getByPlaceholderText('Search by name...'),
+    ).toBeInTheDocument();
+  });
+
   it('renders rows from the new management query', async () => {
     jest
       .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
