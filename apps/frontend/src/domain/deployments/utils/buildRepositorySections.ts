@@ -18,7 +18,6 @@ export type TargetSection = {
   packageGroups: PackageGroup[];
   inSyncCount: number;
   outdatedCount: number;
-  pendingCount: number;
   hasOutdated: boolean;
 };
 
@@ -64,8 +63,7 @@ export function buildRepositorySections({
       packageGroups,
       inSyncCount: counts.inSync,
       outdatedCount: counts.outdated,
-      pendingCount: counts.pending,
-      hasOutdated: counts.outdated + counts.pending > 0,
+      hasOutdated: counts.outdated > 0,
     };
 
     const repoId = entry.gitRepo.id;
@@ -92,24 +90,22 @@ export function buildRepositorySections({
 function countArtifacts(groups: ReadonlyArray<PackageGroup>): {
   inSync: number;
   outdated: number;
-  pending: number;
 } {
   let inSync = 0;
   let outdated = 0;
-  let pending = 0;
 
   groups.forEach((group) => {
     [...group.recipes, ...group.standards, ...group.skills].forEach((item) => {
       if (item.isUpToDate && !item.isDeleted) inSync += 1;
       else outdated += 1;
     });
-    pending +=
+    outdated +=
       group.pendingRecipes.length +
       group.pendingStandards.length +
       group.pendingSkills.length;
   });
 
-  return { inSync, outdated, pending };
+  return { inSync, outdated };
 }
 
 function repoLabel(gitRepo: GitRepo): string {

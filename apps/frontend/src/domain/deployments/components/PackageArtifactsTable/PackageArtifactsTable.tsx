@@ -326,12 +326,11 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = (
   const inSyncCount = allRows.filter(
     (row) => !row.isPending && row.isUpToDate && !row.isDeleted,
   ).length;
-  const driftCount = allRows.filter(
-    (row) => !row.isPending && (!row.isUpToDate || row.isDeleted),
+  const outdatedCount = allRows.filter(
+    (row) => row.isPending || !row.isUpToDate || row.isDeleted,
   ).length;
-  const pendingCount = allRows.filter((row) => row.isPending).length;
-  const totalArtifacts = inSyncCount + driftCount + pendingCount;
-  const hasOutdatedArtifacts = driftCount + pendingCount > 0;
+  const totalArtifacts = inSyncCount + outdatedCount;
+  const hasOutdatedArtifacts = outdatedCount > 0;
 
   const tableRows = visibleRows.map((row) => toTableRow(row, mode));
 
@@ -364,17 +363,12 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = (
                     {
                       value: inSyncCount,
                       colorPalette: 'green',
-                      label: `${inSyncCount} in sync`,
+                      label: `${inSyncCount} up-to-date`,
                     },
                     {
-                      value: driftCount,
+                      value: outdatedCount,
                       colorPalette: 'red',
-                      label: `${driftCount} outdated`,
-                    },
-                    {
-                      value: pendingCount,
-                      colorPalette: 'orange',
-                      label: `${pendingCount} pending`,
+                      label: `${outdatedCount} outdated`,
                     },
                   ]}
                 />
