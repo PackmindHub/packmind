@@ -1,17 +1,23 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { PMTableRow, UIProvider } from '@packmind/ui';
+import { PMButton, PMTableRow, UIProvider } from '@packmind/ui';
 import { ItemsListing, Item, ItemsListingProps } from './ItemsListing';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 describe('ItemsListing', () => {
   const items: Item[] = [
-    { id: '123', name: 'First item' },
-    { id: '456', name: 'Second item' },
-    { id: '789', name: 'Third item' },
-    { id: '987', name: 'Third item (copy)' },
+    { id: 'item-id-1', name: 'First item' },
+    { id: 'item-id-2', name: 'Second item' },
+    { id: 'item-id-3', name: 'Third item' },
+    { id: 'item-id-3-copy', name: 'Third item (copy)' },
   ];
+
+  let batchActionSpy: (selectedIds: string[]) => void;
+
+  beforeEach(() => {
+    batchActionSpy = jest.fn();
+  });
 
   function renderListing() {
     const queryClient = new QueryClient({
@@ -23,7 +29,14 @@ describe('ItemsListing', () => {
 
     const props: ItemsListingProps<Item> = {
       items,
-      batchActions: [],
+      batchActions: [
+        ({ selectedIds }) => (
+          <PMButton
+            children={<>Do something</>}
+            onClick={() => batchActionSpy(selectedIds)}
+          />
+        ),
+      ],
       columns: [{ key: 'name', header: 'Name' }],
       makeTableData: function (item): PMTableRow {
         return {
@@ -83,11 +96,13 @@ describe('ItemsListing', () => {
   }
 
   describe('when user clicks the "Check all" checkbox', () => {
-    it('selects all items', async () => {
+    beforeEach(async () => {
       renderListing();
 
       await selectAll();
+    });
 
+    it('selects all items', async () => {
       expect(getRows()).toEqual([
         { name: 'First item', checked: true },
         { name: 'Second item', checked: true },
@@ -95,14 +110,33 @@ describe('ItemsListing', () => {
         { name: 'Third item (copy)', checked: true },
       ]);
     });
+
+    describe('when user triggers a batch action', () => {
+      it('calls the actions with the items matching ids', async () => {
+        const action = screen.getByRole('button', { name: 'Do something' });
+
+        await act(async () => {
+          fireEvent.click(action);
+        });
+
+        expect(batchActionSpy).toHaveBeenCalledWith([
+          'item-id-1',
+          'item-id-2',
+          'item-id-3',
+          'item-id-3-copy',
+        ]);
+      });
+    });
   });
 
   describe('when user uses the search field', () => {
-    it('only shows the matching items', async () => {
+    beforeEach(async () => {
       renderListing();
 
-      await search('Third item');
+      await search('Third');
+    });
 
+    it('only shows the matching items', async () => {
       expect(getRows()).toEqual([
         { name: 'Third item', checked: false },
         { name: 'Third item (copy)', checked: false },
@@ -110,11 +144,11 @@ describe('ItemsListing', () => {
     });
 
     describe('when user clicks the "Check all" checkbox', () => {
-      it('only selects the filtered items', async () => {
-        renderListing();
-
-        await search('Third');
+      beforeEach(async () => {
         await selectAll();
+      });
+
+      it('only selects the filtered items', async () => {
         await search('');
 
         expect(getRows()).toEqual([
@@ -123,6 +157,21 @@ describe('ItemsListing', () => {
           { name: 'Third item', checked: true },
           { name: 'Third item (copy)', checked: true },
         ]);
+      });
+
+      describe('when user triggers a batch action', () => {
+        it('calls the actions with the items matching ids', async () => {
+          const action = screen.getByRole('button', { name: 'Do something' });
+
+          await act(async () => {
+            fireEvent.click(action);
+          });
+
+          expect(batchActionSpy).toHaveBeenCalledWith([
+            'item-id-3',
+            'item-id-3-copy',
+          ]);
+        });
       });
     });
   });

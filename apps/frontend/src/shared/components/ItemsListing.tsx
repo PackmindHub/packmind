@@ -28,7 +28,7 @@ export type BatchAction<ID> = React.FunctionComponent<{
 
 export type ItemsListingProps<T extends Item> = {
   items: T[];
-  batchActions: BatchAction<T['id']>[];
+  batchActions?: BatchAction<T['id']>[];
   columns: ItemsListingColumn[];
   makeTableData: (item: T) => PMTableRow;
   sortItems: (
@@ -105,6 +105,40 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
   const isAllSelected = selectedIds.length === props.items.length;
   const isSomeSelected = selectedIds.length > 0;
 
+  const columns: PMTableColumn[] = [];
+  if (props.batchActions?.length) {
+    columns.push({
+      key: 'select',
+      header: (
+        <PMCheckbox
+          checked={isAllSelected || false}
+          onCheckedChange={() => {
+            if (isAllSelected) {
+              unselectAll();
+            } else {
+              selectAll();
+            }
+          }}
+          controlProps={{ borderColor: 'border.checkbox' }}
+        />
+      ),
+      width: '50px',
+      align: 'center',
+    });
+  }
+
+  columns.push(
+    ...props.columns.map((col) => {
+      if (!col.sortKey) return col;
+
+      return {
+        ...col,
+        sortable: true,
+        sortDirection: getSortDirection(col.sortKey),
+      };
+    }),
+  );
+
   return (
     <PMBox>
       <PMBox mb={4}>
@@ -115,60 +149,38 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
         />
       </PMBox>
       <PMBox mb={2}>
-        <PMHStack gap={2}>
-          {props.batchActions.map((Action, index) => {
-            return (
-              <Action
-                selectedIds={selectedIds}
-                unselectAll={unselectAll}
-                key={`action-${index}`}
-              />
-            );
-          })}
-          <PMButton
-            variant="secondary"
-            onClick={() => setSelectedIds([])}
-            size={'sm'}
-            disabled={!isSomeSelected}
-          >
-            Clear Selection
-          </PMButton>
-        </PMHStack>
+        {props.batchActions?.length && (
+          <PMHStack gap={2}>
+            {props.batchActions.map((Action, index) => {
+              return (
+                <Action
+                  selectedIds={selectedIds}
+                  unselectAll={unselectAll}
+                  key={`action-${index}`}
+                />
+              );
+            })}
+            <PMButton
+              variant="secondary"
+              onClick={() => setSelectedIds([])}
+              size={'sm'}
+              disabled={!isSomeSelected}
+            >
+              Clear Selection
+            </PMButton>
+          </PMHStack>
+        )}
       </PMBox>
       <PMTable
-        columns={[
-          {
-            key: 'select',
-            header: (
-              <PMCheckbox
-                checked={isAllSelected || false}
-                onCheckedChange={() => {
-                  if (isAllSelected) {
-                    unselectAll();
-                  } else {
-                    selectAll();
-                  }
-                }}
-                controlProps={{ borderColor: 'border.checkbox' }}
-              />
-            ),
-            width: '50px',
-            align: 'center',
-          },
-          ...props.columns.map((col) => {
-            if (!col.sortKey) return col;
-
-            return {
-              ...col,
-              sortable: true,
-              sortDirection: getSortDirection(col.sortKey),
-            };
-          }),
-        ]}
+        columns={columns}
         data={sortedItems.map((item) => {
-          return {
+          const row: PMTableRow = {
             key: item.id,
-            select: (
+            ...props.makeTableData(item),
+          };
+
+          if (props.batchActions?.length) {
+            row['select'] = (
               <PMCheckbox
                 checked={selectedIds.includes(item.id)}
                 onCheckedChange={(event) => {
@@ -180,9 +192,10 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
                   }
                 }}
               />
-            ),
-            ...props.makeTableData(item),
-          };
+            );
+          }
+
+          return row;
         })}
         striped={true}
         hoverable={true}
