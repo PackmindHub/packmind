@@ -1,14 +1,8 @@
-# [Unreleased]
-
-## Added
-
-## Changed
+# [0.28.1] - 2026-05-04
 
 ## Fixed
 
 - `installedAt` property was incorrectly reset even when absent from lockfile.
-
-## Removed
 
 # [0.28.0] - 2026-05-04
 
@@ -344,7 +338,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...HEAD
+[0.28.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...release-cli/0.28.1
 [0.28.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.27.0...release-cli/0.28.0
 [0.27.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.1...release-cli/0.27.0
 [0.26.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.0...release-cli/0.26.1
