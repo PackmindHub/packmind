@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   ActiveDistributedPackagesByTarget,
-  DeploymentOverview,
   Distribution,
-  GetDeploymentOverviewCommand,
-  GetStandardDeploymentOverviewCommand,
-  GetSkillDeploymentOverviewCommand,
   ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -17,8 +13,6 @@ import {
   PublishStandardsCommand,
   PublishPackagesCommand,
   PackagesDeployment,
-  StandardDeploymentOverview,
-  SkillDeploymentOverview,
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
   GetRenderModeConfigurationCommand,
@@ -80,24 +74,6 @@ export class DeploymentsService {
     command: ListDistributionsBySkillCommand,
   ): Promise<Distribution[]> {
     return this.deploymentAdapter.listDistributionsBySkill(command);
-  }
-
-  async getStandardDeploymentOverview(
-    command: GetStandardDeploymentOverviewCommand,
-  ): Promise<StandardDeploymentOverview> {
-    return this.deploymentAdapter.getStandardDeploymentOverview(command);
-  }
-
-  async getSkillsDeploymentOverview(
-    command: GetSkillDeploymentOverviewCommand,
-  ): Promise<SkillDeploymentOverview> {
-    return this.deploymentAdapter.getSkillsDeploymentOverview(command);
-  }
-
-  async getDeploymentOverview(
-    command: GetDeploymentOverviewCommand,
-  ): Promise<DeploymentOverview> {
-    return this.deploymentAdapter.getDeploymentOverview(command);
   }
 
   async publishRecipes(

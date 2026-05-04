@@ -12,11 +12,8 @@ import {
 } from '@nestjs/common';
 import {
   ActiveDistributedPackagesByTarget,
-  DeploymentOverview,
   Distribution,
   PackagesDeployment,
-  StandardDeploymentOverview,
-  SkillDeploymentOverview,
   PublishRecipesCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
@@ -33,9 +30,6 @@ import {
   StandardVersionId,
   PackageId,
   OrganizationId,
-  GetDeploymentOverviewCommand,
-  GetStandardDeploymentOverviewCommand,
-  GetSkillDeploymentOverviewCommand,
   ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -366,147 +360,6 @@ export class DeploymentsController {
         'GET /organizations/:orgId/deployments/distributions/skill/:id - Failed to fetch distributions',
         {
           skillId: id,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Get('standards/overview')
-  async getStandardDeploymentOverview(
-    @Param('orgId') organizationId: OrganizationId,
-    @Query('spaceId') spaceId: SpaceId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<StandardDeploymentOverview> {
-    this.logger.info(
-      'GET /organizations/:orgId/deployments/standards/overview - Fetching standard deployment overview',
-      {
-        organizationId,
-      },
-    );
-
-    try {
-      const command: GetStandardDeploymentOverviewCommand = {
-        userId: request.user.userId,
-        organizationId,
-        spaceId,
-      };
-
-      const overview =
-        await this.deploymentsService.getStandardDeploymentOverview(command);
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/standards/overview - Standard deployment overview fetched successfully',
-        {
-          organizationId,
-          repositoriesCount: overview.repositories.length,
-          standardsCount: overview.standards.length,
-        },
-      );
-
-      return overview;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/standards/overview - Failed to fetch standard deployment overview',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Get('skills/overview')
-  async getSkillsDeploymentOverview(
-    @Param('orgId') organizationId: OrganizationId,
-    @Query('spaceId') spaceId: SpaceId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<SkillDeploymentOverview> {
-    this.logger.info(
-      'GET /organizations/:orgId/deployments/skills/overview - Fetching skills deployment overview',
-      {
-        organizationId,
-      },
-    );
-
-    try {
-      const command: GetSkillDeploymentOverviewCommand = {
-        userId: request.user.userId,
-        organizationId,
-        spaceId,
-      };
-
-      const overview =
-        await this.deploymentsService.getSkillsDeploymentOverview(command);
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/skills/overview - Skills deployment overview fetched successfully',
-        {
-          organizationId,
-          repositoriesCount: overview.repositories.length,
-          skillsCount: overview.skills.length,
-        },
-      );
-
-      return overview;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/skills/overview - Failed to fetch skills deployment overview',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Get('recipes/overview')
-  async getRecipesDeploymentOverview(
-    @Param('orgId') organizationId: OrganizationId,
-    @Query('spaceId') spaceId: SpaceId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<DeploymentOverview> {
-    this.logger.info(
-      'GET /organizations/:orgId/deployments/recipes/overview - Fetching recipes deployment overview',
-      {
-        organizationId,
-      },
-    );
-
-    try {
-      const command: GetDeploymentOverviewCommand = {
-        userId: request.user.userId,
-        organizationId,
-        spaceId,
-      };
-
-      const overview =
-        await this.deploymentsService.getDeploymentOverview(command);
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/recipes/overview - Recipes deployment overview fetched successfully',
-        {
-          organizationId,
-          repositoriesCount: overview.repositories.length,
-          recipesCount: overview.recipes.length,
-        },
-      );
-
-      return overview;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/recipes/overview - Failed to fetch recipes deployment overview',
-        {
           organizationId,
           error: errorMessage,
         },
