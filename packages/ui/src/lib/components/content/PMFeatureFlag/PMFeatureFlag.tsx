@@ -20,7 +20,6 @@ export const CHANGE_PROPOSALS_FEATURE_KEY = 'change-proposals';
 export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
   'change-proposals-in-webapp';
 
-
 export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
