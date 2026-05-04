@@ -11,7 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-05-01T03:10:03.079Z",
+  "installedAt": "2026-05-04T03:10:17.683Z",
   "artifacts": {
     "standard:e2e-page-object": {
       "name": "[E2E] Page object",

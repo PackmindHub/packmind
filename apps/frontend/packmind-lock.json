@@ -11,7 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-05-01T03:10:03.535Z",
+  "installedAt": "2026-05-04T03:10:18.115Z",
   "artifacts": {
     "standard:frontend-data-flow": {
       "name": "Frontend Data Flow",
