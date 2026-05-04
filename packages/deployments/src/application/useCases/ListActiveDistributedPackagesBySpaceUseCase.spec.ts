@@ -20,6 +20,7 @@ import {
   ISpacesPort,
   IStandardsPort,
   ListActiveDistributedPackagesBySpaceCommand,
+  Package,
   PackageId,
   Recipe,
   Skill,
@@ -46,7 +47,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       'findActivePackageOperationsBySpace' | 'findOutdatedDeploymentsBySpace'
     >
   >;
-  let packageRepository: jest.Mocked<Pick<IPackageRepository, never>>;
+  let packageRepository: jest.Mocked<Pick<IPackageRepository, 'findBySpaceId'>>;
   let targetRepository: jest.Mocked<
     Pick<ITargetRepository, 'findActiveInSpace'>
   >;
@@ -107,6 +108,19 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     gitRepoId,
   });
 
+  const buildPackage = (overrides?: Partial<Package>): Package => ({
+    id: createPackageId(uuidv4()),
+    name: 'pkg',
+    slug: 'pkg',
+    description: '',
+    spaceId,
+    createdBy: userId,
+    recipes: [],
+    standards: [],
+    skills: [],
+    ...overrides,
+  });
+
   const gitRepo: GitRepo = {
     id: gitRepoId,
     owner: 'org',
@@ -140,7 +154,9 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       findOutdatedDeploymentsBySpace: jest.fn().mockResolvedValue([]),
     };
 
-    packageRepository = {};
+    packageRepository = {
+      findBySpaceId: jest.fn().mockResolvedValue([]),
+    };
 
     targetRepository = {
       findActiveInSpace: jest.fn().mockResolvedValue([]),
@@ -193,16 +209,17 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       });
     });
 
-    it('returns active packages by target with empty deployed lists', async () => {
+    it('returns an active package with empty deployed and pending lists', async () => {
       const targetId = createTargetId(uuidv4());
-      const packageId = createPackageId(uuidv4());
+      const pkg = buildPackage();
 
       distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
-        [activeRow(targetId, packageId, DistributionStatus.success)],
+        [activeRow(targetId, pkg.id, DistributionStatus.success)],
       );
       targetRepository.findActiveInSpace.mockResolvedValue([
         buildTarget(targetId),
       ]);
+      packageRepository.findBySpaceId.mockResolvedValue([pkg]);
 
       const result = await useCase.execute(command);
 
@@ -213,39 +230,41 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
           gitRepo,
           packages: [
             {
-              packageId,
+              packageId: pkg.id,
+              package: pkg,
               lastDistributionStatus: DistributionStatus.success,
               lastDistributedAt,
+              deployedRecipes: [],
+              deployedStandards: [],
+              deployedSkills: [],
+              pendingRecipes: [],
+              pendingStandards: [],
+              pendingSkills: [],
             },
           ],
-          deployedStandards: [],
-          deployedRecipes: [],
-          deployedSkills: [],
         },
       ]);
     });
 
     it('surfaces failed-but-active distributions returned by the repository', async () => {
       const targetId = createTargetId(uuidv4());
-      const packageId = createPackageId(uuidv4());
+      const pkg = buildPackage();
 
       distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
-        [activeRow(targetId, packageId, DistributionStatus.failure)],
+        [activeRow(targetId, pkg.id, DistributionStatus.failure)],
       );
       targetRepository.findActiveInSpace.mockResolvedValue([
         buildTarget(targetId),
       ]);
+      packageRepository.findBySpaceId.mockResolvedValue([pkg]);
 
       const result = await useCase.execute(command);
 
       expect(result).toHaveLength(1);
-      expect(result[0].packages).toEqual([
-        {
-          packageId,
-          lastDistributionStatus: DistributionStatus.failure,
-          lastDistributedAt,
-        },
-      ]);
+      expect(result[0].packages).toHaveLength(1);
+      expect(result[0].packages[0].lastDistributionStatus).toBe(
+        DistributionStatus.failure,
+      );
     });
 
     it('issues all reads against the requested space and organization', async () => {
@@ -261,9 +280,10 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         organizationId,
         spaceId,
       );
+      expect(packageRepository.findBySpaceId).toHaveBeenCalledWith(spaceId);
     });
 
-    it('includes a target with no active packages when it has deployed artifacts', async () => {
+    it('returns the target with empty packages when no active operation exists', async () => {
       const targetId = createTargetId(uuidv4());
 
       targetRepository.findActiveInSpace.mockResolvedValue([
@@ -288,9 +308,6 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
           target: buildTarget(targetId),
           gitRepo,
           packages: [],
-          deployedStandards: [],
-          deployedRecipes: [],
-          deployedSkills: [],
         },
       ]);
     });
@@ -303,12 +320,37 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       expect(result).toEqual([]);
     });
 
+    it('drops active rows whose package is no longer present in the space', async () => {
+      const targetId = createTargetId(uuidv4());
+      const orphanPackageId = createPackageId(uuidv4());
+
+      distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+        [activeRow(targetId, orphanPackageId, DistributionStatus.success)],
+      );
+      targetRepository.findActiveInSpace.mockResolvedValue([
+        buildTarget(targetId),
+      ]);
+      packageRepository.findBySpaceId.mockResolvedValue([]);
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          target: buildTarget(targetId),
+          gitRepo,
+          packages: [],
+        },
+      ]);
+    });
+
     describe('deployment status flags', () => {
       const targetId = createTargetId(uuidv4());
       const recipeId = createRecipeId(uuidv4());
       const standardId = createStandardId(uuidv4());
       const skillId = createSkillId(uuidv4());
       const deploymentDate = '2026-04-01T10:00:00.000Z';
+      let pkg: Package;
 
       const buildLiveRecipe = (version: number): Recipe =>
         ({
@@ -351,9 +393,18 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         }) as Skill;
 
       const seedDeployment = (deployedVersion: number) => {
+        pkg = buildPackage({
+          recipes: [recipeId],
+          standards: [standardId],
+          skills: [skillId],
+        });
         targetRepository.findActiveInSpace.mockResolvedValue([
           buildTarget(targetId),
         ]);
+        distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+          [activeRow(targetId, pkg.id, DistributionStatus.success)],
+        );
+        packageRepository.findBySpaceId.mockResolvedValue([pkg]);
         distributionRepository.findOutdatedDeploymentsBySpace.mockResolvedValue(
           [
             {
@@ -413,13 +464,17 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         skillsPort.listSkillsBySpace.mockResolvedValue([buildLiveSkill(3)]);
 
         const [entry] = await useCase.execute(command);
+        const [activePkg] = entry.packages;
 
-        expect(entry.deployedRecipes[0].isUpToDate).toBe(true);
-        expect(entry.deployedRecipes[0].isDeleted).toBeUndefined();
-        expect(entry.deployedStandards[0].isUpToDate).toBe(true);
-        expect(entry.deployedStandards[0].isDeleted).toBeUndefined();
-        expect(entry.deployedSkills[0].isUpToDate).toBe(true);
-        expect(entry.deployedSkills[0].isDeleted).toBeUndefined();
+        expect(activePkg.deployedRecipes[0].isUpToDate).toBe(true);
+        expect(activePkg.deployedRecipes[0].isDeleted).toBeUndefined();
+        expect(activePkg.deployedStandards[0].isUpToDate).toBe(true);
+        expect(activePkg.deployedStandards[0].isDeleted).toBeUndefined();
+        expect(activePkg.deployedSkills[0].isUpToDate).toBe(true);
+        expect(activePkg.deployedSkills[0].isDeleted).toBeUndefined();
+        expect(activePkg.pendingRecipes).toEqual([]);
+        expect(activePkg.pendingStandards).toEqual([]);
+        expect(activePkg.pendingSkills).toEqual([]);
       });
 
       it('marks deployments as outdated when deployed version trails latest', async () => {
@@ -431,16 +486,14 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         skillsPort.listSkillsBySpace.mockResolvedValue([buildLiveSkill(5)]);
 
         const [entry] = await useCase.execute(command);
+        const [activePkg] = entry.packages;
 
-        expect(entry.deployedRecipes[0].isUpToDate).toBe(false);
-        expect(entry.deployedRecipes[0].isDeleted).toBeUndefined();
-        expect(entry.deployedRecipes[0].latestVersion.version).toBe(5);
-        expect(entry.deployedStandards[0].isUpToDate).toBe(false);
-        expect(entry.deployedStandards[0].isDeleted).toBeUndefined();
-        expect(entry.deployedStandards[0].latestVersion.version).toBe(5);
-        expect(entry.deployedSkills[0].isUpToDate).toBe(false);
-        expect(entry.deployedSkills[0].isDeleted).toBeUndefined();
-        expect(entry.deployedSkills[0].latestVersion.version).toBe(5);
+        expect(activePkg.deployedRecipes[0].isUpToDate).toBe(false);
+        expect(activePkg.deployedRecipes[0].latestVersion.version).toBe(5);
+        expect(activePkg.deployedStandards[0].isUpToDate).toBe(false);
+        expect(activePkg.deployedStandards[0].latestVersion.version).toBe(5);
+        expect(activePkg.deployedSkills[0].isUpToDate).toBe(false);
+        expect(activePkg.deployedSkills[0].latestVersion.version).toBe(5);
       });
 
       it('flags deleted artifacts when the live entity is missing', async () => {
@@ -450,13 +503,144 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
         skillsPort.listSkillsBySpace.mockResolvedValue([]);
 
         const [entry] = await useCase.execute(command);
+        const [activePkg] = entry.packages;
 
-        expect(entry.deployedRecipes[0].isDeleted).toBe(true);
-        expect(entry.deployedRecipes[0].isUpToDate).toBe(false);
-        expect(entry.deployedStandards[0].isDeleted).toBe(true);
-        expect(entry.deployedStandards[0].isUpToDate).toBe(false);
-        expect(entry.deployedSkills[0].isDeleted).toBe(true);
-        expect(entry.deployedSkills[0].isUpToDate).toBe(false);
+        expect(activePkg.deployedRecipes[0].isDeleted).toBe(true);
+        expect(activePkg.deployedRecipes[0].isUpToDate).toBe(false);
+        expect(activePkg.deployedStandards[0].isDeleted).toBe(true);
+        expect(activePkg.deployedStandards[0].isUpToDate).toBe(false);
+        expect(activePkg.deployedSkills[0].isDeleted).toBe(true);
+        expect(activePkg.deployedSkills[0].isUpToDate).toBe(false);
+      });
+    });
+
+    describe('per-package partitioning and pending', () => {
+      it('splits deployed artifacts across the packages that own them and emits pending for never-deployed ones', async () => {
+        const targetId = createTargetId(uuidv4());
+        const recipeAId = createRecipeId(uuidv4());
+        const recipeBId = createRecipeId(uuidv4());
+        const standardId = createStandardId(uuidv4());
+        const skillId = createSkillId(uuidv4());
+
+        const pkgRecipes = buildPackage({
+          name: 'pkg-recipes',
+          recipes: [recipeAId, recipeBId],
+        });
+        const pkgMixed = buildPackage({
+          name: 'pkg-mixed',
+          standards: [standardId],
+          skills: [skillId],
+        });
+
+        targetRepository.findActiveInSpace.mockResolvedValue([
+          buildTarget(targetId),
+        ]);
+        distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+          [
+            activeRow(targetId, pkgRecipes.id, DistributionStatus.success),
+            activeRow(targetId, pkgMixed.id, DistributionStatus.success),
+          ],
+        );
+        packageRepository.findBySpaceId.mockResolvedValue([
+          pkgRecipes,
+          pkgMixed,
+        ]);
+        recipesPort.listRecipesBySpace.mockResolvedValue([
+          {
+            id: recipeAId,
+            name: 'recipe-a',
+            slug: 'recipe-a',
+            content: 'a',
+            version: 1,
+            userId,
+          } as Recipe,
+          {
+            id: recipeBId,
+            name: 'recipe-b',
+            slug: 'recipe-b',
+            content: 'b',
+            version: 1,
+            userId,
+          } as Recipe,
+        ]);
+        standardsPort.listStandardsBySpace.mockResolvedValue([
+          {
+            id: standardId,
+            name: 'std',
+            slug: 'std',
+            description: '',
+            version: 1,
+            userId,
+            scope: null,
+          } as Standard,
+        ]);
+        skillsPort.listSkillsBySpace.mockResolvedValue([
+          {
+            id: skillId,
+            name: 'skill',
+            slug: 'skill',
+            description: '',
+            prompt: '',
+            version: 1,
+            userId,
+          } as Skill,
+        ]);
+        distributionRepository.findOutdatedDeploymentsBySpace.mockResolvedValue(
+          [
+            {
+              targetId,
+              targetName: `target-${targetId}`,
+              gitRepoId,
+              standards: [
+                {
+                  artifactId: standardId,
+                  artifactName: 'std',
+                  artifactSlug: 'std',
+                  deployedVersion: 1,
+                  deploymentDate: '2026-04-01T10:00:00.000Z',
+                  isDeleted: false,
+                  description: '',
+                  scope: null,
+                  summary: null,
+                  userId,
+                },
+              ],
+              recipes: [
+                {
+                  artifactId: recipeAId,
+                  artifactName: 'recipe-a',
+                  artifactSlug: 'recipe-a',
+                  deployedVersion: 1,
+                  deploymentDate: '2026-04-01T10:00:00.000Z',
+                  isDeleted: false,
+                  content: 'a',
+                  userId,
+                },
+              ],
+              skills: [],
+            },
+          ],
+        );
+
+        const [entry] = await useCase.execute(command);
+        const recipesEntry = entry.packages.find(
+          (p) => p.packageId === pkgRecipes.id,
+        );
+        const mixedEntry = entry.packages.find(
+          (p) => p.packageId === pkgMixed.id,
+        );
+
+        expect(recipesEntry).toBeDefined();
+        expect(recipesEntry?.deployedRecipes).toHaveLength(1);
+        expect(recipesEntry?.deployedRecipes[0].recipe.id).toBe(recipeAId);
+        expect(recipesEntry?.pendingRecipes.map((r) => r.id)).toEqual([
+          recipeBId,
+        ]);
+
+        expect(mixedEntry).toBeDefined();
+        expect(mixedEntry?.deployedStandards).toHaveLength(1);
+        expect(mixedEntry?.deployedStandards[0].standard.id).toBe(standardId);
+        expect(mixedEntry?.pendingSkills.map((s) => s.id)).toEqual([skillId]);
       });
     });
   });

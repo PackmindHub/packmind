@@ -4,6 +4,7 @@ import {
   SpaceMemberContext,
 } from '@packmind/node-utils';
 import {
+  ActiveDistributedPackage,
   ActiveDistributedPackagesByTarget,
   createRecipeVersionId,
   createSkillVersionId,
@@ -20,11 +21,18 @@ import {
   IStandardsPort,
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
+  Package,
+  PendingRecipeInfo,
+  PendingSkillInfo,
+  PendingStandardInfo,
   Recipe,
+  RecipeId,
   RecipeVersion,
   Skill,
+  SkillId,
   SkillVersion,
   Standard,
+  StandardId,
   StandardVersion,
   TargetId,
 } from '@packmind/types';
@@ -95,6 +103,9 @@ export class ListActiveDistributedPackagesBySpaceUseCase
       organizationId,
       command.userId,
     );
+    const packages = await this.packageRepository.findBySpaceId(
+      command.spaceId,
+    );
 
     const gitRepos =
       await this.gitPort.getOrganizationRepositories(organizationId);
@@ -108,6 +119,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     const standardsById = indexById(standards);
     const recipesById = indexById(recipes);
     const skillsById = indexById(skills);
+    const packagesById = indexById(packages);
 
     return targets.map((target): ActiveDistributedPackagesByTarget => {
       const outdated = outdatedByTargetId.get(target.id) ?? {
@@ -115,38 +127,126 @@ export class ListActiveDistributedPackagesBySpaceUseCase
         recipes: [],
         skills: [],
       };
-      const targetPackages = operationsByTarget.get(target.id) ?? [];
+      const targetActiveOps = operationsByTarget.get(target.id) ?? [];
+
+      const deployedStandards = outdated.standards.map((deployment) =>
+        buildDeployedStandardInfo(
+          deployment,
+          standardsById.get(deployment.artifactId),
+        ),
+      );
+      const deployedRecipes = outdated.recipes.map((deployment) =>
+        buildDeployedRecipeInfo(
+          deployment,
+          recipesById.get(deployment.artifactId),
+        ),
+      );
+      const deployedSkills = outdated.skills.map((deployment) =>
+        buildDeployedSkillInfo(
+          deployment,
+          skillsById.get(deployment.artifactId),
+        ),
+      );
 
       return {
         targetId: target.id,
         target,
         gitRepo: gitRepos.find((r) => r.id === target.gitRepoId) ?? null,
-        packages: targetPackages.map((row) => ({
-          packageId: row.packageId,
-          lastDistributionStatus: row.lastDistributionStatus,
-          lastDistributedAt: row.lastDistributedAt,
-        })),
-        deployedStandards: outdated.standards.map((deployment) =>
-          buildDeployedStandardInfo(
-            deployment,
-            standardsById.get(deployment.artifactId),
-          ),
-        ),
-        deployedRecipes: outdated.recipes.map((deployment) =>
-          buildDeployedRecipeInfo(
-            deployment,
-            recipesById.get(deployment.artifactId),
-          ),
-        ),
-        deployedSkills: outdated.skills.map((deployment) =>
-          buildDeployedSkillInfo(
-            deployment,
-            skillsById.get(deployment.artifactId),
-          ),
-        ),
+        packages: targetActiveOps
+          .map((row) =>
+            buildActivePackage({
+              row,
+              pkg: packagesById.get(row.packageId),
+              deployedRecipes,
+              deployedStandards,
+              deployedSkills,
+              recipesById,
+              standardsById,
+              skillsById,
+            }),
+          )
+          .filter((entry): entry is ActiveDistributedPackage => entry !== null),
       };
     });
   }
+}
+
+function buildActivePackage(args: {
+  row: ActivePackageOperationRow;
+  pkg: Package | undefined;
+  deployedRecipes: DeployedRecipeTargetInfo[];
+  deployedStandards: DeployedStandardTargetInfo[];
+  deployedSkills: DeployedSkillTargetInfo[];
+  recipesById: Map<string, Recipe>;
+  standardsById: Map<string, Standard>;
+  skillsById: Map<string, Skill>;
+}): ActiveDistributedPackage | null {
+  const {
+    row,
+    pkg,
+    deployedRecipes,
+    deployedStandards,
+    deployedSkills,
+    recipesById,
+    standardsById,
+    skillsById,
+  } = args;
+  if (!pkg) return null;
+
+  const pkgRecipeIds = new Set<RecipeId>(pkg.recipes);
+  const pkgStandardIds = new Set<StandardId>(pkg.standards);
+  const pkgSkillIds = new Set<SkillId>(pkg.skills);
+
+  const packageDeployedRecipes = deployedRecipes.filter((r) =>
+    pkgRecipeIds.has(r.recipe.id),
+  );
+  const packageDeployedStandards = deployedStandards.filter((s) =>
+    pkgStandardIds.has(s.standard.id),
+  );
+  const packageDeployedSkills = deployedSkills.filter((s) =>
+    pkgSkillIds.has(s.skill.id),
+  );
+
+  const deployedRecipeIds = new Set(
+    packageDeployedRecipes.map((r) => r.recipe.id),
+  );
+  const deployedStandardIds = new Set(
+    packageDeployedStandards.map((s) => s.standard.id),
+  );
+  const deployedSkillIds = new Set(
+    packageDeployedSkills.map((s) => s.skill.id),
+  );
+
+  const pendingRecipes: PendingRecipeInfo[] = pkg.recipes
+    .filter((id) => !deployedRecipeIds.has(id))
+    .map((id) => recipesById.get(id))
+    .filter((r): r is Recipe => Boolean(r))
+    .map((r) => ({ id: r.id, name: r.name, slug: r.slug }));
+
+  const pendingStandards: PendingStandardInfo[] = pkg.standards
+    .filter((id) => !deployedStandardIds.has(id))
+    .map((id) => standardsById.get(id))
+    .filter((s): s is Standard => Boolean(s))
+    .map((s) => ({ id: s.id, name: s.name, slug: s.slug }));
+
+  const pendingSkills: PendingSkillInfo[] = pkg.skills
+    .filter((id) => !deployedSkillIds.has(id))
+    .map((id) => skillsById.get(id))
+    .filter((s): s is Skill => Boolean(s))
+    .map((s) => ({ id: s.id, name: s.name, slug: s.slug }));
+
+  return {
+    packageId: row.packageId,
+    package: pkg,
+    lastDistributionStatus: row.lastDistributionStatus,
+    lastDistributedAt: row.lastDistributedAt,
+    deployedRecipes: packageDeployedRecipes,
+    deployedStandards: packageDeployedStandards,
+    deployedSkills: packageDeployedSkills,
+    pendingRecipes,
+    pendingStandards,
+    pendingSkills,
+  };
 }
 
 function groupActiveOpsByTarget(
