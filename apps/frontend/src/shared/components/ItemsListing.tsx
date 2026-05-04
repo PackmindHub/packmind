@@ -74,7 +74,7 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
         return acc;
       }, [] as string[]),
     );
-  }, [effectiveSearchQuery, props]);
+  }, [effectiveSearchQuery, props.items, props.matchQuery]);
 
   React.useEffect(() => {
     setFilteredItems(
