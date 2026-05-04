@@ -2,14 +2,17 @@ import React, { useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
+  PMCombobox,
   PMEmptyState,
   PMHStack,
   PMInput,
-  PMNativeSelect,
+  PMPortal,
   PMSpinner,
   PMTableRow,
   PMVStack,
   SortDirection,
+  pmCreateListCollection,
+  pmUseFilter,
 } from '@packmind/ui';
 import {
   useGetOrganizationSpacesForManagementQuery,
@@ -53,6 +56,69 @@ const SPACE_COLUMNS: ItemsListingColumn[] = [
 const INTERACTIVE_SELECTOR =
   'button, a, input, [role="menu"], [role="menuitem"]';
 
+type FilterItem = { label: string; value: string };
+
+function MultiFilterCombobox({
+  items,
+  value,
+  onChange,
+  placeholder,
+}: {
+  items: FilterItem[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder: string;
+}) {
+  const [inputValue, setInputValue] = React.useState('');
+  const { contains } = pmUseFilter({ sensitivity: 'base' });
+
+  const collection = useMemo(
+    () =>
+      pmCreateListCollection({
+        items: inputValue
+          ? items.filter((i) => contains(i.label, inputValue))
+          : items,
+      }),
+    [items, inputValue, contains],
+  );
+
+  return (
+    <PMCombobox.Root
+      collection={collection}
+      multiple
+      value={value}
+      onInputValueChange={(e: { inputValue: string }) =>
+        setInputValue(e.inputValue)
+      }
+      onValueChange={(details: { value: string[] }) => onChange(details.value)}
+      openOnClick
+    >
+      <PMCombobox.Control>
+        <PMVStack gap={0}>
+          <PMCombobox.Input placeholder={placeholder} />
+          <PMCombobox.IndicatorGroup>
+            <PMCombobox.ClearTrigger />
+            <PMCombobox.Trigger />
+          </PMCombobox.IndicatorGroup>
+        </PMVStack>
+      </PMCombobox.Control>
+      <PMPortal>
+        <PMCombobox.Positioner>
+          <PMCombobox.Content>
+            <PMCombobox.Empty>No results</PMCombobox.Empty>
+            {collection.items.map((item) => (
+              <PMCombobox.Item item={item} key={item.value}>
+                <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                <PMCombobox.ItemIndicator />
+              </PMCombobox.Item>
+            ))}
+          </PMCombobox.Content>
+        </PMCombobox.Positioner>
+      </PMPortal>
+    </PMCombobox.Root>
+  );
+}
+
 function sortSpaces(
   items: SpaceListItem[],
   sortKey: string | null,
@@ -92,8 +158,8 @@ export const SpacesManagementPage: React.FC = () => {
   const [page] = useState(1);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAdminId, setSelectedAdminId] = useState('');
-  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [selectedAdminIds, setSelectedAdminIds] = useState<string[]>([]);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const orgId = organization?.id ?? '';
   const { data, isLoading, isError } =
     useGetOrganizationSpacesForManagementQuery(orgId, page);
@@ -119,56 +185,55 @@ export const SpacesManagementPage: React.FC = () => {
 
   const items = useMemo(() => (data?.items ?? []).map(toSpaceListItem), [data]);
 
-  const adminOptions = useMemo(() => {
+  const adminItems = useMemo(() => {
     const seen = new Set<string>();
-    const opts: { label: string; value: string }[] = [
-      { label: 'Any', value: '' },
-    ];
+    const result: { label: string; value: string }[] = [];
     for (const item of items) {
       for (const admin of item.admins) {
         if (!seen.has(admin.id)) {
           seen.add(admin.id);
-          opts.push({
+          result.push({
             label: userDisplayNameMap.get(admin.id) ?? admin.displayName,
             value: admin.id,
           });
         }
       }
     }
-    return opts;
+    return result;
   }, [items, userDisplayNameMap]);
 
-  const memberOptions = useMemo(() => {
+  const memberItems = useMemo(() => {
     const seen = new Set<string>();
-    const opts: { label: string; value: string }[] = [
-      { label: 'Any', value: '' },
-    ];
+    const result: { label: string; value: string }[] = [];
     for (const item of items) {
       for (const memberId of item.memberIds) {
         if (!seen.has(memberId)) {
           seen.add(memberId);
-          opts.push({
+          result.push({
             label: userDisplayNameMap.get(memberId) ?? memberId,
             value: memberId,
           });
         }
       }
     }
-    return opts;
+    return result;
   }, [items, userDisplayNameMap]);
 
   const filteredItems = useMemo(() => {
     return items.filter((space) => {
       if (
-        selectedAdminId &&
-        !space.admins.some((a) => a.id === selectedAdminId)
+        selectedAdminIds.length > 0 &&
+        !space.admins.some((a) => selectedAdminIds.includes(a.id))
       )
         return false;
-      if (selectedMemberId && !space.memberIds.includes(selectedMemberId))
+      if (
+        selectedMemberIds.length > 0 &&
+        !space.memberIds.some((id) => selectedMemberIds.includes(id))
+      )
         return false;
       return true;
     });
-  }, [items, selectedAdminId, selectedMemberId]);
+  }, [items, selectedAdminIds, selectedMemberIds]);
 
   if (isError) {
     return (
@@ -255,17 +320,17 @@ export const SpacesManagementPage: React.FC = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           size="sm"
         />
-        <PMNativeSelect
-          items={adminOptions}
-          value={selectedAdminId}
-          onChange={(e) => setSelectedAdminId(e.currentTarget.value)}
-          size="sm"
+        <MultiFilterCombobox
+          items={adminItems}
+          value={selectedAdminIds}
+          onChange={setSelectedAdminIds}
+          placeholder="All admins"
         />
-        <PMNativeSelect
-          items={memberOptions}
-          value={selectedMemberId}
-          onChange={(e) => setSelectedMemberId(e.currentTarget.value)}
-          size="sm"
+        <MultiFilterCombobox
+          items={memberItems}
+          value={selectedMemberIds}
+          onChange={setSelectedMemberIds}
+          placeholder="All members"
         />
       </PMHStack>
       <ItemsListing

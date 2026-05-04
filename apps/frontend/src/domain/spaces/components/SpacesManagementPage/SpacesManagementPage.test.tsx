@@ -174,7 +174,7 @@ describe('SpacesManagementPage', () => {
     jest.restoreAllMocks();
   });
 
-  it('renders the filter bar with search and select inputs', () => {
+  it('renders the filter bar with search and combobox inputs', () => {
     jest
       .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
       .mockReturnValue({
@@ -195,7 +195,8 @@ describe('SpacesManagementPage', () => {
     expect(
       screen.getByPlaceholderText('Search by name...'),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('combobox')).toHaveLength(2);
+    expect(screen.getByPlaceholderText('All admins')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('All members')).toBeInTheDocument();
   });
 
   it('filters spaces by admin', async () => {
@@ -230,8 +231,8 @@ describe('SpacesManagementPage', () => {
     renderWithQuery(<SpacesManagementPage />);
 
     const user = userEvent.setup();
-    const selects = screen.getAllByRole('combobox');
-    await user.selectOptions(selects[0], 'admin-1');
+    await user.click(screen.getByPlaceholderText('All admins'));
+    await user.click(screen.getByRole('option', { name: 'Alice' }));
 
     expect(screen.getByText('Engineering')).toBeInTheDocument();
     expect(screen.queryByText('Frontend')).not.toBeInTheDocument();
@@ -269,8 +270,8 @@ describe('SpacesManagementPage', () => {
     renderWithQuery(<SpacesManagementPage />);
 
     const user = userEvent.setup();
-    const selects = screen.getAllByRole('combobox');
-    await user.selectOptions(selects[1], 'member-1');
+    await user.click(screen.getByPlaceholderText('All members'));
+    await user.click(screen.getByRole('option', { name: 'member-1' }));
 
     expect(screen.getByText('Engineering')).toBeInTheDocument();
     expect(screen.queryByText('Frontend')).not.toBeInTheDocument();
