@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { PMAlert, PMHStack, PMSpinner, PMVStack } from '@packmind/ui';
+import { PMAlert, PMBox, PMHStack, PMSpinner, PMVStack } from '@packmind/ui';
 import {
   useGetOrganizationSpacesForManagementQuery,
   useGetSpacesQuery,
