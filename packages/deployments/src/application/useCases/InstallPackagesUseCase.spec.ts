@@ -325,10 +325,9 @@ describe('InstallPackagesUseCase', () => {
         };
 
         await useCase.execute(command);
-
-        const lockFileModificationCall =
-          lockFileService.createLockFileModification.mock.calls[0][0];
-        expect('installedAt' in lockFileModificationCall).toBe(false);
+        expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
+          expect.objectContaining({ includeInstalledAt: false }),
+        );
       });
     });
   });

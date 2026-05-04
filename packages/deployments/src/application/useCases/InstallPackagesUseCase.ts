@@ -284,11 +284,8 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       packageSlugs: command.packagesSlugs,
       artifactSpaceIds,
       artifactPackageIds,
+      includeInstalledAt: command.packmindLockFile.installedAt !== undefined,
     });
-
-    if (!('installedAt' in command.packmindLockFile)) {
-      delete lockFile.installedAt;
-    }
 
     // Preserve inaccessible artifacts from the previous lock file
     for (const [key, entry] of Object.entries(
