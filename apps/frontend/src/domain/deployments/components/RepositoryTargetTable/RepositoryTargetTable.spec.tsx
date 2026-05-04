@@ -7,12 +7,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../../../../providers/AuthProvider';
 import { RepositoryTargetTable } from './RepositoryTargetTable';
 import {
+  createActivePackage,
   createDeployedRecipeTargetInfo,
   createDeployedStandardTargetInfo,
   packageFactory,
 } from '@packmind/deployments/test';
-import { createTargetId } from '@packmind/types';
-import { PackageGroup } from '../../utils/groupTargetByPackage';
+import { ActiveDistributedPackage, createTargetId } from '@packmind/types';
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -58,28 +58,21 @@ describe('RepositoryTargetTable', () => {
     const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
     const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
-    const groups: PackageGroup[] = [
-      {
-        pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
-        recipes: [recipeA],
-        standards: [],
-        skills: [],
-        pendingRecipes: [],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
-      {
-        pkg: packageFactory({
+    const groups: ActiveDistributedPackage[] = [
+      createActivePackage({
+        package: packageFactory({
+          name: 'alpha',
+          recipes: [recipeA.recipe.id],
+        }),
+        deployedRecipes: [recipeA],
+      }),
+      createActivePackage({
+        package: packageFactory({
           name: 'beta',
           standards: [standardB.standard.id],
         }),
-        recipes: [],
-        standards: [standardB],
-        skills: [],
-        pendingRecipes: [],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
+        deployedStandards: [standardB],
+      }),
     ];
 
     renderWithProvider(
@@ -98,28 +91,21 @@ describe('RepositoryTargetTable', () => {
     const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
     const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
-    const groups: PackageGroup[] = [
-      {
-        pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
-        recipes: [recipeA],
-        standards: [],
-        skills: [],
-        pendingRecipes: [],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
-      {
-        pkg: packageFactory({
+    const groups: ActiveDistributedPackage[] = [
+      createActivePackage({
+        package: packageFactory({
+          name: 'alpha',
+          recipes: [recipeA.recipe.id],
+        }),
+        deployedRecipes: [recipeA],
+      }),
+      createActivePackage({
+        package: packageFactory({
           name: 'beta',
           standards: [standardB.standard.id],
         }),
-        recipes: [],
-        standards: [standardB],
-        skills: [],
-        pendingRecipes: [],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
+        deployedStandards: [standardB],
+      }),
     ];
 
     renderWithProvider(
@@ -138,19 +124,14 @@ describe('RepositoryTargetTable', () => {
   it('renders no pm-table when mode hides every artifact', () => {
     const upToDateRecipe = createDeployedRecipeTargetInfo({ isUpToDate: true });
 
-    const groups: PackageGroup[] = [
-      {
-        pkg: packageFactory({
+    const groups: ActiveDistributedPackage[] = [
+      createActivePackage({
+        package: packageFactory({
           name: 'alpha',
           recipes: [upToDateRecipe.recipe.id],
         }),
-        recipes: [upToDateRecipe],
-        standards: [],
-        skills: [],
-        pendingRecipes: [],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
+        deployedRecipes: [upToDateRecipe],
+      }),
     ];
 
     renderWithProvider(
@@ -170,28 +151,21 @@ describe('RepositoryTargetTable', () => {
     const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
     const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
-    const groups: PackageGroup[] = [
-      {
-        pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
-        recipes: [recipeA],
-        standards: [],
-        skills: [],
-        pendingRecipes: [],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
-      {
-        pkg: packageFactory({
+    const groups: ActiveDistributedPackage[] = [
+      createActivePackage({
+        package: packageFactory({
+          name: 'alpha',
+          recipes: [recipeA.recipe.id],
+        }),
+        deployedRecipes: [recipeA],
+      }),
+      createActivePackage({
+        package: packageFactory({
           name: 'beta',
           standards: [standardB.standard.id],
         }),
-        recipes: [],
-        standards: [standardB],
-        skills: [],
-        pendingRecipes: [],
-        pendingStandards: [],
-        pendingSkills: [],
-      },
+        deployedStandards: [standardB],
+      }),
     ];
 
     renderWithProvider(

@@ -1,15 +1,14 @@
 import React from 'react';
 import { PMAccordion, PMBadge, PMBox, PMText, PMVStack } from '@packmind/ui';
-import { TargetId } from '@packmind/types';
+import { ActiveDistributedPackage, TargetId } from '@packmind/types';
 import { PackageArtifactsTable } from '../PackageArtifactsTable';
-import { PackageGroup } from '../../utils/groupTargetByPackage';
 
 type Mode = 'all' | 'outdated' | 'up-to-date';
 
 export type RepositoryTargetTableProps = {
   orgSlug?: string;
   target: { id: TargetId; name: string; path?: string };
-  packageGroups: ReadonlyArray<PackageGroup>;
+  packageGroups: ReadonlyArray<ActiveDistributedPackage>;
   mode?: Mode;
   canDistributeFromApp: boolean;
   isDistributeReadinessLoading: boolean;
@@ -42,14 +41,14 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         <PMVStack align="stretch" width="full" gap={4}>
           {packageGroups.map((group) => (
             <PackageArtifactsTable
-              key={`pkg-${group.pkg.id}`}
+              key={`pkg-${group.package.id}`}
               orgSlug={orgSlug}
-              packageName={group.pkg.name}
-              packageId={group.pkg.id}
+              packageName={group.package.name}
+              packageId={group.package.id}
               targetId={target.id}
-              recipes={group.recipes}
-              standards={group.standards}
-              skills={group.skills}
+              recipes={group.deployedRecipes}
+              standards={group.deployedStandards}
+              skills={group.deployedSkills}
               pendingRecipes={group.pendingRecipes}
               pendingStandards={group.pendingStandards}
               pendingSkills={group.pendingSkills}

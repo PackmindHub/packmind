@@ -14,8 +14,10 @@ import * as DeploymentQueries from '../../api/queries/DeploymentsQueries';
 import { AuthProvider } from '../../../../providers/AuthProvider';
 import { ActiveDistributedPackagesByTarget } from '@packmind/types';
 import {
+  createActivePackage,
   createActiveDistributedPackagesByTarget,
   createDeployedRecipeTargetInfo,
+  packageFactory,
 } from '@packmind/deployments/test';
 
 const mockSetSearchParams = jest.fn();
@@ -72,12 +74,11 @@ const renderWithProvider = async (ui: React.ReactElement) => {
 };
 
 jest.mock('../../api/queries/DeploymentsQueries', () => ({
-  useListPackagesBySpaceQuery: jest.fn(() => ({
-    data: { packages: [] },
-    isLoading: false,
-    isError: false,
-  })),
   useListActiveDistributedPackagesBySpaceQuery: jest.fn(),
+  useDeployPackagesMutation: () => ({
+    mutateAsync: jest.fn(),
+    isPending: false,
+  }),
 }));
 
 jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
@@ -114,11 +115,23 @@ const mockOverview = (entries: ActiveDistributedPackagesByTarget[]) =>
     UseQueryResult<ActiveDistributedPackagesByTarget[], Error>
   > as UseQueryResult<ActiveDistributedPackagesByTarget[], Error>;
 
-const buildDefaultEntries = (): ActiveDistributedPackagesByTarget[] => [
-  createActiveDistributedPackagesByTarget({
-    deployedRecipes: [createDeployedRecipeTargetInfo()],
-  }),
-];
+const buildDefaultEntries = (): ActiveDistributedPackagesByTarget[] => {
+  const recipeInfo = createDeployedRecipeTargetInfo();
+  const pkg = packageFactory({
+    name: 'pkg',
+    recipes: [recipeInfo.recipe.id],
+  });
+  return [
+    createActiveDistributedPackagesByTarget({
+      packages: [
+        createActivePackage({
+          package: pkg,
+          deployedRecipes: [recipeInfo],
+        }),
+      ],
+    }),
+  ];
+};
 
 describe('DeploymentsPage', () => {
   beforeEach(() => {

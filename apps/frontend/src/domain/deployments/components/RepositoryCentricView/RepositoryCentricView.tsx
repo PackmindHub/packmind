@@ -1,15 +1,6 @@
 import React, { useMemo } from 'react';
 import { PMHeading, PMVStack, PMEmptyState } from '@packmind/ui';
-import {
-  ActiveDistributedPackagesByTarget,
-  Package,
-  Recipe,
-  RecipeId,
-  Skill,
-  SkillId,
-  Standard,
-  StandardId,
-} from '@packmind/types';
+import { ActiveDistributedPackagesByTarget } from '@packmind/types';
 import { RepositoryTargetTable } from '../RepositoryTargetTable/RepositoryTargetTable';
 import {
   buildRepositorySections,
@@ -17,9 +8,6 @@ import {
   TargetSection,
 } from '../../utils/buildRepositorySections';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
-import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
-import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
-import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
 
 type ArtifactStatusFilter = 'all' | 'outdated' | 'up-to-date';
 
@@ -30,8 +18,6 @@ interface RepositoryCentricViewProps {
   selectedTargetNames?: string[];
   orgSlug?: string;
   selectedRepoIds?: string[];
-  packages?: ReadonlyArray<Package>;
-  packagesLoading?: boolean;
 }
 
 const matchesStatus = (
@@ -127,8 +113,6 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   selectedTargetNames = [],
   orgSlug,
   selectedRepoIds = [],
-  packages = [],
-  packagesLoading = false,
 }) => {
   const { data: gitProvidersResponse, isLoading: isProvidersLoading } =
     useGetGitProvidersQuery();
@@ -140,25 +124,10 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
     return set;
   }, [gitProvidersResponse]);
 
-  const { data: recipesData } = useGetRecipesQuery();
-  const { data: standardsData } = useGetStandardsQuery();
-  const { data: skillsData } = useGetSkillsQuery();
-
-  const lookups = useMemo(
-    () => ({
-      recipesById: indexById<RecipeId, Recipe>(recipesData ?? []),
-      standardsById: indexById<StandardId, Standard>(
-        standardsData?.standards ?? [],
-      ),
-      skillsById: indexById<SkillId, Skill>(skillsData ?? []),
-    }),
-    [recipesData, standardsData, skillsData],
+  const sections = useMemo(
+    () => buildRepositorySections({ entries }),
+    [entries],
   );
-
-  const sections = useMemo(() => {
-    if (packagesLoading) return [];
-    return buildRepositorySections({ entries, packages, lookups });
-  }, [packagesLoading, entries, packages, lookups]);
 
   const visibleSections = useMemo(() => {
     return sections
@@ -239,9 +208,3 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
     </PMVStack>
   );
 };
-
-function indexById<TId extends string, T extends { id: TId }>(
-  items: readonly T[],
-): Map<TId, T> {
-  return new Map(items.map((item) => [item.id, item]));
-}

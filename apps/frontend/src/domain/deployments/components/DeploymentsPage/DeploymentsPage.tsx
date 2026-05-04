@@ -15,10 +15,7 @@ import type { ArtifactTypeFilter } from '../ArtifactsView/ArtifactsView';
 import { TargetMultiSelect } from '../TargetMultiSelect';
 import { RepositoryMultiSelect } from '../RepositoryMultiSelect';
 import { StatusCombobox, type RepositoryStatus } from '../StatusCombobox';
-import {
-  useListActiveDistributedPackagesBySpaceQuery,
-  useListPackagesBySpaceQuery,
-} from '../../api/queries/DeploymentsQueries';
+import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { ActiveDistributedPackagesByTarget, Target } from '@packmind/types';
 import { buildArtifactRollups } from '../../utils/buildArtifactRollups';
@@ -56,8 +53,7 @@ const extractAvailableRepositories = (
 export const DeploymentsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { orgSlug } = useParams() as { orgSlug?: string };
-  const { spaceId, space } = useCurrentSpace();
-  const organizationId = space?.organizationId;
+  const { spaceId } = useCurrentSpace();
 
   // URL-synchronized state for viewMode
   const rawView = searchParams.get('view');
@@ -174,9 +170,6 @@ export const DeploymentsPage: React.FC = () => {
     isLoading,
     error,
   } = useListActiveDistributedPackagesBySpaceQuery(spaceId);
-  const { data: packagesResponse, isLoading: isPackagesLoading } =
-    useListPackagesBySpaceQuery(spaceId, organizationId);
-  const packages = packagesResponse?.packages ?? [];
   const entries = useMemo(() => overviewData ?? [], [overviewData]);
 
   const availableTargets = useMemo(
@@ -282,8 +275,6 @@ export const DeploymentsPage: React.FC = () => {
         selectedTargetNames={selectedTargetNames}
         orgSlug={orgSlug}
         selectedRepoIds={selectedRepoIds}
-        packages={packages}
-        packagesLoading={isPackagesLoading}
       />
     </PMVStack>
   );

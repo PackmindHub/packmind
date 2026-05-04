@@ -1,21 +1,15 @@
 import {
+  ActiveDistributedPackage,
   ActiveDistributedPackagesByTarget,
   GitRepo,
-  Package,
-  PackageId,
   Target,
   TargetId,
 } from '@packmind/types';
-import {
-  groupTargetByPackage,
-  GroupTargetByPackageLookups,
-  PackageGroup,
-} from './groupTargetByPackage';
 
 export type TargetSection = {
   id: TargetId;
   target: Target;
-  packageGroups: PackageGroup[];
+  packageGroups: ActiveDistributedPackage[];
   inSyncCount: number;
   outdatedCount: number;
   hasOutdated: boolean;
@@ -28,34 +22,20 @@ export type RepoSection = {
 
 export type BuildRepositorySectionsInput = {
   entries: ReadonlyArray<ActiveDistributedPackagesByTarget>;
-  packages: ReadonlyArray<Package>;
-  lookups: GroupTargetByPackageLookups | undefined;
 };
 
 export function buildRepositorySections({
   entries,
-  packages,
-  lookups,
 }: BuildRepositorySectionsInput): RepoSection[] {
   const sections = new Map<string, RepoSection>();
 
   entries.forEach((entry) => {
     if (!entry.gitRepo) return;
+    if (entry.packages.length === 0) return;
 
-    const activePackageIds = new Set(entry.packages.map((p) => p.packageId));
-    const packageGroups = groupTargetByPackage(
-      {
-        recipes: entry.deployedRecipes,
-        standards: entry.deployedStandards,
-        skills: entry.deployedSkills,
-      },
-      packages,
-      lookups,
-      activePackageIds,
+    const packageGroups = [...entry.packages].sort((a, b) =>
+      a.package.name.localeCompare(b.package.name),
     );
-
-    if (packageGroups.length === 0) return;
-
     const counts = countArtifacts(packageGroups);
     const targetSection: TargetSection = {
       id: entry.target.id,
@@ -87,7 +67,7 @@ export function buildRepositorySections({
   );
 }
 
-function countArtifacts(groups: ReadonlyArray<PackageGroup>): {
+function countArtifacts(groups: ReadonlyArray<ActiveDistributedPackage>): {
   inSync: number;
   outdated: number;
 } {
@@ -95,7 +75,11 @@ function countArtifacts(groups: ReadonlyArray<PackageGroup>): {
   let outdated = 0;
 
   groups.forEach((group) => {
-    [...group.recipes, ...group.standards, ...group.skills].forEach((item) => {
+    [
+      ...group.deployedRecipes,
+      ...group.deployedStandards,
+      ...group.deployedSkills,
+    ].forEach((item) => {
       if (item.isUpToDate && !item.isDeleted) inSync += 1;
       else outdated += 1;
     });

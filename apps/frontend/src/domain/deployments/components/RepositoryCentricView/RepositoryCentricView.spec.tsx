@@ -15,7 +15,7 @@ import {
   targetFactory,
 } from '@packmind/deployments/test';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
-import { Package, createTargetId } from '@packmind/types';
+import { createTargetId } from '@packmind/types';
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -63,7 +63,7 @@ describe('RepositoryCentricView', () => {
   it('displays repository name when a target has an active package', () => {
     const target = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
     const recipeInfo = createDeployedRecipeTargetInfo();
-    const pkg: Package = packageFactory({
+    const pkg = packageFactory({
       name: 'pkg-recipe',
       recipes: [recipeInfo.recipe.id],
     });
@@ -71,14 +71,13 @@ describe('RepositoryCentricView', () => {
       createActiveDistributedPackagesByTarget({
         target,
         gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-        packages: [createActivePackage({ packageId: pkg.id })],
-        deployedRecipes: [recipeInfo],
+        packages: [
+          createActivePackage({ package: pkg, deployedRecipes: [recipeInfo] }),
+        ],
       }),
     ];
 
-    renderWithProvider(
-      <RepositoryCentricView entries={entries} packages={[pkg]} />,
-    );
+    renderWithProvider(<RepositoryCentricView entries={entries} />);
 
     expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
   });
@@ -86,7 +85,7 @@ describe('RepositoryCentricView', () => {
   it('renders one table per package for a recipe target', () => {
     const target = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
     const recipeInfo = createDeployedRecipeTargetInfo();
-    const pkg: Package = packageFactory({
+    const pkg = packageFactory({
       name: 'pkg-recipe',
       recipes: [recipeInfo.recipe.id],
     });
@@ -94,14 +93,13 @@ describe('RepositoryCentricView', () => {
       createActiveDistributedPackagesByTarget({
         target,
         gitRepo: gitRepoFactory(),
-        packages: [createActivePackage({ packageId: pkg.id })],
-        deployedRecipes: [recipeInfo],
+        packages: [
+          createActivePackage({ package: pkg, deployedRecipes: [recipeInfo] }),
+        ],
       }),
     ];
 
-    renderWithProvider(
-      <RepositoryCentricView entries={entries} packages={[pkg]} />,
-    );
+    renderWithProvider(<RepositoryCentricView entries={entries} />);
 
     expect(screen.getAllByTestId('pm-table')).toHaveLength(1);
   });
@@ -109,7 +107,7 @@ describe('RepositoryCentricView', () => {
   it('renders one table per package for a standard target', () => {
     const target = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
     const standardInfo = createDeployedStandardTargetInfo();
-    const pkg: Package = packageFactory({
+    const pkg = packageFactory({
       name: 'pkg-standard',
       standards: [standardInfo.standard.id],
     });
@@ -117,14 +115,16 @@ describe('RepositoryCentricView', () => {
       createActiveDistributedPackagesByTarget({
         target,
         gitRepo: gitRepoFactory(),
-        packages: [createActivePackage({ packageId: pkg.id })],
-        deployedStandards: [standardInfo],
+        packages: [
+          createActivePackage({
+            package: pkg,
+            deployedStandards: [standardInfo],
+          }),
+        ],
       }),
     ];
 
-    renderWithProvider(
-      <RepositoryCentricView entries={entries} packages={[pkg]} />,
-    );
+    renderWithProvider(<RepositoryCentricView entries={entries} />);
 
     expect(screen.getAllByTestId('pm-table')).toHaveLength(1);
   });
@@ -138,7 +138,7 @@ describe('RepositoryCentricView', () => {
     const t2 = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
     const recipeInfo = createDeployedRecipeTargetInfo();
     const standardInfo = createDeployedStandardTargetInfo();
-    const pkg: Package = packageFactory({
+    const pkg = packageFactory({
       name: 'pkg-mixed',
       recipes: [recipeInfo.recipe.id],
       standards: [standardInfo.standard.id],
@@ -147,20 +147,23 @@ describe('RepositoryCentricView', () => {
       createActiveDistributedPackagesByTarget({
         target: t1,
         gitRepo: sharedRepo,
-        packages: [createActivePackage({ packageId: pkg.id })],
-        deployedRecipes: [recipeInfo],
+        packages: [
+          createActivePackage({ package: pkg, deployedRecipes: [recipeInfo] }),
+        ],
       }),
       createActiveDistributedPackagesByTarget({
         target: t2,
         gitRepo: sharedRepo,
-        packages: [createActivePackage({ packageId: pkg.id })],
-        deployedStandards: [standardInfo],
+        packages: [
+          createActivePackage({
+            package: pkg,
+            deployedStandards: [standardInfo],
+          }),
+        ],
       }),
     ];
 
-    renderWithProvider(
-      <RepositoryCentricView entries={entries} packages={[pkg]} />,
-    );
+    renderWithProvider(<RepositoryCentricView entries={entries} />);
 
     expect(
       screen.getByText('shared-owner/shared-repo:main'),
@@ -189,8 +192,12 @@ describe('RepositoryCentricView', () => {
             owner: 'test-owner',
             repo: 'test-repo',
           }),
-          packages: [createActivePackage({ packageId: pkgA.id })],
-          deployedRecipes: [recipeA],
+          packages: [
+            createActivePackage({
+              package: pkgA,
+              deployedRecipes: [recipeA],
+            }),
+          ],
         }),
         createActiveDistributedPackagesByTarget({
           target: targetB,
@@ -198,17 +205,17 @@ describe('RepositoryCentricView', () => {
             owner: 'other-owner',
             repo: 'other-repo',
           }),
-          packages: [createActivePackage({ packageId: pkgB.id })],
-          deployedRecipes: [recipeB],
+          packages: [
+            createActivePackage({
+              package: pkgB,
+              deployedRecipes: [recipeB],
+            }),
+          ],
         }),
       ];
 
       renderWithProvider(
-        <RepositoryCentricView
-          entries={entries}
-          packages={[pkgA, pkgB]}
-          searchTerm="test"
-        />,
+        <RepositoryCentricView entries={entries} searchTerm="test" />,
       );
 
       expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
@@ -247,8 +254,12 @@ describe('RepositoryCentricView', () => {
             owner: 'outdated-owner',
             repo: 'outdated-repo',
           }),
-          packages: [createActivePackage({ packageId: pkgOut.id })],
-          deployedRecipes: [outdatedRecipe],
+          packages: [
+            createActivePackage({
+              package: pkgOut,
+              deployedRecipes: [outdatedRecipe],
+            }),
+          ],
         }),
         createActiveDistributedPackagesByTarget({
           target: upToDateTarget,
@@ -256,15 +267,18 @@ describe('RepositoryCentricView', () => {
             owner: 'uptodate-owner',
             repo: 'uptodate-repo',
           }),
-          packages: [createActivePackage({ packageId: pkgOk.id })],
-          deployedRecipes: [upToDateRecipe],
+          packages: [
+            createActivePackage({
+              package: pkgOk,
+              deployedRecipes: [upToDateRecipe],
+            }),
+          ],
         }),
       ];
 
       renderWithProvider(
         <RepositoryCentricView
           entries={entries}
-          packages={[pkgOut, pkgOk]}
           artifactStatusFilter="outdated"
         />,
       );
@@ -302,21 +316,28 @@ describe('RepositoryCentricView', () => {
         createActiveDistributedPackagesByTarget({
           target: prodTarget,
           gitRepo: sharedRepo,
-          packages: [createActivePackage({ packageId: pkg.id })],
-          deployedRecipes: [recipeProd],
+          packages: [
+            createActivePackage({
+              package: pkg,
+              deployedRecipes: [recipeProd],
+            }),
+          ],
         }),
         createActiveDistributedPackagesByTarget({
           target: stagingTarget,
           gitRepo: sharedRepo,
-          packages: [createActivePackage({ packageId: pkg.id })],
-          deployedRecipes: [recipeStaging],
+          packages: [
+            createActivePackage({
+              package: pkg,
+              deployedRecipes: [recipeStaging],
+            }),
+          ],
         }),
       ];
 
       renderWithProvider(
         <RepositoryCentricView
           entries={entries}
-          packages={[pkg]}
           selectedTargetNames={['Production']}
         />,
       );
@@ -340,21 +361,28 @@ describe('RepositoryCentricView', () => {
         createActiveDistributedPackagesByTarget({
           target: targetA,
           gitRepo: repoA,
-          packages: [createActivePackage({ packageId: pkg.id })],
-          deployedRecipes: [recipeA],
+          packages: [
+            createActivePackage({
+              package: pkg,
+              deployedRecipes: [recipeA],
+            }),
+          ],
         }),
         createActiveDistributedPackagesByTarget({
           target: targetB,
           gitRepo: repoB,
-          packages: [createActivePackage({ packageId: pkg.id })],
-          deployedRecipes: [recipeB],
+          packages: [
+            createActivePackage({
+              package: pkg,
+              deployedRecipes: [recipeB],
+            }),
+          ],
         }),
       ];
 
       renderWithProvider(
         <RepositoryCentricView
           entries={entries}
-          packages={[pkg]}
           selectedRepoIds={[repoA.id]}
         />,
       );
@@ -390,17 +418,14 @@ describe('RepositoryCentricView', () => {
             owner: 'test-owner',
             repo: 'test-repo',
           }),
-          packages: [createActivePackage({ packageId: pkg.id })],
-          deployedRecipes: [recipe],
+          packages: [
+            createActivePackage({ package: pkg, deployedRecipes: [recipe] }),
+          ],
         }),
       ];
 
       renderWithProvider(
-        <RepositoryCentricView
-          entries={entries}
-          packages={[pkg]}
-          searchTerm="nomatch"
-        />,
+        <RepositoryCentricView entries={entries} searchTerm="nomatch" />,
       );
 
       expect(screen.getByText('No repositories found')).toBeInTheDocument();
@@ -423,45 +448,20 @@ describe('RepositoryCentricView', () => {
             owner: 'test-owner',
             repo: 'test-repo',
           }),
-          packages: [createActivePackage({ packageId: pkg.id })],
-          deployedRecipes: [recipe],
+          packages: [
+            createActivePackage({ package: pkg, deployedRecipes: [recipe] }),
+          ],
         }),
       ];
 
       renderWithProvider(
         <RepositoryCentricView
           entries={entries}
-          packages={[pkg]}
           artifactStatusFilter="outdated"
         />,
       );
 
       expect(screen.getByText('No outdated targets')).toBeInTheDocument();
-    });
-
-    it('does not render any target table while packages are loading', () => {
-      const target = targetFactory({ id: createTargetId('t'), name: 'T' });
-      const recipe = createDeployedRecipeTargetInfo();
-      const entries = [
-        createActiveDistributedPackagesByTarget({
-          target,
-          gitRepo: gitRepoFactory({
-            owner: 'pkg-owner',
-            repo: 'pkg-repo',
-          }),
-          deployedRecipes: [recipe],
-        }),
-      ];
-
-      renderWithProvider(
-        <RepositoryCentricView
-          entries={entries}
-          packages={[]}
-          packagesLoading={true}
-        />,
-      );
-
-      expect(screen.queryByTestId('pm-table')).not.toBeInTheDocument();
     });
   });
 
@@ -490,17 +490,19 @@ describe('RepositoryCentricView', () => {
           target,
           gitRepo: sharedRepo,
           packages: [
-            createActivePackage({ packageId: alpha.id }),
-            createActivePackage({ packageId: beta.id }),
+            createActivePackage({
+              package: alpha,
+              deployedStandards: [standardInfo],
+            }),
+            createActivePackage({
+              package: beta,
+              deployedRecipes: [recipeInfo],
+            }),
           ],
-          deployedRecipes: [recipeInfo],
-          deployedStandards: [standardInfo],
         }),
       ];
 
-      renderWithProvider(
-        <RepositoryCentricView entries={entries} packages={[alpha, beta]} />,
-      );
+      renderWithProvider(<RepositoryCentricView entries={entries} />);
 
       expect(screen.getAllByTestId('pm-table')).toHaveLength(2);
       expect(screen.getByText('alpha')).toBeInTheDocument();

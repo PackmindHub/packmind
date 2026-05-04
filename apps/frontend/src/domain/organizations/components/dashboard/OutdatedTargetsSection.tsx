@@ -10,26 +10,18 @@ import {
   PMBox,
   PMIcon,
 } from '@packmind/ui';
-import {
-  useListActiveDistributedPackagesBySpaceQuery,
-  useListPackagesBySpaceQuery,
-} from '../../../deployments/api/queries/DeploymentsQueries';
+import { useListActiveDistributedPackagesBySpaceQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
+  ActiveDistributedPackage,
   TargetId,
   GitRepo,
   GitProviderId,
-  DeployedRecipeTargetInfo,
-  DeployedStandardTargetInfo,
-  DeployedSkillTargetInfo,
-  PackageId,
 } from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
-import { groupTargetByPackage } from '../../../deployments/utils/groupTargetByPackage';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 
-// ---- Types & constants
 type RepoResult = {
   repoKey: string;
   title: string;
@@ -37,26 +29,44 @@ type RepoResult = {
   targets: Array<{
     id: TargetId;
     title: string;
-    activePackageIds: ReadonlySet<PackageId>;
-    recipes: DeployedRecipeTargetInfo[];
-    standards: DeployedStandardTargetInfo[];
-    skills: DeployedSkillTargetInfo[];
+    packages: ActiveDistributedPackage[];
   }>;
+};
+
+const isOutdated = (d: { isUpToDate: boolean; isDeleted?: boolean }): boolean =>
+  !d.isUpToDate || !!d.isDeleted;
+
+const filterPackageToOutdated = (
+  pkg: ActiveDistributedPackage,
+): ActiveDistributedPackage | null => {
+  const deployedRecipes = pkg.deployedRecipes.filter(isOutdated);
+  const deployedStandards = pkg.deployedStandards.filter(isOutdated);
+  const deployedSkills = pkg.deployedSkills.filter(isOutdated);
+  const total =
+    deployedRecipes.length +
+    deployedStandards.length +
+    deployedSkills.length +
+    pkg.pendingRecipes.length +
+    pkg.pendingStandards.length +
+    pkg.pendingSkills.length;
+  if (total === 0) return null;
+  return {
+    ...pkg,
+    deployedRecipes,
+    deployedStandards,
+    deployedSkills,
+  };
 };
 
 export const OutdatedTargetsSection: React.FC = () => {
   const { orgSlug } = useParams() as { orgSlug?: string };
-  const { spaceId, space } = useCurrentSpace();
-  const organizationId = space?.organizationId;
+  const { spaceId } = useCurrentSpace();
   const {
     data: overviewData,
     isLoading,
     isError,
     error,
   } = useListActiveDistributedPackagesBySpaceQuery(spaceId);
-  const { data: packagesResponse, isLoading: isPackagesLoading } =
-    useListPackagesBySpaceQuery(spaceId, organizationId);
-  const packages = packagesResponse?.packages ?? [];
   const { data: gitProvidersResponse, isLoading: isProvidersLoading } =
     useGetGitProvidersQuery();
   const providersWithToken = useMemo(() => {
@@ -80,23 +90,12 @@ export const OutdatedTargetsSection: React.FC = () => {
       }
     >();
 
-    const isOutdated = (d: {
-      isUpToDate: boolean;
-      isDeleted?: boolean;
-    }): boolean => !d.isUpToDate || !!d.isDeleted;
-
     for (const t of overviewData) {
       if (!t.gitRepo) continue;
-      const outdatedRecipes = t.deployedRecipes.filter(isOutdated);
-      const outdatedStandards = t.deployedStandards.filter(isOutdated);
-      const outdatedSkills = t.deployedSkills.filter(isOutdated);
-      if (
-        outdatedRecipes.length === 0 &&
-        outdatedStandards.length === 0 &&
-        outdatedSkills.length === 0
-      ) {
-        continue;
-      }
+      const outdatedPackages = t.packages
+        .map(filterPackageToOutdated)
+        .filter((p): p is ActiveDistributedPackage => p !== null);
+      if (outdatedPackages.length === 0) continue;
 
       const { key, title } = getRepoIdentity(t.gitRepo);
       let repo = repoMap.get(key);
@@ -112,10 +111,7 @@ export const OutdatedTargetsSection: React.FC = () => {
       repo.targets.set(t.target.id, {
         id: t.target.id,
         title: t.target.name,
-        activePackageIds: new Set(t.packages.map((p) => p.packageId)),
-        recipes: outdatedRecipes,
-        standards: outdatedStandards,
-        skills: outdatedSkills,
+        packages: outdatedPackages,
       });
     }
 
@@ -194,30 +190,20 @@ export const OutdatedTargetsSection: React.FC = () => {
                   <PMHeading level="h6">{repo.title}</PMHeading>
                 </PMBox>
                 <PMVStack align="stretch" width="full" padding={2}>
-                  {!isPackagesLoading &&
-                    repo.targets.map((t) => (
-                      <RepositoryTargetTable
-                        key={String(t.id)}
-                        orgSlug={orgSlug}
-                        target={{ id: t.id, name: t.title }}
-                        packageGroups={groupTargetByPackage(
-                          {
-                            recipes: t.recipes,
-                            standards: t.standards,
-                            skills: t.skills,
-                          },
-                          packages,
-                          undefined,
-                          t.activePackageIds,
-                        )}
-                        mode="outdated"
-                        canDistributeFromApp={
-                          !isProvidersLoading &&
-                          providersWithToken.has(repo.providerId)
-                        }
-                        isDistributeReadinessLoading={isProvidersLoading}
-                      />
-                    ))}
+                  {repo.targets.map((t) => (
+                    <RepositoryTargetTable
+                      key={String(t.id)}
+                      orgSlug={orgSlug}
+                      target={{ id: t.id, name: t.title }}
+                      packageGroups={t.packages}
+                      mode="outdated"
+                      canDistributeFromApp={
+                        !isProvidersLoading &&
+                        providersWithToken.has(repo.providerId)
+                      }
+                      isDistributeReadinessLoading={isProvidersLoading}
+                    />
+                  ))}
                 </PMVStack>
               </PMVStack>
             );
@@ -228,7 +214,6 @@ export const OutdatedTargetsSection: React.FC = () => {
   );
 };
 
-// ---- Pure helpers
 const getRepoIdentity = (gitRepo: GitRepo) => {
   const title = `${gitRepo.owner}/${gitRepo.repo}:${gitRepo.branch}`;
   const key = gitRepo.id || title;

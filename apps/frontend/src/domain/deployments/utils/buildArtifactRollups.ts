@@ -50,15 +50,17 @@ export function buildArtifactRollups(
   for (const entry of entries) {
     if (!entry.gitRepo) continue;
     const { target, gitRepo } = entry;
-    entry.deployedRecipes.forEach((d) =>
-      accumulateRecipe(recipes, d, target, gitRepo),
-    );
-    entry.deployedStandards.forEach((d) =>
-      accumulateStandard(standards, d, target, gitRepo),
-    );
-    entry.deployedSkills.forEach((d) =>
-      accumulateSkill(skills, d, target, gitRepo),
-    );
+    entry.packages.forEach((pkg) => {
+      pkg.deployedRecipes.forEach((d) =>
+        accumulateRecipe(recipes, d, target, gitRepo),
+      );
+      pkg.deployedStandards.forEach((d) =>
+        accumulateStandard(standards, d, target, gitRepo),
+      );
+      pkg.deployedSkills.forEach((d) =>
+        accumulateSkill(skills, d, target, gitRepo),
+      );
+    });
   }
 
   return {
