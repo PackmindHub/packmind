@@ -40,7 +40,7 @@ export type ItemsListingProps<T extends Item> = {
 };
 
 function searchInName<T extends Item>(searchQuery: string, item: T) {
-  return item.name.toLowerCase().indexOf(searchQuery.toLowerCase());
+  return item.name.toLowerCase().includes(searchQuery.toLowerCase());
 }
 
 export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
