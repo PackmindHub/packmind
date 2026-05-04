@@ -1,17 +1,29 @@
-import { useMemo } from 'react';
-import { useOutletContext, useParams } from 'react-router';
+import { useCallback, useMemo, type MouseEvent } from 'react';
+import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { PMVStack } from '@packmind/ui';
 import { createSkillFileId, SkillFile } from '@packmind/types';
 
 import { SkillFilePreview } from '../../src/domain/skills/components/SkillFilePreview';
 import { SkillFrontmatterInfo } from '../../src/domain/skills/components/SkillFrontmatterInfo';
 import { buildSkillMdContent } from '../../src/domain/skills/utils/skillMdUtils';
+import { buildSkillLinkTransformer } from '../../src/domain/skills/utils/skillLinkUtils';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
 
 export default function SkillFilesRouteModule() {
-  const { '*': filePath } = useParams<{ '*': string }>();
+  const {
+    '*': filePath,
+    orgSlug,
+    spaceSlug,
+    skillSlug,
+  } = useParams<{
+    '*': string;
+    orgSlug: string;
+    spaceSlug: string;
+    skillSlug: string;
+  }>();
+  const navigate = useNavigate();
   const { skill, files, latestVersion } =
     useOutletContext<ISkillDetailsOutletContext>();
 
@@ -47,6 +59,32 @@ export default function SkillFilesRouteModule() {
 
   const showDescriptionBox = selectedFile?.path === SKILL_MD_FILENAME;
 
+  const transformLinkUri = useMemo(
+    () =>
+      buildSkillLinkTransformer({
+        orgSlug,
+        spaceSlug,
+        skillSlug,
+        currentFilePath: selectedFile?.path ?? SKILL_MD_FILENAME,
+      }),
+    [orgSlug, spaceSlug, skillSlug, selectedFile?.path],
+  );
+
+  const skillFilesPathPrefix =
+    orgSlug && spaceSlug && skillSlug
+      ? `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/files/`
+      : null;
+
+  const handleLinkClick = useCallback(
+    (href: string, event: MouseEvent<HTMLAnchorElement>) => {
+      if (!skillFilesPathPrefix) return;
+      if (!href.startsWith(skillFilesPathPrefix)) return;
+      event.preventDefault();
+      navigate(href, { replace: true });
+    },
+    [navigate, skillFilesPathPrefix],
+  );
+
   return (
     <div>
       <PMVStack align="stretch" gap={6}>
@@ -74,6 +112,8 @@ export default function SkillFilesRouteModule() {
                 ? skillMdClipboardContent
                 : undefined
             }
+            transformLinkUri={transformLinkUri}
+            onLinkClick={handleLinkClick}
           />
         </PMVStack>
       </PMVStack>

@@ -69,6 +69,9 @@ export const StandardsList = ({
     return map;
   }, [groupedProposals]);
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
+  const [filteredStandardIds, setFilteredStandardIds] = React.useState<
+    StandardId[]
+  >([]);
   const [selectedStandardIds, setSelectedStandardIds] = React.useState<
     StandardId[]
   >([]);
@@ -98,10 +101,7 @@ export const StandardsList = ({
   };
 
   const selectAll = () => {
-    if (!listStandardsResponse) return;
-    setSelectedStandardIds(
-      listStandardsResponse.standards.map((standard) => standard.id),
-    );
+    setSelectedStandardIds(filteredStandardIds);
   };
 
   const clearAll = () => setSelectedStandardIds([]);
@@ -151,6 +151,8 @@ export const StandardsList = ({
       (standard) =>
         standard.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
+
+    setFilteredStandardIds(filteredStandards.map((s) => s.id));
 
     const packageNamesById =
       sortKey === 'packages'
@@ -313,8 +315,8 @@ export const StandardsList = ({
   ]);
 
   const isAllSelected =
-    listStandardsResponse &&
-    selectedStandardIds.length === listStandardsResponse.standards.length;
+    filteredStandardIds.length > 0 &&
+    filteredStandardIds.every((id) => selectedStandardIds.includes(id));
   const isSomeSelected = selectedStandardIds.length > 0;
 
   const columns: PMTableColumn[] = [

@@ -76,6 +76,7 @@ jobs:
         run: npm run prettier:check
 
   sonarqube:
+    if: vars.PACKMIND_EDITION != 'proprietary'
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     strategy:

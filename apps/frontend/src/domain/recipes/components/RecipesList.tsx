@@ -67,6 +67,9 @@ export const RecipesList = ({
     return map;
   }, [groupedProposals]);
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
+  const [filteredRecipeIds, setFilteredRecipeIds] = React.useState<RecipeId[]>(
+    [],
+  );
   const [selectedRecipeIds, setSelectedRecipeIds] = React.useState<RecipeId[]>(
     [],
   );
@@ -94,8 +97,8 @@ export const RecipesList = ({
   };
 
   const handleSelectAll = (isChecked: boolean) => {
-    if (isChecked && recipes) {
-      setSelectedRecipeIds(recipes.map((r) => r.id));
+    if (isChecked) {
+      setSelectedRecipeIds(filteredRecipeIds);
     } else {
       setSelectedRecipeIds([]);
     }
@@ -141,6 +144,8 @@ export const RecipesList = ({
     const filteredRecipes = recipes.filter((recipe) =>
       recipe.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
+
+    setFilteredRecipeIds(filteredRecipes.map((r) => r.id));
 
     const packageNamesById =
       sortKey === 'packages'
@@ -299,7 +304,9 @@ export const RecipesList = ({
     groupedProposals,
   ]);
 
-  const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
+  const isAllSelected =
+    filteredRecipeIds.length > 0 &&
+    filteredRecipeIds.every((id) => selectedRecipeIds.includes(id));
   const isSomeSelected = selectedRecipeIds.length > 0;
   const hasRecipes = (recipes ?? []).length > 0;
 

@@ -11,32 +11,60 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-04-21T12:01:50.852Z",
+  "installedAt": "2026-04-29T08:54:42.710Z",
   "artifacts": {
-    "standard:use-case-architecture-patterns": {
-      "name": "Use Case Architecture Patterns",
+    "standard:back-end-repositories-sql-queries-using-typeorm": {
+      "name": "Back-end repositories SQL queries using TypeORM",
       "type": "standard",
-      "id": "0c52d6b4-4e4e-46b4-9eeb-fdbcb4f18e6b",
-      "version": 5,
+      "id": "da23c189-71d8-44d8-b84b-e1598580da57",
+      "version": 4,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
       "files": [
         {
-          "path": ".packmind/standards/use-case-architecture-patterns.md",
+          "path": ".packmind/standards/back-end-repositories-sql-queries-using-typeorm.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/instructions/packmind-use-case-architecture-patterns.instructions.md",
+          "path": ".github/instructions/packmind-back-end-repositories-sql-queries-using-typeorm.instructions.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/rules/packmind/standard-use-case-architecture-patterns.md",
+          "path": ".claude/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/rules/packmind/standard-use-case-architecture-patterns.mdc",
+          "path": ".cursor/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.mdc",
+          "agent": "cursor"
+        }
+      ]
+    },
+    "standard:back-end-typescript-clean-code-practices": {
+      "name": "Back-end TypeScript Clean Code Practices",
+      "type": "standard",
+      "id": "46fa4b47-0c11-42ee-9407-6cd0de6abd18",
+      "version": 8,
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
+      "packageIds": [
+        "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
+      ],
+      "files": [
+        {
+          "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/instructions/packmind-back-end-typescript-clean-code-practices.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/rules/packmind/standard-back-end-typescript-clean-code-practices.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-back-end-typescript-clean-code-practices.mdc",
           "agent": "cursor"
         }
       ]
@@ -97,34 +125,6 @@
         }
       ]
     },
-    "standard:back-end-typescript-clean-code-practices": {
-      "name": "Back-end TypeScript Clean Code Practices",
-      "type": "standard",
-      "id": "46fa4b47-0c11-42ee-9407-6cd0de6abd18",
-      "version": 8,
-      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
-      "packageIds": [
-        "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
-      ],
-      "files": [
-        {
-          "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-back-end-typescript-clean-code-practices.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-back-end-typescript-clean-code-practices.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-back-end-typescript-clean-code-practices.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:scoped-repository-patterns": {
       "name": "Scoped Repository Patterns",
       "type": "standard",
@@ -153,30 +153,30 @@
         }
       ]
     },
-    "standard:back-end-repositories-sql-queries-using-typeorm": {
-      "name": "Back-end repositories SQL queries using TypeORM",
+    "standard:use-case-architecture-patterns": {
+      "name": "Use Case Architecture Patterns",
       "type": "standard",
-      "id": "da23c189-71d8-44d8-b84b-e1598580da57",
-      "version": 4,
+      "id": "0c52d6b4-4e4e-46b4-9eeb-fdbcb4f18e6b",
+      "version": 5,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
       "files": [
         {
-          "path": ".packmind/standards/back-end-repositories-sql-queries-using-typeorm.md",
+          "path": ".packmind/standards/use-case-architecture-patterns.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/instructions/packmind-back-end-repositories-sql-queries-using-typeorm.instructions.md",
+          "path": ".github/instructions/packmind-use-case-architecture-patterns.instructions.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.md",
+          "path": ".claude/rules/packmind/standard-use-case-architecture-patterns.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.mdc",
+          "path": ".cursor/rules/packmind/standard-use-case-architecture-patterns.mdc",
           "agent": "cursor"
         }
       ]
