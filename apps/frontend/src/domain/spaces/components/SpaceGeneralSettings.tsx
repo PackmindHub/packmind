@@ -1,9 +1,4 @@
-import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  PMFeatureFlag,
-  PMVStack,
-  SPACE_IDENTITY_FEATURE_KEY,
-} from '@packmind/ui';
+import { PMVStack } from '@packmind/ui';
 
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
@@ -26,17 +21,11 @@ export function SpaceGeneralSettings() {
   return (
     <PMVStack align="stretch" gap={6} pt={4}>
       {space && (
-        <PMFeatureFlag
-          featureKeys={[SPACE_IDENTITY_FEATURE_KEY]}
-          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-          userEmail={user?.email}
-        >
-          <SpaceIdentitySection
-            key={space.id}
-            space={space}
-            canEdit={canEditIdentity}
-          />
-        </PMFeatureFlag>
+        <SpaceIdentitySection
+          key={space.id}
+          space={space}
+          canEdit={canEditIdentity}
+        />
       )}
       {isSpaceAdmin && !space?.isDefaultSpace && <SpaceAccessSection />}
       {!space?.isDefaultSpace && space && (
