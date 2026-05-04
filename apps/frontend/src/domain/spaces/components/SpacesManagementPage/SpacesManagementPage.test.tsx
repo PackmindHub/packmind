@@ -12,6 +12,10 @@ import * as DeploymentsQueriesModule from '../../../deployments/api/queries/Depl
 import * as UseNavigationModule from '../../../../shared/hooks/useNavigation';
 import * as UserQueriesModule from '../../../accounts/api/queries/UserQueries';
 
+jest.mock('./SpacesToolbar', () => ({
+  SpacesToolbar: () => null,
+}));
+
 jest.mock(
   '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
   () => ({
@@ -19,6 +23,15 @@ jest.mock(
       '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
     ),
     useDeleteSpaceMutation: jest.fn(() => ({
+      mutate: jest.fn(),
+      isPending: false,
+    })),
+    useUpdateSpaceMutation: jest.fn(() => ({
+      mutate: jest.fn(),
+      mutateAsync: jest.fn(),
+      isPending: false,
+    })),
+    useLeaveSpaceMutation: jest.fn(() => ({
       mutate: jest.fn(),
       isPending: false,
     })),
@@ -102,7 +115,7 @@ const mockDrawerDependencies = () => {
   } as unknown as ReturnType<typeof queries.useUpdateMemberRoleMutation>);
 
   jest
-    .spyOn(SpacesManagementQueriesModule, 'useUpdateSpaceMutation')
+    .mocked(SpacesManagementQueriesModule.useUpdateSpaceMutation)
     .mockReturnValue({
       mutate: jest.fn(),
       mutateAsync: jest.fn(),
@@ -112,7 +125,7 @@ const mockDrawerDependencies = () => {
     >);
 
   jest
-    .spyOn(SpacesManagementQueriesModule, 'useLeaveSpaceMutation')
+    .mocked(SpacesManagementQueriesModule.useLeaveSpaceMutation)
     .mockReturnValue({
       mutate: jest.fn(),
       isPending: false,
