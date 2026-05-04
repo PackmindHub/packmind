@@ -27,9 +27,9 @@ export type ActiveDistributedPackagesByTarget = {
   target: Target;
   gitRepo: GitRepo | null;
   packages: ActiveDistributedPackage[];
-  outdatedStandards: DeployedStandardTargetInfo[];
-  outdatedRecipes: DeployedRecipeTargetInfo[];
-  outdatedSkills: DeployedSkillTargetInfo[];
+  deployedStandards: DeployedStandardTargetInfo[];
+  deployedRecipes: DeployedRecipeTargetInfo[];
+  deployedSkills: DeployedSkillTargetInfo[];
 };
 
 export type ListActiveDistributedPackagesBySpaceResponse =

@@ -96,17 +96,14 @@ export class GetOrganizationOnboardingStatusUseCase
       const deploymentPort = this.deploymentPort;
       const overviews = await Promise.all(
         spaces.map((space) =>
-          deploymentPort.getDeploymentOverview({
+          deploymentPort.listActiveDistributedPackagesBySpace({
             userId,
             organizationId: organization.id,
             spaceId: space.id,
           }),
         ),
       );
-      hasDeployed = overviews.some(
-        (overview) =>
-          overview.repositories.length > 0 || overview.recipes.length > 0,
-      );
+      hasDeployed = overviews.some((overview) => overview.length > 0);
     }
 
     const status: OrganizationOnboardingStatus = {

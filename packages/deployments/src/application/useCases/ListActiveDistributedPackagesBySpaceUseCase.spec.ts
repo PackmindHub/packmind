@@ -5,7 +5,10 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
+  createRecipeId,
+  createSkillId,
   createSpaceId,
+  createStandardId,
   createTargetId,
   createUserId,
   DistributionStatus,
@@ -18,6 +21,9 @@ import {
   IStandardsPort,
   ListActiveDistributedPackagesBySpaceCommand,
   PackageId,
+  Recipe,
+  Skill,
+  Standard,
   Target,
   TargetId,
 } from '@packmind/types';
@@ -187,7 +193,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       });
     });
 
-    it('returns active packages by target with empty outdated lists', async () => {
+    it('returns active packages by target with empty deployed lists', async () => {
       const targetId = createTargetId(uuidv4());
       const packageId = createPackageId(uuidv4());
 
@@ -212,9 +218,9 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
               lastDistributedAt,
             },
           ],
-          outdatedStandards: [],
-          outdatedRecipes: [],
-          outdatedSkills: [],
+          deployedStandards: [],
+          deployedRecipes: [],
+          deployedSkills: [],
         },
       ]);
     });
@@ -257,7 +263,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       );
     });
 
-    it('includes a target with no active packages when it has outdated artifacts', async () => {
+    it('includes a target with no active packages when it has deployed artifacts', async () => {
       const targetId = createTargetId(uuidv4());
 
       targetRepository.findActiveInSpace.mockResolvedValue([
@@ -282,9 +288,9 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
           target: buildTarget(targetId),
           gitRepo,
           packages: [],
-          outdatedStandards: [],
-          outdatedRecipes: [],
-          outdatedSkills: [],
+          deployedStandards: [],
+          deployedRecipes: [],
+          deployedSkills: [],
         },
       ]);
     });
@@ -295,6 +301,163 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result).toEqual([]);
+    });
+
+    describe('deployment status flags', () => {
+      const targetId = createTargetId(uuidv4());
+      const recipeId = createRecipeId(uuidv4());
+      const standardId = createStandardId(uuidv4());
+      const skillId = createSkillId(uuidv4());
+      const deploymentDate = '2026-04-01T10:00:00.000Z';
+
+      const buildLiveRecipe = (version: number): Recipe =>
+        ({
+          id: recipeId,
+          name: 'recipe-name',
+          slug: 'recipe-slug',
+          content: 'recipe-content',
+          version,
+          userId,
+          spaceId,
+          movedTo: null,
+        }) as Recipe;
+
+      const buildLiveStandard = (version: number): Standard =>
+        ({
+          id: standardId,
+          name: 'standard-name',
+          slug: 'standard-slug',
+          description: 'standard-description',
+          version,
+          userId,
+          scope: null,
+          spaceId,
+          movedTo: null,
+        }) as Standard;
+
+      const buildLiveSkill = (version: number): Skill =>
+        ({
+          id: skillId,
+          name: 'skill-name',
+          slug: 'skill-slug',
+          description: 'skill-description',
+          prompt: 'skill-prompt',
+          version,
+          userId,
+          spaceId,
+          movedTo: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }) as Skill;
+
+      const seedDeployment = (deployedVersion: number) => {
+        targetRepository.findActiveInSpace.mockResolvedValue([
+          buildTarget(targetId),
+        ]);
+        distributionRepository.findOutdatedDeploymentsBySpace.mockResolvedValue(
+          [
+            {
+              targetId,
+              targetName: `target-${targetId}`,
+              gitRepoId,
+              standards: [
+                {
+                  artifactId: standardId,
+                  artifactName: 'standard-name',
+                  artifactSlug: 'standard-slug',
+                  deployedVersion,
+                  deploymentDate,
+                  isDeleted: false,
+                  description: 'standard-description',
+                  scope: null,
+                  summary: null,
+                  userId,
+                },
+              ],
+              recipes: [
+                {
+                  artifactId: recipeId,
+                  artifactName: 'recipe-name',
+                  artifactSlug: 'recipe-slug',
+                  deployedVersion,
+                  deploymentDate,
+                  isDeleted: false,
+                  content: 'recipe-content',
+                  userId,
+                },
+              ],
+              skills: [
+                {
+                  artifactId: skillId,
+                  artifactName: 'skill-name',
+                  artifactSlug: 'skill-slug',
+                  deployedVersion,
+                  deploymentDate,
+                  isDeleted: false,
+                  description: 'skill-description',
+                  prompt: 'skill-prompt',
+                  userId,
+                },
+              ],
+            },
+          ],
+        );
+      };
+
+      it('marks deployments as up-to-date when deployed version equals latest', async () => {
+        seedDeployment(3);
+        recipesPort.listRecipesBySpace.mockResolvedValue([buildLiveRecipe(3)]);
+        standardsPort.listStandardsBySpace.mockResolvedValue([
+          buildLiveStandard(3),
+        ]);
+        skillsPort.listSkillsBySpace.mockResolvedValue([buildLiveSkill(3)]);
+
+        const [entry] = await useCase.execute(command);
+
+        expect(entry.deployedRecipes[0].isUpToDate).toBe(true);
+        expect(entry.deployedRecipes[0].isDeleted).toBeUndefined();
+        expect(entry.deployedStandards[0].isUpToDate).toBe(true);
+        expect(entry.deployedStandards[0].isDeleted).toBeUndefined();
+        expect(entry.deployedSkills[0].isUpToDate).toBe(true);
+        expect(entry.deployedSkills[0].isDeleted).toBeUndefined();
+      });
+
+      it('marks deployments as outdated when deployed version trails latest', async () => {
+        seedDeployment(2);
+        recipesPort.listRecipesBySpace.mockResolvedValue([buildLiveRecipe(5)]);
+        standardsPort.listStandardsBySpace.mockResolvedValue([
+          buildLiveStandard(5),
+        ]);
+        skillsPort.listSkillsBySpace.mockResolvedValue([buildLiveSkill(5)]);
+
+        const [entry] = await useCase.execute(command);
+
+        expect(entry.deployedRecipes[0].isUpToDate).toBe(false);
+        expect(entry.deployedRecipes[0].isDeleted).toBeUndefined();
+        expect(entry.deployedRecipes[0].latestVersion.version).toBe(5);
+        expect(entry.deployedStandards[0].isUpToDate).toBe(false);
+        expect(entry.deployedStandards[0].isDeleted).toBeUndefined();
+        expect(entry.deployedStandards[0].latestVersion.version).toBe(5);
+        expect(entry.deployedSkills[0].isUpToDate).toBe(false);
+        expect(entry.deployedSkills[0].isDeleted).toBeUndefined();
+        expect(entry.deployedSkills[0].latestVersion.version).toBe(5);
+      });
+
+      it('flags deleted artifacts when the live entity is missing', async () => {
+        seedDeployment(2);
+        recipesPort.listRecipesBySpace.mockResolvedValue([]);
+        standardsPort.listStandardsBySpace.mockResolvedValue([]);
+        skillsPort.listSkillsBySpace.mockResolvedValue([]);
+
+        const [entry] = await useCase.execute(command);
+
+        expect(entry.deployedRecipes[0].isDeleted).toBe(true);
+        expect(entry.deployedRecipes[0].isUpToDate).toBe(false);
+        expect(entry.deployedStandards[0].isDeleted).toBe(true);
+        expect(entry.deployedStandards[0].isUpToDate).toBe(false);
+        expect(entry.deployedSkills[0].isDeleted).toBe(true);
+        expect(entry.deployedSkills[0].isUpToDate).toBe(false);
+      });
     });
   });
 });

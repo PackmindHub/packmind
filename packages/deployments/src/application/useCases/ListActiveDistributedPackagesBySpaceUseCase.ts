@@ -126,19 +126,19 @@ export class ListActiveDistributedPackagesBySpaceUseCase
           lastDistributionStatus: row.lastDistributionStatus,
           lastDistributedAt: row.lastDistributedAt,
         })),
-        outdatedStandards: outdated.standards.map((deployment) =>
+        deployedStandards: outdated.standards.map((deployment) =>
           buildDeployedStandardInfo(
             deployment,
             standardsById.get(deployment.artifactId),
           ),
         ),
-        outdatedRecipes: outdated.recipes.map((deployment) =>
+        deployedRecipes: outdated.recipes.map((deployment) =>
           buildDeployedRecipeInfo(
             deployment,
             recipesById.get(deployment.artifactId),
           ),
         ),
-        outdatedSkills: outdated.skills.map((deployment) =>
+        deployedSkills: outdated.skills.map((deployment) =>
           buildDeployedSkillInfo(
             deployment,
             skillsById.get(deployment.artifactId),
@@ -186,6 +186,10 @@ function buildDeployedStandardInfo(
   const description = standard?.description ?? deployment.description;
   const userId = standard?.userId ?? deployment.userId;
   const scope = standard?.scope ?? deployment.scope;
+  const latestVersionNumber = standard?.version ?? deployment.deployedVersion;
+  const isDeleted = !standard;
+  const isUpToDate =
+    !isDeleted && deployment.deployedVersion === latestVersionNumber;
 
   const buildVersion = (version: number): StandardVersion => ({
     id: createStandardVersionId(baseId),
@@ -212,12 +216,10 @@ function buildDeployedStandardInfo(
   return {
     standard: standard ?? syntheticStandard,
     deployedVersion: buildVersion(deployment.deployedVersion),
-    latestVersion: buildVersion(
-      standard?.version ?? deployment.deployedVersion,
-    ),
-    isUpToDate: false,
+    latestVersion: buildVersion(latestVersionNumber),
+    isUpToDate,
     deploymentDate: deployment.deploymentDate,
-    ...(!standard && { isDeleted: true }),
+    ...(isDeleted && { isDeleted: true }),
   };
 }
 
@@ -230,6 +232,10 @@ function buildDeployedRecipeInfo(
   const slug = recipe?.slug ?? deployment.artifactSlug;
   const content = recipe?.content ?? deployment.content;
   const userId = recipe?.userId ?? deployment.userId;
+  const latestVersionNumber = recipe?.version ?? deployment.deployedVersion;
+  const isDeleted = !recipe;
+  const isUpToDate =
+    !isDeleted && deployment.deployedVersion === latestVersionNumber;
 
   const buildVersion = (version: number): RecipeVersion => ({
     id: createRecipeVersionId(baseId),
@@ -253,10 +259,10 @@ function buildDeployedRecipeInfo(
   return {
     recipe: recipe ?? syntheticRecipe,
     deployedVersion: buildVersion(deployment.deployedVersion),
-    latestVersion: buildVersion(recipe?.version ?? deployment.deployedVersion),
-    isUpToDate: false,
+    latestVersion: buildVersion(latestVersionNumber),
+    isUpToDate,
     deploymentDate: deployment.deploymentDate,
-    ...(!recipe && { isDeleted: true }),
+    ...(isDeleted && { isDeleted: true }),
   };
 }
 
@@ -270,6 +276,10 @@ function buildDeployedSkillInfo(
   const description = skill?.description ?? deployment.description;
   const prompt = skill?.prompt ?? deployment.prompt;
   const userId = skill?.userId ?? deployment.userId;
+  const latestVersionNumber = skill?.version ?? deployment.deployedVersion;
+  const isDeleted = !skill;
+  const isUpToDate =
+    !isDeleted && deployment.deployedVersion === latestVersionNumber;
 
   const buildVersion = (version: number): SkillVersion => ({
     id: createSkillVersionId(baseId),
@@ -295,9 +305,9 @@ function buildDeployedSkillInfo(
   return {
     skill: skill ?? syntheticSkill,
     deployedVersion: buildVersion(deployment.deployedVersion),
-    latestVersion: buildVersion(skill?.version ?? deployment.deployedVersion),
-    isUpToDate: false,
+    latestVersion: buildVersion(latestVersionNumber),
+    isUpToDate,
     deploymentDate: deployment.deploymentDate,
-    ...(!skill && { isDeleted: true }),
+    ...(isDeleted && { isDeleted: true }),
   };
 }
