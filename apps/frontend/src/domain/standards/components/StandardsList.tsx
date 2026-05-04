@@ -168,9 +168,6 @@ export const StandardsList = ({
         }
       });
     },
-    matchQuery(searchQuery, item) {
-      return item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    },
     columns: [
       {
         key: 'name',

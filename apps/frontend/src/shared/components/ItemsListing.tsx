@@ -36,8 +36,12 @@ export type ItemsListingProps<T extends Item> = {
     sortKey: string | null,
     sortDirection: SortDirection,
   ) => T[];
-  matchQuery: (searchQuery: string, item: T) => boolean;
+  matchQuery?: (searchQuery: string, item: T) => boolean;
 };
+
+function searchInName<T extends Item>(searchQuery: string, item: T) {
+  return item.name.toLowerCase().indexOf(searchQuery.toLowerCase());
+}
 
 export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -55,9 +59,11 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
   );
 
   React.useEffect(() => {
+    const matchQuery = props.matchQuery ?? searchInName;
+
     setFilteredIds(
       props.items.reduce((acc, item) => {
-        if (props.matchQuery(searchQuery, item)) {
+        if (matchQuery(searchQuery, item)) {
           acc.push(item.id);
         }
 
