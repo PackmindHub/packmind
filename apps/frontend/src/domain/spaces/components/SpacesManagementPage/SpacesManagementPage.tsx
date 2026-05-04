@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { PMAlert, PMBox, PMSpinner, PMVStack } from '@packmind/ui';
+import { PMAlert, PMHStack, PMSpinner, PMVStack } from '@packmind/ui';
 import {
   useGetOrganizationSpacesForManagementQuery,
   useGetSpacesQuery,
@@ -10,6 +10,7 @@ import { SpacesTable } from './SpacesTable';
 import { toSpaceListItem } from './toSpaceListItem';
 import { sortSpacesByName } from '../../../spaces-management/utils/sortSpacesByName';
 import { SpaceManagementDrawer } from './SpaceManagementDrawer';
+import { SpacesToolbar } from './SpacesToolbar';
 
 export const SpacesManagementPage: React.FC = () => {
   const { organization } = useAuthContext();
@@ -60,25 +61,15 @@ export const SpacesManagementPage: React.FC = () => {
   };
 
   return (
-    <PMVStack alignItems="stretch" gap={4} width="full">
-      <PMBox
-        borderWidth="1px"
-        borderColor="border.tertiary"
-        borderRadius="md"
-        overflow="hidden"
-      >
-        <SpacesTable
-          spaces={rows}
-          memberSpaceIds={memberSpaceIds}
-          onSelectSpace={handleSelectSpace}
-        />
-      </PMBox>
-      {/* <SpacesPagination
-        page={data.page}
-        pageSize={data.pageSize}
-        totalCount={data.totalCount}
-        onPageChange={setPage}
-      /> */}
+    <PMVStack alignItems="stretch" gap={0} width="full">
+      <PMHStack justifyContent="flex-end">
+        <SpacesToolbar />
+      </PMHStack>
+      <SpacesTable
+        spaces={rows}
+        memberSpaceIds={memberSpaceIds}
+        onSelectSpace={handleSelectSpace}
+      />
       <SpaceManagementDrawer
         space={selectedSpace}
         onClose={() => setSelectedSpaceId(null)}

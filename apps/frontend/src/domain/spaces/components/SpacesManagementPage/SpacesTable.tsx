@@ -1,5 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
-import { PMBox, PMTable, PMTableColumn, PMTableRow } from '@packmind/ui';
+import {
+  PMBox,
+  PMEmptyState,
+  PMTable,
+  PMTableColumn,
+  PMTableRow,
+} from '@packmind/ui';
 import { SpaceListItem } from './types';
 import { SpaceNameCell } from './SpaceNameCell';
 import { SpaceAdminsCell } from './SpaceAdminsCell';
@@ -26,36 +32,23 @@ const RowClickArea: React.FC<RowClickAreaProps> = ({ onClick, children }) => (
   </PMBox>
 );
 
-const headerLabel = (text: string) => (
-  <PMBox
-    as="span"
-    textTransform="uppercase"
-    letterSpacing="wider"
-    fontSize="10px"
-    fontWeight="semibold"
-    color="text.faded"
-  >
-    {text}
-  </PMBox>
-);
-
 const COLUMNS: PMTableColumn[] = [
-  { key: 'name', header: headerLabel('Name'), grow: true },
-  { key: 'admins', header: headerLabel('Admins'), width: '320px' },
+  { key: 'name', header: 'Name', grow: true },
+  { key: 'admins', header: 'Admins', width: '320px' },
   {
     key: 'membersCount',
-    header: headerLabel('Collaborators'),
+    header: 'Collaborators',
     width: '130px',
-    align: 'right',
+    align: 'center',
   },
-  // {
-  //   key: 'artifactsCount',
-  //   header: headerLabel('Artifacts'),
-  //   width: '110px',
-  //   align: 'right',
-  // },
-  { key: 'createdAt', header: headerLabel('Created'), width: '140px' },
-  { key: 'actions', header: '', width: '60px', align: 'right' },
+  {
+    key: 'artifactsCount',
+    header: 'Artifacts',
+    width: '110px',
+    align: 'center',
+  },
+  { key: 'createdAt', header: 'Created', width: '140px' },
+  { key: 'actions', header: '', width: '60px' },
 ];
 
 export const SpacesTable: React.FC<SpacesTableProps> = ({
@@ -107,31 +100,24 @@ export const SpacesTable: React.FC<SpacesTableProps> = ({
     [spaces, memberSpaceIds, wrapClickable, onSelectSpace],
   );
 
+  if (spaces.length === 0) {
+    return (
+      <PMEmptyState
+        title="No spaces found"
+        description="No spaces have been created in your organization yet."
+      />
+    );
+  }
+
   return (
     <PMTable
       columns={COLUMNS}
       data={rows}
-      striped={false}
+      striped={true}
       hoverable
-      tableProps={{
-        my: 0,
-        css: {
-          '& thead th': {
-            backgroundColor: 'var(--pm-colors-background-secondary)',
-            borderBottomColor: 'var(--pm-colors-border-tertiary)',
-          },
-          '& tbody td': {
-            backgroundColor: 'var(--pm-colors-background-primary)',
-            borderBottomColor: 'var(--pm-colors-border-tertiary)',
-          },
-          '& tbody tr': {
-            transition: 'background-color 120ms ease',
-          },
-          '& tbody tr:hover td': {
-            backgroundColor: 'var(--pm-colors-background-secondary)',
-          },
-        },
-      }}
+      size="md"
+      variant="line"
+      showColumnBorder={false}
     />
   );
 };

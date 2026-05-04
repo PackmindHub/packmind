@@ -43,7 +43,7 @@ export const SpacesToolbar: React.FC = () => {
         </PMButton> */}
         <PMButton
           variant="primary"
-          size="sm"
+          size="xs"
           onClick={() => setIsCreateDialogOpen(true)}
         >
           <PMIcon>

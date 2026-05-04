@@ -13,7 +13,6 @@ import {
 } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SpacesManagementPage } from '../../src/domain/spaces/components/SpacesManagementPage';
-import { SpacesToolbar } from '../../src/domain/spaces/components/SpacesManagementPage/SpacesToolbar';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const me = await ensureOrgContext(params.orgSlug!);
@@ -52,12 +51,7 @@ export default function SettingsSpacesRouteModule() {
       featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
       userEmail={user?.email}
     >
-      <PMPage
-        title="Spaces"
-        subtitle={subtitle}
-        actions={<SpacesToolbar />}
-        isFullWidth
-      >
+      <PMPage title="Spaces" subtitle={subtitle}>
         <SpacesManagementPage />
       </PMPage>
     </PMFeatureFlag>
