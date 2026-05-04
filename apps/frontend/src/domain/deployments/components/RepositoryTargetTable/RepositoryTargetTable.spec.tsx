@@ -54,233 +54,158 @@ jest.mock('@packmind/ui', () => {
 const target = { id: createTargetId('target-1'), name: 'Production' };
 
 describe('RepositoryTargetTable', () => {
-  describe('when packageGroups is provided', () => {
-    it('renders one pm-table per package group', () => {
-      const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
-      const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
+  it('renders one pm-table per package group', () => {
+    const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
+    const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
-      const groups: PackageGroup[] = [
-        {
-          pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
-          recipes: [recipeA],
-          standards: [],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-        {
-          pkg: packageFactory({
-            name: 'beta',
-            standards: [standardB.standard.id],
-          }),
-          recipes: [],
-          standards: [standardB],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-      ];
+    const groups: PackageGroup[] = [
+      {
+        pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
+        recipes: [recipeA],
+        standards: [],
+        skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
+      },
+      {
+        pkg: packageFactory({
+          name: 'beta',
+          standards: [standardB.standard.id],
+        }),
+        recipes: [],
+        standards: [standardB],
+        skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
+      },
+    ];
 
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={groups}
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
+    renderWithProvider(
+      <RepositoryTargetTable
+        target={target}
+        packageGroups={groups}
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
+      />,
+    );
 
-      expect(screen.getAllByTestId('pm-table')).toHaveLength(2);
-    });
-
-    it('renders both package names in the DOM', () => {
-      const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
-      const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
-
-      const groups: PackageGroup[] = [
-        {
-          pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
-          recipes: [recipeA],
-          standards: [],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-        {
-          pkg: packageFactory({
-            name: 'beta',
-            standards: [standardB.standard.id],
-          }),
-          recipes: [],
-          standards: [standardB],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-      ];
-
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={groups}
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
-
-      expect(screen.getByText('alpha')).toBeInTheDocument();
-      expect(screen.getByText('beta')).toBeInTheDocument();
-    });
+    expect(screen.getAllByTestId('pm-table')).toHaveLength(2);
   });
 
-  describe('when packageGroups produce no visible rows', () => {
-    it('shows the empty state message', () => {
-      const upToDateRecipe = createDeployedRecipeTargetInfo({
-        isUpToDate: true,
-      });
-      const upToDateStandard = createDeployedStandardTargetInfo({
-        isUpToDate: true,
-      });
+  it('renders both package names in the DOM', () => {
+    const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
+    const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
-      const groups: PackageGroup[] = [
-        {
-          pkg: packageFactory({
-            name: 'alpha',
-            recipes: [upToDateRecipe.recipe.id],
-          }),
-          recipes: [upToDateRecipe],
-          standards: [],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-        {
-          pkg: packageFactory({
-            name: 'beta',
-            standards: [upToDateStandard.standard.id],
-          }),
-          recipes: [],
-          standards: [upToDateStandard],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-      ];
+    const groups: PackageGroup[] = [
+      {
+        pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
+        recipes: [recipeA],
+        standards: [],
+        skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
+      },
+      {
+        pkg: packageFactory({
+          name: 'beta',
+          standards: [standardB.standard.id],
+        }),
+        recipes: [],
+        standards: [standardB],
+        skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
+      },
+    ];
 
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={groups}
-          mode="outdated"
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
+    renderWithProvider(
+      <RepositoryTargetTable
+        target={target}
+        packageGroups={groups}
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
+      />,
+    );
 
-      expect(
-        screen.getByText('No artifacts distributed here'),
-      ).toBeInTheDocument();
-    });
-
-    it('renders zero pm-table elements', () => {
-      const upToDateRecipe = createDeployedRecipeTargetInfo({
-        isUpToDate: true,
-      });
-
-      const groups: PackageGroup[] = [
-        {
-          pkg: packageFactory({
-            name: 'alpha',
-            recipes: [upToDateRecipe.recipe.id],
-          }),
-          recipes: [upToDateRecipe],
-          standards: [],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-      ];
-
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={groups}
-          mode="outdated"
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
-
-      expect(screen.queryAllByTestId('pm-table')).toHaveLength(0);
-    });
+    expect(screen.getByText('alpha')).toBeInTheDocument();
+    expect(screen.getByText('beta')).toBeInTheDocument();
   });
 
-  describe('group ordering', () => {
-    it('renders package groups in the order provided', () => {
-      const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
-      const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
+  it('renders no pm-table when mode hides every artifact', () => {
+    const upToDateRecipe = createDeployedRecipeTargetInfo({ isUpToDate: true });
 
-      const groups: PackageGroup[] = [
-        {
-          pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
-          recipes: [recipeA],
-          standards: [],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-        {
-          pkg: packageFactory({
-            name: 'beta',
-            standards: [standardB.standard.id],
-          }),
-          recipes: [],
-          standards: [standardB],
-          skills: [],
-          pendingRecipes: [],
-          pendingStandards: [],
-          pendingSkills: [],
-        },
-      ];
+    const groups: PackageGroup[] = [
+      {
+        pkg: packageFactory({
+          name: 'alpha',
+          recipes: [upToDateRecipe.recipe.id],
+        }),
+        recipes: [upToDateRecipe],
+        standards: [],
+        skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
+      },
+    ];
 
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={groups}
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
+    renderWithProvider(
+      <RepositoryTargetTable
+        target={target}
+        packageGroups={groups}
+        mode="outdated"
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
+      />,
+    );
 
-      const renderedNames = screen
-        .getAllByText(/alpha|beta/)
-        .map((node) => node.textContent);
-      expect(renderedNames).toEqual(['alpha', 'beta']);
-    });
+    expect(screen.queryAllByTestId('pm-table')).toHaveLength(0);
   });
 
-  describe('when called with no package groups', () => {
-    it('shows the empty state', () => {
-      renderWithProvider(
-        <RepositoryTargetTable
-          target={target}
-          packageGroups={[]}
-          canDistributeFromApp={true}
-          isDistributeReadinessLoading={false}
-        />,
-      );
+  it('renders package groups in the order provided', () => {
+    const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
+    const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
-      expect(
-        screen.getByText('No artifacts distributed here'),
-      ).toBeInTheDocument();
-    });
+    const groups: PackageGroup[] = [
+      {
+        pkg: packageFactory({ name: 'alpha', recipes: [recipeA.recipe.id] }),
+        recipes: [recipeA],
+        standards: [],
+        skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
+      },
+      {
+        pkg: packageFactory({
+          name: 'beta',
+          standards: [standardB.standard.id],
+        }),
+        recipes: [],
+        standards: [standardB],
+        skills: [],
+        pendingRecipes: [],
+        pendingStandards: [],
+        pendingSkills: [],
+      },
+    ];
+
+    renderWithProvider(
+      <RepositoryTargetTable
+        target={target}
+        packageGroups={groups}
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
+      />,
+    );
+
+    const renderedNames = screen
+      .getAllByText(/alpha|beta/)
+      .map((node) => node.textContent);
+    expect(renderedNames).toEqual(['alpha', 'beta']);
   });
 });

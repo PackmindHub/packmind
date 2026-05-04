@@ -1,56 +1,30 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { PMHeading, PMVStack, PMEmptyState } from '@packmind/ui';
-import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
 import {
-  RepositoryStandardDeploymentStatus,
-  DeployedStandardInfo,
-} from '@packmind/types';
-import { GitRepo } from '@packmind/types';
-import {
-  DeployedRecipeInfo,
+  ActiveDistributedPackagesByTarget,
   Package,
   Recipe,
   RecipeId,
-  RepositoryDeploymentStatus,
   Skill,
   SkillId,
   Standard,
   StandardId,
-  TargetDeploymentStatus,
-  TargetStandardDeploymentStatus,
-  TargetSkillDeploymentStatus,
-  DeployedSkillTargetInfo,
-  TargetId,
 } from '@packmind/types';
 import { RepositoryTargetTable } from '../RepositoryTargetTable/RepositoryTargetTable';
-import { groupTargetByPackage } from '../../utils/groupTargetByPackage';
+import {
+  buildRepositorySections,
+  RepoSection,
+  TargetSection,
+} from '../../utils/buildRepositorySections';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
-import { useActivePackageIdsByTarget } from '../../hooks/useActivePackageIdsByTarget';
-import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
-interface CombinedRepositoryDeploymentStatus {
-  gitRepo: GitRepo;
-  deployedRecipes: DeployedRecipeInfo[];
-  deployedStandards: DeployedStandardInfo[];
-  deployedSkills: DeployedSkillTargetInfo[];
-  hasOutdatedRecipes: boolean;
-  hasOutdatedStandards: boolean;
-  hasOutdatedSkills: boolean;
-  // Target-based grouping
-  recipeTargets?: TargetDeploymentStatus[];
-  standardTargets?: TargetStandardDeploymentStatus[];
-  skillTargets?: TargetSkillDeploymentStatus[];
-}
+type ArtifactStatusFilter = 'all' | 'outdated' | 'up-to-date';
 
 interface RepositoryCentricViewProps {
-  recipeRepositories: RepositoryDeploymentStatus[];
-  standardRepositories?: RepositoryStandardDeploymentStatus[];
-  recipeTargets?: TargetDeploymentStatus[];
-  standardTargets?: TargetStandardDeploymentStatus[];
-  skillTargets?: TargetSkillDeploymentStatus[];
+  entries: ReadonlyArray<ActiveDistributedPackagesByTarget>;
   searchTerm?: string;
   artifactStatusFilter?: ArtifactStatusFilter;
   selectedTargetNames?: string[];
@@ -60,368 +34,42 @@ interface RepositoryCentricViewProps {
   packagesLoading?: boolean;
 }
 
-type ArtifactStatusFilter = 'all' | 'outdated' | 'up-to-date';
-
-type TargetEntryForRepo = {
-  id: TargetId;
-  name: string;
-  recipes: DeployedRecipeInfo[];
-  standards: DeployedStandardInfo[];
-  skills: DeployedSkillTargetInfo[];
-  hasContent: boolean;
-  hasOutdated: boolean;
+const matchesStatus = (
+  target: TargetSection,
+  filter: ArtifactStatusFilter,
+): boolean => {
+  if (filter === 'outdated') return target.hasOutdated;
+  if (filter === 'up-to-date') return target.inSyncCount > 0;
+  return true;
 };
 
-const getSortedTargetEntries = (
-  repository: CombinedRepositoryDeploymentStatus,
-  selectedTargetNames: string[] | undefined,
-  artifactStatusFilter: ArtifactStatusFilter,
-): TargetEntryForRepo[] => {
-  const targetIds: TargetId[] = Array.from(
-    new Set([
-      ...(repository.recipeTargets?.map((t) => t.target.id) || []),
-      ...(repository.standardTargets?.map((t) => t.target.id) || []),
-      ...(repository.skillTargets?.map((t) => t.target.id) || []),
-    ] as TargetId[]),
-  );
-
-  const entries = targetIds
-    .map((targetId) => {
-      const recipeTarget = repository.recipeTargets?.find(
-        (t) => t.target.id === targetId,
-      );
-      const standardTarget = repository.standardTargets?.find(
-        (t) => t.target.id === targetId,
-      );
-      const skillTarget = repository.skillTargets?.find(
-        (t) => t.target.id === targetId,
-      );
-      const target =
-        recipeTarget?.target || standardTarget?.target || skillTarget?.target;
-      if (!target) return null;
-      const name = target.name;
-      const allRecipes = recipeTarget?.deployedRecipes || [];
-      const allStandards = standardTarget?.deployedStandards || [];
-      const allSkills = skillTarget?.deployedSkills || [];
-      const hasContent =
-        (allRecipes?.length || 0) +
-          (allStandards?.length || 0) +
-          (allSkills?.length || 0) >
-        0;
-      const hasOutdated =
-        recipeTarget?.hasOutdatedRecipes ||
-        standardTarget?.hasOutdatedStandards ||
-        skillTarget?.hasOutdatedSkills ||
-        false;
-      return {
-        id: targetId,
-        name,
-        recipes: allRecipes,
-        standards: allStandards,
-        skills: allSkills,
-        hasContent,
-        hasOutdated,
-      } as TargetEntryForRepo | null;
-    })
-    .filter((t): t is TargetEntryForRepo => !!t && !!t.name)
-    .filter((t) => {
-      if (
-        selectedTargetNames &&
-        selectedTargetNames.length > 0 &&
-        !selectedTargetNames.includes(t.name)
-      ) {
-        return false;
-      }
-      if (artifactStatusFilter === 'outdated' && !t.hasOutdated) {
-        return false;
-      }
-      if (artifactStatusFilter === 'up-to-date') {
-        const hasUpToDate =
-          t.recipes?.some(
-            (r) => (r as unknown as { isUpToDate: boolean }).isUpToDate,
-          ) ||
-          t.standards?.some(
-            (s) => (s as unknown as { isUpToDate: boolean }).isUpToDate,
-          ) ||
-          t.skills?.some(
-            (s) => (s as unknown as { isUpToDate: boolean }).isUpToDate,
-          );
-        if (!hasUpToDate) return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      if (a.hasContent !== b.hasContent) {
-        return a.hasContent ? -1 : 1;
-      }
-      return a.name.localeCompare(b.name);
-    });
-
-  return entries;
+const matchesTargetNames = (
+  target: TargetSection,
+  selectedNames: string[],
+): boolean => {
+  if (selectedNames.length === 0) return true;
+  return selectedNames.includes(target.target.name);
 };
 
-// Build combined repositories map using target-based inputs
-const buildCombinedRepositoriesFromTargets = (
-  recipeTargets: TargetDeploymentStatus[],
-  standardTargets: TargetStandardDeploymentStatus[],
-  skillTargets: TargetSkillDeploymentStatus[],
-): Map<string, CombinedRepositoryDeploymentStatus> => {
-  const combined = new Map<string, CombinedRepositoryDeploymentStatus>();
-
-  // Group recipe targets by repository
-  recipeTargets.forEach((targetDeployment) => {
-    const repoId = targetDeployment.gitRepo.id;
-    const existingRepo = combined.get(repoId);
-
-    if (existingRepo) {
-      existingRepo.deployedRecipes.push(...targetDeployment.deployedRecipes);
-      existingRepo.hasOutdatedRecipes =
-        existingRepo.hasOutdatedRecipes || targetDeployment.hasOutdatedRecipes;
-      existingRepo.recipeTargets = existingRepo.recipeTargets || [];
-      existingRepo.recipeTargets.push(targetDeployment);
-    } else {
-      combined.set(repoId, {
-        gitRepo: targetDeployment.gitRepo,
-        deployedRecipes: [...targetDeployment.deployedRecipes],
-        deployedStandards: [],
-        deployedSkills: [],
-        hasOutdatedRecipes: targetDeployment.hasOutdatedRecipes,
-        hasOutdatedStandards: false,
-        hasOutdatedSkills: false,
-        recipeTargets: [targetDeployment],
-        standardTargets: [],
-        skillTargets: [],
-      });
-    }
-  });
-
-  // Group standard targets by repository
-  standardTargets.forEach((targetDeployment) => {
-    const repoId = targetDeployment.gitRepo.id;
-    const existingRepo = combined.get(repoId);
-
-    if (existingRepo) {
-      existingRepo.deployedStandards.push(
-        ...targetDeployment.deployedStandards,
-      );
-      existingRepo.hasOutdatedStandards =
-        existingRepo.hasOutdatedStandards ||
-        targetDeployment.hasOutdatedStandards;
-      existingRepo.standardTargets = existingRepo.standardTargets || [];
-      existingRepo.standardTargets.push(targetDeployment);
-    } else {
-      combined.set(repoId, {
-        gitRepo: targetDeployment.gitRepo,
-        deployedRecipes: [],
-        deployedStandards: [...targetDeployment.deployedStandards],
-        deployedSkills: [],
-        hasOutdatedRecipes: false,
-        hasOutdatedStandards: targetDeployment.hasOutdatedStandards,
-        hasOutdatedSkills: false,
-        recipeTargets: [],
-        standardTargets: [targetDeployment],
-        skillTargets: [],
-      });
-    }
-  });
-
-  // Group skill targets by repository
-  skillTargets.forEach((targetDeployment) => {
-    const repoId = targetDeployment.gitRepo.id;
-    const existingRepo = combined.get(repoId);
-
-    if (existingRepo) {
-      existingRepo.deployedSkills.push(...targetDeployment.deployedSkills);
-      existingRepo.hasOutdatedSkills =
-        existingRepo.hasOutdatedSkills || targetDeployment.hasOutdatedSkills;
-      existingRepo.skillTargets = existingRepo.skillTargets || [];
-      existingRepo.skillTargets.push(targetDeployment);
-    } else {
-      combined.set(repoId, {
-        gitRepo: targetDeployment.gitRepo,
-        deployedRecipes: [],
-        deployedStandards: [],
-        deployedSkills: [...targetDeployment.deployedSkills],
-        hasOutdatedRecipes: false,
-        hasOutdatedStandards: false,
-        hasOutdatedSkills: targetDeployment.hasOutdatedSkills,
-        recipeTargets: [],
-        standardTargets: [],
-        skillTargets: [targetDeployment],
-      });
-    }
-  });
-
-  return combined;
-};
-
-// Build combined repositories map using legacy repo-based inputs
-const buildCombinedRepositoriesFromRepos = (
-  recipeRepositories: RepositoryDeploymentStatus[],
-  standardRepositories: RepositoryStandardDeploymentStatus[],
-): Map<string, CombinedRepositoryDeploymentStatus> => {
-  const combined = new Map<string, CombinedRepositoryDeploymentStatus>();
-
-  recipeRepositories.forEach((repo) => {
-    combined.set(repo.gitRepo.id, {
-      gitRepo: repo.gitRepo,
-      deployedRecipes: repo.deployedRecipes,
-      deployedStandards: [],
-      deployedSkills: [],
-      hasOutdatedRecipes: repo.hasOutdatedRecipes,
-      hasOutdatedStandards: false,
-      hasOutdatedSkills: false,
-    });
-  });
-
-  standardRepositories.forEach((repo) => {
-    const existing = combined.get(repo.gitRepo.id);
-    if (existing) {
-      existing.deployedStandards = repo.deployedStandards;
-      existing.hasOutdatedStandards = repo.hasOutdatedStandards;
-    } else {
-      combined.set(repo.gitRepo.id, {
-        gitRepo: repo.gitRepo,
-        deployedRecipes: [],
-        deployedStandards: repo.deployedStandards,
-        deployedSkills: [],
-        hasOutdatedRecipes: false,
-        hasOutdatedStandards: repo.hasOutdatedStandards,
-        hasOutdatedSkills: false,
-      });
-    }
-  });
-
-  return combined;
-};
-
-const getVisibleTargets = (
-  repository: CombinedRepositoryDeploymentStatus,
-  selectedTargetNames?: string[],
-) => {
-  const withSelection = !!selectedTargetNames?.length;
-  const visibleRecipeTargets = withSelection
-    ? repository.recipeTargets?.filter(
-        (t) => selectedTargetNames?.includes(t.target.name) ?? false,
-      )
-    : repository.recipeTargets;
-  const visibleStandardTargets = withSelection
-    ? repository.standardTargets?.filter(
-        (t) => selectedTargetNames?.includes(t.target.name) ?? false,
-      )
-    : repository.standardTargets;
-  const visibleSkillTargets = withSelection
-    ? repository.skillTargets?.filter(
-        (t) => selectedTargetNames?.includes(t.target.name) ?? false,
-      )
-    : repository.skillTargets;
-  return { visibleRecipeTargets, visibleStandardTargets, visibleSkillTargets };
-};
-
-type ArtifactCounts = { upToDate: number; outdated: number };
-
-const computeArtifactCounts = (
-  recipeTargets?: TargetDeploymentStatus[],
-  standardTargets?: TargetStandardDeploymentStatus[],
-  skillTargets?: TargetSkillDeploymentStatus[],
-): ArtifactCounts => {
-  const counts: ArtifactCounts = { upToDate: 0, outdated: 0 };
-
-  (recipeTargets || []).forEach((t) => {
-    (t.deployedRecipes || []).forEach((r) => {
-      const isUp = (r as unknown as { isUpToDate?: boolean }).isUpToDate;
-      if (isUp === true) counts.upToDate += 1;
-      else if (isUp === false) counts.outdated += 1;
-    });
-  });
-
-  (standardTargets || []).forEach((t) => {
-    (t.deployedStandards || []).forEach((s) => {
-      const isUp = (s as unknown as { isUpToDate?: boolean }).isUpToDate;
-      if (isUp === true) counts.upToDate += 1;
-      else if (isUp === false) counts.outdated += 1;
-    });
-  });
-
-  (skillTargets || []).forEach((t) => {
-    (t.deployedSkills || []).forEach((s) => {
-      const isUp = (s as unknown as { isUpToDate?: boolean }).isUpToDate;
-      if (isUp === true) counts.upToDate += 1;
-      else if (isUp === false) counts.outdated += 1;
-    });
-  });
-
-  return counts;
-};
-
-const hasVisibleStatusWithTargets = (
-  repository: CombinedRepositoryDeploymentStatus,
-  artifactStatusFilter: ArtifactStatusFilter,
-  selectedTargetNames?: string[],
-) => {
-  if (artifactStatusFilter === 'all') return true;
-  const { visibleRecipeTargets, visibleStandardTargets, visibleSkillTargets } =
-    getVisibleTargets(repository, selectedTargetNames);
-
-  if (artifactStatusFilter === 'outdated') {
-    return (
-      visibleRecipeTargets?.some((t) => t.hasOutdatedRecipes) ||
-      visibleStandardTargets?.some((t) => t.hasOutdatedStandards) ||
-      visibleSkillTargets?.some((t) => t.hasOutdatedSkills)
-    );
-  }
-
-  // up-to-date
-  const hasUpToDateInRecipes = visibleRecipeTargets?.some((t) =>
-    t.deployedRecipes?.some(
-      (r) => (r as unknown as { isUpToDate: boolean }).isUpToDate,
-    ),
-  );
-  const hasUpToDateInStandards = visibleStandardTargets?.some((t) =>
-    t.deployedStandards?.some(
-      (s) => (s as unknown as { isUpToDate: boolean }).isUpToDate,
-    ),
-  );
-  const hasUpToDateInSkills = visibleSkillTargets?.some((t) =>
-    t.deployedSkills?.some(
-      (s) => (s as unknown as { isUpToDate: boolean }).isUpToDate,
-    ),
-  );
-  return Boolean(
-    hasUpToDateInRecipes || hasUpToDateInStandards || hasUpToDateInSkills,
-  );
-};
-
-const hasVisibleStatusLegacy = (
-  repository: CombinedRepositoryDeploymentStatus,
-  artifactStatusFilter: ArtifactStatusFilter,
-) => {
-  if (artifactStatusFilter === 'all') return true;
-  if (artifactStatusFilter === 'outdated') {
-    return repository.hasOutdatedRecipes || repository.hasOutdatedStandards;
-  }
-  // up-to-date: has any deployments and none outdated
-  const hasAny =
-    (repository.deployedRecipes?.length || 0) > 0 ||
-    (repository.deployedStandards?.length || 0) > 0;
-  const hasAnyOutdated =
-    repository.hasOutdatedRecipes || repository.hasOutdatedStandards;
-  return hasAny && !hasAnyOutdated;
+const matchesSearch = (section: RepoSection, searchTerm: string): boolean => {
+  if (!searchTerm) return true;
+  const fullName =
+    `${section.gitRepo.owner}/${section.gitRepo.repo}`.toLowerCase();
+  return fullName.includes(searchTerm.toLowerCase());
 };
 
 type EmptyState = { title: string; description: string } | null;
 
 const getEmptyStateProps = (
-  filteredCount: number,
-  selectedTargetNames: string[] | undefined,
+  visibleCount: number,
+  totalSections: number,
+  selectedTargetNames: string[],
   searchTerm: string,
   artifactStatusFilter: ArtifactStatusFilter,
-  totalRepositoriesCount: number,
 ): EmptyState => {
-  if (filteredCount > 0) return null;
+  if (visibleCount > 0) return null;
 
-  // Case: No distributions at all
-  if (totalRepositoriesCount === 0) {
+  if (totalSections === 0) {
     return {
       title: 'No distributions yet',
       description:
@@ -429,15 +77,14 @@ const getEmptyStateProps = (
     };
   }
 
-  // Cases: Filters return no results
-  if (selectedTargetNames && selectedTargetNames.length > 0 && searchTerm) {
+  if (searchTerm && selectedTargetNames.length > 0) {
     return {
       title: 'No repositories found',
       description: `No repositories match your search "${searchTerm}" for the selected targets`,
     };
   }
 
-  if (selectedTargetNames && selectedTargetNames.length > 0) {
+  if (selectedTargetNames.length > 0) {
     return {
       title: 'No repositories found',
       description: 'No repositories have deployments for the selected targets',
@@ -474,11 +121,7 @@ const getEmptyStateProps = (
 };
 
 export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
-  recipeRepositories,
-  standardRepositories = [],
-  recipeTargets = [],
-  standardTargets = [],
-  skillTargets = [],
+  entries,
   searchTerm = '',
   artifactStatusFilter = 'all',
   selectedTargetNames = [],
@@ -501,178 +144,53 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   const { data: standardsData } = useGetStandardsQuery();
   const { data: skillsData } = useGetSkillsQuery();
 
-  const recipesById = useMemo(() => {
-    const map = new Map<RecipeId, Recipe>();
-    (recipesData ?? []).forEach((r) => map.set(r.id, r));
-    return map;
-  }, [recipesData]);
+  const lookups = useMemo(
+    () => ({
+      recipesById: indexById<RecipeId, Recipe>(recipesData ?? []),
+      standardsById: indexById<StandardId, Standard>(
+        standardsData?.standards ?? [],
+      ),
+      skillsById: indexById<SkillId, Skill>(skillsData ?? []),
+    }),
+    [recipesData, standardsData, skillsData],
+  );
 
-  const standardsById = useMemo(() => {
-    const map = new Map<StandardId, Standard>();
-    (standardsData?.standards ?? []).forEach((s) => map.set(s.id, s));
-    return map;
-  }, [standardsData]);
+  const sections = useMemo(() => {
+    if (packagesLoading) return [];
+    return buildRepositorySections({ entries, packages, lookups });
+  }, [packagesLoading, entries, packages, lookups]);
 
-  const skillsById = useMemo(() => {
-    const map = new Map<SkillId, Skill>();
-    (skillsData ?? []).forEach((s) => map.set(s.id, s));
-    return map;
-  }, [skillsData]);
-
-  const { spaceId } = useCurrentSpace();
-  const { getActivePackageIds } = useActivePackageIdsByTarget(spaceId);
-
-  const shouldUseTargetData =
-    recipeTargets.length > 0 ||
-    standardTargets.length > 0 ||
-    skillTargets.length > 0;
-
-  const combinedRepositories = useMemo(() => {
-    return shouldUseTargetData
-      ? buildCombinedRepositoriesFromTargets(
-          recipeTargets,
-          standardTargets,
-          skillTargets,
-        )
-      : buildCombinedRepositoriesFromRepos(
-          recipeRepositories,
-          standardRepositories,
-        );
+  const visibleSections = useMemo(() => {
+    return sections
+      .filter(
+        (section) =>
+          (selectedRepoIds.length === 0 ||
+            selectedRepoIds.includes(section.gitRepo.id)) &&
+          matchesSearch(section, searchTerm),
+      )
+      .map((section) => ({
+        ...section,
+        targets: section.targets.filter(
+          (t) =>
+            matchesTargetNames(t, selectedTargetNames) &&
+            matchesStatus(t, artifactStatusFilter),
+        ),
+      }))
+      .filter((section) => section.targets.length > 0);
   }, [
-    shouldUseTargetData,
-    recipeTargets,
-    standardTargets,
-    skillTargets,
-    recipeRepositories,
-    standardRepositories,
-  ]);
-  const hasAnySelectedTargetDeployments = useCallback(
-    (repository: CombinedRepositoryDeploymentStatus) => {
-      if (!selectedTargetNames || selectedTargetNames.length === 0) return true;
-      return selectedTargetNames.some(
-        (targetName) =>
-          repository.recipeTargets?.some((t) => t.target.name === targetName) ||
-          repository.standardTargets?.some(
-            (t) => t.target.name === targetName,
-          ) ||
-          repository.skillTargets?.some((t) => t.target.name === targetName),
-      );
-    },
-    [selectedTargetNames],
-  );
-
-  const matchesSearch = useCallback(
-    (repository: CombinedRepositoryDeploymentStatus) => {
-      if (!searchTerm) return true;
-      const fullName =
-        `${repository.gitRepo.owner}/${repository.gitRepo.repo}`.toLowerCase();
-      return fullName.includes(searchTerm.toLowerCase());
-    },
-    [searchTerm],
-  );
-
-  const hasVisibleMatchingStatus = (
-    repository: CombinedRepositoryDeploymentStatus,
-  ) => {
-    return shouldUseTargetData
-      ? hasVisibleStatusWithTargets(
-          repository,
-          artifactStatusFilter,
-          selectedTargetNames,
-        )
-      : hasVisibleStatusLegacy(repository, artifactStatusFilter);
-  };
-
-  const filteredRepositories = Array.from(combinedRepositories.values()).filter(
-    (repository: CombinedRepositoryDeploymentStatus) =>
-      (selectedRepoIds.length === 0 ||
-        selectedRepoIds.includes(repository.gitRepo.id)) &&
-      hasAnySelectedTargetDeployments(repository) &&
-      matchesSearch(repository) &&
-      hasVisibleMatchingStatus(repository),
-  );
-
-  const globalCounts = useMemo(() => {
-    const totals: ArtifactCounts = { upToDate: 0, outdated: 0 };
-
-    const add = (more: ArtifactCounts) => {
-      totals.upToDate += more.upToDate;
-      totals.outdated += more.outdated;
-    };
-
-    Array.from(combinedRepositories.values()).forEach((repository) => {
-      if (
-        (selectedRepoIds.length > 0 &&
-          !selectedRepoIds.includes(repository.gitRepo.id)) ||
-        !hasAnySelectedTargetDeployments(repository) ||
-        !matchesSearch(repository)
-      ) {
-        return;
-      }
-
-      if (shouldUseTargetData) {
-        const {
-          visibleRecipeTargets,
-          visibleStandardTargets,
-          visibleSkillTargets,
-        } = getVisibleTargets(repository, selectedTargetNames);
-        add(
-          computeArtifactCounts(
-            visibleRecipeTargets,
-            visibleStandardTargets,
-            visibleSkillTargets,
-          ),
-        );
-      } else {
-        const counts: ArtifactCounts = { upToDate: 0, outdated: 0 };
-        (repository.deployedRecipes || []).forEach((r) => {
-          const isUp = (r as unknown as { isUpToDate?: boolean }).isUpToDate;
-          if (isUp === true) counts.upToDate += 1;
-          else if (isUp === false) counts.outdated += 1;
-        });
-        (repository.deployedStandards || []).forEach((s) => {
-          const isUp = (s as unknown as { isUpToDate?: boolean }).isUpToDate;
-          if (isUp === true) counts.upToDate += 1;
-          else if (isUp === false) counts.outdated += 1;
-        });
-        add(counts);
-      }
-    });
-
-    return totals;
-  }, [
-    combinedRepositories,
+    sections,
     selectedRepoIds,
+    searchTerm,
     selectedTargetNames,
-    shouldUseTargetData,
-    hasAnySelectedTargetDeployments,
-    matchesSearch,
+    artifactStatusFilter,
   ]);
-
-  // Sort repositories: those with content first, then alphabetical by repo title
-  const sortedRepositories = useMemo(() => {
-    return [...filteredRepositories].sort((a, b) => {
-      const aHas =
-        (a.deployedRecipes?.length || 0) > 0 ||
-        (a.deployedStandards?.length || 0) > 0;
-      const bHas =
-        (b.deployedRecipes?.length || 0) > 0 ||
-        (b.deployedStandards?.length || 0) > 0;
-      if (aHas !== bHas) return aHas ? -1 : 1;
-      const aTitle =
-        `${a.gitRepo.owner}/${a.gitRepo.repo}:${a.gitRepo.branch}`.toLowerCase();
-      const bTitle =
-        `${b.gitRepo.owner}/${b.gitRepo.repo}:${b.gitRepo.branch}`.toLowerCase();
-      return aTitle.localeCompare(bTitle);
-    });
-  }, [filteredRepositories]);
 
   const emptyState = getEmptyStateProps(
-    filteredRepositories.length,
+    visibleSections.length,
+    sections.length,
     selectedTargetNames,
     searchTerm,
     artifactStatusFilter,
-    combinedRepositories.size,
   );
 
   if (emptyState) {
@@ -686,67 +204,44 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
 
   return (
     <PMVStack gap={4} align="stretch">
-      <DeploymentStatsSummary counts={globalCounts} />
-      {sortedRepositories.map((repository) => {
-        // Rendu uniquement basé sur les targets (legacy supprimé)
-        const hasTargets =
-          (repository.recipeTargets && repository.recipeTargets.length > 0) ||
-          (repository.standardTargets &&
-            repository.standardTargets.length > 0) ||
-          (repository.skillTargets && repository.skillTargets.length > 0);
+      {visibleSections.map((section) => (
+        <PMVStack
+          key={section.gitRepo.id}
+          align="stretch"
+          backgroundColor={'blue.1000'}
+          gap={4}
+          borderRadius={'lg'}
+          padding={6}
+        >
+          <PMHeading level="h5">
+            {section.gitRepo.owner}/{section.gitRepo.repo}:
+            {section.gitRepo.branch}
+          </PMHeading>
 
-        return (
-          <PMVStack
-            key={repository.gitRepo.id}
-            align="stretch"
-            backgroundColor={'blue.1000'}
-            gap={4}
-            borderRadius={'lg'}
-            padding={6}
-          >
-            <PMHeading level="h5">
-              {repository.gitRepo.owner}/{repository.gitRepo.repo}:
-              {repository.gitRepo.branch}
-            </PMHeading>
-
-            <PMVStack align="stretch" width="full">
-              {hasTargets &&
-                !packagesLoading &&
-                getSortedTargetEntries(
-                  repository,
-                  selectedTargetNames,
-                  artifactStatusFilter,
-                ).map((t) => (
-                  <RepositoryTargetTable
-                    key={`target-${t.id}`}
-                    orgSlug={orgSlug}
-                    target={{ id: t.id, name: t.name }}
-                    packageGroups={groupTargetByPackage(
-                      {
-                        recipes: t.recipes,
-                        standards: t.standards,
-                        skills: t.skills,
-                      },
-                      packages,
-                      {
-                        recipesById,
-                        standardsById,
-                        skillsById,
-                      },
-                      getActivePackageIds(t.id),
-                    )}
-                    mode={artifactStatusFilter}
-                    canDistributeFromApp={
-                      !isProvidersLoading &&
-                      providersWithToken.has(repository.gitRepo.providerId)
-                    }
-                    isDistributeReadinessLoading={isProvidersLoading}
-                  />
-                ))}
-            </PMVStack>
+          <PMVStack align="stretch" width="full">
+            {section.targets.map((target) => (
+              <RepositoryTargetTable
+                key={`target-${target.id}`}
+                orgSlug={orgSlug}
+                target={{ id: target.id, name: target.target.name }}
+                packageGroups={target.packageGroups}
+                mode={artifactStatusFilter}
+                canDistributeFromApp={
+                  !isProvidersLoading &&
+                  providersWithToken.has(section.gitRepo.providerId)
+                }
+                isDistributeReadinessLoading={isProvidersLoading}
+              />
+            ))}
           </PMVStack>
-        );
-      })}
+        </PMVStack>
+      ))}
     </PMVStack>
   );
 };
+
+function indexById<TId extends string, T extends { id: TId }>(
+  items: readonly T[],
+): Map<TId, T> {
+  return new Map(items.map((item) => [item.id, item]));
+}

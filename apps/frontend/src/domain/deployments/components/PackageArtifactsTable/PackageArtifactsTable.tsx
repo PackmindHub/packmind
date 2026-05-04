@@ -51,7 +51,7 @@ export type PackageArtifactsTableProps = {
   isDistributeReadinessLoading: boolean;
 };
 
-type NormalizedArtifact = {
+type Row = {
   kind: ArtifactKind;
   name: string;
   deployedVersion: number;
@@ -60,6 +60,11 @@ type NormalizedArtifact = {
   isDeleted: boolean;
   isPending: boolean;
   routePath?: string;
+};
+
+type RouteCtx = {
+  orgSlug?: string;
+  spaceSlug?: string;
 };
 
 const TABLE_COLUMNS: PMTableColumn[] = [
@@ -85,64 +90,163 @@ const getGapPalette = (gap: number): 'blue' | 'orange' | 'red' => {
   return 'blue';
 };
 
-const matchesMode = (a: NormalizedArtifact, mode: Mode): boolean => {
-  if (a.isPending) {
-    return mode === 'all' || mode === 'outdated';
-  }
-  if (mode === 'outdated') return !a.isUpToDate || a.isDeleted;
-  if (mode === 'up-to-date') return a.isUpToDate && !a.isDeleted;
+const matchesMode = (row: Row, mode: Mode): boolean => {
+  if (row.isPending) return mode !== 'up-to-date';
+  if (mode === 'outdated') return !row.isUpToDate || row.isDeleted;
+  if (mode === 'up-to-date') return row.isUpToDate && !row.isDeleted;
   return true;
 };
 
-const renderVersionCell = (
-  a: NormalizedArtifact,
-  mode: Mode,
-): React.ReactNode => {
-  if (a.isPending) {
+const buildRows = (
+  props: Pick<
+    PackageArtifactsTableProps,
+    | 'recipes'
+    | 'standards'
+    | 'skills'
+    | 'pendingRecipes'
+    | 'pendingStandards'
+    | 'pendingSkills'
+  >,
+  ctx: RouteCtx,
+): Row[] => {
+  const rows: Row[] = [];
+
+  props.standards.forEach((d) =>
+    rows.push({
+      kind: 'Standard',
+      name: d.standard.name,
+      deployedVersion: d.deployedVersion.version,
+      latestVersion: d.latestVersion.version,
+      isUpToDate: d.isUpToDate,
+      isDeleted: !!d.isDeleted,
+      isPending: false,
+      routePath: standardRoute(ctx, d.standard.id),
+    }),
+  );
+  (props.pendingStandards ?? []).forEach((s) =>
+    rows.push({
+      kind: 'Standard',
+      name: s.name,
+      deployedVersion: 0,
+      latestVersion: 0,
+      isUpToDate: false,
+      isDeleted: false,
+      isPending: true,
+      routePath: standardRoute(ctx, s.id),
+    }),
+  );
+
+  props.recipes.forEach((d) =>
+    rows.push({
+      kind: 'Command',
+      name: d.recipe.name,
+      deployedVersion: d.deployedVersion.version,
+      latestVersion: d.latestVersion.version,
+      isUpToDate: d.isUpToDate,
+      isDeleted: !!d.isDeleted,
+      isPending: false,
+      routePath: commandRoute(ctx, d.recipe.id),
+    }),
+  );
+  (props.pendingRecipes ?? []).forEach((r) =>
+    rows.push({
+      kind: 'Command',
+      name: r.name,
+      deployedVersion: 0,
+      latestVersion: 0,
+      isUpToDate: false,
+      isDeleted: false,
+      isPending: true,
+      routePath: commandRoute(ctx, r.id),
+    }),
+  );
+
+  props.skills.forEach((d) =>
+    rows.push({
+      kind: 'Skill',
+      name: d.skill.name,
+      deployedVersion: d.deployedVersion.version,
+      latestVersion: d.latestVersion.version,
+      isUpToDate: d.isUpToDate,
+      isDeleted: !!d.isDeleted,
+      isPending: false,
+      routePath: skillRoute(ctx, d.skill.slug),
+    }),
+  );
+  (props.pendingSkills ?? []).forEach((s) =>
+    rows.push({
+      kind: 'Skill',
+      name: s.name,
+      deployedVersion: 0,
+      latestVersion: 0,
+      isUpToDate: false,
+      isDeleted: false,
+      isPending: true,
+      routePath: skillRoute(ctx, s.slug),
+    }),
+  );
+
+  return rows;
+};
+
+const standardRoute = (ctx: RouteCtx, id: StandardId) =>
+  ctx.orgSlug && ctx.spaceSlug
+    ? routes.space.toStandard(ctx.orgSlug, ctx.spaceSlug, id)
+    : undefined;
+
+const commandRoute = (ctx: RouteCtx, id: RecipeId) =>
+  ctx.orgSlug && ctx.spaceSlug
+    ? routes.space.toCommand(ctx.orgSlug, ctx.spaceSlug, id)
+    : undefined;
+
+const skillRoute = (ctx: RouteCtx, slug: string) =>
+  ctx.orgSlug && ctx.spaceSlug
+    ? routes.space.toSkill(ctx.orgSlug, ctx.spaceSlug, slug)
+    : undefined;
+
+const renderVersionCell = (row: Row, mode: Mode): React.ReactNode => {
+  if (row.isPending) {
     return (
       <PMText variant="small" color="faded">
         —
       </PMText>
     );
   }
-  if (mode !== 'outdated' && a.isUpToDate) {
+  if (mode !== 'outdated' && row.isUpToDate) {
     return (
       <PMBadge colorPalette="gray" size="sm">
-        {a.deployedVersion}
+        {row.deployedVersion}
       </PMBadge>
     );
   }
-  const palette = getGapPalette(a.latestVersion - a.deployedVersion);
+  const palette = getGapPalette(row.latestVersion - row.deployedVersion);
   return (
     <PMHStack gap={2} justify="center" align="center">
       <PMBadge colorPalette="gray" size="sm">
-        {a.deployedVersion}
+        {row.deployedVersion}
       </PMBadge>
       <PMText variant="small" color="faded">
         →
       </PMText>
       <PMBadge colorPalette={palette} size="sm">
-        {a.latestVersion}
+        {row.latestVersion}
       </PMBadge>
     </PMHStack>
   );
 };
 
-const renderStatusCell = (
-  a: NormalizedArtifact,
-  mode: Mode,
-): React.ReactNode => {
-  if (a.isPending) {
+const renderStatusCell = (row: Row, mode: Mode): React.ReactNode => {
+  if (row.isPending) {
     return (
       <PMBadge colorPalette="orange" size="sm">
         Pending distribution
       </PMBadge>
     );
   }
-  if (a.isDeleted) {
+  if (row.isDeleted) {
     return (
       <PMTooltip
-        label={`The ${KIND_TOOLTIP_NOUN[a.kind]} deletion will be effective on the repository after a \`packmind-cli install\` or git distribution from web app`}
+        label={`The ${KIND_TOOLTIP_NOUN[row.kind]} deletion will be effective on the repository after a \`packmind-cli install\` or git distribution from web app`}
         placement="top"
       >
         <PMBadge colorPalette="red" size="sm">
@@ -151,7 +255,7 @@ const renderStatusCell = (
       </PMTooltip>
     );
   }
-  if (mode === 'outdated' || !a.isUpToDate) {
+  if (mode === 'outdated' || !row.isUpToDate) {
     return (
       <PMBadge colorPalette="red" size="sm">
         Outdated
@@ -165,158 +269,71 @@ const renderStatusCell = (
   );
 };
 
-const renderNameCell = (a: NormalizedArtifact): React.ReactNode => (
+const renderNameCell = (row: Row): React.ReactNode => (
   <PMVStack align="start" gap={0}>
     <PMText variant="small" color="tertiary">
-      {a.kind}
+      {row.kind}
     </PMText>
-    {a.routePath ? (
+    {row.routePath ? (
       <PMLink asChild>
-        <Link to={a.routePath}>{a.name}</Link>
+        <Link to={row.routePath}>{row.name}</Link>
       </PMLink>
     ) : (
-      <PMText variant="body-important">{a.name}</PMText>
+      <PMText variant="body-important">{row.name}</PMText>
     )}
   </PMVStack>
 );
 
-const toTableRow = (a: NormalizedArtifact, mode: Mode): PMTableRow => ({
-  name: renderNameCell(a),
-  version: renderVersionCell(a, mode),
-  status: renderStatusCell(a, mode),
+const toTableRow = (row: Row, mode: Mode): PMTableRow => ({
+  name: renderNameCell(row),
+  version: renderVersionCell(row, mode),
+  status: renderStatusCell(row, mode),
 });
 
-const sortByName = (items: NormalizedArtifact[]): NormalizedArtifact[] =>
-  items.sort((a, b) => a.name.localeCompare(b.name));
+const sortRows = (rows: Row[]): Row[] => {
+  const kindOrder: Record<ArtifactKind, number> = {
+    Standard: 0,
+    Command: 1,
+    Skill: 2,
+  };
+  return [...rows].sort((a, b) => {
+    if (a.kind !== b.kind) return kindOrder[a.kind] - kindOrder[b.kind];
+    return a.name.localeCompare(b.name);
+  });
+};
 
-export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
-  orgSlug,
-  packageName,
-  packageId,
-  targetId,
-  recipes,
-  standards,
-  skills,
-  pendingRecipes = [],
-  pendingStandards = [],
-  pendingSkills = [],
-  mode = 'all',
-  canDistributeFromApp,
-  isDistributeReadinessLoading,
-}) => {
+export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = (
+  props,
+) => {
+  const {
+    orgSlug,
+    packageName,
+    packageId,
+    targetId,
+    mode = 'all',
+    canDistributeFromApp,
+    isDistributeReadinessLoading,
+  } = props;
   const { spaceSlug } = useCurrentSpace();
 
-  const normalizedStandards: NormalizedArtifact[] = standards.map((d) => ({
-    kind: 'Standard',
-    name: d.standard.name,
-    deployedVersion: d.deployedVersion.version,
-    latestVersion: d.latestVersion.version,
-    isUpToDate: d.isUpToDate,
-    isDeleted: !!d.isDeleted,
-    isPending: false,
-    routePath:
-      orgSlug && spaceSlug
-        ? routes.space.toStandard(orgSlug, spaceSlug, d.standard.id)
-        : undefined,
-  }));
+  const allRows = buildRows(props, { orgSlug, spaceSlug });
+  const visibleRows = sortRows(allRows.filter((row) => matchesMode(row, mode)));
 
-  pendingStandards.forEach((s) => {
-    normalizedStandards.push({
-      kind: 'Standard',
-      name: s.name,
-      deployedVersion: 0,
-      latestVersion: 0,
-      isUpToDate: false,
-      isDeleted: false,
-      isPending: true,
-      routePath:
-        orgSlug && spaceSlug
-          ? routes.space.toStandard(orgSlug, spaceSlug, s.id)
-          : undefined,
-    });
-  });
-
-  const normalizedRecipes: NormalizedArtifact[] = recipes.map((d) => ({
-    kind: 'Command',
-    name: d.recipe.name,
-    deployedVersion: d.deployedVersion.version,
-    latestVersion: d.latestVersion.version,
-    isUpToDate: d.isUpToDate,
-    isDeleted: !!d.isDeleted,
-    isPending: false,
-    routePath:
-      orgSlug && spaceSlug
-        ? routes.space.toCommand(orgSlug, spaceSlug, d.recipe.id)
-        : undefined,
-  }));
-
-  pendingRecipes.forEach((r) => {
-    normalizedRecipes.push({
-      kind: 'Command',
-      name: r.name,
-      deployedVersion: 0,
-      latestVersion: 0,
-      isUpToDate: false,
-      isDeleted: false,
-      isPending: true,
-      routePath:
-        orgSlug && spaceSlug
-          ? routes.space.toCommand(orgSlug, spaceSlug, r.id)
-          : undefined,
-    });
-  });
-
-  const normalizedSkills: NormalizedArtifact[] = skills.map((d) => ({
-    kind: 'Skill',
-    name: d.skill.name,
-    deployedVersion: d.deployedVersion.version,
-    latestVersion: d.latestVersion.version,
-    isUpToDate: d.isUpToDate,
-    isDeleted: !!d.isDeleted,
-    isPending: false,
-    routePath:
-      orgSlug && spaceSlug
-        ? routes.space.toSkill(orgSlug, spaceSlug, d.skill.slug)
-        : undefined,
-  }));
-
-  pendingSkills.forEach((s) => {
-    normalizedSkills.push({
-      kind: 'Skill',
-      name: s.name,
-      deployedVersion: 0,
-      latestVersion: 0,
-      isUpToDate: false,
-      isDeleted: false,
-      isPending: true,
-      routePath:
-        orgSlug && spaceSlug
-          ? routes.space.toSkill(orgSlug, spaceSlug, s.slug)
-          : undefined,
-    });
-  });
-
-  const rows: PMTableRow[] = [
-    ...sortByName(normalizedStandards.filter((a) => matchesMode(a, mode))),
-    ...sortByName(normalizedRecipes.filter((a) => matchesMode(a, mode))),
-    ...sortByName(normalizedSkills.filter((a) => matchesMode(a, mode))),
-  ].map((a) => toTableRow(a, mode));
-
-  if (rows.length === 0) {
+  if (visibleRows.length === 0) {
     return null;
   }
 
-  const allDeployed = [...recipes, ...standards, ...skills];
-  const inSyncCount = allDeployed.filter(
-    (a) => a.isUpToDate && !a.isDeleted,
+  const inSyncCount = allRows.filter(
+    (row) => !row.isPending && row.isUpToDate && !row.isDeleted,
   ).length;
-  const driftCount = allDeployed.filter(
-    (a) => !a.isUpToDate || a.isDeleted,
+  const driftCount = allRows.filter(
+    (row) => !row.isPending && (!row.isUpToDate || row.isDeleted),
   ).length;
-  const pendingCount =
-    pendingRecipes.length + pendingStandards.length + pendingSkills.length;
+  const pendingCount = allRows.filter((row) => row.isPending).length;
   const totalArtifacts = inSyncCount + driftCount + pendingCount;
   const hasOutdatedArtifacts = driftCount + pendingCount > 0;
+
+  const tableRows = visibleRows.map((row) => toTableRow(row, mode));
 
   return (
     <PMAccordion.Item
@@ -331,7 +348,7 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
           flex="1"
           px={2}
           py={1}
-          _hover={{ cursor: 'pointer', bg: 'background.tertiary' }}
+          _hover={{ cursor: 'pointer' }}
         >
           <PMHStack gap={2} align="center" flex="1">
             <PMAccordion.ItemIndicator />
@@ -376,7 +393,7 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
       </PMHStack>
       <PMAccordion.ItemContent>
         <PMBox px={2} pb={2}>
-          <PMTable columns={TABLE_COLUMNS} data={rows} size="sm" />
+          <PMTable columns={TABLE_COLUMNS} data={tableRows} size="sm" />
         </PMBox>
       </PMAccordion.ItemContent>
     </PMAccordion.Item>

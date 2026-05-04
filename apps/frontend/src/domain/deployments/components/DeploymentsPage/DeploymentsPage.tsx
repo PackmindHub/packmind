@@ -16,52 +16,42 @@ import { TargetMultiSelect } from '../TargetMultiSelect';
 import { RepositoryMultiSelect } from '../RepositoryMultiSelect';
 import { StatusCombobox, type RepositoryStatus } from '../StatusCombobox';
 import {
-  useGetRecipesDeploymentOverviewQuery,
-  useGetStandardsDeploymentOverviewQuery,
-  useGetSkillsDeploymentOverviewQuery,
+  useListActiveDistributedPackagesBySpaceQuery,
   useListPackagesBySpaceQuery,
 } from '../../api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
-import {
-  Target,
-  TargetDeploymentStatus,
-  TargetStandardDeploymentStatus,
-  TargetSkillDeploymentStatus,
-} from '@packmind/types';
+import { ActiveDistributedPackagesByTarget, Target } from '@packmind/types';
+import { buildArtifactRollups } from '../../utils/buildArtifactRollups';
 
 type ViewMode = 'repositories' | 'artifacts';
 
-/**
- * Extracts unique targets from deployment data for filtering purposes
- */
 const extractAvailableTargets = (
-  recipeTargets: TargetDeploymentStatus[] = [],
-  standardTargets: TargetStandardDeploymentStatus[] = [],
-  skillTargets: TargetSkillDeploymentStatus[] = [],
+  entries: ReadonlyArray<ActiveDistributedPackagesByTarget>,
 ): Target[] => {
   const targetMap = new Map<string, Target>();
-
-  // Add targets from recipe deployments
-  recipeTargets.forEach((targetDeployment) => {
-    targetMap.set(targetDeployment.target.id, targetDeployment.target);
+  entries.forEach((entry) => {
+    targetMap.set(entry.target.id, entry.target);
   });
-
-  // Add targets from standard deployments
-  standardTargets.forEach((targetDeployment) => {
-    targetMap.set(targetDeployment.target.id, targetDeployment.target);
-  });
-
-  // Add targets from skill deployments
-  skillTargets.forEach((targetDeployment) => {
-    targetMap.set(targetDeployment.target.id, targetDeployment.target);
-  });
-
   return Array.from(targetMap.values()).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
 };
 
-// StatusCombobox extracted to components/StatusCombobox
+const extractAvailableRepositories = (
+  entries: ReadonlyArray<ActiveDistributedPackagesByTarget>,
+) => {
+  const map = new Map<
+    string,
+    { id: string; owner: string; repo: string; branch?: string | null }
+  >();
+  entries.forEach((entry) => {
+    if (!entry.gitRepo) return;
+    if (!map.has(entry.gitRepo.id)) map.set(entry.gitRepo.id, entry.gitRepo);
+  });
+  return Array.from(map.values()).sort((a, b) =>
+    (a.owner + '/' + a.repo).localeCompare(b.owner + '/' + b.repo),
+  );
+};
 
 export const DeploymentsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -78,25 +68,17 @@ export const DeploymentsPage: React.FC = () => {
   const setViewMode = (newViewMode: ViewMode) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
-      // Always set new view first
       newParams.set('view', newViewMode);
-
-      // Reset filters when switching views
-      // Common resets
-      newParams.delete('search'); // clear search box
-      newParams.set('repoStatus', 'all'); // reset status filter
+      newParams.delete('search');
+      newParams.set('repoStatus', 'all');
 
       if (newViewMode === 'repositories') {
-        // Clear artifacts-specific filters
         newParams.delete('artType');
-        // Keep repository-centric filters but reset selections
         newParams.delete('repoIds');
         newParams.delete('targetFilter');
       } else if (newViewMode === 'artifacts') {
-        // Clear repository-centric selections
         newParams.delete('repoIds');
         newParams.delete('targetFilter');
-        // Ensure artifact type is reset
         newParams.set('artType', 'all');
       }
 
@@ -104,11 +86,10 @@ export const DeploymentsPage: React.FC = () => {
     });
   };
 
-  // Debounced search term implementation
+  // Debounced search term
   const urlSearchTerm = searchParams.get('search') || '';
   const [searchTerm, setSearchTerm] = useState(urlSearchTerm);
 
-  // Debounce search term updates to URL (500ms delay)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setSearchParams((prev) => {
@@ -125,12 +106,10 @@ export const DeploymentsPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, setSearchParams]);
 
-  // Sync local state with URL when URL changes (e.g., browser back/forward)
   useEffect(() => {
     setSearchTerm(urlSearchTerm);
   }, [urlSearchTerm]);
 
-  // URL-synchronized state for repository status filter
   const rawRepoStatus = searchParams.get('repoStatus');
   const repositoryStatus: RepositoryStatus =
     rawRepoStatus === 'all' ||
@@ -150,16 +129,12 @@ export const DeploymentsPage: React.FC = () => {
     });
   };
 
-  // Removed recipe/standard specific filters and views
-
-  // URL-synchronized state for targetFilter (comma-separated target names)
   const rawTargetFilter = searchParams.get('targetFilter');
   const selectedTargetNames: string[] = useMemo(
     () => (rawTargetFilter ? rawTargetFilter.split(',') : []),
     [rawTargetFilter],
   );
 
-  // URL-synchronized state for repository selection (comma-separated repo IDs)
   const rawRepoIds = searchParams.get('repoIds');
   const selectedRepoIds: string[] = useMemo(
     () => (rawRepoIds ? rawRepoIds.split(',') : []),
@@ -195,75 +170,29 @@ export const DeploymentsPage: React.FC = () => {
   );
 
   const {
-    data: recipesData,
+    data: overviewData,
     isLoading,
     error,
-  } = useGetRecipesDeploymentOverviewQuery(spaceId ?? '');
-  const {
-    data: standardData,
-    isLoading: standardIsLoading,
-    error: standardError,
-  } = useGetStandardsDeploymentOverviewQuery(spaceId ?? '');
-  const {
-    data: skillsData,
-    isLoading: skillsIsLoading,
-    error: skillsError,
-  } = useGetSkillsDeploymentOverviewQuery(spaceId ?? '');
+  } = useListActiveDistributedPackagesBySpaceQuery(spaceId);
   const { data: packagesResponse, isLoading: isPackagesLoading } =
     useListPackagesBySpaceQuery(spaceId, organizationId);
   const packages = packagesResponse?.packages ?? [];
+  const entries = useMemo(() => overviewData ?? [], [overviewData]);
 
-  // Filter targets by selected repositories (if any), then extract available targets
-  const filteredRecipeTargets = useMemo(() => {
-    const all = recipesData?.targets ?? [];
-    if (!selectedRepoIds.length) return all;
-    const selected = new Set(selectedRepoIds);
-    return all.filter((t) => t.gitRepo && selected.has(t.gitRepo.id));
-  }, [recipesData?.targets, selectedRepoIds]);
-
-  const filteredStandardTargets = useMemo(() => {
-    const all = standardData?.targets ?? [];
-    if (!selectedRepoIds.length) return all;
-    const selected = new Set(selectedRepoIds);
-    return all.filter((t) => t.gitRepo && selected.has(t.gitRepo.id));
-  }, [standardData?.targets, selectedRepoIds]);
-
-  const filteredSkillTargets = useMemo(() => {
-    const all = skillsData?.targets ?? [];
-    if (!selectedRepoIds.length) return all;
-    const selected = new Set(selectedRepoIds);
-    return all.filter((t) => t.gitRepo && selected.has(t.gitRepo.id));
-  }, [skillsData?.targets, selectedRepoIds]);
-
-  // Extract available targets for filtering (safe to call even when data is loading)
-  const availableTargets = extractAvailableTargets(
-    filteredRecipeTargets,
-    filteredStandardTargets,
-    filteredSkillTargets,
+  const availableTargets = useMemo(
+    () => extractAvailableTargets(entries),
+    [entries],
   );
 
-  // Build available repositories list for combobox (from targets, since repository view is target-based)
-  const availableRepositories = useMemo(() => {
-    const map = new Map<
-      string,
-      { id: string; owner: string; repo: string; branch?: string | null }
-    >();
-    const add = (gitRepo?: {
-      id: string;
-      owner: string;
-      repo: string;
-      branch?: string | null;
-    }) => {
-      if (!gitRepo) return;
-      if (!map.has(gitRepo.id)) map.set(gitRepo.id, gitRepo);
-    };
-    recipesData?.targets?.forEach((t) => add(t.gitRepo));
-    standardData?.targets?.forEach((t) => add(t.gitRepo));
-    skillsData?.targets?.forEach((t) => add(t.gitRepo));
-    return Array.from(map.values()).sort((a, b) =>
-      (a.owner + '/' + a.repo).localeCompare(b.owner + '/' + b.repo),
-    );
-  }, [recipesData?.targets, standardData?.targets, skillsData?.targets]);
+  const availableRepositories = useMemo(
+    () => extractAvailableRepositories(entries),
+    [entries],
+  );
+
+  const artifactRollups = useMemo(
+    () => buildArtifactRollups(entries),
+    [entries],
+  );
 
   // Cleanup invalid selectedRepoIds when data updates
   useEffect(() => {
@@ -284,45 +213,35 @@ export const DeploymentsPage: React.FC = () => {
       const availableTargetNames = new Set(
         availableTargets.map((target) => target.name),
       );
-      // Keep only valid names and deduplicate
       const validTargetNames = Array.from(
         new Set(
           selectedTargetNames.filter((name) => availableTargetNames.has(name)),
         ),
       );
-
-      // If some selected targets are no longer available, update the selection
       if (validTargetNames.length !== selectedTargetNames.length) {
         setSelectedTargetNames(validTargetNames);
       }
     }
   }, [availableTargets, selectedTargetNames, setSelectedTargetNames]);
 
-  if (isLoading || standardIsLoading || skillsIsLoading) {
+  if (isLoading) {
     return <PMText>Loading...</PMText>;
   }
 
-  if (error || standardError || skillsError) {
+  if (error) {
     return <PMText color="error">Error loading deployment data</PMText>;
   }
 
-  if (!recipesData) {
+  if (!overviewData) {
     return <PMText>No deployment data available</PMText>;
   }
 
-  // Show blank state if no distributions exist anywhere in the organization
-  const hasAnyDistributions =
-    (recipesData.targets && recipesData.targets.length > 0) ||
-    (standardData?.targets && standardData.targets.length > 0) ||
-    (skillsData?.targets && skillsData.targets.length > 0);
-
-  if (!hasAnyDistributions) {
+  if (entries.length === 0) {
     return <DeploymentsBlankState />;
   }
 
   let searchPlaceholder: string;
   if (viewMode === 'repositories') searchPlaceholder = 'Search repositories...';
-  // recipes/standards views removed
   else searchPlaceholder = 'Search artifacts...';
 
   const searchField = (
@@ -357,11 +276,7 @@ export const DeploymentsPage: React.FC = () => {
         />
       </PMHStack>
       <RepositoryCentricView
-        recipeRepositories={recipesData.repositories}
-        standardRepositories={standardData?.repositories}
-        recipeTargets={recipesData.targets}
-        standardTargets={standardData?.targets}
-        skillTargets={skillsData?.targets}
+        entries={entries}
         searchTerm={searchTerm}
         artifactStatusFilter={repositoryStatus}
         selectedTargetNames={selectedTargetNames}
@@ -373,9 +288,6 @@ export const DeploymentsPage: React.FC = () => {
     </PMVStack>
   );
 
-  // Removed recipe and standard views
-
-  // URL-synchronized state for artifact type filter (artType)
   const rawArtType = searchParams.get('artType');
   const artifactTypeFilter: ArtifactTypeFilter =
     rawArtType === 'all' ||
@@ -426,9 +338,9 @@ export const DeploymentsPage: React.FC = () => {
         </PMSegmentGroup.Root>
       </PMHStack>
       <ArtifactsView
-        recipes={recipesData.recipes}
-        standards={standardData?.standards || []}
-        skills={skillsData?.skills || []}
+        recipes={artifactRollups.recipes}
+        standards={artifactRollups.standards}
+        skills={artifactRollups.skills}
         searchTerm={searchTerm}
         artifactStatusFilter={repositoryStatus}
         orgSlug={orgSlug}

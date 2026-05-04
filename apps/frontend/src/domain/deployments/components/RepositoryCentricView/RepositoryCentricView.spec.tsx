@@ -7,18 +7,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../../../../providers/AuthProvider';
 import { RepositoryCentricView } from './RepositoryCentricView';
 import {
-  createRepositoryStandardDeploymentStatus,
-  createRepositoryDeploymentStatus,
-  createTargetDeploymentStatus,
-  createTargetStandardDeploymentStatus,
+  createActivePackage,
+  createActiveDistributedPackagesByTarget,
   createDeployedRecipeTargetInfo,
   createDeployedStandardTargetInfo,
-  createDeployedRecipeInfo,
   packageFactory,
   targetFactory,
 } from '@packmind/deployments/test';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
-import { RepositoryDeploymentStatus, createTargetId } from '@packmind/types';
+import { Package, createTargetId } from '@packmind/types';
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -41,7 +38,6 @@ const renderWithProvider = (ui: React.ReactElement) => {
   );
 };
 
-// Mock useCurrentSpace hook
 jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-id-1',
@@ -57,20 +53,6 @@ jest.mock('../../../git/api/queries/GitProviderQueries', () => ({
   }),
 }));
 
-const mockUseListActiveDistributedPackagesBySpaceQuery = jest.fn();
-jest.mock('../../api/queries/DeploymentsQueries', () => ({
-  ...jest.requireActual('../../api/queries/DeploymentsQueries'),
-  useListActiveDistributedPackagesBySpaceQuery: (...args: unknown[]) =>
-    mockUseListActiveDistributedPackagesBySpaceQuery(...args),
-}));
-
-beforeEach(() => {
-  mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
-    data: undefined,
-  });
-});
-
-// Mock PMTable to avoid internal UI hook/state issues in tests
 jest.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   const PMTable = () => <div data-testid="pm-table" />;
@@ -78,79 +60,76 @@ jest.mock('@packmind/ui', () => {
 });
 
 describe('RepositoryCentricView', () => {
-  it('displays repository name', () => {
-    const repositories = [
-      createRepositoryDeploymentStatus({
+  it('displays repository name when a target has an active package', () => {
+    const target = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
+    const recipeInfo = createDeployedRecipeTargetInfo();
+    const pkg: Package = packageFactory({
+      name: 'pkg-recipe',
+      recipes: [recipeInfo.recipe.id],
+    });
+    const entries = [
+      createActiveDistributedPackagesByTarget({
+        target,
         gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
+        packages: [createActivePackage({ packageId: pkg.id })],
+        deployedRecipes: [recipeInfo],
       }),
     ];
 
     renderWithProvider(
-      <RepositoryCentricView recipeRepositories={repositories} />,
+      <RepositoryCentricView entries={entries} packages={[pkg]} />,
     );
 
     expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
   });
 
-  it('renders a table for a recipe target', () => {
+  it('renders one table per package for a recipe target', () => {
     const target = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
     const recipeInfo = createDeployedRecipeTargetInfo();
-    const recipeTargets = [
-      createTargetDeploymentStatus({
-        target,
-        gitRepo: gitRepoFactory(),
-        deployedRecipes: [recipeInfo],
-      }),
-    ];
-    const pkg = packageFactory({
+    const pkg: Package = packageFactory({
       name: 'pkg-recipe',
       recipes: [recipeInfo.recipe.id],
     });
-    mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
-      data: [{ targetId: target.id, packageIds: [pkg.id] }],
-    });
+    const entries = [
+      createActiveDistributedPackagesByTarget({
+        target,
+        gitRepo: gitRepoFactory(),
+        packages: [createActivePackage({ packageId: pkg.id })],
+        deployedRecipes: [recipeInfo],
+      }),
+    ];
 
     renderWithProvider(
-      <RepositoryCentricView
-        recipeRepositories={[]}
-        recipeTargets={recipeTargets}
-        packages={[pkg]}
-      />,
+      <RepositoryCentricView entries={entries} packages={[pkg]} />,
     );
 
     expect(screen.getAllByTestId('pm-table')).toHaveLength(1);
   });
 
-  it('renders a table for a standard target', () => {
+  it('renders one table per package for a standard target', () => {
     const target = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
     const standardInfo = createDeployedStandardTargetInfo();
-    const standardTargets = [
-      createTargetStandardDeploymentStatus({
-        target,
-        gitRepo: gitRepoFactory(),
-        deployedStandards: [standardInfo],
-      }),
-    ];
-    const pkg = packageFactory({
+    const pkg: Package = packageFactory({
       name: 'pkg-standard',
       standards: [standardInfo.standard.id],
     });
-    mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
-      data: [{ targetId: target.id, packageIds: [pkg.id] }],
-    });
+    const entries = [
+      createActiveDistributedPackagesByTarget({
+        target,
+        gitRepo: gitRepoFactory(),
+        packages: [createActivePackage({ packageId: pkg.id })],
+        deployedStandards: [standardInfo],
+      }),
+    ];
 
     renderWithProvider(
-      <RepositoryCentricView
-        recipeRepositories={[]}
-        standardTargets={standardTargets}
-        packages={[pkg]}
-      />,
+      <RepositoryCentricView entries={entries} packages={[pkg]} />,
     );
 
     expect(screen.getAllByTestId('pm-table')).toHaveLength(1);
   });
 
-  it('renders tables for mixed recipe and standard targets in the same repository', () => {
+  it('groups recipe and standard targets sharing the same repository under one section', () => {
     const sharedRepo = gitRepoFactory({
       owner: 'shared-owner',
       repo: 'shared-repo',
@@ -159,40 +138,28 @@ describe('RepositoryCentricView', () => {
     const t2 = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
     const recipeInfo = createDeployedRecipeTargetInfo();
     const standardInfo = createDeployedStandardTargetInfo();
-
-    const recipeTargets = [
-      createTargetDeploymentStatus({
-        target: t1,
-        gitRepo: sharedRepo,
-        deployedRecipes: [recipeInfo],
-      }),
-    ];
-    const standardTargets = [
-      createTargetStandardDeploymentStatus({
-        target: t2,
-        gitRepo: sharedRepo,
-        deployedStandards: [standardInfo],
-      }),
-    ];
-    const pkg = packageFactory({
+    const pkg: Package = packageFactory({
       name: 'pkg-mixed',
       recipes: [recipeInfo.recipe.id],
       standards: [standardInfo.standard.id],
     });
-    mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
-      data: [
-        { targetId: t1.id, packageIds: [pkg.id] },
-        { targetId: t2.id, packageIds: [pkg.id] },
-      ],
-    });
+    const entries = [
+      createActiveDistributedPackagesByTarget({
+        target: t1,
+        gitRepo: sharedRepo,
+        packages: [createActivePackage({ packageId: pkg.id })],
+        deployedRecipes: [recipeInfo],
+      }),
+      createActiveDistributedPackagesByTarget({
+        target: t2,
+        gitRepo: sharedRepo,
+        packages: [createActivePackage({ packageId: pkg.id })],
+        deployedStandards: [standardInfo],
+      }),
+    ];
 
     renderWithProvider(
-      <RepositoryCentricView
-        recipeRepositories={[]}
-        recipeTargets={recipeTargets}
-        standardTargets={standardTargets}
-        packages={[pkg]}
-      />,
+      <RepositoryCentricView entries={entries} packages={[pkg]} />,
     );
 
     expect(
@@ -202,722 +169,237 @@ describe('RepositoryCentricView', () => {
   });
 
   describe('filtering', () => {
-    describe('when filtering by search term', () => {
-      beforeEach(() => {
-        const repositories = [
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
+    it('filters repositories by search term', () => {
+      const targetA = targetFactory({ id: createTargetId('tA'), name: 'A' });
+      const targetB = targetFactory({ id: createTargetId('tB'), name: 'B' });
+      const recipeA = createDeployedRecipeTargetInfo();
+      const recipeB = createDeployedRecipeTargetInfo();
+      const pkgA = packageFactory({
+        name: 'pkg-a',
+        recipes: [recipeA.recipe.id],
+      });
+      const pkgB = packageFactory({
+        name: 'pkg-b',
+        recipes: [recipeB.recipe.id],
+      });
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target: targetA,
+          gitRepo: gitRepoFactory({
+            owner: 'test-owner',
+            repo: 'test-repo',
           }),
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'other-owner',
-              repo: 'other-repo',
-            }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={repositories}
-            searchTerm="test"
-          />,
-        );
-      });
-
-      it('displays matching repositories', () => {
-        expect(
-          screen.getByText('test-owner/test-repo:main'),
-        ).toBeInTheDocument();
-      });
-
-      it('hides non-matching repositories', () => {
-        expect(
-          screen.queryByText('other-owner/other-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    describe('when filtering outdated recipes', () => {
-      beforeEach(() => {
-        const repositories = [
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'outdated-owner',
-              repo: 'outdated-repo',
-            }),
-            hasOutdatedRecipes: true,
-          }),
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'uptodate-owner',
-              repo: 'uptodate-repo',
-            }),
-            hasOutdatedRecipes: false,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={repositories}
-            artifactStatusFilter="outdated"
-          />,
-        );
-      });
-
-      it('displays outdated repositories', () => {
-        expect(
-          screen.getByText('outdated-owner/outdated-repo:main'),
-        ).toBeInTheDocument();
-      });
-
-      it('hides up-to-date repositories', () => {
-        expect(
-          screen.queryByText('uptodate-owner/uptodate-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    describe('when filtering outdated standards', () => {
-      beforeEach(() => {
-        const repositories: RepositoryDeploymentStatus[] = [];
-        const standardRepositories = [
-          createRepositoryStandardDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'outdated-standards-owner',
-              repo: 'outdated-standards-repo',
-            }),
-            hasOutdatedStandards: true,
-          }),
-          createRepositoryStandardDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'uptodate-standards-owner',
-              repo: 'uptodate-standards-repo',
-            }),
-            hasOutdatedStandards: false,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={repositories}
-            standardRepositories={standardRepositories}
-            artifactStatusFilter="outdated"
-          />,
-        );
-      });
-
-      it('displays outdated standard repositories', () => {
-        expect(
-          screen.getByText(
-            'outdated-standards-owner/outdated-standards-repo:main',
-          ),
-        ).toBeInTheDocument();
-      });
-
-      it('hides up-to-date standard repositories', () => {
-        expect(
-          screen.queryByText(
-            'uptodate-standards-owner/uptodate-standards-repo:main',
-          ),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    describe('when filtering outdated with mixed recipes and standards', () => {
-      beforeEach(() => {
-        const repositories = [
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'outdated-recipes-owner',
-              repo: 'outdated-recipes-repo',
-            }),
-            hasOutdatedRecipes: true,
-          }),
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'uptodate-all-owner',
-              repo: 'uptodate-all-repo',
-            }),
-            hasOutdatedRecipes: false,
-          }),
-        ];
-
-        const standardRepositories = [
-          createRepositoryStandardDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'outdated-standards-owner',
-              repo: 'outdated-standards-repo',
-            }),
-            hasOutdatedStandards: true,
-          }),
-          createRepositoryStandardDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'uptodate-all-owner',
-              repo: 'uptodate-all-repo',
-            }),
-            hasOutdatedStandards: false,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={repositories}
-            standardRepositories={standardRepositories}
-            artifactStatusFilter="outdated"
-          />,
-        );
-      });
-
-      it('displays repositories with outdated recipes', () => {
-        expect(
-          screen.getByText('outdated-recipes-owner/outdated-recipes-repo:main'),
-        ).toBeInTheDocument();
-      });
-
-      it('displays repositories with outdated standards', () => {
-        expect(
-          screen.getByText(
-            'outdated-standards-owner/outdated-standards-repo:main',
-          ),
-        ).toBeInTheDocument();
-      });
-
-      it('hides fully up-to-date repositories', () => {
-        expect(
-          screen.queryByText('uptodate-all-owner/uptodate-all-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    describe('when applying both search and outdated filters', () => {
-      beforeEach(() => {
-        const repositories = [
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'test-owner',
-              repo: 'outdated-repo',
-            }),
-            hasOutdatedRecipes: true,
-          }),
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'test-owner',
-              repo: 'uptodate-repo',
-            }),
-            hasOutdatedRecipes: false,
-          }),
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({
-              owner: 'other-owner',
-              repo: 'outdated-repo',
-            }),
-            hasOutdatedRecipes: true,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={repositories}
-            searchTerm="test"
-            artifactStatusFilter="outdated"
-          />,
-        );
-      });
-
-      it('displays repositories matching both filters', () => {
-        expect(
-          screen.getByText('test-owner/outdated-repo:main'),
-        ).toBeInTheDocument();
-      });
-
-      it('hides up-to-date repositories', () => {
-        expect(
-          screen.queryByText('test-owner/uptodate-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-
-      it('hides repositories not matching search term', () => {
-        expect(
-          screen.queryByText('other-owner/outdated-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    describe('target filtering', () => {
-      it('filters repositories by selected target IDs using OR logic', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-        const target2 = targetFactory({
-          id: createTargetId('target-2'),
-          name: 'Staging',
-        });
-        const target3 = targetFactory({
-          id: createTargetId('target-3'),
-          name: 'Development',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({ owner: 'prod-owner', repo: 'prod-repo' }),
-          }),
-          createTargetDeploymentStatus({
-            target: target2,
-            gitRepo: gitRepoFactory({
-              owner: 'staging-owner',
-              repo: 'staging-repo',
-            }),
-          }),
-          createTargetDeploymentStatus({
-            target: target3,
-            gitRepo: gitRepoFactory({ owner: 'dev-owner', repo: 'dev-repo' }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            selectedTargetNames={['Production', 'Staging']}
-          />,
-        );
-
-        expect(
-          screen.getByText('prod-owner/prod-repo:main'),
-        ).toBeInTheDocument();
-        expect(
-          screen.getByText('staging-owner/staging-repo:main'),
-        ).toBeInTheDocument();
-        expect(
-          screen.queryByText('dev-owner/dev-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-
-      it('filters repositories by selected target IDs for standard targets', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-        const target2 = targetFactory({
-          id: createTargetId('target-2'),
-          name: 'Staging',
-        });
-
-        const standardTargets = [
-          createTargetStandardDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({ owner: 'prod-owner', repo: 'prod-repo' }),
-          }),
-          createTargetStandardDeploymentStatus({
-            target: target2,
-            gitRepo: gitRepoFactory({
-              owner: 'staging-owner',
-              repo: 'staging-repo',
-            }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            standardTargets={standardTargets}
-            selectedTargetNames={['Production']}
-          />,
-        );
-
-        expect(
-          screen.getByText('prod-owner/prod-repo:main'),
-        ).toBeInTheDocument();
-        expect(
-          screen.queryByText('staging-owner/staging-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-
-      it('combines target filter with search term using AND logic', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-          }),
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({
-              owner: 'other-owner',
-              repo: 'other-repo',
-            }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            selectedTargetNames={['Production']}
-            searchTerm="test"
-          />,
-        );
-
-        expect(
-          screen.getByText('test-owner/test-repo:main'),
-        ).toBeInTheDocument();
-        expect(
-          screen.queryByText('other-owner/other-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-
-      it('combines target filter with outdated filter using AND logic', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({
-              owner: 'outdated-owner',
-              repo: 'outdated-repo',
-            }),
-            hasOutdatedRecipes: true,
-          }),
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({
-              owner: 'uptodate-owner',
-              repo: 'uptodate-repo',
-            }),
-            hasOutdatedRecipes: false,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            selectedTargetNames={['Production']}
-            artifactStatusFilter="outdated"
-          />,
-        );
-
-        expect(
-          screen.getByText('outdated-owner/outdated-repo:main'),
-        ).toBeInTheDocument();
-        expect(
-          screen.queryByText('uptodate-owner/uptodate-repo:main'),
-        ).not.toBeInTheDocument();
-      });
-
-      it('hides up-to-date targets when filtering by outdated within same repository', () => {
-        const sharedRepo = gitRepoFactory({
-          owner: 'test-owner',
-          repo: 'test-repo',
-        });
-        const outdatedTarget = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-        const upToDateTarget = targetFactory({
-          id: createTargetId('target-2'),
-          name: 'Staging',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: outdatedTarget,
-            gitRepo: sharedRepo,
-            hasOutdatedRecipes: true,
-          }),
-          createTargetDeploymentStatus({
-            target: upToDateTarget,
-            gitRepo: sharedRepo,
-            hasOutdatedRecipes: false,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            artifactStatusFilter="outdated"
-          />,
-        );
-
-        expect(
-          screen.getByText('test-owner/test-repo:main'),
-        ).toBeInTheDocument();
-        expect(screen.getByText('Production')).toBeInTheDocument();
-        expect(screen.queryByText('Staging')).not.toBeInTheDocument();
-      });
-
-      it('shows empty state when no repositories match selected targets', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({ owner: 'prod-owner', repo: 'prod-repo' }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            selectedTargetNames={['Staging']}
-          />,
-        );
-
-        expect(screen.getByText('No repositories found')).toBeInTheDocument();
-        expect(
-          screen.getByText(
-            'No repositories have deployments for the selected targets',
-          ),
-        ).toBeInTheDocument();
-      });
-
-      it('shows combined empty state when no repositories match selected targets and search term', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({ owner: 'prod-owner', repo: 'prod-repo' }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            selectedTargetNames={['Production']}
-            searchTerm="nomatch"
-          />,
-        );
-
-        expect(screen.getByText('No repositories found')).toBeInTheDocument();
-        expect(
-          screen.getByText(
-            'No repositories match your search "nomatch" for the selected targets',
-          ),
-        ).toBeInTheDocument();
-      });
-
-      it('does not apply target filter when no targets are selected', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: gitRepoFactory({ owner: 'prod-owner', repo: 'prod-repo' }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            selectedTargetNames={[]}
-          />,
-        );
-
-        expect(
-          screen.getByText('prod-owner/prod-repo:main'),
-        ).toBeInTheDocument();
-      });
-
-      it('handles mixed recipe and standard targets for the same repository', () => {
-        const target1 = targetFactory({
-          id: createTargetId('target-1'),
-          name: 'Production',
-        });
-        const target2 = targetFactory({
-          id: createTargetId('target-2'),
-          name: 'Staging',
-        });
-        const sharedRepo = gitRepoFactory({
-          owner: 'shared-owner',
-          repo: 'shared-repo',
-        });
-
-        const recipeTargets = [
-          createTargetDeploymentStatus({
-            target: target1,
-            gitRepo: sharedRepo,
-          }),
-        ];
-
-        const standardTargets = [
-          createTargetStandardDeploymentStatus({
-            target: target2,
-            gitRepo: sharedRepo,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            recipeTargets={recipeTargets}
-            standardTargets={standardTargets}
-            selectedTargetNames={['Staging']}
-          />,
-        );
-
-        expect(
-          screen.getByText('shared-owner/shared-repo:main'),
-        ).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('empty states', () => {
-    describe('when no repositories match search', () => {
-      beforeEach(() => {
-        const repositories = [
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={repositories}
-            searchTerm="nomatch"
-          />,
-        );
-      });
-
-      it('displays empty state title', () => {
-        expect(screen.getByText('No repositories found')).toBeInTheDocument();
-      });
-
-      it('displays empty state description', () => {
-        expect(
-          screen.getByText('No repositories match your search "nomatch"'),
-        ).toBeInTheDocument();
-      });
-    });
-
-    describe('when no outdated targets exist', () => {
-      beforeEach(() => {
-        const repositories = [
-          createRepositoryDeploymentStatus({
-            gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-            hasOutdatedRecipes: false,
-          }),
-        ];
-
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={repositories}
-            artifactStatusFilter="outdated"
-          />,
-        );
-      });
-
-      it('displays empty state title', () => {
-        expect(screen.getByText('No outdated targets')).toBeInTheDocument();
-      });
-
-      it('displays empty state description', () => {
-        expect(
-          screen.getByText(
-            'All targets have up-to-date recipes and standards distributed',
-          ),
-        ).toBeInTheDocument();
-      });
-    });
-
-    describe('when no distributions have been made yet', () => {
-      beforeEach(() => {
-        renderWithProvider(
-          <RepositoryCentricView
-            recipeRepositories={[]}
-            standardRepositories={[]}
-            recipeTargets={[]}
-            standardTargets={[]}
-            skillTargets={[]}
-          />,
-        );
-      });
-
-      it('displays empty state title', () => {
-        expect(screen.getByText('No distributions yet')).toBeInTheDocument();
-      });
-
-      it('displays empty state description', () => {
-        expect(
-          screen.getByText(
-            'No recipes, standards, or skills have been distributed to repositories yet',
-          ),
-        ).toBeInTheDocument();
-      });
-    });
-
-    describe('when no repositories exist', () => {
-      beforeEach(() => {
-        renderWithProvider(<RepositoryCentricView recipeRepositories={[]} />);
-      });
-
-      it('displays empty state title', () => {
-        expect(screen.getByText('No distributions yet')).toBeInTheDocument();
-      });
-
-      it('displays empty state description', () => {
-        expect(
-          screen.getByText(
-            'No recipes, standards, or skills have been distributed to repositories yet',
-          ),
-        ).toBeInTheDocument();
-      });
-    });
-
-    // legacy empty message removed; in target-only view this case is not rendered
-    it('skips legacy empty message (no targets rendered)', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'empty-owner', repo: 'empty-repo' }),
-          deployedRecipes: [],
+          packages: [createActivePackage({ packageId: pkgA.id })],
+          deployedRecipes: [recipeA],
         }),
-      ];
-
-      renderWithProvider(
-        <RepositoryCentricView recipeRepositories={repositories} />,
-      );
-
-      expect(
-        screen.getByText('empty-owner/empty-repo:main'),
-      ).toBeInTheDocument();
-    });
-
-    it('displays search empty state with priority over filter empty state', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-          hasOutdatedRecipes: false,
+        createActiveDistributedPackagesByTarget({
+          target: targetB,
+          gitRepo: gitRepoFactory({
+            owner: 'other-owner',
+            repo: 'other-repo',
+          }),
+          packages: [createActivePackage({ packageId: pkgB.id })],
+          deployedRecipes: [recipeB],
         }),
       ];
 
       renderWithProvider(
         <RepositoryCentricView
-          recipeRepositories={repositories}
-          searchTerm="nomatch"
+          entries={entries}
+          packages={[pkgA, pkgB]}
+          searchTerm="test"
+        />,
+      );
+
+      expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
+      expect(
+        screen.queryByText('other-owner/other-repo:main'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('keeps targets with outdated artifacts when filtering by outdated', () => {
+      const outdatedTarget = targetFactory({
+        id: createTargetId('outdated'),
+        name: 'Outdated',
+      });
+      const upToDateTarget = targetFactory({
+        id: createTargetId('uptodate'),
+        name: 'UpToDate',
+      });
+      const outdatedRecipe = createDeployedRecipeTargetInfo({
+        isUpToDate: false,
+      });
+      const upToDateRecipe = createDeployedRecipeTargetInfo({
+        isUpToDate: true,
+      });
+      const pkgOut = packageFactory({
+        name: 'pkg-out',
+        recipes: [outdatedRecipe.recipe.id],
+      });
+      const pkgOk = packageFactory({
+        name: 'pkg-ok',
+        recipes: [upToDateRecipe.recipe.id],
+      });
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target: outdatedTarget,
+          gitRepo: gitRepoFactory({
+            owner: 'outdated-owner',
+            repo: 'outdated-repo',
+          }),
+          packages: [createActivePackage({ packageId: pkgOut.id })],
+          deployedRecipes: [outdatedRecipe],
+        }),
+        createActiveDistributedPackagesByTarget({
+          target: upToDateTarget,
+          gitRepo: gitRepoFactory({
+            owner: 'uptodate-owner',
+            repo: 'uptodate-repo',
+          }),
+          packages: [createActivePackage({ packageId: pkgOk.id })],
+          deployedRecipes: [upToDateRecipe],
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          entries={entries}
+          packages={[pkgOut, pkgOk]}
           artifactStatusFilter="outdated"
+        />,
+      );
+
+      expect(
+        screen.getByText('outdated-owner/outdated-repo:main'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText('uptodate-owner/uptodate-repo:main'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('filters targets by selected target names', () => {
+      const prodTarget = targetFactory({
+        id: createTargetId('prod'),
+        name: 'Production',
+      });
+      const stagingTarget = targetFactory({
+        id: createTargetId('staging'),
+        name: 'Staging',
+      });
+      const sharedRepo = gitRepoFactory({
+        owner: 'shared-owner',
+        repo: 'shared-repo',
+      });
+      const recipeProd = createDeployedRecipeTargetInfo({ isUpToDate: false });
+      const recipeStaging = createDeployedRecipeTargetInfo({
+        isUpToDate: false,
+      });
+      const pkg = packageFactory({
+        name: 'pkg',
+        recipes: [recipeProd.recipe.id, recipeStaging.recipe.id],
+      });
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target: prodTarget,
+          gitRepo: sharedRepo,
+          packages: [createActivePackage({ packageId: pkg.id })],
+          deployedRecipes: [recipeProd],
+        }),
+        createActiveDistributedPackagesByTarget({
+          target: stagingTarget,
+          gitRepo: sharedRepo,
+          packages: [createActivePackage({ packageId: pkg.id })],
+          deployedRecipes: [recipeStaging],
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          entries={entries}
+          packages={[pkg]}
+          selectedTargetNames={['Production']}
+        />,
+      );
+
+      expect(screen.getByText('Production')).toBeInTheDocument();
+      expect(screen.queryByText('Staging')).not.toBeInTheDocument();
+    });
+
+    it('filters repositories by selected repository ids', () => {
+      const targetA = targetFactory({ id: createTargetId('tA'), name: 'A' });
+      const targetB = targetFactory({ id: createTargetId('tB'), name: 'B' });
+      const recipeA = createDeployedRecipeTargetInfo();
+      const recipeB = createDeployedRecipeTargetInfo();
+      const repoA = gitRepoFactory({ owner: 'a-owner', repo: 'a-repo' });
+      const repoB = gitRepoFactory({ owner: 'b-owner', repo: 'b-repo' });
+      const pkg = packageFactory({
+        name: 'pkg',
+        recipes: [recipeA.recipe.id, recipeB.recipe.id],
+      });
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target: targetA,
+          gitRepo: repoA,
+          packages: [createActivePackage({ packageId: pkg.id })],
+          deployedRecipes: [recipeA],
+        }),
+        createActiveDistributedPackagesByTarget({
+          target: targetB,
+          gitRepo: repoB,
+          packages: [createActivePackage({ packageId: pkg.id })],
+          deployedRecipes: [recipeB],
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          entries={entries}
+          packages={[pkg]}
+          selectedRepoIds={[repoA.id]}
+        />,
+      );
+
+      expect(screen.getByText('a-owner/a-repo:main')).toBeInTheDocument();
+      expect(screen.queryByText('b-owner/b-repo:main')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('empty states', () => {
+    it('shows the no-distributions empty state when there are no entries', () => {
+      renderWithProvider(<RepositoryCentricView entries={[]} />);
+
+      expect(screen.getByText('No distributions yet')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'No recipes, standards, or skills have been distributed to repositories yet',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('shows the search empty state when search yields no result', () => {
+      const target = targetFactory({ id: createTargetId('t'), name: 'T' });
+      const recipe = createDeployedRecipeTargetInfo();
+      const pkg = packageFactory({
+        name: 'pkg',
+        recipes: [recipe.recipe.id],
+      });
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target,
+          gitRepo: gitRepoFactory({
+            owner: 'test-owner',
+            repo: 'test-repo',
+          }),
+          packages: [createActivePackage({ packageId: pkg.id })],
+          deployedRecipes: [recipe],
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          entries={entries}
+          packages={[pkg]}
+          searchTerm="nomatch"
         />,
       );
 
@@ -927,35 +409,64 @@ describe('RepositoryCentricView', () => {
       ).toBeInTheDocument();
     });
 
-    it('shows only up-to-date repositories with active filter (legacy data)', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'ok-owner', repo: 'ok-repo' }),
-          hasOutdatedRecipes: false,
-          deployedRecipes: [createDeployedRecipeInfo({ isUpToDate: true })],
-        }),
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'out-owner', repo: 'out-repo' }),
-          hasOutdatedRecipes: true,
+    it('shows the no-outdated-targets empty state when filtering outdated', () => {
+      const target = targetFactory({ id: createTargetId('t'), name: 'T' });
+      const recipe = createDeployedRecipeTargetInfo({ isUpToDate: true });
+      const pkg = packageFactory({
+        name: 'pkg',
+        recipes: [recipe.recipe.id],
+      });
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target,
+          gitRepo: gitRepoFactory({
+            owner: 'test-owner',
+            repo: 'test-repo',
+          }),
+          packages: [createActivePackage({ packageId: pkg.id })],
+          deployedRecipes: [recipe],
         }),
       ];
 
       renderWithProvider(
         <RepositoryCentricView
-          recipeRepositories={repositories}
-          artifactStatusFilter="up-to-date"
+          entries={entries}
+          packages={[pkg]}
+          artifactStatusFilter="outdated"
         />,
       );
 
-      expect(screen.getByText('ok-owner/ok-repo:main')).toBeInTheDocument();
-      expect(
-        screen.queryByText('out-owner/out-repo:main'),
-      ).not.toBeInTheDocument();
+      expect(screen.getByText('No outdated targets')).toBeInTheDocument();
+    });
+
+    it('does not render any target table while packages are loading', () => {
+      const target = targetFactory({ id: createTargetId('t'), name: 'T' });
+      const recipe = createDeployedRecipeTargetInfo();
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target,
+          gitRepo: gitRepoFactory({
+            owner: 'pkg-owner',
+            repo: 'pkg-repo',
+          }),
+          deployedRecipes: [recipe],
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          entries={entries}
+          packages={[]}
+          packagesLoading={true}
+        />,
+      );
+
+      expect(screen.queryByTestId('pm-table')).not.toBeInTheDocument();
     });
   });
 
   describe('per-package rendering', () => {
-    it('renders one sub-table per package and shows each package name', () => {
+    it('renders one sub-table per active package and shows each package name', () => {
       const target = targetFactory({
         id: createTargetId('target-pkg'),
         name: 'Prod',
@@ -966,22 +477,6 @@ describe('RepositoryCentricView', () => {
       });
       const recipeInfo = createDeployedRecipeTargetInfo();
       const standardInfo = createDeployedStandardTargetInfo();
-
-      const recipeTargets = [
-        createTargetDeploymentStatus({
-          target,
-          gitRepo: sharedRepo,
-          deployedRecipes: [recipeInfo],
-        }),
-      ];
-      const standardTargets = [
-        createTargetStandardDeploymentStatus({
-          target,
-          gitRepo: sharedRepo,
-          deployedStandards: [standardInfo],
-        }),
-      ];
-
       const alpha = packageFactory({
         name: 'alpha',
         standards: [standardInfo.standard.id],
@@ -990,80 +485,26 @@ describe('RepositoryCentricView', () => {
         name: 'beta',
         recipes: [recipeInfo.recipe.id],
       });
-      mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
-        data: [{ targetId: target.id, packageIds: [alpha.id, beta.id] }],
-      });
+      const entries = [
+        createActiveDistributedPackagesByTarget({
+          target,
+          gitRepo: sharedRepo,
+          packages: [
+            createActivePackage({ packageId: alpha.id }),
+            createActivePackage({ packageId: beta.id }),
+          ],
+          deployedRecipes: [recipeInfo],
+          deployedStandards: [standardInfo],
+        }),
+      ];
 
       renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={[]}
-          recipeTargets={recipeTargets}
-          standardTargets={standardTargets}
-          packages={[alpha, beta]}
-        />,
+        <RepositoryCentricView entries={entries} packages={[alpha, beta]} />,
       );
 
       expect(screen.getAllByTestId('pm-table')).toHaveLength(2);
       expect(screen.getByText('alpha')).toBeInTheDocument();
       expect(screen.getByText('beta')).toBeInTheDocument();
-    });
-
-    it('does not render any target table while packages are loading', () => {
-      const target = targetFactory({
-        id: createTargetId('target-pkg'),
-        name: 'Prod',
-      });
-      const recipeInfo = createDeployedRecipeTargetInfo();
-      const recipeTargets = [
-        createTargetDeploymentStatus({
-          target,
-          gitRepo: gitRepoFactory({ owner: 'pkg-owner', repo: 'pkg-repo' }),
-          deployedRecipes: [recipeInfo],
-        }),
-      ];
-
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={[]}
-          recipeTargets={recipeTargets}
-          packages={[]}
-          packagesLoading={true}
-        />,
-      );
-
-      expect(screen.queryByTestId('pm-table')).not.toBeInTheDocument();
-      expect(
-        screen.queryByText('No artifacts distributed here'),
-      ).not.toBeInTheDocument();
-      expect(screen.getByText('pkg-owner/pkg-repo:main')).toBeInTheDocument();
-    });
-
-    it('shows the per-target empty state when packages are loaded but none match', () => {
-      const target = targetFactory({
-        id: createTargetId('target-pkg'),
-        name: 'Prod',
-      });
-      const recipeInfo = createDeployedRecipeTargetInfo();
-      const recipeTargets = [
-        createTargetDeploymentStatus({
-          target,
-          gitRepo: gitRepoFactory({ owner: 'pkg-owner', repo: 'pkg-repo' }),
-          deployedRecipes: [recipeInfo],
-        }),
-      ];
-
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={[]}
-          recipeTargets={recipeTargets}
-          packages={[]}
-        />,
-      );
-
-      expect(
-        screen.getByText('No artifacts distributed here'),
-      ).toBeInTheDocument();
-      expect(screen.queryByTestId('pm-table')).not.toBeInTheDocument();
     });
   });
 });

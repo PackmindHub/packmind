@@ -12,26 +12,18 @@ import {
 import { DeploymentsPage } from './DeploymentsPage';
 import * as DeploymentQueries from '../../api/queries/DeploymentsQueries';
 import { AuthProvider } from '../../../../providers/AuthProvider';
-
+import { ActiveDistributedPackagesByTarget } from '@packmind/types';
 import {
-  DeploymentOverview,
-  StandardDeploymentOverview,
-  SkillDeploymentOverview,
-} from '@packmind/types';
-import {
-  createDeploymentOverview,
-  createStandardDeploymentOverview,
+  createActiveDistributedPackagesByTarget,
+  createDeployedRecipeTargetInfo,
 } from '@packmind/deployments/test';
 
-// Mock react-router
 const mockSetSearchParams = jest.fn();
 const mockSearchParams = new URLSearchParams();
 
-// Make mockSetSearchParams actually update mockSearchParams for testing
 mockSetSearchParams.mockImplementation((updateFn) => {
   if (typeof updateFn === 'function') {
     const updatedParams = updateFn(mockSearchParams);
-    // Copy all the updated params back to mockSearchParams
     mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
     for (const [key, value] of updatedParams.entries()) {
       mockSearchParams.set(key, value);
@@ -72,7 +64,6 @@ const renderWithProvider = async (ui: React.ReactElement) => {
     );
   });
 
-  // Wait for any async state updates from Chakra UI/Zag.js components
   await waitFor(() => {
     expect(document.body).toBeInTheDocument();
   });
@@ -81,22 +72,14 @@ const renderWithProvider = async (ui: React.ReactElement) => {
 };
 
 jest.mock('../../api/queries/DeploymentsQueries', () => ({
-  useGetRecipesDeploymentOverviewQuery: jest.fn(),
-  useGetStandardsDeploymentOverviewQuery: jest.fn(),
-  useGetSkillsDeploymentOverviewQuery: jest.fn(),
   useListPackagesBySpaceQuery: jest.fn(() => ({
     data: { packages: [] },
     isLoading: false,
     isError: false,
   })),
-  useListActiveDistributedPackagesBySpaceQuery: jest.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-  })),
+  useListActiveDistributedPackagesBySpaceQuery: jest.fn(),
 }));
 
-// Mock useCurrentSpace hook
 jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-id-1',
@@ -107,68 +90,44 @@ jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   }),
 }));
 
-// Mock PMTable to avoid internal hook/state issues during tests
 jest.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   const PMTable = () => <div data-testid="pm-table" />;
   return { ...actual, PMTable };
 });
 
-const mockUseGetRecipesDeploymentOverview =
-  DeploymentQueries.useGetRecipesDeploymentOverviewQuery as jest.MockedFunction<
-    typeof DeploymentQueries.useGetRecipesDeploymentOverviewQuery
+const mockUseListActiveDistributedPackagesBySpace =
+  DeploymentQueries.useListActiveDistributedPackagesBySpaceQuery as jest.MockedFunction<
+    typeof DeploymentQueries.useListActiveDistributedPackagesBySpaceQuery
   >;
-const mockUseGetStandardsDeploymentOverview =
-  DeploymentQueries.useGetStandardsDeploymentOverviewQuery as jest.MockedFunction<
-    typeof DeploymentQueries.useGetStandardsDeploymentOverviewQuery
-  >;
-const mockUseGetSkillsDeploymentOverview =
-  DeploymentQueries.useGetSkillsDeploymentOverviewQuery as jest.MockedFunction<
-    typeof DeploymentQueries.useGetSkillsDeploymentOverviewQuery
-  >;
+
+const mockOverview = (entries: ActiveDistributedPackagesByTarget[]) =>
+  ({
+    data: entries,
+    isLoading: false,
+    error: null,
+    isError: false,
+    isPending: false,
+    isSuccess: true,
+    refetch: jest.fn(),
+  }) as Partial<
+    UseQueryResult<ActiveDistributedPackagesByTarget[], Error>
+  > as UseQueryResult<ActiveDistributedPackagesByTarget[], Error>;
+
+const buildDefaultEntries = (): ActiveDistributedPackagesByTarget[] => [
+  createActiveDistributedPackagesByTarget({
+    deployedRecipes: [createDeployedRecipeTargetInfo()],
+  }),
+];
 
 describe('DeploymentsPage', () => {
   beforeEach(() => {
-    // Reset URL params mock
     mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
     mockSetSearchParams.mockClear();
 
-    mockUseGetRecipesDeploymentOverview.mockReturnValue({
-      data: createDeploymentOverview(),
-      isLoading: false,
-      error: null,
-      isError: false,
-      isPending: false,
-      isSuccess: true,
-      refetch: jest.fn(),
-    } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
-      DeploymentOverview,
-      Error
-    >);
-
-    mockUseGetStandardsDeploymentOverview.mockReturnValue({
-      data: createStandardDeploymentOverview(),
-      isLoading: false,
-      error: null,
-      isError: false,
-      isPending: false,
-      isSuccess: true,
-      refetch: jest.fn(),
-    } as Partial<
-      UseQueryResult<StandardDeploymentOverview, Error>
-    > as UseQueryResult<StandardDeploymentOverview, Error>);
-
-    mockUseGetSkillsDeploymentOverview.mockReturnValue({
-      data: { repositories: [], skills: [], targets: [] },
-      isLoading: false,
-      error: null,
-      isError: false,
-      isPending: false,
-      isSuccess: true,
-      refetch: jest.fn(),
-    } as Partial<
-      UseQueryResult<SkillDeploymentOverview, Error>
-    > as UseQueryResult<SkillDeploymentOverview, Error>);
+    mockUseListActiveDistributedPackagesBySpace.mockReturnValue(
+      mockOverview(buildDefaultEntries()),
+    );
   });
 
   afterEach(() => {
@@ -190,20 +149,7 @@ describe('DeploymentsPage', () => {
   });
 
   it('shows loading state initially', async () => {
-    mockUseGetRecipesDeploymentOverview.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-      isError: false,
-      isPending: true,
-      isSuccess: false,
-      refetch: jest.fn(),
-    } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
-      DeploymentOverview,
-      Error
-    >);
-
-    mockUseGetStandardsDeploymentOverview.mockReturnValue({
+    mockUseListActiveDistributedPackagesBySpace.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
@@ -212,54 +158,22 @@ describe('DeploymentsPage', () => {
       isSuccess: false,
       refetch: jest.fn(),
     } as Partial<
-      UseQueryResult<StandardDeploymentOverview, Error>
-    > as UseQueryResult<StandardDeploymentOverview, Error>);
-
-    mockUseGetSkillsDeploymentOverview.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-      isError: false,
-      isPending: true,
-      isSuccess: false,
-      refetch: jest.fn(),
-    } as Partial<
-      UseQueryResult<SkillDeploymentOverview, Error>
-    > as UseQueryResult<SkillDeploymentOverview, Error>);
+      UseQueryResult<ActiveDistributedPackagesByTarget[], Error>
+    > as UseQueryResult<ActiveDistributedPackagesByTarget[], Error>);
 
     await renderWithProvider(<DeploymentsPage />);
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('displays search input field', async () => {
+  it('displays repository combobox', async () => {
     await renderWithProvider(<DeploymentsPage />);
-    // In repositories view, the search input is replaced by a repositories combobox
     expect(screen.getByPlaceholderText('All repositories')).toBeInTheDocument();
   });
 
   it('displays repository status dropdown', async () => {
     await renderWithProvider(<DeploymentsPage />);
-
-    // Dropdown for repository status should be visible with its items
-    // The combobox is closed by default, so only the placeholder is visible
     expect(screen.getByText('All statuses')).toBeInTheDocument();
-  });
-
-  // Removed recipe view; artifacts view now hosts the text search and status filter
-
-  describe('repository view', () => {
-    beforeEach(async () => {
-      await renderWithProvider(<DeploymentsPage />);
-    });
-
-    it('displays repository status dropdown', async () => {
-      expect(screen.getByText('All statuses')).toBeInTheDocument();
-    });
-
-    it('hides undeployed recipes option', async () => {
-      expect(screen.queryByText('Undeployed recipes')).not.toBeInTheDocument();
-    });
   });
 
   describe('when switching views', () => {
@@ -288,7 +202,6 @@ describe('DeploymentsPage', () => {
     beforeEach(async () => {
       jest.useFakeTimers();
       user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      // Start directly in artifacts view to avoid extra setSearchParams from tab switch
       mockSearchParams.set('view', 'artifacts');
       await renderWithProvider(<DeploymentsPage />);
       const searchInput = screen.getByRole('textbox');
@@ -312,43 +225,18 @@ describe('DeploymentsPage', () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       await renderWithProvider(<DeploymentsPage />);
 
-      // Open the combobox via trigger button (more reliable than portal clicking)
       const comboPlaceholder = screen.getByText('All statuses');
       await user.click(comboPlaceholder);
-      // Move to 'Outdated' (2nd item) and select
       await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
       await waitFor(() => expect(mockSetSearchParams).toHaveBeenCalled());
     });
   });
 
-  describe('when switching views with existing search state', () => {
-    let user: ReturnType<typeof userEvent.setup>;
-
-    beforeEach(async () => {
-      user = userEvent.setup();
-      // Mock URL params to simulate search state
-      mockSearchParams.set('search', 'test-search');
-      await renderWithProvider(<DeploymentsPage />);
-      // Switch to artifacts view where the text search input is displayed
-      await user.click(screen.getByText('Artifacts'));
-    });
-
-    it('maintains search term in artifacts view', async () => {
-      expect(screen.getByDisplayValue('test-search')).toBeInTheDocument();
-    });
-
-    it('calls setSearchParams after clicking Artifacts again', async () => {
-      await user.click(screen.getByText('Artifacts'));
-      expect(mockSetSearchParams).toHaveBeenCalled();
-    });
-  });
-
   describe('target filter state management', () => {
     describe('when data updates with mixed valid and invalid target names', () => {
-      const initialData = createDeploymentOverview();
-      const validTargetName =
-        initialData.targets[0]?.target.name || 'Production';
+      const entries = buildDefaultEntries();
+      const validTargetName = entries[0].target.name;
       const invalidTargetName = 'invalid-target-name';
 
       beforeEach(async () => {
@@ -356,19 +244,9 @@ describe('DeploymentsPage', () => {
           'targetFilter',
           `${validTargetName},${invalidTargetName}`,
         );
-
-        mockUseGetRecipesDeploymentOverview.mockReturnValue({
-          data: initialData,
-          isLoading: false,
-          error: null,
-          isError: false,
-          isPending: false,
-          isSuccess: true,
-          refetch: jest.fn(),
-        } as Partial<
-          UseQueryResult<DeploymentOverview, Error>
-        > as UseQueryResult<DeploymentOverview, Error>);
-
+        mockUseListActiveDistributedPackagesBySpace.mockReturnValue(
+          mockOverview(entries),
+        );
         await renderWithProvider(<DeploymentsPage />);
       });
 
@@ -385,7 +263,7 @@ describe('DeploymentsPage', () => {
 
     describe('when all selected targets become invalid', () => {
       beforeEach(async () => {
-        const initialData = createDeploymentOverview();
+        const entries = buildDefaultEntries();
         const invalidTargetName1 = 'invalid-target-1';
         const invalidTargetName2 = 'invalid-target-2';
 
@@ -393,19 +271,9 @@ describe('DeploymentsPage', () => {
           'targetFilter',
           `${invalidTargetName1},${invalidTargetName2}`,
         );
-
-        mockUseGetRecipesDeploymentOverview.mockReturnValue({
-          data: initialData,
-          isLoading: false,
-          error: null,
-          isError: false,
-          isPending: false,
-          isSuccess: true,
-          refetch: jest.fn(),
-        } as Partial<
-          UseQueryResult<DeploymentOverview, Error>
-        > as UseQueryResult<DeploymentOverview, Error>);
-
+        mockUseListActiveDistributedPackagesBySpace.mockReturnValue(
+          mockOverview(entries),
+        );
         await renderWithProvider(<DeploymentsPage />);
       });
 
@@ -422,23 +290,13 @@ describe('DeploymentsPage', () => {
 
     describe('when all selected targets are valid', () => {
       it('does not call setSearchParams', async () => {
-        const initialData = createDeploymentOverview();
-        const validTargetName =
-          initialData.targets[0]?.target.name || 'Production';
+        const entries = buildDefaultEntries();
+        const validTargetName = entries[0].target.name;
 
         mockSearchParams.set('targetFilter', validTargetName);
-
-        mockUseGetRecipesDeploymentOverview.mockReturnValue({
-          data: initialData,
-          isLoading: false,
-          error: null,
-          isError: false,
-          isPending: false,
-          isSuccess: true,
-          refetch: jest.fn(),
-        } as Partial<
-          UseQueryResult<DeploymentOverview, Error>
-        > as UseQueryResult<DeploymentOverview, Error>);
+        mockUseListActiveDistributedPackagesBySpace.mockReturnValue(
+          mockOverview(entries),
+        );
 
         await renderWithProvider(<DeploymentsPage />);
 

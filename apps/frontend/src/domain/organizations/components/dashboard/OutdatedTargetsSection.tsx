@@ -80,13 +80,23 @@ export const OutdatedTargetsSection: React.FC = () => {
       }
     >();
 
+    const isOutdated = (d: {
+      isUpToDate: boolean;
+      isDeleted?: boolean;
+    }): boolean => !d.isUpToDate || !!d.isDeleted;
+
     for (const t of overviewData) {
       if (!t.gitRepo) continue;
-      const hasOutdated =
-        t.outdatedRecipes.length > 0 ||
-        t.outdatedStandards.length > 0 ||
-        t.outdatedSkills.length > 0;
-      if (!hasOutdated) continue;
+      const outdatedRecipes = t.deployedRecipes.filter(isOutdated);
+      const outdatedStandards = t.deployedStandards.filter(isOutdated);
+      const outdatedSkills = t.deployedSkills.filter(isOutdated);
+      if (
+        outdatedRecipes.length === 0 &&
+        outdatedStandards.length === 0 &&
+        outdatedSkills.length === 0
+      ) {
+        continue;
+      }
 
       const { key, title } = getRepoIdentity(t.gitRepo);
       let repo = repoMap.get(key);
@@ -103,9 +113,9 @@ export const OutdatedTargetsSection: React.FC = () => {
         id: t.target.id,
         title: t.target.name,
         activePackageIds: new Set(t.packages.map((p) => p.packageId)),
-        recipes: t.outdatedRecipes,
-        standards: t.outdatedStandards,
-        skills: t.outdatedSkills,
+        recipes: outdatedRecipes,
+        standards: outdatedStandards,
+        skills: outdatedSkills,
       });
     }
 
