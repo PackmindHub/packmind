@@ -52,9 +52,10 @@ describe('IListOrganizationSpacesForManagementUseCase contract', () => {
       item: SpaceManagementListItem,
     ): Pick<
       SpaceManagementListItem,
-      'admins' | 'membersCount' | 'artifactsCount'
+      'admins' | 'memberIds' | 'membersCount' | 'artifactsCount'
     > => ({
       admins: item.admins,
+      memberIds: item.memberIds,
       membersCount: item.membersCount,
       artifactsCount: item.artifactsCount,
     });

@@ -11,6 +11,7 @@ export type SpaceManagementListItemAdmin = {
 
 export type SpaceManagementListItem = Space & {
   admins: SpaceManagementListItemAdmin[];
+  memberIds: UserId[];
   membersCount: number;
   artifactsCount: number;
 };
