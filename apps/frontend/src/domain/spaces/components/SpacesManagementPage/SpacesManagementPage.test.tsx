@@ -196,6 +196,34 @@ describe('SpacesManagementPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('filters spaces by name when searching', async () => {
+    jest
+      .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
+      .mockReturnValue({
+        data: {
+          items: [
+            buildItem({ id: 's1', name: 'Engineering' }),
+            buildItem({ id: 's2', name: 'Frontend' }),
+          ],
+          totalCount: 2,
+          page: 1,
+          pageSize: 8,
+        },
+        isLoading: false,
+        isError: false,
+      } as unknown as ReturnType<
+        typeof queries.useGetOrganizationSpacesForManagementQuery
+      >);
+
+    renderWithQuery(<SpacesManagementPage />);
+
+    const user = userEvent.setup();
+    await user.type(screen.getByPlaceholderText('Search by name...'), 'Eng');
+
+    expect(screen.getByText('Engineering')).toBeInTheDocument();
+    expect(screen.queryByText('Frontend')).not.toBeInTheDocument();
+  });
+
   it('renders rows from the new management query', async () => {
     jest
       .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
