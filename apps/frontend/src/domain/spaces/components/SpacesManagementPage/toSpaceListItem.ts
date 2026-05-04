@@ -8,5 +8,6 @@ export function toSpaceListItem(item: SpaceManagementListItem): SpaceListItem {
       id: admin.id as string,
       displayName: admin.displayName,
     })),
+    memberIds: item.memberIds as string[],
   } as SpaceListItem;
 }

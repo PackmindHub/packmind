@@ -7,6 +7,7 @@ export type SpaceAdminAvatar = {
 
 export type SpaceListItem = Space & {
   admins: SpaceAdminAvatar[];
+  memberIds: string[];
   membersCount: number;
   artifactsCount: number;
   createdAt: string;

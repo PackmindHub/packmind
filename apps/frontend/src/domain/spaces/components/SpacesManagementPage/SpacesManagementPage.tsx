@@ -3,6 +3,9 @@ import {
   PMAlert,
   PMBox,
   PMEmptyState,
+  PMHStack,
+  PMInput,
+  PMNativeSelect,
   PMSpinner,
   PMTableRow,
   PMVStack,
@@ -13,6 +16,7 @@ import {
   useGetSpacesQuery,
 } from '../../api/queries/SpacesQueries';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
 import { toSpaceListItem } from './toSpaceListItem';
 import { SpaceManagementDrawer } from './SpaceManagementDrawer';
 import { SpaceNameCell } from './SpaceNameCell';
@@ -87,10 +91,14 @@ export const SpacesManagementPage: React.FC = () => {
   const { organization } = useAuthContext();
   const [page] = useState(1);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAdminId, setSelectedAdminId] = useState('');
+  const [selectedMemberId, setSelectedMemberId] = useState('');
   const orgId = organization?.id ?? '';
   const { data, isLoading, isError } =
     useGetOrganizationSpacesForManagementQuery(orgId, page);
   const { data: mySpaces } = useGetSpacesQuery();
+  const { data: orgUsers } = useGetUsersInMyOrganizationQuery();
   const memberSpaceIds = useMemo(
     () => new Set((mySpaces ?? []).map((s) => s.id)),
     [mySpaces],
@@ -100,6 +108,67 @@ export const SpacesManagementPage: React.FC = () => {
     () => data?.items.find((item) => item.id === selectedSpaceId) ?? null,
     [selectedSpaceId, data],
   );
+
+  const userDisplayNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const user of orgUsers?.users ?? []) {
+      map.set(user.userId as string, user.displayName);
+    }
+    return map;
+  }, [orgUsers]);
+
+  const items = useMemo(() => (data?.items ?? []).map(toSpaceListItem), [data]);
+
+  const adminOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { label: string; value: string }[] = [
+      { label: 'Any', value: '' },
+    ];
+    for (const item of items) {
+      for (const admin of item.admins) {
+        if (!seen.has(admin.id)) {
+          seen.add(admin.id);
+          opts.push({
+            label: userDisplayNameMap.get(admin.id) ?? admin.displayName,
+            value: admin.id,
+          });
+        }
+      }
+    }
+    return opts;
+  }, [items, userDisplayNameMap]);
+
+  const memberOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { label: string; value: string }[] = [
+      { label: 'Any', value: '' },
+    ];
+    for (const item of items) {
+      for (const memberId of item.memberIds) {
+        if (!seen.has(memberId)) {
+          seen.add(memberId);
+          opts.push({
+            label: userDisplayNameMap.get(memberId) ?? memberId,
+            value: memberId,
+          });
+        }
+      }
+    }
+    return opts;
+  }, [items, userDisplayNameMap]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((space) => {
+      if (
+        selectedAdminId &&
+        !space.admins.some((a) => a.id === selectedAdminId)
+      )
+        return false;
+      if (selectedMemberId && !space.memberIds.includes(selectedMemberId))
+        return false;
+      return true;
+    });
+  }, [items, selectedAdminId, selectedMemberId]);
 
   if (isError) {
     return (
@@ -122,8 +191,6 @@ export const SpacesManagementPage: React.FC = () => {
       </PMBox>
     );
   }
-
-  const items = data.items.map(toSpaceListItem);
 
   const handleSelectSpace = (space: SpaceListItem) => {
     setSelectedSpaceId(space.id);
@@ -181,8 +248,29 @@ export const SpacesManagementPage: React.FC = () => {
 
   return (
     <PMVStack alignItems="stretch" gap={0} width="full">
+      <PMHStack gap={2} mb={4}>
+        <PMInput
+          placeholder="Search by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          size="sm"
+        />
+        <PMNativeSelect
+          items={adminOptions}
+          value={selectedAdminId}
+          onChange={(e) => setSelectedAdminId(e.currentTarget.value)}
+          size="sm"
+        />
+        <PMNativeSelect
+          items={memberOptions}
+          value={selectedMemberId}
+          onChange={(e) => setSelectedMemberId(e.currentTarget.value)}
+          size="sm"
+        />
+      </PMHStack>
       <ItemsListing
-        items={items}
+        items={filteredItems}
+        searchQuery={searchQuery}
         columns={SPACE_COLUMNS}
         makeTableData={makeTableData}
         sortItems={sortSpaces}

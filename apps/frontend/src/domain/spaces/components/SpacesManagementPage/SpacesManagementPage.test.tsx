@@ -92,6 +92,7 @@ const buildItem = (overrides: Record<string, unknown> = {}) => ({
   organizationId: 'org-1',
   isDefaultSpace: false,
   admins: [],
+  memberIds: [],
   membersCount: 0,
   artifactsCount: 0,
   createdAt: '2025-01-12T00:00:00.000Z',
@@ -173,7 +174,7 @@ describe('SpacesManagementPage', () => {
     jest.restoreAllMocks();
   });
 
-  it('renders a search input', () => {
+  it('renders the filter bar with search and select inputs', () => {
     jest
       .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
       .mockReturnValue({
@@ -194,6 +195,85 @@ describe('SpacesManagementPage', () => {
     expect(
       screen.getByPlaceholderText('Search by name...'),
     ).toBeInTheDocument();
+    expect(screen.getAllByRole('combobox')).toHaveLength(2);
+  });
+
+  it('filters spaces by admin', async () => {
+    jest
+      .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
+      .mockReturnValue({
+        data: {
+          items: [
+            buildItem({
+              id: 's1',
+              name: 'Engineering',
+              admins: [{ id: 'admin-1', displayName: 'Alice' }],
+              memberIds: [],
+            }),
+            buildItem({
+              id: 's2',
+              name: 'Frontend',
+              admins: [{ id: 'admin-2', displayName: 'Bob' }],
+              memberIds: [],
+            }),
+          ],
+          totalCount: 2,
+          page: 1,
+          pageSize: 8,
+        },
+        isLoading: false,
+        isError: false,
+      } as unknown as ReturnType<
+        typeof queries.useGetOrganizationSpacesForManagementQuery
+      >);
+
+    renderWithQuery(<SpacesManagementPage />);
+
+    const user = userEvent.setup();
+    const selects = screen.getAllByRole('combobox');
+    await user.selectOptions(selects[0], 'admin-1');
+
+    expect(screen.getByText('Engineering')).toBeInTheDocument();
+    expect(screen.queryByText('Frontend')).not.toBeInTheDocument();
+  });
+
+  it('filters spaces by member', async () => {
+    jest
+      .spyOn(queries, 'useGetOrganizationSpacesForManagementQuery')
+      .mockReturnValue({
+        data: {
+          items: [
+            buildItem({
+              id: 's1',
+              name: 'Engineering',
+              admins: [],
+              memberIds: ['member-1'],
+            }),
+            buildItem({
+              id: 's2',
+              name: 'Frontend',
+              admins: [],
+              memberIds: ['member-2'],
+            }),
+          ],
+          totalCount: 2,
+          page: 1,
+          pageSize: 8,
+        },
+        isLoading: false,
+        isError: false,
+      } as unknown as ReturnType<
+        typeof queries.useGetOrganizationSpacesForManagementQuery
+      >);
+
+    renderWithQuery(<SpacesManagementPage />);
+
+    const user = userEvent.setup();
+    const selects = screen.getAllByRole('combobox');
+    await user.selectOptions(selects[1], 'member-1');
+
+    expect(screen.getByText('Engineering')).toBeInTheDocument();
+    expect(screen.queryByText('Frontend')).not.toBeInTheDocument();
   });
 
   it('filters spaces by name when searching', async () => {
