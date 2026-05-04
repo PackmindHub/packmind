@@ -16,6 +16,7 @@ export const routes = {
     toDeployments: (orgSlug: string) => `/org/${orgSlug}/deployments`,
     toSettings: (orgSlug: string) => `/org/${orgSlug}/settings`,
     toSettingsUsers: (orgSlug: string) => `/org/${orgSlug}/settings/users`,
+    toSettingsSpaces: (orgSlug: string) => `/org/${orgSlug}/settings/spaces`,
     toSettingsGit: (orgSlug: string) => `/org/${orgSlug}/settings/git`,
     toSettingsTargets: (orgSlug: string) => `/org/${orgSlug}/settings/targets`,
     toSettingsDistribution: (orgSlug: string) =>
@@ -122,6 +123,8 @@ export const routes = {
       proposalId: string,
     ) =>
       `/org/${orgSlug}/space/${spaceSlug}/review-changes/${artefactType}/new/${proposalId}`,
+    toJoinSpace: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/spaces/${spaceSlug}/join`,
   },
 
   /**

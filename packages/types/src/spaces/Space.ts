@@ -1,5 +1,6 @@
 import { SpaceId } from './SpaceId';
 import { OrganizationId } from '../accounts/Organization';
+import { SpaceColor } from './SpaceColor';
 
 export enum SpaceType {
   open = 'open',
@@ -14,4 +15,5 @@ export type Space = {
   type: SpaceType;
   organizationId: OrganizationId;
   isDefaultSpace: boolean;
+  color: SpaceColor;
 };
