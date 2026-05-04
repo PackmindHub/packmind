@@ -11,6 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "installedAt": "2026-05-04T13:22:35.490Z",
   "artifacts": {
     "standard:cli-command-structure": {
       "name": "CLI Command Structure",

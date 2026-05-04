@@ -11,6 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "installedAt": "2026-05-04T13:22:34.817Z",
   "artifacts": {
     "standard:rest-api-endpoint-design": {
       "name": "REST API Endpoint Design",

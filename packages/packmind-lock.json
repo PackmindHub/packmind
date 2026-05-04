@@ -11,6 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "installedAt": "2026-05-04T13:22:38.537Z",
   "artifacts": {
     "standard:back-end-repositories-sql-queries-using-typeorm": {
       "name": "Back-end repositories SQL queries using TypeORM",
