@@ -3,7 +3,6 @@ import {
   PMAlert,
   PMBox,
   PMEmptyState,
-  PMHStack,
   PMSpinner,
   PMTableRow,
   PMVStack,
@@ -16,7 +15,6 @@ import {
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { toSpaceListItem } from './toSpaceListItem';
 import { SpaceManagementDrawer } from './SpaceManagementDrawer';
-import { SpacesToolbar } from './SpacesToolbar';
 import { SpaceNameCell } from './SpaceNameCell';
 import { SpaceAdminsCell } from './SpaceAdminsCell';
 import { SpaceRowActions } from './SpaceRowActions';
@@ -174,23 +172,15 @@ export const SpacesManagementPage: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <PMVStack alignItems="stretch" gap={0} width="full">
-        <PMHStack justifyContent="flex-end">
-          <SpacesToolbar />
-        </PMHStack>
-        <PMEmptyState
-          title="No spaces found"
-          description="No spaces have been created in your organization yet."
-        />
-      </PMVStack>
+      <PMEmptyState
+        title="No spaces found"
+        description="No spaces have been created in your organization yet."
+      />
     );
   }
 
   return (
     <PMVStack alignItems="stretch" gap={0} width="full">
-      <PMHStack justifyContent="flex-end">
-        <SpacesToolbar />
-      </PMHStack>
       <ItemsListing
         items={items}
         columns={SPACE_COLUMNS}
