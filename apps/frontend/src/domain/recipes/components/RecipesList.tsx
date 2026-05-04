@@ -4,16 +4,10 @@ import {
   PMBox,
   PMLink,
   PMButton,
-  PMTable,
-  PMTableColumn,
   PMTableRow,
-  PMCheckbox,
   PMAlert,
   PMAlertDialog,
-  PMHStack,
-  PMInput,
   PMBadge,
-  useTableSort,
 } from '@packmind/ui';
 
 import {
@@ -22,13 +16,12 @@ import {
 } from '../api/queries/RecipesQueries';
 
 import './RecipesList.styles.scss';
-import { Recipe, RecipeId } from '@packmind/types';
+import { CreatedBy, Recipe, RecipeId, WithTimestamps } from '@packmind/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
-import { WithTimestamps } from '@packmind/types';
 import { RecipesBlankState } from './RecipesBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 import {
@@ -39,6 +32,10 @@ import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/Deplo
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
+import {
+  ItemsListing,
+  ItemsListingProps,
+} from '../../../shared/components/ItemsListing';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -66,55 +63,27 @@ export const RecipesList = ({
     }
     return map;
   }, [groupedProposals]);
-  const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
-  const [filteredRecipeIds, setFilteredRecipeIds] = React.useState<RecipeId[]>(
-    [],
-  );
-  const [selectedRecipeIds, setSelectedRecipeIds] = React.useState<RecipeId[]>(
-    [],
-  );
+
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
-    {
-      defaultSortKey: 'name',
-      defaultSortDirection: 'asc',
-    },
-  );
 
-  const handleSelectRecipe = (recipeId: RecipeId, isChecked: boolean) => {
-    if (isChecked) {
-      setSelectedRecipeIds((prev) =>
-        prev.includes(recipeId) ? prev : [...prev, recipeId],
-      );
-    } else {
-      setSelectedRecipeIds((prev) => prev.filter((id) => id !== recipeId));
-    }
-  };
-
-  const handleSelectAll = (isChecked: boolean) => {
-    if (isChecked) {
-      setSelectedRecipeIds(filteredRecipeIds);
-    } else {
-      setSelectedRecipeIds([]);
-    }
-  };
-
-  const handleBatchDelete = async () => {
-    if (!isSomeSelected || !organization?.id || !spaceId) return;
+  const handleBatchDelete = async (
+    selectedIds: RecipeId[],
+    unselectAll: () => void,
+  ) => {
+    if (!selectedIds.length || !organization?.id || !spaceId) return;
 
     try {
-      const count = selectedRecipeIds.length;
+      const count = selectedIds.length;
       await deleteBatchMutation.mutateAsync({
         organizationId: organization.id,
         spaceId,
-        recipeIds: selectedRecipeIds,
+        recipeIds: selectedIds,
       });
-      setSelectedRecipeIds([]);
+      unselectAll();
       setDeleteAlert({
         type: 'success',
         message:
@@ -138,77 +107,67 @@ export const RecipesList = ({
     }
   };
 
+  const hasRecipes = (recipes ?? []).length > 0;
+
   React.useEffect(() => {
-    if (!recipes) return;
+    if (onEmptyStateChange) {
+      onEmptyStateChange(!hasRecipes);
+    }
+  }, [hasRecipes, onEmptyStateChange]);
 
-    const filteredRecipes = recipes.filter((recipe) =>
-      recipe.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
-    setFilteredRecipeIds(filteredRecipes.map((r) => r.id));
-
-    const packageNamesById =
-      sortKey === 'packages'
-        ? new Map(
-            filteredRecipes.map((r) => [
-              r.id,
-              formatPackageNames(
-                getArtifactPackages(packagesResponse?.packages, r.id, 'recipe'),
-              ),
-            ]),
-          )
-        : null;
-
-    const sortedRecipes = [...filteredRecipes].sort((a, b) => {
-      const direction = sortDirection === 'asc' ? 1 : -1;
-      switch (sortKey) {
-        case 'name':
-          return direction * a.name.localeCompare(b.name);
-        case 'updatedAt': {
-          const dateA = new Date(
-            (a as WithTimestamps<Recipe>).updatedAt || 0,
-          ).getTime();
-          const dateB = new Date(
-            (b as WithTimestamps<Recipe>).updatedAt || 0,
-          ).getTime();
-          return direction * (dateA - dateB);
-        }
-        case 'createdBy': {
-          const nameA = a.createdBy?.displayName ?? '';
-          const nameB = b.createdBy?.displayName ?? '';
-          return direction * nameA.localeCompare(nameB);
-        }
-        case 'version':
-          return direction * ((a.version ?? 0) - (b.version ?? 0));
-        case 'pendingReviews':
-          return (
-            direction *
-            ((pendingReviewCountByRecipeId.get(a.id) ?? 0) -
-              (pendingReviewCountByRecipeId.get(b.id) ?? 0))
-          );
-        case 'packages':
-          return (
-            direction *
-            (packageNamesById?.get(a.id) ?? '').localeCompare(
-              packageNamesById?.get(b.id) ?? '',
-            )
-          );
-        default:
-          return 0;
-      }
-    });
-
-    setTableData(
-      sortedRecipes.map((recipe) => ({
-        key: recipe.id,
-        select: (
-          <PMCheckbox
-            checked={selectedRecipeIds.includes(recipe.id)}
-            onCheckedChange={(e) => {
-              handleSelectRecipe(recipe.id, e.checked === true);
-            }}
-          />
-        ),
+  const listingProps: Omit<
+    ItemsListingProps<Recipe & { createdBy?: CreatedBy }>,
+    'items'
+  > = {
+    columns: [
+      {
+        key: 'name',
+        header: 'Name',
+        grow: true,
+        sortKey: 'name',
+      },
+      {
+        key: 'createdBy',
+        header: 'Created by',
+        width: '200px',
+        align: 'center',
+        sortKey: 'createdBy',
+      },
+      {
+        key: 'updatedAt',
+        header: 'Last Updated',
+        width: '250px',
+        align: 'center',
+        sortKey: 'updatedAt',
+      },
+      {
+        key: 'version',
+        header: 'Version',
+        width: '100px',
+        align: 'center',
+        sortKey: 'version',
+      },
+      ...(groupedProposals
+        ? [
+            {
+              key: 'pendingReviews',
+              header: 'Pending reviews',
+              width: '150px',
+              align: 'center' as const,
+              sortKey: 'pendingReviews',
+            },
+          ]
+        : []),
+      {
+        key: 'packages',
+        header: 'Packages',
+        width: '220px',
+        align: 'left',
+        sortKey: 'packages',
+      },
+    ],
+    makeTableData(recipe): PMTableRow {
+      return {
         name: (
           <PMLink asChild>
             <Link
@@ -287,102 +246,99 @@ export const RecipesList = ({
             organizationId={organization?.id}
           />
         ),
-      })),
-    );
-  }, [
-    recipes,
-    selectedRecipeIds,
-    orgSlug,
-    spaceSlug,
-    spaceId,
-    organization?.id,
-    sortKey,
-    sortDirection,
-    searchQuery,
-    packagesResponse,
-    pendingReviewCountByRecipeId,
-    groupedProposals,
-  ]);
+      };
+    },
+    sortItems(items, sortKey, sortDirection) {
+      const packageNamesById =
+        sortKey === 'packages'
+          ? new Map(
+              items.map((r) => [
+                r.id,
+                formatPackageNames(
+                  getArtifactPackages(
+                    packagesResponse?.packages,
+                    r.id,
+                    'recipe',
+                  ),
+                ),
+              ]),
+            )
+          : null;
 
-  const isAllSelected =
-    filteredRecipeIds.length > 0 &&
-    filteredRecipeIds.every((id) => selectedRecipeIds.includes(id));
-  const isSomeSelected = selectedRecipeIds.length > 0;
-  const hasRecipes = (recipes ?? []).length > 0;
-
-  React.useEffect(() => {
-    if (onEmptyStateChange) {
-      onEmptyStateChange(!hasRecipes);
-    }
-  }, [hasRecipes, onEmptyStateChange]);
-
-  const columns: PMTableColumn[] = [
-    {
-      key: 'select',
-      header: (
-        <PMCheckbox
-          checked={isAllSelected || false}
-          onCheckedChange={() => {
-            handleSelectAll(!isAllSelected);
-          }}
-          controlProps={{ borderColor: 'border.checkbox' }}
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      return items.sort((a, b) => {
+        switch (sortKey) {
+          case 'name':
+            return direction * a.name.localeCompare(b.name);
+          case 'updatedAt': {
+            const dateA = new Date(
+              (a as WithTimestamps<Recipe>).updatedAt || 0,
+            ).getTime();
+            const dateB = new Date(
+              (b as WithTimestamps<Recipe>).updatedAt || 0,
+            ).getTime();
+            return direction * (dateA - dateB);
+          }
+          case 'createdBy': {
+            const nameA = a.createdBy?.displayName ?? '';
+            const nameB = b.createdBy?.displayName ?? '';
+            return direction * nameA.localeCompare(nameB);
+          }
+          case 'version':
+            return direction * ((a.version ?? 0) - (b.version ?? 0));
+          case 'pendingReviews':
+            return (
+              direction *
+              ((pendingReviewCountByRecipeId.get(a.id) ?? 0) -
+                (pendingReviewCountByRecipeId.get(b.id) ?? 0))
+            );
+          case 'packages':
+            return (
+              direction *
+              (packageNamesById?.get(a.id) ?? '').localeCompare(
+                packageNamesById?.get(b.id) ?? '',
+              )
+            );
+          default:
+            return 0;
+        }
+      });
+    },
+    batchActions: [
+      ({ selectedIds, unselectAll }) => (
+        <PMAlertDialog
+          trigger={
+            <PMButton
+              variant="secondary"
+              loading={deleteBatchMutation.isPending}
+              disabled={!selectedIds.length}
+            >
+              {`Delete (${selectedIds.length})`}
+            </PMButton>
+          }
+          title="Delete Recipes"
+          message={RECIPE_MESSAGES.confirmation.deleteBatchRecipes(
+            selectedIds.length,
+          )}
+          confirmText="Delete"
+          cancelText="Cancel"
+          confirmColorScheme="red"
+          onConfirm={() => handleBatchDelete(selectedIds, unselectAll)}
+          open={deleteDialogOpen}
+          onOpenChange={({ open }) => setDeleteDialogOpen(open)}
+          isLoading={deleteBatchMutation.isPending}
         />
       ),
-      width: '50px',
-      align: 'center',
-    },
-    {
-      key: 'name',
-      header: 'Name',
-      grow: true,
-      sortable: true,
-      sortDirection: getSortDirection('name'),
-    },
-    {
-      key: 'createdBy',
-      header: 'Created by',
-      width: '200px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('createdBy'),
-    },
-    {
-      key: 'updatedAt',
-      header: 'Last Updated',
-      width: '250px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('updatedAt'),
-    },
-    {
-      key: 'version',
-      header: 'Version',
-      width: '100px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('version'),
-    },
-    ...(groupedProposals
-      ? [
-          {
-            key: 'pendingReviews',
-            header: 'Pending reviews',
-            width: '150px',
-            align: 'center' as const,
-            sortable: true,
-            sortDirection: getSortDirection('pendingReviews'),
-          },
-        ]
-      : []),
-    {
-      key: 'packages',
-      header: 'Packages',
-      width: '220px',
-      align: 'left',
-      sortable: true,
-      sortDirection: getSortDirection('packages'),
-    },
-  ];
+      ({ selectedIds, unselectAll }) => (
+        <SpacesManagementActions
+          artifactType="command"
+          selectedIds={selectedIds}
+          isSomeSelected={selectedIds.length > 0}
+          onSuccess={unselectAll}
+        />
+      ),
+    ],
+  };
 
   return (
     <div className={'recipes-list'}>
@@ -398,65 +354,8 @@ export const RecipesList = ({
 
       {isLoading && <p>Loading...</p>}
       {isError && <p>Error loading recipes.</p>}
-      {hasRecipes ? (
-        <PMBox>
-          <PMBox mb={4}>
-            <PMInput
-              placeholder="Search by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </PMBox>
-          <PMBox mb={2}>
-            <PMHStack gap={2}>
-              <PMAlertDialog
-                trigger={
-                  <PMButton
-                    variant="secondary"
-                    loading={deleteBatchMutation.isPending}
-                    disabled={!isSomeSelected}
-                  >
-                    {`Delete (${selectedRecipeIds.length})`}
-                  </PMButton>
-                }
-                title="Delete Recipes"
-                message={RECIPE_MESSAGES.confirmation.deleteBatchRecipes(
-                  selectedRecipeIds.length,
-                )}
-                confirmText="Delete"
-                cancelText="Cancel"
-                confirmColorScheme="red"
-                onConfirm={handleBatchDelete}
-                open={deleteDialogOpen}
-                onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-                isLoading={deleteBatchMutation.isPending}
-              />
-              <SpacesManagementActions
-                artifactType="command"
-                selectedIds={selectedRecipeIds}
-                isSomeSelected={isSomeSelected}
-                onSuccess={() => setSelectedRecipeIds([])}
-              />
-              <PMButton
-                variant="secondary"
-                onClick={() => setSelectedRecipeIds([])}
-                size="sm"
-                disabled={!isSomeSelected}
-              >
-                Clear Selection
-              </PMButton>
-            </PMHStack>
-          </PMBox>
-          <PMTable
-            columns={columns}
-            data={tableData}
-            striped={true}
-            hoverable={true}
-            size="md"
-            variant="line"
-            onSort={handleSort}
-          />
-        </PMBox>
+      {recipes && recipes.length > 0 ? (
+        <ItemsListing {...listingProps} items={recipes} />
       ) : (
         spaceSlug && (
           <RecipesBlankState orgSlug={orgSlug} spaceSlug={spaceSlug} />

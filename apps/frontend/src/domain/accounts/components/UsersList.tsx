@@ -18,8 +18,6 @@ import {
   PMHStack,
   PMIcon,
   PMSpinner,
-  PMTable,
-  PMTableColumn,
   PMTableRow,
   PMText,
   pmToaster,
@@ -34,6 +32,9 @@ import { AuthContextUser, useAuthContext } from '../hooks/useAuthContext';
 import { InviteUsersDialog } from './InviteUsers/InviteUsersDialog';
 import { ExcludeUserDialog } from './ExcludeUserDialog';
 import { ChangeUserRoleDialog } from './ChangeUserRole/ChangeUserRoleDialog';
+import { ItemsListing } from '../../../shared/components/ItemsListing';
+
+type UserStatusItem = UserStatus & { id: string; name: string };
 
 interface UsersListProps {
   organizationId: OrganizationId;
@@ -54,33 +55,15 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
     userStatus: UserStatus | null;
   }>({ isOpen: false, userStatus: null });
 
-  const columns: PMTableColumn[] = [
-    { key: 'email', header: 'Email', grow: true },
-    { key: 'status', header: 'Status', grow: false },
-    { key: 'role', header: 'Role', grow: false },
-    { key: 'actions', header: 'Actions', grow: false },
-  ];
-
-  const tableData = useMemo<PMTableRow[]>(() => {
-    if (!userStatusesData) return [];
-
-    return userStatusesData.userStatuses.map((userStatus: UserStatus) => ({
-      id: userStatus.userId,
-      email: userStatus.email,
-      status: <UserStatusBadge userStatus={userStatus} />,
-      role: <PMBadge colorPalette="blue">{userStatus.role}</PMBadge>,
-      actions: (
-        <UserActions
-          organizationId={organizationId}
-          userStatus={userStatus}
-          onChangeRole={() => setChangeRoleUserStatus(userStatus)}
-          onExcludeUser={(userStatus) =>
-            setExcludeUserState({ isOpen: true, userStatus })
-          }
-        />
-      ),
-    }));
-  }, [userStatusesData, organizationId]);
+  const items = useMemo<UserStatusItem[]>(
+    () =>
+      (userStatusesData?.userStatuses ?? []).map((u) => ({
+        ...u,
+        id: u.userId as string,
+        name: u.email,
+      })),
+    [userStatusesData],
+  );
 
   if (isLoading) {
     return (
@@ -107,7 +90,7 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
 
   return (
     <PMVStack alignItems={'stretch'} gap={0} width="full">
-      {tableData.length === 0 ? (
+      {items.length === 0 ? (
         <PMEmptyState
           title={'No Users Found'}
           description="No users found in your organization"
@@ -127,14 +110,64 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
               Invite users
             </PMButton>
           </PMHStack>
-          <PMTable
-            columns={columns}
-            data={tableData}
-            striped={true}
-            hoverable={true}
-            size="md"
-            variant="line"
-            showColumnBorder={false}
+          <ItemsListing<UserStatusItem>
+            items={items}
+            columns={[
+              { key: 'email', header: 'Email', grow: true, sortKey: 'email' },
+              {
+                key: 'status',
+                header: 'Status',
+                grow: false,
+                sortKey: 'status',
+              },
+              { key: 'role', header: 'Role', grow: false, sortKey: 'role' },
+              { key: 'actions', header: 'Actions', grow: false },
+            ]}
+            makeTableData={(userStatus): PMTableRow => ({
+              email: userStatus.email,
+              status: <UserStatusBadge userStatus={userStatus} />,
+              role: <PMBadge colorPalette="blue">{userStatus.role}</PMBadge>,
+              actions: (
+                <UserActions
+                  organizationId={organizationId}
+                  userStatus={userStatus}
+                  onChangeRole={() => setChangeRoleUserStatus(userStatus)}
+                  onExcludeUser={(userStatus) =>
+                    setExcludeUserState({ isOpen: true, userStatus })
+                  }
+                />
+              ),
+            })}
+            sortItems={(items, sortKey, sortDirection) => {
+              const direction = sortDirection === 'asc' ? 1 : -1;
+              return items.sort((a, b) => {
+                switch (sortKey) {
+                  case 'email':
+                    return direction * a.email.localeCompare(b.email);
+                  case 'status': {
+                    const statusOrder = {
+                      active: 0,
+                      pending: 1,
+                      accepted: 2,
+                      expired: 3,
+                      none: 4,
+                    };
+                    const getStatus = (u: UserStatusItem) =>
+                      u.isActive
+                        ? 'active'
+                        : (u.invitationStatus as keyof typeof statusOrder);
+                    return (
+                      direction *
+                      (statusOrder[getStatus(a)] - statusOrder[getStatus(b)])
+                    );
+                  }
+                  case 'role':
+                    return direction * a.role.localeCompare(b.role);
+                  default:
+                    return 0;
+                }
+              });
+            }}
           />
         </>
       )}

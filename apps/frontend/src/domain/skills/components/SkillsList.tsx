@@ -3,21 +3,14 @@ import { Link } from 'react-router';
 import {
   PMBox,
   PMLink,
-  PMTable,
-  PMTableColumn,
-  PMTableRow,
-  PMHStack,
-  PMText,
   PMButton,
+  PMTableRow,
   PMAlert,
   PMAlertDialog,
-  PMCheckbox,
-  PMInput,
   PMBadge,
-  useTableSort,
 } from '@packmind/ui';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { SkillId } from '@packmind/types';
+import { Skill, SkillId } from '@packmind/types';
 
 import {
   useGetSkillsQuery,
@@ -29,12 +22,18 @@ import { routes } from '../../../shared/utils/routes';
 import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import {
+  PackageCountBadge,
+  formatPackageNames,
+} from '../../deployments/components/PackageCountBadge';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
-import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
+import {
+  ItemsListing,
+  ItemsListingProps,
+} from '../../../shared/components/ItemsListing';
 
 interface ISkillsListProps {
   orgSlug: string;
@@ -58,51 +57,29 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     }
     return map;
   }, [groupedProposals]);
-  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
-    {
-      defaultSortKey: 'name',
-      defaultSortDirection: 'asc',
-    },
-  );
 
-  const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
-  const [filteredSkillIds, setFilteredSkillIds] = React.useState<SkillId[]>([]);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [selectedSkillIds, setSelectedSkillIds] = React.useState<SkillId[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
 
-  const checkSkill = (skillId: SkillId) => {
-    setSelectedSkillIds((prev) => [...prev, skillId]);
-  };
-
-  const uncheckSkill = (skillId: SkillId) => {
-    setSelectedSkillIds((prev) => prev.filter((id) => id !== skillId));
-  };
-
-  const selectAll = () => {
-    setSelectedSkillIds(filteredSkillIds);
-  };
-
-  const clearAll = () => setSelectedSkillIds([]);
-
-  const handleBatchDelete = async () => {
-    if (selectedSkillIds.length === 0) return;
+  const handleBatchDelete = async (
+    selectedIds: SkillId[],
+    unselectAll: () => void,
+  ) => {
+    if (!selectedIds.length) return;
 
     try {
-      const count = selectedSkillIds.length;
-      await deleteBatchMutation.mutateAsync(selectedSkillIds);
-      setSelectedSkillIds([]);
+      const count = selectedIds.length;
+      await deleteBatchMutation.mutateAsync(selectedIds);
+      unselectAll();
       setDeleteAlert({
         type: 'success',
         message: SKILL_MESSAGES.success.deletedBatch(count),
       });
       setDeleteModalOpen(false);
 
-      // Auto-dismiss success alert after 3 seconds
       setTimeout(() => {
         setDeleteAlert(null);
       }, 3000);
@@ -116,78 +93,56 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     }
   };
 
-  React.useEffect(() => {
-    if (!skills) return;
-
-    const filteredSkills = skills.filter((skill) =>
-      skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
-    setFilteredSkillIds(filteredSkills.map((s) => s.id));
-
-    const packageNamesById =
-      sortKey === 'packages'
-        ? new Map(
-            filteredSkills.map((s) => [
-              s.id,
-              formatPackageNames(
-                getArtifactPackages(packagesResponse?.packages, s.id, 'skill'),
-              ),
-            ]),
-          )
-        : null;
-
-    const sortedSkills = [...filteredSkills].sort((a, b) => {
-      const direction = sortDirection === 'asc' ? 1 : -1;
-      switch (sortKey) {
-        case 'name':
-          return direction * a.name.localeCompare(b.name);
-        case 'updatedAt': {
-          const dateA = new Date(a.updatedAt || 0).getTime();
-          const dateB = new Date(b.updatedAt || 0).getTime();
-          return direction * (dateA - dateB);
-        }
-        case 'createdBy': {
-          const nameA = a.createdBy?.displayName ?? '';
-          const nameB = b.createdBy?.displayName ?? '';
-          return direction * nameA.localeCompare(nameB);
-        }
-        case 'version':
-          return direction * ((a.version ?? 0) - (b.version ?? 0));
-        case 'pendingReviews':
-          return (
-            direction *
-            ((pendingReviewCountBySkillId.get(a.id) ?? 0) -
-              (pendingReviewCountBySkillId.get(b.id) ?? 0))
-          );
-        case 'packages':
-          return (
-            direction *
-            (packageNamesById?.get(a.id) ?? '').localeCompare(
-              packageNamesById?.get(b.id) ?? '',
-            )
-          );
-        default:
-          return 0;
-      }
-    });
-
-    setTableData(
-      sortedSkills.map((skill) => ({
-        key: skill.id,
-        select: (
-          <PMCheckbox
-            checked={selectedSkillIds.includes(skill.id)}
-            onCheckedChange={(event) => {
-              const checked = event.checked === true;
-              if (checked) {
-                checkSkill(skill.id);
-              } else {
-                uncheckSkill(skill.id);
-              }
-            }}
-          />
-        ),
+  const listingProps: Omit<ItemsListingProps<Skill>, 'items'> = {
+    columns: [
+      {
+        key: 'name',
+        header: 'Name',
+        grow: true,
+        sortKey: 'name',
+      },
+      {
+        key: 'createdBy',
+        header: 'Created by',
+        width: '120px',
+        align: 'center',
+        sortKey: 'createdBy',
+      },
+      {
+        key: 'updatedAt',
+        header: 'Last Updated',
+        width: '250px',
+        align: 'center',
+        sortKey: 'updatedAt',
+      },
+      {
+        key: 'version',
+        header: 'Version',
+        width: '100px',
+        align: 'center',
+        sortKey: 'version',
+      },
+      ...(groupedProposals
+        ? [
+            {
+              key: 'pendingReviews',
+              header: 'Pending reviews',
+              width: '150px',
+              align: 'center' as const,
+              sortKey: 'pendingReviews',
+            },
+          ]
+        : []),
+      {
+        key: 'packages',
+        header: 'Packages',
+        width: '220px',
+        align: 'left',
+        sortKey: 'packages',
+      },
+    ],
+    makeTableData(skill): PMTableRow {
+      return {
         name: (
           <PMLink asChild>
             <Link
@@ -201,10 +156,6 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
             </Link>
           </PMLink>
         ),
-        updatedAt: formatDistanceToNowStrict(skill.updatedAt || new Date(), {
-          addSuffix: true,
-        }),
-        version: skill.version,
         createdBy: skill.createdBy?.displayName ? (
           <UserAvatarWithInitials
             displayName={skill.createdBy.displayName}
@@ -213,6 +164,14 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         ) : (
           <span>-</span>
         ),
+        updatedAt: (
+          <>
+            {formatDistanceToNowStrict(skill.updatedAt || new Date(), {
+              addSuffix: true,
+            })}
+          </>
+        ),
+        version: skill.version,
         ...(groupedProposals
           ? {
               pendingReviews: (() => {
@@ -259,110 +218,102 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
             organizationId={organization?.id}
           />
         ),
-      })),
-    );
-  }, [
-    skills,
-    selectedSkillIds,
-    spaceSlug,
-    spaceId,
-    orgSlug,
-    organization?.id,
-    sortKey,
-    sortDirection,
-    searchQuery,
-    packagesResponse,
-    pendingReviewCountBySkillId,
-    groupedProposals,
-  ]);
+      };
+    },
+    sortItems(items, sortKey, sortDirection) {
+      const packageNamesById =
+        sortKey === 'packages'
+          ? new Map(
+              items.map((s) => [
+                s.id,
+                formatPackageNames(
+                  getArtifactPackages(
+                    packagesResponse?.packages,
+                    s.id,
+                    'skill',
+                  ),
+                ),
+              ]),
+            )
+          : null;
 
-  const isAllSelected =
-    filteredSkillIds.length > 0 &&
-    filteredSkillIds.every((id) => selectedSkillIds.includes(id));
-  const isSomeSelected = selectedSkillIds.length > 0;
-
-  const columns: PMTableColumn[] = [
-    {
-      key: 'select',
-      header: (
-        <PMCheckbox
-          checked={isAllSelected || false}
-          onCheckedChange={() => {
-            if (isAllSelected) {
-              clearAll();
-            } else {
-              selectAll();
-            }
-          }}
-          controlProps={{ borderColor: 'border.checkbox' }}
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      return items.sort((a, b) => {
+        switch (sortKey) {
+          case 'name':
+            return direction * a.name.localeCompare(b.name);
+          case 'updatedAt': {
+            const dateA = new Date(a.updatedAt || 0).getTime();
+            const dateB = new Date(b.updatedAt || 0).getTime();
+            return direction * (dateA - dateB);
+          }
+          case 'createdBy': {
+            const nameA = a.createdBy?.displayName ?? '';
+            const nameB = b.createdBy?.displayName ?? '';
+            return direction * nameA.localeCompare(nameB);
+          }
+          case 'version':
+            return direction * ((a.version ?? 0) - (b.version ?? 0));
+          case 'pendingReviews':
+            return (
+              direction *
+              ((pendingReviewCountBySkillId.get(a.id) ?? 0) -
+                (pendingReviewCountBySkillId.get(b.id) ?? 0))
+            );
+          case 'packages':
+            return (
+              direction *
+              (packageNamesById?.get(a.id) ?? '').localeCompare(
+                packageNamesById?.get(b.id) ?? '',
+              )
+            );
+          default:
+            return 0;
+        }
+      });
+    },
+    batchActions: [
+      ({ selectedIds, unselectAll }) => (
+        <PMAlertDialog
+          trigger={
+            <PMButton
+              variant="secondary"
+              loading={deleteBatchMutation.isPending}
+              size="sm"
+              disabled={!selectedIds.length}
+            >
+              {`Delete (${selectedIds.length})`}
+            </PMButton>
+          }
+          title="Delete Skills"
+          message={SKILL_MESSAGES.confirmation.deleteBatchSkills(
+            selectedIds.length,
+          )}
+          confirmText="Delete"
+          cancelText="Cancel"
+          confirmColorScheme="red"
+          onConfirm={() => handleBatchDelete(selectedIds, unselectAll)}
+          open={deleteModalOpen}
+          onOpenChange={(details) => setDeleteModalOpen(details.open)}
+          isLoading={deleteBatchMutation.isPending}
         />
       ),
-      width: '50px',
-      align: 'center',
-    },
-    {
-      key: 'name',
-      header: 'Name',
-      grow: true,
-      sortable: true,
-      sortDirection: getSortDirection('name'),
-    },
-    {
-      key: 'createdBy',
-      header: 'Created by',
-      width: '120px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('createdBy'),
-    },
-    {
-      key: 'updatedAt',
-      header: 'Last Updated',
-      width: '250px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('updatedAt'),
-    },
-    {
-      key: 'version',
-      header: 'Version',
-      width: '100px',
-      align: 'center',
-      sortable: true,
-      sortDirection: getSortDirection('version'),
-    },
-    ...(groupedProposals
-      ? [
-          {
-            key: 'pendingReviews',
-            header: 'Pending reviews',
-            width: '150px',
-            align: 'center' as const,
-            sortable: true,
-            sortDirection: getSortDirection('pendingReviews'),
-          },
-        ]
-      : []),
-    {
-      key: 'packages',
-      header: 'Packages',
-      width: '220px',
-      align: 'left',
-      sortable: true,
-      sortDirection: getSortDirection('packages'),
-    },
-  ];
+      ({ selectedIds, unselectAll }) => (
+        <SpacesManagementActions
+          artifactType="skill"
+          selectedIds={selectedIds}
+          isSomeSelected={selectedIds.length > 0}
+          onSuccess={unselectAll}
+        />
+      ),
+    ],
+  };
 
-  if (isLoading) return <PMText>Loading...</PMText>;
-  if (isError) return <PMText color="error">Error loading skills.</PMText>;
-
-  if (!skills?.length) {
-    return <SkillsBlankState orgSlug={orgSlug} spaceSlug={spaceSlug} />;
-  }
+  if (isLoading) return <p>Loading...</p>;
+  if (isError) return <p>Error loading skills.</p>;
 
   return (
     <PMBox>
-      {/* Delete Success/Error Alert */}
       {deleteAlert && (
         <PMBox mb={4}>
           <PMAlert.Root status={deleteAlert.type}>
@@ -372,65 +323,11 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         </PMBox>
       )}
 
-      <PMBox mb={4}>
-        <PMInput
-          placeholder="Search by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </PMBox>
-
-      <PMBox mb={2}>
-        <PMHStack gap={2}>
-          <PMAlertDialog
-            trigger={
-              <PMButton
-                variant="secondary"
-                loading={deleteBatchMutation.isPending}
-                size="sm"
-                disabled={!isSomeSelected}
-              >
-                {`Delete (${selectedSkillIds.length})`}
-              </PMButton>
-            }
-            title="Delete Skills"
-            message={SKILL_MESSAGES.confirmation.deleteBatchSkills(
-              selectedSkillIds.length,
-            )}
-            confirmText="Delete"
-            cancelText="Cancel"
-            confirmColorScheme="red"
-            onConfirm={handleBatchDelete}
-            open={deleteModalOpen}
-            onOpenChange={(details) => setDeleteModalOpen(details.open)}
-            isLoading={deleteBatchMutation.isPending}
-          />
-          <SpacesManagementActions
-            artifactType="skill"
-            selectedIds={selectedSkillIds}
-            isSomeSelected={isSomeSelected}
-            onSuccess={() => setSelectedSkillIds([])}
-          />
-          <PMButton
-            variant="secondary"
-            onClick={() => setSelectedSkillIds([])}
-            size="sm"
-            disabled={!isSomeSelected}
-          >
-            Clear Selection
-          </PMButton>
-        </PMHStack>
-      </PMBox>
-
-      <PMTable
-        columns={columns}
-        data={tableData}
-        striped
-        hoverable
-        size="md"
-        variant="line"
-        onSort={handleSort}
-      />
+      {skills && skills.length > 0 ? (
+        <ItemsListing {...listingProps} items={skills} />
+      ) : (
+        <SkillsBlankState orgSlug={orgSlug} spaceSlug={spaceSlug} />
+      )}
     </PMBox>
   );
 };

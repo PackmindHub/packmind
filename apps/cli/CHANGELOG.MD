@@ -2,13 +2,21 @@
 
 ## Added
 
-- Parse and preserve the new Claude Code skill frontmatter fields (`when_to_use`, `paths`, `shell`) when syncing SKILL.md files
-
 ## Changed
 
 ## Fixed
 
 ## Removed
+
+# [0.28.0] - 2026-05-04
+
+## Added
+
+- Parse and preserve the new Claude Code skill frontmatter fields (`when_to_use`, `paths`, `shell`) when syncing SKILL.md files
+
+## Fixed
+
+- Better lookup for the local cert files when using HTTPS
 
 # [0.27.0] - 2026-04-20
 
@@ -334,7 +342,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.27.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...HEAD
+[0.28.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.27.0...release-cli/0.28.0
 [0.27.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.1...release-cli/0.27.0
 [0.26.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.0...release-cli/0.26.1
 [0.26.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.25.0...release-cli/0.26.0
