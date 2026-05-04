@@ -1,6 +1,43 @@
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { version } from '../../../package.json';
 import { isCommunityEditionError } from '../../domain/errors/CommunityEditionError';
+import { Agent } from 'undici';
+import * as tls from 'tls';
+import * as fs from 'fs';
+
+function buildDispatcher(): Agent {
+  const cas: (string | Buffer)[] = [...tls.rootCertificates];
+
+  const programFiles = process.env['ProgramFiles'] ?? 'C:\\Program Files';
+  const programFilesX86 =
+    process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)';
+
+  const systemCertFiles = [
+    '/etc/ssl/certs/ca-certificates.crt', // Debian/Ubuntu
+    '/etc/ssl/cert.pem', // macOS / Alpine
+    '/etc/ssl/certs/ca-bundle.crt', // RHEL / CentOS
+    // Git for Windows bundles (most common CA source on Windows)
+    `${programFiles}\\Git\\usr\\ssl\\certs\\ca-bundle.crt`,
+    `${programFiles}\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt`,
+    `${programFilesX86}\\Git\\usr\\ssl\\certs\\ca-bundle.crt`,
+    `${programFilesX86}\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt`,
+    `D:\\ca-certificates.crt`,
+    `/private/etc/ssl/certs/ca-certificates.crt`, // Mac OS
+    process.env.NODE_EXTRA_CA_CERTS, // user-defined extra CAs
+  ].filter(Boolean) as string[];
+
+  for (const certFile of systemCertFiles) {
+    try {
+      cas.push(fs.readFileSync(certFile));
+    } catch {
+      // file absent on this platform — skip
+    }
+  }
+
+  return new Agent({ connect: { ca: cas } });
+}
+
+const dispatcher = buildDispatcher();
 
 interface IAuthContext {
   host: string;
@@ -77,6 +114,8 @@ export class PackmindHttpClient {
           'User-Agent': `packmind-cli:${version}`,
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
+        // @ts-expect-error — Node.js fetch (undici) accepts a dispatcher option not present in the DOM types
+        dispatcher,
       });
 
       if (!response.ok) {

@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- Better lookup for the local cert files when using HTTPS
+
 ## Removed
 
 # [0.27.0] - 2026-04-20

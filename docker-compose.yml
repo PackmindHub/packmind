@@ -291,6 +291,29 @@ services:
       run-migrations:
         condition: service_completed_successfully
 
+  nginx:
+    image: nginx:alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-nginx
+    ports:
+      - '443:443'
+    entrypoint:
+      - sh
+      - -c
+      - |
+        apk add --no-cache openssl &&
+        mkdir -p /etc/nginx/ssl &&
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+          -keyout /etc/nginx/ssl/key.pem \
+          -out /etc/nginx/ssl/cert.pem \
+          -subj "/C=US/ST=Dev/L=Local/O=Packmind/CN=localhost" &&
+        nginx -g "daemon off;"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/ssl/:/etc/nginx/ssl
+    depends_on:
+      frontend:
+        condition: service_healthy
+
   run-e2e-tests:
     image: mcr.microsoft.com/playwright:v1.58.2-jammy
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-run-e2e-tests-${PACKMIND_EDITION:-oss}
