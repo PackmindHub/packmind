@@ -30,20 +30,6 @@ const defaultSkills: DefaultSkill[] = [
     slug: 'packmind-update-playbook',
     minimumVersion: '0.21.0',
   },
-  {
-    name: 'Create Package',
-    description:
-      'Create packages to organize and distribute standards, commands, and skills.',
-    slug: 'packmind-create-package',
-    minimumVersion: '1.0.0',
-  },
-  {
-    name: 'CLI List Commands',
-    description:
-      'Discover available standards, commands, and skills in your organization.',
-    slug: 'packmind-cli-list-commands',
-    minimumVersion: '1.0.0',
-  },
 ];
 
 const skillsTableColumns: PMTableColumn[] = [
