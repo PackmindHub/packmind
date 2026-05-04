@@ -1,9 +1,6 @@
 import { NewGateway } from '@packmind/types';
 import {
-  IGetDeploymentOverview,
   IGetPackageByIdUseCase,
-  IGetStandardDeploymentOverview,
-  IGetSkillDeploymentOverview,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
@@ -38,9 +35,6 @@ export interface IDeploymentsGateway {
   updatePackage: NewGateway<IUpdatePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
-  getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview>;
-  getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview>;
-  getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview>;
   publishRecipes: NewGateway<IPublishRecipes>;
   publishStandards: NewGateway<IPublishStandards>;
   publishPackages: NewGateway<IPublishPackages>;

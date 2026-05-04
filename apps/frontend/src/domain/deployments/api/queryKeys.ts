@@ -13,9 +13,6 @@ export enum DeploymentQueryKeys {
   GET_PACKAGE_BY_ID = 'get-package-by-id',
   UPDATE_PACKAGE = 'update-package',
   REMOVE_PACKAGE_FROM_TARGETS = 'remove-package-from-targets',
-  GET_RECIPES_DEPLOYMENT_OVERVIEW = 'get-recipes-deployment-overview',
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW = 'get-standards-deployment-overview',
-  GET_SKILLS_DEPLOYMENT_OVERVIEW = 'get-skills-deployment-overview',
   GET_TARGETS_BY_GIT_REPO = 'get-targets-by-git-repo',
   GET_TARGETS_BY_REPOSITORY = 'get-targets-by-repository',
   GET_TARGETS_BY_ORGANIZATION = 'get-targets-by-organization',
@@ -66,33 +63,6 @@ export const LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY = [
   DEPLOYMENTS_QUERY_SCOPE,
   DeploymentQueryKeys.LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE,
 ] as const;
-
-export const GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_RECIPES_DEPLOYMENT_OVERVIEW,
-] as const;
-
-export const getRecipesDeploymentOverviewKey = (spaceId: string) =>
-  [...GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY, spaceId] as const;
-
-export const GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_STANDARDS_DEPLOYMENT_OVERVIEW,
-] as const;
-
-export const getStandardsDeploymentOverviewKey = (spaceId: string) =>
-  [...GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY, spaceId] as const;
-
-export const GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_SKILLS_DEPLOYMENT_OVERVIEW,
-] as const;
-
-export const getSkillsDeploymentOverviewKey = (spaceId: string) =>
-  [...GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY, spaceId] as const;
 
 export const GET_TARGETS_BY_GIT_REPO_KEY = [
   ORGANIZATION_QUERY_SCOPE,

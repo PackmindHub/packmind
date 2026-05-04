@@ -1,49 +1,13 @@
-import { Factory } from '@packmind/test-utils';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
 import {
-  DeployedRecipeInfo,
-  DeploymentOverview,
   RecipeDeploymentStatus,
   RepositoryDeploymentInfo,
-  RepositoryDeploymentStatus,
-  TargetDeploymentStatus,
   TargetDeploymentInfo,
   DeployedRecipeTargetInfo,
 } from '@packmind/types';
 import { targetFactory } from './targetFactory';
-
-export const createDeployedRecipeInfo = (
-  deployedRecipeInfo?: Partial<DeployedRecipeInfo>,
-): DeployedRecipeInfo => {
-  const recipe = recipeFactory();
-  const deployedVersion = recipeVersionFactory({ recipeId: recipe.id });
-  const latestVersion = recipeVersionFactory({
-    recipeId: recipe.id,
-    version: deployedVersion.version + 1,
-  });
-
-  return {
-    recipe,
-    deployedVersion,
-    latestVersion,
-    isUpToDate: false,
-    deploymentDate: new Date().toISOString(),
-    ...deployedRecipeInfo,
-  };
-};
-
-export const createRepositoryDeploymentStatus = (
-  repositoryDeploymentStatus?: Partial<RepositoryDeploymentStatus>,
-): RepositoryDeploymentStatus => {
-  return {
-    gitRepo: gitRepoFactory(),
-    deployedRecipes: [createDeployedRecipeInfo()],
-    hasOutdatedRecipes: true,
-    ...repositoryDeploymentStatus,
-  };
-};
 
 export const createRepositoryDeploymentInfo = (
   repositoryDeploymentInfo?: Partial<RepositoryDeploymentInfo>,
@@ -71,7 +35,6 @@ export const createRecipeDeploymentStatus = (
   };
 };
 
-// Target-centric factory functions
 export const createDeployedRecipeTargetInfo = (
   deployedRecipeTargetInfo?: Partial<DeployedRecipeTargetInfo>,
 ): DeployedRecipeTargetInfo => {
@@ -92,19 +55,6 @@ export const createDeployedRecipeTargetInfo = (
   };
 };
 
-export const createTargetDeploymentStatus = (
-  targetDeploymentStatus?: Partial<TargetDeploymentStatus>,
-): TargetDeploymentStatus => {
-  const target = targetFactory();
-  return {
-    target,
-    gitRepo: gitRepoFactory({ id: target.gitRepoId }),
-    deployedRecipes: [createDeployedRecipeTargetInfo()],
-    hasOutdatedRecipes: true,
-    ...targetDeploymentStatus,
-  };
-};
-
 export const createTargetDeploymentInfo = (
   targetDeploymentInfo?: Partial<TargetDeploymentInfo>,
 ): TargetDeploymentInfo => {
@@ -116,16 +66,5 @@ export const createTargetDeploymentInfo = (
     isUpToDate: false,
     deploymentDate: new Date().toISOString(),
     ...targetDeploymentInfo,
-  };
-};
-
-export const createDeploymentOverview: Factory<DeploymentOverview> = (
-  deploymentOverview?: Partial<DeploymentOverview>,
-) => {
-  return {
-    repositories: [createRepositoryDeploymentStatus()],
-    targets: [createTargetDeploymentStatus()],
-    recipes: [createRecipeDeploymentStatus()],
-    ...deploymentOverview,
   };
 };

@@ -4,7 +4,7 @@ import { useParams } from 'react-router';
 import { recipesGateway } from '../gateways';
 import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
 import {
-  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
 } from '../../../deployments/api/queryKeys';
 import {
@@ -107,7 +107,7 @@ export const useCreateRecipeMutation = () => {
 
       // Deployments overview may be affected
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -158,7 +158,7 @@ export const useUpdateRecipeMutation = () => {
 
       // Deployments overview (updated recipe version affects deployments)
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -237,7 +237,7 @@ export const useDeleteRecipeMutation = () => {
 
       // Deployments orphaned (same as standards)
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       // Packages containing the deleted recipe need to be refreshed
@@ -285,7 +285,7 @@ export const useDeleteRecipesBatchMutation = () => {
       });
 
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       // Packages containing the deleted recipes need to be refreshed

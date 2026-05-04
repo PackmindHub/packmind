@@ -1,21 +1,7 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
-import { OrganizationId } from '../../accounts/Organization';
 import { GitRepo } from '../../git/GitRepo';
 import { Recipe } from '../../recipes/Recipe';
 import { RecipeVersion } from '../../recipes/RecipeVersion';
-import { SpaceId } from '../../spaces/SpaceId';
 import { Target } from '../Target';
-
-export type GetDeploymentOverviewCommand = PackmindCommand & {
-  organizationId: OrganizationId;
-  spaceId: SpaceId;
-};
-
-export interface DeploymentOverview {
-  repositories: RepositoryDeploymentStatus[]; // Legacy support - keep for backward compatibility
-  targets: TargetDeploymentStatus[]; // New target-centric view
-  recipes: RecipeDeploymentStatus[];
-}
 
 export interface RepositoryDeploymentStatus {
   gitRepo: GitRepo;
@@ -25,7 +11,7 @@ export interface RepositoryDeploymentStatus {
 
 export interface TargetDeploymentStatus {
   target: Target;
-  gitRepo: GitRepo; // Include repo info for display
+  gitRepo: GitRepo;
   deployedRecipes: DeployedRecipeTargetInfo[];
   hasOutdatedRecipes: boolean;
 }
@@ -50,8 +36,8 @@ export interface DeployedRecipeTargetInfo {
 export interface RecipeDeploymentStatus {
   recipe: Recipe;
   latestVersion: RecipeVersion;
-  deployments: RepositoryDeploymentInfo[]; // Legacy support
-  targetDeployments: TargetDeploymentInfo[]; // New target-based deployments
+  deployments: RepositoryDeploymentInfo[];
+  targetDeployments: TargetDeploymentInfo[];
   hasOutdatedDeployments: boolean;
   isDeleted?: boolean;
 }
@@ -65,13 +51,8 @@ export interface RepositoryDeploymentInfo {
 
 export interface TargetDeploymentInfo {
   target: Target;
-  gitRepo: GitRepo; // Include repo info for display
+  gitRepo: GitRepo;
   deployedVersion: RecipeVersion;
   isUpToDate: boolean;
   deploymentDate: string;
 }
-
-export type IGetDeploymentOverview = IUseCase<
-  GetDeploymentOverviewCommand,
-  DeploymentOverview
->;

@@ -6,7 +6,6 @@ import {
   ICreatePackageUseCase,
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
-  IGetDeploymentOverview,
   IGetTargetsByOrganizationUseCase,
   IListChangeProposalsByArtefact,
   IListChangeProposalsBySpace,
@@ -61,7 +60,6 @@ export interface IChangeProposalGateway {
 
 export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
-  getRecipeDeploymentOverview: Gateway<IGetDeploymentOverview>;
 }
 
 export interface IPackmindGateway {

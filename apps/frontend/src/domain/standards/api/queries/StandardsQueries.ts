@@ -11,7 +11,7 @@ import {
 } from '@packmind/types';
 import {
   GET_PACKAGE_BY_ID_KEY,
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
 } from '../../../deployments/api/queryKeys';
 import {
@@ -125,7 +125,7 @@ export const useCreateStandardMutation = () => {
 
       // Deployments overview (new standard can be distributed)
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
@@ -200,7 +200,7 @@ export const useUpdateStandardMutation = () => {
 
       // Deployments overview (updated standard version affects deployments)
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -330,7 +330,7 @@ export const useDeleteStandardMutation = () => {
 
       // Deployments orphaned (see domain-relationships-map.md)
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       // Packages containing the deleted standard need to be refreshed
@@ -386,7 +386,7 @@ export const useCreateStandardsFromSamplesMutation = () => {
       });
 
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       await queryClient.invalidateQueries({
@@ -428,7 +428,7 @@ export const useDeleteStandardsBatchMutation = () => {
       });
 
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       // Packages containing the deleted standards need to be refreshed

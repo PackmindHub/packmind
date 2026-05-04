@@ -3,12 +3,6 @@ import { Standard } from '../standards/Standard';
 import { StandardVersion } from '../standards/StandardVersion';
 import { Target } from './Target';
 
-export interface StandardDeploymentOverview {
-  repositories: RepositoryStandardDeploymentStatus[]; // Legacy support
-  targets: TargetStandardDeploymentStatus[]; // New target-centric view
-  standards: StandardDeploymentStatus[];
-}
-
 export interface RepositoryStandardDeploymentStatus {
   gitRepo: GitRepo;
   deployedStandards: DeployedStandardInfo[];
@@ -17,7 +11,7 @@ export interface RepositoryStandardDeploymentStatus {
 
 export interface TargetStandardDeploymentStatus {
   target: Target;
-  gitRepo: GitRepo; // Include repo info for display
+  gitRepo: GitRepo;
   deployedStandards: DeployedStandardTargetInfo[];
   hasOutdatedStandards: boolean;
 }
@@ -42,8 +36,8 @@ export interface DeployedStandardTargetInfo {
 export interface StandardDeploymentStatus {
   standard: Standard;
   latestVersion: StandardVersion;
-  deployments: RepositoryStandardDeploymentInfo[]; // Legacy support
-  targetDeployments: TargetStandardDeploymentInfo[]; // New target-based deployments
+  deployments: RepositoryStandardDeploymentInfo[];
+  targetDeployments: TargetStandardDeploymentInfo[];
   hasOutdatedDeployments: boolean;
   isDeleted?: boolean;
 }
@@ -57,7 +51,7 @@ export interface RepositoryStandardDeploymentInfo {
 
 export interface TargetStandardDeploymentInfo {
   target: Target;
-  gitRepo: GitRepo; // Include repo info for display
+  gitRepo: GitRepo;
   deployedVersion: StandardVersion;
   isUpToDate: boolean;
   deploymentDate: string;

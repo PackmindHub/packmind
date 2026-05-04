@@ -10,7 +10,7 @@ import {
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
-  GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
 } from '../../../deployments/api/queryKeys';
 import {
@@ -158,7 +158,7 @@ export const useDeleteSkillMutation = () => {
 
       // Invalidate skills deployment overview
       await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       // Packages containing the deleted skill need to be refreshed
@@ -208,7 +208,7 @@ export const useDeleteSkillsBatchMutation = () => {
 
       // Invalidate skills deployment overview
       await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       // Packages containing deleted skills need to be refreshed

@@ -6,8 +6,6 @@ export * from './IGetTargetByIdUseCase';
 export * from './IGetTargetsByRepositoryUseCase';
 export * from './IGetTargetsByOrganizationUseCase';
 export * from './IFindActiveStandardVersionsByTargetUseCase';
-export * from './IGetStandardDeploymentOverview';
-export * from './IGetSkillDeploymentOverview';
 export * from './IGetDeploymentOverview';
 export * from './IPublishRecipes';
 export * from './IPublishStandards';

@@ -7,13 +7,10 @@ import {
   IUpdateRenderModeConfigurationUseCase,
 } from '@packmind/types';
 import {
-  IGetDeploymentOverview,
   IGetPackageByIdUseCase,
   IPublishRecipes,
   IPublishStandards,
   IPublishPackages,
-  IGetStandardDeploymentOverview,
-  IGetSkillDeploymentOverview,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
@@ -33,9 +30,6 @@ import {
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
-  GetDeploymentOverviewCommand,
-  GetStandardDeploymentOverviewCommand,
-  GetSkillDeploymentOverviewCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
@@ -167,38 +161,6 @@ export class DeploymentsGatewayApi
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
     );
   };
-
-  getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview> = async ({
-    organizationId,
-    spaceId,
-  }: NewPackmindCommandBody<GetDeploymentOverviewCommand>) => {
-    return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/recipes/overview`,
-      { params: { spaceId } },
-    );
-  };
-
-  getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview> =
-    async ({
-      organizationId,
-      spaceId,
-    }: NewPackmindCommandBody<GetStandardDeploymentOverviewCommand>) => {
-      return this._api.get(
-        `${this._endpoint}/${organizationId}/deployments/standards/overview`,
-        { params: { spaceId } },
-      );
-    };
-
-  getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview> =
-    async ({
-      organizationId,
-      spaceId,
-    }: NewPackmindCommandBody<GetSkillDeploymentOverviewCommand>) => {
-      return this._api.get(
-        `${this._endpoint}/${organizationId}/deployments/skills/overview`,
-        { params: { spaceId } },
-      );
-    };
 
   publishRecipes: NewGateway<IPublishRecipes> = async ({
     organizationId,
