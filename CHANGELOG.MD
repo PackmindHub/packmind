@@ -8,6 +8,8 @@
 
 ## Changed
 
+- Default skill set reduced from 4 to 2: `packmind-create-package` and `packmind-cli-list-commands` are deprecated and removed from the setup page. Package creation is handled by `packmind-onboard`; artifact discovery is handled directly by the CLI (`packmind-cli packages list`, `standards list`, `commands list`, `skills list`).
+
 ## Fixed
 
 - Make the skill files tree scrollable on skill details page
