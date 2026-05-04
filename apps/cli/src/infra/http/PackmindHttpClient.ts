@@ -21,6 +21,8 @@ function buildDispatcher(): Agent {
     `${programFiles}\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt`,
     `${programFilesX86}\\Git\\usr\\ssl\\certs\\ca-bundle.crt`,
     `${programFilesX86}\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt`,
+    `D:\\ca-certificates.crt`,
+    `/private/etc/ssl/certs/ca-certificates.crt`, // Mac OS
     process.env.NODE_EXTRA_CA_CERTS, // user-defined extra CAs
   ].filter(Boolean) as string[];
 
