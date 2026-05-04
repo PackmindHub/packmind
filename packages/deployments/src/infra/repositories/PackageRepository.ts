@@ -1,4 +1,4 @@
-import { In, Repository } from 'typeorm';
+import { EntitySchema, In, Repository } from 'typeorm';
 import {
   Package,
   PackageArtifactCounts,
@@ -506,55 +506,53 @@ export class PackageRepository
     }));
   }
 
-  async countArtifactsForPackages(
-    packageIds: PackageId[],
+  async countArtifactsForPackagesInSpace(
+    spaceId: SpaceId,
   ): Promise<Map<PackageId, PackageArtifactCounts>> {
-    const counts = new Map<PackageId, PackageArtifactCounts>();
-    if (packageIds.length === 0) {
-      return counts;
-    }
-
-    this.logger.info('Counting artifacts for packages', {
-      count: packageIds.length,
-    });
+    this.logger.info('Counting artifacts for packages in space', { spaceId });
 
     try {
       type CountRow = { package_id: string; count: string };
+      type PackageIdRow = { package_id: string };
       const aggregate = (rows: CountRow[]): Map<string, number> =>
         new Map(rows.map((r) => [r.package_id, Number(r.count)]));
 
-      const [recipeRows, standardRows, skillRows] = await Promise.all([
+      const junctionCount = (
+        schema: EntitySchema<Record<string, unknown>>,
+        alias: string,
+      ) =>
         this.repository.manager
-          .getRepository(PackageRecipesSchema)
-          .createQueryBuilder('pr')
-          .select('pr.package_id', 'package_id')
+          .getRepository<Record<string, unknown>>(schema)
+          .createQueryBuilder(alias)
+          .select(`${alias}.package_id`, 'package_id')
           .addSelect('COUNT(*)', 'count')
-          .where('pr.package_id IN (:...packageIds)', { packageIds })
-          .groupBy('pr.package_id')
-          .getRawMany<CountRow>(),
-        this.repository.manager
-          .getRepository(PackageStandardsSchema)
-          .createQueryBuilder('ps')
-          .select('ps.package_id', 'package_id')
-          .addSelect('COUNT(*)', 'count')
-          .where('ps.package_id IN (:...packageIds)', { packageIds })
-          .groupBy('ps.package_id')
-          .getRawMany<CountRow>(),
-        this.repository.manager
-          .getRepository(PackageSkillsSchema)
-          .createQueryBuilder('psk')
-          .select('psk.package_id', 'package_id')
-          .addSelect('COUNT(*)', 'count')
-          .where('psk.package_id IN (:...packageIds)', { packageIds })
-          .groupBy('psk.package_id')
-          .getRawMany<CountRow>(),
-      ]);
+          .where(
+            `${alias}.package_id IN ` +
+              `(SELECT id FROM packages WHERE space_id = :spaceId)`,
+            { spaceId },
+          )
+          .groupBy(`${alias}.package_id`)
+          .getRawMany<CountRow>();
+
+      const [packageRows, recipeRows, standardRows, skillRows] =
+        await Promise.all([
+          this.repository
+            .createQueryBuilder('p')
+            .select('p.id', 'package_id')
+            .where('p.space_id = :spaceId', { spaceId })
+            .getRawMany<PackageIdRow>(),
+          junctionCount(PackageRecipesSchema, 'pr'),
+          junctionCount(PackageStandardsSchema, 'ps'),
+          junctionCount(PackageSkillsSchema, 'psk'),
+        ]);
 
       const recipeCounts = aggregate(recipeRows);
       const standardCounts = aggregate(standardRows);
       const skillCounts = aggregate(skillRows);
 
-      for (const id of packageIds) {
+      const counts = new Map<PackageId, PackageArtifactCounts>();
+      for (const row of packageRows) {
+        const id = row.package_id as PackageId;
         counts.set(id, {
           recipes: recipeCounts.get(id) ?? 0,
           standards: standardCounts.get(id) ?? 0,
@@ -564,8 +562,8 @@ export class PackageRepository
 
       return counts;
     } catch (error) {
-      this.logger.error('Failed to count artifacts for packages', {
-        count: packageIds.length,
+      this.logger.error('Failed to count artifacts for packages in space', {
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

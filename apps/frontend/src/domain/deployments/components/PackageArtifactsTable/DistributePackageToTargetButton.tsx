@@ -1,9 +1,10 @@
 import React from 'react';
-import { PMButton, PMTooltip, pmToaster } from '@packmind/ui';
+import { PMButton, PMText, PMTooltip, pmToaster, PMIcon } from '@packmind/ui';
 import { PackageId, TargetId } from '@packmind/types';
 import { useDeployPackage } from '../../hooks/useDeployPackage';
 import { createPackagesDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
+import { LuCircleCheckBig } from 'react-icons/lu';
 
 export interface DistributePackageToTargetButtonProps {
   packageId: PackageId;
@@ -11,6 +12,7 @@ export interface DistributePackageToTargetButtonProps {
   targetId: TargetId;
   canDistributeFromApp: boolean;
   isDistributeReadinessLoading: boolean;
+  hasOutdatedArtifacts: boolean;
 }
 
 export const DistributePackageToTargetButton: React.FC<
@@ -21,6 +23,7 @@ export const DistributePackageToTargetButton: React.FC<
   targetId,
   canDistributeFromApp,
   isDistributeReadinessLoading,
+  hasOutdatedArtifacts,
 }) => {
   const { deployPackage, isDeploying } = useDeployPackage();
 
@@ -63,6 +66,14 @@ export const DistributePackageToTargetButton: React.FC<
       Distribute
     </PMButton>
   );
+
+  if (!hasOutdatedArtifacts) {
+    return (
+      <PMIcon color="text.success">
+        <LuCircleCheckBig />
+      </PMIcon>
+    );
+  }
 
   if (!isDistributeReadinessLoading && !canDistributeFromApp) {
     return (

@@ -1,5 +1,11 @@
 import { Repository, SelectQueryBuilder } from 'typeorm';
-import { Target, TargetId, GitRepoId, OrganizationId } from '@packmind/types';
+import {
+  Target,
+  TargetId,
+  GitRepoId,
+  OrganizationId,
+  SpaceId,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   localDataSource,
@@ -80,6 +86,49 @@ export class TargetRepository
       this.logger.error('Failed to find targets by IDs within organization', {
         organizationId,
         targetIdsCount: targetIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findActiveInSpace(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<Target[]> {
+    this.logger.info('Finding targets active in space', {
+      organizationId,
+      spaceId,
+    });
+
+    try {
+      const targets = await this.createScopedQueryBuilder(organizationId)
+        .innerJoin(
+          'distributions',
+          'distribution',
+          'distribution.target_id = target.id',
+        )
+        .innerJoin(
+          'distributed_packages',
+          'distributedPackage',
+          'distributedPackage.distribution_id = distribution.id',
+        )
+        .innerJoin('packages', 'pkg', 'pkg.id = distributedPackage.package_id')
+        .andWhere('pkg.space_id = :spaceId', { spaceId })
+        .distinct(true)
+        .getMany();
+
+      this.logger.info('Targets active in space found', {
+        organizationId,
+        spaceId,
+        foundCount: targets.length,
+      });
+
+      return targets;
+    } catch (error) {
+      this.logger.error('Failed to find targets active in space', {
+        organizationId,
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

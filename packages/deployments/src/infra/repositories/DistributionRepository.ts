@@ -19,13 +19,23 @@ import {
 } from '@packmind/types';
 import { Repository } from 'typeorm';
 import {
+  ActivePackageOperationRow,
   IDistributionRepository,
-  LatestPackageOperationRow,
   OutdatedDeploymentsByTarget,
+  OutdatedRecipeDeployment,
+  OutdatedSkillDeployment,
+  OutdatedStandardDeployment,
 } from '../../domain/repositories/IDistributionRepository';
 import { DistributionSchema } from '../schemas/DistributionSchema';
 
 const origin = 'DistributionRepository';
+
+function toIsoString(value: unknown): string {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  return value == null ? '' : String(value);
+}
 
 export class DistributionRepository implements IDistributionRepository {
   constructor(
@@ -1460,7 +1470,9 @@ export class DistributionRepository implements IDistributionRepository {
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
-      // Group distributions by target, then track latest operation per package per target
+      // Group distributions by target, then track latest operation per package per target.
+      // Distributions are ordered by createdAt DESC, so the first occurrence of any
+      // (target, package) pair is the latest.
       const targetData = new Map<
         string,
         {
@@ -1470,6 +1482,7 @@ export class DistributionRepository implements IDistributionRepository {
             string,
             {
               operation: string;
+              deploymentDate: string;
               standardVersions: StandardVersion[];
               recipeVersions: RecipeVersion[];
               skillVersions: SkillVersion[];
@@ -1495,6 +1508,7 @@ export class DistributionRepository implements IDistributionRepository {
           if (!target.latestPerPackage.has(dp.packageId)) {
             target.latestPerPackage.set(dp.packageId, {
               operation: dp.operation ?? 'add',
+              deploymentDate: toIsoString(distribution.createdAt),
               standardVersions: dp.standardVersions,
               recipeVersions: dp.recipeVersions,
               skillVersions: dp.skillVersions,
@@ -1503,22 +1517,13 @@ export class DistributionRepository implements IDistributionRepository {
         }
       }
 
-      // Build result: extract versions from active packages, dedup by artifact ID
+      // Build result: extract version snapshots from active packages, dedup by artifact ID
       const result: OutdatedDeploymentsByTarget[] = [];
 
       for (const [tId, data] of targetData) {
-        const standardMap = new Map<
-          string,
-          { version: number; deploymentDate: string }
-        >();
-        const recipeMap = new Map<
-          string,
-          { version: number; deploymentDate: string }
-        >();
-        const skillMap = new Map<
-          string,
-          { version: number; deploymentDate: string }
-        >();
+        const standardMap = new Map<string, OutdatedStandardDeployment>();
+        const recipeMap = new Map<string, OutdatedRecipeDeployment>();
+        const skillMap = new Map<string, OutdatedSkillDeployment>();
 
         for (const [, pkgData] of data.latestPerPackage) {
           if (pkgData.operation === 'remove') {
@@ -1528,8 +1533,16 @@ export class DistributionRepository implements IDistributionRepository {
           for (const sv of pkgData.standardVersions) {
             if (!standardMap.has(sv.standardId)) {
               standardMap.set(sv.standardId, {
-                version: sv.version,
-                deploymentDate: '',
+                artifactId: sv.standardId,
+                artifactName: sv.name,
+                artifactSlug: sv.slug,
+                deployedVersion: sv.version,
+                deploymentDate: pkgData.deploymentDate,
+                isDeleted: false,
+                description: sv.description,
+                scope: sv.scope ?? null,
+                summary: sv.summary ?? null,
+                userId: sv.userId ?? null,
               });
             }
           }
@@ -1537,8 +1550,14 @@ export class DistributionRepository implements IDistributionRepository {
           for (const rv of pkgData.recipeVersions) {
             if (!recipeMap.has(rv.recipeId)) {
               recipeMap.set(rv.recipeId, {
-                version: rv.version,
-                deploymentDate: '',
+                artifactId: rv.recipeId,
+                artifactName: rv.name,
+                artifactSlug: rv.slug,
+                deployedVersion: rv.version,
+                deploymentDate: pkgData.deploymentDate,
+                isDeleted: false,
+                content: rv.content,
+                userId: rv.userId ?? null,
               });
             }
           }
@@ -1546,8 +1565,15 @@ export class DistributionRepository implements IDistributionRepository {
           for (const sv of pkgData.skillVersions) {
             if (!skillMap.has(sv.skillId)) {
               skillMap.set(sv.skillId, {
-                version: sv.version,
-                deploymentDate: '',
+                artifactId: sv.skillId,
+                artifactName: sv.name,
+                artifactSlug: sv.slug,
+                deployedVersion: sv.version,
+                deploymentDate: pkgData.deploymentDate,
+                isDeleted: false,
+                description: sv.description,
+                prompt: sv.prompt,
+                userId: sv.userId,
               });
             }
           }
@@ -1561,25 +1587,13 @@ export class DistributionRepository implements IDistributionRepository {
           continue;
         }
 
-        const toRows = (
-          map: Map<string, { version: number; deploymentDate: string }>,
-        ) =>
-          Array.from(map.entries()).map(([artifactId, info]) => ({
-            artifactId,
-            artifactName: '',
-            deployedVersion: info.version,
-            latestVersion: 0,
-            deploymentDate: info.deploymentDate,
-            isDeleted: false,
-          }));
-
         result.push({
           targetId: tId as TargetId,
           targetName: data.targetName,
           gitRepoId: data.gitRepoId,
-          standards: toRows(standardMap),
-          recipes: toRows(recipeMap),
-          skills: toRows(skillMap),
+          standards: Array.from(standardMap.values()),
+          recipes: Array.from(recipeMap.values()),
+          skills: Array.from(skillMap.values()),
         });
       }
 
@@ -1600,13 +1614,24 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
-  async findLatestPackageOperationsBySpace(
+  async findActivePackageOperationsBySpace(
     spaceId: SpaceId,
-  ): Promise<LatestPackageOperationRow[]> {
-    this.logger.info('Listing latest package operations by space ID', {
+  ): Promise<ActivePackageOperationRow[]> {
+    this.logger.info('Listing active package operations by space ID', {
       spaceId,
     });
     try {
+      type RawRow = {
+        targetId: TargetId;
+        packageId: PackageId;
+        operation: 'add' | 'remove';
+        status: DistributionStatus;
+        lastDistributedAt: string;
+      };
+
+      // Latest distribution per (target, package) within the space. The
+      // active-distribution rule (successful add OR failed remove) is applied
+      // in JS because the predicate must run after DISTINCT ON.
       const rows = await this.repository
         .createQueryBuilder('distribution')
         .innerJoin('distribution.distributedPackages', 'distributedPackage')
@@ -1621,14 +1646,29 @@ export class DistributionRepository implements IDistributionRepository {
         .addSelect('distributedPackage.operation', 'operation')
         .addSelect('distribution.status', 'status')
         .addSelect('distribution.createdAt', 'lastDistributedAt')
-        .getRawMany<LatestPackageOperationRow>();
+        .getRawMany<RawRow>();
+
+      const activeRows = rows.filter((row) => {
+        const isFailure = row.status === DistributionStatus.failure;
+        return (
+          (row.operation === 'add' && !isFailure) ||
+          (row.operation === 'remove' && isFailure)
+        );
+      });
+
       this.logger.info(
-        'Latest package operations listed by space ID successfully',
-        { spaceId, count: rows.length },
+        'Active package operations listed by space ID successfully',
+        { spaceId, total: rows.length, active: activeRows.length },
       );
-      return rows;
+
+      return activeRows.map((row) => ({
+        targetId: row.targetId,
+        packageId: row.packageId,
+        lastDistributionStatus: row.status,
+        lastDistributedAt: row.lastDistributedAt,
+      }));
     } catch (error) {
-      this.logger.error('Failed to list latest package operations by space', {
+      this.logger.error('Failed to list active package operations by space', {
         spaceId,
         error: error instanceof Error ? error.message : String(error),
       });

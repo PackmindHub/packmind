@@ -20,7 +20,6 @@ export type ActiveDistributedPackage = {
   packageId: PackageId;
   lastDistributionStatus: DistributionStatus;
   lastDistributedAt: string;
-  artifactCounts: PackageArtifactCounts;
 };
 
 export type ActiveDistributedPackagesByTarget = {

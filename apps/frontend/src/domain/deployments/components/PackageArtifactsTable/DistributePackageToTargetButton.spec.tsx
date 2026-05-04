@@ -49,6 +49,7 @@ describe('DistributePackageToTargetButton', () => {
         targetId={TEST_TARGET_ID}
         canDistributeFromApp={true}
         isDistributeReadinessLoading={false}
+        hasOutdatedArtifacts={true}
       />,
     );
 
@@ -64,6 +65,7 @@ describe('DistributePackageToTargetButton', () => {
         targetId={TEST_TARGET_ID}
         canDistributeFromApp={false}
         isDistributeReadinessLoading={false}
+        hasOutdatedArtifacts={true}
       />,
     );
 
@@ -83,6 +85,7 @@ describe('DistributePackageToTargetButton', () => {
         targetId={TEST_TARGET_ID}
         canDistributeFromApp={false}
         isDistributeReadinessLoading={true}
+        hasOutdatedArtifacts={true}
       />,
     );
 

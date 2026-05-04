@@ -316,6 +316,7 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
   const pendingCount =
     pendingRecipes.length + pendingStandards.length + pendingSkills.length;
   const totalArtifacts = inSyncCount + driftCount + pendingCount;
+  const hasOutdatedArtifacts = driftCount + pendingCount > 0;
 
   return (
     <PMAccordion.Item
@@ -370,6 +371,7 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = ({
           targetId={targetId}
           canDistributeFromApp={canDistributeFromApp}
           isDistributeReadinessLoading={isDistributeReadinessLoading}
+          hasOutdatedArtifacts={hasOutdatedArtifacts}
         />
       </PMHStack>
       <PMAccordion.ItemContent>

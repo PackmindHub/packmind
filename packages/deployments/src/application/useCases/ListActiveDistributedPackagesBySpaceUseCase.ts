@@ -4,7 +4,6 @@ import {
   SpaceMemberContext,
 } from '@packmind/node-utils';
 import {
-  ActiveDistributedPackage,
   ActiveDistributedPackagesByTarget,
   createRecipeVersionId,
   createSkillVersionId,
@@ -12,8 +11,6 @@ import {
   DeployedRecipeTargetInfo,
   DeployedSkillTargetInfo,
   DeployedStandardTargetInfo,
-  DistributionStatus,
-  GitRepo,
   IAccountsPort,
   IGitPort,
   IListActiveDistributedPackagesBySpaceUseCase,
@@ -23,35 +20,26 @@ import {
   IStandardsPort,
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
-  PackageArtifactCounts,
-  PackageId,
   Recipe,
-  RecipeId,
   RecipeVersion,
   Skill,
-  SkillId,
   SkillVersion,
   Standard,
-  StandardId,
   StandardVersion,
-  Target,
   TargetId,
 } from '@packmind/types';
 import {
+  ActivePackageOperationRow,
   IDistributionRepository,
-  LatestPackageOperationRow,
-  OutdatedDeploymentInfo,
+  OutdatedDeploymentsByTarget,
+  OutdatedRecipeDeployment,
+  OutdatedSkillDeployment,
+  OutdatedStandardDeployment,
 } from '../../domain/repositories/IDistributionRepository';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 
 const origin = 'ListActiveDistributedPackagesBySpaceUseCase';
-
-const EMPTY_COUNTS: PackageArtifactCounts = {
-  recipes: 0,
-  standards: 0,
-  skills: 0,
-};
 
 export class ListActiveDistributedPackagesBySpaceUseCase
   extends AbstractSpaceMemberUseCase<
@@ -79,293 +67,237 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     command: ListActiveDistributedPackagesBySpaceCommand & SpaceMemberContext,
   ): Promise<ListActiveDistributedPackagesBySpaceResponse> {
     const organizationId = command.organization.id;
-    const [latestRows, outdatedByTarget, standards, recipes, skills, gitRepos] =
-      await Promise.all([
-        this.distributionRepository.findLatestPackageOperationsBySpace(
-          command.spaceId,
-        ),
-        this.distributionRepository.findOutdatedDeploymentsBySpace(
-          organizationId,
-          command.spaceId,
-        ),
-        this.standardsPort.listStandardsBySpace(
-          command.spaceId,
-          organizationId,
-          command.userId,
-        ),
-        this.recipesPort.listRecipesBySpace({
-          spaceId: command.spaceId,
-          organizationId,
-          userId: command.userId,
-        }),
-        this.skillsPort.listSkillsBySpace(
-          command.spaceId,
-          organizationId,
-          command.userId,
-        ),
-        this.gitPort.getOrganizationRepositories(organizationId),
-      ]);
-
-    const projected = projectActiveDistributedPackagesByTarget(latestRows);
-
-    const uniquePackageIds = Array.from(
-      new Set<PackageId>(
-        projected.flatMap((entry) => entry.packages.map((p) => p.packageId)),
-      ),
-    );
-
-    const counts =
-      await this.packageRepository.countArtifactsForPackages(uniquePackageIds);
-
-    const allTargetIds = Array.from(
-      new Set<TargetId>([
-        ...projected.map((entry) => entry.targetId),
-        ...outdatedByTarget.map((entry) => entry.targetId),
-      ]),
-    );
-
-    const targets = await this.targetRepository.findByIdsInOrganization(
-      allTargetIds,
+    const activeOps =
+      await this.distributionRepository.findActivePackageOperationsBySpace(
+        command.spaceId,
+      );
+    const outdatedByTarget =
+      await this.distributionRepository.findOutdatedDeploymentsBySpace(
+        organizationId,
+        command.spaceId,
+      );
+    const targets = await this.targetRepository.findActiveInSpace(
       organizationId,
+      command.spaceId,
     );
-    const targetMap = new Map(targets.map((t) => [t.id, t]));
-    const standardsMap = new Map(standards.map((s) => [s.id as string, s]));
-    const recipesMap = new Map(recipes.map((r) => [r.id as string, r]));
-    const skillsMap = new Map(skills.map((s) => [s.id as string, s]));
-    const gitReposMap = new Map(gitRepos.map((r) => [r.id, r]));
-    const projectedByTarget = new Map(
-      projected.map((entry) => [entry.targetId, entry.packages]),
+    const standards = await this.standardsPort.listStandardsBySpace(
+      command.spaceId,
+      organizationId,
+      command.userId,
     );
-    const outdatedByTargetId = new Map(
-      outdatedByTarget.map((entry) => [entry.targetId, entry]),
-    );
-
-    const entries = await Promise.all(
-      allTargetIds.map((targetId) =>
-        this.buildTargetEntry({
-          targetId,
-          target: targetMap.get(targetId),
-          gitReposMap,
-          packages: projectedByTarget.get(targetId) ?? [],
-          counts,
-          outdated: outdatedByTargetId.get(targetId),
-          standardsMap,
-          recipesMap,
-          skillsMap,
-        }),
-      ),
+    const recipes = await this.recipesPort.listRecipesBySpace({
+      spaceId: command.spaceId,
+      organizationId,
+      userId: command.userId,
+    });
+    const skills = await this.skillsPort.listSkillsBySpace(
+      command.spaceId,
+      organizationId,
+      command.userId,
     );
 
-    return entries.filter(
-      (entry): entry is ActiveDistributedPackagesByTarget => entry !== null,
-    );
-  }
+    const gitRepos =
+      await this.gitPort.getOrganizationRepositories(organizationId);
 
-  private async buildTargetEntry(args: {
-    targetId: TargetId;
-    target: Target | undefined;
-    gitReposMap: Map<string, GitRepo>;
-    packages: ProjectedActivePackage[];
-    counts: Map<PackageId, PackageArtifactCounts>;
-    outdated:
-      | {
-          standards: OutdatedDeploymentInfo[];
-          recipes: OutdatedDeploymentInfo[];
-          skills: OutdatedDeploymentInfo[];
-        }
-      | undefined;
-    standardsMap: Map<string, Standard>;
-    recipesMap: Map<string, Recipe>;
-    skillsMap: Map<string, Skill>;
-  }): Promise<ActiveDistributedPackagesByTarget | null> {
-    const { targetId, target, gitReposMap, packages, counts, outdated } = args;
-    if (!target) return null;
+    if (targets.length === 0) {
+      return [];
+    }
 
-    const enrichedPackages: ActiveDistributedPackage[] = packages.map(
-      (pkg) => ({
-        ...pkg,
-        artifactCounts: counts.get(pkg.packageId) ?? EMPTY_COUNTS,
-      }),
-    );
+    const operationsByTarget = groupActiveOpsByTarget(activeOps);
+    const outdatedByTargetId = indexOutdatedByTarget(outdatedByTarget);
+    const standardsById = indexById(standards);
+    const recipesById = indexById(recipes);
+    const skillsById = indexById(skills);
 
-    const [outdatedStandards, outdatedRecipes, outdatedSkills] =
-      await Promise.all([
-        resolveOutdatedDeployments(
-          outdated?.standards ?? [],
-          args.standardsMap,
-          (id) => this.standardsPort.getStandard(id as StandardId),
-          buildDeployedStandardInfo,
+    return targets.map((target): ActiveDistributedPackagesByTarget => {
+      const outdated = outdatedByTargetId.get(target.id) ?? {
+        standards: [],
+        recipes: [],
+        skills: [],
+      };
+      const targetPackages = operationsByTarget.get(target.id) ?? [];
+
+      return {
+        targetId: target.id,
+        target,
+        gitRepo: gitRepos.find((r) => r.id === target.gitRepoId) ?? null,
+        packages: targetPackages.map((row) => ({
+          packageId: row.packageId,
+          lastDistributionStatus: row.lastDistributionStatus,
+          lastDistributedAt: row.lastDistributedAt,
+        })),
+        outdatedStandards: outdated.standards.map((deployment) =>
+          buildDeployedStandardInfo(
+            deployment,
+            standardsById.get(deployment.artifactId),
+          ),
         ),
-        resolveOutdatedDeployments(
-          outdated?.recipes ?? [],
-          args.recipesMap,
-          (id) => this.recipesPort.getRecipeByIdInternal(id as RecipeId),
-          buildDeployedRecipeInfo,
+        outdatedRecipes: outdated.recipes.map((deployment) =>
+          buildDeployedRecipeInfo(
+            deployment,
+            recipesById.get(deployment.artifactId),
+          ),
         ),
-        resolveOutdatedDeployments(
-          outdated?.skills ?? [],
-          args.skillsMap,
-          (id) => this.skillsPort.getSkill(id as SkillId),
-          buildDeployedSkillInfo,
+        outdatedSkills: outdated.skills.map((deployment) =>
+          buildDeployedSkillInfo(
+            deployment,
+            skillsById.get(deployment.artifactId),
+          ),
         ),
-      ]);
-
-    return {
-      targetId,
-      target,
-      gitRepo: gitReposMap.get(target.gitRepoId) ?? null,
-      packages: enrichedPackages,
-      outdatedStandards,
-      outdatedRecipes,
-      outdatedSkills,
-    };
+      };
+    });
   }
 }
 
-async function resolveOutdatedDeployments<
-  TEntity extends { version: number },
-  TInfo,
->(
-  deployments: OutdatedDeploymentInfo[],
-  entityMap: Map<string, TEntity>,
-  fetchById: (id: string) => Promise<TEntity | null>,
-  buildInfo: (
-    entity: TEntity,
-    deployment: OutdatedDeploymentInfo,
-    isDeleted: boolean,
-  ) => TInfo,
-): Promise<TInfo[]> {
-  const resolved = await Promise.all(
-    deployments.map(async (deployment) => {
-      const cached = entityMap.get(deployment.artifactId);
-      const entity = cached ?? (await fetchById(deployment.artifactId));
-      if (!entity) return undefined;
-
-      const isDeleted = !cached;
-      const isUpToDate =
-        deployment.deployedVersion >= entity.version && !isDeleted;
-      if (isUpToDate) return undefined;
-
-      return buildInfo(entity, deployment, isDeleted);
-    }),
-  );
-  return resolved.filter((info): info is Awaited<TInfo> => info !== undefined);
+function groupActiveOpsByTarget(
+  rows: ActivePackageOperationRow[],
+): Map<TargetId, ActivePackageOperationRow[]> {
+  const map = new Map<TargetId, ActivePackageOperationRow[]>();
+  for (const row of rows) {
+    const existing = map.get(row.targetId);
+    if (existing) {
+      existing.push(row);
+    } else {
+      map.set(row.targetId, [row]);
+    }
+  }
+  return map;
 }
 
-function toStandardVersion(
-  standard: Standard,
-  version: number,
-): StandardVersion {
-  return {
-    id: createStandardVersionId(standard.id),
-    standardId: standard.id,
-    name: standard.name,
-    slug: standard.slug,
-    version,
-    description: standard.description,
-    summary: null,
-    userId: standard.userId,
-    scope: standard.scope,
-  };
+function indexOutdatedByTarget(
+  rows: OutdatedDeploymentsByTarget[],
+): Map<TargetId, OutdatedDeploymentsByTarget> {
+  return new Map(rows.map((row) => [row.targetId, row]));
 }
 
-function toRecipeVersion(recipe: Recipe, version: number): RecipeVersion {
-  return {
-    id: createRecipeVersionId(recipe.id),
-    recipeId: recipe.id,
-    name: recipe.name,
-    slug: recipe.slug,
-    content: recipe.content,
-    version,
-    userId: recipe.userId,
-  };
-}
-
-function toSkillVersion(skill: Skill, version: number): SkillVersion {
-  return {
-    id: createSkillVersionId(skill.id),
-    skillId: skill.id,
-    name: skill.name,
-    slug: skill.slug,
-    description: skill.description,
-    prompt: skill.prompt,
-    version,
-    userId: skill.userId,
-  };
+function indexById<T extends { id: string }>(
+  items: readonly T[],
+): Map<string, T> {
+  return new Map(items.map((item) => [item.id, item]));
 }
 
 function buildDeployedStandardInfo(
-  standard: Standard,
-  deployment: OutdatedDeploymentInfo,
-  isDeleted: boolean,
+  deployment: OutdatedStandardDeployment,
+  standard: Standard | undefined,
 ): DeployedStandardTargetInfo {
+  const baseId = standard?.id ?? deployment.artifactId;
+  const name = standard?.name ?? deployment.artifactName;
+  const slug = standard?.slug ?? deployment.artifactSlug;
+  const description = standard?.description ?? deployment.description;
+  const userId = standard?.userId ?? deployment.userId;
+  const scope = standard?.scope ?? deployment.scope;
+
+  const buildVersion = (version: number): StandardVersion => ({
+    id: createStandardVersionId(baseId),
+    standardId: baseId,
+    name,
+    slug,
+    version,
+    description,
+    summary: deployment.summary ?? null,
+    userId,
+    scope,
+  });
+
+  const syntheticStandard = {
+    id: baseId,
+    name,
+    slug,
+    description,
+    version: deployment.deployedVersion,
+    userId,
+    scope,
+  } as Standard;
+
   return {
-    standard,
-    deployedVersion: toStandardVersion(standard, deployment.deployedVersion),
-    latestVersion: toStandardVersion(standard, standard.version),
+    standard: standard ?? syntheticStandard,
+    deployedVersion: buildVersion(deployment.deployedVersion),
+    latestVersion: buildVersion(
+      standard?.version ?? deployment.deployedVersion,
+    ),
     isUpToDate: false,
     deploymentDate: deployment.deploymentDate,
-    ...(isDeleted && { isDeleted }),
+    ...(!standard && { isDeleted: true }),
   };
 }
 
 function buildDeployedRecipeInfo(
-  recipe: Recipe,
-  deployment: OutdatedDeploymentInfo,
-  isDeleted: boolean,
+  deployment: OutdatedRecipeDeployment,
+  recipe: Recipe | undefined,
 ): DeployedRecipeTargetInfo {
+  const baseId = recipe?.id ?? deployment.artifactId;
+  const name = recipe?.name ?? deployment.artifactName;
+  const slug = recipe?.slug ?? deployment.artifactSlug;
+  const content = recipe?.content ?? deployment.content;
+  const userId = recipe?.userId ?? deployment.userId;
+
+  const buildVersion = (version: number): RecipeVersion => ({
+    id: createRecipeVersionId(baseId),
+    recipeId: baseId,
+    name,
+    slug,
+    content,
+    version,
+    userId,
+  });
+
+  const syntheticRecipe = {
+    id: baseId,
+    name,
+    slug,
+    content,
+    version: deployment.deployedVersion,
+    userId,
+  } as Recipe;
+
   return {
-    recipe,
-    deployedVersion: toRecipeVersion(recipe, deployment.deployedVersion),
-    latestVersion: toRecipeVersion(recipe, recipe.version),
+    recipe: recipe ?? syntheticRecipe,
+    deployedVersion: buildVersion(deployment.deployedVersion),
+    latestVersion: buildVersion(recipe?.version ?? deployment.deployedVersion),
     isUpToDate: false,
     deploymentDate: deployment.deploymentDate,
-    ...(isDeleted && { isDeleted }),
+    ...(!recipe && { isDeleted: true }),
   };
 }
 
 function buildDeployedSkillInfo(
-  skill: Skill,
-  deployment: OutdatedDeploymentInfo,
-  isDeleted: boolean,
+  deployment: OutdatedSkillDeployment,
+  skill: Skill | undefined,
 ): DeployedSkillTargetInfo {
+  const baseId = skill?.id ?? deployment.artifactId;
+  const name = skill?.name ?? deployment.artifactName;
+  const slug = skill?.slug ?? deployment.artifactSlug;
+  const description = skill?.description ?? deployment.description;
+  const prompt = skill?.prompt ?? deployment.prompt;
+  const userId = skill?.userId ?? deployment.userId;
+
+  const buildVersion = (version: number): SkillVersion => ({
+    id: createSkillVersionId(baseId),
+    skillId: baseId,
+    name,
+    slug,
+    description,
+    prompt,
+    version,
+    userId,
+  });
+
+  const syntheticSkill = {
+    id: baseId,
+    name,
+    slug,
+    description,
+    prompt,
+    version: deployment.deployedVersion,
+    userId,
+  } as Skill;
+
   return {
-    skill,
-    deployedVersion: toSkillVersion(skill, deployment.deployedVersion),
-    latestVersion: toSkillVersion(skill, skill.version),
+    skill: skill ?? syntheticSkill,
+    deployedVersion: buildVersion(deployment.deployedVersion),
+    latestVersion: buildVersion(skill?.version ?? deployment.deployedVersion),
     isUpToDate: false,
     deploymentDate: deployment.deploymentDate,
-    ...(isDeleted && { isDeleted }),
+    ...(!skill && { isDeleted: true }),
   };
-}
-
-type ProjectedActivePackage = Omit<ActiveDistributedPackage, 'artifactCounts'>;
-
-type ProjectedActivePackagesByTarget = {
-  targetId: TargetId;
-  packages: ProjectedActivePackage[];
-};
-
-export function projectActiveDistributedPackagesByTarget(
-  rows: LatestPackageOperationRow[],
-): ProjectedActivePackagesByTarget[] {
-  const byTarget = new Map<TargetId, ProjectedActivePackage[]>();
-  for (const row of rows) {
-    const isActiveFromAdd =
-      row.operation === 'add' && row.status !== DistributionStatus.failure;
-    const isActiveFromFailedRemove =
-      row.operation === 'remove' && row.status === DistributionStatus.failure;
-    if (!isActiveFromAdd && !isActiveFromFailedRemove) continue;
-    const list = byTarget.get(row.targetId) ?? [];
-    list.push({
-      packageId: row.packageId,
-      lastDistributionStatus: row.status,
-      lastDistributedAt: row.lastDistributedAt,
-    });
-    byTarget.set(row.targetId, list);
-  }
-  return Array.from(byTarget, ([targetId, packages]) => ({
-    targetId,
-    packages,
-  }));
 }

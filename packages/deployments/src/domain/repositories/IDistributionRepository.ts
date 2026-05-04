@@ -14,6 +14,7 @@ import {
   StandardVersion,
   TargetId,
   RenderMode,
+  UserId,
 } from '@packmind/types';
 
 export interface IDistributionRepository {
@@ -189,37 +190,58 @@ export interface IDistributionRepository {
   ): Promise<OutdatedDeploymentsByTarget[]>;
 
   /**
-   * For each (target, package) pair within a space, return the operation and
-   * status of the latest distribution by createdAt. Aggregation happens in SQL
-   * (DISTINCT ON), so the use case only applies the active-distribution rule.
+   * For each (target, package) pair within a space, return the latest
+   * distribution by createdAt, filtered to only those whose latest operation
+   * leaves the package actively distributed (successful add OR failed remove).
+   * Aggregation and the active-distribution predicate both run in SQL.
    */
-  findLatestPackageOperationsBySpace(
+  findActivePackageOperationsBySpace(
     spaceId: SpaceId,
-  ): Promise<LatestPackageOperationRow[]>;
+  ): Promise<ActivePackageOperationRow[]>;
 }
 
-export type LatestPackageOperationRow = {
+export type ActivePackageOperationRow = {
   targetId: TargetId;
   packageId: PackageId;
-  operation: 'add' | 'remove';
-  status: DistributionStatus;
+  lastDistributionStatus: DistributionStatus;
   lastDistributedAt: string;
 };
 
-export type OutdatedDeploymentInfo = {
+type OutdatedDeploymentBase = {
   artifactId: string;
   artifactName: string;
+  artifactSlug: string;
   deployedVersion: number;
-  latestVersion: number;
   deploymentDate: string;
   isDeleted: boolean;
+};
+
+export type OutdatedStandardDeployment = OutdatedDeploymentBase & {
+  artifactId: StandardId;
+  description: string;
+  scope: string | null;
+  summary: string | null;
+  userId: UserId | null;
+};
+
+export type OutdatedRecipeDeployment = OutdatedDeploymentBase & {
+  artifactId: RecipeId;
+  content: string;
+  userId: UserId | null;
+};
+
+export type OutdatedSkillDeployment = OutdatedDeploymentBase & {
+  artifactId: SkillId;
+  description: string;
+  prompt: string;
+  userId: UserId;
 };
 
 export type OutdatedDeploymentsByTarget = {
   targetId: TargetId;
   targetName: string;
   gitRepoId: string;
-  standards: OutdatedDeploymentInfo[];
-  recipes: OutdatedDeploymentInfo[];
-  skills: OutdatedDeploymentInfo[];
+  standards: OutdatedStandardDeployment[];
+  recipes: OutdatedRecipeDeployment[];
+  skills: OutdatedSkillDeployment[];
 };
