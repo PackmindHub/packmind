@@ -129,6 +129,68 @@ describe('ItemsListing', () => {
     });
   });
 
+  describe('when searchQuery prop is provided externally', () => {
+    function renderListingWithSearchQuery(searchQuery: string) {
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+          mutations: { retry: false },
+        },
+      });
+
+      const props: ItemsListingProps<Item> = {
+        items,
+        columns: [{ key: 'name', header: 'Name' }],
+        makeTableData: function (item): PMTableRow {
+          return {
+            name: <p>{item.name}</p>,
+          };
+        },
+        sortItems: function (items) {
+          return items;
+        },
+        matchQuery: function (searchQuery, item): boolean {
+          return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+        },
+        searchQuery,
+      };
+
+      return render(
+        <UIProvider>
+          <QueryClientProvider client={queryClient}>
+            <ItemsListing {...props} />
+          </QueryClientProvider>
+        </UIProvider>,
+      );
+    }
+
+    it('does not render the internal search input', () => {
+      renderListingWithSearchQuery('Third');
+
+      expect(screen.queryByPlaceholderText('Search by name...')).toBeNull();
+    });
+
+    it('filters items by the provided searchQuery value', () => {
+      renderListingWithSearchQuery('Third');
+
+      expect(getRows()).toEqual([
+        { name: 'Third item', checked: false },
+        { name: 'Third item (copy)', checked: false },
+      ]);
+    });
+
+    it('shows all items when searchQuery is empty string', () => {
+      renderListingWithSearchQuery('');
+
+      expect(getRows()).toEqual([
+        { name: 'First item', checked: false },
+        { name: 'Second item', checked: false },
+        { name: 'Third item', checked: false },
+        { name: 'Third item (copy)', checked: false },
+      ]);
+    });
+  });
+
   describe('when user uses the search field', () => {
     beforeEach(async () => {
       renderListing();
