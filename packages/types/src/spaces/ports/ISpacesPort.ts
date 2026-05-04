@@ -242,4 +242,12 @@ export interface ISpacesPort {
    * Spaces with zero memberships are absent from the returned Map.
    */
   countUsersForSpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
+
+  /**
+   * Find member user IDs grouped by space for the given space IDs.
+   * Spaces with zero memberships are absent from the returned Map.
+   */
+  findMemberIdsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, UserId[]>>;
 }

@@ -39,6 +39,9 @@ export interface IUserSpaceMembershipRepository {
   ): Promise<
     Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
   >;
+  findMemberIdsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, UserId[]>>;
   countByRoleForSpaceIds(
     spaceIds: SpaceId[],
     role: UserSpaceRole,

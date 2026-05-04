@@ -264,6 +264,13 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return membershipService.countUsersForSpaceIds(spaceIds);
   }
 
+  async findMemberIdsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, UserId[]>> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.findMemberIdsForSpaceIds(spaceIds);
+  }
+
   async updateMemberRole(
     command: UpdateMemberRoleCommand,
   ): Promise<UpdateMemberRoleResponse> {

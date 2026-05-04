@@ -35,7 +35,10 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
   let spacesPort: jest.Mocked<
     Pick<
       ISpacesPort,
-      'findOrgPagePaginated' | 'findAdminsForSpaceIds' | 'countUsersForSpaceIds'
+      | 'findOrgPagePaginated'
+      | 'findAdminsForSpaceIds'
+      | 'countUsersForSpaceIds'
+      | 'findMemberIdsForSpaceIds'
     >
   >;
   let standardsPort: jest.Mocked<Pick<IStandardsPort, 'countBySpaceIds'>>;
@@ -72,6 +75,7 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
         .mockResolvedValue({ items: [], totalCount: 0 }),
       findAdminsForSpaceIds: jest.fn().mockResolvedValue([]),
       countUsersForSpaceIds: jest.fn().mockResolvedValue(new Map()),
+      findMemberIdsForSpaceIds: jest.fn().mockResolvedValue(new Map()),
     };
 
     standardsPort = {
@@ -164,6 +168,7 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
 
       expect(spacesPort.findAdminsForSpaceIds).not.toHaveBeenCalled();
       expect(spacesPort.countUsersForSpaceIds).not.toHaveBeenCalled();
+      expect(spacesPort.findMemberIdsForSpaceIds).not.toHaveBeenCalled();
       expect(standardsPort.countBySpaceIds).not.toHaveBeenCalled();
       expect(recipesPort.countBySpaceIds).not.toHaveBeenCalled();
       expect(skillsPort.countBySpaceIds).not.toHaveBeenCalled();
@@ -278,6 +283,9 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
       expect(spacesPort.countUsersForSpaceIds).toHaveBeenCalledWith([
         single.id,
       ]);
+      expect(spacesPort.findMemberIdsForSpaceIds).toHaveBeenCalledWith([
+        single.id,
+      ]);
       expect(standardsPort.countBySpaceIds).toHaveBeenCalledWith([single.id]);
       expect(recipesPort.countBySpaceIds).toHaveBeenCalledWith([single.id]);
       expect(skillsPort.countBySpaceIds).toHaveBeenCalledWith([single.id]);
@@ -291,6 +299,36 @@ describe('ListOrganizationSpacesForManagementUseCase', () => {
         4,
         ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
       );
+    });
+
+    it('includes memberIds per space from the members port', async () => {
+      const userId1 = createUserId('member-1');
+      const userId2 = createUserId('member-2');
+      const userId3 = createUserId('member-3');
+
+      spacesPort.findMemberIdsForSpaceIds.mockResolvedValue(
+        new Map([
+          [space1.id, [userId1, userId2]],
+          [space2.id, [userId3]],
+        ]),
+      );
+
+      const result = await useCase.execute(buildCommand());
+
+      expect(result.items[0].id).toBe(space1.id);
+      expect(result.items[0].memberIds).toEqual([userId1, userId2]);
+
+      expect(result.items[1].id).toBe(space2.id);
+      expect(result.items[1].memberIds).toEqual([userId3]);
+    });
+
+    it('defaults memberIds to empty array when space has no members', async () => {
+      spacesPort.findMemberIdsForSpaceIds.mockResolvedValue(new Map());
+
+      const result = await useCase.execute(buildCommand());
+
+      expect(result.items[0].memberIds).toEqual([]);
+      expect(result.items[1].memberIds).toEqual([]);
     });
   });
 });

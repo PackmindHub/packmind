@@ -376,6 +376,41 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
     }
   }
 
+  async findMemberIdsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, UserId[]>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Finding member IDs for space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .select('m.space_id', 'spaceId')
+        .addSelect('m.user_id', 'userId')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .andWhere('m.deletedAt IS NULL')
+        .getRawMany<{ spaceId: SpaceId; userId: UserId }>();
+
+      const result = new Map<SpaceId, UserId[]>();
+      for (const row of rows) {
+        const list = result.get(row.spaceId) ?? [];
+        list.push(row.userId);
+        result.set(row.spaceId, list);
+      }
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to find member IDs for space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async countUsersForSpaceIds(
     spaceIds: SpaceId[],
   ): Promise<Map<SpaceId, number>> {

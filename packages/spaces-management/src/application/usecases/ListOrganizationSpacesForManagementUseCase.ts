@@ -64,12 +64,14 @@ export class ListOrganizationSpacesForManagementUseCase extends AbstractAdminUse
     const [
       adminRows,
       memberCounts,
+      memberIdsBySpace,
       standardsCounts,
       recipesCounts,
       skillsCounts,
     ] = await Promise.all([
       this.spacesPort.findAdminsForSpaceIds(spaceIds),
       this.spacesPort.countUsersForSpaceIds(spaceIds),
+      this.spacesPort.findMemberIdsForSpaceIds(spaceIds),
       this.standardsPort.countBySpaceIds(spaceIds),
       this.recipesPort.countBySpaceIds(spaceIds),
       this.skillsPort.countBySpaceIds(spaceIds),
@@ -85,6 +87,7 @@ export class ListOrganizationSpacesForManagementUseCase extends AbstractAdminUse
     const items: SpaceManagementListItem[] = spaces.map((space) => ({
       ...space,
       admins: adminsBySpace.get(space.id) ?? [],
+      memberIds: memberIdsBySpace.get(space.id) ?? [],
       membersCount: memberCounts.get(space.id) ?? 0,
       artifactsCount:
         (standardsCounts.get(space.id) ?? 0) +
