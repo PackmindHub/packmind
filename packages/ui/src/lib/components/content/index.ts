@@ -8,7 +8,6 @@ export type { IPMPageProps } from './PMPage/PMPage';
 export { PMPopover } from './PMPopover';
 export * from './PMEmptyState/PMEmptyState';
 export { PMBadge } from './PMBadge/PMBadge';
-export type { BadgeProps as PMBadgeProps } from './PMBadge/PMBadge';
 export { PMAvatar } from './PMAvatar/PMAvatar';
 export { PMBreadcrumb } from './PMBreadcrumb/PMBreadcrumb';
 export { PMDrawer } from './PMDrawer/PMDrawer';

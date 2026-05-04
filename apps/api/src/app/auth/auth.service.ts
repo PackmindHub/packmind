@@ -621,8 +621,6 @@ export class AuthService {
       // Verify and decode the current JWT
       const payload: JwtPayload = this.jwtService.verify(accessToken);
 
-      // Get organization details from the user's memberships
-      // We need to fetch the organization details since memberships only have id and role
       const getUserResponse = await this.accountsAdapter.getUserById({
         userId: payload.user.userId,
       });
@@ -639,11 +637,9 @@ export class AuthService {
         throw new Error('Organization membership not found');
       }
 
-      // Get the organization details
-      const organizationResponse =
-        await this.accountsAdapter.getOrganizationById({
-          organizationId: command.organizationId,
-        });
+      // UserRepository.findById joins memberships.organization, so the org is
+      // already loaded — no extra round-trip needed.
+      const organizationResponse = userMembership.organization;
 
       if (!organizationResponse) {
         throw new Error('Organization not found');

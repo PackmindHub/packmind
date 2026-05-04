@@ -23,6 +23,7 @@ import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/Use
 import { useAddMembersToSpaceMutation } from '../api/queries/SpacesQueries';
 import { SpaceMemberEntry, SpaceMemberRole } from '../types';
 import { SpaceMember } from './SpaceMembersTable';
+import { isPackmindError } from '../../../services/api/errors/PackmindError';
 
 interface UserSearchComboboxProps {
   items: { label: string; value: string }[];
@@ -94,6 +95,7 @@ interface AddSpaceMembersDialogProps {
   setOpen: (open: boolean) => void;
   spaceId: string;
   existingMembers: SpaceMember[];
+  onSuccess?: () => void;
 }
 
 export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
@@ -101,6 +103,7 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
   setOpen,
   spaceId,
   existingMembers,
+  onSuccess,
 }) => {
   const [selectedMembers, setSelectedMembers] = useState<SpaceMemberEntry[]>(
     [],
@@ -156,17 +159,36 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
         title: 'Members added',
         description: `${selectedMembers.length} member(s) added to the space.`,
       });
+      onSuccess?.();
     } catch (error) {
+      const status = isPackmindError(error)
+        ? error.serverError.status
+        : undefined;
+      const titleByStatus: Record<number, string> = {
+        400: 'Invalid member selection.',
+        403: "You don't have permission to add members to this space.",
+        404: 'This space no longer exists.',
+        409: 'One or more selected users are already members.',
+      };
+      const title =
+        (status !== undefined && titleByStatus[status]) ||
+        'Failed to add members';
+      const description =
+        status === undefined
+          ? (error as Error)?.message || 'An unexpected error occurred.'
+          : undefined;
       pmToaster.create({
         type: 'error',
-        title: 'Failed to add members',
-        description:
-          (error as Error)?.message || 'An unexpected error occurred.',
+        title,
+        description,
       });
     }
   };
 
   const handleOpenChange = (details: { open: boolean }) => {
+    if (isPending && !details.open) {
+      return;
+    }
     setOpen(details.open);
     if (!details.open) {
       setSelectedMembers([]);
@@ -187,7 +209,7 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
           <PMDialog.Header>
             <PMDialog.Title>Add members to space</PMDialog.Title>
             <PMDialog.CloseTrigger asChild>
-              <PMCloseButton />
+              <PMCloseButton disabled={isPending} />
             </PMDialog.CloseTrigger>
           </PMDialog.Header>
           <PMDialog.Body>
@@ -219,6 +241,7 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
                         <PMNativeSelect
                           size="sm"
                           value={member.role}
+                          disabled={isPending}
                           onChange={(e) =>
                             setUserRole(
                               member.userId,
@@ -235,6 +258,7 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
                           size="xs"
                           variant="ghost"
                           colorPalette="red"
+                          disabled={isPending}
                           onClick={() => removeUser(member.userId)}
                         >
                           <PMIcon>
@@ -251,12 +275,15 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
           <PMDialog.Footer>
             <PMButtonGroup size="sm">
               <PMDialog.Trigger asChild>
-                <PMButton variant="tertiary">Cancel</PMButton>
+                <PMButton variant="tertiary" disabled={isPending}>
+                  Cancel
+                </PMButton>
               </PMDialog.Trigger>
               <PMButton
                 variant="primary"
                 onClick={handleSubmit}
                 disabled={isPending || selectedMembers.length === 0}
+                loading={isPending}
               >
                 <PMIcon>
                   <LuPlus />

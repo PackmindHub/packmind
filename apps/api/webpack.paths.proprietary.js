@@ -14,6 +14,7 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
     '@packmind/analytics': join(__dirname, '../../packages/analytics/src'),
     '@packmind/linter': join(__dirname, '../../packages/linter/src'),
     '@packmind/amplitude': join(__dirname, '../../packages/amplitude/src'),
+    '@packmind/crisp': join(__dirname, '../../packages/crisp/src'),
     '@packmind/plugins': join(__dirname, '../../packages/plugins/src'),
     '@packmind/import-practices-legacy': join(
       __dirname,
