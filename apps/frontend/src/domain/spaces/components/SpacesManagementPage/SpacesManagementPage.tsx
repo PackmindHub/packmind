@@ -69,17 +69,28 @@ function MultiFilterCombobox({
   onChange: (v: string[]) => void;
   placeholder: string;
 }) {
-  const [inputValue, setInputValue] = React.useState('');
+  const [open, setOpen] = React.useState(false);
+  const [searchInput, setSearchInput] = React.useState('');
   const { contains } = pmUseFilter({ sensitivity: 'base' });
+
+  const selectedLabels = useMemo(
+    () =>
+      items
+        .filter((i) => value.includes(i.value))
+        .map((i) => i.label)
+        .join(', '),
+    [items, value],
+  );
 
   const collection = useMemo(
     () =>
       pmCreateListCollection({
-        items: inputValue
-          ? items.filter((i) => contains(i.label, inputValue))
-          : items,
+        items:
+          open && searchInput
+            ? items.filter((i) => contains(i.label, searchInput))
+            : items,
       }),
-    [items, inputValue, contains],
+    [items, open, searchInput, contains],
   );
 
   return (
@@ -87,9 +98,15 @@ function MultiFilterCombobox({
       collection={collection}
       multiple
       value={value}
-      onInputValueChange={(e: { inputValue: string }) =>
-        setInputValue(e.inputValue)
-      }
+      inputValue={open ? searchInput : selectedLabels}
+      open={open}
+      onOpenChange={(details: { open: boolean }) => {
+        setOpen(details.open);
+        if (!details.open) setSearchInput('');
+      }}
+      onInputValueChange={(e: { inputValue: string }) => {
+        if (open) setSearchInput(e.inputValue);
+      }}
       onValueChange={(details: { value: string[] }) => onChange(details.value)}
       openOnClick
     >
