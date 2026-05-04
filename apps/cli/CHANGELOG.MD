@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- `installedAt` property was incorrectly reset even when absent from lockfile.
+
 ## Removed
 
 # [0.28.0] - 2026-05-04

@@ -71,6 +71,24 @@ describe('PackmindLockFileService', () => {
       },
     ];
 
+    describe('when includeInstalledAt is set to false', () => {
+      it('does not set the installedAt property', () => {
+        const lockFile = service.buildLockFile({
+          artifactPackageIds: {},
+          artifactSpaceIds: {},
+          codingAgents: [],
+          fileModifications: [],
+          packageSlugs: [],
+          recipeVersions: [],
+          skillVersions: [],
+          standardVersions: [],
+          includeInstalledAt: false,
+        });
+
+        expect(lockFile.installedAt).toBe(undefined);
+      });
+    });
+
     describe('with recipe, standard, and skill versions', () => {
       let result: PackmindLockFile;
 
