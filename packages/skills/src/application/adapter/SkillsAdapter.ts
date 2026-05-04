@@ -282,6 +282,10 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     });
   }
 
+  public countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.services.getSkillService().countBySpaceIds(spaceIds);
+  }
+
   async findSkillBySlug(
     slug: string,
     organizationId: OrganizationId,

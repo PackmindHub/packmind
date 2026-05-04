@@ -20,6 +20,7 @@ import {
   RemoveMemberFromSpaceCommand,
   RemoveMemberFromSpaceResponse,
   Space,
+  SpaceColor,
   UpdateMemberRoleCommand,
   UpdateMemberRoleResponse,
   SpaceId,
@@ -68,6 +69,15 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<Space[]> {
     const spaceService = this.hexa.getSpaceService();
     return spaceService.listSpacesByOrganization(organizationId);
+  }
+
+  async findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }> {
+    const spaceService = this.hexa.getSpaceService();
+    return spaceService.findOrgPagePaginated(organizationId, page, pageSize);
   }
 
   async getSpaceBySlug(
@@ -124,6 +134,15 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     return membershipService.addSpaceMembership(membership);
   }
 
+  async updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.updateMembershipPinned(userId, spaceId, pinned);
+  }
+
   async removeUserFromOrganizationSpaces(
     userId: UserId,
     organizationId: OrganizationId,
@@ -149,15 +168,6 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
   ): Promise<boolean> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
     return membershipService.removeSpaceMembership(userId, spaceId);
-  }
-
-  async updateMembershipPinned(
-    userId: UserId,
-    spaceId: SpaceId,
-    pinned: boolean,
-  ): Promise<boolean> {
-    const membershipService = this.hexa.getUserSpaceMembershipService();
-    return membershipService.updateMembershipPinned(userId, spaceId, pinned);
   }
 
   async findMembershipsByUserAndOrganization(
@@ -211,10 +221,47 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
 
   async updateSpace(
     spaceId: SpaceId,
-    fields: { name?: string; type?: SpaceType },
+    fields: { name?: string; type?: SpaceType; color?: SpaceColor },
   ): Promise<Space> {
     const spaceService = this.hexa.getSpaceService();
     return spaceService.updateSpace(spaceId, fields);
+  }
+
+  async deleteSpace(spaceId: SpaceId, deletedBy: UserId): Promise<void> {
+    const spaceService = this.hexa.getSpaceService();
+    return spaceService.deleteSpace(spaceId, deletedBy as string);
+  }
+
+  async softDeleteMembershipsBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: UserId,
+  ): Promise<number> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.softDeleteMembershipsBySpaceId(spaceId, deletedBy);
+  }
+
+  async findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  > {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.findAdminsForSpaceIds(spaceIds);
+  }
+
+  async countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.countByRoleForSpaceIds(spaceIds, role);
+  }
+
+  async countUsersForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, number>> {
+    const membershipService = this.hexa.getUserSpaceMembershipService();
+    return membershipService.countUsersForSpaceIds(spaceIds);
   }
 
   async updateMemberRole(

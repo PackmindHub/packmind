@@ -10,6 +10,7 @@ import {
 import {
   createOrganizationId,
   createRecipeId,
+  createSpaceId,
   Recipe,
   WithSoftDelete,
 } from '@packmind/types';
@@ -125,6 +126,64 @@ describe('RecipeRepository', () => {
           }),
         ).toMatchObject({ id: recipe.id, name: recipe.name });
       });
+    });
+  });
+
+  describe('countBySpaceIds', () => {
+    it('returns a Map of spaceId -> count, omitting spaces with zero recipes', async () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+      const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+      const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+      await spaceRepo.save([spaceA, spaceB, spaceC]);
+
+      await recipeRepository.add(recipeFactory({ spaceId: spaceA.id }));
+      await recipeRepository.add(recipeFactory({ spaceId: spaceA.id }));
+      await recipeRepository.add(recipeFactory({ spaceId: spaceB.id }));
+
+      const counts = await recipeRepository.countBySpaceIds([
+        spaceA.id,
+        spaceB.id,
+        spaceC.id,
+      ]);
+
+      expect(counts.get(spaceA.id)).toBe(2);
+      expect(counts.get(spaceB.id)).toBe(1);
+      expect(counts.has(spaceC.id)).toBe(false);
+    });
+
+    it('returns an empty Map for empty input', async () => {
+      const counts = await recipeRepository.countBySpaceIds([]);
+      expect(counts.size).toBe(0);
+    });
+
+    it('excludes soft-deleted recipes from the count', async () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const space = spaceFactory({ organizationId });
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+      await spaceRepo.save(space);
+
+      const aliveRecipe = await recipeRepository.add(
+        recipeFactory({ spaceId: space.id }),
+      );
+      const deletedRecipe = await recipeRepository.add(
+        recipeFactory({ spaceId: space.id }),
+      );
+      await recipeRepository.deleteById(deletedRecipe.id);
+
+      const counts = await recipeRepository.countBySpaceIds([space.id]);
+
+      expect(counts.get(space.id)).toBe(1);
+      expect(aliveRecipe.spaceId).toBe(space.id);
+    });
+
+    it('omits unknown space IDs from the result Map', async () => {
+      const unknownSpaceId = createSpaceId(uuidv4());
+
+      const counts = await recipeRepository.countBySpaceIds([unknownSpaceId]);
+
+      expect(counts.has(unknownSpaceId)).toBe(false);
     });
   });
 

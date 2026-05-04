@@ -32,6 +32,11 @@ export interface ISkillsPort {
     userId: string,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]>;
+  /**
+   * Count skills grouped by space ID, omitting spaces with zero skills.
+   * Used for management listing aggregations.
+   */
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   findSkillBySlug(
     slug: string,
     organizationId: OrganizationId,

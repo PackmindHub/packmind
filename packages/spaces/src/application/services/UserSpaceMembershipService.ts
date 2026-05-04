@@ -107,6 +107,18 @@ export class UserSpaceMembershipService {
     );
   }
 
+  async updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean> {
+    return this.userSpaceMembershipRepository.updateMembershipPinned(
+      userId,
+      spaceId,
+      pinned,
+    );
+  }
+
   async removeUserFromOrganizationSpaces(
     userId: UserId,
     organizationId: OrganizationId,
@@ -136,19 +148,41 @@ export class UserSpaceMembershipService {
     return this.userSpaceMembershipRepository.removeMembership(userId, spaceId);
   }
 
-  async updateMembershipPinned(
-    userId: UserId,
+  async getSpaceById(spaceId: SpaceId): Promise<Space | null> {
+    return this.spaceRepository.findById(spaceId);
+  }
+
+  async softDeleteMembershipsBySpaceId(
     spaceId: SpaceId,
-    pinned: boolean,
-  ): Promise<boolean> {
-    return this.userSpaceMembershipRepository.updateMembershipPinned(
-      userId,
+    deletedBy: UserId,
+  ): Promise<number> {
+    return this.userSpaceMembershipRepository.softDeleteBySpaceId(
       spaceId,
-      pinned,
+      deletedBy as string,
     );
   }
 
-  async getSpaceById(spaceId: SpaceId): Promise<Space | null> {
-    return this.spaceRepository.findById(spaceId);
+  async findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  > {
+    return this.userSpaceMembershipRepository.findAdminsForSpaceIds(spaceIds);
+  }
+
+  async countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>> {
+    return this.userSpaceMembershipRepository.countByRoleForSpaceIds(
+      spaceIds,
+      role,
+    );
+  }
+
+  async countUsersForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, number>> {
+    return this.userSpaceMembershipRepository.countUsersForSpaceIds(spaceIds);
   }
 }

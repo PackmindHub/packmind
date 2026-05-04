@@ -9,6 +9,7 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
+import { PreviewArtifactRenderingCommand } from '@packmind/types';
 import { CopyMarkdownButton } from './CopyMarkdownButton';
 import { DownloadAsAgentButton } from './DownloadAsAgentButton';
 import { stripFrontmatter } from '../utils/stripFrontmatter';
@@ -19,7 +20,10 @@ interface ArtifactResultFilePreviewProps {
   previewContent?: ReactNode;
   hideActions?: boolean;
   hideFileName?: boolean;
-  getPreviewCommand?: () => unknown;
+  getPreviewCommand?: () => Omit<
+    PreviewArtifactRenderingCommand,
+    'codingAgent'
+  >;
 }
 
 export function ArtifactResultFilePreview({
