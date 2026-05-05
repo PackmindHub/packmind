@@ -130,36 +130,60 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
         it('notifies Packmind that the private command was deployed', async () => {
           const overview =
-            await context.gateway.deployments.getRecipeDeploymentOverview({
-              spaceId: privateSpace.id,
-            });
+            await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+              {
+                spaceId: privateSpace.id,
+              },
+            );
 
-          expect(overview).toMatchObject({
-            recipes: [
+          expect(overview).toEqual(
+            expect.arrayContaining([
               expect.objectContaining({
-                recipe: expect.objectContaining({ id: privateCommand.id }),
-                hasOutdatedDeployments: false,
-                deployments: [expect.objectContaining({ isUpToDate: true })],
+                packages: expect.arrayContaining([
+                  expect.objectContaining({
+                    packageId: privatePackage.id,
+                    deployedRecipes: expect.arrayContaining([
+                      expect.objectContaining({
+                        recipe: expect.objectContaining({
+                          id: privateCommand.id,
+                        }),
+                        isUpToDate: true,
+                      }),
+                    ]),
+                  }),
+                ]),
               }),
-            ],
-          });
+            ]),
+          );
         });
 
         it('notifies Packmind that the public command was deployed', async () => {
           const overview =
-            await context.gateway.deployments.getRecipeDeploymentOverview({
-              spaceId: publicSpace.id,
-            });
+            await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+              {
+                spaceId: publicSpace.id,
+              },
+            );
 
-          expect(overview).toMatchObject({
-            recipes: [
+          expect(overview).toEqual(
+            expect.arrayContaining([
               expect.objectContaining({
-                recipe: expect.objectContaining({ id: publicCommand.id }),
-                hasOutdatedDeployments: false,
-                deployments: [expect.objectContaining({ isUpToDate: true })],
+                packages: expect.arrayContaining([
+                  expect.objectContaining({
+                    packageId: publicPackage.id,
+                    deployedRecipes: expect.arrayContaining([
+                      expect.objectContaining({
+                        recipe: expect.objectContaining({
+                          id: publicCommand.id,
+                        }),
+                        isUpToDate: true,
+                      }),
+                    ]),
+                  }),
+                ]),
               }),
-            ],
-          });
+            ]),
+          );
         });
 
         describe('when user without access to the spaces runs install', () => {
@@ -263,44 +287,60 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
             it('notifies Packmind that the private command update was deployed', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: privateSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: privateSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
+              expect(overview).toEqual(
+                expect.arrayContaining([
                   expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: privateCommand.id,
-                    }),
-                    hasOutdatedDeployments: false,
-                    deployments: [
-                      expect.objectContaining({ isUpToDate: true }),
-                    ],
+                    packages: expect.arrayContaining([
+                      expect.objectContaining({
+                        packageId: privatePackage.id,
+                        deployedRecipes: expect.arrayContaining([
+                          expect.objectContaining({
+                            recipe: expect.objectContaining({
+                              id: privateCommand.id,
+                            }),
+                            isUpToDate: true,
+                          }),
+                        ]),
+                      }),
+                    ]),
                   }),
-                ],
-              });
+                ]),
+              );
             });
 
             it('notifies Packmind that the public command is still up-to-date', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: publicSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: publicSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
+              expect(overview).toEqual(
+                expect.arrayContaining([
                   expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: publicCommand.id,
-                    }),
-                    hasOutdatedDeployments: false,
-                    deployments: [
-                      expect.objectContaining({ isUpToDate: true }),
-                    ],
+                    packages: expect.arrayContaining([
+                      expect.objectContaining({
+                        packageId: publicPackage.id,
+                        deployedRecipes: expect.arrayContaining([
+                          expect.objectContaining({
+                            recipe: expect.objectContaining({
+                              id: publicCommand.id,
+                            }),
+                            isUpToDate: true,
+                          }),
+                        ]),
+                      }),
+                    ]),
                   }),
-                ],
-              });
+                ]),
+              );
             });
           });
 
@@ -344,42 +384,60 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
             it('does not update the distributed version of the private command in Packmind', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: privateSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: privateSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
+              expect(overview).toEqual(
+                expect.arrayContaining([
                   expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: privateCommand.id,
-                    }),
-                    deployments: [
-                      expect.objectContaining({ isUpToDate: false }),
-                    ],
+                    packages: expect.arrayContaining([
+                      expect.objectContaining({
+                        packageId: privatePackage.id,
+                        deployedRecipes: expect.arrayContaining([
+                          expect.objectContaining({
+                            recipe: expect.objectContaining({
+                              id: privateCommand.id,
+                            }),
+                            isUpToDate: false,
+                          }),
+                        ]),
+                      }),
+                    ]),
                   }),
-                ],
-              });
+                ]),
+              );
             });
 
             it('keeps the distributed version of the public command as up-to-date in Packmind', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: publicSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: publicSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
+              expect(overview).toEqual(
+                expect.arrayContaining([
                   expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: publicCommand.id,
-                    }),
-                    deployments: [
-                      expect.objectContaining({ isUpToDate: true }),
-                    ],
+                    packages: expect.arrayContaining([
+                      expect.objectContaining({
+                        packageId: publicPackage.id,
+                        deployedRecipes: expect.arrayContaining([
+                          expect.objectContaining({
+                            recipe: expect.objectContaining({
+                              id: publicCommand.id,
+                            }),
+                            isUpToDate: true,
+                          }),
+                        ]),
+                      }),
+                    ]),
                   }),
-                ],
-              });
+                ]),
+              );
             });
           });
         });
@@ -451,46 +509,45 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
             it('notifies Packmind that the private command is no longer deployed', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: privateSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: privateSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
-                  expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: privateCommand.id,
-                    }),
-                    targetDeployments: [],
-                  }),
-                ],
-              });
+              const allPackages = overview.flatMap((entry) => entry.packages);
+              expect(
+                allPackages.find((pkg) => pkg.packageId === privatePackage.id),
+              ).toBeUndefined();
             });
 
             it('notifies Packmind that the public command is still deployed', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: publicSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: publicSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
+              expect(overview).toEqual(
+                expect.arrayContaining([
                   expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: publicCommand.id,
-                    }),
-                    hasOutdatedDeployments: false,
-                    targetDeployments: [
+                    packages: expect.arrayContaining([
                       expect.objectContaining({
-                        deployedVersion: expect.objectContaining({
-                          slug: publicCommand.slug,
-                          version: 1,
-                        }),
+                        packageId: publicPackage.id,
+                        deployedRecipes: expect.arrayContaining([
+                          expect.objectContaining({
+                            recipe: expect.objectContaining({
+                              id: publicCommand.id,
+                            }),
+                            isUpToDate: true,
+                          }),
+                        ]),
                       }),
-                    ],
+                    ]),
                   }),
-                ],
-              });
+                ]),
+              );
             });
           });
 
@@ -541,46 +598,45 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
             it('notifies Packmind that the private command is no longer deployed', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: privateSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: privateSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
-                  expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: privateCommand.id,
-                    }),
-                    targetDeployments: [],
-                  }),
-                ],
-              });
+              const allPackages = overview.flatMap((entry) => entry.packages);
+              expect(
+                allPackages.find((pkg) => pkg.packageId === privatePackage.id),
+              ).toBeUndefined();
             });
 
             it('notifies Packmind that the public command is still deployed', async () => {
               const overview =
-                await context.gateway.deployments.getRecipeDeploymentOverview({
-                  spaceId: publicSpace.id,
-                });
+                await context.gateway.deployments.listActiveDistributedPackagesBySpace(
+                  {
+                    spaceId: publicSpace.id,
+                  },
+                );
 
-              expect(overview).toMatchObject({
-                recipes: [
+              expect(overview).toEqual(
+                expect.arrayContaining([
                   expect.objectContaining({
-                    recipe: expect.objectContaining({
-                      id: publicCommand.id,
-                    }),
-                    hasOutdatedDeployments: false,
-                    targetDeployments: [
+                    packages: expect.arrayContaining([
                       expect.objectContaining({
-                        deployedVersion: expect.objectContaining({
-                          slug: publicCommand.slug,
-                          version: 1,
-                        }),
+                        packageId: publicPackage.id,
+                        deployedRecipes: expect.arrayContaining([
+                          expect.objectContaining({
+                            recipe: expect.objectContaining({
+                              id: publicCommand.id,
+                            }),
+                            isUpToDate: true,
+                          }),
+                        ]),
                       }),
-                    ],
+                    ]),
                   }),
-                ],
-              });
+                ]),
+              );
             });
           });
         });
