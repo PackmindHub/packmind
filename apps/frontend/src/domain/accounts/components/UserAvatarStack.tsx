@@ -51,7 +51,7 @@ export const UserAvatarStack: React.FC<UserAvatarStackProps> = ({
       {showExtra && (
         <PMTooltip label={extraLabel} placement="top">
           <span style={{ display: 'inline-flex' }}>
-            <PMAvatar.Root size={size} colorPalette="black" key={'extra-users'}>
+            <PMAvatar.Root size={size} colorPalette="grey" key={'extra-users'}>
               <PMAvatar.Fallback>
                 +{users.length + 1 - maxVisibleAvatars}
               </PMAvatar.Fallback>
