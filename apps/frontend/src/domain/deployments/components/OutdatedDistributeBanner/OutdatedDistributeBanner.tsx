@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { PMAlert, PMHStack } from '@packmind/ui';
+import { PMAlert, PMHStack, PMVStack } from '@packmind/ui';
 import { ActiveDistributedPackagesByTarget } from '@packmind/types';
 import { buildRepositorySections } from '../../utils/buildRepositorySections';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
@@ -59,22 +59,26 @@ export const OutdatedDistributeBanner: React.FC<
     return null;
   }
 
+  const hasNoEligibleTargets = groups.length === 0;
+
   return (
     <PMAlert.Root status="info">
       <PMHStack justify="space-between" align="center" width="full" gap={4}>
-        <PMHStack>
+        <PMHStack align="start">
           <PMAlert.Indicator />
-          <PMAlert.Title>Some targets need distribution.</PMAlert.Title>
+          <PMVStack align="start" gap={1}>
+            <PMAlert.Title>Some targets need distribution.</PMAlert.Title>
+          </PMVStack>
         </PMHStack>
         {!isProvidersLoading && (
           <BatchDistributeButton
             label="Distribute all"
             groups={groups}
             variant="primary"
-            disabled={hasIneligibleTargets}
+            disabled={hasNoEligibleTargets}
             disabledTooltip={
-              hasIneligibleTargets
-                ? 'Some targets are not configured for in-app distribution. Use packmind-cli to distribute.'
+              hasNoEligibleTargets
+                ? 'Outdated targets are configured for in-app distribution. Use packmind-cli to distribute.'
                 : undefined
             }
           />
