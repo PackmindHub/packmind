@@ -6,6 +6,7 @@ import {
   pmCreateListCollection,
   PMEmptyState,
   PMPortal,
+  PMSelect,
   PMSpinner,
   PMTableRow,
   pmUseFilter,
@@ -29,6 +30,7 @@ import {
   ItemsListing,
   ItemsListingColumn,
 } from '../../../../shared/components/ItemsListing';
+import { SpaceType } from '@packmind/types';
 
 const SPACE_COLUMNS: ItemsListingColumn[] = [
   { key: 'name', header: 'Name', grow: true, sortKey: 'name' },
@@ -56,6 +58,13 @@ const INTERACTIVE_SELECTOR =
   'button, a, input, [role="menu"], [role="menuitem"]';
 
 type FilterItem = { label: string; value: string };
+
+const spaceTypeFilter = pmCreateListCollection({
+  items: [
+    { label: 'Private', value: SpaceType.private },
+    { label: 'Open', value: SpaceType.open },
+  ],
+});
 
 function MultiFilterCombobox({
   items,
@@ -173,6 +182,8 @@ export const SpacesManagementPage: React.FC = () => {
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [selectedAdminIds, setSelectedAdminIds] = useState<string[]>([]);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [selectedVisibility, setSelectedVisibility] =
+    useState<SpaceType | null>(null);
   const orgId = organization?.id ?? '';
   const { data, isLoading, isError } =
     useGetOrganizationSpacesForManagementQuery(orgId, page);
@@ -244,9 +255,14 @@ export const SpacesManagementPage: React.FC = () => {
         !space.memberIds.some((id) => selectedMemberIds.includes(id))
       )
         return false;
+
+      if (selectedVisibility !== null) {
+        return space.type === selectedVisibility;
+      }
+
       return true;
     });
-  }, [items, selectedAdminIds, selectedMemberIds]);
+  }, [items, selectedAdminIds, selectedMemberIds, selectedVisibility]);
 
   if (isError) {
     return (
@@ -333,6 +349,44 @@ export const SpacesManagementPage: React.FC = () => {
         makeTableData={makeTableData}
         sortItems={sortSpaces}
         filters={[
+          <PMSelect.Root
+            collection={spaceTypeFilter}
+            value={[`${selectedVisibility}`]}
+            onValueChange={(e) => {
+              if (e.value.length === 0) {
+                setSelectedVisibility(null);
+                return;
+              }
+
+              setSelectedVisibility(
+                e.value[0] === 'private' ? SpaceType.private : SpaceType.open,
+              );
+            }}
+            key={'visibility-filter'}
+          >
+            <PMSelect.HiddenSelect />
+            <PMSelect.Control>
+              <PMSelect.Trigger>
+                <PMSelect.ValueText placeholder="Select visibility" />
+              </PMSelect.Trigger>
+              <PMSelect.IndicatorGroup>
+                {selectedVisibility && <PMSelect.ClearTrigger />}
+                <PMSelect.Indicator />
+              </PMSelect.IndicatorGroup>
+            </PMSelect.Control>
+            <PMPortal>
+              <PMSelect.Positioner>
+                <PMSelect.Content>
+                  {spaceTypeFilter.items.map((visibility) => (
+                    <PMSelect.Item item={visibility} key={visibility.value}>
+                      {visibility.label}
+                      <PMSelect.ItemIndicator />
+                    </PMSelect.Item>
+                  ))}
+                </PMSelect.Content>
+              </PMSelect.Positioner>
+            </PMPortal>
+          </PMSelect.Root>,
           <MultiFilterCombobox
             items={adminItems}
             value={selectedAdminIds}
