@@ -75,40 +75,57 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     command: ListActiveDistributedPackagesBySpaceCommand & SpaceMemberContext,
   ): Promise<ListActiveDistributedPackagesBySpaceResponse> {
     const organizationId = command.organization.id;
-    const activeOps =
-      await this.distributionRepository.findActivePackageOperationsBySpace(
+
+    const [
+      activeOpsR,
+      outdatedR,
+      targetsR,
+      standardsR,
+      recipesR,
+      skillsR,
+      packagesR,
+      gitReposR,
+    ] = await Promise.allSettled([
+      this.distributionRepository.findActivePackageOperationsBySpace(
         command.spaceId,
-      );
-    const outdatedByTarget =
-      await this.distributionRepository.findOutdatedDeploymentsBySpace(
+      ),
+      this.distributionRepository.findOutdatedDeploymentsBySpace(
         organizationId,
         command.spaceId,
-      );
-    const targets = await this.targetRepository.findActiveInSpace(
-      organizationId,
-      command.spaceId,
-    );
-    const standards = await this.standardsPort.listStandardsBySpace(
-      command.spaceId,
-      organizationId,
-      command.userId,
-    );
-    const recipes = await this.recipesPort.listRecipesBySpace({
-      spaceId: command.spaceId,
-      organizationId,
-      userId: command.userId,
-    });
-    const skills = await this.skillsPort.listSkillsBySpace(
-      command.spaceId,
-      organizationId,
-      command.userId,
-    );
-    const packages = await this.packageRepository.findBySpaceId(
-      command.spaceId,
-    );
+      ),
+      this.targetRepository.findActiveInSpace(organizationId, command.spaceId),
+      this.standardsPort.listStandardsBySpace(
+        command.spaceId,
+        organizationId,
+        command.userId,
+      ),
+      this.recipesPort.listRecipesBySpace({
+        spaceId: command.spaceId,
+        organizationId,
+        userId: command.userId,
+      }),
+      this.skillsPort.listSkillsBySpace(
+        command.spaceId,
+        organizationId,
+        command.userId,
+      ),
+      this.packageRepository.findBySpaceId(command.spaceId),
+      this.gitPort.getOrganizationRepositories(organizationId),
+    ] as const);
 
-    const gitRepos =
-      await this.gitPort.getOrganizationRepositories(organizationId);
+    const value = <T>(r: PromiseSettledResult<T>): T => {
+      if (r.status === 'rejected') throw r.reason;
+      return r.value;
+    };
+
+    const activeOps = value(activeOpsR);
+    const outdatedByTarget = value(outdatedR);
+    const targets = value(targetsR);
+    const standards = value(standardsR);
+    const recipes = value(recipesR);
+    const skills = value(skillsR);
+    const packages = value(packagesR);
+    const gitRepos = value(gitReposR);
 
     if (targets.length === 0) {
       return [];
@@ -120,6 +137,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     const recipesById = indexById(recipes);
     const skillsById = indexById(skills);
     const packagesById = indexById(packages);
+    const gitRepoById = new Map(gitRepos.map((r) => [r.id, r]));
 
     return targets.map((target): ActiveDistributedPackagesByTarget => {
       const outdated = outdatedByTargetId.get(target.id) ?? {
@@ -151,7 +169,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
       return {
         targetId: target.id,
         target,
-        gitRepo: gitRepos.find((r) => r.id === target.gitRepoId) ?? null,
+        gitRepo: gitRepoById.get(target.gitRepoId) ?? null,
         packages: targetActiveOps
           .map((row) =>
             buildActivePackage({
