@@ -3,6 +3,7 @@ import { organizationGateway, userGateway, authGateway } from '../gateways';
 import {
   GET_USER_ORGANIZATIONS_KEY,
   GET_USER_STATUSES_KEY,
+  GET_USERS_IN_MY_ORGANIZATION_KEY,
   GET_ONBOARDING_STATUS_KEY,
   GET_ME_KEY,
 } from '../queryKeys';
@@ -73,6 +74,9 @@ export const useInviteUsersMutation = () => {
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({
         queryKey: GET_USER_STATUSES_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_USERS_IN_MY_ORGANIZATION_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
