@@ -9,6 +9,7 @@ import {
   PMSegmentGroup,
 } from '@packmind/ui';
 import { RepositoryCentricView } from '../RepositoryCentricView';
+import { OutdatedDistributeBanner } from '../OutdatedDistributeBanner/OutdatedDistributeBanner';
 import { DeploymentsBlankState } from '../DeploymentsBlankState';
 import { ArtifactsView } from '../ArtifactsView';
 import type { ArtifactTypeFilter } from '../ArtifactsView/ArtifactsView';
@@ -249,6 +250,7 @@ export const DeploymentsPage: React.FC = () => {
 
   const renderRepositoriesView = () => (
     <PMVStack gap={4} marginTop={4} align={'stretch'}>
+      <OutdatedDistributeBanner entries={entries} />
       <PMHStack gap={4}>
         <RepositoryMultiSelect
           availableRepositories={availableRepositories}

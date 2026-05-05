@@ -341,6 +341,7 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = (
       borderColor="border.secondary"
       borderRadius={4}
       width="full"
+      py={2}
     >
       <PMHStack gap={2} align="center" justify="space-between" pr={2}>
         <PMAccordion.ItemTrigger

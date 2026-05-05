@@ -2,6 +2,7 @@ import {
   ActiveDistributedPackage,
   ActiveDistributedPackagesByTarget,
   GitRepo,
+  PackageId,
   Target,
   TargetId,
 } from '@packmind/types';
@@ -13,6 +14,7 @@ export type TargetSection = {
   inSyncCount: number;
   outdatedCount: number;
   hasOutdated: boolean;
+  outdatedPackageIds: PackageId[];
 };
 
 export type RepoSection = {
@@ -37,6 +39,9 @@ export function buildRepositorySections({
       a.package.name.localeCompare(b.package.name),
     );
     const counts = countArtifacts(packageGroups);
+    const outdatedPackageIds = packageGroups
+      .filter(isPackageOutdated)
+      .map((group) => group.packageId);
     const targetSection: TargetSection = {
       id: entry.target.id,
       target: entry.target,
@@ -44,6 +49,7 @@ export function buildRepositorySections({
       inSyncCount: counts.inSync,
       outdatedCount: counts.outdated,
       hasOutdated: counts.outdated > 0,
+      outdatedPackageIds,
     };
 
     const repoId = entry.gitRepo.id;
@@ -65,6 +71,20 @@ export function buildRepositorySections({
   return Array.from(sections.values()).sort((a, b) =>
     repoLabel(a.gitRepo).localeCompare(repoLabel(b.gitRepo)),
   );
+}
+
+export function isPackageOutdated(group: ActiveDistributedPackage): boolean {
+  const hasOutdatedDeployed = [
+    ...group.deployedRecipes,
+    ...group.deployedStandards,
+    ...group.deployedSkills,
+  ].some((item) => !item.isUpToDate || !!item.isDeleted);
+  const hasPending =
+    group.pendingRecipes.length +
+      group.pendingStandards.length +
+      group.pendingSkills.length >
+    0;
+  return hasOutdatedDeployed || hasPending;
 }
 
 function countArtifacts(groups: ReadonlyArray<ActiveDistributedPackage>): {
