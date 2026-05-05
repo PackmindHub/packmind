@@ -196,7 +196,9 @@ describe('SpacesManagementPage', () => {
       screen.getByPlaceholderText('Search by name...'),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText('All admins')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('All members')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('All collaborators'),
+    ).toBeInTheDocument();
   });
 
   it('filters spaces by admin', async () => {
@@ -270,7 +272,7 @@ describe('SpacesManagementPage', () => {
     renderWithQuery(<SpacesManagementPage />);
 
     const user = userEvent.setup();
-    await user.click(screen.getByPlaceholderText('All members'));
+    await user.click(screen.getByPlaceholderText('All collaborators'));
     await user.click(screen.getByRole('option', { name: 'member-1' }));
 
     expect(screen.getByText('Engineering')).toBeInTheDocument();

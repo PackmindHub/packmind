@@ -141,11 +141,8 @@ function sortSpaces(
   sortKey: string | null,
   sortDirection: SortDirection,
 ): SpaceListItem[] {
-  const defaults = items.filter((s) => s.isDefaultSpace);
-  const others = items.filter((s) => !s.isDefaultSpace);
-
   const direction = sortDirection === 'asc' ? 1 : -1;
-  const sorted = [...others].sort((a, b) => {
+  return items.sort((a, b) => {
     switch (sortKey) {
       case 'name':
         return (
@@ -166,8 +163,6 @@ function sortSpaces(
         return 0;
     }
   });
-
-  return [...defaults, ...sorted];
 }
 
 export const SpacesManagementPage: React.FC = () => {
@@ -346,7 +341,7 @@ export const SpacesManagementPage: React.FC = () => {
             items={memberItems}
             value={selectedMemberIds}
             onChange={setSelectedMemberIds}
-            placeholder="All members"
+            placeholder="All collaborators"
             key={'member-filter'}
           />,
         ]}
