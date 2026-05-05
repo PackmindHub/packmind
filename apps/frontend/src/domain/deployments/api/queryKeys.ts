@@ -9,18 +9,15 @@ export enum DeploymentQueryKeys {
   LIST_STANDARD_DISTRIBUTIONS = 'list-standard-distributions',
   LIST_SKILL_DISTRIBUTIONS = 'list-skill-distributions',
   LIST_PACKAGES_BY_SPACE = 'list-packages-by-space',
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE = 'list-active-distributed-packages-by-space',
   GET_PACKAGE_BY_ID = 'get-package-by-id',
   UPDATE_PACKAGE = 'update-package',
   REMOVE_PACKAGE_FROM_TARGETS = 'remove-package-from-targets',
-  GET_RECIPES_DEPLOYMENT_OVERVIEW = 'get-recipes-deployment-overview',
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW = 'get-standards-deployment-overview',
-  GET_SKILLS_DEPLOYMENT_OVERVIEW = 'get-skills-deployment-overview',
   GET_TARGETS_BY_GIT_REPO = 'get-targets-by-git-repo',
   GET_TARGETS_BY_REPOSITORY = 'get-targets-by-repository',
   GET_TARGETS_BY_ORGANIZATION = 'get-targets-by-organization',
   GET_RENDER_MODE_CONFIGURATION = 'get-render-mode-configuration',
   GET_DASHBOARD_KPI = 'get-dashboard-kpi',
-  GET_DASHBOARD_OUTDATED = 'get-dashboard-outdated',
   GET_DASHBOARD_NON_LIVE = 'get-dashboard-non-live',
 }
 
@@ -61,32 +58,11 @@ export const LIST_PACKAGES_BY_SPACE_KEY = [
   DeploymentQueryKeys.LIST_PACKAGES_BY_SPACE,
 ] as const;
 
-export const GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY = [
+export const LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_RECIPES_DEPLOYMENT_OVERVIEW,
+  DeploymentQueryKeys.LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE,
 ] as const;
-
-export const getRecipesDeploymentOverviewKey = (spaceId: string) =>
-  [...GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY, spaceId] as const;
-
-export const GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_STANDARDS_DEPLOYMENT_OVERVIEW,
-] as const;
-
-export const getStandardsDeploymentOverviewKey = (spaceId: string) =>
-  [...GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY, spaceId] as const;
-
-export const GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_SKILLS_DEPLOYMENT_OVERVIEW,
-] as const;
-
-export const getSkillsDeploymentOverviewKey = (spaceId: string) =>
-  [...GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY, spaceId] as const;
 
 export const GET_TARGETS_BY_GIT_REPO_KEY = [
   ORGANIZATION_QUERY_SCOPE,
@@ -138,15 +114,6 @@ export const GET_DASHBOARD_KPI_KEY = [
 
 export const getDashboardKpiKey = (spaceId: string) =>
   [...GET_DASHBOARD_KPI_KEY, spaceId] as const;
-
-export const GET_DASHBOARD_OUTDATED_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  DEPLOYMENTS_QUERY_SCOPE,
-  DeploymentQueryKeys.GET_DASHBOARD_OUTDATED,
-] as const;
-
-export const getDashboardOutdatedKey = (spaceId: string) =>
-  [...GET_DASHBOARD_OUTDATED_KEY, spaceId] as const;
 
 export const GET_DASHBOARD_NON_LIVE_KEY = [
   ORGANIZATION_QUERY_SCOPE,

@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
-  DeploymentOverview,
+  ActiveDistributedPackagesByTarget,
   Distribution,
-  GetDeploymentOverviewCommand,
-  GetStandardDeploymentOverviewCommand,
-  GetSkillDeploymentOverviewCommand,
+  ListActiveDistributedPackagesBySpaceCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -15,8 +13,6 @@ import {
   PublishStandardsCommand,
   PublishPackagesCommand,
   PackagesDeployment,
-  StandardDeploymentOverview,
-  SkillDeploymentOverview,
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
   GetRenderModeConfigurationCommand,
@@ -43,8 +39,6 @@ import {
   AddArtefactsToPackageResponse,
   GetDashboardKpiCommand,
   DashboardKpiResponse,
-  GetDashboardOutdatedCommand,
-  DashboardOutdatedResponse,
   GetDashboardNonLiveCommand,
   DashboardNonLiveResponse,
   IDeploymentPort,
@@ -80,24 +74,6 @@ export class DeploymentsService {
     command: ListDistributionsBySkillCommand,
   ): Promise<Distribution[]> {
     return this.deploymentAdapter.listDistributionsBySkill(command);
-  }
-
-  async getStandardDeploymentOverview(
-    command: GetStandardDeploymentOverviewCommand,
-  ): Promise<StandardDeploymentOverview> {
-    return this.deploymentAdapter.getStandardDeploymentOverview(command);
-  }
-
-  async getSkillsDeploymentOverview(
-    command: GetSkillDeploymentOverviewCommand,
-  ): Promise<SkillDeploymentOverview> {
-    return this.deploymentAdapter.getSkillsDeploymentOverview(command);
-  }
-
-  async getDeploymentOverview(
-    command: GetDeploymentOverviewCommand,
-  ): Promise<DeploymentOverview> {
-    return this.deploymentAdapter.getDeploymentOverview(command);
   }
 
   async publishRecipes(
@@ -212,15 +188,15 @@ export class DeploymentsService {
     return this.deploymentAdapter.getDashboardKpi(command);
   }
 
-  async getDashboardOutdated(
-    command: GetDashboardOutdatedCommand,
-  ): Promise<DashboardOutdatedResponse> {
-    return this.deploymentAdapter.getDashboardOutdated(command);
-  }
-
   async getDashboardNonLive(
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse> {
     return this.deploymentAdapter.getDashboardNonLive(command);
+  }
+
+  async listActiveDistributedPackagesBySpace(
+    command: ListActiveDistributedPackagesBySpaceCommand,
+  ): Promise<ActiveDistributedPackagesByTarget[]> {
+    return this.deploymentAdapter.listActiveDistributedPackagesBySpace(command);
   }
 }

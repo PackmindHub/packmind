@@ -10,59 +10,94 @@ import {
   PMBox,
   PMIcon,
 } from '@packmind/ui';
-import { useGetDashboardOutdatedQuery } from '../../../deployments/api/queries/DeploymentsQueries';
+import { useListActiveDistributedPackagesBySpaceQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
+  ActiveDistributedPackage,
   TargetId,
   GitRepo,
-  DeployedRecipeTargetInfo,
-  DeployedStandardTargetInfo,
+  GitProviderId,
 } from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 
-// ---- Types & constants
 type RepoResult = {
   repoKey: string;
   title: string;
+  providerId: GitProviderId;
   targets: Array<{
     id: TargetId;
     title: string;
-    recipes: DeployedRecipeTargetInfo[];
-    standards: DeployedStandardTargetInfo[];
+    packages: ActiveDistributedPackage[];
   }>;
 };
+
+const isArtifactOutdated = (d: {
+  isUpToDate: boolean;
+  isDeleted?: boolean;
+}): boolean => !d.isUpToDate || !!d.isDeleted;
+
+const hasOutdatedArtifacts = (pkg: ActiveDistributedPackage): boolean =>
+  pkg.deployedRecipes.some(isArtifactOutdated) ||
+  pkg.deployedStandards.some(isArtifactOutdated) ||
+  pkg.deployedSkills.some(isArtifactOutdated) ||
+  pkg.pendingRecipes.length > 0 ||
+  pkg.pendingStandards.length > 0 ||
+  pkg.pendingSkills.length > 0;
 
 export const OutdatedTargetsSection: React.FC = () => {
   const { orgSlug } = useParams() as { orgSlug?: string };
   const { spaceId } = useCurrentSpace();
   const {
-    data: outdatedData,
+    data: overviewData,
     isLoading,
     isError,
     error,
-  } = useGetDashboardOutdatedQuery(spaceId ?? '');
+  } = useListActiveDistributedPackagesBySpaceQuery(spaceId);
+  const { data: gitProvidersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+  const providersWithToken = useMemo(() => {
+    const set = new Set<GitProviderId>();
+    gitProvidersResponse?.providers
+      .filter((provider) => provider.hasToken)
+      .forEach((provider) => set.add(provider.id));
+    return set;
+  }, [gitProvidersResponse]);
 
-  const reposWithTargets = useMemo(() => {
-    if (!outdatedData?.targets) return [];
+  const reposWithTargets = useMemo<RepoResult[]>(() => {
+    if (!overviewData) return [];
     type TargetValue = RepoResult['targets'][number];
     const repoMap = new Map<
       string,
-      { repoKey: string; title: string; targets: Map<TargetId, TargetValue> }
+      {
+        repoKey: string;
+        title: string;
+        providerId: GitProviderId;
+        targets: Map<TargetId, TargetValue>;
+      }
     >();
 
-    for (const t of outdatedData.targets) {
+    for (const t of overviewData) {
+      if (!t.gitRepo) continue;
+      const outdatedPackages = t.packages.filter(hasOutdatedArtifacts);
+      if (outdatedPackages.length === 0) continue;
+
       const { key, title } = getRepoIdentity(t.gitRepo);
       let repo = repoMap.get(key);
       if (!repo) {
-        repo = { repoKey: key, title, targets: new Map() };
+        repo = {
+          repoKey: key,
+          title,
+          providerId: t.gitRepo.providerId,
+          targets: new Map(),
+        };
         repoMap.set(key, repo);
       }
       repo.targets.set(t.target.id, {
         id: t.target.id,
         title: t.target.name,
-        recipes: t.outdatedRecipes,
-        standards: t.outdatedStandards,
+        packages: outdatedPackages,
       });
     }
 
@@ -70,16 +105,17 @@ export const OutdatedTargetsSection: React.FC = () => {
       .map((r) => ({
         repoKey: r.repoKey,
         title: r.title,
+        providerId: r.providerId,
         targets: Array.from(r.targets.values()).sort((a, b) =>
           a.title.localeCompare(b.title),
         ),
       }))
       .sort((a, b) => a.title.localeCompare(b.title));
-  }, [outdatedData]);
+  }, [overviewData]);
 
   return (
     <PMPageSection
-      title="Outdated artifacts"
+      title="Outdated packages"
       headingLevel="h5"
       boxProps={{ padding: 0 }}
     >
@@ -145,10 +181,13 @@ export const OutdatedTargetsSection: React.FC = () => {
                       key={String(t.id)}
                       orgSlug={orgSlug}
                       target={{ id: t.id, name: t.title }}
-                      recipes={t.recipes}
-                      standards={t.standards}
-                      skills={[]}
-                      mode="outdated"
+                      packageGroups={t.packages}
+                      mode="all"
+                      canDistributeFromApp={
+                        !isProvidersLoading &&
+                        providersWithToken.has(repo.providerId)
+                      }
+                      isDistributeReadinessLoading={isProvidersLoading}
                     />
                   ))}
                 </PMVStack>
@@ -161,7 +200,6 @@ export const OutdatedTargetsSection: React.FC = () => {
   );
 };
 
-// ---- Pure helpers
 const getRepoIdentity = (gitRepo: GitRepo) => {
   const title = `${gitRepo.owner}/${gitRepo.repo}:${gitRepo.branch}`;
   const key = gitRepo.id || title;
