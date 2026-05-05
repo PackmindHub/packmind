@@ -55,7 +55,11 @@ export const UserAvatarWithInitials: React.FC<UserAvatarWithInitialsProps> = ({
 
   return (
     <PMTooltip label={displayName} placement="top">
-      <span style={{ display: 'inline-flex' }}>
+      <span
+        style={{ display: 'inline-flex' }}
+        data-testid="user-avatar"
+        aria-label={displayName}
+      >
         <PMAvatar.Root size={size} colorPalette={color}>
           <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
           <PMAvatar.Image src="" alt={displayName} />
