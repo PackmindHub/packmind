@@ -15,8 +15,6 @@ export const SpaceAdminsCell: React.FC<SpaceAdminsCellProps> = ({ admins }) => {
   }
 
   const visible = admins.slice(0, MAX_VISIBLE_AVATARS);
-  const isSingle = admins.length === 1;
-  const label = isSingle ? admins[0].displayName : `${admins.length} admins`;
 
   return (
     <PMHStack gap={2} align="center">
@@ -29,7 +27,6 @@ export const SpaceAdminsCell: React.FC<SpaceAdminsCellProps> = ({ admins }) => {
           />
         ))}
       </PMHStack>
-      <PMText color="secondary">{label}</PMText>
     </PMHStack>
   );
 };
