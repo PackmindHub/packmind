@@ -1445,21 +1445,22 @@ export class DistributionRepository implements IDistributionRepository {
     });
 
     try {
-      const distributions = await this.repository
+      type LatestRow = {
+        distributedPackageId: string;
+        targetId: TargetId;
+        targetName: string;
+        gitRepoId: string;
+        deploymentDate: string;
+      };
+
+      // Latest successful 'add' distribution per (target, package) within the space.
+      // DISTINCT ON collapses history to one row per pair at the SQL layer, so we
+      // never hydrate the heavy version content for older distributions.
+      const latestRows = await this.repository
         .createQueryBuilder('distribution')
-        .leftJoinAndSelect(
-          'distribution.distributedPackages',
-          'distributedPackage',
-        )
-        .leftJoinAndSelect(
-          'distributedPackage.standardVersions',
-          'standardVersion',
-        )
-        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
-        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
-        .leftJoinAndSelect('distributedPackage.package', 'package')
-        .leftJoinAndSelect('distribution.target', 'target')
-        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
+        .innerJoin('distribution.distributedPackages', 'distributedPackage')
+        .innerJoin('distributedPackage.package', 'package')
+        .innerJoin('distribution.target', 'target')
         .where('distribution.organizationId = :organizationId', {
           organizationId,
         })
@@ -1467,133 +1468,195 @@ export class DistributionRepository implements IDistributionRepository {
           status: DistributionStatus.success,
         })
         .andWhere('package.spaceId = :spaceId', { spaceId })
-        .orderBy('distribution.createdAt', 'DESC')
-        .getMany();
+        .andWhere('distributedPackage.operation = :operation', {
+          operation: 'add',
+        })
+        .distinctOn(['distribution.target_id', 'distributedPackage.package_id'])
+        .orderBy('distribution.target_id')
+        .addOrderBy('distributedPackage.package_id')
+        .addOrderBy('distribution.createdAt', 'DESC')
+        .select('distributedPackage.id', 'distributedPackageId')
+        .addSelect('distribution.target_id', 'targetId')
+        .addSelect('target.name', 'targetName')
+        .addSelect('target.git_repo_id', 'gitRepoId')
+        .addSelect('distribution.createdAt', 'deploymentDate')
+        .getRawMany<LatestRow>();
 
-      // Group distributions by target, then track latest operation per package per target.
-      // Distributions are ordered by createdAt DESC, so the first occurrence of any
-      // (target, package) pair is the latest.
-      const targetData = new Map<
-        string,
-        {
-          targetName: string;
-          gitRepoId: string;
-          latestPerPackage: Map<
-            string,
-            {
-              operation: string;
-              deploymentDate: string;
-              standardVersions: StandardVersion[];
-              recipeVersions: RecipeVersion[];
-              skillVersions: SkillVersion[];
-            }
-          >;
-        }
-      >();
-
-      for (const distribution of distributions) {
-        const tId = distribution.target.id as string;
-
-        if (!targetData.has(tId)) {
-          targetData.set(tId, {
-            targetName: distribution.target.name,
-            gitRepoId: distribution.target.gitRepoId as string,
-            latestPerPackage: new Map(),
-          });
-        }
-
-        const target = targetData.get(tId)!;
-
-        for (const dp of distribution.distributedPackages) {
-          if (!target.latestPerPackage.has(dp.packageId)) {
-            target.latestPerPackage.set(dp.packageId, {
-              operation: dp.operation ?? 'add',
-              deploymentDate: toIsoString(distribution.createdAt),
-              standardVersions: dp.standardVersions,
-              recipeVersions: dp.recipeVersions,
-              skillVersions: dp.skillVersions,
-            });
-          }
-        }
+      if (latestRows.length === 0) {
+        this.logger.info('Outdated deployments found by space', {
+          organizationId,
+          spaceId,
+          targetCount: 0,
+        });
+        return [];
       }
 
-      // Build result: extract version snapshots from active packages, dedup by artifact ID
+      const distributedPackageIds = latestRows.map(
+        (row) => row.distributedPackageId,
+      );
+      const dpById = new Map(
+        latestRows.map((row) => [row.distributedPackageId, row]),
+      );
+
+      type StandardVersionRow = {
+        distributedPackageId: string;
+        standardId: StandardId;
+        name: string;
+        slug: string;
+        version: number;
+      };
+      type RecipeVersionRow = {
+        distributedPackageId: string;
+        recipeId: RecipeId;
+        name: string;
+        slug: string;
+        version: number;
+      };
+      type SkillVersionRow = {
+        distributedPackageId: string;
+        skillId: SkillId;
+        name: string;
+        slug: string;
+        version: number;
+      };
+
+      // Slim version metadata pulled from the pivot tables. Three focused
+      // queries keep each join flat (no Cartesian product across the three
+      // version types) and reuse the same Distribution-bound QueryBuilder.
+      const [standardRows, recipeRows, skillRows] = await Promise.all([
+        this.repository
+          .createQueryBuilder('distribution')
+          .innerJoin('distribution.distributedPackages', 'distributedPackage')
+          .innerJoin('distributedPackage.standardVersions', 'standardVersion')
+          .where('distributedPackage.id IN (:...ids)', {
+            ids: distributedPackageIds,
+          })
+          .select('distributedPackage.id', 'distributedPackageId')
+          .addSelect('standardVersion.standard_id', 'standardId')
+          .addSelect('standardVersion.name', 'name')
+          .addSelect('standardVersion.slug', 'slug')
+          .addSelect('standardVersion.version', 'version')
+          .getRawMany<StandardVersionRow>(),
+        this.repository
+          .createQueryBuilder('distribution')
+          .innerJoin('distribution.distributedPackages', 'distributedPackage')
+          .innerJoin('distributedPackage.recipeVersions', 'recipeVersion')
+          .where('distributedPackage.id IN (:...ids)', {
+            ids: distributedPackageIds,
+          })
+          .select('distributedPackage.id', 'distributedPackageId')
+          .addSelect('recipeVersion.recipe_id', 'recipeId')
+          .addSelect('recipeVersion.name', 'name')
+          .addSelect('recipeVersion.slug', 'slug')
+          .addSelect('recipeVersion.version', 'version')
+          .getRawMany<RecipeVersionRow>(),
+        this.repository
+          .createQueryBuilder('distribution')
+          .innerJoin('distribution.distributedPackages', 'distributedPackage')
+          .innerJoin('distributedPackage.skillVersions', 'skillVersion')
+          .where('distributedPackage.id IN (:...ids)', {
+            ids: distributedPackageIds,
+          })
+          .select('distributedPackage.id', 'distributedPackageId')
+          .addSelect('skillVersion.skill_id', 'skillId')
+          .addSelect('skillVersion.name', 'name')
+          .addSelect('skillVersion.slug', 'slug')
+          .addSelect('skillVersion.version', 'version')
+          .getRawMany<SkillVersionRow>(),
+      ]);
+
+      type TargetBucket = {
+        targetName: string;
+        gitRepoId: string;
+        standards: Map<string, OutdatedStandardDeployment>;
+        recipes: Map<string, OutdatedRecipeDeployment>;
+        skills: Map<string, OutdatedSkillDeployment>;
+      };
+
+      const targets = new Map<string, TargetBucket>();
+
+      const bucketFor = (row: LatestRow): TargetBucket => {
+        const tId = row.targetId as string;
+        const existing = targets.get(tId);
+        if (existing) return existing;
+        const created: TargetBucket = {
+          targetName: row.targetName,
+          gitRepoId: row.gitRepoId,
+          standards: new Map(),
+          recipes: new Map(),
+          skills: new Map(),
+        };
+        targets.set(tId, created);
+        return created;
+      };
+
+      // Seed buckets so targets with active packages but no artifacts still
+      // appear (the use case relies on per-target indexing).
+      for (const row of latestRows) {
+        bucketFor(row);
+      }
+
+      for (const sv of standardRows) {
+        const dp = dpById.get(sv.distributedPackageId);
+        if (!dp) continue;
+        const bucket = bucketFor(dp);
+        if (bucket.standards.has(sv.standardId)) continue;
+        bucket.standards.set(sv.standardId, {
+          artifactId: sv.standardId,
+          artifactName: sv.name,
+          artifactSlug: sv.slug,
+          deployedVersion: sv.version,
+          deploymentDate: toIsoString(dp.deploymentDate),
+          isDeleted: false,
+        });
+      }
+
+      for (const rv of recipeRows) {
+        const dp = dpById.get(rv.distributedPackageId);
+        if (!dp) continue;
+        const bucket = bucketFor(dp);
+        if (bucket.recipes.has(rv.recipeId)) continue;
+        bucket.recipes.set(rv.recipeId, {
+          artifactId: rv.recipeId,
+          artifactName: rv.name,
+          artifactSlug: rv.slug,
+          deployedVersion: rv.version,
+          deploymentDate: toIsoString(dp.deploymentDate),
+          isDeleted: false,
+        });
+      }
+
+      for (const sv of skillRows) {
+        const dp = dpById.get(sv.distributedPackageId);
+        if (!dp) continue;
+        const bucket = bucketFor(dp);
+        if (bucket.skills.has(sv.skillId)) continue;
+        bucket.skills.set(sv.skillId, {
+          artifactId: sv.skillId,
+          artifactName: sv.name,
+          artifactSlug: sv.slug,
+          deployedVersion: sv.version,
+          deploymentDate: toIsoString(dp.deploymentDate),
+          isDeleted: false,
+        });
+      }
+
       const result: OutdatedDeploymentsByTarget[] = [];
-
-      for (const [tId, data] of targetData) {
-        const standardMap = new Map<string, OutdatedStandardDeployment>();
-        const recipeMap = new Map<string, OutdatedRecipeDeployment>();
-        const skillMap = new Map<string, OutdatedSkillDeployment>();
-
-        for (const [, pkgData] of data.latestPerPackage) {
-          if (pkgData.operation === 'remove') {
-            continue;
-          }
-
-          for (const sv of pkgData.standardVersions) {
-            if (!standardMap.has(sv.standardId)) {
-              standardMap.set(sv.standardId, {
-                artifactId: sv.standardId,
-                artifactName: sv.name,
-                artifactSlug: sv.slug,
-                deployedVersion: sv.version,
-                deploymentDate: pkgData.deploymentDate,
-                isDeleted: false,
-                description: sv.description,
-                scope: sv.scope ?? null,
-                summary: sv.summary ?? null,
-                userId: sv.userId ?? null,
-              });
-            }
-          }
-
-          for (const rv of pkgData.recipeVersions) {
-            if (!recipeMap.has(rv.recipeId)) {
-              recipeMap.set(rv.recipeId, {
-                artifactId: rv.recipeId,
-                artifactName: rv.name,
-                artifactSlug: rv.slug,
-                deployedVersion: rv.version,
-                deploymentDate: pkgData.deploymentDate,
-                isDeleted: false,
-                content: rv.content,
-                userId: rv.userId ?? null,
-              });
-            }
-          }
-
-          for (const sv of pkgData.skillVersions) {
-            if (!skillMap.has(sv.skillId)) {
-              skillMap.set(sv.skillId, {
-                artifactId: sv.skillId,
-                artifactName: sv.name,
-                artifactSlug: sv.slug,
-                deployedVersion: sv.version,
-                deploymentDate: pkgData.deploymentDate,
-                isDeleted: false,
-                description: sv.description,
-                prompt: sv.prompt,
-                userId: sv.userId,
-              });
-            }
-          }
-        }
-
+      for (const [tId, bucket] of targets) {
         if (
-          standardMap.size === 0 &&
-          recipeMap.size === 0 &&
-          skillMap.size === 0
+          bucket.standards.size === 0 &&
+          bucket.recipes.size === 0 &&
+          bucket.skills.size === 0
         ) {
           continue;
         }
-
         result.push({
           targetId: tId as TargetId,
-          targetName: data.targetName,
-          gitRepoId: data.gitRepoId,
-          standards: Array.from(standardMap.values()),
-          recipes: Array.from(recipeMap.values()),
-          skills: Array.from(skillMap.values()),
+          targetName: bucket.targetName,
+          gitRepoId: bucket.gitRepoId,
+          standards: Array.from(bucket.standards.values()),
+          recipes: Array.from(bucket.recipes.values()),
+          skills: Array.from(bucket.skills.values()),
         });
       }
 

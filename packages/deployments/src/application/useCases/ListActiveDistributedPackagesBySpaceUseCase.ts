@@ -9,6 +9,7 @@ import {
   createRecipeVersionId,
   createSkillVersionId,
   createStandardVersionId,
+  createUserId,
   DeployedRecipeTargetInfo,
   DeployedSkillTargetInfo,
   DeployedStandardTargetInfo,
@@ -301,9 +302,9 @@ function buildDeployedStandardInfo(
   const baseId = standard?.id ?? deployment.artifactId;
   const name = standard?.name ?? deployment.artifactName;
   const slug = standard?.slug ?? deployment.artifactSlug;
-  const description = standard?.description ?? deployment.description;
-  const userId = standard?.userId ?? deployment.userId;
-  const scope = standard?.scope ?? deployment.scope;
+  const description = standard?.description ?? '';
+  const userId = standard?.userId ?? null;
+  const scope = standard?.scope ?? null;
   const latestVersionNumber = standard?.version ?? deployment.deployedVersion;
   const isDeleted = !standard;
   const isUpToDate =
@@ -316,7 +317,7 @@ function buildDeployedStandardInfo(
     slug,
     version,
     description,
-    summary: deployment.summary ?? null,
+    summary: null,
     userId,
     scope,
   });
@@ -348,8 +349,8 @@ function buildDeployedRecipeInfo(
   const baseId = recipe?.id ?? deployment.artifactId;
   const name = recipe?.name ?? deployment.artifactName;
   const slug = recipe?.slug ?? deployment.artifactSlug;
-  const content = recipe?.content ?? deployment.content;
-  const userId = recipe?.userId ?? deployment.userId;
+  const content = recipe?.content ?? '';
+  const userId = recipe?.userId ?? null;
   const latestVersionNumber = recipe?.version ?? deployment.deployedVersion;
   const isDeleted = !recipe;
   const isUpToDate =
@@ -391,9 +392,9 @@ function buildDeployedSkillInfo(
   const baseId = skill?.id ?? deployment.artifactId;
   const name = skill?.name ?? deployment.artifactName;
   const slug = skill?.slug ?? deployment.artifactSlug;
-  const description = skill?.description ?? deployment.description;
-  const prompt = skill?.prompt ?? deployment.prompt;
-  const userId = skill?.userId ?? deployment.userId;
+  const description = skill?.description ?? '';
+  const prompt = skill?.prompt ?? '';
+  const userId = skill?.userId ?? createUserId('');
   const latestVersionNumber = skill?.version ?? deployment.deployedVersion;
   const isDeleted = !skill;
   const isUpToDate =

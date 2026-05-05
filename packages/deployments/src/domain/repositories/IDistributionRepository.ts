@@ -14,7 +14,6 @@ import {
   StandardVersion,
   TargetId,
   RenderMode,
-  UserId,
 } from '@packmind/types';
 
 export interface IDistributionRepository {
@@ -218,23 +217,14 @@ type OutdatedDeploymentBase = {
 
 export type OutdatedStandardDeployment = OutdatedDeploymentBase & {
   artifactId: StandardId;
-  description: string;
-  scope: string | null;
-  summary: string | null;
-  userId: UserId | null;
 };
 
 export type OutdatedRecipeDeployment = OutdatedDeploymentBase & {
   artifactId: RecipeId;
-  content: string;
-  userId: UserId | null;
 };
 
 export type OutdatedSkillDeployment = OutdatedDeploymentBase & {
   artifactId: SkillId;
-  description: string;
-  prompt: string;
-  userId: UserId;
 };
 
 export type OutdatedDeploymentsByTarget = {
