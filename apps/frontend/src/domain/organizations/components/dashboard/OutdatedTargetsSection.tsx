@@ -20,6 +20,7 @@ import {
 } from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
+import { OutdatedDistributeBanner } from '../../../deployments/components/OutdatedDistributeBanner/OutdatedDistributeBanner';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 
 type RepoResult = {
@@ -158,6 +159,7 @@ export const OutdatedTargetsSection: React.FC = () => {
 
       {!isLoading && !isError && reposWithTargets.length > 0 && (
         <PMVStack gap={4} align="stretch" width="full">
+          <OutdatedDistributeBanner entries={overviewData ?? []} />
           {reposWithTargets.map((repo) => {
             return (
               <PMVStack

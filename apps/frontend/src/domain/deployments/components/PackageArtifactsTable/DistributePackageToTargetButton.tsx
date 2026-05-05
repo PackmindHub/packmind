@@ -1,5 +1,12 @@
 import React from 'react';
-import { PMButton, PMText, PMTooltip, pmToaster, PMIcon } from '@packmind/ui';
+import {
+  PMButton,
+  PMText,
+  PMTooltip,
+  pmToaster,
+  PMIcon,
+  PMHStack,
+} from '@packmind/ui';
 import { PackageId, TargetId } from '@packmind/types';
 import { useDeployPackage } from '../../hooks/useDeployPackage';
 import { createPackagesDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
@@ -69,9 +76,14 @@ export const DistributePackageToTargetButton: React.FC<
 
   if (!hasOutdatedArtifacts) {
     return (
-      <PMIcon color="text.success">
-        <LuCircleCheckBig />
-      </PMIcon>
+      <PMHStack gap={1} align="center" justifyContent="center">
+        <PMIcon color="text.success">
+          <LuCircleCheckBig />
+        </PMIcon>
+        <PMText color="success" variant="body-important">
+          Up-to-date
+        </PMText>
+      </PMHStack>
     );
   }
 
