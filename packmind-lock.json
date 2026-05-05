@@ -18,6 +18,34 @@
     "packmind"
   ],
   "artifacts": {
+    "command:resume-handoff": {
+      "name": "Resume handoff",
+      "type": "command",
+      "id": "05c8b199-25d7-4cf6-9fe5-4835e1e3ae5e",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "files": [
+        {
+          "path": ".packmind/commands/resume-handoff.md",
+          "agent": "packmind"
+        },
+        {
+          "path": ".github/prompts/resume-handoff.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".claude/commands/resume-handoff.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/commands/resume-handoff.md",
+          "agent": "cursor"
+        }
+      ]
+    },
     "command:creating-end-user-documentation-for-packmind": {
       "name": "Creating End-User Documentation for Packmind",
       "type": "command",
@@ -42,34 +70,6 @@
         },
         {
           "path": ".cursor/commands/creating-end-user-documentation-for-packmind.md",
-          "agent": "cursor"
-        }
-      ]
-    },
-    "command:update-handoff": {
-      "name": "Update Handoff",
-      "type": "command",
-      "id": "fc2294fd-2bcd-4b09-a610-8dbad8459276",
-      "version": 1,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": [
-        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
-      ],
-      "files": [
-        {
-          "path": ".packmind/commands/update-handoff.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/update-handoff.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/commands/update-handoff.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/update-handoff.md",
           "agent": "cursor"
         }
       ]
@@ -102,10 +102,10 @@
         }
       ]
     },
-    "command:resume-handoff": {
-      "name": "Resume handoff",
+    "command:update-handoff": {
+      "name": "Update Handoff",
       "type": "command",
-      "id": "05c8b199-25d7-4cf6-9fe5-4835e1e3ae5e",
+      "id": "fc2294fd-2bcd-4b09-a610-8dbad8459276",
       "version": 1,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": [
@@ -113,19 +113,19 @@
       ],
       "files": [
         {
-          "path": ".packmind/commands/resume-handoff.md",
+          "path": ".packmind/commands/update-handoff.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/prompts/resume-handoff.prompt.md",
+          "path": ".github/prompts/update-handoff.prompt.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/commands/resume-handoff.md",
+          "path": ".claude/commands/update-handoff.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/commands/resume-handoff.md",
+          "path": ".cursor/commands/update-handoff.md",
           "agent": "cursor"
         }
       ]
@@ -158,10 +158,10 @@
         }
       ]
     },
-    "command:create-or-update-model-and-typeorm-schemas": {
-      "name": "Create or update model and TypeORM schemas",
+    "command:repository-implementation-and-testing-pattern": {
+      "name": "Repository Implementation and Testing Pattern",
       "type": "command",
-      "id": "d63a7443-51c4-4c08-8afc-1027f37215c7",
+      "id": "44474dab-be7d-4d3d-85ee-6f91f0a93410",
       "version": 2,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
@@ -169,19 +169,19 @@
       ],
       "files": [
         {
-          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
+          "path": ".packmind/commands/repository-implementation-and-testing-pattern.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
+          "path": ".github/prompts/repository-implementation-and-testing-pattern.prompt.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
+          "path": ".claude/commands/repository-implementation-and-testing-pattern.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/commands/create-or-update-model-and-typeorm-schemas.md",
+          "path": ".cursor/commands/repository-implementation-and-testing-pattern.md",
           "agent": "cursor"
         }
       ]
@@ -214,10 +214,10 @@
         }
       ]
     },
-    "command:repository-implementation-and-testing-pattern": {
-      "name": "Repository Implementation and Testing Pattern",
+    "command:create-or-update-model-and-typeorm-schemas": {
+      "name": "Create or update model and TypeORM schemas",
       "type": "command",
-      "id": "44474dab-be7d-4d3d-85ee-6f91f0a93410",
+      "id": "d63a7443-51c4-4c08-8afc-1027f37215c7",
       "version": 2,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
@@ -225,19 +225,19 @@
       ],
       "files": [
         {
-          "path": ".packmind/commands/repository-implementation-and-testing-pattern.md",
+          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "packmind"
         },
         {
-          "path": ".github/prompts/repository-implementation-and-testing-pattern.prompt.md",
+          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
           "agent": "copilot"
         },
         {
-          "path": ".claude/commands/repository-implementation-and-testing-pattern.md",
+          "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "claude"
         },
         {
-          "path": ".cursor/commands/repository-implementation-and-testing-pattern.md",
+          "path": ".cursor/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "cursor"
         }
       ]
