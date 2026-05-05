@@ -3,16 +3,14 @@ import {
   PMAlert,
   PMBox,
   PMCombobox,
+  pmCreateListCollection,
   PMEmptyState,
-  PMHStack,
-  PMInput,
   PMPortal,
   PMSpinner,
   PMTableRow,
+  pmUseFilter,
   PMVStack,
   SortDirection,
-  pmCreateListCollection,
-  pmUseFilter,
 } from '@packmind/ui';
 import {
   useGetOrganizationSpacesForManagementQuery,
@@ -34,6 +32,7 @@ import {
 
 const SPACE_COLUMNS: ItemsListingColumn[] = [
   { key: 'name', header: 'Name', grow: true, sortKey: 'name' },
+  { key: 'visibility', header: 'Visibility', sortKey: 'visibility' },
   { key: 'admins', header: 'Admins', width: '320px' },
   {
     key: 'membersCount',
@@ -149,6 +148,9 @@ function sortSpaces(
           direction *
           a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
         );
+      case 'visibility':
+        return direction * a.type.localeCompare(b.type);
+
       case 'membersCount':
         return direction * ((a.membersCount ?? 0) - (b.membersCount ?? 0));
       case 'artifactsCount':
@@ -299,6 +301,7 @@ export const SpacesManagementPage: React.FC = () => {
           isDefaultSpace={space.isDefaultSpace}
         />,
       ),
+      visibility: wrap(<>{space.type}</>),
       admins: wrap(<SpaceAdminsCell admins={space.admins} />),
       membersCount: wrap(formatCount(space.membersCount)),
       artifactsCount: wrap(formatCount(space.artifactsCount)),
