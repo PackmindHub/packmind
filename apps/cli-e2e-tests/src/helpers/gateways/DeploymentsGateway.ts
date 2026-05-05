@@ -1,9 +1,5 @@
 import { PackmindHttpClient } from './PackmindHttpClient';
-import {
-  Gateway,
-  IGetDeploymentOverview,
-  IGetTargetsByOrganizationUseCase,
-} from '@packmind/types';
+import { Gateway, IGetTargetsByOrganizationUseCase } from '@packmind/types';
 import { IDeploymentsGateway } from '../IPackmindGateway';
 
 export class DeploymentsGateway implements IDeploymentsGateway {
@@ -16,13 +12,4 @@ export class DeploymentsGateway implements IDeploymentsGateway {
         `/api/v0/organizations/${organizationId}/deployments/targets`,
       );
     };
-
-  getRecipeDeploymentOverview: Gateway<IGetDeploymentOverview> = async ({
-    spaceId,
-  }) => {
-    const organizationId = this.httpClient.getOrganizationId();
-    return this.httpClient.request(
-      `/api/v0/organizations/${organizationId}/deployments/recipes/overview?spaceId=${spaceId}`,
-    );
-  };
 }

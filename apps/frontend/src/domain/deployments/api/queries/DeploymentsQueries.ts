@@ -33,13 +33,11 @@ import { deploymentsGateways } from '../gateways';
 import {
   DeploymentQueryKeys,
   GET_PACKAGE_BY_ID_KEY,
-  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_RENDER_MODE_CONFIGURATION_KEY,
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-  GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_TARGETS_BY_REPOSITORY_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
+  LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DISTRIBUTIONS_KEY,
@@ -47,11 +45,7 @@ import {
   LIST_SKILL_DISTRIBUTIONS_KEY,
   REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
-  getRecipesDeploymentOverviewKey,
-  getStandardsDeploymentOverviewKey,
-  getSkillsDeploymentOverviewKey,
   getDashboardKpiKey,
-  getDashboardOutdatedKey,
   getDashboardNonLiveKey,
 } from '../queryKeys';
 
@@ -92,6 +86,33 @@ export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
       });
     },
     enabled: !!organization?.id,
+  });
+};
+
+export const useListActiveDistributedPackagesBySpaceQuery = (
+  spaceId: SpaceId | undefined,
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [...LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY, spaceId],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch active distributed packages',
+        );
+      }
+      if (!spaceId) {
+        throw new Error(
+          'Space ID is required to fetch active distributed packages',
+        );
+      }
+      return deploymentsGateways.listActiveDistributedPackagesBySpace({
+        organizationId: organization.id,
+        spaceId,
+      });
+    },
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 
@@ -237,66 +258,6 @@ export const useGetPackageByIdQuery = (
   });
 };
 
-export const useGetRecipesDeploymentOverviewQuery = (spaceId: string) => {
-  const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: getRecipesDeploymentOverviewKey(spaceId),
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error(
-          'Organization ID is required to fetch recipes deployment overview',
-        );
-      }
-      return deploymentsGateways.getRecipesDeploymentOverview({
-        organizationId: organization.id,
-        spaceId: createSpaceId(spaceId),
-      });
-    },
-    enabled: !!organization?.id && !!spaceId,
-  });
-};
-
-export const useGetStandardsDeploymentOverviewQuery = (spaceId: string) => {
-  const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: getStandardsDeploymentOverviewKey(spaceId),
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error(
-          'Organization ID is required to fetch standards deployment overview',
-        );
-      }
-      return deploymentsGateways.getStandardsDeploymentOverview({
-        organizationId: organization.id,
-        spaceId: createSpaceId(spaceId),
-      });
-    },
-    enabled: !!organization?.id && !!spaceId,
-  });
-};
-
-export const useGetSkillsDeploymentOverviewQuery = (spaceId: string) => {
-  const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: getSkillsDeploymentOverviewKey(spaceId),
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error(
-          'Organization ID is required to fetch skills deployment overview',
-        );
-      }
-      return deploymentsGateways.getSkillsDeploymentOverview({
-        organizationId: organization.id,
-        spaceId: createSpaceId(spaceId),
-      });
-    },
-    enabled: !!organization?.id && !!spaceId,
-  });
-};
-
 export const useGetDashboardKpiQuery = (spaceId: string) => {
   const { organization } = useAuthContext();
 
@@ -307,26 +268,6 @@ export const useGetDashboardKpiQuery = (spaceId: string) => {
         throw new Error('Organization ID is required to fetch dashboard KPI');
       }
       return deploymentsGateways.getDashboardKpi({
-        organizationId: organization.id,
-        spaceId: createSpaceId(spaceId),
-      });
-    },
-    enabled: !!organization?.id && !!spaceId,
-  });
-};
-
-export const useGetDashboardOutdatedQuery = (spaceId: string) => {
-  const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: getDashboardOutdatedKey(spaceId),
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error(
-          'Organization ID is required to fetch dashboard outdated',
-        );
-      }
-      return deploymentsGateways.getDashboardOutdated({
         organizationId: organization.id,
         spaceId: createSpaceId(spaceId),
       });
@@ -383,20 +324,15 @@ export const useDeployRecipesMutation = () => {
       });
     },
     onSuccess: async () => {
-      // We need to invalidate queries, but we don't have recipeIds directly
-      // For now, we'll invalidate all recipes queries
       await queryClient.invalidateQueries({
         queryKey: LIST_RECIPE_DEPLOYMENTS_KEY,
       });
-
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
-
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
-      // If we have specific recipe IDs in the future, we can invalidate them individually
     },
     onError: async (error, variables, context) => {
       console.error('Error publishing recipes to git');
@@ -432,12 +368,11 @@ export const useDeployStandardsMutation = () => {
       });
     },
     onSuccess: async () => {
-      // Invalidate standard distributions queries
       await queryClient.invalidateQueries({
         queryKey: LIST_STANDARD_DISTRIBUTIONS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
@@ -493,13 +428,7 @@ export const useDeployPackagesMutation = () => {
           query.queryKey.includes(DeploymentQueryKeys.LIST_PACKAGE_DEPLOYMENTS),
       });
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
@@ -584,13 +513,7 @@ export const useAddTargetMutation = () => {
 
       // Invalidate all deployment overviews (new target available for all)
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       pmToaster.create({
@@ -637,13 +560,7 @@ export const useUpdateTargetMutation = () => {
       });
 
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       pmToaster.create({
@@ -690,13 +607,7 @@ export const useDeleteTargetMutation = () => {
       });
 
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
 
       pmToaster.create({
@@ -883,13 +794,7 @@ export const useRemovePackageFromTargetsMutation = () => {
           query.queryKey.includes(DeploymentQueryKeys.LIST_PACKAGE_DEPLOYMENTS),
       });
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
       await invalidateChangeProposalQueries(queryClient);
     },

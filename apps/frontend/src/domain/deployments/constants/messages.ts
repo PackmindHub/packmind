@@ -38,6 +38,11 @@ export const PACKAGE_MESSAGES = {
     cancelButtonLabel: 'Cancel',
     backButtonLabel: 'Back',
   },
+  distribution: {
+    notConfigured:
+      'This target is not configured for in-app distribution. Use packmind-cli to distribute.',
+    upToDate: 'This package is up to date',
+  },
 } as const;
 
 // Type for message categories

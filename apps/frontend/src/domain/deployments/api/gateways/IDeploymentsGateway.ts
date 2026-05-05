@@ -1,14 +1,12 @@
 import { NewGateway } from '@packmind/types';
 import {
-  IGetDeploymentOverview,
   IGetPackageByIdUseCase,
-  IGetStandardDeploymentOverview,
-  IGetSkillDeploymentOverview,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
   IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
+  IListActiveDistributedPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
@@ -24,7 +22,6 @@ import {
   IUpdateRenderModeConfigurationUseCase,
   IRemovePackageFromTargetsUseCase,
   IGetDashboardKpi,
-  IGetDashboardOutdated,
   IGetDashboardNonLive,
 } from '@packmind/types';
 
@@ -38,9 +35,6 @@ export interface IDeploymentsGateway {
   updatePackage: NewGateway<IUpdatePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
-  getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview>;
-  getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview>;
-  getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview>;
   publishRecipes: NewGateway<IPublishRecipes>;
   publishStandards: NewGateway<IPublishStandards>;
   publishPackages: NewGateway<IPublishPackages>;
@@ -53,6 +47,6 @@ export interface IDeploymentsGateway {
   updateRenderModeConfiguration: NewGateway<IUpdateRenderModeConfigurationUseCase>;
   removePackageFromTargets: NewGateway<IRemovePackageFromTargetsUseCase>;
   getDashboardKpi: NewGateway<IGetDashboardKpi>;
-  getDashboardOutdated: NewGateway<IGetDashboardOutdated>;
   getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
+  listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase>;
 }

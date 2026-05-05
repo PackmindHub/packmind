@@ -7,14 +7,12 @@ import {
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
-  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
   DeleteTargetResponse,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
-  DeploymentOverview,
   DownloadDefaultSkillsZipForAgentCommand,
   DownloadDefaultSkillsZipForAgentResponse,
   DownloadSkillZipForAgentCommand,
@@ -25,18 +23,14 @@ import {
   GetContentByVersionsResponse,
   GetDashboardKpiCommand,
   GetDashboardNonLiveCommand,
-  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
-  GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
   GetPackageSummaryCommand,
   GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
-  GetStandardDeploymentOverviewCommand,
-  GetSkillDeploymentOverviewCommand,
   GetTargetsByGitRepoCommand,
   GetTargetByIdCommand,
   GetTargetByIdResponse,
@@ -45,6 +39,9 @@ import {
   InstallPackagesCommand,
   InstallPackagesResponse,
   IPullContentResponse,
+  IListActiveDistributedPackagesBySpaceUseCase,
+  ListActiveDistributedPackagesBySpaceCommand,
+  ListActiveDistributedPackagesBySpaceResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -71,8 +68,6 @@ import {
 import { Distribution } from '../Distribution';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
-import { StandardDeploymentOverview } from '../StandardDeploymentOverview';
-import { SkillDeploymentOverview } from '../SkillDeploymentOverview';
 import { Target } from '../Target';
 import { TargetWithRepository } from '../TargetWithRepository';
 
@@ -89,21 +84,6 @@ export interface IDeploymentPort {
   findActiveStandardVersionsByTarget(
     command: FindActiveStandardVersionsByTargetCommand,
   ): Promise<FindActiveStandardVersionsByTargetResponse>;
-
-  /**
-   * Gets deployment overview for an organization
-   *
-   * Provides a comprehensive view of deployment status across all repositories
-   * and recipes for the specified organization, including:
-   * - Repository-centric view: which recipes are deployed where and if they're up-to-date
-   * - Recipe-centric view: which repositories each recipe is deployed to and deployment status
-   *
-   * @param command - Command containing organizationId
-   * @returns Promise of DeploymentOverview with repositories and recipes deployment status
-   */
-  getDeploymentOverview(
-    command: GetDeploymentOverviewCommand,
-  ): Promise<DeploymentOverview>;
 
   /**
    * Publishes packages to specified targets
@@ -180,36 +160,6 @@ export interface IDeploymentPort {
   listDistributionsBySkill(
     command: ListDistributionsBySkillCommand,
   ): Promise<Distribution[]>;
-
-  /**
-   * Gets standard deployment overview for an organization
-   *
-   * Provides a comprehensive view of standard deployment status across all repositories
-   * for the specified organization, including:
-   * - Repository-centric view: which standards are deployed where and if they're up-to-date
-   * - Standard-centric view: which repositories each standard is deployed to and deployment status
-   *
-   * @param command - Command containing organizationId
-   * @returns Promise of StandardDeploymentOverview with repositories and standards deployment status
-   */
-  getStandardDeploymentOverview(
-    command: GetStandardDeploymentOverviewCommand,
-  ): Promise<StandardDeploymentOverview>;
-
-  /**
-   * Gets skills deployment overview for an organization
-   *
-   * Provides a comprehensive view of skills deployment status across all repositories
-   * for the specified organization, including:
-   * - Repository-centric view: which skills are deployed where and if they're up-to-date
-   * - Skill-centric view: which repositories each skill is deployed to and deployment status
-   *
-   * @param command - Command containing organizationId
-   * @returns Promise of SkillDeploymentOverview with repositories and skills deployment status
-   */
-  getSkillsDeploymentOverview(
-    command: GetSkillDeploymentOverviewCommand,
-  ): Promise<SkillDeploymentOverview>;
 
   /**
    * Creates a target for a git repository
@@ -570,11 +520,26 @@ export interface IDeploymentPort {
     command: GetDashboardKpiCommand,
   ): Promise<DashboardKpiResponse>;
 
-  getDashboardOutdated(
-    command: GetDashboardOutdatedCommand,
-  ): Promise<DashboardOutdatedResponse>;
-
   getDashboardNonLive(
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse>;
+
+  /**
+   * Lists active distributed packages grouped by target within a space.
+   *
+   * For each target that has at least one actively deployed package, returns the target ID
+   * and the list of package IDs that are currently active (last operation was 'add' with
+   * non-failure status, or 'remove' with failure status).
+   *
+   * @param command - Command containing spaceId and user/organization context
+   * @returns Promise of active distributed packages per target
+   */
+  listActiveDistributedPackagesBySpace(
+    command: ListActiveDistributedPackagesBySpaceCommand,
+  ): Promise<ListActiveDistributedPackagesBySpaceResponse>;
+
+  /**
+   * Exposes the typed use case instance for consumers that need the port-typed reference.
+   */
+  getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase;
 }
