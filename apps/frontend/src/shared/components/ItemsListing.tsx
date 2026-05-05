@@ -52,12 +52,8 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
   const [filteredItems, setFilteredItems] = React.useState<T[]>([]);
   const [sortedItems, setSortedItems] = React.useState<T[]>([]);
 
-  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
-    {
-      defaultSortKey: 'name',
-      defaultSortDirection: 'asc',
-    },
-  );
+  const { sortKey, sortDirection, handleSort, getSortDirection } =
+    useTableSort();
 
   React.useEffect(() => {
     const matchQuery = props.matchQuery ?? searchInName;
