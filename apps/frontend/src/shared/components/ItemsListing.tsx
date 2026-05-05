@@ -37,7 +37,7 @@ export type ItemsListingProps<T extends Item> = {
     sortDirection: SortDirection,
   ) => T[];
   matchQuery?: (searchQuery: string, item: T) => boolean;
-  searchQuery?: string;
+  filters?: React.ReactNode[];
 };
 
 function searchInName<T extends Item>(searchQuery: string, item: T) {
@@ -52,9 +52,6 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
   const [filteredItems, setFilteredItems] = React.useState<T[]>([]);
   const [sortedItems, setSortedItems] = React.useState<T[]>([]);
 
-  const effectiveSearchQuery =
-    props.searchQuery !== undefined ? props.searchQuery : searchQuery;
-
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
     {
       defaultSortKey: 'name',
@@ -67,22 +64,22 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
 
     setFilteredIds(
       props.items.reduce((acc, item) => {
-        if (matchQuery(effectiveSearchQuery, item)) {
+        if (matchQuery(searchQuery, item)) {
           acc.push(item.id);
         }
 
         return acc;
       }, [] as string[]),
     );
-  }, [effectiveSearchQuery, props.items, props.matchQuery]);
+  }, [searchQuery, props]);
 
   React.useEffect(() => {
     setFilteredItems(
       props.items.filter(
-        (item) => !effectiveSearchQuery || filteredIds.includes(item.id),
+        (item) => !searchQuery || filteredIds.includes(item.id),
       ),
     );
-  }, [filteredIds, props.items, effectiveSearchQuery]);
+  }, [filteredIds, props.items, searchQuery]);
 
   React.useEffect(() => {
     setSortedItems(props.sortItems(filteredItems, sortKey, sortDirection));
@@ -98,9 +95,7 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
 
   const selectAll = () => {
     setSelectedIds(
-      effectiveSearchQuery.length
-        ? filteredIds
-        : props.items.map((item) => item.id),
+      searchQuery.length ? filteredIds : props.items.map((item) => item.id),
     );
   };
 
@@ -147,15 +142,14 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
 
   return (
     <PMBox>
-      {props.searchQuery === undefined && (
-        <PMBox mb={4}>
-          <PMInput
-            placeholder="Search by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </PMBox>
-      )}
+      <PMHStack gap={2} mb={4}>
+        <PMInput
+          placeholder="Search by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {props.filters}
+      </PMHStack>
       <PMBox mb={2}>
         {props.batchActions?.length && (
           <PMHStack gap={2}>

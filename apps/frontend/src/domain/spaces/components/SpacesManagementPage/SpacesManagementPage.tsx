@@ -174,7 +174,6 @@ export const SpacesManagementPage: React.FC = () => {
   const { organization } = useAuthContext();
   const [page] = useState(1);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedAdminIds, setSelectedAdminIds] = useState<string[]>([]);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const orgId = organization?.id ?? '';
@@ -330,32 +329,27 @@ export const SpacesManagementPage: React.FC = () => {
 
   return (
     <PMVStack alignItems="stretch" gap={0} width="full">
-      <PMHStack gap={2} mb={4}>
-        <PMInput
-          placeholder="Search by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          size="sm"
-        />
-        <MultiFilterCombobox
-          items={adminItems}
-          value={selectedAdminIds}
-          onChange={setSelectedAdminIds}
-          placeholder="All admins"
-        />
-        <MultiFilterCombobox
-          items={memberItems}
-          value={selectedMemberIds}
-          onChange={setSelectedMemberIds}
-          placeholder="All members"
-        />
-      </PMHStack>
       <ItemsListing
         items={filteredItems}
-        searchQuery={searchQuery}
         columns={SPACE_COLUMNS}
         makeTableData={makeTableData}
         sortItems={sortSpaces}
+        filters={[
+          <MultiFilterCombobox
+            items={adminItems}
+            value={selectedAdminIds}
+            onChange={setSelectedAdminIds}
+            placeholder="All admins"
+            key={'admin-filter'}
+          />,
+          <MultiFilterCombobox
+            items={memberItems}
+            value={selectedMemberIds}
+            onChange={setSelectedMemberIds}
+            placeholder="All members"
+            key={'member-filter'}
+          />,
+        ]}
       />
       <SpaceManagementDrawer
         space={selectedSpace}
