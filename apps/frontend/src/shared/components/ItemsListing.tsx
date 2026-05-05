@@ -37,6 +37,7 @@ export type ItemsListingProps<T extends Item> = {
     sortDirection: SortDirection,
   ) => T[];
   matchQuery?: (searchQuery: string, item: T) => boolean;
+  filters?: React.ReactNode[];
 };
 
 function searchInName<T extends Item>(searchQuery: string, item: T) {
@@ -141,13 +142,14 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
 
   return (
     <PMBox>
-      <PMBox mb={4}>
+      <PMHStack gap={2} mb={4}>
         <PMInput
           placeholder="Search by name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-      </PMBox>
+        {props.filters}
+      </PMHStack>
       <PMBox mb={2}>
         {props.batchActions?.length && (
           <PMHStack gap={2}>
