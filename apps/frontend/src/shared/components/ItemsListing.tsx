@@ -47,39 +47,30 @@ function searchInName<T extends Item>(searchQuery: string, item: T) {
 export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedIds, setSelectedIds] = React.useState<T['id'][]>([]);
-  const [filteredIds, setFilteredIds] = React.useState<T['id'][]>([]);
-
-  const [filteredItems, setFilteredItems] = React.useState<T[]>([]);
-  const [sortedItems, setSortedItems] = React.useState<T[]>([]);
 
   const { sortKey, sortDirection, handleSort, getSortDirection } =
     useTableSort();
 
-  React.useEffect(() => {
-    const matchQuery = props.matchQuery ?? searchInName;
+  const {
+    items,
+    matchQuery: matchQueryProp,
+    sortItems,
+    filters,
+    batchActions,
+    columns: columnsProp,
+    makeTableData,
+  } = props;
 
-    setFilteredIds(
-      props.items.reduce((acc, item) => {
-        if (matchQuery(searchQuery, item)) {
-          acc.push(item.id);
-        }
-
-        return acc;
-      }, [] as string[]),
+  const filteredItems = React.useMemo(() => {
+    const matchQuery = matchQueryProp ?? searchInName;
+    return items.filter(
+      (item) => !searchQuery || matchQuery(searchQuery, item),
     );
-  }, [searchQuery, props]);
+  }, [searchQuery, items, matchQueryProp]);
 
-  React.useEffect(() => {
-    setFilteredItems(
-      props.items.filter(
-        (item) => !searchQuery || filteredIds.includes(item.id),
-      ),
-    );
-  }, [filteredIds, props.items, searchQuery]);
-
-  React.useEffect(() => {
-    setSortedItems(props.sortItems(filteredItems, sortKey, sortDirection));
-  }, [props, filteredItems, sortKey, sortDirection]);
+  const sortedItems = React.useMemo(() => {
+    return sortItems(filteredItems, sortKey, sortDirection);
+  }, [filteredItems, sortKey, sortDirection, sortItems]);
 
   const selectItem = (itemId: string) => {
     setSelectedIds((prev) => [...prev, itemId]);
@@ -91,7 +82,9 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
 
   const selectAll = () => {
     setSelectedIds(
-      searchQuery.length ? filteredIds : props.items.map((item) => item.id),
+      searchQuery.length
+        ? filteredItems.map((item) => item.id)
+        : items.map((item) => item.id),
     );
   };
 
@@ -99,11 +92,11 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
     setSelectedIds([]);
   };
 
-  const isAllSelected = selectedIds.length === props.items.length;
+  const isAllSelected = selectedIds.length === items.length;
   const isSomeSelected = selectedIds.length > 0;
 
   const columns: PMTableColumn[] = [];
-  if (props.batchActions?.length) {
+  if (batchActions?.length) {
     columns.push({
       key: 'select',
       header: (
@@ -125,7 +118,7 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
   }
 
   columns.push(
-    ...props.columns.map((col) => {
+    ...columnsProp.map((col) => {
       if (!col.sortKey) return col;
 
       return {
@@ -144,12 +137,12 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        {props.filters}
+        {filters}
       </PMHStack>
       <PMBox mb={2}>
-        {props.batchActions?.length && (
+        {batchActions?.length && (
           <PMHStack gap={2}>
-            {props.batchActions.map((Action, index) => {
+            {batchActions.map((Action, index) => {
               return (
                 <Action
                   selectedIds={selectedIds}
@@ -174,10 +167,10 @@ export function ItemsListing<T extends Item>(props: ItemsListingProps<T>) {
         data={sortedItems.map((item) => {
           const row: PMTableRow = {
             key: item.id,
-            ...props.makeTableData(item),
+            ...makeTableData(item),
           };
 
-          if (props.batchActions?.length) {
+          if (batchActions?.length) {
             row['select'] = (
               <PMCheckbox
                 checked={selectedIds.includes(item.id)}
