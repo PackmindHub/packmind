@@ -13,6 +13,7 @@ import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { SkillsHexa, skillsSchemas } from '@packmind/skills';
+import { TelemetryHexa } from '@packmind/telemetry';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
@@ -62,6 +63,7 @@ import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { PlaybookModule } from './organizations/playbook/playbook.module';
 import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
 import { TrialModule } from './trial/trial.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
@@ -119,6 +121,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         PlaybookChangeApplierHexa,
         CodingAgentHexa,
         DeploymentsHexa,
+        TelemetryHexa,
       ],
       services: [
         JobsService, // Infrastructure service for background jobs
@@ -134,6 +137,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     ImportLegacyModule,
     TrialModule,
     PublicSkillsModule,
+    TelemetryModule,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
@@ -144,6 +148,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       {
         path: 'skills',
         module: PublicSkillsModule,
+      },
+      {
+        path: 'telemetry',
+        module: TelemetryModule,
       },
       {
         path: 'organizations/:orgId',

@@ -41,7 +41,7 @@ export class TelemetryHexa extends BaseHexa<TelemetryHexaOpts, ITelemetryPort> {
 
     const repository: ITelemetryEventRepository =
       opts?.repository ??
-      new TelemetryEventRepository(Cache.getInstance().getRawClient());
+      new TelemetryEventRepository(() => Cache.getInstance().getRawClient());
 
     this.adapter = new TelemetryAdapter(repository);
     this.logger.info('TelemetryHexa construction completed');

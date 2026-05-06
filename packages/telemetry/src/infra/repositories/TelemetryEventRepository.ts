@@ -9,11 +9,25 @@ const KEY_PREFIX = 'telemetry:events:org:';
 const TTL_SECONDS = 14 * 24 * 60 * 60; // 14 days
 const MAX_BATCHES_PER_ORG = 1000;
 
+export type TelemetryRedisClient = Pick<
+  Redis,
+  'multi' | 'lrange' | 'lpush' | 'ltrim' | 'expire'
+>;
+
+export type TelemetryRedisProvider = () => TelemetryRedisClient;
+
 export class TelemetryEventRepository implements ITelemetryEventRepository {
+  private readonly resolveClient: TelemetryRedisProvider;
+
   constructor(
-    private readonly client: Redis,
+    clientOrProvider: TelemetryRedisClient | TelemetryRedisProvider,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+  ) {
+    this.resolveClient =
+      typeof clientOrProvider === 'function'
+        ? clientOrProvider
+        : () => clientOrProvider;
+  }
 
   async pushBatch(event: TelemetryEvent): Promise<void> {
     const key = this.buildKey(event.organizationId);
@@ -22,7 +36,7 @@ export class TelemetryEventRepository implements ITelemetryEventRepository {
       receivedAt: event.receivedAt.toISOString(),
     });
 
-    await this.client
+    await this.resolveClient()
       .multi()
       .lpush(key, serialized)
       .ltrim(key, 0, MAX_BATCHES_PER_ORG - 1)
@@ -43,7 +57,7 @@ export class TelemetryEventRepository implements ITelemetryEventRepository {
   ): Promise<TelemetryEvent[]> {
     const key = this.buildKey(organizationId);
     const safeLimit = Math.max(1, Math.min(limit, MAX_BATCHES_PER_ORG));
-    const raw = await this.client.lrange(key, 0, safeLimit - 1);
+    const raw = await this.resolveClient().lrange(key, 0, safeLimit - 1);
 
     return raw.map((entry) => this.deserialize(entry));
   }

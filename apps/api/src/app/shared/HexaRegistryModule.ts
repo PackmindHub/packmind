@@ -22,6 +22,7 @@ import { SkillsHexa } from '@packmind/skills';
 import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
+import { TelemetryHexa } from '@packmind/telemetry';
 import {
   IAccountsPort,
   ICodingAgentPort,
@@ -36,6 +37,7 @@ import {
   ISpacesManagementPort,
   ISpacesPort,
   IStandardsPort,
+  ITelemetryPort,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { ApiKeyServiceProvider } from './ApiKeyServiceProvider';
@@ -87,6 +89,7 @@ export const PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN =
   'PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER';
 export const PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN =
   'PLAYBOOK_CHANGE_APPLIER_ADAPTER';
+export const TELEMETRY_ADAPTER_TOKEN = 'TELEMETRY_ADAPTER';
 
 /**
  * NestJS Module for integrating HexaRegistry with dependency injection.
@@ -138,6 +141,7 @@ export class HexaRegistryModule {
         LLM_ADAPTER_TOKEN,
         PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
         PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN,
+        TELEMETRY_ADAPTER_TOKEN,
       ],
     };
   }
@@ -405,6 +409,21 @@ export class HexaRegistryModule {
           return playbookChangeApplierHexa.getAdapter();
         } catch {
           // PlaybookChangeApplierHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // Telemetry adapter
+    providers.push({
+      provide: TELEMETRY_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): ITelemetryPort | null => {
+        try {
+          const telemetryHexa = registry.get(TelemetryHexa);
+          return telemetryHexa.getAdapter();
+        } catch {
+          // TelemetryHexa not available
         }
         return null;
       },

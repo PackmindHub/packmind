@@ -26,6 +26,7 @@ import { SkillsHexa } from '@packmind/skills';
 import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
+import { TelemetryHexa } from '@packmind/telemetry';
 import { DataSource } from 'typeorm';
 import { apiHexaPlugins } from '@packmind/plugins';
 
@@ -84,6 +85,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       PlaybookChangeApplierHexa,
       CodingAgentHexa,
       DeploymentsHexa,
+      TelemetryHexa, // No cross-domain deps beyond AccountsHexa
       ...apiHexaPlugins,
     ],
     services: [JobsService, PackmindEventEmitterService],

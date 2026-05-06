@@ -14,6 +14,7 @@ import {
   LLM_ADAPTER_TOKEN,
   PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
   PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN,
+  TELEMETRY_ADAPTER_TOKEN,
 } from './HexaRegistryModule';
 
 /**
@@ -82,3 +83,4 @@ export const InjectPlaybookChangeManagementAdapter = () =>
   Inject(PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN);
 export const InjectPlaybookChangeApplierAdapter = () =>
   Inject(PLAYBOOK_CHANGE_APPLIER_ADAPTER_TOKEN);
+export const InjectTelemetryAdapter = () => Inject(TELEMETRY_ADAPTER_TOKEN);
