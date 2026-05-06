@@ -4,7 +4,8 @@
 
 - Support new Claude Code skill frontmatter fields: `when_to_use`, `paths`, and `shell` (validated to `bash` or `powershell`)
 - Added `--skip-installed-at` flag on `install` command to avoid merge issues when working with multiple branches.
-- Space admins can now configure space identity (name and color) from the space general settings page
+- Space admins can now configure space identity (name and color) from the space general settings page - Enterprise version only
+- Org admins can manage all spaces from a dedicated management page with search, filters, and per-space drawer - Enterprise version only
 
 ## Changed
 
