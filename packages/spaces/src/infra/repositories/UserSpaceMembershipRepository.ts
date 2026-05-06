@@ -4,6 +4,7 @@ import {
   UserId,
   SpaceId,
   UserSpaceRole,
+  WithSoftDelete,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { IUserSpaceMembershipRepository } from '../../domain/repositories/IUserSpaceMembershipRepository';
@@ -13,7 +14,7 @@ import { WithTimestamps, localDataSource } from '@packmind/node-utils';
 
 const origin = 'UserSpaceMembershipRepository';
 
-type MembershipEntity = WithTimestamps<UserSpaceMembership>;
+type MembershipEntity = WithSoftDelete<WithTimestamps<UserSpaceMembership>>;
 
 export class UserSpaceMembershipRepository implements IUserSpaceMembershipRepository {
   constructor(
@@ -223,6 +224,7 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
         .where('membership.userId = :userId', { userId })
         .andWhere('space.organizationId = :organizationId', { organizationId })
         .andWhere('space.deletedAt IS NULL')
+        .andWhere('membership.deletedAt IS NULL')
         .getMany();
 
       if (memberships.length === 0) {
@@ -277,6 +279,7 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
         .where('membership.userId = :userId', { userId })
         .andWhere('space.organizationId = :organizationId', { organizationId })
         .andWhere('space.deletedAt IS NULL')
+        .andWhere('membership.deletedAt IS NULL')
         .getMany();
 
       this.logger.info('Memberships found by user and organization', {
@@ -289,6 +292,178 @@ export class UserSpaceMembershipRepository implements IUserSpaceMembershipReposi
       this.logger.error('Failed to find memberships by user and organization', {
         userId,
         organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  > {
+    if (spaceIds.length === 0) {
+      return [];
+    }
+
+    this.logger.info('Finding admins for space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .innerJoin('users', 'u', 'u.id = m.user_id AND u.deleted_at IS NULL')
+        .select('m.space_id', 'spaceId')
+        .addSelect('u.id', 'userId')
+        .addSelect('u.display_name', 'displayName')
+        .addSelect('u.email', 'email')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .andWhere('m.role = :role', { role: UserSpaceRole.ADMIN })
+        .getRawMany<{
+          spaceId: SpaceId;
+          userId: UserId;
+          displayName: string | null;
+          email: string;
+        }>();
+
+      return rows.map((row) => ({
+        spaceId: row.spaceId,
+        user: {
+          id: row.userId,
+          displayName: row.displayName ?? row.email.split('@')[0],
+        },
+      }));
+    } catch (error) {
+      this.logger.error('Failed to find admins for space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Counting memberships by role for space IDs', {
+      spaceCount: spaceIds.length,
+      role,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .select('m.space_id', 'spaceId')
+        .addSelect('COUNT(*)', 'count')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .andWhere('m.role = :role', { role })
+        .groupBy('m.space_id')
+        .getRawMany<{ spaceId: SpaceId; count: string }>();
+
+      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
+    } catch (error) {
+      this.logger.error('Failed to count memberships by role for space IDs', {
+        role,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findMemberIdsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, UserId[]>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Finding member IDs for space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .select('m.space_id', 'spaceId')
+        .addSelect('m.user_id', 'userId')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .andWhere('m.deletedAt IS NULL')
+        .getRawMany<{ spaceId: SpaceId; userId: UserId }>();
+
+      const result = new Map<SpaceId, UserId[]>();
+      for (const row of rows) {
+        const list = result.get(row.spaceId) ?? [];
+        list.push(row.userId);
+        result.set(row.spaceId, list);
+      }
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to find member IDs for space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async countUsersForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, number>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Counting users for space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('m')
+        .select('m.space_id', 'spaceId')
+        .addSelect('COUNT(*)', 'count')
+        .where('m.space_id IN (:...spaceIds)', { spaceIds })
+        .groupBy('m.space_id')
+        .getRawMany<{ spaceId: SpaceId; count: string }>();
+
+      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
+    } catch (error) {
+      this.logger.error('Failed to count users for space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async softDeleteBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: string,
+  ): Promise<number> {
+    this.logger.info('Soft-deleting memberships by spaceId', { spaceId });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .update()
+        .set({ deletedAt: new Date(), deletedBy })
+        .where('space_id = :spaceId', { spaceId })
+        .andWhere('deleted_at IS NULL')
+        .execute();
+
+      const affected = result.affected ?? 0;
+      this.logger.info('Memberships soft-deleted by spaceId', {
+        spaceId,
+        affected,
+      });
+      return affected;
+    } catch (error) {
+      this.logger.error('Failed to soft-delete memberships by spaceId', {
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

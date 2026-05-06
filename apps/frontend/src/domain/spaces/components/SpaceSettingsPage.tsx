@@ -1,30 +1,33 @@
 import { PMPage, PMTabs, PMVStack } from '@packmind/ui';
 
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../hooks/useCurrentSpace';
+import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
 import { SpaceGeneralSettings } from './SpaceGeneralSettings';
 import { SpaceMembersList } from './SpaceMembersList';
 
 export function SpaceSettingsPage() {
-  const { space } = useCurrentSpace();
+  const { space, spaceId } = useCurrentSpace();
+  const { user } = useAuthContext();
+  const { data: membersData } = useGetSpaceMembersQuery(spaceId ?? '');
 
-  const showGeneralTab = !space?.isDefaultSpace;
+  const isSpaceAdmin =
+    membersData?.members?.find((m) => m.userId === user?.id)?.role === 'admin';
 
   const tabs = [
-    ...(showGeneralTab
-      ? [
-          {
-            value: 'general',
-            triggerLabel: 'General',
-            content: <SpaceGeneralSettings />,
-          },
-        ]
-      : []),
+    {
+      value: 'general',
+      triggerLabel: 'General',
+      content: <SpaceGeneralSettings />,
+    },
     {
       value: 'members',
       triggerLabel: 'Members',
       content: (
         <PMVStack align="stretch" pt={4}>
-          <SpaceMembersList />
+          {space && (
+            <SpaceMembersList space={space} isSpaceAdmin={isSpaceAdmin} />
+          )}
         </PMVStack>
       ),
     },

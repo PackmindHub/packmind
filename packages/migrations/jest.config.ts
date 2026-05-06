@@ -8,4 +8,7 @@ export default {
   transform: swcTransform,
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/migrations',
+  moduleNameMapper: {
+    '^@packmind/logger$': '<rootDir>/../../packages/logger/src/index.ts',
+  },
 };
