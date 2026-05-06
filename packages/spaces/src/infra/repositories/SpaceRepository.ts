@@ -1,7 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractRepository, localDataSource } from '@packmind/node-utils';
-import { OrganizationId, Space, SpaceId, SpaceType } from '@packmind/types';
+import {
+  OrganizationId,
+  Space,
+  SpaceColor,
+  SpaceId,
+  SpaceType,
+} from '@packmind/types';
 import { Repository } from 'typeorm';
+import { SpaceNotFoundError } from '../../domain/errors/SpaceNotFoundError';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
 
@@ -84,19 +91,25 @@ export class SpaceRepository
 
   async updateFields(
     id: SpaceId,
-    fields: { name?: string; slug?: string; type?: SpaceType },
+    fields: {
+      name?: string;
+      slug?: string;
+      type?: SpaceType;
+      color?: SpaceColor;
+    },
   ): Promise<Space> {
     this.logger.info('Updating space fields', { id, fields });
 
     try {
       const space = await this.repository.findOne({ where: { id } });
       if (!space) {
-        throw new Error(`Space ${id} not found`);
+        throw new SpaceNotFoundError(id);
       }
 
       if (fields.name !== undefined) space.name = fields.name;
       if (fields.slug !== undefined) space.slug = fields.slug;
       if (fields.type !== undefined) space.type = fields.type;
+      if (fields.color !== undefined) space.color = fields.color;
 
       const updated = await this.repository.save(space);
       this.logger.info('Space updated successfully', { id });
@@ -121,6 +134,46 @@ export class SpaceRepository
       return spaces;
     } catch (error) {
       this.logger.error('Failed to list spaces', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }> {
+    this.logger.info('Finding org spaces page paginated', {
+      organizationId,
+      page,
+      pageSize,
+    });
+
+    try {
+      const skip = (page - 1) * pageSize;
+      const [items, totalCount] = await this.repository
+        .createQueryBuilder('space')
+        .where('space.organization_id = :organizationId', { organizationId })
+        .orderBy('space.is_default_space', 'DESC')
+        .addOrderBy('space.created_at', 'ASC')
+        .skip(skip)
+        .take(pageSize)
+        .getManyAndCount();
+      this.logger.info('Org spaces page found', {
+        organizationId,
+        page,
+        pageSize,
+        returned: items.length,
+        totalCount,
+      });
+      return { items, totalCount };
+    } catch (error) {
+      this.logger.error('Failed to find org spaces page paginated', {
+        organizationId,
+        page,
+        pageSize,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

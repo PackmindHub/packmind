@@ -102,6 +102,13 @@ export interface ISpaceSettingsPage extends IPackmindAppPage {
   searchAndSelectMember(displayName: string): Promise<void>;
   submitAddMembers(): Promise<void>;
   listMembers(): Promise<{ displayName: string }[]>;
+  getSpaceNameInput(): Promise<string>;
+  setSpaceName(name: string): Promise<void>;
+  isSpaceNameDisabled(): Promise<boolean>;
+  selectColor(color: string): Promise<void>;
+  clickSaveIdentity(): Promise<void>;
+  waitForIdentityUpdateSuccess(): Promise<void>;
+  waitForIdentityUpdateError(): Promise<string>;
 }
 
 export interface IInvitationPage extends IPackmindPage {

@@ -1,6 +1,16 @@
 import type { RefObject } from 'react';
-import { PMBox, PMCloseButton, PMDrawer, PMPortal } from '@packmind/ui';
+import {
+  PMBox,
+  PMCloseButton,
+  PMDrawer,
+  PMIconButton,
+  PMPortal,
+} from '@packmind/ui';
+import { LuSlidersHorizontal } from 'react-icons/lu';
+import { useNavigate } from 'react-router';
 import type { Space } from '@packmind/types';
+import { SidebarNavigationDataTestId } from '@packmind/frontend';
+import { routes } from '../../../../shared/utils/routes';
 import { SpaceNavSections } from './SpaceNavSections';
 
 interface SpaceNavPanelProps {
@@ -18,6 +28,8 @@ export function SpaceNavPanel({
   onClose,
   containerRef,
 }: Readonly<SpaceNavPanelProps>) {
+  const navigate = useNavigate();
+
   return (
     <PMDrawer.Root
       open={open}
@@ -32,7 +44,20 @@ export function SpaceNavPanel({
         <PMDrawer.Positioner position="absolute">
           <PMDrawer.Content>
             <PMDrawer.Header>
-              <PMDrawer.Title fontSize="sm">{space.name}</PMDrawer.Title>
+              <PMBox display="flex" alignItems="center" gap={1}>
+                <PMDrawer.Title fontSize="sm">{space.name}</PMDrawer.Title>
+                <PMIconButton
+                  aria-label="Space settings"
+                  size="2xs"
+                  variant="ghost"
+                  onClick={() =>
+                    navigate(routes.space.toSettings(orgSlug, space.slug))
+                  }
+                  data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
+                >
+                  <LuSlidersHorizontal />
+                </PMIconButton>
+              </PMBox>
             </PMDrawer.Header>
             <PMDrawer.Body paddingX={1} paddingY={2}>
               <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
