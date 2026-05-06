@@ -5,6 +5,7 @@ import { DownloadDefaultSkillsPopover } from '../../src/domain/skills/components
 import { useGetSkillsQuery } from '../../src/domain/skills/api/queries/SkillsQueries';
 import { useParams } from 'react-router';
 import { SkillsCreateButton } from '../../src/domain/skills/components/SkillsCreateButton';
+import { SkillsUsageTable } from '../../src/domain/telemetry/components/SkillsUsageTable';
 
 export default function SkillsIndexRouteModule() {
   const { organization } = useAuthContext();
@@ -35,6 +36,7 @@ export default function SkillsIndexRouteModule() {
     >
       <PMVStack align="stretch" gap={6}>
         <SkillsList key={spaceSlug} orgSlug={organization.slug} />
+        <SkillsUsageTable />
       </PMVStack>
     </PMPage>
   );
