@@ -11,8 +11,13 @@
     "gitlab_duo",
     "packmind"
   ],
+<<<<<<< oss-sync
+  "installedAt": "2026-05-06T09:22:13.662Z",
+  "targetId": "ad9a8ad9-fb1e-42f6-bec1-d956f02cb0e4",
+=======
   "installedAt": "2026-05-06T09:22:13.569Z",
   "targetId": "d68f6aaf-2774-4fc7-9032-3b51000e07b7",
+>>>>>>> main
   "artifacts": {
     "command:create-handoff": {
       "name": "Create handoff",

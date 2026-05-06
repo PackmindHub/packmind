@@ -2,9 +2,20 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.14.0] - 2026-05-06
+
+## Added
+
 - Support new Claude Code skill frontmatter fields: `when_to_use`, `paths`, and `shell` (validated to `bash` or `powershell`)
 - Added `--skip-installed-at` flag on `install` command to avoid merge issues when working with multiple branches.
-- Space admins can now configure space identity (name and color) from the space general settings page
+- Space admins can now configure space identity (name and color) from the space general settings page - Enterprise version only
+- Org admins can manage all spaces from a dedicated management page with search, filters, and per-space drawer - Enterprise version only
 
 ## Changed
 
@@ -13,8 +24,6 @@
 ## Fixed
 
 - Make the skill files tree scrollable on skill details page
-
-## Removed
 
 # [1.13.1] - 2026-04-15
 
@@ -290,7 +299,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.13.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.14.0...HEAD
+[1.14.0]: https://github.com/PackmindHub/packmind/compare/release/1.13.1...release/1.14.0
 [1.13.1]: https://github.com/PackmindHub/packmind/compare/release/1.13.0...release/1.13.1
 [1.13.0]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...release/1.13.0
 [1.12.0]: https://github.com/PackmindHub/packmind/compare/release/1.11.1...release/1.12.0
