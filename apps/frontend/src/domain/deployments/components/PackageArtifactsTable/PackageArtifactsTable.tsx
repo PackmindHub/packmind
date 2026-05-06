@@ -259,8 +259,8 @@ const renderVersionCell = (row: Row, mode: Mode): React.ReactNode => {
 const renderStatusCell = (row: Row, mode: Mode): React.ReactNode => {
   if (row.isPending) {
     return (
-      <PMBadge colorPalette="orange" size="sm">
-        Pending distribution
+      <PMBadge colorPalette="red" size="sm">
+        Not distributed
       </PMBadge>
     );
   }

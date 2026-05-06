@@ -278,7 +278,7 @@ describe('PackageArtifactsTable', () => {
       expect(screen.getByText('My Pending Recipe')).toBeInTheDocument();
     });
 
-    it('renders the Pending distribution badge in mode all', () => {
+    it('renders the Not distributed badge in mode all', () => {
       renderWithProvider(
         <PackageArtifactsTable
           orgSlug="test-org"
@@ -295,7 +295,7 @@ describe('PackageArtifactsTable', () => {
         />,
       );
 
-      expect(screen.getByText('Pending distribution')).toBeInTheDocument();
+      expect(screen.getByText('Not distributed')).toBeInTheDocument();
     });
 
     it('renders the pending recipe name in mode outdated', () => {
@@ -318,7 +318,7 @@ describe('PackageArtifactsTable', () => {
       expect(screen.getByText('My Pending Recipe')).toBeInTheDocument();
     });
 
-    it('renders the Pending distribution badge in mode outdated', () => {
+    it('renders the Not distributed badge in mode outdated', () => {
       renderWithProvider(
         <PackageArtifactsTable
           orgSlug="test-org"
@@ -335,7 +335,7 @@ describe('PackageArtifactsTable', () => {
         />,
       );
 
-      expect(screen.getByText('Pending distribution')).toBeInTheDocument();
+      expect(screen.getByText('Not distributed')).toBeInTheDocument();
     });
 
     it('hides the pending recipe in mode up-to-date', () => {
