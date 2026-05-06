@@ -134,6 +134,16 @@ export function CreateSkillReviewDetail({
     };
   }, [displayedProposal]);
 
+  const handleDialogConfirm = useCallback(async () => {
+    if (!displayedProposal) return;
+    if (pendingDecision === 'accept') {
+      await handleAccept(displayedProposal.payload);
+    } else if (pendingDecision === 'dismiss') {
+      await handleReject();
+    }
+    setPendingDecision(null);
+  }, [pendingDecision, handleAccept, handleReject, displayedProposal?.payload]);
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -162,14 +172,7 @@ export function CreateSkillReviewDetail({
         decision={pendingDecision ?? 'accept'}
         skillName={displayedProposal.payload.name}
         isPending={isPending}
-        onConfirm={async () => {
-          if (pendingDecision === 'accept') {
-            await handleAccept(displayedProposal.payload);
-          } else if (pendingDecision === 'dismiss') {
-            await handleReject();
-          }
-          setPendingDecision(null);
-        }}
+        onConfirm={handleDialogConfirm}
         onOpenChange={(open) => {
           if (!open && !isPending) {
             setPendingDecision(null);
