@@ -1,5 +1,5 @@
 ---
-description: "Update an existing handoff document with the current session's progress, preserving prior work history while refreshing status and next steps. Falls back to creating a new handoff if no source file is found."
+description: 'Update an existing handoff document with the current session''s progress, preserving prior work history while refreshing status and next steps. Falls back to creating a new handoff if no source file is found.'
 ---
 
 Update an existing handoff document with the current session's progress, preserving prior work history while refreshing status and next steps. Falls back to creating a new handoff if no source file is found.
@@ -12,15 +12,14 @@ Update an existing handoff document with the current session's progress, preserv
 
 ## Context Validation Checkpoints
 
-- [ ] Can you identify the handoff file to update (from argument, or from a previous /resume_handoff invocation in this conversation)?
-- [ ] Is there meaningful progress (new work done, status changes, or updated next steps) to record?
+* [ ] Can you identify the handoff file to update (from argument, or from a previous /resume_handoff invocation in this conversation)?
+* [ ] Is there meaningful progress (new work done, status changes, or updated next steps) to record?
 
 ## Command Steps
 
 ### Step 1: Resolve the handoff file path
 
 Determine which handoff file to update using this priority order:
-
 1. If an argument was provided (e.g., `$ARGUMENTS` or `$1`), use that as the handoff file path.
 2. If this session was resumed from a handoff, look for a previous `/resume_handoff` invocation in the conversation history — the argument passed to it is the file path.
 3. If neither is found, **fall back to creating a new handoff**: generate a new file at `./tmp/handoffs/handoff_YYYYMMDD_HHMMSS.md` and inform the user that no existing handoff was found so a new one is being created.
@@ -32,7 +31,6 @@ Read the resolved handoff file to understand its current content. Parse all sect
 ### Step 3: Rewrite the handoff in place
 
 Overwrite the handoff file with updated content. Follow these merge rules for each section:
-
 - **Task**: Keep original (update only if scope fundamentally changed).
 - **Scope**: Keep or refine based on new understanding.
 - **Files**: Merge — combine original file references with new files touched in this session. Use `path/to/file:lineNumber` format.
