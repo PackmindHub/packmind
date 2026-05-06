@@ -1,7 +1,6 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import {
   DEFAULT_FEATURE_DOMAIN_MAP,
-  ORGA_SPACE_MANAGEMENT_FEATURE_KEY,
   PMFeatureFlag,
   PMPage,
 } from '@packmind/ui';
@@ -47,14 +46,8 @@ export default function SettingsSpacesRouteModule() {
         }`;
 
   return (
-    <PMFeatureFlag
-      featureKeys={[ORGA_SPACE_MANAGEMENT_FEATURE_KEY]}
-      featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-      userEmail={user?.email}
-    >
-      <PMPage title="Spaces" subtitle={subtitle} actions={<SpacesToolbar />}>
-        <SpacesManagementPage />
-      </PMPage>
-    </PMFeatureFlag>
+    <PMPage title="Spaces" subtitle={subtitle} actions={<SpacesToolbar />}>
+      <SpacesManagementPage />
+    </PMPage>
   );
 }

@@ -12,7 +12,6 @@ import {
 } from '../../src/domain/accounts/api/queries/UserQueries';
 import {
   DEFAULT_FEATURE_DOMAIN_MAP,
-  ORGA_SPACE_MANAGEMENT_FEATURE_KEY,
   PMFeatureFlag,
   PMFlex,
   PMGrid,
@@ -100,18 +99,11 @@ export default function SettingsIndexRouteModule() {
                 exact
                 data-testid={SettingsRouteDataTestIds.UsersLink}
               />,
-              <PMFeatureFlag
-                key="spaces"
-                featureKeys={[ORGA_SPACE_MANAGEMENT_FEATURE_KEY]}
-                featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-                userEmail={me?.user?.email}
-              >
-                <SidebarNavigationLink
-                  url={orgSlug ? routes.org.toSettingsSpaces(orgSlug) : '#'}
-                  label="Spaces"
-                  exact
-                />
-              </PMFeatureFlag>,
+              <SidebarNavigationLink
+                url={orgSlug ? routes.org.toSettingsSpaces(orgSlug) : '#'}
+                label="Spaces"
+                exact
+              />,
             ]}
           />
 
