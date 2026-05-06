@@ -142,7 +142,7 @@ export function CreateSkillReviewDetail({
       await handleReject();
     }
     setPendingDecision(null);
-  }, [pendingDecision, handleAccept, handleReject, displayedProposal?.payload]);
+  }, [pendingDecision, handleAccept, handleReject, displayedProposal]);
 
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
