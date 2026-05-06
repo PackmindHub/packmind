@@ -2,6 +2,8 @@
 name: 'packmind-create-package'
 description: 'Guide for creating Packmind packages via the CLI. This skill should be used when users want to create a new package to organize standards, commands, and skills for distribution.'
 license: 'Complete terms in LICENSE.txt'
+metadata:
+ packmind-cli-version: "< 0.27.0"
 ---
 
 # Package Creator
@@ -36,7 +38,7 @@ packmind-cli login
 List existing packages to identify naming conventions:
 
 ```bash
-packmind-cli install --list
+packmind-cli packages list
 ```
 
 Review the output to:
@@ -78,7 +80,7 @@ On success:
 ```
 Created: <slug>
 You can see it at: https://<host>/packages/<slug>
-You can install it with: packmind-cli packages install <slug>
+You can install it with: packmind-cli install <slug>
 ```
 
 ## Naming Guidelines
@@ -99,6 +101,6 @@ You can install it with: packmind-cli packages install <slug>
 
 After creating a package, content can be added via:
 
-1. **MCP tools**: Use `packageSlugs` parameter when creating standards/commands
+1. **CLI**: Use `packmind-cli packages add --to package-slug --standard standard-slug` parameter when creating standards (use `--command` or `--skill` parameter depending on the artefact type)  
 2. **Web interface**: Navigate to the package URL and add items manually
 
