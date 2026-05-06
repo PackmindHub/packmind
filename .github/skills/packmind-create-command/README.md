@@ -21,9 +21,9 @@ The AI agent will:
 
 1. Ask clarifying questions to understand the command's purpose
 2. Help you define steps with proper formatting
-3. Create a playbook JSON file
+3. Draft a markdown file for review
 4. Get your approval before submission
-5. Run the CLI command to create the command
+5. Convert to JSON and run the CLI command to create the command
 
 ## Prerequisites
 
