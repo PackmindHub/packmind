@@ -1692,9 +1692,6 @@ export class DistributionRepository implements IDistributionRepository {
         lastDistributedAt: string;
       };
 
-      // Latest distribution per (target, package) within the space. The
-      // active-distribution rule (successful add OR failed remove) is applied
-      // in JS because the predicate must run after DISTINCT ON.
       const rows = await this.repository
         .createQueryBuilder('distribution')
         .innerJoin('distribution.distributedPackages', 'distributedPackage')
@@ -1711,13 +1708,13 @@ export class DistributionRepository implements IDistributionRepository {
         .addSelect('distribution.createdAt', 'lastDistributedAt')
         .getRawMany<RawRow>();
 
-      const activeRows = rows.filter((row) => {
-        const isFailure = row.status === DistributionStatus.failure;
-        return (
-          (row.operation === 'add' && !isFailure) ||
-          (row.operation === 'remove' && isFailure)
-        );
-      });
+      const activeRows = rows.filter(
+        (row) =>
+          !(
+            row.operation === 'remove' &&
+            row.status === DistributionStatus.success
+          ),
+      );
 
       this.logger.info(
         'Active package operations listed by space ID successfully',
