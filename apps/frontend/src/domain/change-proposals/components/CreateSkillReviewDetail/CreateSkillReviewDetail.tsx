@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { LuFile } from 'react-icons/lu';
 import {
@@ -28,6 +28,10 @@ import {
 } from '../ProposalDetailPlaceholder';
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { FileContent } from '../SkillReviewDetail/FileItems/FileContent';
+import {
+  ConfirmSkillDecisionDialog,
+  type SkillDecision,
+} from './ConfirmSkillDecisionDialog';
 
 interface CreateSkillReviewDetailProps {
   proposalId: ChangeProposalId;
@@ -56,6 +60,10 @@ export function CreateSkillReviewDetail({
     getAcceptUrl: (_response, orgSlug, spaceSlug) =>
       routes.space.toSkills(orgSlug, spaceSlug),
   });
+
+  const [pendingDecision, setPendingDecision] = useState<SkillDecision | null>(
+    null,
+  );
 
   const userLookup = useUserLookup();
   const [searchParams] = useSearchParams();
@@ -143,11 +151,30 @@ export function CreateSkillReviewDetail({
         artefactName={displayedProposal.payload.name}
         latestAuthor={authorName}
         latestTime={new Date(displayedProposal.lastContributedAt)}
-        onAccept={() => handleAccept(displayedProposal.payload)}
-        onDismiss={handleReject}
+        onAccept={() => setPendingDecision('accept')}
+        onDismiss={() => setPendingDecision('dismiss')}
         isPending={isPending}
         isSubmitted={!!submittedState}
         getPreviewCommand={getPreviewCommand}
+      />
+      <ConfirmSkillDecisionDialog
+        open={pendingDecision !== null}
+        decision={pendingDecision ?? 'accept'}
+        skillName={displayedProposal.payload.name}
+        isPending={isPending}
+        onConfirm={async () => {
+          if (pendingDecision === 'accept') {
+            await handleAccept(displayedProposal.payload);
+          } else if (pendingDecision === 'dismiss') {
+            await handleReject();
+          }
+          setPendingDecision(null);
+        }}
+        onOpenChange={(open) => {
+          if (!open && !isPending) {
+            setPendingDecision(null);
+          }
+        }}
       />
       <PMBox
         px={6}
