@@ -1634,16 +1634,51 @@ describe('DistributionRepository', () => {
       ]);
     });
 
-    it('drops successful removes and failed adds', async () => {
+    it('drops successful removes (the package is no longer on the target)', async () => {
       (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
         rawRow(packageId1, 'remove', DistributionStatus.success),
-        rawRow(packageId2, 'add', DistributionStatus.failure),
       ]);
 
       const result =
         await repository.findActivePackageOperationsBySpace(spaceId);
 
       expect(result).toEqual([]);
+    });
+
+    it('keeps failed adds so the UI can surface the failed distribution status', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        rawRow(packageId1, 'add', DistributionStatus.failure),
+      ]);
+
+      const result =
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          packageId: packageId1,
+          lastDistributionStatus: DistributionStatus.failure,
+          lastDistributedAt,
+        },
+      ]);
+    });
+
+    it('keeps in-progress adds so the UI can surface the in-progress status', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        rawRow(packageId1, 'add', DistributionStatus.in_progress),
+      ]);
+
+      const result =
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          packageId: packageId1,
+          lastDistributionStatus: DistributionStatus.in_progress,
+          lastDistributedAt,
+        },
+      ]);
     });
 
     it('filters by spaceId via parameterized query', async () => {

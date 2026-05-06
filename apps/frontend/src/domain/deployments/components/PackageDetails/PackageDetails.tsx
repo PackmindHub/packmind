@@ -19,7 +19,7 @@ import {
   PMTabs,
   PMEmptyState,
 } from '@packmind/ui';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
   useGetPackageByIdQuery,
   useDeletePackagesBatchMutation,
@@ -54,6 +54,12 @@ export const PackageDetails = ({
   const navigate = useNavigate();
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab =
+    tabParam === 'distributions' || tabParam === 'content'
+      ? tabParam
+      : 'content';
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -297,7 +303,7 @@ export const PackageDetails = ({
       }
     >
       <PMTabs
-        defaultValue="content"
+        defaultValue={initialTab}
         tabs={[
           {
             value: 'content',

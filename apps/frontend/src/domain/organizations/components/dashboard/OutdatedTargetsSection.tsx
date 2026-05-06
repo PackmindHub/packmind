@@ -165,19 +165,13 @@ export const OutdatedTargetsSection: React.FC = () => {
               <PMVStack
                 key={repo.repoKey}
                 align="stretch"
-                border={'solid 1px'}
-                borderColor={'border.primary'}
-                gap={0}
+                backgroundColor={'blue.1000'}
+                gap={4}
+                borderRadius={'lg'}
+                padding={6}
               >
-                <PMBox
-                  borderBottom={'solid 1px'}
-                  borderColor={'border.primary'}
-                  padding={4}
-                  backgroundColor={'background.primary'}
-                >
-                  <PMHeading level="h6">{repo.title}</PMHeading>
-                </PMBox>
-                <PMVStack align="stretch" width="full" padding={2}>
+                <PMHeading level="h5">{repo.title}</PMHeading>
+                <PMVStack align="stretch" width="full">
                   {repo.targets.map((t) => (
                     <RepositoryTargetTable
                       key={String(t.id)}
