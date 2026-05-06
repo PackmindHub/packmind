@@ -29,9 +29,9 @@ import {
 import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import { FileContent } from '../SkillReviewDetail/FileItems/FileContent';
 import {
-  ConfirmSkillDecisionDialog,
-  type SkillDecision,
-} from './ConfirmSkillDecisionDialog';
+  ConfirmCreationDecisionDialog,
+  type CreationDecision,
+} from '../shared/ConfirmCreationDecisionDialog';
 
 interface CreateSkillReviewDetailProps {
   proposalId: ChangeProposalId;
@@ -61,9 +61,8 @@ export function CreateSkillReviewDetail({
       routes.space.toSkills(orgSlug, spaceSlug),
   });
 
-  const [pendingDecision, setPendingDecision] = useState<SkillDecision | null>(
-    null,
-  );
+  const [pendingDecision, setPendingDecision] =
+    useState<CreationDecision | null>(null);
 
   const userLookup = useUserLookup();
   const [searchParams] = useSearchParams();
@@ -167,10 +166,11 @@ export function CreateSkillReviewDetail({
         isSubmitted={!!submittedState}
         getPreviewCommand={getPreviewCommand}
       />
-      <ConfirmSkillDecisionDialog
+      <ConfirmCreationDecisionDialog
+        artefactLabel="skill"
         open={pendingDecision !== null}
         decision={pendingDecision ?? 'accept'}
-        skillName={displayedProposal.payload.name}
+        artefactName={displayedProposal.payload.name}
         isPending={isPending}
         onConfirm={handleDialogConfirm}
         onOpenChange={(open) => {

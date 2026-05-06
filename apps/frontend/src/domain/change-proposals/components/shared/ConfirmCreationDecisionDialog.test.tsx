@@ -1,37 +1,38 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
-import { ConfirmSkillDecisionDialog } from './ConfirmSkillDecisionDialog';
+import { ConfirmCreationDecisionDialog } from './ConfirmCreationDecisionDialog';
 
 const renderWithProviders = (ui: React.ReactElement) =>
   render(<UIProvider>{ui}</UIProvider>);
 
 const baseProps = {
   open: true,
-  skillName: 'Generate React component',
+  artefactLabel: 'skill' as const,
+  artefactName: 'Generate React component',
   isPending: false,
   onConfirm: jest.fn(),
   onOpenChange: jest.fn(),
 };
 
-describe('ConfirmSkillDecisionDialog', () => {
+describe('ConfirmCreationDecisionDialog', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('when decision is "accept"', () => {
-    it('renders the accept title', async () => {
+    it('renders the accept title with the artefact label', async () => {
       renderWithProviders(
-        <ConfirmSkillDecisionDialog {...baseProps} decision="accept" />,
+        <ConfirmCreationDecisionDialog {...baseProps} decision="accept" />,
       );
       expect(
         await screen.findByText('Accept this skill proposal?'),
       ).toBeInTheDocument();
     });
 
-    it('renders the skill name in the body', async () => {
+    it('renders the artefact name in the body', async () => {
       renderWithProviders(
-        <ConfirmSkillDecisionDialog {...baseProps} decision="accept" />,
+        <ConfirmCreationDecisionDialog {...baseProps} decision="accept" />,
       );
       expect(
         await screen.findByText(/Generate React component/),
@@ -40,7 +41,7 @@ describe('ConfirmSkillDecisionDialog', () => {
 
     it('renders an "Accept" confirm button', async () => {
       renderWithProviders(
-        <ConfirmSkillDecisionDialog {...baseProps} decision="accept" />,
+        <ConfirmCreationDecisionDialog {...baseProps} decision="accept" />,
       );
       expect(
         await screen.findByRole('button', { name: 'Accept' }),
@@ -50,7 +51,7 @@ describe('ConfirmSkillDecisionDialog', () => {
     it('calls onConfirm when the confirm button is clicked', async () => {
       const onConfirm = jest.fn();
       renderWithProviders(
-        <ConfirmSkillDecisionDialog
+        <ConfirmCreationDecisionDialog
           {...baseProps}
           decision="accept"
           onConfirm={onConfirm}
@@ -63,9 +64,9 @@ describe('ConfirmSkillDecisionDialog', () => {
   });
 
   describe('when decision is "dismiss"', () => {
-    it('renders the dismiss title', async () => {
+    it('renders the dismiss title with the artefact label', async () => {
       renderWithProviders(
-        <ConfirmSkillDecisionDialog {...baseProps} decision="dismiss" />,
+        <ConfirmCreationDecisionDialog {...baseProps} decision="dismiss" />,
       );
       expect(
         await screen.findByText('Dismiss this skill proposal?'),
@@ -74,7 +75,7 @@ describe('ConfirmSkillDecisionDialog', () => {
 
     it('renders a "Dismiss" confirm button', async () => {
       renderWithProviders(
-        <ConfirmSkillDecisionDialog {...baseProps} decision="dismiss" />,
+        <ConfirmCreationDecisionDialog {...baseProps} decision="dismiss" />,
       );
       expect(
         await screen.findByRole('button', { name: 'Dismiss' }),
@@ -84,7 +85,7 @@ describe('ConfirmSkillDecisionDialog', () => {
     it('calls onConfirm when the confirm button is clicked', async () => {
       const onConfirm = jest.fn();
       renderWithProviders(
-        <ConfirmSkillDecisionDialog
+        <ConfirmCreationDecisionDialog
           {...baseProps}
           decision="dismiss"
           onConfirm={onConfirm}
@@ -96,10 +97,56 @@ describe('ConfirmSkillDecisionDialog', () => {
     });
   });
 
+  describe('artefact label substitution', () => {
+    it('renders "command" in the accept title when label is "command"', async () => {
+      renderWithProviders(
+        <ConfirmCreationDecisionDialog
+          {...baseProps}
+          decision="accept"
+          artefactLabel="command"
+        />,
+      );
+      expect(
+        await screen.findByText('Accept this command proposal?'),
+      ).toBeInTheDocument();
+    });
+
+    it('renders "standard" in the dismiss title when label is "standard"', async () => {
+      renderWithProviders(
+        <ConfirmCreationDecisionDialog
+          {...baseProps}
+          decision="dismiss"
+          artefactLabel="standard"
+        />,
+      );
+      expect(
+        await screen.findByText('Dismiss this standard proposal?'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when isPending is true', () => {
+    it('does not call onConfirm when the confirm button is clicked', async () => {
+      const onConfirm = jest.fn();
+      renderWithProviders(
+        <ConfirmCreationDecisionDialog
+          {...baseProps}
+          decision="accept"
+          isPending={true}
+          onConfirm={onConfirm}
+        />,
+      );
+      const buttons = await screen.findAllByRole('button');
+      const confirmButton = buttons[buttons.length - 2];
+      fireEvent.click(confirmButton);
+      expect(onConfirm).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when not open', () => {
     it('does not render the dialog content', () => {
       renderWithProviders(
-        <ConfirmSkillDecisionDialog
+        <ConfirmCreationDecisionDialog
           {...baseProps}
           open={false}
           decision="accept"
@@ -108,27 +155,6 @@ describe('ConfirmSkillDecisionDialog', () => {
       expect(
         screen.queryByText('Accept this skill proposal?'),
       ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('when isPending is true', () => {
-    it('does not call onConfirm when the confirm button is clicked', async () => {
-      const onConfirm = jest.fn();
-      renderWithProviders(
-        <ConfirmSkillDecisionDialog
-          {...baseProps}
-          decision="accept"
-          isPending={true}
-          onConfirm={onConfirm}
-        />,
-      );
-      // When loading, Chakra replaces the button label with a spinner so the
-      // accessible name "Accept" is no longer present. Select the confirm button
-      // by position: Cancel is first, Confirm is second.
-      const buttons = await screen.findAllByRole('button');
-      const confirmButton = buttons[buttons.length - 2]; // second-to-last (last is close trigger)
-      fireEvent.click(confirmButton);
-      expect(onConfirm).not.toHaveBeenCalled();
     });
   });
 });
