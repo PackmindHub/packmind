@@ -34,6 +34,6 @@ nightly-packmind-update:
     - |
       git push origin packmind-cli-update \
         -o merge_request.create \
-        -o merge_request.target=main \
+        -o merge_request.target=${CI_DEFAULT_BRANCH} \
         -o merge_request.title="chore(packmind): nightly artifacts update" \
         -o merge_request.description="Automated nightly update of Packmind artifacts via \`packmind-cli install\`. Review the diff under \`.packmind/\` and \`packmind-lock.json\`."
