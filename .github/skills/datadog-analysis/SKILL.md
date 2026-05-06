@@ -1,6 +1,6 @@
 ---
 name: 'datadog-analysis'
-description: 'Analyze Datadog error logs for Packmind production services (API, MCP server, Frontend), group them into patterns, perform root cause analysis against the codebase, and produce a structured bug report. This skill should be used when investigating production errors, triaging bugs, auditing service health, or performing periodic error reviews. Also triggers when the user mentions Datadog, production logs, error analysis, prod issues, service health, or asks about what errors are happening in prod. Also triggers on references to specific Datadog service names like api-proprietary, mcp-proprietary, or frontend-proprietary.'
+description: 'Analyze Datadog error logs for Packmind production services (api-proprietary, mcp-proprietary, frontend-proprietary), group them into patterns, root-cause against the codebase, and produce a structured bug report. Triggers on Datadog, production logs, prod errors, service health, or periodic error reviews.'
 ---
 
 # Datadog Analysis
@@ -85,6 +85,8 @@ For `frontend-proprietary`, Nginx writes all `error_log` output (including `[not
 
 For each application-level error (not infra/external):
 
+Before grepping, consult `references/known_patterns.md` — if the error matches a catalogued pattern, jump straight to its entry point and skip to step 2.
+
 1. **Grep for the error class or message** in the codebase using the Grep tool (e.g., `SpaceMembershipRequiredError`, `Recipe.*not found`)
 2. **Read the source files** where the error is thrown
 3. **Trace the call chain**: error class -> service/use case -> controller/adapter
@@ -97,118 +99,4 @@ For frontend Nginx errors, check:
 
 ### Phase 4: Generate Report
 
-Write the report to `datadog_{YYYY_MM_DD}.md` at the project root, where the date is today's date.
-
-#### Report Structure
-
-The report is organized with **one top-level section per application**, each containing its own issues:
-
-```markdown
-# Datadog Error Report
-
-**Period**: {start_date} to {end_date} ({N} days)
-
----
-
-# API (`api-proprietary`)
-
-**Total error log lines**: ~{count}
-
-| Day       | Error count |
-|-----------|------------|
-| {date}    | {count}    |
-
-## 1. {Issue Title}
-
-**Occurrences**: {frequency description}
-
-**Datadog search pattern**:
-```
-service:api-proprietary status:error {specific pattern keywords}
-```
-
-**Description**: {What the error is and how it manifests}
-
-**Root cause**: {Analysis with source file paths and line numbers from the codebase.}
-
-**Source**: `{file_path}:{line_number}`
-
----
-
-## 2. {Next Issue}
-...
-
----
-
-# MCP Server (`mcp-proprietary`)
-
-**Total error log lines**: ~{count}
-
-| Day       | Error count |
-|-----------|------------|
-| {date}    | {count}    |
-
-## 1. {Issue Title}
-...
-
----
-
-# Frontend (`frontend-proprietary`)
-
-**Total error log lines**: ~{count} (excluding Nginx [notice] noise)
-
-| Day       | Error count |
-|-----------|------------|
-| {date}    | {count}    |
-
-## 1. {Issue Title}
-...
-```
-
-#### Ordering (within each section)
-
-Sort issues by severity:
-1. Infrastructure errors (Redis, database connectivity, Nginx permission errors)
-2. Application bugs (unhandled exceptions returning 500, missing static assets)
-3. External service failures (Amplitude, third-party APIs)
-4. Deprecation warnings (Node.js, library deprecations)
-5. Expected user errors logged at wrong level (failed logins)
-
-#### Occurrence Labels
-
-Use these labels based on the pattern:
-- **ONCE** -- single occurrence in the period
-- **{N} TIMES** -- N occurrences total, no clear daily pattern
-- **{N} DAYS THIS WEEK** -- recurring across N distinct days
-- **ALL {N} DAYS** -- present every day in the period
-- **{N} lines, {M} day(s)** -- for high-volume infra errors, specify raw log line count and day spread
-
-After writing the report, print a summary table covering all services:
-
-| Service | # | Issue | Occurrences | Severity |
-|---------|---|-------|-------------|----------|
-| API | 1 | ... | ... | High/Medium/Low |
-| MCP | 1 | ... | ... | High/Medium/Low |
-| Frontend | 1 | ... | ... | High/Medium/Low |
-
-## Known Error Patterns
-
-### API (`api-proprietary`)
-
-| Pattern | Datadog query | Codebase entry point |
-|---------|--------------|---------------------|
-| Redis connection failure | `service:api-proprietary status:error ETIMEDOUT OR ECONNREFUSED` | `ioredis` client, infra-level |
-| Space membership check | `service:api-proprietary status:error SpaceMembershipRequiredError` | `packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts` |
-| Recipe not found | `service:api-proprietary status:error "Recipe" "not found"` | `packages/recipes/src/application/services/RecipeService.ts` |
-| Artefact not found | `service:api-proprietary status:error "Artefact" "not found"` | `packages/playbook-change-management/src/application/services/validateArtefactInSpace.ts` |
-| Sign-in failure | `service:api-proprietary status:error "Failed to sign in"` | `apps/api/src/app/auth/auth.controller.ts` |
-| Onboarding status failure | `service:api-proprietary status:error "onboarding status"` | `apps/api/src/app/auth/auth.service.ts` |
-| Amplitude tracking failure | `service:api-proprietary status:error Amplitude` | Amplitude Node.js SDK (external) |
-| PG concurrent query | `service:api-proprietary status:error "client.query() when the client is already executing"` | `pg` driver through TypeORM |
-
-### Frontend (`frontend-proprietary`)
-
-| Pattern | Datadog query | Codebase entry point |
-|---------|--------------|---------------------|
-| Nginx PID unlink permission denied | `service:frontend-proprietary "unlink" "nginx.pid"` | `dockerfile/Dockerfile.frontend:17` + `dockerfile/nginx.*.conf:3` |
-| Nginx notice logs misclassified | `service:frontend-proprietary status:error "[notice]"` | Datadog log pipeline config (not code) |
+Read `references/report-template.md` before writing the report for the output path, scaffold, severity ordering, occurrence labels, and final summary table.

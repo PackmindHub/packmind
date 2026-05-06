@@ -89,14 +89,6 @@ Maintain CHANGELOG.MD using Keep a Changelog format with a top [Unreleased] sect
 
 Full standard is available here for further request: [Changelog](.packmind/standards/changelog.md)
 
-# Standard: Typescript good practices
-
-Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeOf in custom errors and requiring intersection types (DomainType & { extraField: T }) for presentation DTO enrichment to improve reliability and catch domain-field drift at compile time. :
-* Do not use `Object.setPrototypeOf` when defining errors.
-* When defining a presentation DTO that enriches a domain type, use an intersection type (`DomainType & { extraField: T }`) instead of manually re-declaring the domain type's fields, so that structural drift is caught at compile time.
-
-Full standard is available here for further request: [Typescript good practices](.packmind/standards/typescript-good-practices.md)
-
 # Standard: Compliance - Logging Personal Information
 
 Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries. :
@@ -104,4 +96,12 @@ Enforce masking of personal information in TypeScript logs, using a standard fir
 * Use the standard masking format of first 6 characters followed by "*" for logging user emails. This ensures consistency across the codebase and makes it easier to audit logs for compliance.
 
 Full standard is available here for further request: [Compliance - Logging Personal Information](.packmind/standards/compliance-logging-personal-information.md)
+
+# Standard: Typescript good practices
+
+Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeOf in custom errors and requiring intersection types (DomainType & { extraField: T }) for presentation DTO enrichment to improve reliability and catch domain-field drift at compile time. :
+* Do not use `Object.setPrototypeOf` when defining errors.
+* When defining a presentation DTO that enriches a domain type, use an intersection type (`DomainType & { extraField: T }`) instead of manually re-declaring the domain type's fields, so that structural drift is caught at compile time.
+
+Full standard is available here for further request: [Typescript good practices](.packmind/standards/typescript-good-practices.md)
 <!-- end: Packmind standards -->_

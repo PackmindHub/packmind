@@ -5,6 +5,7 @@
     "@frontend/playground": "*",
     "@testing/cli-e2e": "*",
     "@frontend/generic": "*",
-    "@cli/generic": "*"
+    "@cli/generic": "*",
+    "generic": "*"
   }
 }
