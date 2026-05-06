@@ -209,4 +209,18 @@ export class Cache {
       initialized: this.initialized,
     };
   }
+
+  /**
+   * Access the underlying ioredis client.
+   *
+   * Reserved for callers that need Redis primitives not exposed by the
+   * `set/get/invalidate` API (e.g. list/stream operations). Throws if the
+   * cache has not been initialised — callers must run after app bootstrap.
+   */
+  getRawClient(): Redis {
+    if (!this.initialized || !this.client) {
+      throw new Error('Cache not initialized. Call initialize() first.');
+    }
+    return this.client;
+  }
 }

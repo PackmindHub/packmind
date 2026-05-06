@@ -18,3 +18,4 @@ export * from './database/types';
 export * from './events';
 export * from './playbookChangeManagement';
 export * from './playbookChangeApplier';
+export * from './telemetry';

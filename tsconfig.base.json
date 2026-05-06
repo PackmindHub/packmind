@@ -48,6 +48,7 @@
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
+      "@packmind/telemetry": ["packages/telemetry/src/index.ts"],
       "@packmind/test-utils": ["packages/test-utils/src/index.ts"],
       "@packmind/types": ["packages/types/src/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"],
