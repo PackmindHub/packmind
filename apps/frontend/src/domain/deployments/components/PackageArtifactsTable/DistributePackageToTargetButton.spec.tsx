@@ -2,7 +2,11 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
-import { createPackageId, createTargetId } from '@packmind/types';
+import {
+  DistributionStatus,
+  createPackageId,
+  createTargetId,
+} from '@packmind/types';
 import { DistributePackageToTargetButton } from './DistributePackageToTargetButton';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
@@ -74,6 +78,27 @@ describe('DistributePackageToTargetButton', () => {
     expect(tooltip).toHaveAttribute(
       'data-label',
       PACKAGE_MESSAGES.distribution.notConfigured,
+    );
+  });
+
+  it('renders a disabled button wrapped in the in-progress tooltip when a distribution is in progress', () => {
+    renderWithProvider(
+      <DistributePackageToTargetButton
+        packageId={TEST_PACKAGE_ID}
+        packageName="my-pkg"
+        targetId={TEST_TARGET_ID}
+        canDistributeFromApp={true}
+        isDistributeReadinessLoading={false}
+        hasOutdatedArtifacts={true}
+        lastDistributionStatus={DistributionStatus.in_progress}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Distribute' })).toBeDisabled();
+    const tooltip = screen.getByTestId('pm-tooltip');
+    expect(tooltip).toHaveAttribute(
+      'data-label',
+      'A distribution is currently in progress for this target',
     );
   });
 

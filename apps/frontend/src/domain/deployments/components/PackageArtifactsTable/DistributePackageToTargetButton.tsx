@@ -7,7 +7,7 @@ import {
   PMIcon,
   PMHStack,
 } from '@packmind/ui';
-import { PackageId, TargetId } from '@packmind/types';
+import { DistributionStatus, PackageId, TargetId } from '@packmind/types';
 import { useDeployPackage } from '../../hooks/useDeployPackage';
 import { createPackagesDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
@@ -20,6 +20,7 @@ export interface DistributePackageToTargetButtonProps {
   canDistributeFromApp: boolean;
   isDistributeReadinessLoading: boolean;
   hasOutdatedArtifacts: boolean;
+  lastDistributionStatus?: DistributionStatus;
 }
 
 export const DistributePackageToTargetButton: React.FC<
@@ -31,10 +32,18 @@ export const DistributePackageToTargetButton: React.FC<
   canDistributeFromApp,
   isDistributeReadinessLoading,
   hasOutdatedArtifacts,
+  lastDistributionStatus,
 }) => {
   const { deployPackage, isDeploying } = useDeployPackage();
 
   const handleClick = async () => {
+    pmToaster.create({
+      type: 'success',
+      title: 'Distribution started',
+      description:
+        'The distribution has started and may take a few minutes to complete.',
+    });
+
     try {
       const deployments = await deployPackage(
         { id: packageId, name: packageName },
@@ -59,8 +68,14 @@ export const DistributePackageToTargetButton: React.FC<
     }
   };
 
+  const isDistributionInProgress =
+    lastDistributionStatus === DistributionStatus.in_progress;
+
   const isDisabled =
-    isDeploying || isDistributeReadinessLoading || !canDistributeFromApp;
+    isDeploying ||
+    isDistributeReadinessLoading ||
+    !canDistributeFromApp ||
+    isDistributionInProgress;
 
   const button = (
     <PMButton
@@ -84,6 +99,14 @@ export const DistributePackageToTargetButton: React.FC<
           Up-to-date
         </PMText>
       </PMHStack>
+    );
+  }
+
+  if (isDistributionInProgress) {
+    return (
+      <PMTooltip label="A distribution is currently in progress for this target">
+        {button}
+      </PMTooltip>
     );
   }
 

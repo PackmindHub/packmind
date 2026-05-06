@@ -6,6 +6,7 @@ import {
   PMHStack,
   PMLink,
   PMSegmentedBar,
+  PMSpinner,
   PMTable,
   PMTableColumn,
   PMTableRow,
@@ -18,6 +19,7 @@ import {
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
   DeployedSkillTargetInfo,
+  DistributionStatus,
   PackageId,
   RecipeId,
   SkillId,
@@ -26,6 +28,7 @@ import {
 } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../../shared/utils/routes';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import { DistributePackageToTargetButton } from './DistributePackageToTargetButton';
 
 type Mode = 'all' | 'outdated' | 'up-to-date';
@@ -46,9 +49,27 @@ export type PackageArtifactsTableProps = {
     slug: string;
   }>;
   pendingSkills?: ReadonlyArray<{ id: SkillId; name: string; slug: string }>;
+  lastDistributedAt?: string;
+  lastDistributionStatus?: DistributionStatus;
   mode?: Mode;
   canDistributeFromApp: boolean;
   isDistributeReadinessLoading: boolean;
+};
+
+const DISTRIBUTION_STATUS_BADGE: Record<
+  DistributionStatus,
+  { label: string; colorPalette: 'green' | 'red' | 'blue' | 'gray' }
+> = {
+  [DistributionStatus.success]: { label: 'Success', colorPalette: 'green' },
+  [DistributionStatus.failure]: { label: 'Failed', colorPalette: 'red' },
+  [DistributionStatus.in_progress]: {
+    label: 'In progress',
+    colorPalette: 'blue',
+  },
+  [DistributionStatus.no_changes]: {
+    label: 'No changes',
+    colorPalette: 'gray',
+  },
 };
 
 type Row = {
@@ -310,11 +331,22 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = (
     packageName,
     packageId,
     targetId,
+    lastDistributedAt,
+    lastDistributionStatus,
     mode = 'all',
     canDistributeFromApp,
     isDistributeReadinessLoading,
   } = props;
   const { spaceSlug } = useCurrentSpace();
+  const packageDistributionsHref =
+    orgSlug && spaceSlug
+      ? `${routes.space.toPackage(orgSlug, spaceSlug, packageId)}?tab=distributions`
+      : undefined;
+  const statusBadgeMeta = lastDistributionStatus
+    ? DISTRIBUTION_STATUS_BADGE[lastDistributionStatus]
+    : undefined;
+  const isDistributionInProgress =
+    lastDistributionStatus === DistributionStatus.in_progress;
 
   const allRows = buildRows(props, { orgSlug, spaceSlug });
   const visibleRows = sortRows(allRows.filter((row) => matchesMode(row, mode)));
@@ -350,13 +382,104 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = (
           py={1}
           _hover={{ cursor: 'pointer' }}
         >
-          <PMHStack gap={2} align="center" flex="1">
-            <PMAccordion.ItemIndicator />
-            <PMBadge colorPalette="gray" size="xs">
-              Package
-            </PMBadge>
-            <PMText variant="body-important">{packageName}</PMText>
-            <PMHStack flex="1" justify="flex-end">
+          <PMHStack gap={2} align="center" flex="1" justify="space-between">
+            <PMHStack flex="1">
+              <PMAccordion.ItemIndicator />
+              <PMBadge colorPalette="gray" size="xs">
+                Package
+              </PMBadge>
+              <PMText variant="body-important">{packageName}</PMText>
+            </PMHStack>
+            {lastDistributedAt && packageDistributionsHref && (
+              <PMHStack flex="1" gap={2} align="center">
+                {isDistributionInProgress ? (
+                  <PMText variant="small" color="faded">
+                    Distribution in progress…
+                  </PMText>
+                ) : (
+                  <PMTooltip
+                    label={format(
+                      new Date(lastDistributedAt),
+                      'yyyy-MM-dd h:mm a',
+                    )}
+                    placement="top"
+                  >
+                    <PMText variant="small" color="faded">
+                      Last distributed:{' '}
+                      <PMLink
+                        asChild
+                        variant="underline"
+                        color="inherit"
+                        fontSize="xs"
+                      >
+                        <Link
+                          to={packageDistributionsHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {formatDistanceToNowStrict(
+                            new Date(lastDistributedAt),
+                            {
+                              addSuffix: true,
+                            },
+                          )}
+                        </Link>
+                      </PMLink>
+                    </PMText>
+                  </PMTooltip>
+                )}
+                {isDistributionInProgress && packageDistributionsHref && (
+                  <PMTooltip label="View distribution history" placement="top">
+                    <PMLink asChild>
+                      <Link
+                        to={packageDistributionsHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <PMSpinner size="sm" />
+                      </Link>
+                    </PMLink>
+                  </PMTooltip>
+                )}
+                {!isDistributionInProgress &&
+                  statusBadgeMeta &&
+                  packageDistributionsHref && (
+                    <PMTooltip
+                      label="View distribution history"
+                      placement="top"
+                    >
+                      <PMLink asChild>
+                        <Link
+                          to={packageDistributionsHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <PMBadge
+                            colorPalette={statusBadgeMeta.colorPalette}
+                            size="sm"
+                          >
+                            {statusBadgeMeta.label}
+                          </PMBadge>
+                        </Link>
+                      </PMLink>
+                    </PMTooltip>
+                  )}
+                {!isDistributionInProgress &&
+                  statusBadgeMeta &&
+                  !packageDistributionsHref && (
+                    <PMBadge
+                      colorPalette={statusBadgeMeta.colorPalette}
+                      size="sm"
+                    >
+                      {statusBadgeMeta.label}
+                    </PMBadge>
+                  )}
+              </PMHStack>
+            )}
+            <PMHStack justify="flex-end" flex="1">
               {totalArtifacts > 0 && (
                 <PMSegmentedBar
                   width="160px"
@@ -384,6 +507,7 @@ export const PackageArtifactsTable: React.FC<PackageArtifactsTableProps> = (
           canDistributeFromApp={canDistributeFromApp}
           isDistributeReadinessLoading={isDistributeReadinessLoading}
           hasOutdatedArtifacts={hasOutdatedArtifacts}
+          lastDistributionStatus={lastDistributionStatus}
         />
       </PMHStack>
       <PMAccordion.ItemContent>

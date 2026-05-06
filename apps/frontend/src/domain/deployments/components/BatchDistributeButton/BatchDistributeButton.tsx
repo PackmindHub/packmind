@@ -28,6 +28,13 @@ export const BatchDistributeButton: React.FC<BatchDistributeButtonProps> = ({
   const nonEmptyGroups = groups.filter((g) => g.packageIds.length > 0);
 
   const handleClick = async () => {
+    pmToaster.create({
+      type: 'success',
+      title: 'Distribution started',
+      description:
+        'The distributions have started and may take a few minutes to complete.',
+    });
+
     try {
       const deployments = await deployOutdatedByTargets(nonEmptyGroups);
       const notifications = createPackagesDeploymentNotifications(deployments);
