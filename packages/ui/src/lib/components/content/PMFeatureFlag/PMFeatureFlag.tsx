@@ -10,12 +10,6 @@ export interface IPMFeatureFlagProps {
 export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
   'rule-details-detection-tab';
 
-export const MCP_CONFIG_REDESIGN_FEATURE_KEY = 'mcp-config-redesign';
-
-export const STANDARD_SAMPLES_FEATURE_KEY = 'standard-samples';
-
-export const CHANGE_PROPOSALS_FEATURE_KEY = 'change-proposals';
-
 /* Custom feature toggle for the "Propose change" links in the app */
 export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
   'change-proposals-in-webapp';
@@ -24,14 +18,6 @@ export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [STANDARD_SAMPLES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [CHANGE_PROPOSALS_FEATURE_KEY]: [
-    '@packmind.com',
-    '@promyze.com',
-    '@monpetitplacement.fr',
-    '@ninaa.io',
-  ],
   [ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY]: [
     '@packmind.com',
     '@promyze.com',
