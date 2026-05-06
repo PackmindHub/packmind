@@ -111,6 +111,74 @@ describe('CrispTrackEventService', () => {
           });
         });
       });
+
+      describe('when addNewPeopleProfile fails with subscription error', () => {
+        const subscriptionError = {
+          reason: 'error',
+          message: 'subscription_upgrade_required',
+          code: 402,
+          data: {
+            namespace: 'response',
+            message: 'Got response error: subscription_upgrade_required',
+          },
+        };
+
+        beforeEach(() => {
+          mockCrispClient.website.checkPeopleProfileExists.mockRejectedValue({
+            code: 404,
+          });
+          mockCrispClient.website.addNewPeopleProfile.mockRejectedValue(
+            subscriptionError,
+          );
+        });
+
+        it('does not throw', async () => {
+          await expect(
+            service.createPeopleIfNotAlreadyExists(regularEmail),
+          ).resolves.toBeUndefined();
+        });
+
+        it('logs the failure at error level', async () => {
+          await service.createPeopleIfNotAlreadyExists(regularEmail);
+
+          expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining('subscription_upgrade_required'),
+          );
+        });
+      });
+
+      describe('when checkPeopleProfileExists fails with non-404 error', () => {
+        beforeEach(() => {
+          mockCrispClient.website.checkPeopleProfileExists.mockRejectedValue({
+            code: 500,
+            message: 'Internal Server Error',
+          });
+        });
+
+        it('does not throw', async () => {
+          await expect(
+            service.createPeopleIfNotAlreadyExists(regularEmail),
+          ).resolves.toBeUndefined();
+        });
+
+        it('does not attempt to create the profile', async () => {
+          await service.createPeopleIfNotAlreadyExists(regularEmail);
+
+          expect(
+            mockCrispClient.website.addNewPeopleProfile,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('logs the failure at error level', async () => {
+          await service.createPeopleIfNotAlreadyExists(regularEmail);
+
+          expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining(
+              'createPeopleIfNotAlreadyExists for user@e',
+            ),
+          );
+        });
+      });
     });
   });
 

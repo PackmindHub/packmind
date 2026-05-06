@@ -1,9 +1,19 @@
 import { Crisp } from 'crisp-api';
 import { maskEmail, PackmindLogger } from '@packmind/logger';
-import { Configuration, getErrorMessage } from '@packmind/node-utils';
+import { Configuration } from '@packmind/node-utils';
 import { isTrialEmail } from './utils/email.utils';
 
 const origin = 'CrispTrackEventService';
+
+function describeCrispError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (error && typeof error === 'object') {
+    return JSON.stringify(error);
+  }
+  return String(error);
+}
 
 export class CrispTrackEventService {
   private initialized = false;
@@ -62,37 +72,46 @@ export class CrispTrackEventService {
       `[Crisp API] Before checkPeopleProfileExists for ${maskEmail(email)}`,
     );
     try {
-      await this.crispClient.website.checkPeopleProfileExists(
-        this.webSite,
+      try {
+        await this.crispClient.website.checkPeopleProfileExists(
+          this.webSite,
+          email,
+        );
+        this.logger.info(
+          `[Crisp API] After checkPeopleProfileExists for ${maskEmail(email)} - profile exists`,
+        );
+        return;
+      } catch (error: unknown) {
+        const isNotFound =
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 404;
+        if (!isNotFound) {
+          throw error;
+        }
+      }
+
+      const peopleProfile = {
         email,
+        person: {
+          nickname: email,
+        },
+      };
+      this.logger.info(
+        `[Crisp API] Before addNewPeopleProfile for ${maskEmail(email)}`,
+      );
+      await this.crispClient.website.addNewPeopleProfile(
+        this.webSite,
+        peopleProfile,
       );
       this.logger.info(
-        `[Crisp API] After checkPeopleProfileExists for ${maskEmail(email)} - profile exists`,
+        `[Crisp API] After addNewPeopleProfile for ${maskEmail(email)} - success`,
       );
-    } catch (error: unknown) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code === 404
-      ) {
-        const peopleProfile = {
-          email,
-          person: {
-            nickname: email,
-          },
-        };
-        this.logger.info(
-          `[Crisp API] Before addNewPeopleProfile for ${maskEmail(email)}`,
-        );
-        await this.crispClient.website.addNewPeopleProfile(
-          this.webSite,
-          peopleProfile,
-        );
-        this.logger.info(
-          `[Crisp API] After addNewPeopleProfile for ${maskEmail(email)} - success`,
-        );
-      }
+    } catch (error) {
+      this.logger.error(
+        `[Crisp API] createPeopleIfNotAlreadyExists for ${maskEmail(email)} failed: ${describeCrispError(error)}`,
+      );
     }
   }
 
@@ -131,7 +150,7 @@ export class CrispTrackEventService {
       );
     } catch (error) {
       this.logger.error(
-        `[Crisp API] addPeopleEvent '${eventName}' for ${maskEmail(email)} failed: ${getErrorMessage(error)}`,
+        `[Crisp API] addPeopleEvent '${eventName}' for ${maskEmail(email)} failed: ${describeCrispError(error)}`,
       );
     }
   }
