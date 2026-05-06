@@ -18,7 +18,7 @@ const COPY: Record<
     bodyPrefix: string;
     bodySuffix: string;
     confirmText: string;
-    confirmColorScheme: string;
+    confirmColorScheme: 'green' | 'red';
   }
 > = {
   accept: {

@@ -110,4 +110,25 @@ describe('ConfirmSkillDecisionDialog', () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe('when isPending is true', () => {
+    it('does not call onConfirm when the confirm button is clicked', async () => {
+      const onConfirm = jest.fn();
+      renderWithProviders(
+        <ConfirmSkillDecisionDialog
+          {...baseProps}
+          decision="accept"
+          isPending={true}
+          onConfirm={onConfirm}
+        />,
+      );
+      // When loading, Chakra replaces the button label with a spinner so the
+      // accessible name "Accept" is no longer present. Select the confirm button
+      // by position: Cancel is first, Confirm is second.
+      const buttons = await screen.findAllByRole('button');
+      const confirmButton = buttons[buttons.length - 2]; // second-to-last (last is close trigger)
+      fireEvent.click(confirmButton);
+      expect(onConfirm).not.toHaveBeenCalled();
+    });
+  });
 });
