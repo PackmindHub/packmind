@@ -1,5 +1,5 @@
 import { PMBox, PMHeading, PMMarkdownViewer, PMVStack } from '@packmind/ui';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ChangeProposalId,
   CommandCreationProposalOverview,
@@ -12,6 +12,10 @@ import { useUserLookup } from '../../hooks/useUserLookup';
 import { stripFrontmatter } from '../../../artifacts/utils/stripFrontmatter';
 import { SubmissionBanner } from '../SubmissionBanner';
 import { CreationReviewHeader } from '../shared/CreationReviewHeader';
+import {
+  ConfirmCreationDecisionDialog,
+  type CreationDecision,
+} from '../shared/ConfirmCreationDecisionDialog';
 import { ProposalMessage } from '../shared/ProposalMessage';
 import {
   ProposalDetailEmpty,
@@ -50,6 +54,9 @@ export function CreateCommandReviewDetail({
     },
   });
 
+  const [pendingDecision, setPendingDecision] =
+    useState<CreationDecision | null>(null);
+
   const userLookup = useUserLookup();
 
   const getPreviewCommand = useCallback(() => {
@@ -75,6 +82,16 @@ export function CreateCommandReviewDetail({
     };
   }, [displayedProposal]);
 
+  const handleDialogConfirm = useCallback(async () => {
+    if (!displayedProposal) return;
+    if (pendingDecision === 'accept') {
+      await handleAccept(displayedProposal.payload);
+    } else if (pendingDecision === 'dismiss') {
+      await handleReject();
+    }
+    setPendingDecision(null);
+  }, [pendingDecision, handleAccept, handleReject, displayedProposal]);
+
   if (isLoading && !displayedProposal) {
     return <ProposalDetailLoading />;
   }
@@ -92,11 +109,24 @@ export function CreateCommandReviewDetail({
         artefactName={displayedProposal.name}
         latestAuthor={authorName}
         latestTime={new Date(displayedProposal.lastContributedAt)}
-        onAccept={() => handleAccept(displayedProposal.payload)}
-        onDismiss={handleReject}
+        onAccept={() => setPendingDecision('accept')}
+        onDismiss={() => setPendingDecision('dismiss')}
         isPending={isPending}
         isSubmitted={!!submittedState}
         getPreviewCommand={getPreviewCommand}
+      />
+      <ConfirmCreationDecisionDialog
+        artefactLabel="command"
+        open={pendingDecision !== null}
+        decision={pendingDecision ?? 'accept'}
+        artefactName={displayedProposal.payload.name}
+        isPending={isPending}
+        onConfirm={handleDialogConfirm}
+        onOpenChange={(open) => {
+          if (!open && !isPending) {
+            setPendingDecision(null);
+          }
+        }}
       />
       <PMBox
         px={6}
