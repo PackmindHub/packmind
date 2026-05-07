@@ -2,6 +2,8 @@
 name: 'packmind-create-skill'
 description: 'Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Cursor''s capabilities with specialized knowledge, workflows, or tool integrations.'
 license: 'Complete terms in LICENSE.txt'
+metadata:
+ packmind-cli-version: "< 0.25.0"
 ---
 
 # Create skill
@@ -277,3 +279,4 @@ After successful distribution, check if the skill fits an existing package:
    - Run: `packmind-cli packages add --to <package-slug> --skill <skill-slug>`
    - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
    - If yes, run: `packmind-cli install`
+

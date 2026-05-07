@@ -2,6 +2,8 @@
 name: 'packmind-cli-list-commands'
 description: 'Reference for Packmind CLI listing commands. This skill should be used when an agent needs to discover available standards, commands, or skills in the Packmind organization.'
 license: 'Complete terms in LICENSE.txt'
+metadata:
+ packmind-cli-version: "< 0.27.0"
 ---
 
 # Packmind CLI List Commands
@@ -36,7 +38,8 @@ Example output format to show the user:
 | `packmind-cli standards list` | List coding standards |
 | `packmind-cli commands list` | List reusable commands |
 | `packmind-cli skills list` | List available skills |
-| `packmind-cli install --list` | List available packages |
+| `packmind-cli packages list` | List available packages |
+| `packmind-cli packages show <package-slug>` | Show content of a package |
 
 ## Prerequisites
 
@@ -51,3 +54,4 @@ If not logged in, authenticate first:
 ```bash
 packmind-cli login
 ```
+

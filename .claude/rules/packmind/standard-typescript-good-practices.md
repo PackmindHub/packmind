@@ -6,7 +6,7 @@ alwaysApply: false
 description: 'Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeOf in custom errors and requiring intersection types (DomainType & { extraField: T }) for presentation DTO enrichment to improve reliability and catch domain-field drift at compile time.'
 ---
 
-## Standard: Typescript good practices
+# Standard: Typescript good practices
 
 Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeOf in custom errors and requiring intersection types (DomainType & { extraField: T }) for presentation DTO enrichment to improve reliability and catch domain-field drift at compile time. :
 * Do not use `Object.setPrototypeOf` when defining errors.
