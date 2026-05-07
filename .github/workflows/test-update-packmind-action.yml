@@ -24,12 +24,6 @@ jobs:
         uses: PackmindHub/update-packmind-artifacts@v1.0.0
         with:
           packmind-api-key: ${{ secrets.PACKMIND_API_KEY_V3 }}
-          branch-name: test-action-update-${{ github.run_id }}
-          pr-title: '[TEST] update-packmind-artifacts action — run ${{ github.run_id }}'
-          pr-body: |
-            Automated test PR opened by the sandbox workflow `test-update-packmind-action.yml`.
-            Validates `PackmindHub/update-packmind-artifacts@v1.0.0` end-to-end before official Marketplace release.
-            Safe to close + delete branch after review.
 
       - name: Show outputs
         run: |
