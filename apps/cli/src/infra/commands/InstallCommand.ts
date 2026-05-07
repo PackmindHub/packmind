@@ -15,6 +15,10 @@ import {
   InstallHandlerDependencies,
 } from './installPackagesHandler';
 import { CodingAgent, PackmindLockFile } from '@packmind/types';
+import {
+  buildInstallSummary,
+  buildIncapableArtifactsWarning,
+} from './installSummary';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -122,39 +126,6 @@ export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   }
 
   return merged;
-}
-
-function buildInstallSummary(result: IInstallResult): string {
-  const contentParts = [
-    result.standardsCount > 0
-      ? `${result.standardsCount} ${result.standardsCount === 1 ? 'standard' : 'standards'}`
-      : null,
-    result.commandsCount > 0
-      ? `${result.commandsCount} ${result.commandsCount === 1 ? 'command' : 'commands'}`
-      : null,
-    result.skillsCount > 0
-      ? `${result.skillsCount} ${result.skillsCount === 1 ? 'skill' : 'skills'}`
-      : null,
-    result.recipesCount > 0
-      ? `${result.recipesCount} ${result.recipesCount === 1 ? 'recipe' : 'recipes'}`
-      : null,
-  ].filter(Boolean);
-
-  const contentChanged = result.contentFilesChanged > 0;
-
-  if (!contentChanged && contentParts.length === 0) {
-    return '✅ Nothing to install';
-  }
-
-  if (!contentChanged) {
-    return `✅ Already up to date — ${contentParts.join(', ')}`;
-  }
-
-  if (contentParts.length === 0) {
-    return '✅ Packages removed';
-  }
-
-  return `✅ Synced ${contentParts.join(', ')}`;
 }
 
 async function notifyArtefactsDistributionIfInGitRepo(params: {
@@ -358,9 +329,14 @@ export async function installHandler({
     logWarningConsole(warning);
   }
 
-  logConsole(buildInstallSummary(combined));
-
-  await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd });
+  if (results.length > 0) {
+    const capabilityWarning = buildIncapableArtifactsWarning(combined);
+    if (capabilityWarning) {
+      logWarningConsole(capabilityWarning);
+    }
+    logConsole(buildInstallSummary(combined));
+    await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd });
+  }
 
   const allErrors = [...combined.errors, ...thrownErrors];
 

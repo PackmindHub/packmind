@@ -23,6 +23,7 @@ jest.mock('../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logWarningConsole: jest.fn(),
+  formatCommand: jest.fn((cmd: string) => cmd),
 }));
 
 jest.mock('@packmind/logger', () => ({
@@ -526,6 +527,82 @@ describe('installCommand', () => {
           expect.stringContaining('2 standards'),
         );
       });
+    });
+  });
+
+  describe('installHandler output', () => {
+    beforeEach(() => {
+      mockFs.existsSync.mockReturnValue(false);
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    it('emits the capability warning before the summary line', async () => {
+      mockInstall.mockResolvedValue(
+        makeResult({
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+          resolvedAgents: ['agents_md', 'packmind'],
+          sourceArtifacts: {
+            skillsCount: 3,
+            standardsCount: 0,
+            commandsCount: 0,
+            recipesCount: 0,
+          },
+        }),
+      );
+
+      await handler({
+        installPath: '',
+        packages: ['@testing/cli-e2e'],
+        list: false,
+        show: '',
+        status: false,
+        skipInstalledAt: false,
+      });
+
+      const warningIndex =
+        mockConsoleLogger.logWarningConsole.mock.calls.findIndex(([msg]) =>
+          msg.includes('could not be rendered'),
+        );
+      const summaryIndex = mockConsoleLogger.logConsole.mock.calls.findIndex(
+        ([msg]) => msg.includes('Created packmind.json'),
+      );
+      expect(warningIndex).toBeGreaterThanOrEqual(0);
+      expect(summaryIndex).toBeGreaterThanOrEqual(0);
+
+      const warningOrder =
+        mockConsoleLogger.logWarningConsole.mock.invocationCallOrder[
+          warningIndex
+        ];
+      const summaryOrder =
+        mockConsoleLogger.logConsole.mock.invocationCallOrder[summaryIndex];
+      expect(warningOrder).toBeLessThan(summaryOrder);
+    });
+
+    it('never emits "Nothing to install" when packages were added', async () => {
+      mockInstall.mockResolvedValue(
+        makeResult({
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+        }),
+      );
+
+      await handler({
+        installPath: '',
+        packages: ['@testing/cli-e2e'],
+        list: false,
+        show: '',
+        status: false,
+        skipInstalledAt: false,
+      });
+
+      const allLogged = [
+        ...mockConsoleLogger.logConsole.mock.calls,
+        ...mockConsoleLogger.logWarningConsole.mock.calls,
+      ]
+        .map(([msg]) => msg)
+        .join('\n');
+      expect(allLogged).not.toContain('Nothing to install');
     });
   });
 
