@@ -2,6 +2,8 @@
 name: 'packmind-create-command'
 description: 'Guide for creating reusable commands via the Packmind CLI. This skill should be used when users want to create a new command that captures multi-step workflows, recipes, or task automation for distribution to CoPilot.'
 license: 'Complete terms in LICENSE.txt'
+metadata:
+ packmind-cli-version: "< 0.25.0"
 ---
 
 # Command Creator
@@ -345,3 +347,4 @@ EOF
 | `### Step Name` | Yes (≥1) | Step title |
 | Step body (paragraph) | Yes | Implementation details |
 | Step body (code block) | No | Markdown code block with language |
+

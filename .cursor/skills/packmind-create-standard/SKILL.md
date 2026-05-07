@@ -2,6 +2,8 @@
 name: 'packmind-create-standard'
 description: 'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to Cursor.'
 license: 'Complete terms in LICENSE.txt'
+metadata:
+ packmind-cli-version: "< 0.25.0"
 ---
 
 # Standard Creator
@@ -32,7 +34,7 @@ What the standard covers and why.
 
 ## Scope
 
-Where/when the standard applies (e.g., "TypeScript files", "React components").
+Comma-separated glob patterns for files where the standard applies (e.g., "**/*.ts", "**/*.spec.ts,**/*.test.ts").
 
 ## Rules
 
@@ -69,12 +71,20 @@ The `# Title` heading is the **display name** shown in indexes and dashboards. T
 - ❌ `"good-practices"` (slug format and too vague)
 - ❌ `"Standards for Code"` (describes meta-concept, not the actual domain)
 
-**Note**: The Packmind CLI currently requires the `scope` field. The `summary` field is used in other workflows (like MCP) but not yet supported by the CLI.
+**Note**: The `summary` field is used in other workflows but not yet supported by the CLI.
 
 #### Understanding `scope` vs `summary`
 
-- **`scope`** (required by CLI): **WHERE** the standard applies - file patterns, technologies, specific locations
-  - Examples: `"TypeScript test files (*.spec.ts, *.test.ts)"`, `"React functional components"`
+- **`scope`** (required by CLI): **WHERE** the standard applies — comma-separated glob patterns.
+  - Must be **glob patterns only** — never natural language descriptions.
+  - Examples: `"**/*.spec.ts,**/*.test.ts"`, `"**/*.tsx,**/*.jsx"`, `"src/domain/**/*.ts"`
+  - **Common patterns:**
+    - `**/*.ts` — all TypeScript files
+    - `**/*.spec.ts,**/*.test.ts` — all test files
+    - `**/*.tsx,**/*.jsx` — all React component files
+    - `src/domain/**/*.ts` — domain TypeScript files under src
+    - `packages/**/src/**/*.ts` — all package source files
+  - ⚠️ **Never write natural language** like "TypeScript files" or "React components" — the value is used as literal glob patterns for file matching, so natural language will match nothing.
 - **`summary`** (optional, not yet CLI-supported): **WHEN/WHY** to apply - high-level purpose and trigger condition
   - Examples: `"Apply when writing tests to ensure consistency"`, `"Use when handling user data for privacy compliance"`
 
@@ -145,7 +155,7 @@ Transform the understanding into a complete markdown draft with rules and exampl
 2. Draft structure:
    - `# <Standard Title>` (Title Case, 2–5 words)
    - `## Description` — what the standard covers and why it exists
-   - `## Scope` — where/when the standard applies (file patterns, technologies)
+   - `## Scope` — comma-separated glob patterns (required)
    - `## Rules` — each rule as a `### <rule text>` subsection following the Rule Writing Guidelines below
    - For each rule that benefits from code examples, add:
      - `#### Positive Example` with a language-annotated code block showing the compliant approach
@@ -225,7 +235,7 @@ Valid language values for code blocks:
 - TYPESCRIPT, TYPESCRIPT_TSX
 - JAVASCRIPT, JAVASCRIPT_JSX
 - PYTHON, JAVA, GO, RUST, CSHARP
-- PHP, RUBY, KOTLIN, SWIFT, SQL
+- PHP, RUBY, KOTLIN, SWIFT, DART, SQL
 - HTML, CSS, SCSS, YAML, JSON
 - MARKDOWN, BASH, GENERIC
 
@@ -300,7 +310,7 @@ Rules:
    {
      "name": "Standard Name",
      "description": "What the standard covers and why.",
-     "scope": "Where/when the standard applies.",
+     "scope": "**/*.spec.ts,**/*.test.ts",
      "rules": [
        {
          "content": "Rule description starting with action verb",
@@ -389,7 +399,7 @@ Enforce consistent testing patterns in TypeScript test files to improve readabil
 
 ## Scope
 
-TypeScript test files (*.spec.ts, *.test.ts)
+**/*.spec.ts,**/*.test.ts
 
 ## Rules
 
@@ -444,7 +454,7 @@ it('validates user', () => { expect(result.name).toBe('test'); expect(result.age
 **Creating the standard (piped via stdin):**
 ```bash
 packmind-cli standards create --origin-skill packmind-create-standard <<'EOF'
-{"name":"TypeScript Testing Conventions","description":"Enforce consistent testing patterns...","scope":"TypeScript test files (*.spec.ts, *.test.ts)","rules":[...]}
+{"name":"TypeScript Testing Conventions","description":"Enforce consistent testing patterns...","scope":"**/*.spec.ts,**/*.test.ts","rules":[...]}
 EOF
 ```
 
@@ -454,8 +464,9 @@ EOF
 |---|---|---|
 | `# Title` | Yes | Title Case, descriptive, 2–5 words |
 | `## Description` | Yes | What and why |
-| `## Scope` | Yes (CLI) | Where it applies |
+| `## Scope` | Yes (CLI) | Comma-separated glob patterns |
 | `## Rules` | Yes | Contains rule subsections |
 | `### Rule text` | Yes (≥1) | Rule text (verb-first, max ~25 words) |
 | `#### Positive Example` | No | Valid code in fenced block |
 | `#### Negative Example` | No | Invalid code in fenced block |
+
