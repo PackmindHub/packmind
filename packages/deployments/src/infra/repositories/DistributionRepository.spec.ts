@@ -39,13 +39,19 @@ describe('DistributionRepository', () => {
     SelectQueryBuilder<Distribution>
   > => {
     const qb = {
+      innerJoin: jest.fn().mockReturnThis(),
       innerJoinAndSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       setParameter: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      distinctOn: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
+      getRawMany: jest.fn(),
     } as unknown as jest.Mocked<SelectQueryBuilder<Distribution>>;
     return qb;
   };
@@ -1327,112 +1333,101 @@ describe('DistributionRepository', () => {
     const targetId1 = createTargetId('target-1');
     const targetId2 = createTargetId('target-2');
     const gitRepoId1 = createGitRepoId('git-repo-1');
+    const gitRepoId2 = createGitRepoId('git-repo-2');
 
-    const createStandardVersion = (
-      id: string,
-      standardId: string,
-      name: string,
-      version = 1,
-    ) => ({
-      id: createStandardVersionId(id),
-      standardId: createStandardId(standardId),
-      name,
-      slug: name.toLowerCase().replace(/ /g, '-'),
-      description: `Description for ${name}`,
-      version,
-      summary: null,
-      gitCommit: undefined,
-      userId: createUserId('author-1'),
-      scope: null,
-    });
+    type LatestRowRaw = {
+      distributedPackageId: string;
+      targetId: ReturnType<typeof createTargetId>;
+      targetName: string;
+      gitRepoId: string;
+      deploymentDate: string;
+    };
+    type StandardVersionRowRaw = {
+      distributedPackageId: string;
+      standardId: StandardId;
+      name: string;
+      slug: string;
+      version: number;
+    };
+    type RecipeVersionRowRaw = {
+      distributedPackageId: string;
+      recipeId: RecipeId;
+      name: string;
+      slug: string;
+      version: number;
+    };
+    type SkillVersionRowRaw = {
+      distributedPackageId: string;
+      skillId: SkillId;
+      name: string;
+      slug: string;
+      version: number;
+    };
 
-    const createRecipeVersion = (
-      id: string,
-      recipeId: string,
-      name: string,
-      version = 1,
-    ) => ({
-      id: createRecipeVersionId(id),
-      recipeId: createRecipeId(recipeId),
-      name,
-      slug: name.toLowerCase().replace(/ /g, '-'),
-      content: `Content for ${name}`,
-      version,
-      summary: null,
-      userId: null,
-    });
-
-    const createDistributionForTarget = (
-      id: string,
-      createdAt: string,
-      tgtId: string,
-      tgtName: string,
-      gRepoId: string,
-      distributedPackages: Distribution['distributedPackages'],
-    ): Distribution => ({
-      id: createDistributionId(id),
-      organizationId,
-      authorId: createUserId('author-1'),
-      status: DistributionStatus.success,
-      target: {
-        id: createTargetId(tgtId),
-        name: tgtName,
-        path: '/',
-        gitRepoId: createGitRepoId(gRepoId),
-      },
-      distributedPackages,
-      createdAt,
-      renderModes: [],
-      source: 'cli',
-    });
+    const seedRawMany = (
+      latestRows: LatestRowRaw[],
+      standardRows: StandardVersionRowRaw[] = [],
+      recipeRows: RecipeVersionRowRaw[] = [],
+      skillRows: SkillVersionRowRaw[] = [],
+    ) => {
+      (mockQueryBuilder.getRawMany as jest.Mock)
+        .mockResolvedValueOnce(latestRows)
+        .mockResolvedValueOnce(standardRows)
+        .mockResolvedValueOnce(recipeRows)
+        .mockResolvedValueOnce(skillRows);
+    };
 
     describe('with standards and recipes across multiple targets', () => {
-      const sv1 = createStandardVersion('sv-1', 'std-1', 'Standard One', 2);
-      const rv1 = createRecipeVersion('rv-1', 'recipe-1', 'Recipe One', 3);
-      const sv2 = createStandardVersion('sv-2', 'std-2', 'Standard Two', 1);
+      const standardId1 = createStandardId('std-1');
+      const standardId2 = createStandardId('std-2');
+      const recipeId1 = createRecipeId('recipe-1');
 
       let result: OutdatedDeploymentsByTarget[];
 
       beforeEach(async () => {
-        const dist1 = createDistributionForTarget(
-          'dist-1',
-          '2024-01-02T00:00:00Z',
-          'target-1',
-          'Target One',
-          'git-repo-1',
+        seedRawMany(
           [
             {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [sv1],
-              recipeVersions: [rv1],
-              skillVersions: [],
+              distributedPackageId: 'dp-1',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              deploymentDate: '2024-01-02T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-2',
+              targetId: targetId2,
+              targetName: 'Target Two',
+              gitRepoId: gitRepoId2,
+              deploymentDate: '2024-01-03T00:00:00Z',
+            },
+          ],
+          [
+            {
+              distributedPackageId: 'dp-1',
+              standardId: standardId1,
+              name: 'Standard One',
+              slug: 'standard-one',
+              version: 2,
+            },
+            {
+              distributedPackageId: 'dp-2',
+              standardId: standardId2,
+              name: 'Standard Two',
+              slug: 'standard-two',
+              version: 1,
+            },
+          ],
+          [
+            {
+              distributedPackageId: 'dp-1',
+              recipeId: recipeId1,
+              name: 'Recipe One',
+              slug: 'recipe-one',
+              version: 3,
             },
           ],
         );
-
-        const dist2 = createDistributionForTarget(
-          'dist-2',
-          '2024-01-03T00:00:00Z',
-          'target-2',
-          'Target Two',
-          'git-repo-2',
-          [
-            {
-              id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: packageId2,
-              operation: 'add',
-              standardVersions: [sv2],
-              recipeVersions: [],
-              skillVersions: [],
-            },
-          ],
-        );
-
-        mockQueryBuilder.getMany.mockResolvedValue([dist1, dist2]);
 
         result = await repository.findOutdatedDeploymentsBySpace(
           organizationId,
@@ -1442,11 +1437,6 @@ describe('DistributionRepository', () => {
 
       it('returns entries for both targets', () => {
         expect(result).toHaveLength(2);
-      });
-
-      it('includes first target in results', () => {
-        const target1 = result.find((r) => r.targetId === targetId1);
-        expect(target1).toBeDefined();
       });
 
       it('sets correct target name for first target', () => {
@@ -1459,14 +1449,9 @@ describe('DistributionRepository', () => {
         expect(target1!.gitRepoId).toBe(gitRepoId1);
       });
 
-      it('includes one standard for first target', () => {
-        const target1 = result.find((r) => r.targetId === targetId1);
-        expect(target1!.standards).toHaveLength(1);
-      });
-
       it('sets correct standard artifactId for first target', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
-        expect(target1!.standards[0].artifactId).toBe(sv1.standardId);
+        expect(target1!.standards[0].artifactId).toBe(standardId1);
       });
 
       it('sets correct standard deployedVersion for first target', () => {
@@ -1474,14 +1459,9 @@ describe('DistributionRepository', () => {
         expect(target1!.standards[0].deployedVersion).toBe(2);
       });
 
-      it('includes one recipe for first target', () => {
-        const target1 = result.find((r) => r.targetId === targetId1);
-        expect(target1!.recipes).toHaveLength(1);
-      });
-
       it('sets correct recipe artifactId for first target', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
-        expect(target1!.recipes[0].artifactId).toBe(rv1.recipeId);
+        expect(target1!.recipes[0].artifactId).toBe(recipeId1);
       });
 
       it('sets correct recipe deployedVersion for first target', () => {
@@ -1489,14 +1469,9 @@ describe('DistributionRepository', () => {
         expect(target1!.recipes[0].deployedVersion).toBe(3);
       });
 
-      it('includes one standard for second target', () => {
-        const target2 = result.find((r) => r.targetId === targetId2);
-        expect(target2!.standards).toHaveLength(1);
-      });
-
       it('sets correct standard artifactId for second target', () => {
         const target2 = result.find((r) => r.targetId === targetId2);
-        expect(target2!.standards[0].artifactId).toBe(sv2.standardId);
+        expect(target2!.standards[0].artifactId).toBe(standardId2);
       });
 
       it('includes no recipes for second target', () => {
@@ -1505,135 +1480,89 @@ describe('DistributionRepository', () => {
       });
     });
 
-    describe('with removed packages', () => {
-      const sv1 = createStandardVersion('sv-1', 'std-1', 'Standard One', 1);
-      let result: OutdatedDeploymentsByTarget[];
+    describe('SQL shape', () => {
+      it("filters latest distributions to operation='add'", async () => {
+        seedRawMany([]);
 
-      beforeEach(async () => {
-        const addDist = createDistributionForTarget(
-          'dist-1',
-          '2024-01-01T00:00:00Z',
-          'target-1',
-          'Target One',
-          'git-repo-1',
-          [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [sv1],
-              recipeVersions: [],
-              skillVersions: [],
-            },
-          ],
-        );
-
-        const removeDist = createDistributionForTarget(
-          'dist-2',
-          '2024-01-02T00:00:00Z',
-          'target-1',
-          'Target One',
-          'git-repo-1',
-          [
-            {
-              id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: packageId1,
-              operation: 'remove',
-              standardVersions: [],
-              recipeVersions: [],
-              skillVersions: [],
-            },
-          ],
-        );
-
-        mockQueryBuilder.getMany.mockResolvedValue([removeDist, addDist]);
-
-        result = await repository.findOutdatedDeploymentsBySpace(
+        await repository.findOutdatedDeploymentsBySpace(
           organizationId,
           spaceId,
         );
+
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          'distributedPackage.operation = :operation',
+          { operation: 'add' },
+        );
       });
 
-      it('excludes artifacts from removed packages', () => {
-        expect(result).toHaveLength(0);
+      it('uses DISTINCT ON (target_id, package_id) to keep one row per pair', async () => {
+        seedRawMany([]);
+
+        await repository.findOutdatedDeploymentsBySpace(
+          organizationId,
+          spaceId,
+        );
+
+        expect(mockQueryBuilder.distinctOn).toHaveBeenCalledWith([
+          'distribution.target_id',
+          'distributedPackage.package_id',
+        ]);
       });
     });
 
     describe('with no distributions', () => {
-      let result: OutdatedDeploymentsByTarget[];
+      it('returns an empty array', async () => {
+        seedRawMany([]);
 
-      beforeEach(async () => {
-        mockQueryBuilder.getMany.mockResolvedValue([]);
-
-        result = await repository.findOutdatedDeploymentsBySpace(
+        const result = await repository.findOutdatedDeploymentsBySpace(
           organizationId,
           spaceId,
         );
-      });
 
-      it('returns an empty array', () => {
         expect(result).toEqual([]);
       });
     });
 
-    describe('with duplicate standard versions across packages', () => {
-      const sv1v1 = createStandardVersion(
-        'sv-1-v1',
-        'std-1',
-        'Standard One v1',
-        1,
-      );
-      const sv1v2 = createStandardVersion(
-        'sv-1-v2',
-        'std-1',
-        'Standard One v2',
-        2,
-      );
+    describe('with duplicate standard versions across distributedPackages', () => {
+      const standardId1 = createStandardId('std-1');
 
       let result: OutdatedDeploymentsByTarget[];
 
       beforeEach(async () => {
-        const dist1 = createDistributionForTarget(
-          'dist-2',
-          '2024-01-02T00:00:00Z',
-          'target-1',
-          'Target One',
-          'git-repo-1',
+        seedRawMany(
           [
             {
-              id: createDistributedPackageId('dp-2'),
-              distributionId: createDistributionId('dist-2'),
-              packageId: packageId1,
-              operation: 'add',
-              standardVersions: [sv1v2],
-              recipeVersions: [],
-              skillVersions: [],
+              distributedPackageId: 'dp-1',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              deploymentDate: '2024-01-01T00:00:00Z',
+            },
+            {
+              distributedPackageId: 'dp-2',
+              targetId: targetId1,
+              targetName: 'Target One',
+              gitRepoId: gitRepoId1,
+              deploymentDate: '2024-01-02T00:00:00Z',
+            },
+          ],
+          [
+            {
+              distributedPackageId: 'dp-2',
+              standardId: standardId1,
+              name: 'Standard One v2',
+              slug: 'standard-one-v2',
+              version: 2,
+            },
+            {
+              distributedPackageId: 'dp-1',
+              standardId: standardId1,
+              name: 'Standard One v1',
+              slug: 'standard-one-v1',
+              version: 1,
             },
           ],
         );
-
-        const dist2 = createDistributionForTarget(
-          'dist-1',
-          '2024-01-01T00:00:00Z',
-          'target-1',
-          'Target One',
-          'git-repo-1',
-          [
-            {
-              id: createDistributedPackageId('dp-1'),
-              distributionId: createDistributionId('dist-1'),
-              packageId: packageId2,
-              operation: 'add',
-              standardVersions: [sv1v1],
-              recipeVersions: [],
-              skillVersions: [],
-            },
-          ],
-        );
-
-        mockQueryBuilder.getMany.mockResolvedValue([dist1, dist2]);
 
         result = await repository.findOutdatedDeploymentsBySpace(
           organizationId,
@@ -1646,9 +1575,174 @@ describe('DistributionRepository', () => {
         expect(target1!.standards).toHaveLength(1);
       });
 
-      it('keeps the most recent version after deduplication', () => {
+      it('keeps the first-seen version after deduplication', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
         expect(target1!.standards[0].deployedVersion).toBe(2);
+      });
+    });
+  });
+
+  describe('findActivePackageOperationsBySpace', () => {
+    const spaceId = createSpaceId('space-findby-1');
+    const lastDistributedAt = '2026-04-30T10:00:00.000Z';
+
+    const rawRow = (
+      packageId: ReturnType<typeof createPackageId>,
+      operation: 'add' | 'remove',
+      status: DistributionStatus,
+    ) => ({
+      targetId,
+      packageId,
+      operation,
+      status,
+      lastDistributedAt,
+    });
+
+    it('projects successful adds onto the active-row shape', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        rawRow(packageId1, 'add', DistributionStatus.success),
+      ]);
+
+      const result =
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          packageId: packageId1,
+          lastDistributionStatus: DistributionStatus.success,
+          lastDistributedAt,
+        },
+      ]);
+    });
+
+    it('keeps failed removes (the package is still effectively distributed)', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        rawRow(packageId1, 'remove', DistributionStatus.failure),
+      ]);
+
+      const result =
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          packageId: packageId1,
+          lastDistributionStatus: DistributionStatus.failure,
+          lastDistributedAt,
+        },
+      ]);
+    });
+
+    it('drops successful removes (the package is no longer on the target)', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        rawRow(packageId1, 'remove', DistributionStatus.success),
+      ]);
+
+      const result =
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(result).toEqual([]);
+    });
+
+    it('keeps failed adds so the UI can surface the failed distribution status', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        rawRow(packageId1, 'add', DistributionStatus.failure),
+      ]);
+
+      const result =
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          packageId: packageId1,
+          lastDistributionStatus: DistributionStatus.failure,
+          lastDistributedAt,
+        },
+      ]);
+    });
+
+    it('keeps in-progress adds so the UI can surface the in-progress status', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+        rawRow(packageId1, 'add', DistributionStatus.in_progress),
+      ]);
+
+      const result =
+        await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(result).toEqual([
+        {
+          targetId,
+          packageId: packageId1,
+          lastDistributionStatus: DistributionStatus.in_progress,
+          lastDistributedAt,
+        },
+      ]);
+    });
+
+    it('filters by spaceId via parameterized query', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+      await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'package.spaceId = :spaceId',
+        { spaceId },
+      );
+    });
+
+    it('uses DISTINCT ON (target_id, package_id) to keep one row per pair', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+      await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(mockQueryBuilder.distinctOn).toHaveBeenCalledWith([
+        'distribution.target_id',
+        'distributedPackage.package_id',
+      ]);
+    });
+
+    it('orders by (target_id, package_id, createdAt DESC) so DISTINCT ON keeps the latest', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+      await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+        'distribution.target_id',
+      );
+      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+        'distributedPackage.package_id',
+      );
+      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+        'distribution.createdAt',
+        'DESC',
+      );
+    });
+
+    it('joins distributedPackages and package without selecting them', async () => {
+      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+      await repository.findActivePackageOperationsBySpace(spaceId);
+
+      expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+        'distribution.distributedPackages',
+        'distributedPackage',
+      );
+      expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+        'distributedPackage.package',
+        'package',
+      );
+    });
+
+    describe('when no rows match the space', () => {
+      it('returns an empty array', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+        const result =
+          await repository.findActivePackageOperationsBySpace(spaceId);
+
+        expect(result).toEqual([]);
       });
     });
   });

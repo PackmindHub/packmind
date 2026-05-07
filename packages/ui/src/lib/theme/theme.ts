@@ -203,7 +203,12 @@ export const packmindTheme = (preflight: boolean) =>
           gray: {
             subtle: { value: '{colors.beige.800}' },
             fg: { value: '{colors.beige.200}' },
-            muted: { value: '{colors.yellow.600}' },
+            muted: { value: '{colors.beige.600}' },
+          },
+          black: {
+            subtle: { value: '{colors.beige.1000}' },
+            fg: { value: '{colors.beige.0}' },
+            muted: { value: '{colors.beige.800}' },
           },
           yellow: {
             subtle: { value: '{colors.yellow.800}' },

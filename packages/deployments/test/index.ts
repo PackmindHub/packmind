@@ -1,3 +1,4 @@
+export * from './activeDistributedPackagesByTargetFactory';
 export * from './deploymentOverviewFactory';
 export * from './distributionFactory';
 export * from './packageFactory';

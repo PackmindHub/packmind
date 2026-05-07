@@ -11,11 +11,7 @@ export const PMSelectTrigger = React.forwardRef<
   ref,
 ) {
   return (
-    <ChakraSelect.Trigger
-      ref={ref}
-      {...props}
-      backgroundColor="background.primary"
-    >
+    <ChakraSelect.Trigger ref={ref} {...props}>
       <ChakraSelect.ValueText placeholder={placeholder} />
       <PMIcon>
         <LuChevronDown />
@@ -76,11 +72,29 @@ const CollapsibleItemGroup = React.forwardRef<
   );
 });
 
+const PMSelectTriggerStyled = React.forwardRef<
+  HTMLButtonElement,
+  ChakraSelect.TriggerProps
+>(function PMSelectTriggerStyled(props, ref) {
+  return (
+    <ChakraSelect.Trigger
+      ref={ref}
+      backgroundColor="background.tertiary"
+      borderColor="transparent"
+      color="fg.muted"
+      _hover={{ borderColor: 'transparent' }}
+      {...props}
+    />
+  );
+});
+
 export const PMSelect: typeof ChakraSelect & {
+  Trigger: typeof PMSelectTriggerStyled;
   ItemGroupLabel: typeof PMSelectItemGroupLabel;
   CollapsibleItemGroup: typeof CollapsibleItemGroup;
 } = {
   ...ChakraSelect,
+  Trigger: PMSelectTriggerStyled,
   ItemGroupLabel: PMSelectItemGroupLabel,
   CollapsibleItemGroup,
 };

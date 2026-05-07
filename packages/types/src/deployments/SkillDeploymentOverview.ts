@@ -3,12 +3,6 @@ import { Skill } from '../skills/Skill';
 import { SkillVersion } from '../skills/SkillVersion';
 import { Target } from './Target';
 
-export interface SkillDeploymentOverview {
-  repositories: RepositorySkillDeploymentStatus[]; // Legacy support
-  targets: TargetSkillDeploymentStatus[]; // New target-centric view
-  skills: SkillDeploymentStatus[];
-}
-
 export interface RepositorySkillDeploymentStatus {
   gitRepo: GitRepo;
   deployedSkills: DeployedSkillInfo[];
@@ -17,7 +11,7 @@ export interface RepositorySkillDeploymentStatus {
 
 export interface TargetSkillDeploymentStatus {
   target: Target;
-  gitRepo: GitRepo; // Include repo info for display
+  gitRepo: GitRepo;
   deployedSkills: DeployedSkillTargetInfo[];
   hasOutdatedSkills: boolean;
 }
@@ -42,8 +36,8 @@ export interface DeployedSkillTargetInfo {
 export interface SkillDeploymentStatus {
   skill: Skill;
   latestVersion: SkillVersion;
-  deployments: RepositorySkillDeploymentInfo[]; // Legacy support
-  targetDeployments: TargetSkillDeploymentInfo[]; // New target-based deployments
+  deployments: RepositorySkillDeploymentInfo[];
+  targetDeployments: TargetSkillDeploymentInfo[];
   hasOutdatedDeployments: boolean;
   isDeleted?: boolean;
 }
@@ -57,7 +51,7 @@ export interface RepositorySkillDeploymentInfo {
 
 export interface TargetSkillDeploymentInfo {
   target: Target;
-  gitRepo: GitRepo; // Include repo info for display
+  gitRepo: GitRepo;
   deployedVersion: SkillVersion;
   isUpToDate: boolean;
   deploymentDate: string;

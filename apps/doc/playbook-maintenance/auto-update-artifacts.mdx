@@ -1,0 +1,53 @@
+---
+title: 'Auto-Update Artifacts'
+---
+
+Keep your Packmind artifacts in sync automatically by scheduling `packmind-cli install` to run in your CI/CD pipeline. When artifacts change on Packmind, the job commits the updated files to a dedicated branch and opens a merge/pull request for review — no manual intervention needed.
+
+## GitHub
+
+<Info>Automated artifact updates via GitHub Actions are coming soon.</Info>
+
+## GitLab
+
+### Prerequisites
+
+Before setting up the CI job, make sure you have:
+
+- A Packmind API key (available from your Packmind user profile settings)
+- Maintainer or Owner access to the GitLab project to create a Project Access Token
+
+### Step 1: Add the workflow file
+
+Copy the ready-to-use `.gitlab-ci.yml` file from the [Packmind repository](https://github.com/PackmindHub/packmind/blob/main/auto-update/.gitlab-ci.yml) and place it at the **root of your GitLab repository**.
+
+If your repository already has a `.gitlab-ci.yml`, merge the `nightly-packmind-update` job into your existing file.
+
+### Step 2: Configure CI variables
+
+In your GitLab project, go to **Settings → CI/CD → Variables** and add the following two variables (mark both as **Masked**):
+
+| Variable              | Value                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `PACKMIND_API_KEY_V3` | Your Packmind API key                                                                    |
+| `PACKMIND_BOT_TOKEN`  | A GitLab Project Access Token with `write_repository` and `api` scopes, role ≥ Developer |
+
+To create a Project Access Token: **Settings → Access Tokens → Add new token**, select scopes `write_repository` and `api`, and set a role of at least Developer.
+
+### Step 3: Run the job
+
+**Manually** — Go to **Build → Pipelines → Run pipeline**, select your default branch, and click **Run pipeline**. The `nightly-packmind-update` job will start automatically.
+
+**On a schedule** — Go to **Settings → CI/CD → Pipeline schedules → Add new schedule**. Use a cron expression such as `0 2 * * 1-5` (every weeknight at 02:00 UTC) and set the target branch to your default branch.
+
+### What happens next
+
+- If artifacts have changed, the job commits the updated files to a `packmind-cli-update` branch and opens a merge request targeting your default branch.
+- If no artifacts have changed, the job exits successfully without creating a commit.
+- If a merge request is already open for `packmind-cli-update`, new changes are appended to it instead of opening a duplicate.
+
+## Related Documentation
+
+- [Distribution](/governance/distribution) — Distribute artifacts to your team manually or via CLI
+- [Updating Your Playbook](/playbook-maintenance/updating-your-playbook) — Other ways to update artifacts
+- [CLI Reference](/tools/cli) — Full reference for `packmind-cli install` and other commands

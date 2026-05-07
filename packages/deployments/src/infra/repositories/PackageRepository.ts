@@ -1,6 +1,7 @@
-import { In, Repository } from 'typeorm';
+import { EntitySchema, In, Repository } from 'typeorm';
 import {
   Package,
+  PackageArtifactCounts,
   PackageId,
   PackageWithArtefacts,
   Recipe,
@@ -503,6 +504,70 @@ export class PackageRepository
       standards: standardsByPackage[pkg.id] || [],
       skills: skillsByPackage[pkg.id] || [],
     }));
+  }
+
+  async countArtifactsForPackagesInSpace(
+    spaceId: SpaceId,
+  ): Promise<Map<PackageId, PackageArtifactCounts>> {
+    this.logger.info('Counting artifacts for packages in space', { spaceId });
+
+    try {
+      type CountRow = { package_id: string; count: string };
+      type PackageIdRow = { package_id: string };
+      const aggregate = (rows: CountRow[]): Map<string, number> =>
+        new Map(rows.map((r) => [r.package_id, Number(r.count)]));
+
+      const junctionCount = (
+        schema: EntitySchema<Record<string, unknown>>,
+        alias: string,
+      ) =>
+        this.repository.manager
+          .getRepository<Record<string, unknown>>(schema)
+          .createQueryBuilder(alias)
+          .select(`${alias}.package_id`, 'package_id')
+          .addSelect('COUNT(*)', 'count')
+          .where(
+            `${alias}.package_id IN ` +
+              `(SELECT id FROM packages WHERE space_id = :spaceId)`,
+            { spaceId },
+          )
+          .groupBy(`${alias}.package_id`)
+          .getRawMany<CountRow>();
+
+      const [packageRows, recipeRows, standardRows, skillRows] =
+        await Promise.all([
+          this.repository
+            .createQueryBuilder('p')
+            .select('p.id', 'package_id')
+            .where('p.space_id = :spaceId', { spaceId })
+            .getRawMany<PackageIdRow>(),
+          junctionCount(PackageRecipesSchema, 'pr'),
+          junctionCount(PackageStandardsSchema, 'ps'),
+          junctionCount(PackageSkillsSchema, 'psk'),
+        ]);
+
+      const recipeCounts = aggregate(recipeRows);
+      const standardCounts = aggregate(standardRows);
+      const skillCounts = aggregate(skillRows);
+
+      const counts = new Map<PackageId, PackageArtifactCounts>();
+      for (const row of packageRows) {
+        const id = row.package_id as PackageId;
+        counts.set(id, {
+          recipes: recipeCounts.get(id) ?? 0,
+          standards: standardCounts.get(id) ?? 0,
+          skills: skillCounts.get(id) ?? 0,
+        });
+      }
+
+      return counts;
+    } catch (error) {
+      this.logger.error('Failed to count artifacts for packages in space', {
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   async addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void> {
