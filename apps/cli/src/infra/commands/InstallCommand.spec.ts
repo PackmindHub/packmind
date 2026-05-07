@@ -30,6 +30,20 @@ jest.mock('@packmind/logger', () => ({
   LogLevel: { INFO: 'INFO' },
 }));
 
+jest.mock('./installPreflightHandler', () => ({
+  installPreflightHandler: jest
+    .fn()
+    .mockResolvedValue({ configReady: true, warned: false }),
+}));
+
+jest.mock('../repositories/ConfigFileRepository', () => ({
+  ConfigFileRepository: jest.fn().mockImplementation(() => ({})),
+}));
+
+jest.mock('../../application/services/AgentArtifactDetectionService', () => ({
+  AgentArtifactDetectionService: jest.fn().mockImplementation(() => ({})),
+}));
+
 import * as path from 'path';
 import { installHandler } from './InstallCommand';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
@@ -101,6 +115,7 @@ describe('installCommand', () => {
           install: mockInstall,
           tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
           installDefaultSkills: mockInstallDefaultSkills,
+          getPackmindGateway: jest.fn().mockReturnValue({}),
         }) as unknown as PackmindCliHexa,
     );
   });
@@ -164,11 +179,20 @@ describe('installCommand', () => {
     });
 
     describe('when the path is a valid directory', () => {
+      const appsDir = path.resolve(process.cwd(), 'apps/frontend');
+      const subProject = path.join(appsDir, 'sub-project');
+
       beforeEach(async () => {
-        mockFs.existsSync.mockReturnValue(true);
         mockFs.statSync.mockReturnValue({
           isDirectory: () => true,
         } as fs.Stats);
+        mockFs.existsSync.mockImplementation((p) => {
+          const s = String(p);
+          return s === appsDir || s === path.join(subProject, 'packmind.json');
+        });
+        mockFs.readdirSync.mockReturnValue([
+          makeDirent('sub-project'),
+        ] as unknown as string[]);
         await handler({
           installPath: 'apps/frontend',
           packages: [],
@@ -176,6 +200,10 @@ describe('installCommand', () => {
           show: '',
           status: false,
         });
+      });
+
+      afterEach(() => {
+        mockFs.readdirSync.mockReturnValue([]);
       });
 
       it('does not exit', () => {
@@ -193,7 +221,11 @@ describe('installCommand', () => {
 
     describe('when no path is provided', () => {
       beforeEach(async () => {
-        mockFs.existsSync.mockReturnValue(false);
+        const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+        mockFs.existsSync.mockImplementation(
+          (p) => String(p) === cwdPackmindJson,
+        );
+        mockFs.readdirSync.mockReturnValue([]);
         await handler({
           installPath: '',
           packages: [],
@@ -219,6 +251,13 @@ describe('installCommand', () => {
     beforeEach(() => {
       mockFs.existsSync.mockReturnValue(true);
       mockFs.statSync.mockReturnValue({ isDirectory: () => true } as fs.Stats);
+      mockFs.readdirSync.mockReturnValue([
+        makeDirent('sub-project'),
+      ] as unknown as string[]);
+    });
+
+    afterEach(() => {
+      mockFs.readdirSync.mockReturnValue([]);
     });
 
     describe('when there are missing access packages', () => {
@@ -524,7 +563,9 @@ describe('installCommand', () => {
     const gitRoot = process.cwd();
 
     beforeEach(() => {
-      mockFs.existsSync.mockReturnValue(false);
+      mockFs.existsSync.mockImplementation((p) =>
+        String(p).endsWith('packmind.json'),
+      );
       mockFs.readdirSync.mockReturnValue([]);
     });
 

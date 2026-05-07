@@ -386,4 +386,29 @@ describe('initHandler', () => {
       );
     });
   });
+
+  describe('when showOnboardHint is false', () => {
+    beforeEach(async () => {
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 1,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+      });
+
+      await initHandler({ ...deps, showOnboardHint: false });
+    });
+
+    it('still displays "Packmind initialized successfully!"', () => {
+      expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+        'Packmind initialized successfully!',
+      );
+    });
+
+    it('does not display the /packmind-onboard hint', () => {
+      expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('/packmind-onboard'),
+      );
+    });
+  });
 });

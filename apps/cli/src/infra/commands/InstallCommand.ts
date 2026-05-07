@@ -15,6 +15,9 @@ import {
   InstallHandlerDependencies,
 } from './installPackagesHandler';
 import { PackmindLockFile } from '@packmind/types';
+import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { AgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
+import { installPreflightHandler } from './installPreflightHandler';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -271,6 +274,18 @@ export async function installHandler({
     }
   }
 
+  const preflight = await installPreflightHandler({
+    configRepository: new ConfigFileRepository(),
+    agentDetectionService: new AgentArtifactDetectionService(),
+    packmindGateway: packmindCliHexa.getPackmindGateway(),
+    baseDirectory: cwd,
+    packages,
+    isTTY: process.stdin.isTTY ?? false,
+    installDefaultSkills:
+      packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
+    cliVersion: CLI_VERSION,
+  });
+
   // Determine target directories
   let targetDirs: string[];
 
@@ -289,9 +304,14 @@ export async function installHandler({
     targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, true));
   }
 
-  // Fallback: if no config files found anywhere, run on cwd (use case will report the error)
   if (targetDirs.length === 0) {
-    targetDirs = [cwd];
+    if (preflight.warned) {
+      return;
+    }
+    logErrorConsole(
+      'No packmind.json found in the current directory or its sub-directories.',
+    );
+    process.exit(1);
   }
 
   const results: IInstallResult[] = [];

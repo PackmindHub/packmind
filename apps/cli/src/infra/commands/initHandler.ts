@@ -27,6 +27,7 @@ export type InitHandlerDependencies = {
   installDefaultSkills: InstallDefaultSkillsFunction;
   cliVersion: string;
   isTTY?: boolean;
+  showOnboardHint?: boolean;
 };
 
 export type InitHandlerResult = {
@@ -49,6 +50,7 @@ export async function initHandler(
     installDefaultSkills,
     cliVersion,
     isTTY,
+    showOnboardHint = true,
   } = deps;
 
   // Step 1: Run config agents flow
@@ -100,9 +102,11 @@ export async function initHandler(
   // Step 3: Display success message with next steps
   logConsole('');
   logSuccessConsole('Packmind initialized successfully!');
-  logInfoConsole(
-    `Next step: Run ${formatCommand('/packmind-onboard')} in your AI agent to onboard the project`,
-  );
+  if (showOnboardHint) {
+    logInfoConsole(
+      `Next step: Run ${formatCommand('/packmind-onboard')} in your AI agent to onboard the project`,
+    );
+  }
 
   return {
     success: true,
