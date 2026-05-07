@@ -24,9 +24,9 @@ export const AGENT_CAPABILITIES: Record<CodingAgent, AgentCapabilityFlags> = {
     commands: false,
     recipes: false,
   },
-  codex: { skills: false, standards: true, commands: false, recipes: false },
+  codex: { skills: true, standards: true, commands: false, recipes: false },
   gitlab_duo: {
-    skills: false,
+    skills: true,
     standards: true,
     commands: false,
     recipes: false,
@@ -34,8 +34,8 @@ export const AGENT_CAPABILITIES: Record<CodingAgent, AgentCapabilityFlags> = {
   claude: { skills: true, standards: true, commands: true, recipes: true },
   cursor: { skills: true, standards: true, commands: true, recipes: true },
   copilot: { skills: true, standards: true, commands: true, recipes: true },
-  continue: { skills: true, standards: true, commands: true, recipes: true },
-  junie: { skills: true, standards: true, commands: true, recipes: true },
+  continue: { skills: false, standards: true, commands: true, recipes: true },
+  junie: { skills: false, standards: true, commands: true, recipes: true },
   opencode: { skills: true, standards: true, commands: true, recipes: true },
 };
 
