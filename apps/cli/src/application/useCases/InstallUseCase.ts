@@ -128,13 +128,8 @@ export class InstallUseCase implements IInstallUseCase {
     });
 
     result.missingAccess = response.missingAccess;
-    result.resolvedAgents = response.resolvedAgents ?? [];
-    result.sourceArtifacts = response.sourceArtifacts ?? {
-      skillsCount: 0,
-      standardsCount: 0,
-      commandsCount: 0,
-      recipesCount: 0,
-    };
+    result.resolvedAgents = response.resolvedAgents;
+    result.sourceArtifacts = response.sourceArtifacts;
 
     if (result.missingAccess.length > 0) {
       result.joinSpaceUrl = await this.computeJoinSpaceUrl(

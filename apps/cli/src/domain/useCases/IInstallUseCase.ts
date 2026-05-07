@@ -1,4 +1,4 @@
-import { CodingAgent, IPublicUseCase } from '@packmind/types';
+import { InstallPackagesResponse, IPublicUseCase } from '@packmind/types';
 
 export type IInstallCommand = {
   baseDirectory?: string;
@@ -6,7 +6,10 @@ export type IInstallCommand = {
   skipInstalledAt?: boolean;
 };
 
-export type IInstallResult = {
+export type IInstallResult = Pick<
+  InstallPackagesResponse,
+  'sourceArtifacts' | 'resolvedAgents' | 'missingAccess'
+> & {
   filesCreated: number;
   filesUpdated: number;
   filesDeleted: number;
@@ -21,17 +24,9 @@ export type IInstallResult = {
   commandsRemoved: number;
   skillsRemoved: number;
   skillDirectoriesDeleted: number;
-  missingAccess: string[];
   joinSpaceUrl?: string;
   configCreated: boolean;
   packagesAdded: string[];
-  sourceArtifacts: {
-    skillsCount: number;
-    standardsCount: number;
-    commandsCount: number;
-    recipesCount: number;
-  };
-  resolvedAgents: CodingAgent[];
 };
 
 export type IInstallUseCase = IPublicUseCase<IInstallCommand, IInstallResult>;

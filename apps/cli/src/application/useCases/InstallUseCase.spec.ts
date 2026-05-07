@@ -1297,28 +1297,5 @@ Old packmind content
         recipesCount: 0,
       });
     });
-
-    it('falls back to zero counts and empty agents when server omits them (older API)', async () => {
-      mockGateway.deployment.install.mockResolvedValue({
-        fileUpdates: { createOrUpdate: [], delete: [] },
-        missingAccess: [],
-        skillFolders: [],
-        // sourceArtifacts and resolvedAgents intentionally omitted
-      } as never);
-      mockConfigFileRepository.configExists.mockResolvedValue(true);
-      mockConfigFileRepository.readConfig.mockResolvedValue({
-        packages: { '@space/pkg': '*' },
-      });
-
-      const result = await useCase.execute({ baseDirectory: '/test' });
-
-      expect(result.resolvedAgents).toEqual([]);
-      expect(result.sourceArtifacts).toEqual({
-        skillsCount: 0,
-        standardsCount: 0,
-        commandsCount: 0,
-        recipesCount: 0,
-      });
-    });
   });
 });
