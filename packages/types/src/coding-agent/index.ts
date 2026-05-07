@@ -2,6 +2,7 @@ export * from './contracts';
 export * from './ICodingAgentDeployerRegistry';
 export * from './ports';
 export * from './validation';
+export * from './AgentCapabilities';
 export * from './CodingAgent';
 export * from './CodingAgentArtefactPaths';
 export * from './resolveArtefactFromPath';
