@@ -2,6 +2,8 @@
 name: 'packmind-create-standard'
 description: 'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to Claude.'
 license: 'Complete terms in LICENSE.txt'
+metadata:
+ packmind-cli-version: "< 0.25.0"
 ---
 
 # Standard Creator
@@ -69,7 +71,7 @@ The `# Title` heading is the **display name** shown in indexes and dashboards. T
 - ❌ `"good-practices"` (slug format and too vague)
 - ❌ `"Standards for Code"` (describes meta-concept, not the actual domain)
 
-**Note**: The `summary` field is used in other workflows (like MCP) but not yet supported by the CLI.
+**Note**: The `summary` field is used in other workflows but not yet supported by the CLI.
 
 #### Understanding `scope` vs `summary`
 
@@ -467,3 +469,4 @@ EOF
 | `### Rule text` | Yes (≥1) | Rule text (verb-first, max ~25 words) |
 | `#### Positive Example` | No | Valid code in fenced block |
 | `#### Negative Example` | No | Invalid code in fenced block |
+

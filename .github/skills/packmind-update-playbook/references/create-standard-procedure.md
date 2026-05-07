@@ -1,6 +1,6 @@
 # Create Standard Procedure
 
-Write a new standard file locally at `.packmind/standards/<slug>.md`. Do NOT call any CLI commands — Phase 4 handles submission via `packmind-cli diff add`.
+Write a new standard file locally at `.packmind/standards/<slug>.md`.
 
 ## Slug Derivation
 
@@ -14,7 +14,7 @@ Derive the slug from the standard title: lowercase, replace spaces with hyphens,
 
 ## File Format
 
-The parser (`parsePackmindStandard`) expects this exact structure:
+The parser expects this exact structure:
 
 ```markdown
 # Standard Name

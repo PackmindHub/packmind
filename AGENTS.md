@@ -107,15 +107,4 @@ Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeO
 * When defining a presentation DTO that enriches a domain type, use an intersection type (`DomainType & { extraField: T }`) instead of manually re-declaring the domain type's fields, so that structural drift is caught at compile time.
 
 Full standard is available here for further request: [Typescript good practices](.packmind/standards/typescript-good-practices.md)
-
-# Standard: Testing good practices
-
-Standardize unit test structure and naming in TypeScript/TSX test files using verb-first descriptions, Arrange-Act-Assert flow without comments, nested describe('when...') context blocks, and single-expect test cases to improve readability, maintainability, and debugging. :
-* Follow  'Arrange, Act, Assert' pattern
-* Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
-* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
-* Use assertive, verb-first unit test names instead of starting with 'should'
-* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
-
-Full standard is available here for further request: [Testing good practices](.packmind/standards/testing-good-practices.md)
 <!-- end: Packmind standards -->_
