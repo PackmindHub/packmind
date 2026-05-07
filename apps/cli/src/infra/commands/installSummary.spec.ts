@@ -1,5 +1,8 @@
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
-import { buildInstallSummary } from './installSummary';
+import {
+  buildInstallSummary,
+  buildIncapableArtifactsWarning,
+} from './installSummary';
 
 const baseResult: IInstallResult = {
   filesCreated: 0,
@@ -141,6 +144,109 @@ describe('buildInstallSummary', () => {
       );
       expect(summary).toContain('Created packmind.json');
       expect(summary).toContain('Synced 2 standards');
+    });
+  });
+});
+
+describe('buildIncapableArtifactsWarning', () => {
+  describe('when no source artifacts exist', () => {
+    it('returns null', () => {
+      expect(buildIncapableArtifactsWarning(make())).toBeNull();
+    });
+  });
+
+  describe('when at least one resolvedAgent supports every present type', () => {
+    it('returns null', () => {
+      expect(
+        buildIncapableArtifactsWarning(
+          make({
+            resolvedAgents: ['claude'],
+            sourceArtifacts: {
+              skillsCount: 3,
+              standardsCount: 1,
+              commandsCount: 0,
+              recipesCount: 0,
+            },
+          }),
+        ),
+      ).toBeNull();
+    });
+  });
+
+  describe('Cedric scenario: skills in source but no skill-capable agent', () => {
+    it('warns about skills with the count and capable agent suggestions', () => {
+      const warning = buildIncapableArtifactsWarning(
+        make({
+          resolvedAgents: ['agents_md', 'packmind'],
+          sourceArtifacts: {
+            skillsCount: 3,
+            standardsCount: 0,
+            commandsCount: 0,
+            recipesCount: 0,
+          },
+        }),
+      );
+      expect(warning).not.toBeNull();
+      expect(warning).toContain('agents_md, packmind');
+      expect(warning).toContain('3 skills');
+      expect(warning).toContain('claude');
+      expect(warning).toContain('packmind-cli config agents');
+    });
+  });
+
+  describe('multi-type mismatch', () => {
+    it('produces a single consolidated block listing every unsupported type', () => {
+      const warning = buildIncapableArtifactsWarning(
+        make({
+          resolvedAgents: ['agents_md'],
+          sourceArtifacts: {
+            skillsCount: 2,
+            standardsCount: 5, // supported by agents_md
+            commandsCount: 4,
+            recipesCount: 1,
+          },
+        }),
+      );
+      expect(warning).not.toBeNull();
+      expect(warning).toContain('2 skills');
+      expect(warning).toContain('4 commands');
+      expect(warning).toContain('1 recipe');
+      expect(warning).not.toContain('5 standards'); // supported, not warned
+    });
+  });
+
+  describe('singular form', () => {
+    it('uses "1 skill" not "1 skills"', () => {
+      const warning = buildIncapableArtifactsWarning(
+        make({
+          resolvedAgents: ['agents_md'],
+          sourceArtifacts: {
+            skillsCount: 1,
+            standardsCount: 0,
+            commandsCount: 0,
+            recipesCount: 0,
+          },
+        }),
+      );
+      expect(warning).toContain('1 skill');
+      expect(warning).not.toContain('1 skills');
+    });
+  });
+
+  describe('empty resolvedAgents (server omitted them)', () => {
+    it('renders "(default)" placeholder', () => {
+      const warning = buildIncapableArtifactsWarning(
+        make({
+          resolvedAgents: [],
+          sourceArtifacts: {
+            skillsCount: 1,
+            standardsCount: 0,
+            commandsCount: 0,
+            recipesCount: 0,
+          },
+        }),
+      );
+      expect(warning).toContain('(default)');
     });
   });
 });
