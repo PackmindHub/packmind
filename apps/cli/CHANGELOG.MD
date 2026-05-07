@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- `install <package>` against a directory without `packmind.json` now reports `Created packmind.json with N package(s)` instead of the misleading `Nothing to install`.
+
 ## Removed
 
 # [0.28.1] - 2026-05-04
