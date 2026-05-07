@@ -31,7 +31,7 @@ jest.mock('@packmind/logger', () => ({
 }));
 
 import * as path from 'path';
-import { installHandler } from './InstallCommand';
+import { installHandler, mergeInstallResults } from './InstallCommand';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
@@ -68,6 +68,15 @@ const makeResult = (
   missingAccess: [],
   joinSpaceUrl: undefined,
   errors: [],
+  configCreated: false,
+  packagesAdded: [],
+  sourceArtifacts: {
+    skillsCount: 0,
+    standardsCount: 0,
+    commandsCount: 0,
+    recipesCount: 0,
+  },
+  resolvedAgents: [],
   ...overrides,
 });
 
@@ -625,5 +634,58 @@ describe('installCommand', () => {
         expect(processExitSpy).not.toHaveBeenCalled();
       });
     });
+  });
+});
+
+describe('mergeInstallResults', () => {
+  it('ORs configCreated across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({ configCreated: false }),
+      makeResult({ configCreated: true }),
+    ]);
+    expect(merged.configCreated).toBe(true);
+  });
+
+  it('deduplicates packagesAdded across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({ packagesAdded: ['@a/x'] }),
+      makeResult({ packagesAdded: ['@a/x', '@b/y'] }),
+    ]);
+    expect(merged.packagesAdded).toEqual(['@a/x', '@b/y']);
+  });
+
+  it('sums sourceArtifacts counts across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({
+        sourceArtifacts: {
+          skillsCount: 1,
+          standardsCount: 2,
+          commandsCount: 0,
+          recipesCount: 0,
+        },
+      }),
+      makeResult({
+        sourceArtifacts: {
+          skillsCount: 3,
+          standardsCount: 0,
+          commandsCount: 1,
+          recipesCount: 0,
+        },
+      }),
+    ]);
+    expect(merged.sourceArtifacts).toEqual({
+      skillsCount: 4,
+      standardsCount: 2,
+      commandsCount: 1,
+      recipesCount: 0,
+    });
+  });
+
+  it('unions resolvedAgents across results (deduplicated)', () => {
+    const merged = mergeInstallResults([
+      makeResult({ resolvedAgents: ['claude'] }),
+      makeResult({ resolvedAgents: ['claude', 'cursor'] }),
+    ]);
+    expect(merged.resolvedAgents).toEqual(['claude', 'cursor']);
   });
 });

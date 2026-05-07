@@ -14,7 +14,7 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
-import { PackmindLockFile } from '@packmind/types';
+import { CodingAgent, PackmindLockFile } from '@packmind/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -48,7 +48,7 @@ function findSubDirectoriesWithPackmindJson(
   return result;
 }
 
-function mergeInstallResults(results: IInstallResult[]): IInstallResult {
+export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   const merged: IInstallResult = {
     filesCreated: 0,
     filesUpdated: 0,
@@ -66,7 +66,19 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     skillDirectoriesDeleted: 0,
     missingAccess: [],
     joinSpaceUrl: undefined,
+    configCreated: false,
+    packagesAdded: [],
+    sourceArtifacts: {
+      skillsCount: 0,
+      standardsCount: 0,
+      commandsCount: 0,
+      recipesCount: 0,
+    },
+    resolvedAgents: [],
   };
+
+  const packagesAddedSet = new Set<string>();
+  const resolvedAgentsSet = new Set<CodingAgent>();
 
   for (const r of results) {
     merged.filesCreated += r.filesCreated;
@@ -84,9 +96,19 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     merged.skillsRemoved += r.skillsRemoved;
     merged.skillDirectoriesDeleted += r.skillDirectoriesDeleted;
     merged.missingAccess.push(...r.missingAccess);
+
+    merged.configCreated = merged.configCreated || r.configCreated;
+    r.packagesAdded.forEach((p) => packagesAddedSet.add(p));
+    merged.sourceArtifacts.skillsCount += r.sourceArtifacts.skillsCount;
+    merged.sourceArtifacts.standardsCount += r.sourceArtifacts.standardsCount;
+    merged.sourceArtifacts.commandsCount += r.sourceArtifacts.commandsCount;
+    merged.sourceArtifacts.recipesCount += r.sourceArtifacts.recipesCount;
+    r.resolvedAgents.forEach((a) => resolvedAgentsSet.add(a));
   }
 
   merged.missingAccess = [...new Set(merged.missingAccess)];
+  merged.packagesAdded = [...packagesAddedSet];
+  merged.resolvedAgents = [...resolvedAgentsSet];
 
   const urlsFromResultsWithMissingAccess = results
     .filter((r) => r.missingAccess.length > 0)
