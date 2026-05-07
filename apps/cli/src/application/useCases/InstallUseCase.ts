@@ -44,12 +44,24 @@ export class InstallUseCase implements IInstallUseCase {
       skillsRemoved: 0,
       skillDirectoriesDeleted: 0,
       missingAccess: [],
+      configCreated: false,
+      packagesAdded: [],
+      sourceArtifacts: {
+        skillsCount: 0,
+        standardsCount: 0,
+        commandsCount: 0,
+        recipesCount: 0,
+      },
+      resolvedAgents: [],
     };
 
     const hasExplicitPackages = command.packages && command.packages.length > 0;
 
+    const configExistedBefore =
+      await this.configFileRepository.configExists(baseDirectory);
     const lockFile = await this.lockFileRepository.read(baseDirectory);
     const config = await this.configFileRepository.readConfig(baseDirectory);
+    const slugsBefore = new Set(Object.keys(config?.packages ?? {}));
 
     if (!config && !hasExplicitPackages) {
       const configFileExists =
@@ -116,6 +128,13 @@ export class InstallUseCase implements IInstallUseCase {
     });
 
     result.missingAccess = response.missingAccess;
+    result.resolvedAgents = response.resolvedAgents ?? [];
+    result.sourceArtifacts = response.sourceArtifacts ?? {
+      skillsCount: 0,
+      standardsCount: 0,
+      commandsCount: 0,
+      recipesCount: 0,
+    };
 
     if (result.missingAccess.length > 0) {
       result.joinSpaceUrl = await this.computeJoinSpaceUrl(
@@ -265,6 +284,14 @@ export class InstallUseCase implements IInstallUseCase {
         baseDirectory,
         normalizedPackages,
       );
+
+      const configAfter =
+        await this.configFileRepository.readConfig(baseDirectory);
+      const slugsAfter = new Set(Object.keys(configAfter?.packages ?? {}));
+      result.packagesAdded = [...slugsAfter].filter(
+        (slug) => !slugsBefore.has(slug),
+      );
+      result.configCreated = !configExistedBefore && slugsAfter.size > 0;
     }
 
     return result;
