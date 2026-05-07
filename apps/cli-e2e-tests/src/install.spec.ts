@@ -200,6 +200,66 @@ describeForVersion('>= 0.24.0', 'install command', () => {
       });
     });
 
+    describe('when packmind.json does not exist (fresh install)', () => {
+      let pkgWithSkills: Package;
+
+      beforeEach(async () => {
+        // Create a package containing at least one skill so the capability
+        // warning fires when only AGENTS.md / packmind agents are configured.
+        // The e2e gateway currently does not expose a helper to attach skills
+        // to a test package, so the package is created empty for now and the
+        // skill-capability assertion below stays skipped.
+        const created = await context.gateway.packages.create({
+          name: 'Skills test package',
+          description: 'Has skills only',
+          recipeIds: [],
+          standardIds: [],
+          spaceId: context.space.id,
+        });
+        pkgWithSkills = created.package;
+      });
+
+      describe('and the user runs install <package>', () => {
+        let result: RunCliResult;
+
+        beforeEach(async () => {
+          // Confirm packmind.json does not exist yet
+          expect(fileExists('packmind.json', context.testDir)).toBe(false);
+
+          result = await context.runCli(
+            `install @${context.space.slug}/${pkgWithSkills.slug}`,
+          );
+        });
+
+        it('exits successfully', () => {
+          expect(result.returnCode).toBe(0);
+        });
+
+        it('creates packmind.json with the package', () => {
+          expect(fileExists('packmind.json', context.testDir)).toBe(true);
+          const content = readFile('packmind.json', context.testDir);
+          expect(content).toContain(pkgWithSkills.slug);
+        });
+
+        it('reports that packmind.json was created in stdout', () => {
+          expect(result.stdout).toContain('Created packmind.json');
+        });
+
+        it('never emits the bare "Nothing to install" message', () => {
+          expect(result.stdout).not.toContain('Nothing to install');
+        });
+
+        // TODO: enable once the e2e gateway can publish skills into a test
+        // package. With AGENTS.md/packmind as default agents, the CLI should
+        // print the capability warning naming "skills".
+        it.skip('warns when configured agents lack skill capability', () => {
+          expect(result.stdout).toContain('could not be rendered');
+          expect(result.stdout).toContain('skills');
+          expect(result.stdout).toContain('packmind-cli config agents');
+        });
+      });
+    });
+
     describe('when using --path to scope recursive install to a subtree', () => {
       beforeEach(async () => {
         // Create packmind.json at root and in a subdirectory
