@@ -15,7 +15,7 @@
     "@packmind/types": "*",
     "bullmq": "^5.58.2",
     "slug": "^11.0.0",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "@packmind/test-utils": "0.0.1"
   }
 }

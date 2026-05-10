@@ -10,7 +10,7 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "slug": "^11.0.0",
     "@packmind/accounts": "*",
     "@packmind/test-utils": "*"
