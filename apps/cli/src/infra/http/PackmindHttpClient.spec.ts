@@ -2,8 +2,10 @@ import { PackmindHttpClient } from './PackmindHttpClient';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 
 describe('PackmindHttpClient', () => {
-  const createTestApiKey = (orgId = 'org-123') => {
-    const jwtPayload = { organization: { id: orgId, name: 'Test Org' } };
+  const createTestApiKey = (orgId = 'org-123', role?: string) => {
+    const jwtPayload = {
+      organization: { id: orgId, name: 'Test Org', ...(role ? { role } : {}) },
+    };
     const jwtPayloadBase64 = Buffer.from(JSON.stringify(jwtPayload)).toString(
       'base64',
     );
@@ -51,6 +53,38 @@ describe('PackmindHttpClient', () => {
         const client = new PackmindHttpClient('not-valid-base64!@#');
 
         expect(() => client.getAuthContext()).toThrow('Invalid API key');
+      });
+    });
+
+    describe('when JWT includes organization.role', () => {
+      it('returns role "admin" when the JWT role is admin', () => {
+        const client = new PackmindHttpClient(
+          createTestApiKey('org-456', 'admin'),
+        );
+        expect(client.getAuthContext().role).toBe('admin');
+      });
+
+      it('returns role "member" when the JWT role is member', () => {
+        const client = new PackmindHttpClient(
+          createTestApiKey('org-456', 'member'),
+        );
+        expect(client.getAuthContext().role).toBe('member');
+      });
+    });
+
+    describe('when JWT omits organization.role', () => {
+      it('returns role null', () => {
+        const client = new PackmindHttpClient(createTestApiKey('org-456'));
+        expect(client.getAuthContext().role).toBeNull();
+      });
+    });
+
+    describe('when JWT organization.role is an unknown value', () => {
+      it('returns role null', () => {
+        const client = new PackmindHttpClient(
+          createTestApiKey('org-456', 'superadmin'),
+        );
+        expect(client.getAuthContext().role).toBeNull();
       });
     });
 
