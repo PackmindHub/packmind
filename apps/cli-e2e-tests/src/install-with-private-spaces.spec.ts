@@ -202,7 +202,7 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
                 expect.toMatchOutput(`You don't have access to the following packages (their artifacts were preserved from the lock file):
 - @private-space/private-package
 - @public-space/public-package`),
-              stdout: expect.toMatchOutput('Nothing to install'),
+              stdout: expect.toMatchOutput('Already up to date'),
             });
           });
 
@@ -659,7 +659,7 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
               stderr: expect.toMatchOutput(
                 `install failed: You don't have access to space @public-space. It is a public space — you can join at: http://localhost:4201/org/${context.organization.slug}/spaces/${publicSpace.slug}/join`,
               ),
-              stdout: expect.toMatchOutput('Nothing to install'),
+              stdout: '',
             });
           });
         });
@@ -680,7 +680,7 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
               stderr: expect.toMatchOutput(
                 `Package @${privateSpace.slug}/${privatePackage.slug} does not exist`,
               ),
-              stdout: expect.toMatchOutput('Nothing to install'),
+              stdout: '',
             });
           });
         });
