@@ -33,24 +33,18 @@ export const BatchDistributeButton: React.FC<BatchDistributeButtonProps> = ({
       title: 'Distribution started',
       description:
         'The distributions have started and may take a few minutes to complete.',
+      duration: 7500,
     });
 
     try {
-      const deployments = await deployOutdatedByTargets(nonEmptyGroups);
-      const notifications = createPackagesDeploymentNotifications(deployments);
-      notifications.forEach((notification) => {
-        pmToaster.create({
-          type: notification.type,
-          title: notification.title,
-          description: notification.description,
-        });
-      });
+      await deployOutdatedByTargets(nonEmptyGroups);
     } catch (error) {
       pmToaster.create({
         type: 'error',
         title: 'Distribution failed',
         description:
           error instanceof Error ? error.message : 'Unexpected error',
+        duration: 15000,
       });
     }
   };

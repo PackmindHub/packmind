@@ -2,8 +2,11 @@ import { UninstallUseCase } from './UninstallUseCase';
 import { createMockConfigFileRepository } from '../../mocks/createMockRepositories';
 import { createMockSpaceService } from '../../mocks/createMockServices';
 import { spaceFactory } from '@packmind/spaces/test';
-import { createSpaceId, IInstallResult } from '@packmind/types';
-import { IInstallUseCase } from '../../domain/useCases/IInstallUseCase';
+import { createSpaceId } from '@packmind/types';
+import {
+  IInstallResult,
+  IInstallUseCase,
+} from '../../domain/useCases/IInstallUseCase';
 
 const installResultFactory = (
   overrides: Partial<IInstallResult> = {},
@@ -23,6 +26,15 @@ const installResultFactory = (
   skillsRemoved: 0,
   skillDirectoriesDeleted: 0,
   missingAccess: [],
+  configCreated: false,
+  packagesAdded: [],
+  sourceArtifacts: {
+    skillsCount: 0,
+    standardsCount: 0,
+    commandsCount: 0,
+    recipesCount: 0,
+  },
+  resolvedAgents: [],
   ...overrides,
 });
 

@@ -14,6 +14,8 @@ import {
   PackmindLockFile,
   Recipe,
   RecipeVersion,
+  Skill,
+  SkillVersion,
   Space,
   SpaceType,
   Standard,
@@ -27,6 +29,8 @@ import {
   createPackageId,
   createRecipeId,
   createRecipeVersionId,
+  createSkillId,
+  createSkillVersionId,
   createSpaceId,
   createStandardId,
   createStandardVersionId,
@@ -329,6 +333,113 @@ describe('InstallPackagesUseCase', () => {
         expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
           expect.objectContaining({ includeInstalledAt: false }),
         );
+      });
+    });
+
+    it('returns sourceArtifacts counts based on the packages being installed', async () => {
+      // Build 2 standards, 1 recipe, 3 skills on the package
+      const standardA: Standard = {
+        id: createStandardId(uuidv4()),
+        spaceId: publicSpace.id,
+        name: 'Standard A',
+        slug: 'standard-a',
+      } as Standard;
+      const standardB: Standard = {
+        id: createStandardId(uuidv4()),
+        spaceId: publicSpace.id,
+        name: 'Standard B',
+        slug: 'standard-b',
+      } as Standard;
+
+      const recipe: Recipe = {
+        id: createRecipeId(uuidv4()),
+        spaceId: publicSpace.id,
+        name: 'Recipe A',
+        slug: 'recipe-a',
+      } as Recipe;
+
+      const skillA: Skill = {
+        id: createSkillId(uuidv4()),
+        spaceId: publicSpace.id,
+        name: 'Skill A',
+        slug: 'skill-a',
+      } as Skill;
+      const skillB: Skill = {
+        id: createSkillId(uuidv4()),
+        spaceId: publicSpace.id,
+        name: 'Skill B',
+        slug: 'skill-b',
+      } as Skill;
+      const skillC: Skill = {
+        id: createSkillId(uuidv4()),
+        spaceId: publicSpace.id,
+        name: 'Skill C',
+        slug: 'skill-c',
+      } as Skill;
+
+      publicPackage.standards = [standardA, standardB];
+      publicPackage.recipes = [recipe];
+      publicPackage.skills = [skillA, skillB, skillC];
+
+      const standardVersionA: StandardVersion = {
+        id: createStandardVersionId(uuidv4()),
+        standardId: standardA.id,
+        name: standardA.name,
+        slug: standardA.slug,
+        version: 1,
+        spaceId: publicSpace.id,
+      } as unknown as StandardVersion;
+      const standardVersionB: StandardVersion = {
+        id: createStandardVersionId(uuidv4()),
+        standardId: standardB.id,
+        name: standardB.name,
+        slug: standardB.slug,
+        version: 1,
+        spaceId: publicSpace.id,
+      } as unknown as StandardVersion;
+      standardsPort.getLatestStandardVersion.mockImplementation(
+        async (standardId) => {
+          if (standardId === standardA.id) return standardVersionA;
+          if (standardId === standardB.id) return standardVersionB;
+          return null;
+        },
+      );
+
+      const recipeVersion: RecipeVersion = {
+        id: createRecipeVersionId(uuidv4()),
+        recipeId: recipe.id,
+        name: recipe.name,
+        slug: recipe.slug,
+        version: 1,
+      } as unknown as RecipeVersion;
+      recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+
+      const buildSkillVersion = (skill: Skill): SkillVersion =>
+        ({
+          id: createSkillVersionId(uuidv4()),
+          skillId: skill.id,
+          name: skill.name,
+          slug: skill.slug,
+          version: 1,
+          spaceId: publicSpace.id,
+        }) as unknown as SkillVersion;
+
+      const skillVersions = new Map<string, SkillVersion>([
+        [String(skillA.id), buildSkillVersion(skillA)],
+        [String(skillB.id), buildSkillVersion(skillB)],
+        [String(skillC.id), buildSkillVersion(skillC)],
+      ]);
+      skillsPort.getLatestSkillVersion.mockImplementation(
+        async (skillId) => skillVersions.get(String(skillId)) ?? null,
+      );
+
+      const response = await useCase.execute(command);
+
+      expect(response.sourceArtifacts).toEqual({
+        skillsCount: 3,
+        standardsCount: 2,
+        commandsCount: 0,
+        recipesCount: 1,
       });
     });
   });

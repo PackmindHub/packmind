@@ -23,6 +23,7 @@ jest.mock('../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
   logWarningConsole: jest.fn(),
+  formatCommand: jest.fn((cmd: string) => cmd),
 }));
 
 jest.mock('@packmind/logger', () => ({
@@ -31,7 +32,7 @@ jest.mock('@packmind/logger', () => ({
 }));
 
 import * as path from 'path';
-import { installHandler } from './InstallCommand';
+import { installHandler, mergeInstallResults } from './InstallCommand';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
@@ -68,6 +69,15 @@ const makeResult = (
   missingAccess: [],
   joinSpaceUrl: undefined,
   errors: [],
+  configCreated: false,
+  packagesAdded: [],
+  sourceArtifacts: {
+    skillsCount: 0,
+    standardsCount: 0,
+    commandsCount: 0,
+    recipesCount: 0,
+  },
+  resolvedAgents: [],
   ...overrides,
 });
 
@@ -520,6 +530,82 @@ describe('installCommand', () => {
     });
   });
 
+  describe('installHandler output', () => {
+    beforeEach(() => {
+      mockFs.existsSync.mockReturnValue(false);
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    it('emits the capability warning before the summary line', async () => {
+      mockInstall.mockResolvedValue(
+        makeResult({
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+          resolvedAgents: ['agents_md', 'packmind'],
+          sourceArtifacts: {
+            skillsCount: 3,
+            standardsCount: 0,
+            commandsCount: 0,
+            recipesCount: 0,
+          },
+        }),
+      );
+
+      await handler({
+        installPath: '',
+        packages: ['@testing/cli-e2e'],
+        list: false,
+        show: '',
+        status: false,
+        skipInstalledAt: false,
+      });
+
+      const warningIndex =
+        mockConsoleLogger.logWarningConsole.mock.calls.findIndex(([msg]) =>
+          msg.includes('could not be rendered'),
+        );
+      const summaryIndex = mockConsoleLogger.logConsole.mock.calls.findIndex(
+        ([msg]) => msg.includes('Created packmind.json'),
+      );
+      expect(warningIndex).toBeGreaterThanOrEqual(0);
+      expect(summaryIndex).toBeGreaterThanOrEqual(0);
+
+      const warningOrder =
+        mockConsoleLogger.logWarningConsole.mock.invocationCallOrder[
+          warningIndex
+        ];
+      const summaryOrder =
+        mockConsoleLogger.logConsole.mock.invocationCallOrder[summaryIndex];
+      expect(warningOrder).toBeLessThan(summaryOrder);
+    });
+
+    it('never emits "Nothing to install" when packages were added', async () => {
+      mockInstall.mockResolvedValue(
+        makeResult({
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+        }),
+      );
+
+      await handler({
+        installPath: '',
+        packages: ['@testing/cli-e2e'],
+        list: false,
+        show: '',
+        status: false,
+        skipInstalledAt: false,
+      });
+
+      const allLogged = [
+        ...mockConsoleLogger.logConsole.mock.calls,
+        ...mockConsoleLogger.logWarningConsole.mock.calls,
+      ]
+        .map(([msg]) => msg)
+        .join('\n');
+      expect(allLogged).not.toContain('Nothing to install');
+    });
+  });
+
   describe('default skills auto-install', () => {
     const gitRoot = process.cwd();
 
@@ -625,5 +711,58 @@ describe('installCommand', () => {
         expect(processExitSpy).not.toHaveBeenCalled();
       });
     });
+  });
+});
+
+describe('mergeInstallResults', () => {
+  it('ORs configCreated across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({ configCreated: false }),
+      makeResult({ configCreated: true }),
+    ]);
+    expect(merged.configCreated).toBe(true);
+  });
+
+  it('deduplicates packagesAdded across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({ packagesAdded: ['@a/x'] }),
+      makeResult({ packagesAdded: ['@a/x', '@b/y'] }),
+    ]);
+    expect(merged.packagesAdded).toEqual(['@a/x', '@b/y']);
+  });
+
+  it('sums sourceArtifacts counts across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({
+        sourceArtifacts: {
+          skillsCount: 1,
+          standardsCount: 2,
+          commandsCount: 0,
+          recipesCount: 0,
+        },
+      }),
+      makeResult({
+        sourceArtifacts: {
+          skillsCount: 3,
+          standardsCount: 0,
+          commandsCount: 1,
+          recipesCount: 0,
+        },
+      }),
+    ]);
+    expect(merged.sourceArtifacts).toEqual({
+      skillsCount: 4,
+      standardsCount: 2,
+      commandsCount: 1,
+      recipesCount: 0,
+    });
+  });
+
+  it('unions resolvedAgents across results (deduplicated)', () => {
+    const merged = mergeInstallResults([
+      makeResult({ resolvedAgents: ['claude'] }),
+      makeResult({ resolvedAgents: ['claude', 'cursor'] }),
+    ]);
+    expect(merged.resolvedAgents).toEqual(['claude', 'cursor']);
   });
 });

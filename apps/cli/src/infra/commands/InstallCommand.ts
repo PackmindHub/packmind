@@ -14,7 +14,11 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
-import { PackmindLockFile } from '@packmind/types';
+import { CodingAgent, PackmindLockFile } from '@packmind/types';
+import {
+  buildInstallSummary,
+  buildIncapableArtifactsWarning,
+} from './installSummary';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -48,7 +52,7 @@ function findSubDirectoriesWithPackmindJson(
   return result;
 }
 
-function mergeInstallResults(results: IInstallResult[]): IInstallResult {
+export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   const merged: IInstallResult = {
     filesCreated: 0,
     filesUpdated: 0,
@@ -66,7 +70,19 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     skillDirectoriesDeleted: 0,
     missingAccess: [],
     joinSpaceUrl: undefined,
+    configCreated: false,
+    packagesAdded: [],
+    sourceArtifacts: {
+      skillsCount: 0,
+      standardsCount: 0,
+      commandsCount: 0,
+      recipesCount: 0,
+    },
+    resolvedAgents: [],
   };
+
+  const packagesAddedSet = new Set<string>();
+  const resolvedAgentsSet = new Set<CodingAgent>();
 
   for (const r of results) {
     merged.filesCreated += r.filesCreated;
@@ -84,9 +100,19 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     merged.skillsRemoved += r.skillsRemoved;
     merged.skillDirectoriesDeleted += r.skillDirectoriesDeleted;
     merged.missingAccess.push(...r.missingAccess);
+
+    merged.configCreated = merged.configCreated || r.configCreated;
+    r.packagesAdded.forEach((p) => packagesAddedSet.add(p));
+    merged.sourceArtifacts.skillsCount += r.sourceArtifacts.skillsCount;
+    merged.sourceArtifacts.standardsCount += r.sourceArtifacts.standardsCount;
+    merged.sourceArtifacts.commandsCount += r.sourceArtifacts.commandsCount;
+    merged.sourceArtifacts.recipesCount += r.sourceArtifacts.recipesCount;
+    r.resolvedAgents.forEach((a) => resolvedAgentsSet.add(a));
   }
 
   merged.missingAccess = [...new Set(merged.missingAccess)];
+  merged.packagesAdded = [...packagesAddedSet];
+  merged.resolvedAgents = [...resolvedAgentsSet];
 
   const urlsFromResultsWithMissingAccess = results
     .filter((r) => r.missingAccess.length > 0)
@@ -100,39 +126,6 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   }
 
   return merged;
-}
-
-function buildInstallSummary(result: IInstallResult): string {
-  const contentParts = [
-    result.standardsCount > 0
-      ? `${result.standardsCount} ${result.standardsCount === 1 ? 'standard' : 'standards'}`
-      : null,
-    result.commandsCount > 0
-      ? `${result.commandsCount} ${result.commandsCount === 1 ? 'command' : 'commands'}`
-      : null,
-    result.skillsCount > 0
-      ? `${result.skillsCount} ${result.skillsCount === 1 ? 'skill' : 'skills'}`
-      : null,
-    result.recipesCount > 0
-      ? `${result.recipesCount} ${result.recipesCount === 1 ? 'recipe' : 'recipes'}`
-      : null,
-  ].filter(Boolean);
-
-  const contentChanged = result.contentFilesChanged > 0;
-
-  if (!contentChanged && contentParts.length === 0) {
-    return '✅ Nothing to install';
-  }
-
-  if (!contentChanged) {
-    return `✅ Already up to date — ${contentParts.join(', ')}`;
-  }
-
-  if (contentParts.length === 0) {
-    return '✅ Packages removed';
-  }
-
-  return `✅ Synced ${contentParts.join(', ')}`;
 }
 
 async function notifyArtefactsDistributionIfInGitRepo(params: {
@@ -336,9 +329,14 @@ export async function installHandler({
     logWarningConsole(warning);
   }
 
-  logConsole(buildInstallSummary(combined));
-
-  await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd });
+  if (results.length > 0) {
+    const capabilityWarning = buildIncapableArtifactsWarning(combined);
+    if (capabilityWarning) {
+      logWarningConsole(capabilityWarning);
+    }
+    logConsole(buildInstallSummary(combined));
+    await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd });
+  }
 
   const allErrors = [...combined.errors, ...thrownErrors];
 

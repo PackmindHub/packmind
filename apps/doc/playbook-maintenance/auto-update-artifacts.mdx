@@ -6,7 +6,41 @@ Keep your Packmind artifacts in sync automatically by scheduling `packmind-cli i
 
 ## GitHub
 
-<Info>Automated artifact updates via GitHub Actions are coming soon.</Info>
+Automated artifact updates on GitHub are powered by the [`update-packmind-artifacts`](https://github.com/marketplace/actions/update-packmind-artifacts) action published on the GitHub Marketplace.
+
+### Quick start
+
+Add the following workflow at `.github/workflows/nightly-packmind-update.yml` in your repository:
+
+```yaml
+name: Nightly Packmind Artifacts Update
+
+on:
+  schedule:
+    - cron: '0 2 * * 1-5' # Every weeknight at 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: PackmindHub/update-packmind-artifacts@v1
+        with:
+          packmind-api-key: ${{ secrets.PACKMIND_API_KEY_V3 }}
+```
+
+Then add `PACKMIND_API_KEY_V3` as a repository secret (**Settings → Secrets and variables → Actions → New repository secret**).
+
+For full configuration options (custom branch names, PR titles, Node version, etc.), see the [Marketplace listing](https://github.com/marketplace/actions/update-packmind-artifacts).
 
 ## GitLab
 
