@@ -6,7 +6,6 @@
     "@testing/cli-e2e": "*",
     "@frontend/generic": "*",
     "@cli/generic": "*",
-    "@global/proprietary": "*",
-    "generic": "*"
+    "@global/proprietary": "*"
   }
 }
