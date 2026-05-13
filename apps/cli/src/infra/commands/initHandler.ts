@@ -13,11 +13,21 @@ import {
 } from '../utils/consoleLogger';
 import { IInstallDefaultSkillsResult } from '../../domain/useCases/IInstallDefaultSkillsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import {
+  EnsureCliVersionOutcome,
+  IEnsureCliVersionCommand,
+} from '../../domain/useCases/IEnsureCliVersionUseCase';
+import { handleIncompatibleInstalledSkillsSilently } from './skills/incompatibleSkillsHandler';
+import { reportEnsureCliVersionOutcome } from './ensureCliVersionReporter';
 
 export type InstallDefaultSkillsFunction = (options: {
   includeBeta: boolean;
   cliVersion?: string;
 }) => Promise<IInstallDefaultSkillsResult>;
+
+export type EnsureCliVersionFunction = (
+  command: IEnsureCliVersionCommand,
+) => Promise<EnsureCliVersionOutcome>;
 
 export type InitHandlerDependencies = {
   configRepository: IConfigFileRepository;
@@ -25,6 +35,7 @@ export type InitHandlerDependencies = {
   packmindGateway: IPackmindGateway;
   baseDirectory: string;
   installDefaultSkills: InstallDefaultSkillsFunction;
+  ensureCliVersion?: EnsureCliVersionFunction;
   cliVersion: string;
   isTTY?: boolean;
   showOnboardHint?: boolean;
@@ -48,10 +59,24 @@ export async function initHandler(
     packmindGateway,
     baseDirectory,
     installDefaultSkills,
+    ensureCliVersion,
     cliVersion,
     isTTY,
     showOnboardHint = true,
   } = deps;
+
+  if (ensureCliVersion) {
+    try {
+      const outcome = await ensureCliVersion({
+        baseDirectory,
+        currentCliVersion: cliVersion,
+        includeBeta: false,
+      });
+      reportEnsureCliVersionOutcome(outcome, cliVersion);
+    } catch {
+      // Silently swallow drift-check failures; init must continue.
+    }
+  }
 
   // Step 1: Run config agents flow
   const configAgentsDeps: ConfigAgentsHandlerDependencies = {
@@ -71,6 +96,16 @@ export async function initHandler(
     includeBeta: false,
     cliVersion,
   });
+
+  if (
+    result.incompatibleInstalledSkills &&
+    result.incompatibleInstalledSkills.length > 0
+  ) {
+    await handleIncompatibleInstalledSkillsSilently(
+      result.incompatibleInstalledSkills,
+      baseDirectory,
+    );
+  }
 
   if (result.errors.length > 0) {
     return {

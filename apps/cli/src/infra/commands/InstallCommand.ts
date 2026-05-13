@@ -22,6 +22,8 @@ import {
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { AgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
+import { handleIncompatibleInstalledSkillsSilently } from './skills/incompatibleSkillsHandler';
+import { reportEnsureCliVersionOutcome } from './ensureCliVersionReporter';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -187,6 +189,13 @@ async function installDefaultSkillsIfAtGitRoot(params: {
       baseDirectory: cwd,
     });
 
+    if (skillsResult.incompatibleInstalledSkills.length > 0) {
+      await handleIncompatibleInstalledSkillsSilently(
+        skillsResult.incompatibleInstalledSkills,
+        cwd,
+      );
+    }
+
     if (skillsResult.errors.length > 0) {
       skillsResult.errors.forEach((err) => {
         logWarningConsole(`Warning: ${err}`);
@@ -267,6 +276,17 @@ export async function installHandler({
     }
   }
 
+  try {
+    const ensureOutcome = await packmindCliHexa.ensureCliVersion({
+      baseDirectory: cwd,
+      currentCliVersion: CLI_VERSION,
+      includeBeta: false,
+    });
+    reportEnsureCliVersionOutcome(ensureOutcome, CLI_VERSION);
+  } catch {
+    // Silently swallow drift-check failures; install must continue.
+  }
+
   const bootstrap = await bootstrapInstallContext({
     configRepository: new ConfigFileRepository(),
     agentDetectionService: new AgentArtifactDetectionService(),
@@ -322,6 +342,7 @@ export async function installHandler({
         baseDirectory: dir,
         packages: packages.length > 0 ? packages : undefined,
         skipInstalledAt,
+        cliVersion: CLI_VERSION,
       });
       results.push(result);
 

@@ -58,7 +58,10 @@ export class UninstallUseCase implements IUninstallUseCase {
     );
 
     try {
-      return await this.installUseCase.execute({ baseDirectory });
+      return await this.installUseCase.execute({
+        baseDirectory,
+        cliVersion: command.cliVersion,
+      });
     } catch (error) {
       await this.configFileRepository.updateConfig(
         baseDirectory,
