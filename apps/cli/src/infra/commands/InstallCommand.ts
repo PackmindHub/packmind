@@ -283,8 +283,13 @@ export async function installHandler({
   let targetDirs: string[];
 
   if (installPath) {
-    // With -p: find packmind.json in direct sub-directories only (non-recursive)
-    targetDirs = findSubDirectoriesWithPackmindJson(cwd, false);
+    // With -p: target cwd itself when it has packmind.json or explicit packages
+    // were passed, plus any direct sub-directories with packmind.json.
+    targetDirs = [];
+    if (fs.existsSync(path.join(cwd, 'packmind.json')) || packages.length > 0) {
+      targetDirs.push(cwd);
+    }
+    targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, false));
   } else if (packages.length > 0) {
     // With explicit packages: only update the cwd's packmind.json
     targetDirs = [cwd];
