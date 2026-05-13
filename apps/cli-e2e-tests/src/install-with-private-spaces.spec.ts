@@ -2,6 +2,7 @@ import {
   describeForVersion,
   describeWithExtraUser,
   fileExists,
+  matchesVersionConstraint,
   readFile,
   RunCliResult,
   setupGitRepo,
@@ -196,13 +197,16 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
           });
 
           it('succeeds', async () => {
+            const expectedSummary = matchesVersionConstraint('> 0.28.1')
+              ? 'Already up to date'
+              : 'Nothing to install';
             expect(installResult).toEqual({
               returnCode: 0,
               stderr:
                 expect.toMatchOutput(`You don't have access to the following packages (their artifacts were preserved from the lock file):
 - @private-space/private-package
 - @public-space/public-package`),
-              stdout: expect.toMatchOutput('Already up to date'),
+              stdout: expect.toMatchOutput(expectedSummary),
             });
           });
 
@@ -654,12 +658,15 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
           });
 
           it('fails and tells the user how to join the space', async () => {
+            const expectedStdout = matchesVersionConstraint('> 0.28.1')
+              ? ''
+              : expect.toMatchOutput('Nothing to install');
             expect(installResult).toEqual({
               returnCode: 1,
               stderr: expect.toMatchOutput(
                 `install failed: You don't have access to space @public-space. It is a public space — you can join at: http://localhost:4201/org/${context.organization.slug}/spaces/${publicSpace.slug}/join`,
               ),
-              stdout: '',
+              stdout: expectedStdout,
             });
           });
         });
@@ -675,12 +682,15 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
           });
 
           it('fails', async () => {
+            const expectedStdout = matchesVersionConstraint('> 0.28.1')
+              ? ''
+              : expect.toMatchOutput('Nothing to install');
             expect(installResult).toEqual({
               returnCode: 1,
               stderr: expect.toMatchOutput(
                 `Package @${privateSpace.slug}/${privatePackage.slug} does not exist`,
               ),
-              stdout: '',
+              stdout: expectedStdout,
             });
           });
         });
