@@ -1,6 +1,7 @@
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { version } from '../../../package.json';
 import { isCommunityEditionError } from '../../domain/errors/CommunityEditionError';
+import { UserOrganizationRole } from '@packmind/types';
 import { Agent } from 'undici';
 import * as tls from 'tls';
 import * as fs from 'fs';
@@ -43,6 +44,7 @@ interface IAuthContext {
   host: string;
   jwt: string;
   organizationId: string;
+  role: UserOrganizationRole | null;
 }
 
 interface IRequestOptions {
@@ -76,14 +78,21 @@ export class PackmindHttpClient {
       throw new Error('Invalid API key: missing organizationId');
     }
 
+    const rawRole = jwtPayload?.organization?.role;
+    const role: UserOrganizationRole | null =
+      rawRole === 'admin' || rawRole === 'member' ? rawRole : null;
+
     return {
       host: decoded.host,
       jwt: decoded.jwt,
       organizationId,
+      role,
     };
   }
 
-  private decodeJwt(jwt: string): { organization?: { id?: string } } | null {
+  private decodeJwt(
+    jwt: string,
+  ): { organization?: { id?: string; role?: string } } | null {
     try {
       const parts = jwt.split('.');
       if (parts.length !== 3) {

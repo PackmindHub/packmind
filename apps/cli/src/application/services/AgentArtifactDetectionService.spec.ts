@@ -98,6 +98,58 @@ describe('AgentArtifactDetectionService', () => {
       });
     });
 
+    describe('when .github/prompts/ directory exists', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, '.github/prompts'), {
+          recursive: true,
+        });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('returns copilot agent', () => {
+        expect(result).toContainEqual({
+          agent: 'copilot',
+          artifactPath: path.join(tempDir, '.github/prompts'),
+        });
+      });
+    });
+
+    describe('when .github/skills/ directory exists', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, '.github/skills'), {
+          recursive: true,
+        });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('returns copilot agent', () => {
+        expect(result).toContainEqual({
+          agent: 'copilot',
+          artifactPath: path.join(tempDir, '.github/skills'),
+        });
+      });
+    });
+
+    describe('when only .github/workflows/ exists (bare GitHub CI repo)', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, '.github/workflows'), {
+          recursive: true,
+        });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('does not detect copilot agent', () => {
+        const copilotResults = result.filter((r) => r.agent === 'copilot');
+        expect(copilotResults).toHaveLength(0);
+      });
+    });
+
     describe('when both copilot artifacts exist', () => {
       let result: DetectedAgentArtifact[];
 

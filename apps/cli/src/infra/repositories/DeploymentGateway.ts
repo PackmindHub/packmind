@@ -9,6 +9,7 @@ import {
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IPullContentUseCase,
+  RenderMode,
 } from '@packmind/types';
 import { IDeploymentGateway } from '../../domain/repositories/IDeploymentGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
@@ -151,6 +152,19 @@ export class DeploymentGateway implements IDeploymentGateway {
         `/api/v0/organizations/${organizationId}/deployments/renderModeConfiguration`,
       );
     };
+
+  public async updateRenderModeConfiguration(command: {
+    activeRenderModes: RenderMode[];
+  }): Promise<void> {
+    const { organizationId } = this.httpClient.getAuthContext();
+    await this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/deployments/renderModeConfiguration`,
+      {
+        method: 'POST',
+        body: { activeRenderModes: command.activeRenderModes },
+      },
+    );
+  }
 
   public async getLatestVersion(
     type: ArtifactType,

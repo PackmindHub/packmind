@@ -22,7 +22,12 @@ const AGENT_ARTIFACT_CHECKS: ArtifactCheck[] = [
   { agent: 'cursor', paths: ['.cursor'] },
   {
     agent: 'copilot',
-    paths: ['.github/copilot-instructions.md', '.github/instructions'],
+    paths: [
+      '.github/copilot-instructions.md',
+      '.github/instructions',
+      '.github/prompts',
+      '.github/skills',
+    ],
   },
   { agent: 'continue', paths: ['.continue'] },
   { agent: 'junie', paths: ['.junie', '.junie.md'] },

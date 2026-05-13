@@ -8,6 +8,7 @@ import {
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IPullContentUseCase,
+  RenderMode,
 } from '@packmind/types';
 
 export interface IDeploymentGateway {
@@ -18,6 +19,9 @@ export interface IDeploymentGateway {
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
   notifyArtefactsDistribution: Gateway<INotifyArtefactsDistribution>;
   getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase>;
+  updateRenderModeConfiguration(command: {
+    activeRenderModes: RenderMode[];
+  }): Promise<void>;
   getLatestVersion(
     type: ArtifactType,
     id: string,
