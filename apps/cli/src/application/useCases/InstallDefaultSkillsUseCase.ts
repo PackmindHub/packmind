@@ -9,6 +9,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import semver from 'semver';
 import { parseSkillMdContent } from '@packmind/node-utils';
+import { stripPrerelease } from '../utils/normalizeSemver';
 
 export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase {
   constructor(private readonly repositories: IPackmindRepositories) {}
@@ -116,6 +117,17 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
       result.errors.push(`Failed to install default skills: ${errorMsg}`);
     }
 
+    // Second pass: include skills that are present in the local lockfile but no
+    // longer in the default-skills gateway response. These have effectively
+    // dropped out of the default registry and must be cleaned up too.
+    await this.appendObsoleteSkillsFromLockFile(
+      baseDirectory,
+      response.fileUpdates.createOrUpdate,
+      incompatibleInstalledMap,
+    );
+
+    // Keep ordering deterministic (insertion order: version-incompatible
+    // skills first, then lockfile-only obsolete skills).
     result.incompatibleInstalledSkills = Array.from(
       incompatibleInstalledMap.entries(),
     ).map(
@@ -126,6 +138,48 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     );
 
     return result;
+  }
+
+  /**
+   * Enumerates skills present in `packmind-lock.json` (entries with
+   * `type === 'skill'` that have at least one `isSkillDefinition` file) and
+   * appends any whose skill-definition files are NOT present in the gateway
+   * response to the `incompatibleInstalledMap` for deletion.
+   *
+   * Deduplicates against entries already in the map (keyed by skill name).
+   */
+  private async appendObsoleteSkillsFromLockFile(
+    baseDirectory: string,
+    createOrUpdate: ReadonlyArray<{ path: string }>,
+    incompatibleInstalledMap: Map<string, string[]>,
+  ): Promise<void> {
+    const lockFile =
+      await this.repositories.lockFileRepository.read(baseDirectory);
+    if (!lockFile) return;
+
+    const responsePaths = new Set(createOrUpdate.map((file) => file.path));
+
+    // Iterate artifacts in their stable Object.values() order so the second
+    // pass is deterministic given a deterministic lockfile.
+    for (const entry of Object.values(lockFile.artifacts)) {
+      if (entry.type !== 'skill') continue;
+
+      const skillDefinitionFiles = entry.files.filter(
+        (file) => file.isSkillDefinition === true,
+      );
+      if (skillDefinitionFiles.length === 0) continue;
+
+      const stillInDefaultResponse = skillDefinitionFiles.some((file) =>
+        responsePaths.has(file.path),
+      );
+      if (stillInDefaultResponse) continue;
+
+      const skillName = entry.name;
+      if (incompatibleInstalledMap.has(skillName)) continue;
+
+      const filePaths = entry.files.map((file) => file.path);
+      incompatibleInstalledMap.set(skillName, filePaths);
+    }
   }
 
   private async createOrUpdateFile(
@@ -221,7 +275,7 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     const constraint = metadata['packmind-cli-version'];
     if (!constraint) return false;
 
-    const normalizedVersion = cliVersion.replace('-next', '');
+    const normalizedVersion = stripPrerelease(cliVersion);
     return !semver.satisfies(normalizedVersion, constraint);
   }
 

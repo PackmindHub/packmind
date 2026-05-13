@@ -3,11 +3,13 @@ import { InstallDefaultSkillsUseCase } from './InstallDefaultSkillsUseCase';
 import {
   createMockPackmindRepositories,
   createMockConfigFileRepository,
+  createMockLockFileRepository,
 } from '../../mocks/createMockRepositories';
 import {
   createMockSkillsGateway,
   createMockPackmindGateway,
 } from '../../mocks/createMockGateways';
+import { PackmindLockFile } from '@packmind/types';
 
 jest.mock('fs/promises');
 
@@ -34,6 +36,7 @@ Skill body.
 describe('InstallDefaultSkillsUseCase', () => {
   let useCase: InstallDefaultSkillsUseCase;
   let mockGetDefaults: jest.Mock;
+  let mockReadLockFile: jest.Mock;
 
   beforeEach(() => {
     mockFs.mkdir.mockResolvedValue(undefined);
@@ -45,6 +48,8 @@ describe('InstallDefaultSkillsUseCase', () => {
       skippedSkillsCount: 0,
     });
 
+    mockReadLockFile = jest.fn().mockResolvedValue(null);
+
     const skillsGateway = createMockSkillsGateway({
       getDefaults: mockGetDefaults,
     });
@@ -54,9 +59,13 @@ describe('InstallDefaultSkillsUseCase', () => {
     const configRepo = createMockConfigFileRepository({
       readConfig: jest.fn().mockResolvedValue(null),
     });
+    const lockFileRepo = createMockLockFileRepository({
+      read: mockReadLockFile,
+    });
     const repositories = createMockPackmindRepositories({
       packmindGateway,
       configFileRepository: configRepo,
+      lockFileRepository: lockFileRepo,
     });
 
     useCase = new InstallDefaultSkillsUseCase(repositories);
@@ -457,6 +466,280 @@ describe('InstallDefaultSkillsUseCase', () => {
 
     it('returns empty skippedIncompatibleSkillNames', () => {
       expect(result.skippedIncompatibleSkillNames).toHaveLength(0);
+    });
+  });
+
+  describe('when a skill is in the lockfile but no longer in the gateway response', () => {
+    const obsoleteSkillPath = '.claude/skills/old-skill/SKILL.md';
+
+    function lockFileWithSkill(
+      filePath: string,
+      name: string,
+    ): PackmindLockFile {
+      return {
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {
+          [name]: {
+            name,
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              {
+                path: filePath,
+                agent: 'claude',
+                isSkillDefinition: true,
+              },
+            ],
+          },
+        },
+      };
+    }
+
+    beforeEach(() => {
+      // Gateway response no longer contains the obsolete skill.
+      mockGetDefaults.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skippedSkillsCount: 0,
+      });
+      mockReadLockFile.mockResolvedValue(
+        lockFileWithSkill(obsoleteSkillPath, 'old-skill'),
+      );
+    });
+
+    it('flags the skill as incompatibleInstalledSkill', async () => {
+      const result = await useCase.execute({
+        cliVersion: '0.28.0',
+        baseDirectory: BASE_DIR,
+      });
+      expect(result.incompatibleInstalledSkills).toEqual([
+        { skillName: 'old-skill', filePaths: [obsoleteSkillPath] },
+      ]);
+    });
+
+    it('includes all lockfile-recorded file paths in filePaths', async () => {
+      mockReadLockFile.mockResolvedValueOnce({
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {
+          'old-skill': {
+            name: 'old-skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              {
+                path: '.claude/skills/old-skill/SKILL.md',
+                agent: 'claude',
+                isSkillDefinition: true,
+              },
+              {
+                path: '.claude/skills/old-skill/README.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      } satisfies PackmindLockFile);
+
+      const result = await useCase.execute({
+        cliVersion: '0.28.0',
+        baseDirectory: BASE_DIR,
+      });
+
+      expect(result.incompatibleInstalledSkills).toHaveLength(1);
+      expect(result.incompatibleInstalledSkills[0].filePaths).toEqual([
+        '.claude/skills/old-skill/SKILL.md',
+        '.claude/skills/old-skill/README.md',
+      ]);
+    });
+
+    it('also runs when no cliVersion is provided', async () => {
+      const result = await useCase.execute({ baseDirectory: BASE_DIR });
+      expect(result.incompatibleInstalledSkills).toEqual([
+        { skillName: 'old-skill', filePaths: [obsoleteSkillPath] },
+      ]);
+    });
+  });
+
+  describe('when a skill is in the lockfile and still in the gateway response', () => {
+    const skillPath = '.claude/skills/current-skill/SKILL.md';
+
+    beforeEach(() => {
+      mockGetDefaults.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            { path: skillPath, content: makeSkillContent('current-skill') },
+          ],
+          delete: [],
+        },
+        skippedSkillsCount: 0,
+      });
+      mockReadLockFile.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {
+          'current-skill': {
+            name: 'current-skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              {
+                path: skillPath,
+                agent: 'claude',
+                isSkillDefinition: true,
+              },
+            ],
+          },
+        },
+      } satisfies PackmindLockFile);
+      mockFs.access.mockResolvedValue(undefined);
+    });
+
+    it('does not flag it as obsolete', async () => {
+      const result = await useCase.execute({
+        cliVersion: '0.28.0',
+        baseDirectory: BASE_DIR,
+      });
+      expect(result.incompatibleInstalledSkills).toHaveLength(0);
+    });
+  });
+
+  describe('when the lockfile contains non-skill artifacts', () => {
+    beforeEach(() => {
+      mockGetDefaults.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skippedSkillsCount: 0,
+      });
+      mockReadLockFile.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {
+          'my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'artifact-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+            ],
+          },
+        },
+      } satisfies PackmindLockFile);
+    });
+
+    it('ignores standards and commands when computing obsolete skills', async () => {
+      const result = await useCase.execute({
+        cliVersion: '0.28.0',
+        baseDirectory: BASE_DIR,
+      });
+      expect(result.incompatibleInstalledSkills).toHaveLength(0);
+    });
+  });
+
+  describe('when a lockfile skill entry has no isSkillDefinition file', () => {
+    beforeEach(() => {
+      mockGetDefaults.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skippedSkillsCount: 0,
+      });
+      mockReadLockFile.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {
+          'partial-skill': {
+            name: 'partial-skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              {
+                path: '.claude/skills/partial-skill/README.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      } satisfies PackmindLockFile);
+    });
+
+    it('does not flag it as obsolete', async () => {
+      const result = await useCase.execute({
+        cliVersion: '0.28.0',
+        baseDirectory: BASE_DIR,
+      });
+      expect(result.incompatibleInstalledSkills).toHaveLength(0);
+    });
+  });
+
+  describe('when a lockfile skill is both obsolete AND version-incompatible against an installed copy', () => {
+    const skillPath = '.claude/skills/duplicated-skill/SKILL.md';
+    const incompatibleSkillContent = makeSkillContent('duplicated-skill', {
+      versionConstraint: '< 0.24.0',
+    });
+
+    beforeEach(() => {
+      // Gateway returns the version-incompatible skill (same path).
+      mockGetDefaults.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            { path: skillPath, content: incompatibleSkillContent },
+          ],
+          delete: [],
+        },
+        skippedSkillsCount: 0,
+      });
+      mockReadLockFile.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {
+          'duplicated-skill': {
+            name: 'duplicated-skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              {
+                path: skillPath,
+                agent: 'claude',
+                isSkillDefinition: true,
+              },
+            ],
+          },
+        },
+      } satisfies PackmindLockFile);
+      mockFs.access.mockResolvedValue(undefined); // installed on disk
+    });
+
+    it('produces a single deduplicated entry', async () => {
+      const result = await useCase.execute({
+        cliVersion: '0.25.0',
+        baseDirectory: BASE_DIR,
+      });
+      expect(result.incompatibleInstalledSkills).toHaveLength(1);
+      expect(result.incompatibleInstalledSkills[0].skillName).toBe(
+        'duplicated-skill',
+      );
     });
   });
 });
