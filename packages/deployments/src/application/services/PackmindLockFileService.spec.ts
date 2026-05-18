@@ -337,7 +337,11 @@ describe('PackmindLockFileService', () => {
       });
 
       it('sets isSkillDefinition for the skill definition file', () => {
-        expect(result.artifacts['skill:my-skill'].files[0]).toEqual({
+        expect(
+          result.artifacts['skill:my-skill'].files.find(
+            (f) => f.path === '.claude/skills/my-skill/SKILL.md',
+          ),
+        ).toEqual({
           path: '.claude/skills/my-skill/SKILL.md',
           agent: 'claude',
           isSkillDefinition: true,
@@ -345,7 +349,11 @@ describe('PackmindLockFileService', () => {
       });
 
       it('does not set isSkillDefinition for files with skillFileId', () => {
-        expect(result.artifacts['skill:my-skill'].files[1]).toEqual({
+        expect(
+          result.artifacts['skill:my-skill'].files.find(
+            (f) => f.path === '.claude/skills/my-skill/helper.ts',
+          ),
+        ).toEqual({
           path: '.claude/skills/my-skill/helper.ts',
           agent: 'claude',
         });
@@ -383,6 +391,91 @@ describe('PackmindLockFileService', () => {
         });
 
         expect(result.agents).toEqual(['claude', 'copilot', 'cursor']);
+      });
+    });
+
+    describe('determinism', () => {
+      const buildWithOrder = (fileModifications: FileModification[]) =>
+        service.buildLockFile({
+          fileModifications,
+          recipeVersions,
+          standardVersions,
+          skillVersions,
+          codingAgents: ['cursor', 'claude'],
+          packageSlugs: ['pkg-b', 'pkg-a'],
+          targetId: 'target-1',
+          artifactSpaceIds: {
+            [String(recipeId)]: 'space-A',
+            [String(standardId)]: 'space-B',
+            [String(skillId)]: 'space-C',
+          },
+          artifactPackageIds: {
+            [String(recipeId)]: ['pkg-1'],
+            [String(standardId)]: ['pkg-2'],
+            [String(skillId)]: ['pkg-3'],
+          },
+        });
+
+      const filesA: FileModification[] = [
+        {
+          path: '.cursor/commands/my-recipe.md',
+          content: 'recipe content',
+          artifactType: 'command',
+          artifactId: String(recipeId),
+        },
+        {
+          path: '.claude/commands/my-recipe.md',
+          content: 'recipe content',
+          artifactType: 'command',
+          artifactId: String(recipeId),
+        },
+        {
+          path: '.claude/rules/my-standard.md',
+          content: 'standard content',
+          artifactType: 'standard',
+          artifactId: String(standardId),
+        },
+        {
+          path: '.claude/skills/my-skill/SKILL.md',
+          content: 'skill content',
+          artifactType: 'skill',
+          artifactId: String(skillId),
+        },
+      ];
+
+      const filesB: FileModification[] = [
+        filesA[3],
+        filesA[2],
+        filesA[1],
+        filesA[0],
+      ];
+
+      it('produces byte-identical output regardless of input order', () => {
+        const a = buildWithOrder(filesA);
+        const b = buildWithOrder(filesB);
+
+        expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+      });
+
+      it('sorts artifact keys alphabetically', () => {
+        const result = buildWithOrder(filesA);
+
+        expect(Object.keys(result.artifacts)).toEqual([
+          'command:my-recipe',
+          'skill:my-skill',
+          'standard:my-standard',
+        ]);
+      });
+
+      it('sorts files within an artifact by path', () => {
+        const result = buildWithOrder(filesA);
+
+        expect(
+          result.artifacts['command:my-recipe'].files.map((f) => f.path),
+        ).toEqual([
+          '.claude/commands/my-recipe.md',
+          '.cursor/commands/my-recipe.md',
+        ]);
       });
     });
 
@@ -701,6 +794,60 @@ describe('PackmindLockFileService', () => {
         );
 
         expect(result.artifacts['command:removed-recipe']).toBeUndefined();
+      });
+    });
+
+    describe('determinism when merging', () => {
+      it('sorts merged artifact keys alphabetically', () => {
+        const existingLockFile: PackmindLockFile = {
+          lockfileVersion: 1,
+          packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
+          agents: ['claude'],
+          installedAt: '2024-01-01T00:00:00.000Z',
+          targetId: 'target-1',
+          artifacts: {
+            'standard:zzz-preserved': {
+              name: 'Preserved Standard',
+              type: 'standard',
+              id: 'std-preserved',
+              version: 1,
+              spaceId: 'space-private',
+              packageIds: ['pkg-private'],
+              files: [
+                {
+                  path: '.claude/rules/zzz-preserved.md',
+                  agent: 'claude',
+                },
+              ],
+            },
+            'command:aaa-preserved': {
+              name: 'Aaa Preserved',
+              type: 'command',
+              id: 'recipe-preserved',
+              version: 1,
+              spaceId: 'space-private',
+              packageIds: ['pkg-private'],
+              files: [
+                {
+                  path: '.claude/commands/aaa-preserved.md',
+                  agent: 'claude',
+                },
+              ],
+            },
+          },
+        };
+
+        const result = service.mergeWithExistingLockFile(
+          newLockFile,
+          existingLockFile,
+          ['pkg-a'],
+        );
+
+        expect(Object.keys(result.artifacts)).toEqual([
+          'command:aaa-preserved',
+          'standard:accessible-standard',
+          'standard:zzz-preserved',
+        ]);
       });
     });
 
