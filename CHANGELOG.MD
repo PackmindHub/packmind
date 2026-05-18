@@ -9,6 +9,8 @@
 
 ## Fixed
 
+- Skill descriptions longer than 1024 characters are now rejected with a clear 400 error on the playbook accept path instead of failing with a generic server error
+
 ## Removed
 
 # [1.14.0] - 2026-05-06
