@@ -11,6 +11,7 @@ export const SectionCard: React.FC<ISectionCardProps> = ({
   title,
   description,
   variant = 'secondary',
+  backgroundColor,
   children,
 }) => (
   <PMVStack
@@ -20,6 +21,7 @@ export const SectionCard: React.FC<ISectionCardProps> = ({
     height="full"
     border="solid 1px"
     borderColor={BORDER_COLORS[variant]}
+    backgroundColor={backgroundColor}
     padding={4}
     borderRadius={4}
   >

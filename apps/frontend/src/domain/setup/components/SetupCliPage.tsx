@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   PMPage,
   PMPageSection,
@@ -8,7 +8,9 @@ import {
   PMText,
   PMBox,
   PMAlert,
+  PMLink,
 } from '@packmind/ui';
+import { useLocation, useParams } from 'react-router';
 import {
   CopiableTextarea,
   CopiableTextField,
@@ -34,6 +36,10 @@ import {
   AuthMethod,
 } from '../../accounts/components/LocalEnvironmentSetup/types';
 import { CliAuthenticationDataTestIds } from '@packmind/frontend';
+import { routes } from '../../../shared/utils/routes';
+import { API_KEY_HASH } from './AutomateUpdatesStep';
+
+const AUTHENTICATE_ANCHOR_ID = 'setup-cli-authenticate';
 
 const LoginCommandContent: React.FC = () => (
   <SectionCard
@@ -155,9 +161,22 @@ const ApiKeyContent: React.FC = () => {
 
 export const SetupCliPage: React.FC = () => {
   const [selectedOs, setSelectedOs] = useState<OsType>(detectUserOs);
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('login-command');
+  const { hash } = useLocation();
+  const { orgSlug } = useParams();
+  const requestedApiKeyTab = hash === `#${API_KEY_HASH}`;
+  const [authMethod, setAuthMethod] = useState<AuthMethod>(() =>
+    requestedApiKeyTab ? 'api-key' : 'login-command',
+  );
   const { loginCode, isGenerating, codeExpiresAt, regenerate } =
     useCliLoginCode();
+
+  useEffect(() => {
+    if (!requestedApiKeyTab) return;
+    setAuthMethod('api-key');
+    document
+      .getElementById(AUTHENTICATE_ANCHOR_ID)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [requestedApiKeyTab]);
 
   const renderGuidedInstallContent = () => {
     if (isGenerating) {
@@ -279,7 +298,7 @@ export const SetupCliPage: React.FC = () => {
           title="Authenticate"
           variant="outline"
           backgroundColor="primary"
-          boxProps={{ width: 'full' }}
+          boxProps={{ width: 'full', id: AUTHENTICATE_ANCHOR_ID }}
         >
           <PMVStack align="flex-start" gap={4} width="full">
             <PMText color="tertiary" mb={2}>
@@ -295,6 +314,13 @@ export const SetupCliPage: React.FC = () => {
             )}
           </PMVStack>
         </PMPageSection>
+
+        <PMText variant="small" color="tertiary">
+          Want to run <code>packmind-cli install</code> on a schedule?{' '}
+          <PMLink href={orgSlug ? routes.org.toSetupAutoUpdate(orgSlug) : '#'}>
+            Set up Auto-update →
+          </PMLink>
+        </PMText>
       </PMVStack>
     </PMPage>
   );
