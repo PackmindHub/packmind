@@ -41,6 +41,7 @@ import {
   camelToKebab,
   sortAdditionalPropertiesKeys,
 } from '@packmind/types';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
 import { IChangesProposalApplier } from './appliers/IChangesProposalApplier';
 import { StandardChangesApplier } from './appliers/StandardChangesApplier';
 import { CommandChangesApplier } from './appliers/CommandChangesApplier';
@@ -175,6 +176,17 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
         const errorType =
           step.kind === 'create' ? step.proposal.type : step.proposals[0].type;
         await this.rollback(rollbackEntries);
+        if (error instanceof SkillValidationError) {
+          const descriptionError = error.errors.find(
+            (e) => e.field === 'description',
+          );
+          error.message = descriptionError
+            ? `A submitted skill has a description longer than ${DESCRIPTION_MAX_LENGTH} characters. Edit your skill and upload it again.`
+            : `A submitted skill is invalid: ${error.errors
+                .map((e) => e.message)
+                .join('; ')}. Edit your skill and upload it again.`;
+          throw error;
+        }
         return {
           success: false,
           error: {
@@ -280,6 +292,18 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       currentVersion,
       changeProposals,
     );
+
+    if (step.itemType === 'skill') {
+      const newSkillVersion = result.version as SkillVersionWithFiles;
+      if (newSkillVersion.description.length > DESCRIPTION_MAX_LENGTH) {
+        throw new SkillValidationError([
+          {
+            field: 'description',
+            message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
+          },
+        ]);
+      }
+    }
 
     const spaceId = step.proposals[0].spaceId;
     const brandedUserId = createUserId(userId);

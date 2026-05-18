@@ -9,6 +9,7 @@
     "@packmind/types": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
+    "@packmind/skills": "*",
     "@packmind/test-utils": "*",
     "typeorm": "0.3.28",
     "uuid": "^11.1.0",
