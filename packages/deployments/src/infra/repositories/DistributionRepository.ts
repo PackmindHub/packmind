@@ -37,6 +37,19 @@ function toIsoString(value: unknown): string {
   return value == null ? '' : String(value);
 }
 
+// A SkillVersion is "orphaned" when its parent Skill row has been soft-deleted.
+// TypeORM's leftJoinAndSelect does not auto-apply soft-delete filtering on
+// joined entities, so we filter explicitly to avoid surfacing versions of
+// deleted skills through historical distribution rows.
+function isSkillVersionOrphaned(skillVersion: SkillVersion): boolean {
+  const skill = (
+    skillVersion as SkillVersion & {
+      skill?: { deletedAt?: Date | null } | null;
+    }
+  ).skill;
+  return skill?.deletedAt != null;
+}
+
 export class DistributionRepository implements IDistributionRepository {
   constructor(
     private readonly repository: Repository<Distribution> = localDataSource.getRepository<Distribution>(
@@ -1064,6 +1077,7 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage',
         )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .leftJoinAndSelect('skillVersion.skill', 'skill')
         .where('distribution.organizationId = :organizationId', {
           organizationId,
         })
@@ -1106,6 +1120,9 @@ export class DistributionRepository implements IDistributionRepository {
         }
 
         for (const skillVersion of data.skillVersions) {
+          if (isSkillVersionOrphaned(skillVersion)) {
+            continue;
+          }
           // Only keep the first (most recent) version of each skill
           if (!skillVersionMap.has(skillVersion.skillId)) {
             skillVersionMap.set(skillVersion.skillId, skillVersion);
@@ -1157,6 +1174,7 @@ export class DistributionRepository implements IDistributionRepository {
           'distributedPackage',
         )
         .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .leftJoinAndSelect('skillVersion.skill', 'skill')
         .where('distribution.organizationId = :organizationId', {
           organizationId,
         })
@@ -1204,6 +1222,9 @@ export class DistributionRepository implements IDistributionRepository {
         }
 
         for (const skillVersion of data.skillVersions) {
+          if (isSkillVersionOrphaned(skillVersion)) {
+            continue;
+          }
           if (!skillVersionMap.has(skillVersion.skillId)) {
             skillVersionMap.set(skillVersion.skillId, skillVersion);
           }

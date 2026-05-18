@@ -8,6 +8,8 @@ import {
   createPackageId,
   createRecipeId,
   createRecipeVersionId,
+  createSkillId,
+  createSkillVersionId,
   createSpaceId,
   createStandardId,
   createStandardVersionId,
@@ -789,6 +791,234 @@ describe('DistributionRepository', () => {
 
       it('keeps the most recent version', () => {
         expect(result[0].id).toBe(rv1v2.id);
+      });
+    });
+  });
+
+  describe('findActiveSkillVersionsByTarget', () => {
+    const createSkillVersion = (
+      id: string,
+      skillId: string,
+      name: string,
+      opts: { parentDeletedAt?: Date | null } = {},
+    ) =>
+      ({
+        id: createSkillVersionId(id),
+        skillId: createSkillId(skillId),
+        name,
+        slug: name.toLowerCase().replace(/ /g, '-'),
+        description: `Description for ${name}`,
+        version: 1,
+        prompt: '',
+        userId: createUserId('author-1'),
+        skill: { deletedAt: opts.parentDeletedAt ?? null },
+      }) as never;
+
+    const createDistribution = (
+      id: string,
+      createdAt: string,
+      distributedPackages: Distribution['distributedPackages'],
+    ): Distribution => ({
+      id: createDistributionId(id),
+      organizationId,
+      authorId: createUserId('author-1'),
+      status: DistributionStatus.success,
+      target: {
+        id: targetId,
+        name: 'default',
+        path: '/',
+        gitRepoId: 'git-repo-1' as never,
+      },
+      distributedPackages,
+      createdAt,
+      renderModes: [],
+      source: 'cli',
+    });
+
+    describe('with an active parent skill', () => {
+      const skv1 = createSkillVersion('skv-1', 'skill-1', 'Skill One');
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveSkillVersionsByTarget>
+      >;
+
+      beforeEach(async () => {
+        const distribution = createDistribution(
+          'dist-1',
+          '2024-01-01T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [skv1],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([distribution]);
+
+        result = await repository.findActiveSkillVersionsByTarget(
+          organizationId,
+          targetId,
+        );
+      });
+
+      it('returns the skill version', () => {
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe(skv1.id);
+      });
+
+      it('loads the parent skill via the join', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'skillVersion.skill',
+          'skill',
+        );
+      });
+    });
+
+    describe('with a soft-deleted parent skill', () => {
+      const liveSkv = createSkillVersion(
+        'skv-live',
+        'skill-live',
+        'Live Skill',
+      );
+      const orphanSkv = createSkillVersion(
+        'skv-orphan',
+        'skill-deleted',
+        'Orphan Skill',
+        { parentDeletedAt: new Date('2026-04-16T14:00:21.000Z') },
+      );
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveSkillVersionsByTarget>
+      >;
+
+      beforeEach(async () => {
+        const distribution = createDistribution(
+          'dist-1',
+          '2024-01-01T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [liveSkv, orphanSkv],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([distribution]);
+
+        result = await repository.findActiveSkillVersionsByTarget(
+          organizationId,
+          targetId,
+        );
+      });
+
+      it('excludes versions whose parent skill is soft-deleted', () => {
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe(liveSkv.id);
+      });
+    });
+  });
+
+  describe('findActiveSkillVersionsByTargetAndPackages', () => {
+    const createSkillVersion = (
+      id: string,
+      skillId: string,
+      name: string,
+      opts: { parentDeletedAt?: Date | null } = {},
+    ) =>
+      ({
+        id: createSkillVersionId(id),
+        skillId: createSkillId(skillId),
+        name,
+        slug: name.toLowerCase().replace(/ /g, '-'),
+        description: `Description for ${name}`,
+        version: 1,
+        prompt: '',
+        userId: createUserId('author-1'),
+        skill: { deletedAt: opts.parentDeletedAt ?? null },
+      }) as never;
+
+    const createDistribution = (
+      id: string,
+      createdAt: string,
+      distributedPackages: Distribution['distributedPackages'],
+    ): Distribution => ({
+      id: createDistributionId(id),
+      organizationId,
+      authorId: createUserId('author-1'),
+      status: DistributionStatus.success,
+      target: {
+        id: targetId,
+        name: 'default',
+        path: '/',
+        gitRepoId: 'git-repo-1' as never,
+      },
+      distributedPackages,
+      createdAt,
+      renderModes: [],
+      source: 'cli',
+    });
+
+    describe('with a soft-deleted parent skill', () => {
+      const liveSkv = createSkillVersion(
+        'skv-live',
+        'skill-live',
+        'Live Skill',
+      );
+      const orphanSkv = createSkillVersion(
+        'skv-orphan',
+        'skill-deleted',
+        'Orphan Skill',
+        { parentDeletedAt: new Date('2026-04-16T14:00:21.000Z') },
+      );
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveSkillVersionsByTargetAndPackages>
+      >;
+
+      beforeEach(async () => {
+        const distribution = createDistribution(
+          'dist-1',
+          '2024-01-01T00:00:00Z',
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [liveSkv, orphanSkv],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([distribution]);
+
+        result = await repository.findActiveSkillVersionsByTargetAndPackages(
+          organizationId,
+          targetId,
+          [packageId1],
+        );
+      });
+
+      it('excludes versions whose parent skill is soft-deleted', () => {
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe(liveSkv.id);
+      });
+
+      it('loads the parent skill via the join', () => {
+        expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+          'skillVersion.skill',
+          'skill',
+        );
       });
     });
   });
