@@ -1123,6 +1123,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       userId,
       organizationId,
       agents: targetCodingAgents,
+      excludeDeprecated: true,
     });
 
     // Extract skill names from paths and determine which are new

@@ -395,6 +395,47 @@ describe('DeployDefaultSkillsUseCase', () => {
     });
   });
 
+  describe('when command.excludeDeprecated is true', () => {
+    let mockDeployer: jest.Mocked<ICodingAgentDeployer>;
+
+    beforeEach(async () => {
+      mockDeployer = createMockDeployer();
+      deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
+
+      await useCase.execute({
+        ...command,
+        agents: ['claude'] as CodingAgent[],
+        excludeDeprecated: true,
+      });
+    });
+
+    it('forwards excludeDeprecated to the deployer', () => {
+      expect(mockDeployer.deployDefaultSkills).toHaveBeenCalledWith(
+        expect.objectContaining({ excludeDeprecated: true }),
+      );
+    });
+  });
+
+  describe('when command.excludeDeprecated is not provided', () => {
+    let mockDeployer: jest.Mocked<ICodingAgentDeployer>;
+
+    beforeEach(async () => {
+      mockDeployer = createMockDeployer();
+      deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
+
+      await useCase.execute({
+        ...command,
+        agents: ['claude'] as CodingAgent[],
+      });
+    });
+
+    it('does not set excludeDeprecated on the deployer call', () => {
+      expect(mockDeployer.deployDefaultSkills).toHaveBeenCalledWith(
+        expect.objectContaining({ excludeDeprecated: undefined }),
+      );
+    });
+  });
+
   describe('when command.agents has multiple agents', () => {
     let claudeDeployer: jest.Mocked<ICodingAgentDeployer>;
     let cursorDeployer: jest.Mocked<ICodingAgentDeployer>;

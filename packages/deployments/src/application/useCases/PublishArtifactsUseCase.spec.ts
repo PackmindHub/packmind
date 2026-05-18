@@ -2830,7 +2830,16 @@ describe('PublishArtifactsUseCase', () => {
         userId,
         organizationId,
         agents: activeCodingAgents,
+        excludeDeprecated: true,
       });
+    });
+
+    it('asks DeployDefaultSkillsUseCase to exclude deprecated skills', async () => {
+      await useCase.execute(command);
+
+      const executeCall =
+        mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+      expect(executeCall.excludeDeprecated).toBe(true);
     });
   });
 
@@ -2936,6 +2945,7 @@ describe('PublishArtifactsUseCase', () => {
           userId,
           organizationId,
           agents: perTargetAgents,
+          excludeDeprecated: true,
         });
       });
 
@@ -2966,6 +2976,7 @@ describe('PublishArtifactsUseCase', () => {
           userId,
           organizationId,
           agents: [CodingAgents.packmind],
+          excludeDeprecated: true,
         });
       });
     });
@@ -2987,6 +2998,7 @@ describe('PublishArtifactsUseCase', () => {
           userId,
           organizationId,
           agents: activeCodingAgents,
+          excludeDeprecated: true,
         });
       });
     });
