@@ -17,7 +17,6 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-05-13T11:52:39.272Z",
   "artifacts": {
     "command:creating-end-user-documentation-for-packmind": {
       "name": "Creating End-User Documentation for Packmind",
