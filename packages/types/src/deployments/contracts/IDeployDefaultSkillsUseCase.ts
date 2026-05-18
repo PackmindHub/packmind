@@ -5,6 +5,7 @@ import { FileUpdates } from '../FileUpdates';
 export type DeployDefaultSkillsCommand = PackmindCommand & {
   cliVersion?: string;
   includeBeta?: boolean;
+  excludeDeprecated?: boolean;
   // Optional agents to generate skills for (overrides org-level config when present)
   agents?: CodingAgent[];
 };

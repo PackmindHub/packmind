@@ -80,6 +80,7 @@ export class DeployDefaultSkillsUseCase
         const result = await deployer.deployDefaultSkills({
           cliVersion: command.cliVersion,
           includeBeta: command.includeBeta,
+          excludeDeprecated: command.excludeDeprecated,
         });
         this.mergeFileUpdates(mergedFileUpdates, result.fileUpdates);
         skippedSkillsCount = result.skippedSkillsCount;
