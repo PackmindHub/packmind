@@ -19,6 +19,7 @@ import {
   NewCommandPayload,
   NewSkillPayload,
   NewStandardPayload,
+  ScalarUpdatePayload,
   RecipeId,
   RecipeVersion,
   SkillId,
@@ -284,6 +285,26 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     const applier = this.getApplierForType(step.itemType);
     const currentVersion = await applier.getVersion(step.artefactId);
 
+    if (step.itemType === 'skill') {
+      for (const proposal of step.proposals) {
+        if (proposal.type !== ChangeProposalType.updateSkillDescription) {
+          continue;
+        }
+        const payload = proposal.payload as ScalarUpdatePayload;
+        if (
+          typeof payload.newValue === 'string' &&
+          payload.newValue.length > DESCRIPTION_MAX_LENGTH
+        ) {
+          throw new SkillValidationError([
+            {
+              field: 'description',
+              message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
+            },
+          ]);
+        }
+      }
+    }
+
     const changeProposals = step.proposals.map((item) =>
       this.buildChangeProposal(item, userId),
     );
@@ -292,18 +313,6 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       currentVersion,
       changeProposals,
     );
-
-    if (step.itemType === 'skill') {
-      const newSkillVersion = result.version as SkillVersionWithFiles;
-      if (newSkillVersion.description.length > DESCRIPTION_MAX_LENGTH) {
-        throw new SkillValidationError([
-          {
-            field: 'description',
-            message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
-          },
-        ]);
-      }
-    }
 
     const spaceId = step.proposals[0].spaceId;
     const brandedUserId = createUserId(userId);

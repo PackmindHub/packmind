@@ -1137,6 +1137,55 @@ describe('ApplyPlaybookUseCase', () => {
       });
     });
 
+    describe('when updating a non-description field on a legacy skill whose existing description exceeds 1024 chars', () => {
+      const skillId = createSkillId('legacy-skill');
+      const skillVersionId = createSkillVersionId('legacy-ver-1');
+      const newSkillVersionId = createSkillVersionId('legacy-ver-2');
+
+      const legacyOversizedDescription = 'l'.repeat(1500);
+
+      const skillVersion: SkillVersion = {
+        id: skillVersionId,
+        skillId,
+        name: 'Legacy Skill',
+        slug: 'legacy-skill',
+        description: legacyOversizedDescription,
+        prompt: 'Do things',
+        version: 1,
+        userId,
+      };
+
+      it('allows the update without flagging the legacy description', async () => {
+        skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+        skillsPort.getSkillFiles.mockResolvedValue([]);
+        skillsPort.saveSkillVersion.mockResolvedValue({
+          ...skillVersion,
+          id: newSkillVersionId,
+          name: 'Renamed Skill',
+          version: 2,
+        });
+
+        const result = await useCase.execute(
+          buildCommand({
+            proposals: [
+              {
+                spaceId,
+                type: ChangeProposalType.updateSkillName,
+                artefactId: skillId,
+                payload: {
+                  oldValue: 'Legacy Skill',
+                  newValue: 'Renamed Skill',
+                },
+              },
+            ],
+          }),
+        );
+
+        expect(result.success).toBe(true);
+        expect(skillsPort.saveSkillVersion).toHaveBeenCalledTimes(1);
+      });
+    });
+
     describe('when submitting a deleteRule proposal', () => {
       const ruleToDelete = createRuleId('rule-to-delete');
       const stdVersionWithTwoRules: StandardVersion = {
