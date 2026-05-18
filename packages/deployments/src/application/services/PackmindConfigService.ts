@@ -3,6 +3,7 @@ import {
   FileModification,
   PackmindFileConfig,
 } from '@packmind/types';
+import { parsePackageSlug } from './packageSlugHelpers';
 
 export class PackmindConfigService {
   generateConfigContent(
@@ -13,6 +14,10 @@ export class PackmindConfigService {
     const packages: { [slug: string]: string } = { ...existingPackages };
 
     for (const slug of packagesSlugs) {
+      const { spaceSlug, packageSlug } = parsePackageSlug(slug);
+      if (spaceSlug !== null && packages[packageSlug] !== undefined) {
+        delete packages[packageSlug];
+      }
       packages[slug] = '*';
     }
 

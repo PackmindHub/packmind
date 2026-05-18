@@ -130,6 +130,61 @@ describe('PackmindConfigService', () => {
           },
         });
       });
+
+      describe('when an incoming slug is prefixed with @space', () => {
+        it('replaces a bare-slug entry with the prefixed form', () => {
+          const existingPackages = {
+            'pkg-a': '*',
+            'pkg-b': '*',
+          };
+
+          const result = service.generateConfigContent(
+            ['@my-space/pkg-a'],
+            existingPackages,
+          );
+
+          expect(result).toEqual({
+            packages: {
+              'pkg-b': '*',
+              '@my-space/pkg-a': '*',
+            },
+          });
+        });
+
+        it('replaces the bare entry even when a different space is provided', () => {
+          const existingPackages = {
+            'pkg-a': '*',
+          };
+
+          const result = service.generateConfigContent(
+            ['@other-space/pkg-a'],
+            existingPackages,
+          );
+
+          expect(result).toEqual({
+            packages: {
+              '@other-space/pkg-a': '*',
+            },
+          });
+        });
+
+        it('does not duplicate when the prefixed entry already exists', () => {
+          const existingPackages = {
+            '@my-space/pkg-a': '*',
+          };
+
+          const result = service.generateConfigContent(
+            ['@my-space/pkg-a'],
+            existingPackages,
+          );
+
+          expect(result).toEqual({
+            packages: {
+              '@my-space/pkg-a': '*',
+            },
+          });
+        });
+      });
     });
 
     describe('with existing agents', () => {

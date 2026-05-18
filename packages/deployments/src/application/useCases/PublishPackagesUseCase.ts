@@ -15,6 +15,8 @@ import {
   IStandardsPort,
   ISkillsPort,
   IDeploymentPort,
+  ISpacesPort,
+  SpaceId,
   createDistributedPackageId,
   createPackagesDeploymentId,
   Distribution,
@@ -44,6 +46,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     private readonly deploymentPort: IDeploymentPort,
     public readonly packageService: PackageService,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
+    private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -165,8 +168,23 @@ export class PublishPackagesUseCase implements IPublishPackages {
       skillVersionsCount: skillVersionIds.length,
     });
 
-    // Extract package slugs
-    const packagesSlugs = packages.map((p) => p.slug);
+    // Resolve package slugs in the `@<space-slug>/<package-slug>` form used by
+    // the CLI so the deployed packmind.json references match across surfaces.
+    const spaceSlugCache = new Map<SpaceId, string>();
+    const packagesSlugs: string[] = [];
+    for (const pkg of packages) {
+      const spaceId = pkg.spaceId as SpaceId;
+      let spaceSlug = spaceSlugCache.get(spaceId);
+      if (spaceSlug === undefined) {
+        const space = await this.spacesPort.getSpaceById(spaceId);
+        if (!space) {
+          throw new Error(`Space ${spaceId} not found for package ${pkg.slug}`);
+        }
+        spaceSlug = space.slug;
+        spaceSlugCache.set(spaceId, spaceSlug);
+      }
+      packagesSlugs.push(`@${spaceSlug}/${pkg.slug}`);
+    }
 
     // Build artifact metadata maps for lock file generation
     const artifactSpaceIds: Record<string, string> = {};
