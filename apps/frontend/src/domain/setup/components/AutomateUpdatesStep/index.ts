@@ -1,11 +1,12 @@
+export { AutomateUpdatesStep } from './AutomateUpdatesStep';
 export type {
   AutoUpdateProvider,
   IProviderMetadata,
-  IProviderSecret,
   SchedulePresetKind,
   ScheduleSelectorValue,
 } from './constants';
 export {
+  API_KEY_HASH,
   DEFAULT_CRON,
   DOCS_URL,
   PROVIDER_METADATA,

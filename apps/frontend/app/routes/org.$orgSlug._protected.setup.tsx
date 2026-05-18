@@ -86,6 +86,12 @@ export default function SetupIndexRouteModule() {
                 label="CLI"
                 exact
               />,
+              <SidebarNavigationLink
+                key="auto-update"
+                url={orgSlug ? routes.org.toSetupAutoUpdate(orgSlug) : '#'}
+                label="Auto-update"
+                exact
+              />,
             ]}
           />
 

@@ -25,6 +25,7 @@ export const routes = {
     toProfile: (orgSlug: string) => `/org/${orgSlug}/profile`,
     toSetup: (orgSlug: string) => `/org/${orgSlug}/setup`,
     toSetupCLI: (orgSlug: string) => `/org/${orgSlug}/setup/cli`,
+    toSetupAutoUpdate: (orgSlug: string) => `/org/${orgSlug}/setup/auto-update`,
     toSetupSkills: (orgSlug: string) => `/org/${orgSlug}/setup/skills`,
     toSetupUseCases: (orgSlug: string) => `/org/${orgSlug}/setup/use-cases`,
   },

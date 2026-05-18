@@ -12,6 +12,7 @@ export interface ISectionCardProps {
   title: string;
   description?: string;
   variant?: 'primary' | 'secondary';
+  backgroundColor?: string;
   children: React.ReactNode;
 }
 

@@ -6,7 +6,6 @@ import {
   SCHEDULE_PRESETS,
   ScheduleSelectorValue,
 } from './constants';
-import { buildWorkflowYaml } from './yaml';
 
 const isProvider = (value: string | null): value is AutoUpdateProvider =>
   value === 'github' || value === 'gitlab';
@@ -43,7 +42,6 @@ export interface IUseAutomateUpdatesState {
   schedule: ScheduleSelectorValue;
   setSchedule: (next: ScheduleSelectorValue) => void;
   effectiveCron: string;
-  yaml: string;
 }
 
 export const useAutomateUpdatesState = (): IUseAutomateUpdatesState => {
@@ -64,17 +62,11 @@ export const useAutomateUpdatesState = (): IUseAutomateUpdatesState => {
 
   const effectiveCron = useMemo(() => resolveCron(schedule), [schedule]);
 
-  const yaml = useMemo(
-    () => buildWorkflowYaml(provider, effectiveCron),
-    [provider, effectiveCron],
-  );
-
   return {
     provider,
     setProvider,
     schedule,
     setSchedule,
     effectiveCron,
-    yaml,
   };
 };
