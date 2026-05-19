@@ -108,7 +108,7 @@ export const OutdatedDistributeBanner: React.FC<
             <PMAlert.Title>Some targets are out of date.</PMAlert.Title>
             {orgSlug && (
               <PMAlert.Description>
-                Or schedule it automatically —{' '}
+                Keep targets in sync automatically —{' '}
                 <PMLink href={routes.org.toSetupAutoUpdate(orgSlug)}>
                   set up Auto-update
                 </PMLink>
