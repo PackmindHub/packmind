@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import { AutomateUpdatesStep } from './AutomateUpdatesStep';
 import { useApiKey } from '../../../accounts/components/LocalEnvironmentSetup/hooks';
@@ -29,19 +29,6 @@ const buildUseApiKeyReturn = (hasExistingKey: boolean) =>
     getGenerateButtonLabel: () => 'Generate API Key',
   }) as ReturnType<typeof useApiKey>;
 
-const CliSetupStub: React.FC = () => {
-  const location = useLocation();
-  return (
-    <div
-      data-testid="cli-setup-stub"
-      data-pathname={location.pathname}
-      data-hash={location.hash}
-    >
-      CLI Setup
-    </div>
-  );
-};
-
 const renderStep = () =>
   render(
     <UIProvider>
@@ -51,7 +38,6 @@ const renderStep = () =>
             path="/org/:orgSlug/setup/auto-update"
             element={<AutomateUpdatesStep />}
           />
-          <Route path="/org/:orgSlug/setup/cli" element={<CliSetupStub />} />
         </Routes>
       </MemoryRouter>
     </UIProvider>,
@@ -89,7 +75,7 @@ describe('AutomateUpdatesStep', () => {
     expect(workflowTextarea.value).toContain('cron: "0 2 * * 1-5"');
   });
 
-  it('prompts the user to generate an API key when none exists and navigates to CLI Setup', async () => {
+  it('prompts the user to generate an API key when none exists and links to CLI Setup in a new tab', () => {
     mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(false));
     renderStep();
 
@@ -98,14 +84,12 @@ describe('AutomateUpdatesStep', () => {
       within(panel).getByText(/you need an api key first/i),
     ).toBeInTheDocument();
 
-    const button = within(panel).getByRole('button', {
+    const link = within(panel).getByRole('link', {
       name: /go to cli setup/i,
     });
-    await userEvent.click(button);
-
-    const stub = await screen.findByTestId('cli-setup-stub');
-    expect(stub).toHaveAttribute('data-pathname', '/org/acme/setup/cli');
-    expect(stub).toHaveAttribute('data-hash', '#api-key');
+    expect(link).toHaveAttribute('href', '/org/acme/setup/cli#api-key');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toMatch(/noopener/);
   });
 
   it('switches to GitLab and tells the user about both required CI variables', async () => {
