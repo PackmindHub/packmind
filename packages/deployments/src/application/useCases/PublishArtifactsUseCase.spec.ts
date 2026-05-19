@@ -2830,7 +2830,16 @@ describe('PublishArtifactsUseCase', () => {
         userId,
         organizationId,
         agents: activeCodingAgents,
+        excludeDeprecated: true,
       });
+    });
+
+    it('asks DeployDefaultSkillsUseCase to exclude deprecated skills', async () => {
+      await useCase.execute(command);
+
+      const executeCall =
+        mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+      expect(executeCall.excludeDeprecated).toBe(true);
     });
   });
 
@@ -2936,6 +2945,7 @@ describe('PublishArtifactsUseCase', () => {
           userId,
           organizationId,
           agents: perTargetAgents,
+          excludeDeprecated: true,
         });
       });
 
@@ -2966,6 +2976,7 @@ describe('PublishArtifactsUseCase', () => {
           userId,
           organizationId,
           agents: [CodingAgents.packmind],
+          excludeDeprecated: true,
         });
       });
     });
@@ -2987,6 +2998,7 @@ describe('PublishArtifactsUseCase', () => {
           userId,
           organizationId,
           agents: activeCodingAgents,
+          excludeDeprecated: true,
         });
       });
     });
@@ -4226,6 +4238,181 @@ describe('PublishArtifactsUseCase', () => {
       const parsed = JSON.parse(lockFile.content);
 
       expect(parsed.packageSlugs).toContain('@team-a/pkg-a');
+    });
+  });
+
+  describe('installedAt field in lock file', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: '/',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['@team-a/pkg-a'],
+        packageIds: [createPackageId(uuidv4())],
+        artifactSpaceIds: { [String(recipeVersion.recipeId)]: 'space-a' },
+        artifactPackageIds: {
+          [String(recipeVersion.recipeId)]: ['pkg-a'],
+        },
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.claude/commands/test-recipe.md',
+            content: 'recipe content',
+            artifactType: 'command',
+            artifactId: String(recipeVersion.recipeId),
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    describe('when existing lock file has no installedAt field', () => {
+      beforeEach(() => {
+        const existingLockFileContent = {
+          lockfileVersion: 1,
+          packageSlugs: ['@team-a/pkg-a'],
+          agents: ['claude'],
+          targetId: 'target-1',
+          artifacts: {},
+        };
+
+        mockGitPort.getFileFromRepo.mockImplementation(
+          async (_gitRepo, filePath) => {
+            if (filePath === 'packmind-lock.json') {
+              return {
+                sha: 'lock-sha',
+                content: JSON.stringify(existingLockFileContent),
+              };
+            }
+            return null;
+          },
+        );
+      });
+
+      it('does not add installedAt to the lock file', async () => {
+        await useCase.execute(command);
+
+        const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+        const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+          (f: { path: string }) => f.path === 'packmind-lock.json',
+        );
+
+        assert(lockFile, 'lockFile should be defined');
+        assert(lockFile.content, 'lockFile.content should be defined');
+        const parsed = JSON.parse(lockFile.content);
+
+        expect(parsed.installedAt).toBeUndefined();
+      });
+    });
+
+    describe('when existing lock file has an installedAt field', () => {
+      beforeEach(() => {
+        const existingLockFileContent = {
+          lockfileVersion: 1,
+          packageSlugs: ['@team-a/pkg-a'],
+          agents: ['claude'],
+          installedAt: '2024-01-01T00:00:00.000Z',
+          targetId: 'target-1',
+          artifacts: {},
+        };
+
+        mockGitPort.getFileFromRepo.mockImplementation(
+          async (_gitRepo, filePath) => {
+            if (filePath === 'packmind-lock.json') {
+              return {
+                sha: 'lock-sha',
+                content: JSON.stringify(existingLockFileContent),
+              };
+            }
+            return null;
+          },
+        );
+      });
+
+      it('refreshes installedAt in the lock file', async () => {
+        await useCase.execute(command);
+
+        const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+        const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+          (f: { path: string }) => f.path === 'packmind-lock.json',
+        );
+
+        assert(lockFile, 'lockFile should be defined');
+        assert(lockFile.content, 'lockFile.content should be defined');
+        const parsed = JSON.parse(lockFile.content);
+
+        expect(parsed.installedAt).toBeDefined();
+        expect(parsed.installedAt).not.toEqual('2024-01-01T00:00:00.000Z');
+      });
+    });
+
+    describe('when there is no existing lock file', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      });
+
+      it('sets installedAt in the new lock file', async () => {
+        await useCase.execute(command);
+
+        const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+        const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+          (f: { path: string }) => f.path === 'packmind-lock.json',
+        );
+
+        assert(lockFile, 'lockFile should be defined');
+        assert(lockFile.content, 'lockFile.content should be defined');
+        const parsed = JSON.parse(lockFile.content);
+
+        expect(parsed.installedAt).toBeDefined();
+      });
     });
   });
 });

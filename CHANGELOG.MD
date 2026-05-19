@@ -2,9 +2,14 @@
 
 ## Added
 
+- Add a "Distribute all" button on the space deployment overview to redistribute all outdated packages in one batch action
+- Show the last distribution status and date for each package on the space deployment overview
+
 ## Changed
 
 ## Fixed
+
+- Skill descriptions longer than 1024 characters are now rejected with a clear 400 error on the playbook accept path instead of failing with a generic server error
 
 ## Removed
 

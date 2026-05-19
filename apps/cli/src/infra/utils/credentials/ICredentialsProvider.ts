@@ -8,7 +8,7 @@ export interface DecodedCredentials {
 
 export interface ICredentialsProvider {
   /**
-   * Returns the source name for display purposes (e.g., "PACKMIND_API_KEY_V3 environment variable")
+   * Returns the source name for display purposes (e.g., "PACKMIND_API_KEY environment variable")
    */
   getSourceName(): string;
 

@@ -68,10 +68,10 @@ export async function runCli(
   const tempHome =
     opts?.home ?? fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
 
-  // Build clean environment by filtering out PACKMIND_API_KEY_V3
+  // Build clean environment by filtering out PACKMIND_API_KEY(_V3)
   const cleanEnv: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(process.env)) {
-    if (key !== 'PACKMIND_API_KEY_V3') {
+    if (key !== 'PACKMIND_API_KEY_V3' && key !== 'PACKMIND_API_KEY') {
       cleanEnv[key] = value;
     }
   }
@@ -80,7 +80,10 @@ export async function runCli(
   const env = {
     ...cleanEnv,
     HOME: tempHome, // Override HOME to prevent loading ~/.packmind/credentials.json
-    ...(opts?.apiKey && { PACKMIND_API_KEY_V3: opts.apiKey }),
+    ...(opts?.apiKey && {
+      PACKMIND_API_KEY: opts.apiKey,
+      PACKMIND_API_KEY_V3: opts.apiKey,
+    }),
   };
 
   return new Promise((resolve, reject) => {

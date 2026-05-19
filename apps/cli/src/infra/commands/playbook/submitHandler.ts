@@ -16,6 +16,7 @@ import {
 import { checkForDuplicateNames } from './submit/duplicateNameChecker';
 import { createTargetContextResolver } from './submit/targetContextResolver';
 import { buildProposals, ProposalItem } from './submit/proposalBuilder';
+import { validateProposalSkillDescriptions } from './submit/skillDescriptionValidator';
 import {
   fetchAvailablePackageSlugs,
   logPackageAddGuidance,
@@ -144,6 +145,18 @@ export async function playbookSubmitHandler(
     changes,
     resolver.getTargetContext,
   );
+
+  // Pre-flight: reject skill proposals whose description exceeds the limit.
+  // The backend enforces the same cap; failing fast here keeps the error tied
+  // to the local file so users can fix it before sending anything.
+  const descriptionErrors = validateProposalSkillDescriptions(allProposals);
+  if (descriptionErrors.length > 0) {
+    for (const error of descriptionErrors) {
+      logErrorConsole(error);
+    }
+    exit(1);
+    return;
+  }
 
   // Pre-flight: reject when the same artifact is updated from multiple agents
   if (conflicts.length > 0) {

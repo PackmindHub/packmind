@@ -1184,4 +1184,118 @@ Old packmind content
       );
     });
   });
+
+  describe('config creation tracking', () => {
+    const space = spaceFactory({ slug: 'space' });
+
+    beforeEach(() => {
+      mockSpaceService.getSpaces.mockResolvedValue([space]);
+      mockSpaceService.getApiContext.mockReturnValue({
+        host: 'https://app.packmind.com',
+        organizationId: 'org-1',
+      });
+    });
+
+    it('sets configCreated=true when no packmind.json existed and explicit packages are added', async () => {
+      mockConfigFileRepository.configExists.mockResolvedValue(false);
+      mockConfigFileRepository.readConfig
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          packages: { '@space/pkg': '*' },
+        });
+
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        packages: ['@space/pkg'],
+      });
+
+      expect(result.configCreated).toBe(true);
+    });
+
+    it('sets configCreated=false when packmind.json already existed', async () => {
+      mockConfigFileRepository.configExists.mockResolvedValue(true);
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/old-pkg': '*' },
+      });
+
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        packages: ['@space/new-pkg'],
+      });
+
+      expect(result.configCreated).toBe(false);
+    });
+  });
+
+  describe('packages added tracking', () => {
+    const space = spaceFactory({ slug: 'space' });
+
+    beforeEach(() => {
+      mockSpaceService.getSpaces.mockResolvedValue([space]);
+      mockSpaceService.getApiContext.mockReturnValue({
+        host: 'https://app.packmind.com',
+        organizationId: 'org-1',
+      });
+    });
+
+    it('returns slugs that were not in the config before', async () => {
+      mockConfigFileRepository.configExists.mockResolvedValue(true);
+      mockConfigFileRepository.readConfig
+        .mockResolvedValueOnce({
+          packages: { '@space/existing': '*' },
+        })
+        .mockResolvedValueOnce({
+          packages: { '@space/existing': '*', '@space/new-one': '*' },
+        });
+
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        packages: ['@space/existing', '@space/new-one'],
+      });
+
+      expect(result.packagesAdded).toEqual(['@space/new-one']);
+    });
+
+    it('returns empty array when running install with no explicit packages', async () => {
+      mockConfigFileRepository.configExists.mockResolvedValue(true);
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/existing': '*' },
+      });
+
+      const result = await useCase.execute({ baseDirectory: '/test' });
+
+      expect(result.packagesAdded).toEqual([]);
+    });
+  });
+
+  describe('source artifacts and resolved agents passthrough', () => {
+    it('passes through sourceArtifacts and resolvedAgents from the gateway response', async () => {
+      mockGateway.deployment.install.mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        resolvedAgents: ['agents_md', 'packmind'],
+        missingAccess: [],
+        skillFolders: [],
+        sourceArtifacts: {
+          skillsCount: 3,
+          standardsCount: 2,
+          commandsCount: 0,
+          recipesCount: 0,
+        },
+      });
+      mockConfigFileRepository.configExists.mockResolvedValue(true);
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/pkg': '*' },
+      });
+
+      const result = await useCase.execute({ baseDirectory: '/test' });
+
+      expect(result.resolvedAgents).toEqual(['agents_md', 'packmind']);
+      expect(result.sourceArtifacts).toEqual({
+        skillsCount: 3,
+        standardsCount: 2,
+        commandsCount: 0,
+        recipesCount: 0,
+      });
+    });
+  });
 });

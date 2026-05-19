@@ -7,9 +7,9 @@ import {
   SkillProperties,
 } from '../../domain/SkillProperties';
 
-const NAME_MAX_LENGTH = 64;
-const DESCRIPTION_MAX_LENGTH = 1024;
-const COMPATIBILITY_MAX_LENGTH = 500;
+export const NAME_MAX_LENGTH = 64;
+export const DESCRIPTION_MAX_LENGTH = 1024;
+export const COMPATIBILITY_MAX_LENGTH = 500;
 const ALLOWED_SHELL_VALUES = ['bash', 'powershell'] as const;
 
 /**
