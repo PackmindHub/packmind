@@ -27,7 +27,7 @@ interface IProviderPanelProps {
   schedule: ScheduleSelectorValue;
   onScheduleChange: (next: ScheduleSelectorValue) => void;
   hasActiveApiKey: boolean;
-  onNavigateToApiKey: () => void;
+  apiKeyHref: string;
 }
 
 const formatSecretsReminder = (
@@ -47,7 +47,7 @@ export const ProviderPanel: React.FC<IProviderPanelProps> = ({
   schedule,
   onScheduleChange,
   hasActiveApiKey,
-  onNavigateToApiKey,
+  apiKeyHref,
 }) => {
   const metadata = PROVIDER_METADATA[provider];
   const yaml = useMemo(
@@ -76,12 +76,14 @@ export const ProviderPanel: React.FC<IProviderPanelProps> = ({
                 then come back here.
               </PMAlert.Description>
               <PMBox mt={2}>
-                <PMButton
-                  size="xs"
-                  variant="outline"
-                  onClick={onNavigateToApiKey}
-                >
-                  Go to CLI Setup
+                <PMButton size="xs" variant="outline" asChild>
+                  <a
+                    href={apiKeyHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Go to CLI Setup ↗
+                  </a>
                 </PMButton>
               </PMBox>
             </PMAlert.Content>
