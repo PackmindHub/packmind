@@ -4,6 +4,8 @@
 
 ## Changed
 
+- Authentication is now done by reading `PACKMIND_API_KEY` env var (and also `PACKMIND_API_KEY_V3`)
+
 ## Fixed
 
 - `install <package>` against a directory without `packmind.json` now reports `Created packmind.json with N package(s)` instead of the misleading `Nothing to install`.
