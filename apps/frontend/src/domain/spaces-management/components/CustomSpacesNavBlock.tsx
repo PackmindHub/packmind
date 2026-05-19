@@ -1,5 +1,5 @@
 import type { UserSpaceWithRole } from '@packmind/types';
-import { PMBox, PMSeparator, PMText } from '@packmind/ui';
+import { PMBox, PMSeparator, PMText, PMTooltip } from '@packmind/ui';
 import { SpaceNavBlock } from '../../organizations/components/sidebar/SpaceNavBlock';
 import { useSidebarCollapse } from '../../organizations/components/SidebarCollapseContext';
 import { sortSpacesByName } from '../utils/sortSpacesByName';
@@ -45,6 +45,8 @@ export function CustomSpacesNavBlock({
   const unpinnedSpaces = hiddenActiveSpace
     ? [...visibleUnpinned, hiddenActiveSpace]
     : visibleUnpinned;
+
+  const hasNoCustomSpaces = customSpaces.length === 0;
 
   return (
     <>
@@ -112,6 +114,24 @@ export function CustomSpacesNavBlock({
           onSpaceClick={() => onSpaceClick(space)}
         />
       ))}
+      {!isCollapsed && hasNoCustomSpaces && (
+        <PMBox px={3} pt={1} pb={2}>
+          <PMText fontSize="xs" color="tertiary">
+            Browse to discover{' '}
+            <PMTooltip label='Organize your playbook by team, project, or language. E.g. "Backend", "Frontend", "Security".'>
+              <PMBox
+                as="span"
+                textDecoration="underline"
+                textDecorationStyle="dotted"
+                cursor="help"
+              >
+                spaces
+              </PMBox>
+            </PMTooltip>{' '}
+            or create your own.
+          </PMText>
+        </PMBox>
+      )}
     </>
   );
 }
