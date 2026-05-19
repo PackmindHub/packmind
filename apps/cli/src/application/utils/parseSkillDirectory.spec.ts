@@ -130,6 +130,44 @@ describe('parseSkillDirectory', () => {
     });
   });
 
+  describe('when description exceeds 1024 characters', () => {
+    it('returns an error', () => {
+      const longDescription = 'a'.repeat(1025);
+      const content = [
+        '---',
+        'name: My Skill',
+        `description: "${longDescription}"`,
+        '---',
+        'Prompt body.',
+      ].join('\n');
+
+      const result = parseSkillDirectory([buildSkillMdFile(content)]);
+
+      expect(result).toEqual({
+        success: false,
+        error:
+          'Skill "My Skill" has a description of 1025 characters, which exceeds the maximum of 1024. Edit the "description" field in SKILL.md and try again.',
+      });
+    });
+  });
+
+  describe('when description is exactly 1024 characters', () => {
+    it('accepts the skill', () => {
+      const exactDescription = 'a'.repeat(1024);
+      const content = [
+        '---',
+        'name: My Skill',
+        `description: "${exactDescription}"`,
+        '---',
+        'Prompt body.',
+      ].join('\n');
+
+      const result = parseSkillDirectory([buildSkillMdFile(content)]);
+
+      expect(result.success).toBe(true);
+    });
+  });
+
   describe('when body is empty', () => {
     it('returns an error', () => {
       const content = [
