@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { UIProvider } from '@packmind/ui';
+import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 import { AutomateUpdatesStep } from './AutomateUpdatesStep';
 import { useApiKey } from '../../../accounts/components/LocalEnvironmentSetup/hooks';
 
@@ -13,9 +14,11 @@ jest.mock('../../../accounts/components/LocalEnvironmentSetup/hooks', () => ({
 
 const mockedUseApiKey = useApiKey as jest.MockedFunction<typeof useApiKey>;
 
-const buildUseApiKeyReturn = (hasExistingKey: boolean) =>
+const buildUseApiKeyReturn = (
+  overrides: Partial<ReturnType<typeof useApiKey>> = {},
+): ReturnType<typeof useApiKey> =>
   ({
-    hasExistingKey,
+    hasExistingKey: false,
     existingKeyExpiresAt: undefined,
     generatedKey: undefined,
     generatedKeyExpiresAt: undefined,
@@ -26,7 +29,9 @@ const buildUseApiKeyReturn = (hasExistingKey: boolean) =>
     showConfirmGenerate: false,
     handleGenerate: jest.fn(),
     cancelGenerate: jest.fn(),
-    getGenerateButtonLabel: () => 'Generate API Key',
+    getGenerateButtonLabel: () =>
+      overrides.hasExistingKey ? 'Generate New API Key' : 'Generate API Key',
+    ...overrides,
   }) as ReturnType<typeof useApiKey>;
 
 const renderStep = () =>
@@ -61,39 +66,72 @@ describe('AutomateUpdatesStep', () => {
   });
 
   it('shows the GitHub workflow with the default cron when the user has an API key', () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(true));
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({ hasExistingKey: true }),
+    );
     renderStep();
 
     const panel = getActivePanel();
-    expect(
-      within(panel).queryByText(/you need an api key first/i),
-    ).not.toBeInTheDocument();
-
     const workflowTextarea = within(panel).getByDisplayValue(
       /name: Nightly Packmind update/,
     ) as HTMLTextAreaElement;
     expect(workflowTextarea.value).toContain('cron: "0 2 * * 1-5"');
   });
 
-  it('prompts the user to generate an API key when none exists and links to CLI Setup in a new tab', () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(false));
+  it('exposes an inline API key generator at Step 1 of the panel', () => {
+    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn());
     renderStep();
 
     const panel = getActivePanel();
     expect(
-      within(panel).getByText(/you need an api key first/i),
+      within(panel).getByRole('heading', { name: /step 1: api key/i }),
     ).toBeInTheDocument();
+    expect(
+      within(panel).getByTestId(CliAuthenticationDataTestIds.GenerateApiKeyCTA),
+    ).toBeInTheDocument();
+    expect(
+      within(panel).queryByText(/you need an api key first/i),
+    ).not.toBeInTheDocument();
+  });
 
-    const link = within(panel).getByRole('link', {
-      name: /go to cli setup/i,
-    });
-    expect(link).toHaveAttribute('href', '/org/acme/setup/cli#api-key');
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link.getAttribute('rel')).toMatch(/noopener/);
+  it('triggers API key generation directly from the panel button', async () => {
+    const handleGenerate = jest.fn();
+    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn({ handleGenerate }));
+    renderStep();
+
+    const panel = getActivePanel();
+    const generateButton = within(panel).getByTestId(
+      CliAuthenticationDataTestIds.GenerateApiKeyCTA,
+    );
+    await userEvent.click(generateButton);
+
+    expect(handleGenerate).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces the freshly generated API key inline so the user can copy it', () => {
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({
+        hasExistingKey: true,
+        isSuccess: true,
+        generatedKey: 'pmk_test_abc123',
+        generatedKeyExpiresAt: '2026-08-19T12:00:00.000Z',
+      }),
+    );
+    renderStep();
+
+    const panel = getActivePanel();
+    expect(
+      within(panel).getByText(/api key generated successfully/i),
+    ).toBeInTheDocument();
+    expect(
+      within(panel).getByDisplayValue('pmk_test_abc123'),
+    ).toBeInTheDocument();
   });
 
   it('switches to GitLab and tells the user about both required CI variables', async () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(true));
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({ hasExistingKey: true }),
+    );
     renderStep();
 
     const gitlabTab = screen.getByRole('tab', { name: /gitlab ci/i });
@@ -111,7 +149,9 @@ describe('AutomateUpdatesStep', () => {
   });
 
   it('tells the user about the GitHub Actions secret on the GitHub panel', () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(true));
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({ hasExistingKey: true }),
+    );
     renderStep();
 
     const panel = getActivePanel();
@@ -123,7 +163,9 @@ describe('AutomateUpdatesStep', () => {
   });
 
   it('updates the rendered cron when switching schedule preset on GitHub', async () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(true));
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({ hasExistingKey: true }),
+    );
     renderStep();
 
     const panel = getActivePanel();
@@ -137,7 +179,9 @@ describe('AutomateUpdatesStep', () => {
   });
 
   it('persists the chosen provider in localStorage and restores it on remount', async () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(true));
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({ hasExistingKey: true }),
+    );
     const { unmount } = renderStep();
 
     const gitlabTab = screen.getByRole('tab', { name: /gitlab ci/i });
@@ -155,7 +199,9 @@ describe('AutomateUpdatesStep', () => {
   });
 
   it('shows an invalid-cron error when typing a malformed custom expression', async () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(true));
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({ hasExistingKey: true }),
+    );
     renderStep();
 
     const panel = getActivePanel();
@@ -172,7 +218,9 @@ describe('AutomateUpdatesStep', () => {
   });
 
   it('renders the docs link to the public guide on the active panel', () => {
-    mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn(true));
+    mockedUseApiKey.mockReturnValue(
+      buildUseApiKeyReturn({ hasExistingKey: true }),
+    );
     renderStep();
 
     const panel = getActivePanel();

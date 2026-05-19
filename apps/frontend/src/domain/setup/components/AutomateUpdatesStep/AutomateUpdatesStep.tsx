@@ -1,19 +1,12 @@
 import React, { useCallback } from 'react';
 import { PMVStack, PMTabs } from '@packmind/ui';
-import { useParams } from 'react-router';
 import { useApiKey } from '../../../accounts/components/LocalEnvironmentSetup/hooks';
-import { routes } from '../../../../shared/utils/routes';
 import { ProviderPanel } from './ProviderPanel';
-import {
-  API_KEY_HASH,
-  AutoUpdateProvider,
-  PROVIDER_METADATA,
-} from './constants';
+import { AutoUpdateProvider, PROVIDER_METADATA } from './constants';
 import { useAutomateUpdatesState } from './useAutomateUpdatesState';
 
 export const AutomateUpdatesStep: React.FC = () => {
-  const { hasExistingKey } = useApiKey();
-  const { orgSlug } = useParams();
+  const apiKey = useApiKey();
   const { provider, setProvider, schedule, setSchedule, effectiveCron } =
     useAutomateUpdatesState();
 
@@ -26,10 +19,6 @@ export const AutomateUpdatesStep: React.FC = () => {
     [setProvider],
   );
 
-  const apiKeyHref = orgSlug
-    ? `${routes.org.toSetupCLI(orgSlug)}#${API_KEY_HASH}`
-    : '#';
-
   const tabs = (['github', 'gitlab'] as AutoUpdateProvider[]).map(
     (tabProvider) => ({
       value: tabProvider,
@@ -40,8 +29,7 @@ export const AutomateUpdatesStep: React.FC = () => {
           effectiveCron={effectiveCron}
           schedule={schedule}
           onScheduleChange={setSchedule}
-          hasActiveApiKey={hasExistingKey}
-          apiKeyHref={apiKeyHref}
+          apiKey={apiKey}
         />
       ),
     }),
