@@ -2,6 +2,7 @@ import { spawnSync } from 'child_process';
 import { writeFileSync, readFileSync, unlinkSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { resolveEditor } from './resolveEditor';
 
 const MAX_MESSAGE_LENGTH = 1024;
 
@@ -11,13 +12,12 @@ const EDITOR_TEMPLATE = `
 # An empty message aborts the submission.
 `;
 
-export function openEditorForMessage(): string {
+export function openEditorForMessage(prefill?: string): string {
+  const editor = resolveEditor();
   const tmpFile = join(tmpdir(), `packmind-msg-${Date.now()}.txt`);
 
   try {
-    writeFileSync(tmpFile, EDITOR_TEMPLATE, 'utf-8');
-
-    const editor = process.env.EDITOR || process.env.VISUAL || 'vi';
+    writeFileSync(tmpFile, prefill ?? EDITOR_TEMPLATE, 'utf-8');
 
     const result = spawnSync(editor, [tmpFile], {
       stdio: 'inherit',

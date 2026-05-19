@@ -1,40 +1,11 @@
-import { readFileSync, writeFileSync, unlinkSync, rmSync } from 'fs';
-import { execSync } from 'child_process';
-import { tmpdir } from 'os';
-import { join } from 'path';
+import { unlinkSync, rmSync } from 'fs';
 import { command, flag, option, optional, string } from 'cmd-ts';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PlaybookLocalRepository } from '../../repositories/PlaybookLocalRepository';
 import { LockFileRepository } from '../../repositories/LockFileRepository';
 import { playbookSubmitHandler } from './submitHandler';
-
-function openEditorForMessage(prefill: string): string | null {
-  const editor = process.env.VISUAL || process.env.EDITOR || 'vi';
-  const tmpFile = join(tmpdir(), `packmind-submit-${Date.now()}.md`);
-
-  try {
-    writeFileSync(tmpFile, prefill, 'utf-8');
-    execSync(`${editor} "${tmpFile}"`, { stdio: 'inherit' });
-    const content = readFileSync(tmpFile, 'utf-8');
-
-    const stripped = content
-      .split('\n')
-      .filter((line) => !line.startsWith('#'))
-      .join('\n')
-      .trim();
-
-    return stripped || null;
-  } catch {
-    return null;
-  } finally {
-    try {
-      unlinkSync(tmpFile);
-    } catch {
-      /* ignore */
-    }
-  }
-}
+import { safeOpenEditor } from './safeOpenEditor';
 
 export const submitPlaybookCommand = command({
   name: 'submit',
@@ -70,7 +41,7 @@ export const submitPlaybookCommand = command({
       exit: process.exit,
       message,
       noReview,
-      openEditor: (prefill: string) => openEditorForMessage(prefill),
+      openEditor: safeOpenEditor,
       unlinkSync: (p: string) => unlinkSync(p),
       rmSync: (p: string, opts?: { recursive?: boolean }) => rmSync(p, opts),
     });

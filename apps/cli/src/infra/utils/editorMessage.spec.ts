@@ -1,9 +1,12 @@
 import { validateMessage, openEditorForMessage } from './editorMessage';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
+import * as resolveEditorModule from './resolveEditor';
+import { EDITOR_NOT_FOUND_MESSAGE } from './resolveEditor';
 
 jest.mock('child_process');
 jest.mock('fs');
+jest.mock('./resolveEditor');
 
 describe('validateMessage', () => {
   describe('when message is valid', () => {
@@ -59,9 +62,11 @@ describe('openEditorForMessage', () => {
   const mockedWriteFileSync = fs.writeFileSync as jest.Mock;
   const mockedReadFileSync = fs.readFileSync as jest.Mock;
   const mockedUnlinkSync = fs.unlinkSync as jest.Mock;
+  const mockedResolveEditor = resolveEditorModule.resolveEditor as jest.Mock;
 
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks();
+    mockedResolveEditor.mockReturnValue('nano');
   });
 
   describe('when editor exits successfully', () => {
@@ -74,17 +79,13 @@ describe('openEditorForMessage', () => {
         '# This is a comment\nActual message\n# Another comment\n',
       );
 
-      const result = openEditorForMessage();
-
-      expect(result).toBe('Actual message');
+      expect(openEditorForMessage()).toBe('Actual message');
     });
 
     it('trims whitespace from result', () => {
       mockedReadFileSync.mockReturnValue('\n  My message  \n\n');
 
-      const result = openEditorForMessage();
-
-      expect(result).toBe('My message');
+      expect(openEditorForMessage()).toBe('My message');
     });
 
     it('cleans up temp file', () => {
@@ -95,7 +96,7 @@ describe('openEditorForMessage', () => {
       expect(mockedUnlinkSync).toHaveBeenCalledTimes(1);
     });
 
-    it('writes template to temp file', () => {
+    it('writes the default template to the temp file when no prefill is given', () => {
       mockedReadFileSync.mockReturnValue('message');
 
       openEditorForMessage();
@@ -104,6 +105,31 @@ describe('openEditorForMessage', () => {
         expect.stringContaining('packmind-msg-'),
         expect.stringContaining('# Enter a message'),
         'utf-8',
+      );
+    });
+
+    it('writes the prefill verbatim when provided', () => {
+      mockedReadFileSync.mockReturnValue('updated content');
+
+      openEditorForMessage('original content\n# kept comment');
+
+      expect(mockedWriteFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('packmind-msg-'),
+        'original content\n# kept comment',
+        'utf-8',
+      );
+    });
+
+    it('uses the editor returned by resolveEditor', () => {
+      mockedResolveEditor.mockReturnValue('vim');
+      mockedReadFileSync.mockReturnValue('message');
+
+      openEditorForMessage();
+
+      expect(mockedSpawnSync).toHaveBeenCalledWith(
+        'vim',
+        expect.any(Array),
+        expect.any(Object),
       );
     });
   });
@@ -130,27 +156,16 @@ describe('openEditorForMessage', () => {
     });
   });
 
-  describe('when EDITOR env variable is set', () => {
-    const originalEditor = process.env.EDITOR;
+  describe('when no editor can be resolved', () => {
+    it('propagates the EDITOR_NOT_FOUND_MESSAGE from the resolver and does not touch the filesystem', () => {
+      mockedResolveEditor.mockImplementation(() => {
+        throw new Error(EDITOR_NOT_FOUND_MESSAGE);
+      });
 
-    beforeEach(() => {
-      process.env.EDITOR = 'nano';
-      mockedSpawnSync.mockReturnValue({ status: 0 });
-      mockedReadFileSync.mockReturnValue('message');
-    });
-
-    afterEach(() => {
-      process.env.EDITOR = originalEditor;
-    });
-
-    it('uses the EDITOR env variable', () => {
-      openEditorForMessage();
-
-      expect(mockedSpawnSync).toHaveBeenCalledWith(
-        'nano',
-        expect.any(Array),
-        expect.any(Object),
-      );
+      expect(() => openEditorForMessage()).toThrow(EDITOR_NOT_FOUND_MESSAGE);
+      expect(mockedSpawnSync).not.toHaveBeenCalled();
+      expect(mockedWriteFileSync).not.toHaveBeenCalled();
+      expect(mockedUnlinkSync).not.toHaveBeenCalled();
     });
   });
 });
