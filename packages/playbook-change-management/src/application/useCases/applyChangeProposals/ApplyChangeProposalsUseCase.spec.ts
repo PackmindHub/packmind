@@ -3,6 +3,7 @@ import {
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
+import { SkillValidationError } from '@packmind/skills';
 import {
   AcceptedChangeProposal,
   ChangeProposal,
@@ -1448,6 +1449,114 @@ describe('ApplyChangeProposalsUseCase', () => {
       });
 
       expect(result.updatedPackages).toEqual([stdPackageId]);
+    });
+  });
+
+  describe('when accepting an updateSkillDescription proposal with newValue > 1024 chars', () => {
+    const skillId = createSkillId('legacy-skill-id');
+    const oversizedDescription = 'a'.repeat(1025);
+    const updateDescriptionProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-oversize-desc'),
+      type: ChangeProposalType.updateSkillDescription,
+      artefactId: skillId,
+      payload: {
+        oldValue: 'previous description',
+        newValue: oversizedDescription,
+      },
+      spaceId,
+      status: ChangeProposalStatus.pending,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(
+        updateDescriptionProposal,
+      );
+      skillsPort.getSkill.mockResolvedValue({
+        id: skillId,
+        spaceId,
+      } as never);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(
+        skillVersionFactory({ skillId, version: 1 }),
+      );
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+    });
+
+    it('rejects with an actionable SkillValidationError before saving', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          artefactId: skillId,
+          accepted: [toAcceptedProposal(updateDescriptionProposal)],
+          rejected: [],
+        }),
+      ).rejects.toThrow(
+        /description longer than 1024 characters\. Edit your skill and upload it again\./,
+      );
+
+      expect(skillsPort.saveSkillVersion).not.toHaveBeenCalled();
+    });
+
+    it('rethrows a SkillValidationError so the controller can map it to 400', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          artefactId: skillId,
+          accepted: [toAcceptedProposal(updateDescriptionProposal)],
+          rejected: [],
+        }),
+      ).rejects.toBeInstanceOf(SkillValidationError);
+    });
+  });
+
+  describe('when accepting an updateSkillName on a legacy skill whose existing description exceeds 1024 chars', () => {
+    const skillId = createSkillId('legacy-skill-id-2');
+    const legacyOversizedDescription = 'l'.repeat(1500);
+    const updateNameProposal = changeProposalFactory({
+      id: createChangeProposalId('cp-update-name'),
+      type: ChangeProposalType.updateSkillName,
+      artefactId: skillId,
+      payload: {
+        oldValue: 'old name',
+        newValue: 'new name',
+      },
+      spaceId,
+      status: ChangeProposalStatus.pending,
+    });
+
+    const legacySkillVersion = skillVersionFactory({
+      skillId,
+      version: 1,
+      description: legacyOversizedDescription,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(updateNameProposal);
+      skillsPort.getSkill.mockResolvedValue({
+        id: skillId,
+        spaceId,
+      } as never);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(legacySkillVersion);
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+      skillsPort.saveSkillVersion.mockResolvedValue(legacySkillVersion);
+    });
+
+    it('allows the update without flagging the legacy description', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          artefactId: skillId,
+          accepted: [toAcceptedProposal(updateNameProposal)],
+          rejected: [],
+        }),
+      ).resolves.toBeDefined();
+
+      expect(skillsPort.saveSkillVersion).toHaveBeenCalled();
     });
   });
 });

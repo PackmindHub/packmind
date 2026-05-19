@@ -28,10 +28,12 @@ import {
   IStandardsPort,
   PackageId,
   RecipeId,
+  ScalarUpdatePayload,
   SkillId,
   StandardId,
   UserId,
 } from '@packmind/types';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
 import { DiffService } from '@packmind/types';
@@ -108,6 +110,41 @@ export class ApplyChangeProposalsUseCase<
         );
       }
       this.assertProposalMatchesDatabase(acceptedProposal, dbProposal);
+    }
+
+    // Reject legacy proposals (typically submitted via an older CLI) whose
+    // updateSkillDescription payload exceeds the current 1024-char cap.
+    // Scoped to updateSkillDescription.newValue: a skill with a legacy
+    // oversized description must still be editable on other fields.
+    try {
+      for (const acceptedProposal of command.accepted) {
+        if (
+          acceptedProposal.type !== ChangeProposalType.updateSkillDescription
+        ) {
+          continue;
+        }
+        const payload = acceptedProposal.payload as ScalarUpdatePayload;
+        if (payload.newValue.length > DESCRIPTION_MAX_LENGTH) {
+          throw new SkillValidationError([
+            {
+              field: 'description',
+              message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
+            },
+          ]);
+        }
+      }
+    } catch (error) {
+      if (error instanceof SkillValidationError) {
+        const descriptionError = error.errors.find(
+          (e) => e.field === 'description',
+        );
+        error.message = descriptionError
+          ? `A submitted skill has a description longer than ${DESCRIPTION_MAX_LENGTH} characters. Edit your skill and upload it again.`
+          : `A submitted skill is invalid: ${error.errors
+              .map((e) => e.message)
+              .join('; ')}. Edit your skill and upload it again.`;
+      }
+      throw error;
     }
 
     const changesApplier = this.getApplier(changeProposals);

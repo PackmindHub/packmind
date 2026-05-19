@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -18,6 +19,7 @@ import {
   SkillId,
   SpaceId,
 } from '@packmind/types';
+import { SkillValidationError } from '@packmind/skills';
 import { SkillsChangeProposalsService } from './skills-change-proposals.service';
 import { OrganizationAccessGuard } from '../../../shared/organization-access.guard';
 
@@ -87,6 +89,8 @@ export class OrganizationsSpacesSkillsChangeProposalsController {
     body: { accepted: AcceptedChangeProposal[]; rejected: ChangeProposalId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<ApplyChangeProposalsResponse<SkillId>> {
+    const userId = request.user.userId;
+
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/skills/:skillId/change-proposals/apply',
       {
@@ -98,14 +102,32 @@ export class OrganizationsSpacesSkillsChangeProposalsController {
       },
     );
 
-    const result = await this.service.applySkillChangeProposals({
-      userId: request.user.userId,
-      organizationId,
-      spaceId,
-      artefactId: skillId,
-      accepted: body.accepted,
-      rejected: body.rejected,
-    });
+    let result: ApplyChangeProposalsResponse<SkillId>;
+    try {
+      result = await this.service.applySkillChangeProposals({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: skillId,
+        accepted: body.accepted,
+        rejected: body.rejected,
+      });
+    } catch (error) {
+      if (error instanceof SkillValidationError) {
+        this.logger.warn(
+          'Skill validation failed on skill change proposals apply',
+          {
+            userId: userId.substring(0, 6) + '*',
+            organizationId,
+            spaceId,
+            skillId,
+            errors: error.errors,
+          },
+        );
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
 
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/skills/:skillId/change-proposals/apply - Applied successfully',
