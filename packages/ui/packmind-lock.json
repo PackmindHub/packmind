@@ -23,20 +23,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/front-end-ui-and-design-systems.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-front-end-ui-and-design-systems.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-front-end-ui-and-design-systems.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-front-end-ui-and-design-systems.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-front-end-ui-and-design-systems.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/front-end-ui-and-design-systems.md",
+          "agent": "packmind"
         }
       ]
     }

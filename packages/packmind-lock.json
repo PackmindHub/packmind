@@ -23,20 +23,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/back-end-repositories-sql-queries-using-typeorm.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-back-end-repositories-sql-queries-using-typeorm.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-back-end-repositories-sql-queries-using-typeorm.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/back-end-repositories-sql-queries-using-typeorm.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -51,20 +51,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-back-end-typescript-clean-code-practices.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-back-end-typescript-clean-code-practices.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-back-end-typescript-clean-code-practices.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-back-end-typescript-clean-code-practices.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/back-end-typescript-clean-code-practices.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -79,20 +79,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/domain-events.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-domain-events.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-domain-events.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-domain-events.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-domain-events.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/domain-events.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -107,20 +107,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/port-adapter-cross-domain-integration.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-port-adapter-cross-domain-integration.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-port-adapter-cross-domain-integration.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-port-adapter-cross-domain-integration.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-port-adapter-cross-domain-integration.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/port-adapter-cross-domain-integration.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -135,20 +135,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/scoped-repository-patterns.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-scoped-repository-patterns.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-scoped-repository-patterns.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-scoped-repository-patterns.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-scoped-repository-patterns.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/scoped-repository-patterns.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -163,20 +163,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/use-case-architecture-patterns.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-use-case-architecture-patterns.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-use-case-architecture-patterns.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-use-case-architecture-patterns.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-use-case-architecture-patterns.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/use-case-architecture-patterns.md",
+          "agent": "packmind"
         }
       ]
     }

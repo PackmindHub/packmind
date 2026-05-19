@@ -23,20 +23,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/prompts/create-or-update-model-and-typeorm-schemas.prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "packmind"
         }
       ]
     }

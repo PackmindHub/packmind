@@ -23,20 +23,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/frontend-data-flow.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-frontend-data-flow.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-frontend-data-flow.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-frontend-data-flow.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-frontend-data-flow.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/frontend-data-flow.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -51,20 +51,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/frontend-error-management.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-frontend-error-management.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-frontend-error-management.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-frontend-error-management.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-frontend-error-management.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/frontend-error-management.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -79,20 +79,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/frontend-navigation-with-react-router.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-frontend-navigation-with-react-router.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-frontend-navigation-with-react-router.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-frontend-navigation-with-react-router.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-frontend-navigation-with-react-router.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/frontend-navigation-with-react-router.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -107,20 +107,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/tanstack-query-key-management.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-tanstack-query-key-management.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-tanstack-query-key-management.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-tanstack-query-key-management.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-tanstack-query-key-management.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/tanstack-query-key-management.md",
+          "agent": "packmind"
         }
       ]
     }
