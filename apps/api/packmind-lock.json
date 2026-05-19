@@ -12,34 +12,6 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:rest-api-endpoint-design": {
-      "name": "REST API Endpoint Design",
-      "type": "standard",
-      "id": "0c6060b2-c18f-4813-a426-fbe9b360b3ef",
-      "version": 1,
-      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
-      "packageIds": [
-        "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
-      ],
-      "files": [
-        {
-          "path": ".packmind/standards/rest-api-endpoint-design.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-rest-api-endpoint-design.instructions.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".claude/rules/packmind/standard-rest-api-endpoint-design.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/rules/packmind/standard-rest-api-endpoint-design.mdc",
-          "agent": "cursor"
-        }
-      ]
-    },
     "standard:nestjs-module-hierarchy": {
       "name": "NestJS Module Hierarchy",
       "type": "standard",
@@ -51,20 +23,48 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/nestjs-module-hierarchy.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-nestjs-module-hierarchy.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-nestjs-module-hierarchy.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-nestjs-module-hierarchy.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-nestjs-module-hierarchy.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/nestjs-module-hierarchy.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "standard:rest-api-endpoint-design": {
+      "name": "REST API Endpoint Design",
+      "type": "standard",
+      "id": "0c6060b2-c18f-4813-a426-fbe9b360b3ef",
+      "version": 1,
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
+      "packageIds": [
+        "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
+      ],
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-rest-api-endpoint-design.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-rest-api-endpoint-design.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-rest-api-endpoint-design.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/rest-api-endpoint-design.md",
+          "agent": "packmind"
         }
       ]
     }

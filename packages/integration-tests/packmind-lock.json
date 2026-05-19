@@ -23,20 +23,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/integration-tests-structure-and-patterns.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-integration-tests-structure-and-patterns.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-integration-tests-structure-and-patterns.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-integration-tests-structure-and-patterns.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-integration-tests-structure-and-patterns.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/integration-tests-structure-and-patterns.md",
+          "agent": "packmind"
         }
       ]
     }
