@@ -105,7 +105,7 @@ export const OutdatedDistributeBanner: React.FC<
         <PMHStack align="start">
           <PMAlert.Indicator />
           <PMVStack align="start" gap={1}>
-            <PMAlert.Title>Some targets need distribution.</PMAlert.Title>
+            <PMAlert.Title>Some targets are out of date.</PMAlert.Title>
             {orgSlug && (
               <PMAlert.Description>
                 Or schedule it automatically —{' '}
