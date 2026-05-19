@@ -68,6 +68,7 @@ export const ApiKeyGenerator: React.FC<IApiKeyGeneratorProps> = ({
         <PMButton
           onClick={handleGenerate}
           disabled={isGenerating}
+          alignSelf="flex-start"
           data-testid={CliAuthenticationDataTestIds.GenerateApiKeyCTA}
         >
           {getGenerateButtonLabel()}
