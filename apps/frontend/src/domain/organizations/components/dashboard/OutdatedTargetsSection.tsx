@@ -9,6 +9,8 @@ import {
   PMHeading,
   PMBox,
   PMIcon,
+  PMLink,
+  PMText,
 } from '@packmind/ui';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -22,6 +24,7 @@ import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
 import { OutdatedDistributeBanner } from '../../../deployments/components/OutdatedDistributeBanner/OutdatedDistributeBanner';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
+import { routes } from '../../../../shared/utils/routes';
 
 type RepoResult = {
   repoKey: string;
@@ -153,12 +156,28 @@ export const OutdatedTargetsSection: React.FC = () => {
             }
             title="Everything is up-to-date!"
             description="All distributed artifacts are up-to-date across your targets."
-          />
+          >
+            {orgSlug && (
+              <PMText variant="small" color="tertiary">
+                <PMLink href={routes.org.toSetupAutoUpdate(orgSlug)}>
+                  Keep it that way — schedule auto-updates
+                </PMLink>
+              </PMText>
+            )}
+          </PMEmptyState>
         </PMBox>
       )}
 
       {!isLoading && !isError && reposWithTargets.length > 0 && (
         <PMVStack gap={4} align="stretch" width="full">
+          {orgSlug && (
+            <PMText variant="small" color="tertiary">
+              Tired of seeing this list?{' '}
+              <PMLink href={routes.org.toSetupAutoUpdate(orgSlug)}>
+                Automate updates →
+              </PMLink>
+            </PMText>
+          )}
           <OutdatedDistributeBanner entries={overviewData ?? []} />
           {reposWithTargets.map((repo) => {
             return (
