@@ -23,20 +23,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/cli-command-structure.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-cli-command-structure.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-cli-command-structure.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-cli-command-structure.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-cli-command-structure.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/cli-command-structure.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -51,20 +51,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/cli-packmindgateway-method-implementation.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-cli-packmindgateway-method-implementation.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-cli-packmindgateway-method-implementation.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-cli-packmindgateway-method-implementation.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-cli-packmindgateway-method-implementation.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/cli-packmindgateway-method-implementation.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -79,20 +79,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/cli-use-case-structure.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-cli-use-case-structure.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-cli-use-case-structure.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-cli-use-case-structure.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-cli-use-case-structure.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/cli-use-case-structure.md",
+          "agent": "packmind"
         }
       ]
     }

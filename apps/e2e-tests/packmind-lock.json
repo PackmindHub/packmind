@@ -23,20 +23,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/e2e-page-object.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-e2e-page-object.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-e2e-page-object.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-e2e-page-object.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-e2e-page-object.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/e2e-page-object.md",
+          "agent": "packmind"
         }
       ]
     },
@@ -51,20 +51,20 @@
       ],
       "files": [
         {
-          "path": ".packmind/standards/e2e-writing-e2e-tests.md",
-          "agent": "packmind"
-        },
-        {
-          "path": ".github/instructions/packmind-e2e-writing-e2e-tests.instructions.md",
-          "agent": "copilot"
-        },
-        {
           "path": ".claude/rules/packmind/standard-e2e-writing-e2e-tests.md",
           "agent": "claude"
         },
         {
           "path": ".cursor/rules/packmind/standard-e2e-writing-e2e-tests.mdc",
           "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-e2e-writing-e2e-tests.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/e2e-writing-e2e-tests.md",
+          "agent": "packmind"
         }
       ]
     }
