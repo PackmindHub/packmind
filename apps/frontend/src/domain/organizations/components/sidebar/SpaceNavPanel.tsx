@@ -40,8 +40,8 @@ export function SpaceNavPanel({
       size="xs"
     >
       <PMPortal container={containerRef}>
-        <PMDrawer.Backdrop position="absolute" />
-        <PMDrawer.Positioner position="absolute">
+        <PMDrawer.Backdrop position="absolute" boxSize="full" />
+        <PMDrawer.Positioner position="absolute" boxSize="full">
           <PMDrawer.Content>
             <PMDrawer.Header>
               <PMBox display="flex" alignItems="center" gap={1}>

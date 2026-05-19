@@ -112,8 +112,8 @@ export function BrowseSpacesDrawer({
       size="sm"
     >
       <PMPortal container={containerRef}>
-        <PMDrawer.Backdrop position="absolute" />
-        <PMDrawer.Positioner position="absolute">
+        <PMDrawer.Backdrop position="absolute" boxSize="full" />
+        <PMDrawer.Positioner position="absolute" boxSize="full">
           <PMDrawer.Content>
             <PMDrawer.Header paddingBottom={0} borderBottomWidth="0">
               <PMDrawer.CloseTrigger asChild pos="initial">
