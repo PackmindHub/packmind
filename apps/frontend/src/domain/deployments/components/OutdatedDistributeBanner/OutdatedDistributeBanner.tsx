@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { PMAlert, PMHStack, PMVStack } from '@packmind/ui';
+import { useParams } from 'react-router';
+import { PMAlert, PMHStack, PMLink, PMVStack } from '@packmind/ui';
 import {
   ActiveDistributedPackagesByTarget,
   DistributionStatus,
@@ -9,6 +10,7 @@ import { buildRepositorySections } from '../../utils/buildRepositorySections';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { BatchDistributeButton } from '../BatchDistributeButton/BatchDistributeButton';
 import { DeployByTargetGroup } from '../../hooks/useDeployPackage';
+import { routes } from '../../../../shared/utils/routes';
 
 export interface OutdatedDistributeBannerProps {
   entries: ReadonlyArray<ActiveDistributedPackagesByTarget>;
@@ -17,6 +19,7 @@ export interface OutdatedDistributeBannerProps {
 export const OutdatedDistributeBanner: React.FC<
   OutdatedDistributeBannerProps
 > = ({ entries }) => {
+  const { orgSlug } = useParams() as { orgSlug?: string };
   const { data: gitProvidersResponse, isLoading: isProvidersLoading } =
     useGetGitProvidersQuery();
 
@@ -103,6 +106,15 @@ export const OutdatedDistributeBanner: React.FC<
           <PMAlert.Indicator />
           <PMVStack align="start" gap={1}>
             <PMAlert.Title>Some targets need distribution.</PMAlert.Title>
+            {orgSlug && (
+              <PMAlert.Description>
+                Or schedule it automatically —{' '}
+                <PMLink href={routes.org.toSetupAutoUpdate(orgSlug)}>
+                  set up Auto-update
+                </PMLink>
+                .
+              </PMAlert.Description>
+            )}
           </PMVStack>
         </PMHStack>
         {!isProvidersLoading && (
