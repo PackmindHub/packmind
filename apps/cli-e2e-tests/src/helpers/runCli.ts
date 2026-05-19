@@ -80,7 +80,10 @@ export async function runCli(
   const env = {
     ...cleanEnv,
     HOME: tempHome, // Override HOME to prevent loading ~/.packmind/credentials.json
-    ...(opts?.apiKey && { PACKMIND_API_KEY: opts.apiKey }),
+    ...(opts?.apiKey && {
+      PACKMIND_API_KEY: opts.apiKey,
+      PACKMIND_API_KEY_V3: opts.apiKey,
+    }),
   };
 
   return new Promise((resolve, reject) => {
