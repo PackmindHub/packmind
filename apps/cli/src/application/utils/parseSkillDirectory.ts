@@ -3,6 +3,7 @@ import {
   parseSkillMdContent,
   CLAUDE_CODE_ADDITIONAL_FIELDS,
 } from '@packmind/node-utils';
+import { DESCRIPTION_MAX_LENGTH } from '@packmind/skills';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
 
@@ -73,6 +74,14 @@ export function parseSkillDirectory(
     };
   }
 
+  const trimmedDescription = description.trim();
+  if (trimmedDescription.length > DESCRIPTION_MAX_LENGTH) {
+    return {
+      success: false,
+      error: `Skill "${name.trim()}" has a description of ${trimmedDescription.length} characters, which exceeds the maximum of ${DESCRIPTION_MAX_LENGTH}. Edit the "description" field in SKILL.md and try again.`,
+    };
+  }
+
   if (body.trim().length === 0) {
     return {
       success: false,
@@ -82,7 +91,7 @@ export function parseSkillDirectory(
 
   const payload: NewSkillPayload = {
     name: name.trim(),
-    description: description.trim(),
+    description: trimmedDescription,
     prompt: body,
     skillMdPermissions: skillMdFile.permissions,
   };
