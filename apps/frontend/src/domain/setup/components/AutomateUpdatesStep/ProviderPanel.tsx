@@ -1,17 +1,14 @@
 import React, { useMemo } from 'react';
-import {
-  PMVStack,
-  PMText,
-  PMBox,
-  PMLink,
-  PMAlert,
-  PMButton,
-} from '@packmind/ui';
+import { PMVStack, PMText, PMBox, PMLink } from '@packmind/ui';
 import {
   CopiableTextarea,
   CopiableTextField,
 } from '../../../../shared/components/inputs';
-import { SectionCard } from '../../../accounts/components/LocalEnvironmentSetup/components';
+import {
+  SectionCard,
+  ApiKeyGenerator,
+} from '../../../accounts/components/LocalEnvironmentSetup/components';
+import { useApiKey } from '../../../accounts/components/LocalEnvironmentSetup/hooks';
 import { ScheduleSelector } from './ScheduleSelector';
 import {
   AutoUpdateProvider,
@@ -26,8 +23,7 @@ interface IProviderPanelProps {
   effectiveCron: string;
   schedule: ScheduleSelectorValue;
   onScheduleChange: (next: ScheduleSelectorValue) => void;
-  hasActiveApiKey: boolean;
-  apiKeyHref: string;
+  apiKey: ReturnType<typeof useApiKey>;
 }
 
 const formatSecretsReminder = (
@@ -46,8 +42,7 @@ export const ProviderPanel: React.FC<IProviderPanelProps> = ({
   effectiveCron,
   schedule,
   onScheduleChange,
-  hasActiveApiKey,
-  apiKeyHref,
+  apiKey,
 }) => {
   const metadata = PROVIDER_METADATA[provider];
   const yaml = useMemo(
@@ -62,33 +57,18 @@ export const ProviderPanel: React.FC<IProviderPanelProps> = ({
   return (
     <PMVStack align="flex-start" gap={4} width="full" paddingY={4}>
       <SectionCard
-        title="Workflow file"
+        title="Step 1: API key"
+        description={`Generate an API key now. You'll paste it as the ${metadata.secretNames[0]} secret in your repository.`}
+        backgroundColor="background.primary"
+      >
+        <ApiKeyGenerator apiKey={apiKey} />
+      </SectionCard>
+
+      <SectionCard
+        title="Step 2: Workflow file"
         description={`Add this file to your repository at ${metadata.workflowFilePath}`}
         backgroundColor="background.primary"
       >
-        {!hasActiveApiKey && (
-          <PMAlert.Root status="info">
-            <PMAlert.Indicator />
-            <PMAlert.Content>
-              <PMAlert.Title>You need an API key first</PMAlert.Title>
-              <PMAlert.Description>
-                Generate one on the CLI Setup page (Environment Variable tab),
-                then come back here.
-              </PMAlert.Description>
-              <PMBox mt={2}>
-                <PMButton size="xs" variant="outline" asChild>
-                  <a
-                    href={apiKeyHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Go to CLI Setup ↗
-                  </a>
-                </PMButton>
-              </PMBox>
-            </PMAlert.Content>
-          </PMAlert.Root>
-        )}
         {metadata.cronInYaml && (
           <ScheduleSelector value={schedule} onChange={onScheduleChange} />
         )}
@@ -102,7 +82,7 @@ export const ProviderPanel: React.FC<IProviderPanelProps> = ({
 
       {!metadata.cronInYaml && (
         <SectionCard
-          title="Schedule the pipeline"
+          title="Step 3: Schedule the pipeline"
           description={metadata.scheduleLocationHint}
           backgroundColor="background.primary"
         >
