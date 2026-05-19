@@ -137,6 +137,33 @@ export class SkillRepository
     }
   }
 
+  async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Counting skills by space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('skill')
+        .select('skill.space_id', 'spaceId')
+        .addSelect('COUNT(*)', 'count')
+        .where('skill.space_id IN (:...spaceIds)', { spaceIds })
+        .groupBy('skill.space_id')
+        .getRawMany<{ spaceId: SpaceId; count: string }>();
+
+      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
+    } catch (error) {
+      this.logger.error('Failed to count skills by space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async markAsMoved(
     skillId: SkillId,
     destinationSpaceId: SpaceId,
