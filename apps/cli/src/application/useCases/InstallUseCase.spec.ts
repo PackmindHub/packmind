@@ -108,7 +108,9 @@ describe('InstallUseCase', () => {
     });
 
     it('throws an error indicating packmind.json is missing', async () => {
-      await expect(useCase.execute({ baseDirectory: '/test' })).rejects.toThrow(
+      await expect(
+        useCase.execute({ baseDirectory: '/test', cliVersion: '0.0.0-test' }),
+      ).rejects.toThrow(
         'No packmind.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
       );
     });
@@ -121,7 +123,9 @@ describe('InstallUseCase', () => {
     });
 
     it('throws an error indicating packmind.json cannot be parsed', async () => {
-      await expect(useCase.execute({ baseDirectory: '/test' })).rejects.toThrow(
+      await expect(
+        useCase.execute({ baseDirectory: '/test', cliVersion: '0.0.0-test' }),
+      ).rejects.toThrow(
         'packmind.json exists but could not be parsed. Please fix the JSON syntax errors and try again.',
       );
     });
@@ -149,6 +153,7 @@ describe('InstallUseCase', () => {
         useCase.execute({
           packages: ['@my-space/my-package'],
           baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
         }),
       ).resolves.not.toThrow();
     });
@@ -157,6 +162,7 @@ describe('InstallUseCase', () => {
       await useCase.execute({
         packages: ['@my-space/my-package'],
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
       });
 
       expect(mockGateway.deployment.install).toHaveBeenCalledWith(
@@ -170,6 +176,7 @@ describe('InstallUseCase', () => {
       await useCase.execute({
         packages: ['@my-space/my-package'],
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
       });
 
       expect(mockConfigFileRepository.addPackagesToConfig).toHaveBeenCalledWith(
@@ -202,6 +209,7 @@ describe('InstallUseCase', () => {
       await useCase.execute({
         packages: ['@my-space/new-package'],
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
       });
 
       expect(mockConfigFileRepository.updateConfig).toHaveBeenCalledWith(
@@ -215,6 +223,7 @@ describe('InstallUseCase', () => {
       await useCase.execute({
         packages: ['@my-space/new-package'],
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
       });
 
       expect(mockGateway.deployment.install).toHaveBeenCalledWith(
@@ -239,7 +248,10 @@ describe('InstallUseCase', () => {
     });
 
     it('calls install with the packmind.json package slugs', async () => {
-      await useCase.execute({ baseDirectory: '/test' });
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(mockGateway.deployment.install).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -249,7 +261,10 @@ describe('InstallUseCase', () => {
     });
 
     it('passes the lock file to the install call for artifact preservation', async () => {
-      await useCase.execute({ baseDirectory: '/test' });
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(mockGateway.deployment.install).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -261,7 +276,10 @@ describe('InstallUseCase', () => {
     });
 
     it('does not update packmind.json', async () => {
-      await useCase.execute({ baseDirectory: '/test' });
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(
         mockConfigFileRepository.addPackagesToConfig,
@@ -283,7 +301,10 @@ describe('InstallUseCase', () => {
       });
 
       it('normalizes and saves the slugs in packmind.json', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(mockConfigFileRepository.updateConfig).toHaveBeenCalledWith(
           '/test',
@@ -293,7 +314,10 @@ describe('InstallUseCase', () => {
       });
 
       it('installs using the normalized slugs', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(mockGateway.deployment.install).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -312,7 +336,10 @@ describe('InstallUseCase', () => {
       });
 
       it('passes agents from packmind.json to the install call', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(mockGateway.deployment.install).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -324,7 +351,10 @@ describe('InstallUseCase', () => {
 
     describe('when packmind.json has no agents configured', () => {
       it('passes undefined agents to the install call', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(mockGateway.deployment.install).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -361,7 +391,10 @@ describe('InstallUseCase', () => {
     });
 
     it('does not call the gateway', async () => {
-      await useCase.execute({ baseDirectory: '/test' });
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(mockGateway.deployment.install).not.toHaveBeenCalled();
     });
@@ -372,7 +405,10 @@ describe('InstallUseCase', () => {
         isDirectory: () => false,
       });
 
-      await useCase.execute({ baseDirectory: '/test' });
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(fs.unlink).toHaveBeenCalledWith(
         '/test/.packmind/recipes/my-recipe.md',
@@ -385,19 +421,28 @@ describe('InstallUseCase', () => {
         isDirectory: () => false,
       });
 
-      await useCase.execute({ baseDirectory: '/test' });
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(fs.unlink).toHaveBeenCalledWith('/test/packmind-lock.json');
     });
 
     it('returns no errors', async () => {
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.errors).toHaveLength(0);
     });
 
     it('returns no missing access entries', async () => {
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.missingAccess).toHaveLength(0);
     });
@@ -424,6 +469,7 @@ describe('InstallUseCase', () => {
         await useCase.execute({
           packages: ['my-package'],
           baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
         });
 
         expect(mockGateway.deployment.install).toHaveBeenCalledWith(
@@ -473,6 +519,7 @@ describe('InstallUseCase', () => {
           useCase.execute({
             packages: ['@other-space/secret-package'],
             baseDirectory: '/test',
+            cliVersion: '0.0.0-test',
           }),
         ).rejects.toThrow(
           'Package @other-space/secret-package does not exist.',
@@ -505,6 +552,7 @@ describe('InstallUseCase', () => {
           useCase.execute({
             packages: ['@public-space/some-package'],
             baseDirectory: '/test',
+            cliVersion: '0.0.0-test',
           }),
         ).rejects.toThrow(
           "You don't have access to space @public-space. It is a public space — you can join at: https://app.packmind.com/org/my-org/spaces/public-space/join",
@@ -521,7 +569,10 @@ describe('InstallUseCase', () => {
     });
 
     it('includes missingAccess in the result', async () => {
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.missingAccess).toEqual(['@space/restricted-pkg']);
     });
@@ -548,7 +599,10 @@ describe('InstallUseCase', () => {
       });
 
       it('includes a joinSpaceUrl in the result', async () => {
-        const result = await useCase.execute({ baseDirectory: '/test' });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(result.joinSpaceUrl).toBe(
           'https://app.packmind.com/org/my-org/spaces/open-space/join',
@@ -566,7 +620,10 @@ describe('InstallUseCase', () => {
       });
 
       it('does not include a joinSpaceUrl in the result', async () => {
-        const result = await useCase.execute({ baseDirectory: '/test' });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(result.joinSpaceUrl).toBeUndefined();
       });
@@ -585,7 +642,10 @@ describe('InstallUseCase', () => {
       });
 
       it('does not include a joinSpaceUrl in the result', async () => {
-        const result = await useCase.execute({ baseDirectory: '/test' });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(result.joinSpaceUrl).toBeUndefined();
       });
@@ -603,7 +663,10 @@ describe('InstallUseCase', () => {
       );
       (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
 
-      result = await useCase.execute({ baseDirectory: '/test' });
+      result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
     });
 
     it('writes new file with content', () => {
@@ -638,7 +701,10 @@ describe('InstallUseCase', () => {
         '# Old content\n\nThis is old content.',
       );
 
-      result = await useCase.execute({ baseDirectory: '/test' });
+      result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
     });
 
     it('writes file with new content', () => {
@@ -694,7 +760,10 @@ Some introduction text.
 
 Some footer text.`);
 
-        result = await useCase.execute({ baseDirectory: '/test' });
+        result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
       });
 
       it('writes file with replaced section content', () => {
@@ -751,7 +820,10 @@ Footer text.`;
 
 Footer text.`);
 
-        result = await useCase.execute({ baseDirectory: '/test' });
+        result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
       });
 
       it('writes file with updated section while preserving other sections', () => {
@@ -798,7 +870,10 @@ Some existing content here.
 - Standard content
 <!-- end: Packmind standards -->`);
 
-      result = await useCase.execute({ baseDirectory: '/test' });
+      result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
     });
 
     it('writes file with appended section', () => {
@@ -829,7 +904,10 @@ Some existing content here.
           isFile: () => true,
         });
 
-        result = await useCase.execute({ baseDirectory: '/test' });
+        result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
       });
 
       it('calls unlink with correct path', () => {
@@ -855,7 +933,10 @@ Some existing content here.
           isFile: () => false,
         });
 
-        result = await useCase.execute({ baseDirectory: '/test' });
+        result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
       });
 
       it('calls rm with recursive and force options', () => {
@@ -885,7 +966,10 @@ Some existing content here.
         );
         (fs.stat as jest.Mock).mockResolvedValue(null);
 
-        result = await useCase.execute({ baseDirectory: '/test' });
+        result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
       });
 
       it('does not call unlink', () => {
@@ -921,7 +1005,10 @@ Some existing content here.
           new Error('Permission denied'),
         );
 
-        result = await useCase.execute({ baseDirectory: '/test' });
+        result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
       });
 
       it('captures one error', () => {
@@ -953,13 +1040,19 @@ Some existing content here.
       });
 
       it('does not write to file', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(fs.writeFile).not.toHaveBeenCalled();
       });
 
       it('does not count as updated', async () => {
-        const result = await useCase.execute({ baseDirectory: '/test' });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(result.filesUpdated).toBe(0);
       });
@@ -990,13 +1083,19 @@ Section content here
       });
 
       it('does not write to file', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(fs.writeFile).not.toHaveBeenCalled();
       });
 
       it('does not count as updated', async () => {
-        const result = await useCase.execute({ baseDirectory: '/test' });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(result.filesUpdated).toBe(0);
       });
@@ -1022,7 +1121,10 @@ Section content here
       });
 
       it('decodes base64 content and writes as binary', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(fs.writeFile).toHaveBeenCalledWith(
           '/test/images/logo.png',
@@ -1031,7 +1133,10 @@ Section content here
       });
 
       it('counts as file created', async () => {
-        const result = await useCase.execute({ baseDirectory: '/test' });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(result.filesCreated).toBe(1);
       });
@@ -1043,7 +1148,10 @@ Section content here
       });
 
       it('decodes base64 content and writes as binary', async () => {
-        await useCase.execute({ baseDirectory: '/test' });
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(fs.writeFile).toHaveBeenCalledWith(
           '/test/images/logo.png',
@@ -1052,7 +1160,10 @@ Section content here
       });
 
       it('counts as file updated', async () => {
-        const result = await useCase.execute({ baseDirectory: '/test' });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
         expect(result.filesUpdated).toBe(1);
       });
@@ -1079,7 +1190,10 @@ Section content here
 Old packmind content
 <!-- end: packmind-section -->`);
 
-      result = await useCase.execute({ baseDirectory: '/test' });
+      result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
     });
 
     it('calls unlink to delete the file', () => {
@@ -1120,31 +1234,46 @@ Old packmind content
     });
 
     it('counts recipes correctly', async () => {
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.recipesCount).toBe(2);
     });
 
     it('counts standards correctly', async () => {
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.standardsCount).toBe(1);
     });
 
     it('counts commands correctly', async () => {
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.commandsCount).toBe(1);
     });
 
     it('counts skills correctly', async () => {
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.skillsCount).toBe(1);
     });
 
     it('does not write packmind.json (filtered from server response)', async () => {
-      await useCase.execute({ baseDirectory: '/test' });
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       const writeCalls = (fs.writeFile as jest.Mock).mock.calls.map(
         ([path]: [string]) => path,
@@ -1172,6 +1301,7 @@ Old packmind content
       await useCase.execute({
         packages: ['@my-space/new-package'],
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
       });
 
       expect(mockGateway.deployment.install).toHaveBeenCalledWith(
@@ -1206,6 +1336,7 @@ Old packmind content
 
       const result = await useCase.execute({
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
         packages: ['@space/pkg'],
       });
 
@@ -1220,6 +1351,7 @@ Old packmind content
 
       const result = await useCase.execute({
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
         packages: ['@space/new-pkg'],
       });
 
@@ -1250,6 +1382,7 @@ Old packmind content
 
       const result = await useCase.execute({
         baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
         packages: ['@space/existing', '@space/new-one'],
       });
 
@@ -1262,7 +1395,10 @@ Old packmind content
         packages: { '@space/existing': '*' },
       });
 
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.packagesAdded).toEqual([]);
     });
@@ -1287,7 +1423,10 @@ Old packmind content
         packages: { '@space/pkg': '*' },
       });
 
-      const result = await useCase.execute({ baseDirectory: '/test' });
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
 
       expect(result.resolvedAgents).toEqual(['agents_md', 'packmind']);
       expect(result.sourceArtifacts).toEqual({
@@ -1296,6 +1435,134 @@ Old packmind content
         commandsCount: 0,
         recipesCount: 0,
       });
+    });
+  });
+
+  describe('cliVersion lockfile write', () => {
+    it('writes the lockfile through the repository port with the provided cliVersion', async () => {
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.28.1-next',
+      });
+
+      expect(mockLockFileRepository.write).toHaveBeenCalledTimes(1);
+      expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+        '/test',
+        expect.objectContaining({ cliVersion: '0.28.1-next' }),
+      );
+    });
+
+    it('stores the cliVersion verbatim (including -next suffix)', async () => {
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.28.1-next',
+      });
+
+      const [, lockFileArg] = (mockLockFileRepository.write as jest.Mock).mock
+        .calls[0];
+      expect(lockFileArg.cliVersion).toBe('0.28.1-next');
+    });
+
+    it('does not call fs.writeFile directly for packmind-lock.json', async () => {
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
+
+      const writeCalls = (fs.writeFile as jest.Mock).mock.calls.map(
+        ([path]: [string]) => path,
+      );
+      expect(writeCalls).not.toContain('/test/packmind-lock.json');
+    });
+
+    it('uses the server-returned lockfile content as the base when present', async () => {
+      const serverLockFile = {
+        lockfileVersion: 1,
+        packageSlugs: ['@space/test-package'],
+        agents: ['claude-code'],
+        artifacts: {
+          'artifact-1': {
+            name: 'recipe-from-server',
+            type: 'recipe',
+            id: 'artifact-1',
+            version: 1,
+            spaceId: 'space-1',
+            packageIds: ['pkg-1'],
+            files: [
+              {
+                path: '.packmind/recipes/recipe-from-server.md',
+                agent: 'claude-code',
+              },
+            ],
+          },
+        },
+      };
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          createOrUpdate: [
+            {
+              path: 'packmind-lock.json',
+              content: JSON.stringify(serverLockFile),
+            },
+          ],
+        }),
+      );
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.28.1-next',
+      });
+
+      expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+        '/test',
+        expect.objectContaining({
+          agents: ['claude-code'],
+          packageSlugs: ['@space/test-package'],
+          cliVersion: '0.28.1-next',
+        }),
+      );
+    });
+
+    it('does not write the server-returned lockfile via createOrUpdateFile (filtered out)', async () => {
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          createOrUpdate: [
+            {
+              path: 'packmind-lock.json',
+              content:
+                '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"artifacts":{}}',
+            },
+          ],
+        }),
+      );
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
+
+      const writeCalls = (fs.writeFile as jest.Mock).mock.calls.map(
+        ([path]: [string]) => path,
+      );
+      expect(writeCalls).not.toContain('/test/packmind-lock.json');
+    });
+
+    it('omits installedAt from the written lockfile when skipInstalledAt is true', async () => {
+      mockLockFileRepository.read.mockResolvedValue(null);
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/pkg': '*' },
+      });
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        skipInstalledAt: true,
+      });
+
+      const [, lockFileArg] = (mockLockFileRepository.write as jest.Mock).mock
+        .calls[0];
+      expect(lockFileArg.installedAt).toBeUndefined();
+      expect(lockFileArg.cliVersion).toBe('0.0.0-test');
     });
   });
 });

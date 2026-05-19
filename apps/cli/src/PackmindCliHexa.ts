@@ -33,6 +33,10 @@ import {
   IInstallDefaultSkillsResult,
 } from './domain/useCases/IInstallDefaultSkillsUseCase';
 import {
+  EnsureCliVersionOutcome,
+  IEnsureCliVersionCommand,
+} from './domain/useCases/IEnsureCliVersionUseCase';
+import {
   IListPackagesCommand,
   IListPackagesResult,
 } from './domain/useCases/IListPackagesUseCase';
@@ -385,6 +389,12 @@ export class PackmindCliHexa {
     command: IInstallDefaultSkillsCommand,
   ): Promise<IInstallDefaultSkillsResult> {
     return this.hexa.useCases.installDefaultSkills.execute(command);
+  }
+
+  public async ensureCliVersion(
+    command: IEnsureCliVersionCommand,
+  ): Promise<EnsureCliVersionOutcome> {
+    return this.hexa.useCases.ensureCliVersion.execute(command);
   }
 
   public getPackmindGateway() {

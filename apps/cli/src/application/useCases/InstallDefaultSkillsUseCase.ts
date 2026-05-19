@@ -9,6 +9,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import semver from 'semver';
 import { parseSkillMdContent } from '@packmind/node-utils';
+import { stripPrerelease } from '../utils/normalizeSemver';
 
 export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase {
   constructor(private readonly repositories: IPackmindRepositories) {}
@@ -221,7 +222,7 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     const constraint = metadata['packmind-cli-version'];
     if (!constraint) return false;
 
-    const normalizedVersion = cliVersion.replace('-next', '');
+    const normalizedVersion = stripPrerelease(cliVersion);
     return !semver.satisfies(normalizedVersion, constraint);
   }
 

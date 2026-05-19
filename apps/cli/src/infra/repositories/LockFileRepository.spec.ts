@@ -200,4 +200,107 @@ describe('LockFileRepository', () => {
       });
     });
   });
+
+  describe('write', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 1,
+      cliVersion: '0.28.1-next',
+      packageSlugs: ['my-package'],
+      agents: ['claude', 'packmind'],
+      installedAt: '2026-01-01T00:00:00.000Z',
+      artifacts: {
+        'standard:my-standard': {
+          name: 'My Standard',
+          type: 'standard',
+          id: 'std-123',
+          version: 3,
+          spaceId: 'space-1',
+          packageIds: ['pkg-1'],
+          files: [
+            { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+          ],
+        },
+      },
+    };
+
+    describe('when writing succeeds', () => {
+      beforeEach(async () => {
+        mockFs.writeFile.mockResolvedValue(undefined);
+        await repository.write('/project', lockFile);
+      });
+
+      it('writes to packmind-lock.json in the base directory', () => {
+        expect(mockFs.writeFile).toHaveBeenCalledWith(
+          '/project/packmind-lock.json',
+          expect.any(String),
+          'utf-8',
+        );
+      });
+
+      it('serializes the lockfile as JSON with 2-space indentation and trailing newline', () => {
+        const [[, content]] = mockFs.writeFile.mock.calls as unknown as [
+          [string, string, string],
+        ];
+        expect(content).toBe(JSON.stringify(lockFile, null, 2) + '\n');
+      });
+
+      it('preserves the cliVersion verbatim (including -next suffix)', () => {
+        const [[, content]] = mockFs.writeFile.mock.calls as unknown as [
+          [string, string, string],
+        ];
+        const parsed = JSON.parse(content) as PackmindLockFile;
+        expect(parsed.cliVersion).toBe('0.28.1-next');
+      });
+    });
+
+    describe('round-trip with read()', () => {
+      it('produces content that read() parses back into the same object', async () => {
+        let written = '';
+        mockFs.writeFile.mockImplementation(async (_path, content) => {
+          written = content as string;
+        });
+
+        await repository.write('/project', lockFile);
+
+        mockFs.readFile.mockResolvedValue(written);
+
+        const roundTripped = await repository.read('/project');
+
+        expect(roundTripped).toEqual(lockFile);
+      });
+    });
+
+    describe('when the lock file already exists', () => {
+      it('overwrites the existing file (single fs.writeFile call)', async () => {
+        mockFs.writeFile.mockResolvedValue(undefined);
+
+        await repository.write('/project', lockFile);
+        await repository.write('/project', {
+          ...lockFile,
+          cliVersion: '0.29.0',
+        });
+
+        expect(mockFs.writeFile).toHaveBeenCalledTimes(2);
+        expect(mockFs.writeFile).toHaveBeenNthCalledWith(
+          2,
+          '/project/packmind-lock.json',
+          expect.stringContaining('"cliVersion": "0.29.0"'),
+          'utf-8',
+        );
+      });
+    });
+
+    describe('when the target directory does not exist', () => {
+      it('propagates the underlying fs error (does not swallow)', async () => {
+        const err = Object.assign(new Error('ENOENT: no such directory'), {
+          code: 'ENOENT',
+        });
+        mockFs.writeFile.mockRejectedValue(err);
+
+        await expect(repository.write('/missing', lockFile)).rejects.toThrow(
+          'ENOENT: no such directory',
+        );
+      });
+    });
+  });
 });

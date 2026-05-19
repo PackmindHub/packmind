@@ -1,5 +1,9 @@
 import * as fs from 'fs/promises';
-import { handleIncompatibleInstalledSkills } from './incompatibleSkillsHandler';
+import {
+  handleIncompatibleInstalledSkills,
+  handleIncompatibleInstalledSkillsSilently,
+} from './incompatibleSkillsHandler';
+import { logInfoConsole, logWarningConsole } from '../../utils/consoleLogger';
 
 jest.mock('fs/promises');
 jest.mock('../../utils/consoleLogger', () => ({
@@ -10,6 +14,12 @@ jest.mock('../../utils/consoleLogger', () => ({
 }));
 
 const mockFs = fs as jest.Mocked<typeof fs>;
+const mockLogInfoConsole = logInfoConsole as jest.MockedFunction<
+  typeof logInfoConsole
+>;
+const mockLogWarningConsole = logWarningConsole as jest.MockedFunction<
+  typeof logWarningConsole
+>;
 const BASE_DIR = '/project';
 const confirmYes = () => Promise.resolve(true);
 const confirmNo = () => Promise.resolve(false);
@@ -159,5 +169,108 @@ describe('handleIncompatibleInstalledSkills', () => {
         expect(mockFs.rm).toHaveBeenCalledTimes(2);
       });
     });
+  });
+});
+
+describe('handleIncompatibleInstalledSkillsSilently', () => {
+  beforeEach(() => {
+    mockFs.unlink.mockResolvedValue(undefined);
+    mockFs.rm.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('does not invoke any interactive prompt callback', async () => {
+    const confirm = jest.fn(() => Promise.resolve(true));
+
+    await handleIncompatibleInstalledSkillsSilently(
+      [
+        {
+          skillName: 'obsolete-skill',
+          filePaths: ['.claude/skills/obsolete-skill/SKILL.md'],
+        },
+      ],
+      BASE_DIR,
+    );
+
+    expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it('calls fs.rm for folder-based skills', async () => {
+    await handleIncompatibleInstalledSkillsSilently(
+      [
+        {
+          skillName: 'obsolete-skill',
+          filePaths: [
+            '.claude/skills/obsolete-skill/SKILL.md',
+            '.claude/skills/obsolete-skill/README.md',
+          ],
+        },
+      ],
+      BASE_DIR,
+    );
+
+    expect(mockFs.rm).toHaveBeenCalledWith(
+      `${BASE_DIR}/.claude/skills/obsolete-skill`,
+      { recursive: true, force: true },
+    );
+  });
+
+  it('calls fs.unlink for flat skills', async () => {
+    await handleIncompatibleInstalledSkillsSilently(
+      [
+        {
+          skillName: 'flat-obsolete-skill',
+          filePaths: ['.claude/skills/flat-obsolete-skill.md'],
+        },
+      ],
+      BASE_DIR,
+    );
+
+    expect(mockFs.unlink).toHaveBeenCalledWith(
+      `${BASE_DIR}/.claude/skills/flat-obsolete-skill.md`,
+    );
+  });
+
+  it('logs an info line once per deleted skill', async () => {
+    const skills = [
+      {
+        skillName: 'skill-a',
+        filePaths: ['.claude/skills/skill-a/SKILL.md'],
+      },
+      {
+        skillName: 'skill-b',
+        filePaths: ['.claude/skills/skill-b.md'],
+      },
+    ];
+
+    await handleIncompatibleInstalledSkillsSilently(skills, BASE_DIR);
+
+    const skillRemovalLogs = mockLogInfoConsole.mock.calls.filter(([msg]) =>
+      typeof msg === 'string' ? msg.includes('Removing obsolete skill') : false,
+    );
+
+    expect(skillRemovalLogs).toHaveLength(2);
+    expect(skillRemovalLogs[0][0]).toContain('skill-a');
+    expect(skillRemovalLogs[1][0]).toContain('skill-b');
+  });
+
+  it('still emits the underlying warning message from the wrapped handler', async () => {
+    // The wrapper delegates to the underlying handler, so the warning header
+    // is still produced. This documents the behaviour rather than enforcing
+    // a silent-only output contract.
+    await handleIncompatibleInstalledSkillsSilently(
+      [
+        {
+          skillName: 'obsolete-skill',
+          filePaths: ['.claude/skills/obsolete-skill/SKILL.md'],
+        },
+      ],
+      BASE_DIR,
+    );
+
+    expect(mockLogWarningConsole).toHaveBeenCalled();
   });
 });

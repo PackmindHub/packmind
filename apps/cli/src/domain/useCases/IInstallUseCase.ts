@@ -4,6 +4,12 @@ export type IInstallCommand = {
   baseDirectory?: string;
   packages?: string[];
   skipInstalledAt?: boolean;
+  /**
+   * The running CLI version, stored verbatim (including any `-next`
+   * pre-release suffix) in `packmind-lock.json#cliVersion` after a
+   * successful install so drift can be detected on subsequent commands.
+   */
+  cliVersion: string;
 };
 
 export type IInstallResult = Pick<

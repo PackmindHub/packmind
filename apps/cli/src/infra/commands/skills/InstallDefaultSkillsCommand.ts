@@ -8,9 +8,8 @@ import {
   logWarningConsole,
   formatCommand,
 } from '../../utils/consoleLogger';
-import * as readline from 'readline';
-import { IncompatibleInstalledSkill } from '../../../domain/useCases/IInstallDefaultSkillsUseCase';
-import { handleIncompatibleInstalledSkills } from './incompatibleSkillsHandler';
+import { handleIncompatibleInstalledSkillsSilently } from './incompatibleSkillsHandler';
+import { reportEnsureCliVersionOutcome } from '../ensureCliVersionReporter';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -30,9 +29,21 @@ export const installDefaultSkillsCommand = command({
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     try {
+      const baseDirectory = process.cwd();
+
+      try {
+        const outcome = await packmindCliHexa.ensureCliVersion({
+          baseDirectory,
+          currentCliVersion: CLI_VERSION,
+          includeBeta,
+        });
+        reportEnsureCliVersionOutcome(outcome, CLI_VERSION);
+      } catch {
+        // Silently swallow drift-check failures; skills init must continue.
+      }
+
       logInfoConsole('Installing default skills...');
 
-      const baseDirectory = process.cwd();
       const result = await packmindCliHexa.installDefaultSkills({
         includeBeta,
         cliVersion: includeBeta ? undefined : CLI_VERSION,
@@ -46,7 +57,7 @@ export const installDefaultSkillsCommand = command({
       }
 
       if (result.incompatibleInstalledSkills.length > 0) {
-        await handleIncompatibleInstalledSkillsWithPrompt(
+        await handleIncompatibleInstalledSkillsSilently(
           result.incompatibleInstalledSkills,
           baseDirectory,
         );
@@ -82,26 +93,3 @@ export const installDefaultSkillsCommand = command({
     }
   },
 });
-
-async function handleIncompatibleInstalledSkillsWithPrompt(
-  skills: IncompatibleInstalledSkill[],
-  baseDirectory: string,
-): Promise<void> {
-  await handleIncompatibleInstalledSkills(skills, baseDirectory, () =>
-    promptConfirmation('Confirm deletion? [y/N]: '),
-  );
-}
-
-async function promptConfirmation(question: string): Promise<boolean> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim().toLowerCase() === 'y');
-    });
-  });
-}

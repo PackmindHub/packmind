@@ -86,6 +86,8 @@ export class InstallUseCase implements IInstallUseCase {
         : { installedAt: new Date().toISOString() }),
     };
 
+    effectiveLockFile.cliVersion = command.cliVersion;
+
     let packagesSlugs: string[];
     let normalizedPackages: string[] = [];
 
@@ -138,9 +140,18 @@ export class InstallUseCase implements IInstallUseCase {
     }
 
     // Filter out packmind.json from server response - config writing is handled separately
-    // by the CLI to preserve property order
+    // by the CLI to preserve property order.
+    // Filter out packmind-lock.json — it is written below via the lockfile
+    // port so we can inject cliVersion.
     const filteredCreateOrUpdate = response.fileUpdates.createOrUpdate.filter(
-      (file) => file.path !== 'packmind.json',
+      (file) =>
+        file.path !== 'packmind.json' && file.path !== 'packmind-lock.json',
+    );
+
+    // Capture the server's lockfile content (if returned) so we can merge it
+    // with the running CLI version before persisting via the port.
+    const serverLockFile = response.fileUpdates.createOrUpdate.find(
+      (file) => file.path === 'packmind-lock.json',
     );
 
     // Deduplicate files by path
@@ -159,23 +170,6 @@ export class InstallUseCase implements IInstallUseCase {
     }
 
     const uniqueFiles = Array.from(uniqueFilesMap.values());
-
-    if (command.skipInstalledAt) {
-      for (const file of uniqueFiles) {
-        if (file.path === 'packmind-lock.json' && file.content) {
-          try {
-            const lockFileData = JSON.parse(file.content) as Record<
-              string,
-              unknown
-            >;
-            delete lockFileData.installedAt;
-            file.content = JSON.stringify(lockFileData, null, 2) + '\n';
-          } catch {
-            // If parsing fails, keep original content
-          }
-        }
-      }
-    }
 
     // Count artifact types
     for (const file of uniqueFiles) {
@@ -272,6 +266,32 @@ export class InstallUseCase implements IInstallUseCase {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       result.errors.push(`Failed to install packages: ${errorMsg}`);
+    }
+
+    // Persist the lockfile through the port so we can inject the running CLI
+    // version. Prefer the server's lockfile content as the base (it reflects
+    // the latest artifact state after install); fall back to the in-memory
+    // `effectiveLockFile` when the server did not return one.
+    try {
+      let lockFileToPersist = effectiveLockFile;
+      if (serverLockFile?.content) {
+        try {
+          lockFileToPersist = JSON.parse(serverLockFile.content);
+        } catch {
+          // Fall back to in-memory lockfile if the server payload was malformed.
+        }
+      }
+
+      if (command.skipInstalledAt) {
+        delete (lockFileToPersist as { installedAt?: string }).installedAt;
+      }
+
+      lockFileToPersist.cliVersion = command.cliVersion;
+
+      await this.lockFileRepository.write(baseDirectory, lockFileToPersist);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Failed to write packmind-lock.json: ${errorMsg}`);
     }
 
     if (normalizedPackages.length > 0) {
