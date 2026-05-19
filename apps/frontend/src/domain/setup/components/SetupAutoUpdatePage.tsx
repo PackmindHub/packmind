@@ -4,7 +4,7 @@ import { AutomateUpdatesStep } from './AutomateUpdatesStep';
 
 export const SetupAutoUpdatePage: React.FC = () => (
   <PMPage
-    title="Auto-update artifacts"
+    title="Auto-update your playbook"
     subtitle="Schedule `packmind-cli install` on your CI to keep your team's playbook in sync without thinking about it."
   >
     <AutomateUpdatesStep />
