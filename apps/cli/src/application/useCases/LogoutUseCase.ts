@@ -4,8 +4,7 @@ import {
   ILogoutUseCase,
 } from '../../domain/useCases/ILogoutUseCase';
 import { getCredentialsPath } from '../../infra/utils/credentials';
-
-const ENV_VAR_NAME = 'PACKMIND_API_KEY_V3';
+import { ENV_VAR_NAMES } from '../../infra/utils/credentials/EnvCredentialsProvider';
 
 export interface ILogoutDependencies {
   getCredentialsPath: () => string;
@@ -22,7 +21,13 @@ export class LogoutUseCase implements ILogoutUseCase {
       getCredentialsPath: deps?.getCredentialsPath ?? getCredentialsPath,
       fileExists: deps?.fileExists ?? ((path) => fs.existsSync(path)),
       deleteFile: deps?.deleteFile ?? ((path) => fs.unlinkSync(path)),
-      hasEnvVar: deps?.hasEnvVar ?? (() => !!process.env[ENV_VAR_NAME]),
+      hasEnvVar:
+        deps?.hasEnvVar ??
+        (() =>
+          ENV_VAR_NAMES.some((name) => {
+            const value = process.env[name];
+            return !!value && value.trim().length > 0;
+          })),
     };
   }
 
