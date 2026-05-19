@@ -3,6 +3,7 @@ import {
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
+import { SkillValidationError } from '@packmind/skills';
 import {
   ChangeProposal,
   ChangeProposalDecision,
@@ -1332,6 +1333,77 @@ describe('ApplyCreationChangeProposalsUseCase', () => {
     });
 
     it('does not call batchUpdateProposalsInTransaction', async () => {
+      await useCase
+        .execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [toAcceptedProposal(skillProposal)],
+          rejected: [],
+        })
+        .catch(() => undefined);
+
+      expect(
+        changeProposalService.batchUpdateProposalsInTransaction,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when uploadSkill throws SkillValidationError on a legacy createSkill proposal', () => {
+    const skillPayload: NewSkillPayload = {
+      name: 'My Skill',
+      description: 'a'.repeat(1025),
+      prompt: 'This is the skill prompt',
+      skillMdPermissions: 'rw-r--r--',
+    };
+    const skillProposal = changeProposalFactory({
+      id: createChangeProposalId('skill-proposal-1'),
+      type: ChangeProposalType.createSkill,
+      artefactId: null,
+      payload: skillPayload,
+      status: ChangeProposalStatus.pending,
+      spaceId,
+    });
+
+    beforeEach(() => {
+      changeProposalService.findById.mockResolvedValue(skillProposal);
+      skillsPort.uploadSkill.mockRejectedValue(
+        new SkillValidationError([
+          {
+            field: 'description',
+            message: 'description must not exceed 1024 characters',
+          },
+        ]),
+      );
+    });
+
+    it('rethrows with an actionable user-facing message', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [toAcceptedProposal(skillProposal)],
+          rejected: [],
+        }),
+      ).rejects.toThrow(
+        /description longer than 1024 characters\. Edit your skill and upload it again\./,
+      );
+    });
+
+    it('rethrows a SkillValidationError so the controller can map it to 400', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          accepted: [toAcceptedProposal(skillProposal)],
+          rejected: [],
+        }),
+      ).rejects.toBeInstanceOf(SkillValidationError);
+    });
+
+    it('does not call batchUpdateProposalsInTransaction so the proposal stays pending', async () => {
       await useCase
         .execute({
           userId,

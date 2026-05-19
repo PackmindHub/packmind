@@ -35,6 +35,7 @@ import {
   SpaceId,
   StandardId,
 } from '@packmind/types';
+import { SkillValidationError } from '@packmind/skills';
 import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 import {
@@ -152,6 +153,8 @@ export class OrganizationsSpacesChangeProposalsController {
     body: { accepted: AcceptedChangeProposal[]; rejected: ChangeProposalId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<ApplyCreationChangeProposalsResponse> {
+    const userId = request.user.userId;
+
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/change-proposals/apply',
       {
@@ -162,14 +165,30 @@ export class OrganizationsSpacesChangeProposalsController {
       },
     );
 
-    const result =
-      await this.changeProposalsService.applyCreationChangeProposals({
-        userId: request.user.userId,
+    let result: ApplyCreationChangeProposalsResponse;
+    try {
+      result = await this.changeProposalsService.applyCreationChangeProposals({
+        userId,
         organizationId,
         spaceId,
         accepted: body.accepted,
         rejected: body.rejected,
       });
+    } catch (error) {
+      if (error instanceof SkillValidationError) {
+        this.logger.warn(
+          'Skill validation failed on creation change proposals apply',
+          {
+            userId: userId.substring(0, 6) + '*',
+            organizationId,
+            spaceId,
+            errors: error.errors,
+          },
+        );
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
 
     this.logger.info(
       'POST .../change-proposals/apply - Applied creation proposals successfully',

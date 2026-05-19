@@ -27,6 +27,7 @@ import {
   IStandardsPort,
   UserId,
 } from '@packmind/types';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import {
   CreatedIds,
@@ -99,26 +100,40 @@ export class ApplyCreationChangeProposalsUseCase
     };
     const createdArtefactIdByProposalId = new Map<ChangeProposalId, string>();
 
-    for (const acceptedProposal of command.accepted) {
-      const dbProposal = proposalMap.get(acceptedProposal.id);
-      if (!dbProposal) {
-        throw new Error(
-          `Change proposal ${acceptedProposal.id} not found in database`,
+    try {
+      for (const acceptedProposal of command.accepted) {
+        const dbProposal = proposalMap.get(acceptedProposal.id);
+        if (!dbProposal) {
+          throw new Error(
+            `Change proposal ${acceptedProposal.id} not found in database`,
+          );
+        }
+
+        // Validate that the proposal from command matches the one in DB
+        this.assertProposalMatchesDatabase(acceptedProposal, dbProposal);
+
+        const applier = this.appliers[acceptedProposal.type];
+
+        const artefact = await applier.apply(
+          acceptedProposal,
+          command.spaceId,
+          createOrganizationId(command.organizationId),
         );
+        createdArtefactIdByProposalId.set(acceptedProposal.id, artefact.id);
+        createdIds = applier.updateCreatedIds(createdIds, artefact);
       }
-
-      // Validate that the proposal from command matches the one in DB
-      this.assertProposalMatchesDatabase(acceptedProposal, dbProposal);
-
-      const applier = this.appliers[acceptedProposal.type];
-
-      const artefact = await applier.apply(
-        acceptedProposal,
-        command.spaceId,
-        createOrganizationId(command.organizationId),
-      );
-      createdArtefactIdByProposalId.set(acceptedProposal.id, artefact.id);
-      createdIds = applier.updateCreatedIds(createdIds, artefact);
+    } catch (error) {
+      if (error instanceof SkillValidationError) {
+        const descriptionError = error.errors.find(
+          (e) => e.field === 'description',
+        );
+        error.message = descriptionError
+          ? `A submitted skill has a description longer than ${DESCRIPTION_MAX_LENGTH} characters. Edit your skill and upload it again.`
+          : `A submitted skill is invalid: ${error.errors
+              .map((e) => e.message)
+              .join('; ')}. Edit your skill and upload it again.`;
+      }
+      throw error;
     }
 
     const acceptedProposals = command.accepted.map((proposal) => ({
