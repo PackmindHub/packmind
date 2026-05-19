@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isPackmindError } from '../../../../services/api/errors/PackmindError';
 import {
   ApplyChangeProposalsCommand,
   ApplyCreationChangeProposalsCommand,
@@ -276,8 +277,9 @@ export const useApplyRecipeChangeProposalsMutation = (params?: {
 
       pmToaster.create({
         title: 'Failed to apply changes',
-        description:
-          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        description: isPackmindError(error)
+          ? error.message
+          : 'The changes could not be applied. Please try again or contact support if the problem persists.',
         type: 'error',
       });
     },
@@ -365,8 +367,9 @@ export const useApplyStandardChangeProposalsMutation = (params?: {
 
       pmToaster.create({
         title: 'Failed to apply changes',
-        description:
-          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        description: isPackmindError(error)
+          ? error.message
+          : 'The changes could not be applied. Please try again or contact support if the problem persists.',
         type: 'error',
       });
     },
@@ -446,8 +449,9 @@ export const useApplySkillChangeProposalsMutation = (params?: {
 
       pmToaster.create({
         title: 'Failed to apply changes',
-        description:
-          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        description: isPackmindError(error)
+          ? error.message
+          : 'The changes could not be applied. Please try again or contact support if the problem persists.',
         type: 'error',
       });
     },
@@ -540,8 +544,9 @@ export const useApplyCreationChangeProposalsMutation = (params?: {
 
       pmToaster.create({
         title: 'Failed to apply changes',
-        description:
-          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        description: isPackmindError(error)
+          ? error.message
+          : 'The changes could not be applied. Please try again or contact support if the problem persists.',
         type: 'error',
       });
     },
