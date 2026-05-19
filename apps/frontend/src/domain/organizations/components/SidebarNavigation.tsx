@@ -451,6 +451,7 @@ export const SidebarNavigation: React.FunctionComponent<
 
             <PMVStack
               alignItems="stretch"
+              gap={0}
               scrollbarColor="{colors.background.tertiary} transparent"
               minHeight={0}
               overflowY="auto"
