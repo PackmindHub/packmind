@@ -5,7 +5,6 @@
 ## Changed
 
 - Authentication is now done by reading `PACKMIND_API_KEY` env var (and also `PACKMIND_API_KEY_V3`)
-- Silently remove obsolete default skills on `install`, `init`, and `skills init`.
 - Track the running CLI version in `packmind-lock.json`; warn when the installed CLI is older than the recorded version, auto-refresh default skills when it is newer.
 
 ## Fixed
