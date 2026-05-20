@@ -2,10 +2,13 @@
 
 ## Added
 
+- Default skills are now tracked in `packmind-lock.json` as first-class entries with a `source: 'default'` discriminator, alongside user-authored and package-distributed entries (`source: 'user'`).
+
 ## Changed
 
 - Authentication is now done by reading `PACKMIND_API_KEY` env var (and also `PACKMIND_API_KEY_V3`)
 - Track the running CLI version in `packmind-lock.json`; warn when the installed CLI is older than the recorded version, auto-refresh default skills when it is newer.
+- **Breaking for external tooling that parses `packmind-lock.json`:** `lockfileVersion` has been bumped from `1` to `2`. The `artifacts` map key format changed from `${type}:${slug}` to `${source}:${type}:${slug}` (e.g. `default:skill:packmind-create-skill`, `user:standard:my-standard`), and each entry now carries a required `source: 'default' | 'user'` field. The CLI silently migrates v1 lockfiles to v2 on read (tagging every existing entry as `source: 'user'`), but external tooling must be updated to handle the new key format and the new required field.
 
 ## Fixed
 

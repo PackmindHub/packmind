@@ -109,6 +109,13 @@ export class InstallUseCase implements IInstallUseCase {
     }
 
     if (packagesSlugs.length === 0) {
+      // TODO(downstream-safe-cleanup-sprint): this branch unconditionally
+      // deletes every artifact referenced in the lockfile, but the v2 schema
+      // now allows `source: 'user'` user-authored skills and `source: 'default'`
+      // default skills to live alongside package-installed entries. Filter by
+      // `source` (and, when available, package ownership) before deleting.
+      // See tmp/feature-specs/default-skills-lockfile-tracking/implementation-plan.md
+      // → "Known issues for the downstream safe-cleanup sprint".
       try {
         for (const entry of Object.values(effectiveLockFile.artifacts)) {
           for (const file of entry.files) {

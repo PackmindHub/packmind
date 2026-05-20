@@ -5,7 +5,10 @@ import {
   RunCliResult,
   UserSignedUpContext,
   updateFile,
+  readFile,
+  fileExists,
 } from './helpers';
+import { PackmindLockFile } from '@packmind/types';
 
 describeForVersion('>= 0.24.0', 'skills init command', () => {
   describeWithUserSignedUp('skills init command', (getContext) => {
@@ -38,6 +41,50 @@ describeForVersion('>= 0.24.0', 'skills init command', () => {
       it('does not output any error', () => {
         expect(result.stdout).not.toContain('Installation failed');
       });
+
+      // Default-skill lockfile tracking landed after 0.28.1.
+      describeForVersion(
+        '> 0.28.1',
+        'lockfile entries for default skills',
+        () => {
+          let lockFile: PackmindLockFile;
+
+          beforeEach(() => {
+            // Sanity: previous beforeEach already ran `skills init`.
+            expect(fileExists('packmind-lock.json', context.testDir)).toBe(
+              true,
+            );
+            const raw = readFile('packmind-lock.json', context.testDir);
+            lockFile = JSON.parse(raw) as PackmindLockFile;
+          });
+
+          it('writes a lockfileVersion: 2 lockfile', () => {
+            expect(lockFile.lockfileVersion).toBe(2);
+          });
+
+          it('records at least one default:skill:<slug> entry', () => {
+            const defaultKeys = Object.keys(lockFile.artifacts).filter((k) =>
+              k.startsWith('default:skill:'),
+            );
+            expect(defaultKeys.length).toBeGreaterThan(0);
+          });
+
+          it('records only default:skill:<slug> entries (no user: prefix)', () => {
+            const allKeys = Object.keys(lockFile.artifacts);
+            for (const key of allKeys) {
+              expect(key.startsWith('default:skill:')).toBe(true);
+            }
+          });
+
+          it('tags every entry with source: "default"', () => {
+            const entries = Object.values(lockFile.artifacts);
+            expect(entries.length).toBeGreaterThan(0);
+            for (const entry of entries) {
+              expect(entry.source).toBe('default');
+            }
+          });
+        },
+      );
     });
 
     describeForVersion(
