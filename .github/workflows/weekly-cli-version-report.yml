@@ -34,7 +34,7 @@ jobs:
             echo "## Packmind CLI Version Usage (last 7 days)"
             echo ''
             echo '```'
-            cat cli-version-report.txt
+            cat cli-version-report.md
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
