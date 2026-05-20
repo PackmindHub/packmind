@@ -61,7 +61,7 @@ describeForVersion('>= 0.24.0', 'skills init command', () => {
       });
 
       it('warns that skills are skipped', () => {
-        expect(result.stdout).toMatch(
+        expect(result.stderr).toMatch(
           /Skipping default skills.*do not support skills/,
         );
       });
