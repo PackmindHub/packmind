@@ -37,9 +37,12 @@ jest.mock('@packmind/logger', () => ({
 }));
 
 jest.mock('./bootstrapInstallContext', () => ({
-  bootstrapInstallContext: jest
-    .fn()
-    .mockResolvedValue({ configReady: true, warned: false }),
+  bootstrapInstallContext: jest.fn().mockResolvedValue({
+    configReady: true,
+    warned: false,
+    configCreated: false,
+    packagesAdded: [],
+  }),
 }));
 
 jest.mock('../repositories/ConfigFileRepository', () => ({
@@ -62,6 +65,11 @@ import * as consoleLogger from '../utils/consoleLogger';
 import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { bootstrapInstallContext } from './bootstrapInstallContext';
+
+const mockBootstrap = bootstrapInstallContext as jest.MockedFunction<
+  typeof bootstrapInstallContext
+>;
 
 const MockedConfigFileRepository = ConfigFileRepository as unknown as jest.Mock;
 
@@ -663,6 +671,132 @@ describe('installCommand', () => {
         .join('\n');
       expect(allLogged).not.toContain('Nothing to install');
     });
+
+    describe("when bootstrap pre-populated packmind.json (Cedric's scenario)", () => {
+      beforeEach(async () => {
+        // Bootstrap auto-detected agents and wrote packmind.json with the
+        // CLI-supplied package — so install use case sees no diff.
+        mockBootstrap.mockResolvedValueOnce({
+          configReady: true,
+          warned: false,
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+        });
+        mockInstall.mockResolvedValue(
+          makeResult({
+            configCreated: false,
+            packagesAdded: [],
+          }),
+        );
+
+        await handler({
+          installPath: '',
+          packages: ['@testing/cli-e2e'],
+          list: false,
+          show: '',
+          status: false,
+          skipInstalledAt: false,
+        });
+      });
+
+      it('does not emit a misleading "Already up to date" summary', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).not.toContain('Already up to date');
+      });
+
+      it('reports that packmind.json was created', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).toContain('Created packmind.json');
+      });
+
+      it('lists the package as added', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).toContain('@testing/cli-e2e');
+      });
+    });
+
+    describe('when bootstrap and install each add a different package', () => {
+      let allLogged: string;
+
+      beforeEach(async () => {
+        mockBootstrap.mockResolvedValueOnce({
+          configReady: true,
+          warned: false,
+          configCreated: true,
+          packagesAdded: ['@a/x'],
+        });
+        mockInstall.mockResolvedValue(
+          makeResult({
+            configCreated: false,
+            packagesAdded: ['@b/y'],
+          }),
+        );
+
+        await handler({
+          installPath: '',
+          packages: ['@a/x', '@b/y'],
+          list: false,
+          show: '',
+          status: false,
+          skipInstalledAt: false,
+        });
+
+        allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+      });
+
+      it('includes the bootstrap-added package in the summary', () => {
+        expect(allLogged).toContain('@a/x');
+      });
+
+      it('includes the install-added package in the summary', () => {
+        expect(allLogged).toContain('@b/y');
+      });
+    });
+
+    describe('when bootstrap and install report the same package', () => {
+      let summaryLog: string;
+
+      beforeEach(async () => {
+        mockBootstrap.mockResolvedValueOnce({
+          configReady: true,
+          warned: false,
+          configCreated: true,
+          packagesAdded: ['@a/x'],
+        });
+        mockInstall.mockResolvedValue(
+          makeResult({
+            configCreated: false,
+            packagesAdded: ['@a/x'],
+          }),
+        );
+
+        await handler({
+          installPath: '',
+          packages: ['@a/x'],
+          list: false,
+          show: '',
+          status: false,
+          skipInstalledAt: false,
+        });
+
+        summaryLog = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+      });
+
+      it('lists the package exactly once in the summary', () => {
+        const matches = summaryLog.match(/@a\/x/g) ?? [];
+        expect(matches).toHaveLength(1);
+      });
+    });
   });
 
   describe('default skills auto-install', () => {
@@ -751,6 +885,43 @@ describe('installCommand', () => {
       it('logs the file counts', () => {
         expect(mockConsoleLogger.logConsole).toHaveBeenCalledWith(
           expect.stringContaining('added 3 files'),
+        );
+      });
+    });
+
+    describe('when installDefaultSkills is a no-op (already up to date)', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not announce "Installing default skills..."', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).not.toContain('Installing default skills');
+      });
+
+      it('does not print "Default skills are already up to date"', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).not.toContain(
+          'Default skills are already up to date',
         );
       });
     });

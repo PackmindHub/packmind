@@ -197,7 +197,6 @@ async function installDefaultSkillsIfAtGitRoot(params: {
   }
 
   try {
-    logConsole('\nInstalling default skills...');
     const skillsResult = await packmindCliHexa.installDefaultSkills({
       cliVersion: CLI_VERSION,
       baseDirectory: cwd,
@@ -218,12 +217,13 @@ async function installDefaultSkillsIfAtGitRoot(params: {
 
     const totalSkillFiles =
       skillsResult.filesCreated + skillsResult.filesUpdated;
+    // Stay silent when nothing happened — otherwise the user reads a
+    // contradictory "Already up to date" + "Installing default skills..."
+    // narrative in the same turn.
     if (totalSkillFiles > 0) {
       logConsole(
         `Default skills: added ${skillsResult.filesCreated} files, changed ${skillsResult.filesUpdated} files`,
       );
-    } else if (skillsResult.errors.length === 0) {
-      logConsole('Default skills are already up to date');
     }
   } catch {
     // Silently ignore default skills installation errors as it's a secondary operation
@@ -378,6 +378,18 @@ export async function installHandler({
   }
 
   const combined = mergeInstallResults(results);
+
+  // Merge bootstrap-induced changes into the summary so users see "config
+  // created" / "packages added" even when bootstrap pre-populated packmind.json
+  // before the install use case ran.
+  if (bootstrap.configCreated) {
+    combined.configCreated = true;
+  }
+  if (bootstrap.packagesAdded.length > 0) {
+    const merged = new Set(combined.packagesAdded);
+    bootstrap.packagesAdded.forEach((p) => merged.add(p));
+    combined.packagesAdded = [...merged];
+  }
 
   if (combined.missingAccess.length > 0) {
     let warning =

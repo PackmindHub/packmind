@@ -143,7 +143,12 @@ describe('bootstrapInstallContext', () => {
         runInit,
       });
 
-      expect(result).toEqual({ configReady: true, warned: false });
+      expect(result).toEqual({
+        configReady: true,
+        warned: false,
+        configCreated: false,
+        packagesAdded: [],
+      });
       expect(agentDetectionService.detectAgentArtifacts).not.toHaveBeenCalled();
       expect(runInit).not.toHaveBeenCalled();
     });
@@ -169,7 +174,12 @@ describe('bootstrapInstallContext', () => {
         cliVersion,
       });
 
-      expect(result).toEqual({ configReady: true, warned: false });
+      expect(result).toEqual({
+        configReady: true,
+        warned: false,
+        configCreated: false,
+        packagesAdded: [],
+      });
     });
   });
 
@@ -207,6 +217,28 @@ describe('bootstrapInstallContext', () => {
       );
       expect(runInit).not.toHaveBeenCalled();
     });
+
+    it('reports configCreated:true when bootstrap writes packmind.json from detected agents', async () => {
+      const configRepository = makeConfigRepository();
+      const agentDetectionService = makeDetectionService([
+        { agent: 'claude', artifactPath: '/test/project/.claude' },
+      ]);
+
+      const result = await bootstrapInstallContext({
+        configRepository,
+        agentDetectionService,
+        packmindGateway: makeGateway(),
+        baseDirectory,
+        packages: ['@testing/cli-e2e'],
+        isTTY: false,
+        installDefaultSkills: jest.fn(),
+        cliVersion,
+        runInit: jest.fn(),
+      });
+
+      expect(result.configCreated).toBe(true);
+      expect(result.packagesAdded).toEqual(['@testing/cli-e2e']);
+    });
   });
 
   describe('TTY + no agents detected', () => {
@@ -233,6 +265,62 @@ describe('bootstrapInstallContext', () => {
       expect(runInit).toHaveBeenCalledWith(
         expect.objectContaining({ showOnboardHint: false }),
       );
+    });
+
+    it('returns configCreated:true and packagesAdded:[] when init succeeds', async () => {
+      const configRepository = makeConfigRepository();
+      const agentDetectionService = makeDetectionService([]);
+      const runInit = jest
+        .fn<Promise<InitHandlerResult>, []>()
+        .mockResolvedValue({ success: true, errors: [] });
+
+      const result = await bootstrapInstallContext({
+        configRepository,
+        agentDetectionService,
+        packmindGateway: makeGateway(),
+        baseDirectory,
+        // Even when packages are passed by the CLI, interactive init does not
+        // pre-populate them — installUseCase handles that.
+        packages: ['@a/x'],
+        isTTY: true,
+        installDefaultSkills: jest.fn(),
+        cliVersion,
+        runInit,
+      });
+
+      expect(result).toMatchObject({
+        configReady: true,
+        warned: false,
+        configCreated: true,
+        packagesAdded: [],
+      });
+    });
+
+    it('returns configCreated:false and packagesAdded:[] when init fails', async () => {
+      const configRepository = makeConfigRepository();
+      const agentDetectionService = makeDetectionService([]);
+      const runInit = jest
+        .fn<Promise<InitHandlerResult>, []>()
+        .mockResolvedValue({ success: false, errors: ['boom'] });
+
+      const result = await bootstrapInstallContext({
+        configRepository,
+        agentDetectionService,
+        packmindGateway: makeGateway(),
+        baseDirectory,
+        packages: ['@a/x'],
+        isTTY: true,
+        installDefaultSkills: jest.fn(),
+        cliVersion,
+        runInit,
+      });
+
+      expect(result).toEqual({
+        configReady: false,
+        warned: true,
+        configCreated: false,
+        packagesAdded: [],
+      });
     });
   });
 
@@ -278,7 +366,12 @@ describe('bootstrapInstallContext', () => {
         cliVersion,
       });
 
-      expect(result).toEqual({ configReady: false, warned: true });
+      expect(result).toEqual({
+        configReady: false,
+        warned: true,
+        configCreated: false,
+        packagesAdded: [],
+      });
       expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
         'No packmind.json and no agent context detected — run `packmind-cli init` to configure.',
       );
