@@ -1,4 +1,7 @@
-import { ICodingAgentDeployer } from '@packmind/coding-agent';
+import {
+  DefaultSkillMetadata,
+  ICodingAgentDeployer,
+} from '@packmind/coding-agent';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
@@ -9,8 +12,15 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   IDeployDefaultSkillsUseCase,
+  PackmindLockFileEntry,
+  SkillVersion,
+  createSkillId,
+  createSkillVersionId,
+  createUserId,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { PackmindLockFileService } from '../services/PackmindLockFileService';
+import { enrichDefaultSkillsFileModifications } from '../utils/DefaultSkillsMetadataEnricher';
 
 const origin = 'DeployDefaultSkillsUseCase';
 
@@ -21,13 +31,19 @@ export class DeployDefaultSkillsUseCase
   >
   implements IDeployDefaultSkillsUseCase
 {
+  private readonly packmindLockFileService: PackmindLockFileService;
+
   constructor(
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly codingAgentPort: ICodingAgentPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
+    packmindLockFileService: PackmindLockFileService = new PackmindLockFileService(
+      logger,
+    ),
   ) {
     super(accountsPort, logger);
+    this.packmindLockFileService = packmindLockFileService;
     this.logger.info('DeployDefaultSkillsUseCase initialized');
   }
 
@@ -66,6 +82,7 @@ export class DeployDefaultSkillsUseCase
     const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
 
     let skippedSkillsCount = 0;
+    const deployedSkills: DefaultSkillMetadata[] = [];
 
     for (const codingAgent of codingAgents) {
       const deployer = deployerRegistry.getDeployer(
@@ -84,6 +101,15 @@ export class DeployDefaultSkillsUseCase
         });
         this.mergeFileUpdates(mergedFileUpdates, result.fileUpdates);
         skippedSkillsCount = result.skippedSkillsCount;
+        if (result.deployedSkills) {
+          for (const skill of result.deployedSkills) {
+            if (
+              !deployedSkills.some((existing) => existing.slug === skill.slug)
+            ) {
+              deployedSkills.push(skill);
+            }
+          }
+        }
 
         this.logger.info('Default skills deployed for coding agent', {
           codingAgent,
@@ -94,14 +120,76 @@ export class DeployDefaultSkillsUseCase
       }
     }
 
+    const enrichedFileUpdates = enrichDefaultSkillsFileModifications(
+      mergedFileUpdates,
+      deployedSkills,
+    );
+
+    const lockFileSlice = this.buildLockFileSlice(
+      enrichedFileUpdates,
+      deployedSkills,
+      codingAgents,
+    );
+
     this.logger.info('Default skills deployment completed', {
       organizationId: command.organizationId,
-      totalCreateOrUpdateCount: mergedFileUpdates.createOrUpdate.length,
-      totalDeleteCount: mergedFileUpdates.delete.length,
+      totalCreateOrUpdateCount: enrichedFileUpdates.createOrUpdate.length,
+      totalDeleteCount: enrichedFileUpdates.delete.length,
       skippedSkillsCount,
+      lockFileSliceCount: Object.keys(lockFileSlice).length,
     });
 
-    return { fileUpdates: mergedFileUpdates, skippedSkillsCount };
+    return {
+      fileUpdates: enrichedFileUpdates,
+      skippedSkillsCount,
+      lockFileSlice,
+    };
+  }
+
+  /**
+   * Builds the default-skill slice of the lockfile `artifacts` map.
+   *
+   * The deployer-side `deployedSkills` metadata (slug, name, version) is
+   * shaped into synthetic `SkillVersion` entries that `PackmindLockFileService.buildLockFile`
+   * uses to populate its version lookup. Default skills are not persisted as
+   * Packmind domain entities, so these synthetic versions are only used in
+   * memory to drive lockfile-entry construction; nothing is written to the DB.
+   *
+   * Returns only the `artifacts` map from the resulting lockfile — callers
+   * merge it into the local lockfile via the CLI flow.
+   */
+  private buildLockFileSlice(
+    enrichedFileUpdates: FileUpdates,
+    deployedSkills: DefaultSkillMetadata[],
+    codingAgents: CodingAgent[],
+  ): Record<string, PackmindLockFileEntry> {
+    const syntheticUserId = createUserId('default-skill-author');
+    const skillVersions: SkillVersion[] = deployedSkills.map((skill) => ({
+      id: createSkillVersionId(`default-${skill.slug}-${skill.version}`),
+      skillId: createSkillId(skill.slug),
+      version: skill.version,
+      userId: syntheticUserId,
+      name: skill.name,
+      slug: skill.slug,
+      description: '',
+      prompt: '',
+    }));
+
+    const lockFile = this.packmindLockFileService.buildLockFile({
+      fileModifications: enrichedFileUpdates.createOrUpdate.filter(
+        (file) => file.artifactType && file.artifactId,
+      ),
+      recipeVersions: [],
+      standardVersions: [],
+      skillVersions,
+      codingAgents,
+      packageSlugs: [],
+      artifactSpaceIds: {},
+      artifactPackageIds: {},
+      includeInstalledAt: false,
+    });
+
+    return lockFile.artifacts;
   }
 
   private mergeFileUpdates(target: FileUpdates, source: FileUpdates): void {
