@@ -43,7 +43,7 @@ jobs:
         run: |
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           MAX_LENGTH=3800
-          REPORT=$(cat doc-audit-report.md)
+          REPORT=$(cat cli-version-report.md)
           if [ ${#REPORT} -gt $MAX_LENGTH ]; then
             REPORT="${REPORT:0:$MAX_LENGTH}..."$'\n\n'"Full report: $RUN_URL"
           else
