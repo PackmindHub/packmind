@@ -17,14 +17,20 @@ import {
   LuTerminal,
   LuTriangleAlert,
 } from 'react-icons/lu';
+import { SiClaude, SiGithubcopilot } from 'react-icons/si';
+import type { IconType } from 'react-icons';
 import {
   AGENT_LABEL,
-  AGENT_MONOGRAM,
   type Agent,
   type CoverageView,
   type Marketplace,
   type MarketplaceState,
 } from '../types';
+
+const AGENT_ICON: Record<Agent, IconType> = {
+  'Claude Code': SiClaude,
+  Copilot: SiGithubcopilot,
+};
 
 type MarketplaceRowProps = {
   marketplace: Marketplace;
@@ -238,25 +244,28 @@ type AgentBadgesProps = {
 function AgentBadges({ agents, dimmed }: Readonly<AgentBadgesProps>) {
   return (
     <PMHStack gap={1}>
-      {agents.map((a) => (
-        <PMTooltip key={a} label={AGENT_LABEL[a]} showArrow openDelay={200}>
-          <PMBox
-            bg="background.tertiary"
-            color={dimmed ? 'text.faded' : 'text.secondary'}
-            paddingX={1.5}
-            paddingY="2px"
-            borderRadius="sm"
-            fontSize="10px"
-            fontWeight="semibold"
-            letterSpacing="0.04em"
-            fontFamily="mono"
-            lineHeight={1.4}
-            aria-label={AGENT_LABEL[a]}
-          >
-            {AGENT_MONOGRAM[a]}
-          </PMBox>
-        </PMTooltip>
-      ))}
+      {agents.map((a) => {
+        const Icon = AGENT_ICON[a];
+        return (
+          <PMTooltip key={a} label={AGENT_LABEL[a]} showArrow openDelay={200}>
+            <PMBox
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              bg="background.tertiary"
+              color={dimmed ? 'text.faded' : 'text.secondary'}
+              width="20px"
+              height="18px"
+              borderRadius="sm"
+              aria-label={AGENT_LABEL[a]}
+            >
+              <PMIcon fontSize="11px">
+                <Icon />
+              </PMIcon>
+            </PMBox>
+          </PMTooltip>
+        );
+      })}
     </PMHStack>
   );
 }

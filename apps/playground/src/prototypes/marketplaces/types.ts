@@ -1,10 +1,5 @@
 export type Agent = 'Claude Code' | 'Copilot';
 
-export const AGENT_MONOGRAM: Record<Agent, string> = {
-  'Claude Code': 'CC',
-  Copilot: 'GC',
-};
-
 export const AGENT_LABEL: Record<Agent, string> = {
   'Claude Code': 'Claude Code',
   Copilot: 'GitHub Copilot',
