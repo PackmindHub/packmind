@@ -20,44 +20,62 @@ describe('LockFileRepository', () => {
   });
 
   describe('read', () => {
-    describe('when lock file exists', () => {
+    describe('when a v2 lock file exists', () => {
       const lockFileContent: PackmindLockFile = {
-        lockfileVersion: 1,
+        lockfileVersion: 2,
         packageSlugs: ['my-package'],
         agents: ['claude', 'packmind'],
         installedAt: '2026-01-01T00:00:00.000Z',
         artifacts: {
-          'standard:my-standard': {
+          'user:standard:my-standard': {
             name: 'My Standard',
             type: 'standard',
             id: 'std-123',
             version: 3,
             spaceId: 'space-1',
             packageIds: ['pkg-1'],
+            source: 'user',
             files: [
               { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
             ],
           },
-          'command:my-command': {
+          'user:command:my-command': {
             name: 'My Command',
             type: 'command',
             id: 'cmd-456',
             version: 1,
             spaceId: 'space-1',
             packageIds: ['pkg-1', 'pkg-2'],
+            source: 'user',
             files: [
               { path: '.packmind/commands/my-command.md', agent: 'packmind' },
             ],
           },
-          'skill:my-skill': {
+          'user:skill:my-skill': {
             name: 'My Skill',
             type: 'skill',
             id: 'skl-789',
             version: 2,
             spaceId: 'space-2',
             packageIds: [],
+            source: 'user',
             files: [
               { path: '.claude/skills/my-skill/main.md', agent: 'claude' },
+            ],
+          },
+          'default:skill:create-skill': {
+            name: 'Create Skill',
+            type: 'skill',
+            id: 'create-skill',
+            version: 1,
+            spaceId: '',
+            packageIds: [],
+            source: 'default',
+            files: [
+              {
+                path: '.claude/skills/create-skill/main.md',
+                agent: 'claude',
+              },
             ],
           },
         },
@@ -78,8 +96,111 @@ describe('LockFileRepository', () => {
         );
       });
 
-      it('returns the parsed lock file', () => {
+      it('returns the parsed lock file as-is (no migration)', () => {
         expect(result).toEqual(lockFileContent);
+      });
+    });
+
+    describe('when a v1 lock file exists (migration path)', () => {
+      const v1OnDisk = {
+        lockfileVersion: 1,
+        cliVersion: '0.27.0',
+        packageSlugs: ['my-package'],
+        agents: ['claude', 'packmind'],
+        installedAt: '2026-01-01T00:00:00.000Z',
+        artifacts: {
+          'standard:my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'std-123',
+            version: 3,
+            spaceId: 'space-1',
+            packageIds: ['pkg-1'],
+            files: [
+              { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+            ],
+          },
+          'skill:my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'skl-789',
+            version: 2,
+            spaceId: 'space-2',
+            packageIds: [],
+            files: [
+              { path: '.claude/skills/my-skill/main.md', agent: 'claude' },
+            ],
+          },
+        },
+      };
+
+      let result: PackmindLockFile | null;
+
+      beforeEach(async () => {
+        mockFs.readFile.mockResolvedValue(JSON.stringify(v1OnDisk));
+
+        result = await repository.read('/project');
+      });
+
+      it('returns a non-null lock file (v1 is accepted)', () => {
+        expect(result).not.toBeNull();
+      });
+
+      it('bumps lockfileVersion to 2 on the returned object', () => {
+        expect(result?.lockfileVersion).toBe(2);
+      });
+
+      it('rewrites every map key under the user: prefix', () => {
+        expect(Object.keys(result?.artifacts ?? {}).sort()).toEqual([
+          'user:skill:my-skill',
+          'user:standard:my-standard',
+        ]);
+      });
+
+      it('tags every migrated entry with source: "user"', () => {
+        for (const entry of Object.values(result?.artifacts ?? {})) {
+          expect(entry.source).toBe('user');
+        }
+      });
+
+      it('preserves every existing field on each migrated entry', () => {
+        expect(result?.artifacts['user:standard:my-standard']).toEqual({
+          name: 'My Standard',
+          type: 'standard',
+          id: 'std-123',
+          version: 3,
+          spaceId: 'space-1',
+          packageIds: ['pkg-1'],
+          source: 'user',
+          files: [
+            { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
+          ],
+        });
+        expect(result?.artifacts['user:skill:my-skill']).toEqual({
+          name: 'My Skill',
+          type: 'skill',
+          id: 'skl-789',
+          version: 2,
+          spaceId: 'space-2',
+          packageIds: [],
+          source: 'user',
+          files: [{ path: '.claude/skills/my-skill/main.md', agent: 'claude' }],
+        });
+      });
+
+      it('preserves top-level fields (cliVersion, packageSlugs, agents, installedAt)', () => {
+        expect(result?.cliVersion).toBe('0.27.0');
+        expect(result?.packageSlugs).toEqual(['my-package']);
+        expect(result?.agents).toEqual(['claude', 'packmind']);
+        expect(result?.installedAt).toBe('2026-01-01T00:00:00.000Z');
+      });
+
+      it('does NOT rewrite the on-disk file', () => {
+        expect(mockFs.writeFile).not.toHaveBeenCalled();
+      });
+
+      it('does NOT log any migration message (silent migration)', () => {
+        expect(consoleLogger.logWarningConsole).not.toHaveBeenCalled();
       });
     });
 
@@ -113,23 +234,31 @@ describe('LockFileRepository', () => {
       it.each([
         [
           'missing artifacts',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01"}',
+          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01"}',
         ],
         [
           'artifacts is an array',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":[]}',
+          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":[]}',
         ],
         [
           'artifacts is a string',
-          '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":"bad"}',
+          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":"bad"}',
         ],
         [
           'missing packageSlugs',
-          '{"lockfileVersion":1,"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          '{"lockfileVersion":2,"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
         ],
         [
           'missing agents',
-          '{"lockfileVersion":1,"packageSlugs":[],"installedAt":"2026-01-01","artifacts":{}}',
+          '{"lockfileVersion":2,"packageSlugs":[],"installedAt":"2026-01-01","artifacts":{}}',
+        ],
+        [
+          'unsupported lockfileVersion (3)',
+          '{"lockfileVersion":3,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+        ],
+        [
+          'missing lockfileVersion',
+          '{"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
         ],
         ['completely wrong shape', '{}'],
       ])('returns null when %s', async (_label, content) => {
@@ -141,12 +270,31 @@ describe('LockFileRepository', () => {
         expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
       });
 
+      describe('isValidLockFile accepts both v1 and v2', () => {
+        it.each([
+          [
+            'v1',
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          ],
+          [
+            'v2',
+            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          ],
+        ])('accepts lockfileVersion %s', async (_label, content) => {
+          mockFs.readFile.mockResolvedValue(content);
+
+          const result = await repository.read('/project');
+
+          expect(result).not.toBeNull();
+        });
+      });
+
       describe('when targetId is not a string', () => {
         let result: PackmindLockFile | null;
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":123,"artifacts":{}}',
+            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":123,"artifacts":{}}',
           );
 
           result = await repository.read('/project');
@@ -166,7 +314,7 @@ describe('LockFileRepository', () => {
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":"target-abc","artifacts":{}}',
+            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":"target-abc","artifacts":{}}',
           );
 
           result = await repository.read('/project');
@@ -203,19 +351,20 @@ describe('LockFileRepository', () => {
 
   describe('write', () => {
     const lockFile: PackmindLockFile = {
-      lockfileVersion: 1,
+      lockfileVersion: 2,
       cliVersion: '0.28.1-next',
       packageSlugs: ['my-package'],
       agents: ['claude', 'packmind'],
       installedAt: '2026-01-01T00:00:00.000Z',
       artifacts: {
-        'standard:my-standard': {
+        'user:standard:my-standard': {
           name: 'My Standard',
           type: 'standard',
           id: 'std-123',
           version: 3,
           spaceId: 'space-1',
           packageIds: ['pkg-1'],
+          source: 'user',
           files: [
             { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
           ],
