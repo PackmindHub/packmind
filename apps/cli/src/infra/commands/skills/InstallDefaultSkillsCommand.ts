@@ -10,6 +10,11 @@ import {
 } from '../../utils/consoleLogger';
 import { handleIncompatibleInstalledSkillsSilently } from './incompatibleSkillsHandler';
 import { reportEnsureCliVersionOutcome } from '../ensureCliVersionReporter';
+import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
+import {
+  buildSkillsSkippedWarning,
+  configuredAgentsSupportSkills,
+} from '../skillsCapabilityWarning';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -40,6 +45,14 @@ export const installDefaultSkillsCommand = command({
         reportEnsureCliVersionOutcome(outcome, CLI_VERSION);
       } catch {
         // Silently swallow drift-check failures; skills init must continue.
+      }
+
+      const config = await new ConfigFileRepository().readConfig(baseDirectory);
+      const configuredAgents = config?.agents ?? [];
+
+      if (!configuredAgentsSupportSkills(configuredAgents)) {
+        logWarningConsole(buildSkillsSkippedWarning(configuredAgents));
+        return;
       }
 
       logInfoConsole('Installing default skills...');

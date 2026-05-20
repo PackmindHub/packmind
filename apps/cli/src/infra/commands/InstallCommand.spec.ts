@@ -43,7 +43,12 @@ jest.mock('./bootstrapInstallContext', () => ({
 }));
 
 jest.mock('../repositories/ConfigFileRepository', () => ({
-  ConfigFileRepository: jest.fn().mockImplementation(() => ({})),
+  ConfigFileRepository: jest.fn().mockImplementation(() => ({
+    readConfig: jest.fn().mockResolvedValue({
+      packages: {},
+      agents: ['claude'],
+    }),
+  })),
 }));
 
 jest.mock('../../application/services/AgentArtifactDetectionService', () => ({
@@ -56,6 +61,9 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
 import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+
+const MockedConfigFileRepository = ConfigFileRepository as unknown as jest.Mock;
 
 function makeDirent(name: string, isDir = true): fs.Dirent {
   return {
@@ -762,6 +770,102 @@ describe('installCommand', () => {
 
       it('does not exit with error', () => {
         expect(processExitSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no configured agent supports skills', () => {
+      beforeEach(async () => {
+        MockedConfigFileRepository.mockImplementationOnce(() => ({
+          readConfig: jest.fn().mockResolvedValue({
+            packages: {},
+            agents: ['agents_md'],
+          }),
+        }));
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+
+      it('logs a warning explaining that configured agents do not support skills', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('do not support skills'),
+        );
+      });
+
+      it('includes the actionable hint pointing to packmind-cli config agents', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('packmind-cli config agents'),
+        );
+      });
+
+      it('lists the offending configured agent in the warning', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('agents_md'),
+        );
+      });
+    });
+
+    describe('when readConfig returns null', () => {
+      beforeEach(async () => {
+        MockedConfigFileRepository.mockImplementationOnce(() => ({
+          readConfig: jest.fn().mockResolvedValue(null),
+        }));
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+
+      it('warns that no agents are configured', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('no coding agents are configured'),
+        );
+      });
+    });
+
+    describe('when configured agents are mixed and include a capable one', () => {
+      beforeEach(async () => {
+        MockedConfigFileRepository.mockImplementationOnce(() => ({
+          readConfig: jest.fn().mockResolvedValue({
+            packages: {},
+            agents: ['agents_md', 'claude'],
+          }),
+        }));
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('still calls installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).toHaveBeenCalled();
+      });
+
+      it('does not log the no-capable-agent warning', () => {
+        expect(mockConsoleLogger.logWarningConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('do not support skills'),
+        );
       });
     });
   });

@@ -19,6 +19,10 @@ import {
 } from '../../domain/useCases/IEnsureCliVersionUseCase';
 import { handleIncompatibleInstalledSkillsSilently } from './skills/incompatibleSkillsHandler';
 import { reportEnsureCliVersionOutcome } from './ensureCliVersionReporter';
+import {
+  buildSkillsSkippedWarning,
+  configuredAgentsSupportSkills,
+} from './skillsCapabilityWarning';
 
 export type InstallDefaultSkillsFunction = (options: {
   includeBeta: boolean;
@@ -89,48 +93,55 @@ export async function initHandler(
 
   await configAgentsHandler(configAgentsDeps);
 
-  // Step 2: Run skills init flow
-  logInfoConsole('Installing default skills...');
+  // Step 2: Skip skills install if no configured agent can render them
+  const config = await configRepository.readConfig(baseDirectory);
+  const configuredAgents = config?.agents ?? [];
 
-  const result = await installDefaultSkills({
-    includeBeta: false,
-    cliVersion,
-  });
-
-  if (
-    result.incompatibleInstalledSkills &&
-    result.incompatibleInstalledSkills.length > 0
-  ) {
-    await handleIncompatibleInstalledSkillsSilently(
-      result.incompatibleInstalledSkills,
-      baseDirectory,
-    );
-  }
-
-  if (result.errors.length > 0) {
-    return {
-      success: false,
-      errors: result.errors,
-    };
-  }
-
-  const totalFiles = result.filesCreated + result.filesUpdated;
-
-  if (result.skippedSkillsCount > 0) {
-    logWarningConsole(
-      `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of packmind-cli. Run "${formatCommand('packmind-cli update')}" to get the latest version.`,
-    );
-  }
-
-  if (totalFiles === 0) {
-    logInfoConsole('Default skills are already up to date.');
+  if (!configuredAgentsSupportSkills(configuredAgents)) {
+    logWarningConsole(buildSkillsSkippedWarning(configuredAgents));
   } else {
-    logSuccessConsole('Default skills installed successfully!');
-    if (result.filesCreated > 0) {
-      logInfoConsole(`  Files created: ${result.filesCreated}`);
+    logInfoConsole('Installing default skills...');
+
+    const result = await installDefaultSkills({
+      includeBeta: false,
+      cliVersion,
+    });
+
+    if (
+      result.incompatibleInstalledSkills &&
+      result.incompatibleInstalledSkills.length > 0
+    ) {
+      await handleIncompatibleInstalledSkillsSilently(
+        result.incompatibleInstalledSkills,
+        baseDirectory,
+      );
     }
-    if (result.filesUpdated > 0) {
-      logInfoConsole(`  Files updated: ${result.filesUpdated}`);
+
+    if (result.errors.length > 0) {
+      return {
+        success: false,
+        errors: result.errors,
+      };
+    }
+
+    const totalFiles = result.filesCreated + result.filesUpdated;
+
+    if (result.skippedSkillsCount > 0) {
+      logWarningConsole(
+        `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of packmind-cli. Run "${formatCommand('packmind-cli update')}" to get the latest version.`,
+      );
+    }
+
+    if (totalFiles === 0) {
+      logInfoConsole('Default skills are already up to date.');
+    } else {
+      logSuccessConsole('Default skills installed successfully!');
+      if (result.filesCreated > 0) {
+        logInfoConsole(`  Files created: ${result.filesCreated}`);
+      }
+      if (result.filesUpdated > 0) {
+        logInfoConsole(`  Files updated: ${result.filesUpdated}`);
+      }
     }
   }
 
