@@ -38,7 +38,7 @@ export function parseGitRepoInfo(gitRemoteUrl: string): {
   // Handle SSH format: git@host.com:owner/repo.git or git@host.com:owner/repo
   // Also handles trailing slashes (e.g., https://host.com/owner/repo/)
   // Generic pattern that works for any git host
-  const match = gitRemoteUrl.match(/[/:]([^/:]+)\/([^/.]+)(?:\.git)?\/?$/i);
+  const match = gitRemoteUrl.match(/[/:]([^/:]+)\/([^/]+?)(?:\.git)?\/?$/i);
 
   if (match) {
     return {
