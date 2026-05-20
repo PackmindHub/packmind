@@ -32,11 +32,13 @@ export const ApiKeyGenerator: React.FC<IApiKeyGeneratorProps> = ({
       {hasExistingKey && (
         <PMAlert.Root status="info">
           <PMAlert.Indicator />
-          <PMAlert.Title>Active API Key</PMAlert.Title>
-          <PMAlert.Description>
-            You have an active API key that expires on{' '}
-            {formatExpirationDate(existingKeyExpiresAt)}
-          </PMAlert.Description>
+          <PMAlert.Content>
+            <PMAlert.Title>Active API Key</PMAlert.Title>
+            <PMAlert.Description>
+              You have an active API key that expires on{' '}
+              {formatExpirationDate(existingKeyExpiresAt)}
+            </PMAlert.Description>
+          </PMAlert.Content>
         </PMAlert.Root>
       )}
 
@@ -44,11 +46,13 @@ export const ApiKeyGenerator: React.FC<IApiKeyGeneratorProps> = ({
         <PMVStack gap={3}>
           <PMAlert.Root status="warning">
             <PMAlert.Indicator />
-            <PMAlert.Title>Replace Existing API Key?</PMAlert.Title>
-            <PMAlert.Description>
-              This will invalidate your current API key. Any applications using
-              the old key will need to be updated.
-            </PMAlert.Description>
+            <PMAlert.Content>
+              <PMAlert.Title>Replace Existing API Key?</PMAlert.Title>
+              <PMAlert.Description>
+                This will invalidate your current API key. Any applications
+                using the old key will need to be updated.
+              </PMAlert.Description>
+            </PMAlert.Content>
           </PMAlert.Root>
 
           <PMHStack gap={2}>
@@ -78,12 +82,14 @@ export const ApiKeyGenerator: React.FC<IApiKeyGeneratorProps> = ({
       {isError && (
         <PMAlert.Root status="error">
           <PMAlert.Indicator />
-          <PMAlert.Title>Error Generating API Key</PMAlert.Title>
-          <PMAlert.Description>
-            {error instanceof Error
-              ? error.message
-              : 'Failed to generate API key. Please try again.'}
-          </PMAlert.Description>
+          <PMAlert.Content>
+            <PMAlert.Title>Error Generating API Key</PMAlert.Title>
+            <PMAlert.Description>
+              {error instanceof Error
+                ? error.message
+                : 'Failed to generate API key. Please try again.'}
+            </PMAlert.Description>
+          </PMAlert.Content>
         </PMAlert.Root>
       )}
 
@@ -91,11 +97,14 @@ export const ApiKeyGenerator: React.FC<IApiKeyGeneratorProps> = ({
         <PMVStack width="full" gap={3} alignItems="stretch">
           <PMAlert.Root status="success">
             <PMAlert.Indicator />
-            <PMAlert.Title>API Key Generated Successfully!</PMAlert.Title>
-            <PMAlert.Description>
-              Copy this key now - it won't be shown again. Expires on{' '}
-              {formatExpirationDate(generatedKeyExpiresAt)}
-            </PMAlert.Description>
+            <PMAlert.Content>
+              <PMAlert.Title>API Key Generated Successfully!</PMAlert.Title>
+              <PMAlert.Description>
+                Copy this key now - it won't be shown again. Set it as the{' '}
+                <code>PACKMIND_API_KEY_V3</code> environment variable. Expires
+                on {formatExpirationDate(generatedKeyExpiresAt)}
+              </PMAlert.Description>
+            </PMAlert.Content>
           </PMAlert.Root>
 
           <PMBox width="full">
