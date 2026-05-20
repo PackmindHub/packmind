@@ -16,5 +16,5 @@ export function buildSkillsSkippedWarning(
     return `Skipping default skills — no coding agents are configured. Run ${configHint} to add one (e.g. claude).`;
   }
 
-  return `Skipping default skills — your configured agents (${configuredAgents.join(', ')}) do not support skills. Run ${configHint} to add a capable agent (e.g. claude).`;
+  return `Skipping default skills — your configured agents (${configuredAgents.join(', ')}) do not support skills. Run ${configHint} to add an agent supporting skills (e.g. claude).`;
 }
