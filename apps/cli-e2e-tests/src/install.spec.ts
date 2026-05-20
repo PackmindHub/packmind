@@ -378,7 +378,7 @@ describeForVersion('>= 0.24.0', 'install command', () => {
           });
 
           it('prints the older-version warning', () => {
-            expect(result.stdout).toContain(
+            expect(result.stderr).toContain(
               'older than the version recorded in packmind-lock.json',
             );
           });
@@ -418,10 +418,11 @@ describeForVersion('>= 0.24.0', 'install command', () => {
           });
 
           it('does not print drift output', () => {
-            expect(result.stdout).not.toContain(
+            const combined = result.stdout + result.stderr;
+            expect(combined).not.toContain(
               'older than the version recorded in packmind-lock.json',
             );
-            expect(result.stdout).not.toContain('CLI upgrade detected');
+            expect(combined).not.toContain('CLI upgrade detected');
           });
         });
       },

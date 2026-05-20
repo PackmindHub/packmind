@@ -86,21 +86,21 @@ describeForVersion('> 0.28.1', 'CLI version drift (skills init)', () => {
         await setupGitRepo(context.testDir);
       });
 
-      describe('when the lockfile records an older CLI version and an obsolete skill', () => {
-        const obsoleteSkillPath = '.claude/skills/fake-obsolete-skill/SKILL.md';
+      describe('when the lockfile records an older CLI version and a skill file unknown to the deployer', () => {
+        const skillPath = '.claude/skills/fake-obsolete-skill/SKILL.md';
         let result: RunCliResult;
 
         beforeEach(async () => {
           updateFile(
             'packmind-lock.json',
             JSON.stringify(
-              buildLockFileWithObsoleteSkill('0.0.1', obsoleteSkillPath),
+              buildLockFileWithObsoleteSkill('0.0.1', skillPath),
               null,
               2,
             ) + '\n',
             context.testDir,
           );
-          seedObsoleteSkillFile(context.testDir, obsoleteSkillPath);
+          seedObsoleteSkillFile(context.testDir, skillPath);
 
           result = await context.runCli('skills init');
         });
@@ -118,17 +118,21 @@ describeForVersion('> 0.28.1', 'CLI version drift (skills init)', () => {
           expect(lockFile.cliVersion).toBe(runningCliVersion);
         });
 
-        it('removes the obsolete skill from disk', () => {
-          expect(fileExists(obsoleteSkillPath, context.testDir)).toBe(false);
-          // The whole skill folder should be pruned by the silent handler.
+        // Anti-regression: the CLI must never delete a skill file purely
+        // because it is listed in the lockfile but not in the deployer's
+        // current default-skill set. That heuristic would also destroy
+        // user-authored skills, so the previous implementation was reverted.
+        it('does not remove the on-disk skill file', () => {
+          expect(fileExists(skillPath, context.testDir)).toBe(true);
           expect(
             fileExists('.claude/skills/fake-obsolete-skill', context.testDir),
-          ).toBe(false);
+          ).toBe(true);
         });
 
-        it('does not prompt the user before deleting', () => {
-          expect(result.stdout).not.toMatch(/Are you sure/i);
-          expect(result.stdout).not.toMatch(/\(y\/n\)/i);
+        it('does not prompt the user before any cleanup', () => {
+          const combined = result.stdout + result.stderr;
+          expect(combined).not.toMatch(/Are you sure/i);
+          expect(combined).not.toMatch(/\(y\/n\)/i);
         });
       });
 
@@ -160,7 +164,7 @@ describeForVersion('> 0.28.1', 'CLI version drift (skills init)', () => {
         });
 
         it('prints the "older than packmind-lock.json" warning', () => {
-          expect(result.stdout).toContain(
+          expect(result.stderr).toContain(
             'older than the version recorded in packmind-lock.json',
           );
         });
@@ -203,13 +207,15 @@ describeForVersion('> 0.28.1', 'CLI version drift (skills init)', () => {
         });
 
         it('does not print the older-version warning', () => {
-          expect(result.stdout).not.toContain(
+          const combined = result.stdout + result.stderr;
+          expect(combined).not.toContain(
             'older than the version recorded in packmind-lock.json',
           );
         });
 
         it('does not print the upgrade-detected line', () => {
-          expect(result.stdout).not.toContain('CLI upgrade detected');
+          const combined = result.stdout + result.stderr;
+          expect(combined).not.toContain('CLI upgrade detected');
         });
       });
     },
