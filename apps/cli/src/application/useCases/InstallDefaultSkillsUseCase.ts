@@ -10,6 +10,10 @@ import * as path from 'path';
 import semver from 'semver';
 import { parseSkillMdContent } from '@packmind/node-utils';
 import { stripPrerelease } from '../utils/normalizeSemver';
+import {
+  PackmindLockFile,
+  PackmindLockFileEntry,
+} from '../../domain/repositories/PackmindLockFile';
 
 export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase {
   constructor(private readonly repositories: IPackmindRepositories) {}
@@ -126,7 +130,60 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
       }),
     );
 
+    await this.mergeLockFileSlice(
+      baseDirectory,
+      response.lockFileSlice ?? {},
+      command.cliVersion,
+    );
+
     return result;
+  }
+
+  /**
+   * Merges the server-emitted default-skill `lockFileSlice` into the local
+   * `packmind-lock.json`.
+   *
+   * - If no lockfile exists, a fresh `lockfileVersion: 2` lockfile is created
+   *   containing only the default-skill entries.
+   * - Otherwise the existing lockfile is loaded (with silent v1→v2 migration
+   *   performed by {@link LockFileRepository.read}) and the slice is merged
+   *   into `artifacts` via spread-replace by key. All other top-level fields
+   *   are preserved.
+   *
+   * User-authored and package-distributed entries (`user:...` keys) are NEVER
+   * touched by this merge — they remain byte-equal across invocations. This
+   * preservation is a hard safety invariant enforced by the unit-level
+   * regression test in {@link InstallDefaultSkillsUseCase.spec.ts}.
+   */
+  private async mergeLockFileSlice(
+    baseDirectory: string,
+    lockFileSlice: Record<string, PackmindLockFileEntry>,
+    cliVersion?: string,
+  ): Promise<void> {
+    const existing =
+      await this.repositories.lockFileRepository.read(baseDirectory);
+
+    let lockFile: PackmindLockFile;
+    if (existing === null) {
+      lockFile = {
+        lockfileVersion: 2,
+        cliVersion,
+        packageSlugs: [],
+        agents: [],
+        artifacts: { ...lockFileSlice },
+      };
+    } else {
+      lockFile = {
+        ...existing,
+        lockfileVersion: 2,
+        artifacts: {
+          ...existing.artifacts,
+          ...lockFileSlice,
+        },
+      };
+    }
+
+    await this.repositories.lockFileRepository.write(baseDirectory, lockFile);
   }
 
   private async createOrUpdateFile(

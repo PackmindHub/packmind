@@ -9,12 +9,32 @@ import {
   createMockSkillsGateway,
   createMockPackmindGateway,
 } from '../../mocks/createMockGateways';
+import {
+  PackmindLockFile,
+  PackmindLockFileEntry,
+} from '../../domain/repositories/PackmindLockFile';
 
 jest.mock('fs/promises');
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 
 const BASE_DIR = '/project';
+
+function makeLockFileEntry(
+  overrides: Partial<PackmindLockFileEntry>,
+): PackmindLockFileEntry {
+  return {
+    name: 'entry',
+    type: 'skill',
+    id: 'entry',
+    version: 1,
+    spaceId: '',
+    packageIds: [],
+    files: [],
+    source: 'user',
+    ...overrides,
+  };
+}
 
 function makeSkillContent(
   name: string,
@@ -36,6 +56,7 @@ describe('InstallDefaultSkillsUseCase', () => {
   let useCase: InstallDefaultSkillsUseCase;
   let mockGetDefaults: jest.Mock;
   let mockReadLockFile: jest.Mock;
+  let mockWriteLockFile: jest.Mock;
 
   beforeEach(() => {
     mockFs.mkdir.mockResolvedValue(undefined);
@@ -45,9 +66,11 @@ describe('InstallDefaultSkillsUseCase', () => {
     mockGetDefaults = jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skippedSkillsCount: 0,
+      lockFileSlice: {},
     });
 
     mockReadLockFile = jest.fn().mockResolvedValue(null);
+    mockWriteLockFile = jest.fn().mockResolvedValue(undefined);
 
     const skillsGateway = createMockSkillsGateway({
       getDefaults: mockGetDefaults,
@@ -60,6 +83,7 @@ describe('InstallDefaultSkillsUseCase', () => {
     });
     const lockFileRepo = createMockLockFileRepository({
       read: mockReadLockFile,
+      write: mockWriteLockFile,
     });
     const repositories = createMockPackmindRepositories({
       packmindGateway,
@@ -465,6 +489,424 @@ describe('InstallDefaultSkillsUseCase', () => {
 
     it('returns empty skippedIncompatibleSkillNames', () => {
       expect(result.skippedIncompatibleSkillNames).toHaveLength(0);
+    });
+  });
+
+  describe('lockfile merge', () => {
+    const defaultEntry: PackmindLockFileEntry = makeLockFileEntry({
+      name: 'packmind-create-skill',
+      type: 'skill',
+      id: 'packmind-create-skill',
+      version: 1,
+      source: 'default',
+      files: [
+        {
+          path: '.claude/skills/packmind-create-skill/SKILL.md',
+          agent: 'claude',
+          isSkillDefinition: true,
+        },
+      ],
+    });
+
+    const newDefaultEntry: PackmindLockFileEntry = makeLockFileEntry({
+      name: 'packmind-new-default',
+      type: 'skill',
+      id: 'packmind-new-default',
+      version: 1,
+      source: 'default',
+      files: [
+        {
+          path: '.claude/skills/packmind-new-default/SKILL.md',
+          agent: 'claude',
+          isSkillDefinition: true,
+        },
+      ],
+    });
+
+    beforeEach(() => {
+      mockFs.access.mockRejectedValue(new Error('ENOENT'));
+    });
+
+    describe('when no lockfile exists on disk', () => {
+      beforeEach(() => {
+        mockReadLockFile.mockResolvedValue(null);
+        mockGetDefaults.mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skippedSkillsCount: 0,
+          lockFileSlice: {
+            'default:skill:packmind-create-skill': defaultEntry,
+          },
+        });
+      });
+
+      it('writes a fresh lockfileVersion: 2 lockfile with the slice as artifacts', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(mockWriteLockFile).toHaveBeenCalledTimes(1);
+        const [writtenBaseDir, writtenLockFile] = mockWriteLockFile.mock
+          .calls[0] as [string, PackmindLockFile];
+        expect(writtenBaseDir).toBe(BASE_DIR);
+        expect(writtenLockFile).toEqual({
+          lockfileVersion: 2,
+          cliVersion: '0.25.0',
+          packageSlugs: [],
+          agents: [],
+          artifacts: {
+            'default:skill:packmind-create-skill': defaultEntry,
+          },
+        });
+      });
+    });
+
+    describe('when existing lockfile is v1 with user-skill entries (migrated on read)', () => {
+      // The migrated form is what LockFileRepository.read returns. We simulate
+      // that by returning the v2-shaped equivalent (per Group A.4 semantics).
+      const migratedUserEntry: PackmindLockFileEntry = makeLockFileEntry({
+        name: 'my-custom-skill',
+        type: 'skill',
+        id: 'my-custom-skill',
+        version: 3,
+        source: 'user',
+        files: [
+          {
+            path: '.claude/skills/my-custom-skill/SKILL.md',
+            agent: 'claude',
+            isSkillDefinition: true,
+          },
+        ],
+      });
+
+      beforeEach(() => {
+        mockReadLockFile.mockResolvedValue({
+          lockfileVersion: 2,
+          cliVersion: '0.20.0',
+          packageSlugs: ['@my-space/my-package'],
+          agents: ['claude'],
+          artifacts: {
+            'user:skill:my-custom-skill': migratedUserEntry,
+          },
+        } satisfies PackmindLockFile);
+
+        mockGetDefaults.mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skippedSkillsCount: 0,
+          lockFileSlice: {
+            'default:skill:packmind-create-skill': defaultEntry,
+          },
+        });
+      });
+
+      it('preserves the user-skill entry under its re-keyed form', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(writtenLockFile.artifacts['user:skill:my-custom-skill']).toEqual(
+          migratedUserEntry,
+        );
+      });
+
+      it('merges default-skill entries into artifacts', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(
+          writtenLockFile.artifacts['default:skill:packmind-create-skill'],
+        ).toEqual(defaultEntry);
+      });
+
+      it('persists lockfileVersion: 2', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(writtenLockFile.lockfileVersion).toBe(2);
+      });
+
+      it('preserves other top-level fields (packageSlugs, agents, cliVersion)', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(writtenLockFile.packageSlugs).toEqual(['@my-space/my-package']);
+        expect(writtenLockFile.agents).toEqual(['claude']);
+        expect(writtenLockFile.cliVersion).toBe('0.20.0');
+      });
+    });
+
+    describe('when existing lockfileVersion: 2 has no default skills', () => {
+      beforeEach(() => {
+        mockReadLockFile.mockResolvedValue({
+          lockfileVersion: 2,
+          cliVersion: '0.25.0',
+          packageSlugs: [],
+          agents: ['claude'],
+          artifacts: {},
+        } satisfies PackmindLockFile);
+
+        mockGetDefaults.mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skippedSkillsCount: 0,
+          lockFileSlice: {
+            'default:skill:packmind-create-skill': defaultEntry,
+          },
+        });
+      });
+
+      it('adds the default entries', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(writtenLockFile.artifacts).toEqual({
+          'default:skill:packmind-create-skill': defaultEntry,
+        });
+      });
+    });
+
+    describe('when existing lockfileVersion: 2 has stale default-skill entries', () => {
+      const staleDefaultEntry: PackmindLockFileEntry = makeLockFileEntry({
+        name: 'packmind-stale-skill',
+        type: 'skill',
+        id: 'packmind-stale-skill',
+        version: 1,
+        source: 'default',
+        files: [
+          {
+            path: '.claude/skills/packmind-stale-skill/SKILL.md',
+            agent: 'claude',
+            isSkillDefinition: true,
+          },
+        ],
+      });
+
+      beforeEach(() => {
+        mockReadLockFile.mockResolvedValue({
+          lockfileVersion: 2,
+          cliVersion: '0.25.0',
+          packageSlugs: [],
+          agents: ['claude'],
+          artifacts: {
+            'default:skill:packmind-stale-skill': staleDefaultEntry,
+          },
+        } satisfies PackmindLockFile);
+
+        mockGetDefaults.mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skippedSkillsCount: 0,
+          lockFileSlice: {
+            'default:skill:packmind-create-skill': defaultEntry,
+          },
+        });
+      });
+
+      it('preserves stale default-skill entries (cleanup is out of scope)', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(
+          writtenLockFile.artifacts['default:skill:packmind-stale-skill'],
+        ).toEqual(staleDefaultEntry);
+        expect(
+          writtenLockFile.artifacts['default:skill:packmind-create-skill'],
+        ).toEqual(defaultEntry);
+      });
+    });
+
+    /**
+     * MANDATORY regression test per the safety contract from the
+     * predecessor sprint's revert (commit 76399bfb8).
+     *
+     * Default-skill operations MUST NEVER touch user-authored entries. We
+     * pre-seed a lockfile with `user:skill:my-custom-skill` + an existing
+     * `default:skill:packmind-create-skill`, then run the use case with a
+     * slice that updates the default entry AND adds a new default entry.
+     * The user entry MUST be byte-equal before and after.
+     */
+    describe('MANDATORY: user-skill preservation regression', () => {
+      const userSkillEntry: PackmindLockFileEntry = makeLockFileEntry({
+        name: 'my-custom-skill',
+        type: 'skill',
+        id: 'my-custom-skill',
+        version: 7,
+        spaceId: 'space-1',
+        packageIds: ['pkg-1', 'pkg-2'],
+        source: 'user',
+        files: [
+          {
+            path: '.claude/skills/my-custom-skill/SKILL.md',
+            agent: 'claude',
+            isSkillDefinition: true,
+          },
+        ],
+      });
+
+      const oldDefaultEntry: PackmindLockFileEntry = makeLockFileEntry({
+        name: 'packmind-create-skill',
+        type: 'skill',
+        id: 'packmind-create-skill',
+        version: 1,
+        source: 'default',
+        files: [
+          {
+            path: '.claude/skills/packmind-create-skill/SKILL.md',
+            agent: 'claude',
+            isSkillDefinition: true,
+          },
+        ],
+      });
+
+      const updatedDefaultEntry: PackmindLockFileEntry = makeLockFileEntry({
+        name: 'packmind-create-skill',
+        type: 'skill',
+        id: 'packmind-create-skill',
+        version: 2,
+        source: 'default',
+        files: [
+          {
+            path: '.claude/skills/packmind-create-skill/SKILL.md',
+            agent: 'claude',
+            isSkillDefinition: true,
+          },
+        ],
+      });
+
+      const seededLockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        cliVersion: '0.25.0',
+        packageSlugs: ['@my-space/my-package'],
+        agents: ['claude'],
+        artifacts: {
+          'user:skill:my-custom-skill': userSkillEntry,
+          'default:skill:packmind-create-skill': oldDefaultEntry,
+        },
+      };
+      // Snapshot a deep clone of the user-skill entry BEFORE execute so the
+      // post-execute comparison really proves byte-equality (no shared ref).
+      const userSkillEntrySnapshotBefore: PackmindLockFileEntry = JSON.parse(
+        JSON.stringify(userSkillEntry),
+      );
+
+      beforeEach(() => {
+        mockReadLockFile.mockResolvedValue(
+          // Deep-clone so the use case cannot mutate our seed.
+          JSON.parse(JSON.stringify(seededLockFile)) as PackmindLockFile,
+        );
+
+        mockGetDefaults.mockResolvedValue({
+          fileUpdates: { createOrUpdate: [], delete: [] },
+          skippedSkillsCount: 0,
+          lockFileSlice: {
+            'default:skill:packmind-create-skill': updatedDefaultEntry,
+            'default:skill:packmind-new-default': newDefaultEntry,
+          },
+        });
+      });
+
+      it('keeps the user-skill entry byte-equal after execute', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(writtenLockFile.artifacts['user:skill:my-custom-skill']).toEqual(
+          userSkillEntrySnapshotBefore,
+        );
+        // Byte-equality on the serialized form — the strongest possible
+        // assertion that the user-skill entry was not mutated in any way.
+        expect(
+          JSON.stringify(
+            writtenLockFile.artifacts['user:skill:my-custom-skill'],
+          ),
+        ).toBe(JSON.stringify(userSkillEntrySnapshotBefore));
+      });
+
+      it('updates the existing default-skill entry', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(
+          writtenLockFile.artifacts['default:skill:packmind-create-skill'],
+        ).toEqual(updatedDefaultEntry);
+      });
+
+      it('adds the new default-skill entry', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(
+          writtenLockFile.artifacts['default:skill:packmind-new-default'],
+        ).toEqual(newDefaultEntry);
+      });
+
+      it('does not delete or rename the user-skill key', async () => {
+        await useCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+          string,
+          PackmindLockFile,
+        ];
+        expect(
+          Object.prototype.hasOwnProperty.call(
+            writtenLockFile.artifacts,
+            'user:skill:my-custom-skill',
+          ),
+        ).toBe(true);
+      });
     });
   });
 });
