@@ -69,7 +69,7 @@ jobs:
             REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
           fi
           PAYLOAD=$(jq -n \
-            --arg channel "${{ secrets.SLACK_CHANNEL_ID }}" \
+            --arg channel "${{ secrets.SLACK_CHANNEL_DATADOG_ID }}" \
             --arg text "$REPORT" \
             '{channel: $channel, text: $text}')
           EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
