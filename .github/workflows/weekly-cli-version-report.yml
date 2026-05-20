@@ -1,0 +1,76 @@
+name: Weekly CLI Version Report
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Every Monday at 09:00 UTC (9 AM UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cli-version-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Generate CLI version report
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_APP_KEY: ${{ secrets.DD_APPLICATION_KEY }}
+        run: |
+          node scripts/datadog-cli-version-report.mjs | tee cli-version-report.md
+
+      - name: Publish report to step summary
+        if: always() && hashFiles('cli-version-report.md') != ''
+        run: |
+          {
+            echo "## Packmind CLI Version Usage (last 7 days)"
+            echo ''
+            echo '```'
+            cat cli-version-report.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare Slack payload
+        if: always() && hashFiles('cli-version-report.md') != ''
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MAX_LENGTH=3800
+          REPORT=$(cat cli-version-report.md)
+          if [ ${#REPORT} -gt $MAX_LENGTH ]; then
+            REPORT="${REPORT:0:$MAX_LENGTH}..."$'\n\n'"Full report: $RUN_URL"
+          else
+            REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
+          fi
+          PAYLOAD=$(jq -n \
+            --arg channel "${{ secrets.SLACK_CHANNEL_ID }}" \
+            --arg text "$REPORT" \
+            '{channel: $channel, text: $text}')
+          EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
+          echo "SLACK_PAYLOAD<<${EOF_DELIMITER}" >> "$GITHUB_ENV"
+          echo "$PAYLOAD" >> "$GITHUB_ENV"
+          echo "${EOF_DELIMITER}" >> "$GITHUB_ENV"
+
+      - name: Send report to Slack
+        if: always() && hashFiles('cli-version-report.md') != ''
+        uses: slackapi/slack-github-action@v2
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          payload: ${{ env.SLACK_PAYLOAD }}
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-version-report
+          path: cli-version-report.md
+          if-no-files-found: warn
+          retention-days: 90
