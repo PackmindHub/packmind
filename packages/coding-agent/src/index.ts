@@ -1,6 +1,10 @@
 export * from './domain/AgentConfiguration';
 export * from './domain/repository/ICodingAgentDeployer';
-export { DefaultSkillsDeployResult } from './infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer';
+export {
+  DefaultSkillMetadata,
+  DefaultSkillsDeployer,
+  DefaultSkillsDeployResult,
+} from './infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer';
 export * from './domain/repository/ICodingAgentDeployerRegistry';
 export * from './application/services/DeployerService';
 export * from './application/services/CodingAgentServices';

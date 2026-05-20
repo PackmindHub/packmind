@@ -6,6 +6,8 @@ export type SkillDeployOptions = {
 
 export interface ISkillDeployer {
   slug: string;
+  name: string;
+  version: number;
 
   isBetaSkill(): boolean;
 

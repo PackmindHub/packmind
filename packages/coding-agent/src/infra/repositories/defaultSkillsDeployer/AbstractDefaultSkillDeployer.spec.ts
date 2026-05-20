@@ -6,7 +6,9 @@ describe('AbstractDefaultSkillDeployer', () => {
     describe('when the deployer is not released yet', () => {
       class SampleDeployer extends AbstractDefaultSkillDeployer {
         protected readonly minimumVersion = 'unreleased';
+        protected readonly unsupportedFromVersion = null;
         slug = 'my-super-skill';
+        name = 'My Super Skill';
 
         deploy(): FileUpdates {
           throw new Error('Nope');
@@ -23,7 +25,9 @@ describe('AbstractDefaultSkillDeployer', () => {
     describe('when the deployer has a minimum version', () => {
       class SampleDeployer extends AbstractDefaultSkillDeployer {
         protected readonly minimumVersion = '0.21.0';
+        protected readonly unsupportedFromVersion = null;
         slug = 'my-super-skill';
+        name = 'My Super Skill';
 
         deploy(): FileUpdates {
           throw new Error('Nope');
