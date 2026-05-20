@@ -39,6 +39,10 @@
     "diff": "^8.0.3",
     "inquirer": "^13.0.2",
     "zod": "^4.3.5",
-    "semver": "^7.7.4"
+    "semver": "^7.7.4",
+    "which": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/which": "^3.0.4"
   }
 }

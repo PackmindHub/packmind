@@ -22,8 +22,13 @@ jest.mock('../../PackmindCliHexa', () => ({
 jest.mock('../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
+  logInfoConsole: jest.fn(),
   logWarningConsole: jest.fn(),
   formatCommand: jest.fn((cmd: string) => cmd),
+}));
+
+jest.mock('./skills/incompatibleSkillsHandler', () => ({
+  handleIncompatibleInstalledSkillsSilently: jest.fn(),
 }));
 
 jest.mock('@packmind/logger', () => ({
@@ -49,6 +54,7 @@ import * as path from 'path';
 import { installHandler, mergeInstallResults } from './InstallCommand';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
+import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 
 function makeDirent(name: string, isDir = true): fs.Dirent {
@@ -68,6 +74,9 @@ function makeDirent(name: string, isDir = true): fs.Dirent {
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
+const mockIncompatibleSkillsHandler = incompatibleSkillsHandler as jest.Mocked<
+  typeof incompatibleSkillsHandler
+>;
 const MockPackmindCliHexa = PackmindCliHexa as jest.MockedClass<
   typeof PackmindCliHexa
 >;
@@ -102,6 +111,7 @@ describe('installCommand', () => {
   let mockInstall: jest.Mock;
   let mockTryGetGitRepositoryRoot: jest.Mock;
   let mockInstallDefaultSkills: jest.Mock;
+  let mockEnsureCliVersion: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -119,6 +129,7 @@ describe('installCommand', () => {
       skippedIncompatibleSkillNames: [],
       incompatibleInstalledSkills: [],
     });
+    mockEnsureCliVersion = jest.fn().mockResolvedValue({ kind: 'no-lockfile' });
     MockPackmindCliHexa.mockImplementation(
       () =>
         ({
@@ -126,6 +137,7 @@ describe('installCommand', () => {
           tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
           installDefaultSkills: mockInstallDefaultSkills,
           getPackmindGateway: jest.fn().mockReturnValue({}),
+          ensureCliVersion: mockEnsureCliVersion,
         }) as unknown as PackmindCliHexa,
     );
   });
@@ -751,6 +763,246 @@ describe('installCommand', () => {
       it('does not exit with error', () => {
         expect(processExitSpy).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('CLI version drift detection (ensureCliVersion)', () => {
+    beforeEach(() => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    it('calls ensureCliVersion exactly once with the running CLI version', async () => {
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockEnsureCliVersion).toHaveBeenCalledTimes(1);
+      expect(mockEnsureCliVersion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseDirectory: process.cwd(),
+          currentCliVersion: expect.any(String),
+          includeBeta: false,
+        }),
+      );
+    });
+
+    it('emits a warning when ensureCliVersion returns "older"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'older',
+        lockVersion: '99.0.0',
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls.map(
+        ([msg]) => msg,
+      );
+      const driftWarnings = warnings.filter((msg) =>
+        msg.includes('older than the version recorded in packmind-lock.json'),
+      );
+      expect(driftWarnings).toHaveLength(1);
+      expect(driftWarnings[0]).toContain('99.0.0');
+    });
+
+    it('emits an info line when ensureCliVersion returns "newer"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'newer',
+        lockVersion: '0.0.1',
+        upgraded: true,
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('CLI upgrade detected'),
+      );
+    });
+
+    it('emits no drift-related output when ensureCliVersion returns "match"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({ kind: 'match' });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('older than the version recorded'));
+      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('CLI upgrade detected'));
+      expect(warnings).toHaveLength(0);
+      expect(upgradeInfos).toHaveLength(0);
+    });
+
+    it('emits no drift-related output when ensureCliVersion returns "no-lockfile"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({ kind: 'no-lockfile' });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('older than the version recorded'));
+      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('CLI upgrade detected'));
+      expect(warnings).toHaveLength(0);
+      expect(upgradeInfos).toHaveLength(0);
+    });
+
+    it('emits no drift-related output when ensureCliVersion returns "no-cli-version-recorded"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'no-cli-version-recorded',
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('older than the version recorded'));
+      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('CLI upgrade detected'));
+      expect(warnings).toHaveLength(0);
+      expect(upgradeInfos).toHaveLength(0);
+    });
+
+    it('continues installing when ensureCliVersion throws', async () => {
+      mockEnsureCliVersion.mockRejectedValue(new Error('boom'));
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockInstall).toHaveBeenCalled();
+      expect(processExitSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('silent cleanup of obsolete default skills', () => {
+    const gitRoot = process.cwd();
+
+    beforeEach(() => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+      mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+    });
+
+    it('invokes the silent cleanup helper when default-skills reports obsolete skills', async () => {
+      const incompatibleInstalledSkills = [
+        {
+          skillName: 'obsolete-skill',
+          filePaths: ['.packmind/skills/obsolete-skill.md'],
+        },
+      ];
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills,
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(
+        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+      ).toHaveBeenCalledWith(incompatibleInstalledSkills, gitRoot);
+    });
+
+    it('does not invoke the silent cleanup helper when no obsolete skills are reported', async () => {
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(
+        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('cliVersion propagation', () => {
+    it('forwards the running CLI version to the install use case', async () => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockInstall).toHaveBeenCalledWith(
+        expect.objectContaining({ cliVersion: expect.any(String) }),
+      );
     });
   });
 });

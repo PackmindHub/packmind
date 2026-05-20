@@ -8,6 +8,28 @@ import {
   logWarningConsole,
 } from '../../utils/consoleLogger';
 
+/**
+ * Silent confirm callback: always resolves true.
+ * Used to drive `handleIncompatibleInstalledSkills` without an interactive prompt.
+ */
+const alwaysConfirm = (): Promise<boolean> => Promise.resolve(true);
+
+/**
+ * Convenience wrapper around `handleIncompatibleInstalledSkills` that runs
+ * the deletion flow silently (no prompt). Logs an info line per skill being
+ * removed so the action remains visible in the CLI output.
+ */
+export async function handleIncompatibleInstalledSkillsSilently(
+  skills: IncompatibleInstalledSkill[],
+  baseDirectory: string,
+): Promise<void> {
+  for (const skill of skills) {
+    logInfoConsole(`Removing obsolete skill "${skill.skillName}".`);
+  }
+
+  await handleIncompatibleInstalledSkills(skills, baseDirectory, alwaysConfirm);
+}
+
 export async function handleIncompatibleInstalledSkills(
   skills: IncompatibleInstalledSkill[],
   baseDirectory: string,

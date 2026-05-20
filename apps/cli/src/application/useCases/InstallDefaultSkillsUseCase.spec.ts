@@ -3,6 +3,7 @@ import { InstallDefaultSkillsUseCase } from './InstallDefaultSkillsUseCase';
 import {
   createMockPackmindRepositories,
   createMockConfigFileRepository,
+  createMockLockFileRepository,
 } from '../../mocks/createMockRepositories';
 import {
   createMockSkillsGateway,
@@ -34,6 +35,7 @@ Skill body.
 describe('InstallDefaultSkillsUseCase', () => {
   let useCase: InstallDefaultSkillsUseCase;
   let mockGetDefaults: jest.Mock;
+  let mockReadLockFile: jest.Mock;
 
   beforeEach(() => {
     mockFs.mkdir.mockResolvedValue(undefined);
@@ -45,6 +47,8 @@ describe('InstallDefaultSkillsUseCase', () => {
       skippedSkillsCount: 0,
     });
 
+    mockReadLockFile = jest.fn().mockResolvedValue(null);
+
     const skillsGateway = createMockSkillsGateway({
       getDefaults: mockGetDefaults,
     });
@@ -54,9 +58,13 @@ describe('InstallDefaultSkillsUseCase', () => {
     const configRepo = createMockConfigFileRepository({
       readConfig: jest.fn().mockResolvedValue(null),
     });
+    const lockFileRepo = createMockLockFileRepository({
+      read: mockReadLockFile,
+    });
     const repositories = createMockPackmindRepositories({
       packmindGateway,
       configFileRepository: configRepo,
+      lockFileRepository: lockFileRepo,
     });
 
     useCase = new InstallDefaultSkillsUseCase(repositories);

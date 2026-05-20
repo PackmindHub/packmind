@@ -23,6 +23,8 @@ import { IUninstallUseCase } from './domain/useCases/IUninstallUseCase';
 import { UninstallUseCase } from './application/useCases/UninstallUseCase';
 import { IInstallDefaultSkillsUseCase } from './domain/useCases/IInstallDefaultSkillsUseCase';
 import { InstallDefaultSkillsUseCase } from './application/useCases/InstallDefaultSkillsUseCase';
+import { IEnsureCliVersionUseCase } from './domain/useCases/IEnsureCliVersionUseCase';
+import { EnsureCliVersionUseCase } from './application/useCases/EnsureCliVersionUseCase';
 import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
 import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
@@ -69,6 +71,7 @@ export class PackmindCliHexaFactory {
     install: IInstallUseCase;
     uninstall: IUninstallUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
+    ensureCliVersion: IEnsureCliVersionUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
     login: ILoginUseCase;
@@ -107,6 +110,10 @@ export class PackmindCliHexaFactory {
       this.services.spaceService,
     );
 
+    const installDefaultSkillsUseCase = new InstallDefaultSkillsUseCase(
+      this.repositories,
+    );
+
     this.useCases = {
       executeSingleFileAst: new ExecuteSingleFileAstUseCase(
         this.services.linterExecutionUseCase,
@@ -130,7 +137,11 @@ export class PackmindCliHexaFactory {
         this.services.spaceService,
         installUseCase,
       ),
-      installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
+      installDefaultSkills: installDefaultSkillsUseCase,
+      ensureCliVersion: new EnsureCliVersionUseCase(
+        this.repositories.lockFileRepository,
+        installDefaultSkillsUseCase,
+      ),
       listPackages: new ListPackagesUseCase(
         this.repositories.packmindGateway,
         this.services.spaceService,
