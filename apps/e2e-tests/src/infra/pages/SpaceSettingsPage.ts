@@ -49,6 +49,45 @@ export class SpaceSettingsPage
     return members;
   }
 
+  async getSpaceNameInput(): Promise<string> {
+    return this.page.getByLabel('Name').inputValue();
+  }
+
+  async setSpaceName(name: string): Promise<void> {
+    const input = this.page.getByLabel('Name');
+    await input.clear();
+    await input.fill(name);
+  }
+
+  async isSpaceNameDisabled(): Promise<boolean> {
+    return this.page.getByLabel('Name').isDisabled();
+  }
+
+  async selectColor(color: string): Promise<void> {
+    await this.page.getByLabel(`Select ${color} color`).click();
+  }
+
+  async clickSaveIdentity(): Promise<void> {
+    await this.page
+      .getByRole('button', { name: /Save changes/i })
+      .first()
+      .click();
+  }
+
+  async waitForIdentityUpdateSuccess(): Promise<void> {
+    await this.page
+      .getByText('Space updated')
+      .waitFor({ state: 'visible', timeout: 10000 });
+  }
+
+  async waitForIdentityUpdateError(): Promise<string> {
+    const errorText = this.page.getByText(
+      'Another space with a similar name already exists.',
+    );
+    await errorText.waitFor({ state: 'visible', timeout: 10000 });
+    return errorText.innerText();
+  }
+
   expectedUrl(): string | RegExp {
     return /\/space\/[^/]+\/settings/;
   }

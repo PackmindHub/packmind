@@ -28,6 +28,11 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
+const isEmailEntry = (entry: string): boolean => {
+  const trimmed = entry.trim();
+  return trimmed.includes('@') && !trimmed.startsWith('@');
+};
+
 const normalizeDomain = (domain: string): string =>
   domain.trim().toLowerCase().replace(/^@/, '');
 
@@ -46,24 +51,30 @@ const extractDomainFromEmail = (email?: string | null): string | null => {
   return normalizedEmail.slice(atIndex + 1);
 };
 
-const isDomainAllowedForFeature = ({
+const isAllowedForFeature = ({
   featureKey,
-  domain,
+  userEmail,
   featureDomainMap,
 }: {
   featureKey: string;
-  domain: string;
+  userEmail: string;
   featureDomainMap: Record<string, readonly string[]>;
 }): boolean => {
-  const allowedDomains = featureDomainMap[featureKey];
+  const allowedEntries = featureDomainMap[featureKey];
 
-  if (!allowedDomains?.length) {
+  if (!allowedEntries?.length) {
     return false;
   }
 
-  return allowedDomains.some(
-    (allowedDomain) => normalizeDomain(allowedDomain) === domain,
-  );
+  const normalizedEmail = userEmail.trim().toLowerCase();
+  const userDomain = extractDomainFromEmail(normalizedEmail);
+
+  return allowedEntries.some((entry) => {
+    if (isEmailEntry(entry)) {
+      return entry.trim().toLowerCase() === normalizedEmail;
+    }
+    return userDomain ? normalizeDomain(entry) === userDomain : false;
+  });
 };
 
 export const isFeatureFlagEnabled = ({
@@ -78,16 +89,14 @@ export const isFeatureFlagEnabled = ({
     return true;
   }
 
-  const userDomain = extractDomainFromEmail(userEmail);
-
-  if (!userDomain) {
+  if (!userEmail) {
     return false;
   }
 
   return featureKeys.some((featureKey) =>
-    isDomainAllowedForFeature({
+    isAllowedForFeature({
       featureKey,
-      domain: userDomain,
+      userEmail,
       featureDomainMap,
     }),
   );

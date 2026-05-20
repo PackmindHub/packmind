@@ -83,6 +83,12 @@ export interface IRecipesPort {
    */
   listRecipesBySpace(command: ListRecipesBySpaceCommand): Promise<Recipe[]>;
 
+  /**
+   * Count recipes grouped by space ID, omitting spaces with zero recipes.
+   * Used for management listing aggregations.
+   */
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
+
   // ===========================
   // RECIPE VERSION MANAGEMENT
   // ===========================

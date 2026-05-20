@@ -65,9 +65,6 @@ jest.mock('react-router', () => {
 const ensureQueryDataMock = queryClient.ensureQueryData as jest.MockedFunction<
   typeof queryClient.ensureQueryData
 >;
-const fetchQueryMock = queryClient.fetchQuery as jest.MockedFunction<
-  typeof queryClient.fetchQuery
->;
 const prefetchQueryMock = queryClient.prefetchQuery as jest.MockedFunction<
   typeof queryClient.prefetchQuery
 >;
@@ -95,7 +92,6 @@ async function runLoaderExpectingRedirect(spaceSlug: string) {
 describe('space-protected loader', () => {
   beforeEach(() => {
     ensureQueryDataMock.mockReset();
-    fetchQueryMock.mockReset();
     prefetchQueryMock.mockReset();
     setFlashToastMock.mockReset();
     redirectMock.mockClear();
@@ -107,9 +103,7 @@ describe('space-protected loader', () => {
     beforeEach(() => {
       ensureQueryDataMock
         .mockResolvedValueOnce(me)
-        .mockResolvedValueOnce(space)
         .mockResolvedValueOnce([space]);
-      prefetchQueryMock.mockResolvedValueOnce(undefined);
     });
 
     it('returns the space', async () => {
@@ -125,12 +119,7 @@ describe('space-protected loader', () => {
     });
   });
 
-  describe('when the user is not a member of the space', () => {
-    const targetSpace = {
-      id: 'space-2',
-      slug: 'other-space',
-      name: 'Other Space',
-    };
+  describe('when the space slug does not match any user space', () => {
     const userSpace = {
       id: 'space-1',
       slug: 'my-space',
@@ -140,7 +129,6 @@ describe('space-protected loader', () => {
     beforeEach(async () => {
       ensureQueryDataMock
         .mockResolvedValueOnce(me)
-        .mockResolvedValueOnce(targetSpace)
         .mockResolvedValueOnce([userSpace]);
 
       await runLoaderExpectingRedirect('other-space');
@@ -150,69 +138,53 @@ describe('space-protected loader', () => {
       expect(redirectMock).toHaveBeenCalledWith('/org/org-slug/space/my-space');
     });
 
-    it('sets a permission error flash toast', () => {
-      expect(setFlashToastMock).toHaveBeenCalledWith({
-        type: 'error',
-        title: 'Access denied',
-        description: expect.stringContaining(
-          'do not have permission to access',
-        ),
-      });
-    });
-  });
-
-  describe('when the space does not exist', () => {
-    const userSpace = {
-      id: 'space-1',
-      slug: 'my-space',
-      name: 'My Space',
-    };
-
-    beforeEach(async () => {
-      ensureQueryDataMock.mockResolvedValueOnce(me).mockResolvedValueOnce(null);
-      fetchQueryMock.mockResolvedValueOnce([userSpace]);
-
-      await runLoaderExpectingRedirect('nonexistent');
-    });
-
-    it('redirects to the first available user space', () => {
-      expect(redirectMock).toHaveBeenCalledWith('/org/org-slug/space/my-space');
-    });
-
-    it('sets a space not found flash toast', () => {
+    it('sets a space not found flash toast without leaking space details', () => {
       expect(setFlashToastMock).toHaveBeenCalledWith({
         type: 'error',
         title: 'Space not found',
-        description: expect.stringContaining('does not exist'),
+        description: expect.stringContaining('could not be found'),
       });
     });
   });
 
-  describe('when the space fetch throws an error', () => {
-    const userSpace = {
-      id: 'space-1',
-      slug: 'my-space',
-      name: 'My Space',
-    };
+  describe('when the user has no spaces', () => {
+    beforeEach(async () => {
+      ensureQueryDataMock.mockResolvedValueOnce(me).mockResolvedValueOnce([]);
 
+      await runLoaderExpectingRedirect('any-space');
+    });
+
+    it('redirects to the org page', () => {
+      expect(redirectMock).toHaveBeenCalledWith('/org/org-slug');
+    });
+
+    it('sets a no spaces available flash toast', () => {
+      expect(setFlashToastMock).toHaveBeenCalledWith({
+        type: 'error',
+        title: 'No spaces available',
+        description: expect.stringContaining('not a member of any space'),
+      });
+    });
+  });
+
+  describe('when the spaces list fetch throws an error', () => {
     beforeEach(async () => {
       ensureQueryDataMock
         .mockResolvedValueOnce(me)
         .mockRejectedValueOnce(new Error('Network error'));
-      fetchQueryMock.mockResolvedValueOnce([userSpace]);
 
       await runLoaderExpectingRedirect('broken-space');
     });
 
-    it('redirects to the first available user space', () => {
-      expect(redirectMock).toHaveBeenCalledWith('/org/org-slug/space/my-space');
+    it('redirects to the org page', () => {
+      expect(redirectMock).toHaveBeenCalledWith('/org/org-slug');
     });
 
-    it('sets an error loading space flash toast', () => {
+    it('sets an error loading spaces flash toast', () => {
       expect(setFlashToastMock).toHaveBeenCalledWith({
         type: 'error',
-        title: 'Error loading space',
-        description: expect.stringContaining('Redirecting'),
+        title: 'Error loading spaces',
+        description: expect.stringContaining('Please try again'),
       });
     });
   });

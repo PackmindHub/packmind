@@ -1,4 +1,8 @@
-import { ListUserSpacesResponse, Space } from '@packmind/types';
+import {
+  ListOrganizationSpacesForManagementResponse,
+  ListUserSpacesResponse,
+  Space,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { ISpacesGateway } from './ISpacesGateway';
 import {
@@ -24,6 +28,20 @@ export class SpacesGatewayApi
     }
     return this._api.get<ListUserSpacesResponse>(
       `${this._endpoint}/${orgId}/spaces`,
+    );
+  }
+
+  async listOrganizationSpacesForManagement(
+    orgId: string,
+    page: number,
+  ): Promise<ListOrganizationSpacesForManagementResponse> {
+    if (!orgId) {
+      throw new Error(
+        'Organization ID is required to fetch spaces for management',
+      );
+    }
+    return this._api.get<ListOrganizationSpacesForManagementResponse>(
+      `${this._endpoint}/${orgId}/spaces-management/listing?page=${encodeURIComponent(String(page))}`,
     );
   }
 
