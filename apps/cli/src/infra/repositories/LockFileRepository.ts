@@ -23,10 +23,12 @@ export class LockFileRepository implements ILockFileRepository {
         return null;
       }
 
-      // Silently migrate v1 lockfiles to v2 in memory. The on-disk file is
-      // NOT rewritten by `read` alone — the migrated form is only persisted
-      // when a subsequent mutating command calls `write`.
-      if (parsed.lockfileVersion === 1) {
+      // Silently migrate pre-v2 lockfiles to v2 in memory. The on-disk file
+      // is NOT rewritten by `read` alone — the migrated form is only
+      // persisted when a subsequent mutating command calls `write`.
+      // lockfileVersion 0 predates the version field convention and is
+      // treated identically to v1 (no source field, old key format).
+      if (parsed.lockfileVersion === 0 || parsed.lockfileVersion === 1) {
         return this.migrateV1ToV2(parsed);
       }
 
@@ -60,7 +62,9 @@ export class LockFileRepository implements ILockFileRepository {
     const obj = data as Record<string, unknown>;
 
     const lockfileVersionValid =
-      obj.lockfileVersion === 1 || obj.lockfileVersion === 2;
+      obj.lockfileVersion === 0 ||
+      obj.lockfileVersion === 1 ||
+      obj.lockfileVersion === 2;
 
     return (
       lockfileVersionValid &&

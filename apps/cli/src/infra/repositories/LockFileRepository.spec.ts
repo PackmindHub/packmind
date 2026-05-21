@@ -204,6 +204,53 @@ describe('LockFileRepository', () => {
       });
     });
 
+    describe('when a v0 lock file exists (legacy, predates the version field)', () => {
+      const v0OnDisk = {
+        lockfileVersion: 0,
+        packageSlugs: ['legacy-package'],
+        agents: ['packmind'],
+        installedAt: '',
+        artifacts: {
+          'standard:legacy-standard': {
+            name: 'Legacy Standard',
+            type: 'standard',
+            id: 'std-legacy',
+            version: 1,
+            spaceId: 'space-legacy',
+            packageIds: [],
+            files: [
+              {
+                path: '.packmind/standards/legacy-standard.md',
+                agent: 'packmind',
+              },
+            ],
+          },
+        },
+      };
+
+      let result: PackmindLockFile | null;
+
+      beforeEach(async () => {
+        mockFs.readFile.mockResolvedValue(JSON.stringify(v0OnDisk));
+
+        result = await repository.read('/project');
+      });
+
+      it('is accepted and migrated like v1', () => {
+        expect(result).not.toBeNull();
+        expect(result?.lockfileVersion).toBe(2);
+      });
+
+      it('re-keys entries under the user: prefix and tags them source: "user"', () => {
+        expect(Object.keys(result?.artifacts ?? {})).toEqual([
+          'user:standard:legacy-standard',
+        ]);
+        expect(result?.artifacts['user:standard:legacy-standard'].source).toBe(
+          'user',
+        );
+      });
+    });
+
     describe('when lock file does not exist', () => {
       let result: PackmindLockFile | null;
 
@@ -270,8 +317,12 @@ describe('LockFileRepository', () => {
         expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
       });
 
-      describe('isValidLockFile accepts both v1 and v2', () => {
+      describe('isValidLockFile accepts pre-v2 (0, 1) and v2', () => {
         it.each([
+          [
+            'v0 (predates the version field convention)',
+            '{"lockfileVersion":0,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          ],
           [
             'v1',
             '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
