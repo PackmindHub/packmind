@@ -28,9 +28,11 @@ import {
 } from '../../deployments/components/PackageCountBadge';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
+import { AddToPackagesBatchAction } from '../../deployments/components/AddToPackagesDialog';
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
 import {
+  BatchAction,
   ItemsListing,
   ItemsListingProps,
 } from '../../../shared/components/ItemsListing';
@@ -92,6 +94,24 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       setDeleteModalOpen(false);
     }
   };
+
+  const renderAddToPackagesAction = React.useCallback<BatchAction<SkillId>>(
+    ({ selectedIds }) => {
+      if (!organization?.id || !spaceId) return null;
+      return (
+        <AddToPackagesBatchAction
+          selectedIds={selectedIds}
+          artifactType="skill"
+          artifactKindLabel="skill"
+          organizationId={organization.id}
+          spaceId={spaceId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+        />
+      );
+    },
+    [organization?.id, spaceId, orgSlug, spaceSlug],
+  );
 
   const listingProps: Omit<ItemsListingProps<Skill>, 'items'> = {
     columns: [
@@ -298,6 +318,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
           isLoading={deleteBatchMutation.isPending}
         />
       ),
+      renderAddToPackagesAction,
       ({ selectedIds, unselectAll }) => (
         <SpacesManagementActions
           artifactType="skill"
