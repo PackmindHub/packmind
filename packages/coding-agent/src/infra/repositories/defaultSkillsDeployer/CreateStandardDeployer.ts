@@ -13,6 +13,7 @@ export class CreateStandardDeployer
   implements ISkillDeployer
 {
   public readonly slug = 'packmind-create-standard';
+  public readonly name = skillMd.title;
   protected readonly minimumVersion = '0.14.0';
   protected override unsupportedFromVersion: SemVer = '0.25.0';
 

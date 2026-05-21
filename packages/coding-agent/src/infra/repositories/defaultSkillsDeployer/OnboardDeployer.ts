@@ -52,6 +52,7 @@ export class OnboardDeployer
   implements ISkillDeployer
 {
   public readonly slug = 'packmind-onboard';
+  public readonly name = skillMd.title;
   protected readonly minimumVersion = '0.16.0';
   protected override unsupportedFromVersion = null;
 

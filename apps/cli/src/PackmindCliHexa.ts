@@ -391,6 +391,14 @@ export class PackmindCliHexa {
     return this.hexa.useCases.installDefaultSkills.execute(command);
   }
 
+  public async bootstrapSkillsInitDirectory(command: {
+    baseDirectory: string;
+  }): Promise<void> {
+    return this.hexa.useCases.installDefaultSkills.bootstrapEmptyDirectory(
+      command.baseDirectory,
+    );
+  }
+
   public async ensureCliVersion(
     command: IEnsureCliVersionCommand,
   ): Promise<EnsureCliVersionOutcome> {
