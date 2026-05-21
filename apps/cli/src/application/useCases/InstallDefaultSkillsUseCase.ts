@@ -14,6 +14,8 @@ import {
   PackmindLockFile,
   PackmindLockFileEntry,
 } from '../../domain/repositories/PackmindLockFile';
+import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
+import { SkillsInitBootstrapError } from '../../domain/errors/SkillsInitBootstrapError';
 
 export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase {
   constructor(private readonly repositories: IPackmindRepositories) {}
@@ -22,6 +24,8 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     command: IInstallDefaultSkillsCommand,
   ): Promise<IInstallDefaultSkillsResult> {
     const baseDirectory = command.baseDirectory || process.cwd();
+
+    await this.bootstrapEmptyDirectory(baseDirectory);
 
     const result: IInstallDefaultSkillsResult = {
       filesCreated: 0,
@@ -184,6 +188,53 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     }
 
     await this.repositories.lockFileRepository.write(baseDirectory, lockFile);
+  }
+
+  /**
+   * Bootstraps a truly fresh directory (no packmind.json AND no
+   * packmind-lock.json) by querying the org's active render modes from the
+   * deployment gateway, mapping them through {@link RENDER_MODE_TO_CODING_AGENT},
+   * and writing the resulting `CodingAgent[]` to packmind.json via
+   * {@link IConfigFileRepository.updateAgentsConfig}.
+   *
+   * If either file is already present, this is a strict no-op — existing
+   * configuration is never modified. If the gateway call fails or returns
+   * zero mapped agents, a {@link SkillsInitBootstrapError} is thrown so the
+   * CLI handler can surface a directive message pointing at `packmind init`.
+   */
+  private async bootstrapEmptyDirectory(baseDirectory: string): Promise<void> {
+    const config =
+      await this.repositories.configFileRepository.readConfig(baseDirectory);
+    const lockFile =
+      await this.repositories.lockFileRepository.read(baseDirectory);
+
+    if (config !== null || lockFile !== null) {
+      return;
+    }
+
+    let configuration;
+    try {
+      const result =
+        await this.repositories.packmindGateway.deployment.getRenderModeConfiguration(
+          {},
+        );
+      configuration = result.configuration;
+    } catch {
+      throw new SkillsInitBootstrapError();
+    }
+
+    const agents: CodingAgent[] = (configuration?.activeRenderModes ?? [])
+      .map((mode) => RENDER_MODE_TO_CODING_AGENT[mode])
+      .filter((agent): agent is CodingAgent => agent !== undefined);
+
+    if (agents.length === 0) {
+      throw new SkillsInitBootstrapError();
+    }
+
+    await this.repositories.configFileRepository.updateAgentsConfig(
+      baseDirectory,
+      agents,
+    );
   }
 
   private async createOrUpdateFile(

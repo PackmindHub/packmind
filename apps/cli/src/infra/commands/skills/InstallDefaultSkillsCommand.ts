@@ -15,6 +15,7 @@ import {
   buildSkillsSkippedWarning,
   configuredAgentsSupportSkills,
 } from '../skillsCapabilityWarning';
+import { isSkillsInitBootstrapError } from '../../../domain/errors/SkillsInitBootstrapError';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -97,6 +98,10 @@ export const installDefaultSkillsCommand = command({
         }
       }
     } catch (error) {
+      if (isSkillsInitBootstrapError(error)) {
+        logErrorConsole(error.message);
+        process.exit(1);
+      }
       if (error instanceof Error) {
         logErrorConsole(`Installation failed: ${error.message}`);
       } else {

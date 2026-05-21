@@ -8,11 +8,14 @@ import {
 import {
   createMockSkillsGateway,
   createMockPackmindGateway,
+  createMockDeploymentGateway,
 } from '../../mocks/createMockGateways';
 import {
   PackmindLockFile,
   PackmindLockFileEntry,
 } from '../../domain/repositories/PackmindLockFile';
+import { isSkillsInitBootstrapError } from '../../domain/errors/SkillsInitBootstrapError';
+import { CodingAgent, RenderMode } from '@packmind/types';
 
 jest.mock('fs/promises');
 
@@ -78,8 +81,11 @@ describe('InstallDefaultSkillsUseCase', () => {
     const packmindGateway = createMockPackmindGateway({
       skills: skillsGateway,
     });
+    // Default: an existing (but minimal) packmind.json short-circuits the
+    // bootstrap path so existing tests exercise the post-bootstrap flow.
+    // Dedicated bootstrap tests below override `readConfig` to return null.
     const configRepo = createMockConfigFileRepository({
-      readConfig: jest.fn().mockResolvedValue(null),
+      readConfig: jest.fn().mockResolvedValue({ packages: {} }),
     });
     const lockFileRepo = createMockLockFileRepository({
       read: mockReadLockFile,
@@ -906,6 +912,275 @@ describe('InstallDefaultSkillsUseCase', () => {
             'user:skill:my-custom-skill',
           ),
         ).toBe(true);
+      });
+    });
+  });
+
+  describe('bootstrap empty directory', () => {
+    let bootstrapUseCase: InstallDefaultSkillsUseCase;
+    let bootstrapReadConfig: jest.Mock;
+    let bootstrapUpdateAgentsConfig: jest.Mock;
+    let bootstrapReadLockFile: jest.Mock;
+    let bootstrapGetRenderModeConfiguration: jest.Mock;
+    let bootstrapGetDefaults: jest.Mock;
+
+    function buildUseCase(): InstallDefaultSkillsUseCase {
+      const skillsGateway = createMockSkillsGateway({
+        getDefaults: bootstrapGetDefaults,
+      });
+      const deploymentGateway = createMockDeploymentGateway({
+        getRenderModeConfiguration: bootstrapGetRenderModeConfiguration,
+      });
+      const packmindGateway = createMockPackmindGateway({
+        skills: skillsGateway,
+        deployment: deploymentGateway,
+      });
+      const configRepo = createMockConfigFileRepository({
+        readConfig: bootstrapReadConfig,
+        updateAgentsConfig: bootstrapUpdateAgentsConfig,
+      });
+      const lockFileRepo = createMockLockFileRepository({
+        read: bootstrapReadLockFile,
+        write: jest.fn().mockResolvedValue(undefined),
+      });
+      const repositories = createMockPackmindRepositories({
+        packmindGateway,
+        configFileRepository: configRepo,
+        lockFileRepository: lockFileRepo,
+      });
+      return new InstallDefaultSkillsUseCase(repositories);
+    }
+
+    beforeEach(() => {
+      mockFs.access.mockRejectedValue(new Error('ENOENT'));
+      bootstrapUpdateAgentsConfig = jest.fn().mockResolvedValue(undefined);
+      bootstrapGetDefaults = jest.fn().mockResolvedValue({
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skippedSkillsCount: 0,
+        lockFileSlice: {},
+      });
+    });
+
+    describe('when both packmind.json and packmind-lock.json are absent and gateway returns mapped modes', () => {
+      const mappedAgents: CodingAgent[] = ['claude', 'agents_md'];
+
+      beforeEach(() => {
+        // First read: null (triggers bootstrap). After bootstrap writes the
+        // agents config, the downstream readConfig at execute() line ~36
+        // returns the freshly-written config. This proves the re-read picks
+        // up the bootstrapped agents.
+        bootstrapReadConfig = jest
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValue({ packages: {}, agents: mappedAgents });
+        bootstrapReadLockFile = jest.fn().mockResolvedValue(null);
+        bootstrapGetRenderModeConfiguration = jest.fn().mockResolvedValue({
+          configuration: {
+            activeRenderModes: [RenderMode.CLAUDE, RenderMode.AGENTS_MD],
+          },
+        });
+        bootstrapUseCase = buildUseCase();
+      });
+
+      it('writes the mapped agents to packmind.json once', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledTimes(1);
+        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledWith(
+          BASE_DIR,
+          mappedAgents,
+        );
+      });
+
+      it('passes the bootstrapped agents to getDefaults via the re-read', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
+        expect(bootstrapGetDefaults).toHaveBeenCalledWith(
+          expect.objectContaining({ agents: mappedAgents }),
+        );
+      });
+    });
+
+    describe('when the gateway throws', () => {
+      beforeEach(() => {
+        bootstrapReadConfig = jest.fn().mockResolvedValue(null);
+        bootstrapReadLockFile = jest.fn().mockResolvedValue(null);
+        bootstrapGetRenderModeConfiguration = jest
+          .fn()
+          .mockRejectedValue(new Error('network'));
+        bootstrapUseCase = buildUseCase();
+      });
+
+      it('rejects with SkillsInitBootstrapError', async () => {
+        let caught: unknown;
+        try {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+        } catch (error) {
+          caught = error;
+        }
+        expect(isSkillsInitBootstrapError(caught)).toBe(true);
+      });
+
+      it('does not write agents config', async () => {
+        try {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+        } catch {
+          // expected
+        }
+
+        expect(bootstrapUpdateAgentsConfig).not.toHaveBeenCalled();
+      });
+
+      it('does not call getDefaults', async () => {
+        try {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+        } catch {
+          // expected
+        }
+
+        expect(bootstrapGetDefaults).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when activeRenderModes is empty', () => {
+      beforeEach(() => {
+        bootstrapReadConfig = jest.fn().mockResolvedValue(null);
+        bootstrapReadLockFile = jest.fn().mockResolvedValue(null);
+        bootstrapGetRenderModeConfiguration = jest.fn().mockResolvedValue({
+          configuration: { activeRenderModes: [] },
+        });
+        bootstrapUseCase = buildUseCase();
+      });
+
+      it('rejects with SkillsInitBootstrapError', async () => {
+        let caught: unknown;
+        try {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+        } catch (error) {
+          caught = error;
+        }
+        expect(isSkillsInitBootstrapError(caught)).toBe(true);
+      });
+
+      it('does not write agents config', async () => {
+        try {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+        } catch {
+          // expected
+        }
+
+        expect(bootstrapUpdateAgentsConfig).not.toHaveBeenCalled();
+      });
+
+      it('does not call getDefaults', async () => {
+        try {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+        } catch {
+          // expected
+        }
+
+        expect(bootstrapGetDefaults).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when only packmind-lock.json is present', () => {
+      const stubLockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        cliVersion: '0.0.0',
+        packageSlugs: [],
+        agents: [],
+        artifacts: {},
+      };
+
+      beforeEach(() => {
+        bootstrapReadConfig = jest.fn().mockResolvedValue(null);
+        bootstrapReadLockFile = jest.fn().mockResolvedValue(stubLockFile);
+        bootstrapGetRenderModeConfiguration = jest.fn();
+        bootstrapUseCase = buildUseCase();
+      });
+
+      it('does not call getRenderModeConfiguration', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapGetRenderModeConfiguration).not.toHaveBeenCalled();
+      });
+
+      it('does not write agents config', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapUpdateAgentsConfig).not.toHaveBeenCalled();
+      });
+
+      it('calls getDefaults with agents: undefined', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
+        expect(bootstrapGetDefaults).toHaveBeenCalledWith(
+          expect.objectContaining({ agents: undefined }),
+        );
+      });
+    });
+
+    describe('when packmind.json already exists', () => {
+      beforeEach(() => {
+        bootstrapReadConfig = jest
+          .fn()
+          .mockResolvedValue({ packages: {}, agents: ['claude'] });
+        bootstrapReadLockFile = jest.fn().mockResolvedValue(null);
+        bootstrapGetRenderModeConfiguration = jest.fn();
+        bootstrapUseCase = buildUseCase();
+      });
+
+      it('does not call getRenderModeConfiguration', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapGetRenderModeConfiguration).not.toHaveBeenCalled();
+      });
+
+      it('does not write agents config', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapUpdateAgentsConfig).not.toHaveBeenCalled();
       });
     });
   });
