@@ -62,6 +62,14 @@ export async function configAgentsHandler(
   const isTTY = deps.isTTY ?? process.stdin.isTTY;
   const useSimplePrompt = process.env.PACKMIND_SIMPLE_PROMPT === '1' || !isTTY;
 
+  const configExistedBefore =
+    await configRepository.configExists(baseDirectory);
+  if (!configExistedBefore) {
+    logInfoConsole(
+      `Creating packmind.json at ${getRelativePath(baseDirectory, baseDirectory)}...`,
+    );
+  }
+
   // Step 1: Determine pre-selected agents
   const preselectedAgents = await getPreselectedAgents(deps);
 

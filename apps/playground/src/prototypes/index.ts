@@ -7,6 +7,7 @@ import SidebarWithSpacesPrototype from './sidebar-with-spaces/SidebarWithSpacesP
 import StandardDetailRedesignPrototype from './standard-detail-redesign/StandardDetailRedesignPrototype';
 import PersonalHomePagePrototype from './personal-home-page/PersonalHomePagePrototype';
 import SpacesManagementPrototype from './spaces-management/SpacesManagementPrototype';
+import MarketplacesPrototype from './marketplaces/MarketplacesPrototype';
 
 export interface Prototype {
   name: string;
@@ -51,5 +52,11 @@ export const prototypes: Prototype[] = [
     description:
       'Org-settings surface for managing all spaces \u2014 dense table with a side drawer for per-space General/Members/Danger edits',
     component: SpacesManagementPrototype,
+  },
+  {
+    name: 'Marketplaces',
+    description:
+      'Governance-first index of Git-backed marketplaces that publish Packmind packages to Claude Code and Copilot',
+    component: MarketplacesPrototype,
   },
 ];

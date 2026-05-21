@@ -33,6 +33,17 @@ export type BootstrapInstallContextDependencies = {
 export type BootstrapInstallContextOutcome = {
   configReady: boolean;
   warned: boolean;
+  /**
+   * True when bootstrap itself created `packmind.json` (auto-detect or
+   * interactive init). Lets `installHandler` reflect this in the summary
+   * even when the subsequent install use case sees the config as pre-existing.
+   */
+  configCreated: boolean;
+  /**
+   * Packages that bootstrap injected into a freshly-created `packmind.json`.
+   * Plumbed into the install summary so the user sees them as "added".
+   */
+  packagesAdded: string[];
 };
 
 export async function bootstrapInstallContext(
@@ -56,7 +67,12 @@ export async function bootstrapInstallContext(
   );
 
   if (hierarchicalResult.hasConfigs) {
-    return { configReady: true, warned: false };
+    return {
+      configReady: true,
+      warned: false,
+      configCreated: false,
+      packagesAdded: [],
+    };
   }
 
   const detected =
@@ -82,14 +98,24 @@ export async function bootstrapInstallContext(
         baseDirectory,
       });
     }
-    return { configReady: true, warned: false };
+    return {
+      configReady: true,
+      warned: false,
+      configCreated: true,
+      packagesAdded: [...packages],
+    };
   }
 
   if (!isTTY) {
     logWarningConsole(
       'No packmind.json and no agent context detected — run `packmind-cli init` to configure.',
     );
-    return { configReady: false, warned: true };
+    return {
+      configReady: false,
+      warned: true,
+      configCreated: false,
+      packagesAdded: [],
+    };
   }
 
   const result = await runInit({
@@ -107,7 +133,12 @@ export async function bootstrapInstallContext(
     for (const error of result.errors) {
       logErrorConsole(error);
     }
-    return { configReady: false, warned: true };
+    return {
+      configReady: false,
+      warned: true,
+      configCreated: false,
+      packagesAdded: [],
+    };
   }
 
   await promptOrgRenderModes({
@@ -115,7 +146,15 @@ export async function bootstrapInstallContext(
     configRepository,
     baseDirectory,
   });
-  return { configReady: true, warned: false };
+  // initHandler created the packmind.json with the user-selected agents but
+  // without packages — the install use case will add the CLI packages and
+  // count them via its own `packagesAdded`, so we only flag configCreated.
+  return {
+    configReady: true,
+    warned: false,
+    configCreated: true,
+    packagesAdded: [],
+  };
 }
 
 async function promptOrgRenderModes(params: {

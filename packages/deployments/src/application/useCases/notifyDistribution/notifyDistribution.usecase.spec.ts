@@ -999,4 +999,40 @@ describe('parseGitRepoInfo', () => {
       'Unable to parse git remote URL: invalid-url',
     );
   });
+
+  it('parses GitHub HTTPS URL when repo name contains a dot', () => {
+    const result = parseGitRepoInfo('https://github.com/acme/web.frontend');
+
+    expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+  });
+
+  it('parses GitHub HTTPS URL when repo name contains a dot and .git suffix', () => {
+    const result = parseGitRepoInfo('https://github.com/acme/web.frontend.git');
+
+    expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+  });
+
+  it('parses GitHub HTTPS URL when repo name contains multiple dots', () => {
+    const result = parseGitRepoInfo('https://github.com/acme/my.cool.repo');
+
+    expect(result).toEqual({ owner: 'acme', repo: 'my.cool.repo' });
+  });
+
+  it('parses SSH URL when repo name contains a dot', () => {
+    const result = parseGitRepoInfo('git@github.com:acme/web.frontend.git');
+
+    expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+  });
+
+  it('parses URL when both owner and repo contain dots', () => {
+    const result = parseGitRepoInfo('https://github.com/acme.io/web.frontend');
+
+    expect(result).toEqual({ owner: 'acme.io', repo: 'web.frontend' });
+  });
+
+  it('parses self-hosted URL with trailing slash and dotted repo', () => {
+    const result = parseGitRepoInfo('https://lab.frogg.it/acme/web.frontend/');
+
+    expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+  });
 });
