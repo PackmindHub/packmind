@@ -11,6 +11,14 @@ import {
 } from './helpers';
 import { Package, Recipe, Space, SpaceType } from '@packmind/types';
 
+// lockfileVersion 2 (post-0.28.1) prefixes package-installed artefact keys
+// with `user:`. The 0.28.1 binary still writes v1 (`<type>:<slug>`).
+function commandLockKey(slug: string): string {
+  return matchesVersionConstraint('> 0.28.1')
+    ? `user:command:${slug}`
+    : `command:${slug}`;
+}
+
 describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
   describeWithExtraUser(
     'install command with unjoined spaces',
@@ -117,11 +125,11 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
           expect(packmindLock).toMatchObject({
             artifacts: {
-              [`command:${publicCommand.slug}`]: expect.objectContaining({
+              [commandLockKey(publicCommand.slug)]: expect.objectContaining({
                 id: publicCommand.id,
                 name: publicCommand.name,
               }),
-              [`command:${privateCommand.slug}`]: expect.objectContaining({
+              [commandLockKey(privateCommand.slug)]: expect.objectContaining({
                 id: privateCommand.id,
                 name: privateCommand.name,
               }),
@@ -234,11 +242,11 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
             expect(packmindLock).toMatchObject({
               artifacts: {
-                [`command:${publicCommand.slug}`]: expect.objectContaining({
+                [commandLockKey(publicCommand.slug)]: expect.objectContaining({
                   id: publicCommand.id,
                   name: publicCommand.name,
                 }),
-                [`command:${privateCommand.slug}`]: expect.objectContaining({
+                [commandLockKey(privateCommand.slug)]: expect.objectContaining({
                   id: privateCommand.id,
                   name: privateCommand.name,
                 }),
@@ -280,11 +288,12 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
               expect(packmindLock).toMatchObject({
                 artifacts: {
-                  [`command:${privateCommand.slug}`]: expect.objectContaining({
-                    id: privateCommand.id,
-                    name: privateCommand.name,
-                    version: 2,
-                  }),
+                  [commandLockKey(privateCommand.slug)]:
+                    expect.objectContaining({
+                      id: privateCommand.id,
+                      name: privateCommand.name,
+                      version: 2,
+                    }),
                 },
               });
             });
@@ -377,11 +386,12 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
               expect(packmindLock).toMatchObject({
                 artifacts: {
-                  [`command:${privateCommand.slug}`]: expect.objectContaining({
-                    id: privateCommand.id,
-                    name: privateCommand.name,
-                    version: 1,
-                  }),
+                  [commandLockKey(privateCommand.slug)]:
+                    expect.objectContaining({
+                      id: privateCommand.id,
+                      name: privateCommand.name,
+                      version: 1,
+                    }),
                 },
               });
             });
@@ -503,10 +513,12 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
               expect(packmindLock).toMatchObject({
                 artifacts: {
-                  [`command:${publicCommand.slug}`]: expect.objectContaining({
-                    id: publicCommand.id,
-                    name: publicCommand.name,
-                  }),
+                  [commandLockKey(publicCommand.slug)]: expect.objectContaining(
+                    {
+                      id: publicCommand.id,
+                      name: publicCommand.name,
+                    },
+                  ),
                 },
               });
             });
@@ -592,10 +604,12 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
 
               expect(packmindLock).toMatchObject({
                 artifacts: {
-                  [`command:${publicCommand.slug}`]: expect.objectContaining({
-                    id: publicCommand.id,
-                    name: publicCommand.name,
-                  }),
+                  [commandLockKey(publicCommand.slug)]: expect.objectContaining(
+                    {
+                      id: publicCommand.id,
+                      name: publicCommand.name,
+                    },
+                  ),
                 },
               });
             });
