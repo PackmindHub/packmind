@@ -1,4 +1,4 @@
-# [Unreleased]
+# [0.29.0] - 2026-05-21
 
 ## Added
 
@@ -15,8 +15,6 @@
 - `playbook submit` no longer crashes on Windows when neither `$EDITOR` nor `$VISUAL` is set. The CLI now probes for a platform-appropriate editor (`notepad` on Windows; `nano` → `vim` → `vi` on macOS/Linux) and surfaces a clear, actionable error if none is found.
 - `install <package>` against a directory without `packmind.json` now reports `Created packmind.json with N package(s)` instead of the misleading `Nothing to install`.
 - `playbook add` and `playbook submit` now reject skills whose description exceeds 1024 characters with an actionable message, instead of failing later on the server.
-
-## Removed
 
 # [0.28.1] - 2026-05-04
 
@@ -358,7 +356,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.1...HEAD
+[0.29.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.1...release-cli/0.29.0
 [0.28.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...release-cli/0.28.1
 [0.28.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.27.0...release-cli/0.28.0
 [0.27.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.1...release-cli/0.27.0
