@@ -28,17 +28,21 @@ import {
 } from '@packmind/types';
 import { Link as RouterLink } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
-import { useAddArtefactsToPackagesMutation } from '../../api/queries/DeploymentsQueries';
-import { usePackagesNotContainingArtifact } from '../../hooks/usePackagesNotContainingArtifact';
+import {
+  AddArtefactsToPackagesEntry,
+  useAddArtefactsToPackagesMutation,
+} from '../../api/queries/DeploymentsQueries';
+import { usePackagesMissingAnyArtifact } from '../../hooks/usePackagesMissingAnyArtifact';
 
 export type AddToPackagesArtifactKind = 'standard' | 'command' | 'skill';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
+type ArtifactId = StandardId | RecipeId | SkillId;
 
 interface AddToPackagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  artifactId: StandardId | RecipeId | SkillId;
+  artifactIds: ArtifactId[];
   artifactType: ArtifactType;
   artifactKindLabel: AddToPackagesArtifactKind;
   organizationId: OrganizationId;
@@ -46,6 +50,15 @@ interface AddToPackagesDialogProps {
   orgSlug?: string;
   spaceSlug?: string;
 }
+
+const ARTIFACT_KIND_PLURALS: Record<AddToPackagesArtifactKind, string> = {
+  standard: 'standards',
+  command: 'commands',
+  skill: 'skills',
+};
+
+const pluralizePackages = (count: number) =>
+  count === 1 ? 'package' : 'packages';
 
 function summarizePackageList(packages: Package[]): string {
   if (packages.length === 0) return '';
@@ -57,10 +70,25 @@ function summarizePackageList(packages: Package[]): string {
   return `${packages[0].name}, ${packages[1].name}, and ${packages.length - 2} more`;
 }
 
+function buildArtefactEntry(
+  packageId: PackageId,
+  artifactType: ArtifactType,
+  ids: ArtifactId[],
+): AddArtefactsToPackagesEntry {
+  switch (artifactType) {
+    case 'standard':
+      return { packageId, standardIds: ids as StandardId[] };
+    case 'recipe':
+      return { packageId, recipeIds: ids as RecipeId[] };
+    case 'skill':
+      return { packageId, skillIds: ids as SkillId[] };
+  }
+}
+
 export const AddToPackagesDialog = ({
   open,
   onOpenChange,
-  artifactId,
+  artifactIds,
   artifactType,
   artifactKindLabel,
   organizationId,
@@ -71,13 +99,21 @@ export const AddToPackagesDialog = ({
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<PackageId>>(new Set());
 
-  const { addablePackages, totalPackages, isLoading } =
-    usePackagesNotContainingArtifact({
-      artifactId,
-      artifactType,
-      spaceId,
-      organizationId,
-    });
+  const artifactCount = artifactIds.length;
+  const kindSingular = artifactKindLabel;
+  const kindPlural = ARTIFACT_KIND_PLURALS[artifactKindLabel];
+
+  const {
+    addablePackages,
+    presentArtifactIdsByPackageId,
+    totalPackages,
+    isLoading,
+  } = usePackagesMissingAnyArtifact({
+    artifactIds,
+    artifactType,
+    spaceId,
+    organizationId,
+  });
 
   const filteredPackages = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
@@ -116,37 +152,35 @@ export const AddToPackagesDialog = ({
     });
   };
 
-  const buildArtefactPayload = () => {
-    switch (artifactType) {
-      case 'standard':
-        return { standardIds: [artifactId as StandardId] };
-      case 'recipe':
-        return { recipeIds: [artifactId as RecipeId] };
-      case 'skill':
-        return { skillIds: [artifactId as SkillId] };
-    }
-  };
-
   const handleSubmit = async () => {
     if (selectedCount === 0) return;
-    const packageIds = Array.from(selectedIds);
     const selectedPackages = addablePackages.filter((pkg) =>
       selectedIds.has(pkg.id),
     );
+    const entries: AddArtefactsToPackagesEntry[] = selectedPackages.map(
+      (pkg) => {
+        const presentSet =
+          presentArtifactIdsByPackageId[pkg.id.toString()] ?? new Set<string>();
+        const remaining = artifactIds.filter(
+          (id) => !presentSet.has(id.toString()),
+        );
+        return buildArtefactEntry(pkg.id, artifactType, remaining);
+      },
+    );
     try {
-      const outcomes = await mutateAsync({
-        spaceId,
-        packageIds,
-        ...buildArtefactPayload(),
-      });
+      const outcomes = await mutateAsync({ spaceId, entries });
       const successOutcomes = outcomes.filter((o) => o.ok);
       const failureOutcomes = outcomes.filter((o) => !o.ok);
 
       if (failureOutcomes.length === 0) {
-        const titleNoun = successOutcomes.length === 1 ? 'package' : 'packages';
+        const packageNoun = pluralizePackages(successOutcomes.length);
+        const title =
+          artifactCount === 1
+            ? `Added to ${successOutcomes.length} ${packageNoun}`
+            : `Added ${artifactCount} ${kindPlural} to ${successOutcomes.length} ${packageNoun}`;
         pmToaster.create({
           type: 'success',
-          title: `Added to ${successOutcomes.length} ${titleNoun}`,
+          title,
           description: summarizePackageList(selectedPackages),
         });
         onOpenChange(false);
@@ -217,11 +251,13 @@ export const AddToPackagesDialog = ({
     }
 
     if (addablePackages.length === 0) {
+      const allCoveredMessage =
+        artifactCount === 1
+          ? `This ${kindSingular} is already in every package in this space.`
+          : `These ${artifactCount} ${kindPlural} are already in every package in this space.`;
       return (
         <PMBox paddingY={6} paddingX={2}>
-          <PMText variant="body">
-            This {artifactKindLabel} is already in every package in this space.
-          </PMText>
+          <PMText variant="body">{allCoveredMessage}</PMText>
         </PMBox>
       );
     }
@@ -246,6 +282,12 @@ export const AddToPackagesDialog = ({
       <PMVStack gap={2} alignItems="stretch" role="list">
         {filteredPackages.map((pkg) => {
           const checked = selectedIds.has(pkg.id);
+          const presentCount =
+            presentArtifactIdsByPackageId[pkg.id.toString()]?.size ?? 0;
+          const showOverlapHint =
+            artifactCount > 1 &&
+            presentCount > 0 &&
+            presentCount < artifactCount;
           return (
             <PMHStack
               key={pkg.id}
@@ -280,7 +322,11 @@ export const AddToPackagesDialog = ({
                 <PMText variant="body" fontWeight={500}>
                   {pkg.name}
                 </PMText>
-                {pkg.description ? (
+                {showOverlapHint ? (
+                  <PMText variant="small" color="faded">
+                    Already includes {presentCount} of {artifactCount}
+                  </PMText>
+                ) : pkg.description ? (
                   <PMText variant="small" color="secondary" lineClamp={1}>
                     {pkg.description}
                   </PMText>
@@ -294,6 +340,20 @@ export const AddToPackagesDialog = ({
   };
 
   const showSearchAndCta = addablePackages.length > 0 && !isLoading;
+
+  const subtitle =
+    artifactCount === 1
+      ? `Pick the packages this ${kindSingular} should also ship in.`
+      : `Pick the packages these ${artifactCount} ${kindPlural} should also ship in.`;
+
+  const submitLabel = (() => {
+    if (selectedCount === 0) return 'Add to packages';
+    const packageNoun = pluralizePackages(selectedCount);
+    if (artifactCount === 1) {
+      return `Add to ${selectedCount} ${packageNoun}`;
+    }
+    return `Add ${artifactCount} ${kindPlural} to ${selectedCount} ${packageNoun}`;
+  })();
 
   return (
     <PMDialog.Root
@@ -310,7 +370,7 @@ export const AddToPackagesDialog = ({
             <PMVStack alignItems="flex-start" gap={1}>
               <PMDialog.Title>Add to packages</PMDialog.Title>
               <PMText variant="small" color="secondary">
-                Pick the packages this {artifactKindLabel} should also ship in.
+                {subtitle}
               </PMText>
             </PMVStack>
             <PMDialog.CloseTrigger asChild>
@@ -350,9 +410,7 @@ export const AddToPackagesDialog = ({
                   <PMIcon>
                     <LuPackagePlus />
                   </PMIcon>
-                  {selectedCount > 0
-                    ? `Add to ${selectedCount} package${selectedCount === 1 ? '' : 's'}`
-                    : 'Add to packages'}
+                  {submitLabel}
                 </PMButton>
               ) : null}
             </PMButtonGroup>

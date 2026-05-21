@@ -114,7 +114,7 @@ const renderDialog = (
   const props: React.ComponentProps<typeof AddToPackagesDialog> = {
     open: true,
     onOpenChange: jest.fn(),
-    artifactId,
+    artifactIds: [artifactId],
     artifactType: 'standard',
     artifactKindLabel: 'standard',
     organizationId,
@@ -246,7 +246,7 @@ describe('AddToPackagesDialog', () => {
     });
   });
 
-  it('submits the selected package IDs with the artifact payload', async () => {
+  it('submits a per-package entry for each selected package', async () => {
     const mutateAsync = jest.fn().mockResolvedValue([
       { packageId: packageA.id, ok: true, response: { package: packageA } },
       { packageId: packageB.id, ok: true, response: { package: packageB } },
@@ -268,8 +268,10 @@ describe('AddToPackagesDialog', () => {
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledWith({
         spaceId,
-        packageIds: [packageA.id, packageB.id],
-        standardIds: [artifactId],
+        entries: [
+          { packageId: packageA.id, standardIds: [artifactId] },
+          { packageId: packageB.id, standardIds: [artifactId] },
+        ],
       });
     });
 
@@ -311,5 +313,163 @@ describe('AddToPackagesDialog', () => {
         within(row as HTMLElement).getByText('Rules for the frontend.'),
       ).toBeInTheDocument();
     }
+  });
+
+  describe('multi-artifact selection', () => {
+    const firstId = createStandardId('multi-1');
+    const secondId = createStandardId('multi-2');
+    const thirdId = createStandardId('multi-3');
+    const multiArtifactIds = [firstId, secondId, thirdId];
+
+    const packageWithPartialOverlap: Package = {
+      id: createPackageId('pkg-partial'),
+      name: 'partial-overlap',
+      slug: 'partial-overlap',
+      description: 'Has one of three.',
+      spaceId,
+      createdBy: 'user-1' as Package['createdBy'],
+      recipes: [],
+      standards: [firstId],
+      skills: [],
+    };
+    const packageWithNoOverlap: Package = {
+      id: createPackageId('pkg-fresh'),
+      name: 'fresh-target',
+      slug: 'fresh-target',
+      description: 'Has none of them.',
+      spaceId,
+      createdBy: 'user-1' as Package['createdBy'],
+      recipes: [],
+      standards: [],
+      skills: [],
+    };
+    const packageWithAllArtifacts: Package = {
+      id: createPackageId('pkg-full'),
+      name: 'fully-covered',
+      slug: 'fully-covered',
+      description: '',
+      spaceId,
+      createdBy: 'user-1' as Package['createdBy'],
+      recipes: [],
+      standards: [firstId, secondId, thirdId],
+      skills: [],
+    };
+
+    it('renders a plural subtitle that names the artifact count and kind', () => {
+      setPackagesResponse([packageWithNoOverlap]);
+      renderDialog({ artifactIds: multiArtifactIds });
+
+      expect(
+        screen.getByText(
+          'Pick the packages these 3 standards should also ship in.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('renders an "already includes N of M" hint on packages with partial overlap', () => {
+      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+      renderDialog({ artifactIds: multiArtifactIds });
+
+      const partialRow = screen
+        .getByText('partial-overlap')
+        .closest('[role="listitem"]');
+      expect(partialRow).not.toBeNull();
+      if (partialRow) {
+        expect(
+          within(partialRow as HTMLElement).getByText(
+            'Already includes 1 of 3',
+          ),
+        ).toBeInTheDocument();
+      }
+
+      const freshRow = screen
+        .getByText('fresh-target')
+        .closest('[role="listitem"]');
+      expect(freshRow).not.toBeNull();
+      if (freshRow) {
+        expect(
+          within(freshRow as HTMLElement).queryByText(/Already includes/),
+        ).not.toBeInTheDocument();
+      }
+    });
+
+    it('omits already-present artifact IDs from each per-package entry at submit', async () => {
+      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+      const mutateAsync = jest.fn().mockResolvedValue([
+        {
+          packageId: packageWithPartialOverlap.id,
+          ok: true,
+          response: { package: packageWithPartialOverlap },
+        },
+        {
+          packageId: packageWithNoOverlap.id,
+          ok: true,
+          response: { package: packageWithNoOverlap },
+        },
+      ] as AddArtefactsToPackagesOutcome[]);
+      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+        createMockMutation({ mutateAsync }),
+      );
+
+      renderDialog({ artifactIds: multiArtifactIds });
+
+      fireEvent.click(screen.getByLabelText('Add to partial-overlap'));
+      fireEvent.click(screen.getByLabelText('Add to fresh-target'));
+
+      fireEvent.click(
+        await screen.findByRole('button', {
+          name: /^Add 3 standards to 2 packages$/i,
+        }),
+      );
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          entries: [
+            {
+              packageId: packageWithPartialOverlap.id,
+              standardIds: [secondId, thirdId],
+            },
+            {
+              packageId: packageWithNoOverlap.id,
+              standardIds: [firstId, secondId, thirdId],
+            },
+          ],
+        });
+      });
+    });
+
+    it('shows the plural all-covered message when every package already has every selected artifact', () => {
+      setPackagesResponse([packageWithAllArtifacts]);
+      renderDialog({ artifactIds: multiArtifactIds });
+
+      expect(
+        screen.getByText(
+          'These 3 standards are already in every package in this space.',
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /^Add to/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('switches the submit button copy when more than one artifact is selected', async () => {
+      setPackagesResponse([packageWithNoOverlap]);
+      renderDialog({ artifactIds: multiArtifactIds });
+
+      expect(
+        screen.getByRole('button', { name: /^Add to packages$/i }),
+      ).toBeDisabled();
+
+      fireEvent.click(screen.getByLabelText('Add to fresh-target'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', {
+            name: /^Add 3 standards to 1 package$/i,
+          }),
+        ).not.toBeDisabled();
+      });
+    });
   });
 });

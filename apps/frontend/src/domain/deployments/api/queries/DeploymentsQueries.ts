@@ -745,6 +745,13 @@ export type AddArtefactsToPackagesOutcome =
   | { packageId: PackageId; ok: true; response: AddArtefactsToPackageResponse }
   | { packageId: PackageId; ok: false; error: Error };
 
+export type AddArtefactsToPackagesEntry = {
+  packageId: PackageId;
+  standardIds?: StandardId[];
+  recipeIds?: RecipeId[];
+  skillIds?: SkillId[];
+};
+
 export const ADD_ARTEFACTS_TO_PACKAGES_MUTATION_KEY = 'addArtefactsToPackages';
 export const useAddArtefactsToPackagesMutation = () => {
   const queryClient = useQueryClient();
@@ -754,16 +761,10 @@ export const useAddArtefactsToPackagesMutation = () => {
     mutationKey: [ADD_ARTEFACTS_TO_PACKAGES_MUTATION_KEY],
     mutationFn: async ({
       spaceId,
-      packageIds,
-      standardIds,
-      recipeIds,
-      skillIds,
+      entries,
     }: {
       spaceId: SpaceId;
-      packageIds: PackageId[];
-      standardIds?: StandardId[];
-      recipeIds?: RecipeId[];
-      skillIds?: SkillId[];
+      entries: AddArtefactsToPackagesEntry[];
     }): Promise<AddArtefactsToPackagesOutcome[]> => {
       if (!organization?.id) {
         throw new Error(
@@ -771,19 +772,19 @@ export const useAddArtefactsToPackagesMutation = () => {
         );
       }
       const results = await Promise.allSettled(
-        packageIds.map((packageId) =>
+        entries.map((entry) =>
           deploymentsGateways.addArtefactsToPackage({
             organizationId: organization.id,
             spaceId,
-            packageId,
-            standardIds,
-            recipeIds,
-            skillIds,
+            packageId: entry.packageId,
+            standardIds: entry.standardIds,
+            recipeIds: entry.recipeIds,
+            skillIds: entry.skillIds,
           }),
         ),
       );
       return results.map((result, index) => {
-        const packageId = packageIds[index];
+        const packageId = entries[index].packageId;
         if (result.status === 'fulfilled') {
           return { packageId, ok: true, response: result.value };
         }

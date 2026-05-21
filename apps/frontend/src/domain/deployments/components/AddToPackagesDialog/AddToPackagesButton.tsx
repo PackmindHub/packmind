@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuPackagePlus } from 'react-icons/lu';
 import { PMButton, PMIcon } from '@packmind/ui';
 import {
@@ -35,6 +35,7 @@ export const AddToPackagesButton = ({
   spaceSlug,
 }: AddToPackagesButtonProps) => {
   const [open, setOpen] = useState(false);
+  const artifactIds = useMemo(() => [artifactId], [artifactId]);
 
   return (
     <>
@@ -47,7 +48,7 @@ export const AddToPackagesButton = ({
       <AddToPackagesDialog
         open={open}
         onOpenChange={setOpen}
-        artifactId={artifactId}
+        artifactIds={artifactIds}
         artifactType={artifactType}
         artifactKindLabel={artifactKindLabel}
         organizationId={organizationId}
