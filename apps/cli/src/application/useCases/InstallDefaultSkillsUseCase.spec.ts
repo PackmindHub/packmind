@@ -15,7 +15,12 @@ import {
   PackmindLockFileEntry,
 } from '../../domain/repositories/PackmindLockFile';
 import { isSkillsInitBootstrapError } from '../../domain/errors/SkillsInitBootstrapError';
-import { CodingAgent, RenderMode } from '@packmind/types';
+import {
+  CodingAgent,
+  DEFAULT_ACTIVE_RENDER_MODES,
+  RENDER_MODE_TO_CODING_AGENT,
+  RenderMode,
+} from '@packmind/types';
 
 jest.mock('fs/promises');
 
@@ -1004,6 +1009,51 @@ describe('InstallDefaultSkillsUseCase', () => {
         expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
         expect(bootstrapGetDefaults).toHaveBeenCalledWith(
           expect.objectContaining({ agents: mappedAgents }),
+        );
+      });
+    });
+
+    describe('falls back to default active render modes when configuration is null', () => {
+      const fallbackAgents: CodingAgent[] = DEFAULT_ACTIVE_RENDER_MODES.map(
+        (mode) => RENDER_MODE_TO_CODING_AGENT[mode],
+      ).filter((agent): agent is CodingAgent => agent !== undefined);
+
+      beforeEach(() => {
+        // First read: null (triggers bootstrap). Second read mirrors the
+        // happy-path pattern by returning the just-written agents config.
+        bootstrapReadConfig = jest
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValue({ packages: {}, agents: fallbackAgents });
+        bootstrapReadLockFile = jest.fn().mockResolvedValue(null);
+        bootstrapGetRenderModeConfiguration = jest
+          .fn()
+          .mockResolvedValue({ configuration: null });
+        bootstrapUseCase = buildUseCase();
+      });
+
+      it('writes the default-mapped agents to packmind.json once', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledTimes(1);
+        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledWith(
+          BASE_DIR,
+          fallbackAgents,
+        );
+      });
+
+      it('passes the default-mapped agents to getDefaults via the re-read', async () => {
+        await bootstrapUseCase.execute({
+          cliVersion: '0.25.0',
+          baseDirectory: BASE_DIR,
+        });
+
+        expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
+        expect(bootstrapGetDefaults).toHaveBeenCalledWith(
+          expect.objectContaining({ agents: fallbackAgents }),
         );
       });
     });

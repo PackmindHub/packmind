@@ -14,7 +14,11 @@ import {
   PackmindLockFile,
   PackmindLockFileEntry,
 } from '../../domain/repositories/PackmindLockFile';
-import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
+import {
+  CodingAgent,
+  DEFAULT_ACTIVE_RENDER_MODES,
+  RENDER_MODE_TO_CODING_AGENT,
+} from '@packmind/types';
 import { SkillsInitBootstrapError } from '../../domain/errors/SkillsInitBootstrapError';
 
 export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase {
@@ -223,7 +227,16 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
       throw new SkillsInitBootstrapError();
     }
 
-    const agents: CodingAgent[] = (configuration?.activeRenderModes ?? [])
+    // Fresh org with no persisted RenderModeConfiguration row: mirror the
+    // server-side fallback in RenderModeConfigurationService.getActiveRenderModes
+    // and seed agents from DEFAULT_ACTIVE_RENDER_MODES so bootstrapping doesn't
+    // fail on a clean install.
+    const activeRenderModes =
+      configuration === null
+        ? DEFAULT_ACTIVE_RENDER_MODES
+        : configuration.activeRenderModes;
+
+    const agents: CodingAgent[] = activeRenderModes
       .map((mode) => RENDER_MODE_TO_CODING_AGENT[mode])
       .filter((agent): agent is CodingAgent => agent !== undefined);
 
