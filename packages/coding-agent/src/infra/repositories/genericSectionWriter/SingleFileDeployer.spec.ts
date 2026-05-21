@@ -429,6 +429,112 @@ describe('SingleFileDeployer', () => {
         expect(result.createOrUpdate[0].path).toBe('vscode/TEST_AGENT.md');
       });
     });
+
+    describe('determinism — rendered content does not depend on input order', () => {
+      const buildStandard = (slug: string, name: string): StandardVersion => ({
+        id: createStandardVersionId(`standard-version-${slug}`),
+        standardId: createStandardId(`standard-${slug}`),
+        name,
+        slug,
+        description: `${name} description`,
+        version: 1,
+        summary: `${name} summary`,
+        userId: createUserId('user-1'),
+        scope: 'test',
+      });
+
+      // Names are intentionally reversed vs slugs so the test fails if the
+      // implementation sorts by name instead of slug.
+      const standardA = buildStandard('alpha-standard', 'Zeta Standard');
+      const standardB = buildStandard('beta-standard', 'Yankee Standard');
+      const standardC = buildStandard('charlie-standard', 'Xray Standard');
+
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      });
+
+      const getStandardsSectionContent = async (
+        standardVersions: StandardVersion[],
+      ): Promise<string> => {
+        const result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          jetbrainsTarget,
+        );
+        return result.createOrUpdate[0].sections![0].content;
+      };
+
+      it('produces byte-identical content for any input order via deployStandards', async () => {
+        const orderA = await getStandardsSectionContent([
+          standardA,
+          standardB,
+          standardC,
+        ]);
+        const orderB = await getStandardsSectionContent([
+          standardC,
+          standardA,
+          standardB,
+        ]);
+        const orderC = await getStandardsSectionContent([
+          standardB,
+          standardC,
+          standardA,
+        ]);
+
+        expect(orderA).toBe(orderB);
+        expect(orderA).toBe(orderC);
+      });
+
+      it('renders standards alphabetically by slug (not by name)', async () => {
+        const content = await getStandardsSectionContent([
+          standardC,
+          standardA,
+          standardB,
+        ]);
+
+        // Slug order: alpha-standard < beta-standard < charlie-standard
+        // → expected display order: Zeta (alpha), Yankee (beta), Xray (charlie)
+        const zetaIndex = content.indexOf('# Standard: Zeta Standard');
+        const yankeeIndex = content.indexOf('# Standard: Yankee Standard');
+        const xrayIndex = content.indexOf('# Standard: Xray Standard');
+
+        expect(zetaIndex).toBeGreaterThan(-1);
+        expect(zetaIndex).toBeLessThan(yankeeIndex);
+        expect(yankeeIndex).toBeLessThan(xrayIndex);
+      });
+
+      it('produces byte-identical content via deployArtifacts regardless of input order', async () => {
+        const sectionFor = async (
+          standardVersions: StandardVersion[],
+        ): Promise<string> => {
+          const result = await deployer.deployArtifacts([], standardVersions);
+          const standards = result.createOrUpdate[0].sections!.find(
+            (s) => s.key === 'Packmind standards',
+          );
+          return standards!.content;
+        };
+
+        const orderA = await sectionFor([standardA, standardB, standardC]);
+        const orderB = await sectionFor([standardC, standardB, standardA]);
+
+        expect(orderA).toBe(orderB);
+      });
+
+      it('produces byte-identical content via generateFileUpdatesForStandards regardless of input order', async () => {
+        const contentFor = async (
+          standardVersions: StandardVersion[],
+        ): Promise<string> => {
+          const result =
+            await deployer.generateFileUpdatesForStandards(standardVersions);
+          return result.createOrUpdate[0].content as string;
+        };
+
+        const orderA = await contentFor([standardA, standardB, standardC]);
+        const orderB = await contentFor([standardC, standardB, standardA]);
+
+        expect(orderA).toBe(orderB);
+      });
+    });
   });
 
   describe('error handling in getExistingContent', () => {

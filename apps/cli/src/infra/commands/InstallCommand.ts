@@ -20,10 +20,15 @@ import {
   buildIncapableArtifactsWarning,
 } from './installSummary';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { AgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
 import { handleIncompatibleInstalledSkillsSilently } from './skills/incompatibleSkillsHandler';
 import { reportEnsureCliVersionOutcome } from './ensureCliVersionReporter';
+import {
+  buildSkillsSkippedWarning,
+  configuredAgentsSupportSkills,
+} from './skillsCapabilityWarning';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -173,8 +178,9 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
 async function installDefaultSkillsIfAtGitRoot(params: {
   packmindCliHexa: PackmindCliHexa;
   cwd: string;
+  configRepository: IConfigFileRepository;
 }): Promise<void> {
-  const { packmindCliHexa, cwd } = params;
+  const { packmindCliHexa, cwd, configRepository } = params;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
 
@@ -182,8 +188,15 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     return;
   }
 
+  const config = await configRepository.readConfig(cwd);
+  const configuredAgents = config?.agents ?? [];
+
+  if (!configuredAgentsSupportSkills(configuredAgents)) {
+    logWarningConsole(buildSkillsSkippedWarning(configuredAgents));
+    return;
+  }
+
   try {
-    logConsole('\nInstalling default skills...');
     const skillsResult = await packmindCliHexa.installDefaultSkills({
       cliVersion: CLI_VERSION,
       baseDirectory: cwd,
@@ -204,12 +217,13 @@ async function installDefaultSkillsIfAtGitRoot(params: {
 
     const totalSkillFiles =
       skillsResult.filesCreated + skillsResult.filesUpdated;
+    // Stay silent when nothing happened — otherwise the user reads a
+    // contradictory "Already up to date" + "Installing default skills..."
+    // narrative in the same turn.
     if (totalSkillFiles > 0) {
       logConsole(
         `Default skills: added ${skillsResult.filesCreated} files, changed ${skillsResult.filesUpdated} files`,
       );
-    } else if (skillsResult.errors.length === 0) {
-      logConsole('Default skills are already up to date');
     }
   } catch {
     // Silently ignore default skills installation errors as it's a secondary operation
@@ -287,8 +301,10 @@ export async function installHandler({
     // Silently swallow drift-check failures; install must continue.
   }
 
+  const configRepository = new ConfigFileRepository();
+
   const bootstrap = await bootstrapInstallContext({
-    configRepository: new ConfigFileRepository(),
+    configRepository,
     agentDetectionService: new AgentArtifactDetectionService(),
     packmindGateway: packmindCliHexa.getPackmindGateway(),
     baseDirectory: cwd,
@@ -363,6 +379,18 @@ export async function installHandler({
 
   const combined = mergeInstallResults(results);
 
+  // Merge bootstrap-induced changes into the summary so users see "config
+  // created" / "packages added" even when bootstrap pre-populated packmind.json
+  // before the install use case ran.
+  if (bootstrap.configCreated) {
+    combined.configCreated = true;
+  }
+  if (bootstrap.packagesAdded.length > 0) {
+    const merged = new Set(combined.packagesAdded);
+    bootstrap.packagesAdded.forEach((p) => merged.add(p));
+    combined.packagesAdded = [...merged];
+  }
+
   if (combined.missingAccess.length > 0) {
     let warning =
       `⚠️  You don't have access to the following packages (their artifacts were preserved from the lock file):\n` +
@@ -381,7 +409,11 @@ export async function installHandler({
       logWarningConsole(capabilityWarning);
     }
     logConsole(buildInstallSummary(combined));
-    await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd });
+    await installDefaultSkillsIfAtGitRoot({
+      packmindCliHexa,
+      cwd,
+      configRepository,
+    });
   }
 
   const allErrors = [...combined.errors, ...thrownErrors];
