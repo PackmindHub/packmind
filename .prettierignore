@@ -19,3 +19,5 @@ AGENTS.md
 .docusaurus
 dockerfile/helm-chart/**
 packmind-lock.json
+
+.nx/self-healing

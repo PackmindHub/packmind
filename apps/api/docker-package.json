@@ -5,8 +5,8 @@
   "type": "commonjs",
   "main": "main.js",
   "engines": {
-    "node": "24.14.0",
-    "npm": "11.11.0"
+    "node": "24.15.0",
+    "npm": "11.12.1"
   },
   "dependencies": {
     "@amplitude/analytics-node": "^1.5.18",

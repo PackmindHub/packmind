@@ -49,3 +49,6 @@ apps/mcp-server/key.pem
 # GitLab Duo skills (managed locally)
 .gitlab/
 docker/nginx/ssl
+
+.nx/polygraph
+.nx/self-healing
