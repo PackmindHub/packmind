@@ -20,7 +20,7 @@ import {
   SiJira,
   SiConfluence,
   SiNotion,
-  SiSonarqube,
+  SiSonarqubeserver,
 } from 'react-icons/si';
 
 const REPO_URL = 'https://github.com/PackmindHub/demo-use-case-skills';
@@ -94,7 +94,7 @@ const useCaseSkills: UseCaseSkill[] = [
       'Analyze SonarQube issues to derive coding standards from recurring code quality findings.',
     folder: 'update-from-sonar-issues',
 
-    icon: <SiSonarqube />,
+    icon: <SiSonarqubeserver />,
     requiredMcp: 'SonarQube MCP',
   },
   {
