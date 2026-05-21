@@ -124,4 +124,36 @@ describeForVersion('>= 0.24.0', 'skills init command', () => {
       },
     );
   });
+
+  // Empty-directory bootstrap landed after 0.28.1.
+  describeForVersion('> 0.28.1', 'skills init in empty directory', () => {
+    describeWithUserSignedUp('skills init in empty directory', (getContext) => {
+      let context: UserSignedUpContext;
+      let result: RunCliResult;
+
+      beforeEach(async () => {
+        context = await getContext();
+        await setupGitRepo(context.testDir);
+
+        // Do NOT seed packmind.json or packmind-lock.json — the bootstrap
+        // step should detect the empty directory and write packmind.json
+        // from the org's server-side render modes.
+        result = await context.runCli('skills init');
+      });
+
+      it('exits with code 0', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('creates a packmind.json at the project root', () => {
+        expect(fileExists('packmind.json', context.testDir)).toBe(true);
+      });
+
+      it('writes the org default agents (packmind, agents_md)', () => {
+        const raw = readFile('packmind.json', context.testDir);
+        const config = JSON.parse(raw) as { agents?: unknown };
+        expect(config.agents).toEqual(['packmind', 'agents_md']);
+      });
+    });
+  });
 });
