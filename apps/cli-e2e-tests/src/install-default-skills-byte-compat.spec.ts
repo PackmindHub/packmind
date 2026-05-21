@@ -26,33 +26,6 @@ function extractDefaultSkillEntries(
   return out;
 }
 
-/**
- * Reset a workspace between install paths: remove the lockfile and any
- * deployed default-skill files so the second run is a true fresh-install
- * (and not an idempotent no-op that could mask divergence).
- */
-function resetWorkspace(testDir: string): void {
-  const lockPath = path.join(testDir, 'packmind-lock.json');
-  if (fs.existsSync(lockPath)) {
-    fs.unlinkSync(lockPath);
-  }
-
-  const claudeSkills = path.join(testDir, '.claude', 'skills');
-  if (fs.existsSync(claudeSkills)) {
-    fs.rmSync(claudeSkills, { recursive: true, force: true });
-  }
-
-  const packmindAgent = path.join(testDir, '.packmind', 'skills');
-  if (fs.existsSync(packmindAgent)) {
-    fs.rmSync(packmindAgent, { recursive: true, force: true });
-  }
-
-  const packmindJson = path.join(testDir, 'packmind.json');
-  if (fs.existsSync(packmindJson)) {
-    fs.unlinkSync(packmindJson);
-  }
-}
-
 // Byte-compatibility is guaranteed by having the server emit a single
 // lockFileSlice consumed by both install paths. This landed after 0.28.1.
 describeForVersion(
@@ -87,12 +60,6 @@ describeForVersion(
           installResult = await context.runCli('install');
           const installRaw = readFile('packmind-lock.json', context.testDir);
           installLockFile = JSON.parse(installRaw) as PackmindLockFile;
-
-          // Reset to a clean workspace for Path B so the second install path
-          // produces lockfile entries from scratch (not idempotent updates of
-          // Path A's entries). resetWorkspace leaves `.git` intact, so we
-          // don't re-init git here (setupGitRepo is not idempotent — it would
-          // fail on `git remote add origin`).
 
           // Re-seed packmind.json with claude agents for Path B too — without
           // it the bare `skills init` would fall back to the org-level defaults
