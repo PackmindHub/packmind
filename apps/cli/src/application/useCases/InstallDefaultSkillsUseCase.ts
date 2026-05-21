@@ -206,7 +206,7 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
    * zero mapped agents, a {@link SkillsInitBootstrapError} is thrown so the
    * CLI handler can surface a directive message pointing at `packmind init`.
    */
-  private async bootstrapEmptyDirectory(baseDirectory: string): Promise<void> {
+  public async bootstrapEmptyDirectory(baseDirectory: string): Promise<void> {
     const config =
       await this.repositories.configFileRepository.readConfig(baseDirectory);
     const lockFile =

@@ -22,7 +22,15 @@ export type IInstallDefaultSkillsResult = {
   incompatibleInstalledSkills: IncompatibleInstalledSkill[];
 };
 
-export type IInstallDefaultSkillsUseCase = IPublicUseCase<
+export interface IInstallDefaultSkillsUseCase extends IPublicUseCase<
   IInstallDefaultSkillsCommand,
   IInstallDefaultSkillsResult
->;
+> {
+  /**
+   * Bootstraps a truly empty directory by writing packmind.json from the org's
+   * active render modes. No-op if either packmind.json or packmind-lock.json
+   * already exists. Throws SkillsInitBootstrapError if the gateway fails or
+   * the mapped agent list is empty.
+   */
+  bootstrapEmptyDirectory(baseDirectory: string): Promise<void>;
+}

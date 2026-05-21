@@ -48,6 +48,12 @@ export const installDefaultSkillsCommand = command({
         // Silently swallow drift-check failures; skills init must continue.
       }
 
+      // Bootstrap an empty directory (no packmind.json + no packmind-lock.json)
+      // from the org's active render modes before evaluating skill capability.
+      // Throws SkillsInitBootstrapError on gateway failure — handled by the
+      // outer catch below.
+      await packmindCliHexa.bootstrapSkillsInitDirectory({ baseDirectory });
+
       const config = await new ConfigFileRepository().readConfig(baseDirectory);
       const configuredAgents = config?.agents ?? [];
 
