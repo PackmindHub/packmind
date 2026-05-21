@@ -62,7 +62,7 @@ export default [
           enforceBuildableLibDependency: true,
           allow: [
             '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
-            '^@packmind/(deployments|git|recipes|standards|linter|analytics|spaces)/test',
+            '^@packmind/(deployments|git|recipes|skills|standards|linter|analytics|spaces)/test',
             '^@packmind/test-utils',
           ],
           depConstraints: [

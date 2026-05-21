@@ -45,6 +45,7 @@
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
       "@packmind/skills": ["packages/skills/src/index.ts"],
+      "@packmind/skills/test": ["packages/skills/test/index.ts"],
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
